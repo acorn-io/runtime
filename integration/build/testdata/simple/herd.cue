@@ -1,5 +1,10 @@
 containers: {
 	simple: {
-		build: "."
+		build: {}
+	}
+}
+images: {
+	isimple: {
+		build: {}
 	}
 }

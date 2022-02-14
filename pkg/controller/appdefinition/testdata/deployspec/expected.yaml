@@ -1,0 +1,60 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+spec:
+  selector:
+    matchLabels:
+      "herd-project.io/app-namespace": "app-namespace"
+      "herd-project.io/app-name": "app-name"
+      "herd-project.io/container-name": "oneimage"
+  template:
+    metadata:
+      labels:
+        "herd-project.io/app-namespace": "app-namespace"
+        "herd-project.io/app-name": "app-name"
+        "herd-project.io/container-name": "oneimage"
+    spec:
+      containers:
+        - name: oneimage
+          image: "image-name"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+spec:
+  selector:
+    matchLabels:
+      "herd-project.io/app-namespace": "app-namespace"
+      "herd-project.io/app-name": "app-name"
+      "herd-project.io/container-name": "buildimage"
+  template:
+    metadata:
+      labels:
+        "herd-project.io/app-namespace": "app-namespace"
+        "herd-project.io/app-name": "app-name"
+        "herd-project.io/container-name": "buildimage"
+    spec:
+      containers:
+        - name: buildimage
+          image: "sha256:build-image"

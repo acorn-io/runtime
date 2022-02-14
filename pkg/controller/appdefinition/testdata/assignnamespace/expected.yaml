@@ -1,0 +1,8 @@
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  uid: 12345678-blah
+  name: default
+  namespace: random
+status:
+  namespace: default-12345678

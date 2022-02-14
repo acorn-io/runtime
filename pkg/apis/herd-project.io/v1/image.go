@@ -6,4 +6,5 @@ type ContainerData struct {
 
 type ImageData struct {
 	Containers map[string]ContainerData `json:"containers,omitempty"`
+	Images     map[string]ContainerData `json:"images,omitempty"`
 }

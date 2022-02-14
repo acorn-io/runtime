@@ -8,9 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/api/herd-project.io/v1"
+	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/appimage"
 	"github.com/ibuildthecloud/herd/pkg/streams"
 )
 
@@ -37,7 +36,7 @@ func (b *Opts) complete() (*Opts, error) {
 	return current, nil
 }
 
-func Build(ctx context.Context, file string, opts *Opts) (*appimage.AppImage, error) {
+func Build(ctx context.Context, file string, opts *Opts) (*v1.AppImage, error) {
 	opts, err := opts.complete()
 	if err != nil {
 		return nil, err
@@ -59,9 +58,12 @@ func Build(ctx context.Context, file string, opts *Opts) (*appimage.AppImage, er
 	}
 
 	imageData, err := FromSpec(ctx, opts.Cwd, *buildSpec, *opts.Streams)
-	appImage := &appimage.AppImage{
-		Herdfile:  fileData,
+	appImage := &v1.AppImage{
+		Herdfile:  string(fileData),
 		ImageData: imageData,
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	id, err := FromAppImage(ctx, appImage, *opts.Streams)
@@ -76,6 +78,7 @@ func Build(ctx context.Context, file string, opts *Opts) (*appimage.AppImage, er
 func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams streams.Output) (v1.ImageData, error) {
 	data := v1.ImageData{
 		Containers: map[string]v1.ContainerData{},
+		Images:     map[string]v1.ContainerData{},
 	}
 
 	var containerKeys []string
@@ -86,16 +89,38 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams stream
 
 	for _, key := range containerKeys {
 		container := spec.Containers[key]
-		if container.Image != "" {
+		if container.Image != "" || container.Build == nil {
 			continue
 		}
 
-		id, err := FromBuild(ctx, cwd, container.Build, streams.Streams())
+		id, err := FromBuild(ctx, cwd, *container.Build, streams.Streams())
 		if err != nil {
 			return data, err
 		}
 
 		data.Containers[key] = v1.ContainerData{
+			Image: id,
+		}
+	}
+
+	var imageKeys []string
+	for k := range spec.Images {
+		imageKeys = append(imageKeys, k)
+	}
+	sort.Strings(imageKeys)
+
+	for _, key := range imageKeys {
+		image := spec.Images[key]
+		if image.Image != "" || image.Build == nil {
+			continue
+		}
+
+		id, err := FromBuild(ctx, cwd, *image.Build, streams.Streams())
+		if err != nil {
+			return data, err
+		}
+
+		data.Images[key] = v1.ContainerData{
 			Image: id,
 		}
 	}
@@ -126,6 +151,7 @@ func FromBuild(ctx context.Context, cwd string, build v1.Build, streams streams.
 
 	cmd := exec.CommandContext(ctx, "docker", "build",
 		"--iidfile", iidfile.Name(),
+		"--target", build.Target,
 		"-f", dockerfile, context)
 	cmd.Dir = cwd
 	cmd.Stdin = streams.In

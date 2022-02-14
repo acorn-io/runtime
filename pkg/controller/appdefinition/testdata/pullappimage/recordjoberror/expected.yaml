@@ -1,0 +1,13 @@
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  name: default
+  namespace: random
+spec:
+  image: "appImage"
+status:
+  namespace: "appInstance-namespace"
+  conditions:
+    pulled:
+      error: true
+      message: "it failed"

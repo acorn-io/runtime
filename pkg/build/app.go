@@ -8,13 +8,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/api/herd-project.io/v1"
+	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/appimage"
 	"github.com/ibuildthecloud/herd/pkg/streams"
 )
 
-func FromAppImage(ctx context.Context, appImage *appimage.AppImage, streams streams.Output) (string, error) {
+func FromAppImage(ctx context.Context, appImage *v1.AppImage, streams streams.Output) (string, error) {
 	dockerfile, err := getDockerfile()
 	if err != nil {
 		return "", err
@@ -35,7 +34,7 @@ func FromAppImage(ctx context.Context, appImage *appimage.AppImage, streams stre
 	}, io)
 }
 
-func getContextFromAppImage(appImage *appimage.AppImage) (*bytes.Buffer, error) {
+func getContextFromAppImage(appImage *v1.AppImage) (*bytes.Buffer, error) {
 	buf := &bytes.Buffer{}
 	tarfile := tar.NewWriter(buf)
 

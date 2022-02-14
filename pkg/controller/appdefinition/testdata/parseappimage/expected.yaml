@@ -1,0 +1,34 @@
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  name: default
+  namespace: random
+status:
+  conditions:
+    parsed:
+      success: true
+  appSpec:
+    containers:
+      oneimage:
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+      buildimage:
+        image: "sha256:build-image"
+        build:
+          dockerfile: "custom-dockerfile"
+          context: "."
+  appImage:
+    herdfile: |
+      containers: {
+        oneimage: image: "image-name"
+        buildimage: build: {
+          dockerfile: "custom-dockerfile"
+        }
+      }
+    imageData:
+      containers:
+        buildimage: {
+          image: "sha256:build-image"
+        }

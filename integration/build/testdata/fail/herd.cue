@@ -1,0 +1,5 @@
+containers: {
+	fail: {
+		build: {}
+	}
+}

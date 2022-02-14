@@ -16,7 +16,20 @@ out: {
 			"\(k)": {
 				image: string | *""
 				image: v.image
-				build: v.build
+				if v["build"] != _|_ {
+                    build: v.build
+				}
+			}
+		}
+	}
+	images: {
+		for k, v in _norm.images {
+			"\(k)": {
+				image: string | *""
+				image: v.image
+				if v["build"] != _|_ {
+                    build: v.build
+				}
 			}
 		}
 	}

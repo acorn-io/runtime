@@ -4,7 +4,6 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
-	"sync"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
@@ -12,11 +11,8 @@ import (
 )
 
 type Context struct {
-	valueLock sync.Mutex
-	files     []File
-	fses      []fsEntry
-	value     *cue.Value
-	ctx       *cue.Context
+	files []File
+	fses  []fsEntry
 }
 
 type fsEntry struct {
@@ -73,9 +69,7 @@ func (c Context) WithFiles(file ...File) *Context {
 }
 
 func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
-	if c.ctx == nil {
-		c.ctx = cuecontext.New()
-	}
+	ctx := cuecontext.New()
 
 	// cue needs a dir so we create a unique temporary one for each call.
 	// I wish I didn't need this.
@@ -104,13 +98,13 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 		return nil, err
 	}
 
-	values, err := c.ctx.BuildInstances(instances)
+	values, err := ctx.BuildInstances(instances)
 	if err != nil {
 		return nil, err
 	}
 
-	c.value = &values[0]
-	return c.value, c.value.Err()
+	value := &values[0]
+	return value, value.Err()
 }
 
 func (c *Context) Transform(path string) (*cue.Value, error) {
@@ -138,13 +132,6 @@ func (c *Context) Transform(path string) (*cue.Value, error) {
 }
 
 func (c *Context) Value() (*cue.Value, error) {
-	c.valueLock.Lock()
-	defer c.valueLock.Unlock()
-
-	if c.value != nil {
-		return c.value, nil
-	}
-
 	var args []string
 	for _, f := range c.files {
 		args = append(args, f.Name)
