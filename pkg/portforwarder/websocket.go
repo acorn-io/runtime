@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 )
 
@@ -175,4 +178,27 @@ func NewWebSocketDialer(cfg *rest.Config, pod *corev1.Pod, port uint32) (*WebSoc
 		headers: headers,
 		url:     newURL.String(),
 	}, nil
+}
+
+func urlForPodAndPort(cfg *rest.Config, pod *corev1.Pod, port uint32) (*url.URL, error) {
+	cfg.APIPath = "/api"
+	cfg.GroupVersion = &schema.GroupVersion{
+		Group:   "",
+		Version: "v1",
+	}
+	restClient, err := rest.RESTClientFor(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	url := restClient.Get().
+		Resource("pods").
+		Namespace(pod.Namespace).
+		Name(pod.Name).
+		SubResource("portforward").
+		URL()
+	q := url.Query()
+	q.Set("ports", strconv.Itoa(int(port)))
+	url.RawQuery = q.Encode()
+	return url, nil
 }
