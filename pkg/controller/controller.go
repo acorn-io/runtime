@@ -5,24 +5,42 @@ import (
 
 	"github.com/ibuildthecloud/baaah"
 	"github.com/ibuildthecloud/baaah/pkg/crds"
+	"github.com/ibuildthecloud/baaah/pkg/restconfig"
 	"github.com/ibuildthecloud/baaah/pkg/router"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/controller/appdefinition"
 	"github.com/ibuildthecloud/herd/pkg/scheme"
+	"github.com/rancher/wrangler/pkg/apply"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Controller struct {
 	Router *router.Router
 	Scheme *runtime.Scheme
+	Images Images
+	apply  apply.Apply
+}
+
+type Images struct {
+	AppImageInitImage string
+	BuildkitImage     string
 }
 
 type Config struct {
-	AppImageInitImage string
+	Images Images
 }
 
 func New(c Config) (*Controller, error) {
 	router, err := baaah.DefaultRouter(scheme.Scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	apply, err := apply.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +50,8 @@ func New(c Config) (*Controller, error) {
 	return &Controller{
 		Router: router,
 		Scheme: scheme.Scheme,
+		Images: c.Images,
+		apply:  apply.WithDynamicLookup(),
 	}, nil
 }
 
@@ -39,12 +59,8 @@ func (c *Controller) Start(ctx context.Context) error {
 	if err := crds.Create(ctx, c.Scheme, v1.SchemeGroupVersion); err != nil {
 		return err
 	}
+	if err := c.initData(ctx); err != nil {
+		return err
+	}
 	return c.Router.Start(ctx)
-}
-
-func routes(router *router.Router, c Config) {
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(c.AppImageInitImage))
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.DeploySpec)
 }

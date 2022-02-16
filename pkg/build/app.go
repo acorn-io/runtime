@@ -1,12 +1,11 @@
 package build
 
 import (
-	"archive/tar"
-	"bytes"
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
@@ -14,49 +13,43 @@ import (
 )
 
 func FromAppImage(ctx context.Context, appImage *v1.AppImage, streams streams.Output) (string, error) {
-	dockerfile, err := getDockerfile()
+	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
 	}
-	defer os.Remove(dockerfile)
-
-	buildContext, err := getContextFromAppImage(appImage)
-	if err != nil {
-		return "", err
-	}
+	defer os.RemoveAll(tempContext)
 
 	io := streams.Streams()
-	io.In = buildContext
-
-	return FromBuild(ctx, "", v1.Build{
-		Context:    "-",
-		Dockerfile: "Dockerfile",
-	}, io)
+	return FromBuild(ctx, tempContext, v1.Build{}, io)
 }
 
-func getContextFromAppImage(appImage *v1.AppImage) (*bytes.Buffer, error) {
-	buf := &bytes.Buffer{}
-	tarfile := tar.NewWriter(buf)
+func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
+	tempDir, err := ioutil.TempDir("", "herd-app-image-context")
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if err != nil {
+			os.RemoveAll(tempDir)
+		}
+	}()
 
-	if err := addFile(tarfile, appdefinition.HerdCueFile, appImage.Herdfile); err != nil {
-		return nil, err
+	if err := addFile(tempDir, appdefinition.HerdCueFile, []byte(appImage.Herdfile)); err != nil {
+		return "", err
 	}
-	if err := addFile(tarfile, appdefinition.ImageDataFile, appImage.ImageData); err != nil {
-		return nil, err
+	if err := addFile(tempDir, appdefinition.ImageDataFile, appImage.ImageData); err != nil {
+		return "", err
 	}
-	if err := addFile(tarfile, "Dockerfile", []byte("FROM scratch\nCOPY . /")); err != nil {
-		return nil, err
+	if err := addFile(tempDir, "Dockerfile", []byte("FROM scratch\nCOPY . /")); err != nil {
+		return "", err
 	}
-	if err := addFile(tarfile, ".dockerignore", []byte("Dockerfile\n.dockerignore")); err != nil {
-		return nil, err
+	if err := addFile(tempDir, ".dockerignore", []byte("Dockerfile\n.dockerignore")); err != nil {
+		return "", err
 	}
-	if err := tarfile.Close(); err != nil {
-		return nil, err
-	}
-	return buf, nil
+	return tempDir, nil
 }
 
-func addFile(tarfile *tar.Writer, name string, obj interface{}) error {
+func addFile(tempDir, name string, obj interface{}) error {
 	var (
 		data []byte
 		err  error
@@ -70,35 +63,10 @@ func addFile(tarfile *tar.Writer, name string, obj interface{}) error {
 		}
 	}
 
-	err = tarfile.WriteHeader(&tar.Header{
-		Typeflag: tar.TypeReg,
-		Name:     name,
-		Size:     int64(len(data)),
-		Mode:     0600,
-	})
-	if err != nil {
+	target := filepath.Join(tempDir, name)
+	if err := os.MkdirAll(filepath.Dir(target), 0700); err != nil {
 		return err
 	}
-	_, err = tarfile.Write(data)
-	return err
-}
 
-func getDockerfile() (string, error) {
-	dockerfile, err := ioutil.TempFile("", "herd-appimage-")
-	if err != nil {
-		return "", err
-	}
-
-	_, err = dockerfile.WriteString("FROM scratch\nCOPY . /")
-	if err != nil {
-		os.Remove(dockerfile.Name())
-		return "", err
-	}
-
-	if err := dockerfile.Close(); err != nil {
-		os.Remove(dockerfile.Name())
-		return "", err
-	}
-
-	return dockerfile.Name(), nil
+	return ioutil.WriteFile(target, data, 0600)
 }

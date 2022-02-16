@@ -73,7 +73,7 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 
 	// cue needs a dir so we create a unique temporary one for each call.
 	// I wish I didn't need this.
-	dir, err := ioutil.TempDir("", "herd.cue-")
+	dir, err := ioutil.TempDir("", "herd-herd.cue-")
 	if err != nil {
 		return nil, err
 	}

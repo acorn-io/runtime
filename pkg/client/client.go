@@ -1,22 +1,17 @@
 package client
 
 import (
+	"github.com/ibuildthecloud/baaah/pkg/restconfig"
 	"github.com/ibuildthecloud/herd/pkg/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
-func MustDefault() client.WithWatch {
-	c, err := Default()
-	if err != nil {
-		panic(err)
-	}
-	return c
-}
+type ObjectKey = client.ObjectKey
+type ListOptions = client.ListOptions
 
 func Default() (client.WithWatch, error) {
-	cfg, err := config.GetConfig()
+	cfg, err := restconfig.New(scheme.Scheme)
 	if err != nil {
 		return nil, err
 	}

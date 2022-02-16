@@ -8,12 +8,10 @@ status:
     parsed:
       success: true
   appSpec:
+    images: {}
     containers:
       oneimage:
         image: "image-name"
-        build:
-          dockerfile: "Dockerfile"
-          context: "."
       buildimage:
         image: "sha256:build-image"
         build:

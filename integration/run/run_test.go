@@ -22,7 +22,7 @@ func TestSimple(t *testing.T) {
 	}
 
 	ctx := helper.GetCTX(t)
-	client := client.MustDefault()
+	client := helper.MustReturn(client.Default)
 	ns := helper.TempNamespace(t, client)
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{

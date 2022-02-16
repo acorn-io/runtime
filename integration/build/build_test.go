@@ -1,10 +1,14 @@
 package build
 
 import (
+	"context"
+	"strings"
 	"testing"
 
 	"github.com/ibuildthecloud/herd/integration/helper"
 	"github.com/ibuildthecloud/herd/pkg/build"
+	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
+	"github.com/ibuildthecloud/herd/pkg/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +27,8 @@ func TestSimpleBuild(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Len(t, image.ImageData.Containers, 1)
-	assert.True(t, len(image.ImageData.Containers["simple"].Image) > 0)
+	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:"))
+	assert.False(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:5000"))
 	assert.Len(t, image.ImageData.Images, 1)
 	assert.True(t, len(image.ImageData.Images["isimple"].Image) > 0)
 }
@@ -55,4 +60,15 @@ func TestSimpleTwo(t *testing.T) {
 	assert.True(t, len(image.ImageData.Images["ione"].Image) > 0)
 	assert.True(t, len(image.ImageData.Images["itwo"].Image) > 0)
 	assert.Equal(t, image.ImageData.Containers["two"].Image, image.ImageData.Images["itwo"].Image)
+}
+
+func Test_GetBuildkitDialer(t *testing.T) {
+	c, err := client.Default()
+	assert.Nil(t, err)
+
+	ctx, cancel := context.WithCancel(helper.GetCTX(t))
+	defer cancel()
+	port, _, err := buildkit.GetBuildkitDialer(ctx, c)
+	assert.Nil(t, err)
+	assert.True(t, port > 30000)
 }

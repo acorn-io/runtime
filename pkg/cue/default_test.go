@@ -83,5 +83,5 @@ func TestDefaultContext(t *testing.T) {
 	assert.Equal(t, "foo", s)
 
 	newV, _ := ctx.Value()
-	assert.Equal(t, v, newV)
+	assert.NotEqual(t, v, newV)
 }

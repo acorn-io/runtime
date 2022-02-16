@@ -26,7 +26,10 @@ func StartController(t *testing.T) {
 	}
 
 	c, err := controller.New(controller.Config{
-		AppImageInitImage: images.Images["app-image-init"].Image,
+		Images: controller.Images{
+			AppImageInitImage: images.Images["app-image-init"].Image,
+			BuildkitImage:     images.Images["buildkitd"].Image,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

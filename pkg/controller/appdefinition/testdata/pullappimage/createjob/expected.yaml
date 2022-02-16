@@ -9,6 +9,7 @@ spec:
   backoffLimit: 3
   template:
     spec:
+      restartPolicy: Never
       volumes:
         - name: "share"
           emptyDir: {}
@@ -16,7 +17,8 @@ spec:
         - name: init
           image: "appimageinit"
           args:
-          - "init"
+            - "init"
+            - "/share/init"
           volumeMounts:
             - mountPath: /share
               name: share

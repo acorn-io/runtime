@@ -4,12 +4,11 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"sort"
-	"strings"
 
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
+	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
 	"github.com/ibuildthecloud/herd/pkg/streams"
 )
 
@@ -129,42 +128,13 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams stream
 }
 
 func FromBuild(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
-	iidfile, err := ioutil.TempFile("", "herd-idfile-")
-	if err != nil {
-		return "", err
-	}
-	defer os.Remove(iidfile.Name())
-
-	if err := iidfile.Close(); err != nil {
-		return "", err
+	if build.Dockerfile == "" {
+		build.Dockerfile = "Dockerfile"
 	}
 
-	dockerfile := build.Dockerfile
-	if dockerfile == "" {
-		dockerfile = "Dockerfile"
+	if build.Context == "" {
+		build.Context = "."
 	}
 
-	context := build.Context
-	if context == "" {
-		context = "."
-	}
-
-	cmd := exec.CommandContext(ctx, "docker", "build",
-		"--iidfile", iidfile.Name(),
-		"--target", build.Target,
-		"-f", dockerfile, context)
-	cmd.Dir = cwd
-	cmd.Stdin = streams.In
-	cmd.Stdout = streams.Out
-	cmd.Stderr = streams.Err
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
-
-	id, err := ioutil.ReadFile(iidfile.Name())
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(string(id)), nil
+	return buildkit.Build(ctx, cwd, build, streams)
 }
