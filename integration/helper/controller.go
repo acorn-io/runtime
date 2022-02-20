@@ -4,13 +4,23 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/ibuildthecloud/baaah/pkg/crds"
 	"github.com/ibuildthecloud/herd/pkg/controller"
+	"github.com/ibuildthecloud/herd/pkg/scheme"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
 	controllerStarted   = false
 	controllerStartLock sync.Mutex
 )
+
+func EnsureCRDs(t *testing.T) {
+	ctx := GetCTX(t)
+	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func StartController(t *testing.T) {
 	controllerStartLock.Lock()

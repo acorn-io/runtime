@@ -27,6 +27,7 @@ func addDeployments(appInstance *v1.AppInstance, resp router.Response) {
 				Namespace: appInstance.Status.Namespace,
 				Labels: map[string]string{
 					labels.HerdAppName:       appInstance.Name,
+					labels.HerdAppPod:        "true",
 					labels.HerdAppNamespace:  appInstance.Namespace,
 					labels.HerdContainerName: name,
 				},

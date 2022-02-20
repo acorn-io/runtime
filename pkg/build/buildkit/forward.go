@@ -29,18 +29,3 @@ func GetBuildkitDialer(ctx context.Context, client client.WithWatch) (int, Diale
 	}
 	return port, dialer.DialContext, nil
 }
-
-func GetBuildkitAddress(ctx context.Context, client client.WithWatch) (int, string, error) {
-	port, pod, err := GetBuildkitPod(ctx, client)
-	if err != nil {
-		return 0, "", err
-	}
-
-	cfg, err := restconfig.New(client.Scheme())
-	if err != nil {
-		return 0, "", err
-	}
-
-	address, err := portforwarder.Forward(ctx, cfg, pod, uint32(system.BuildkitPort))
-	return port, address, err
-}
