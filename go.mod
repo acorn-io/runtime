@@ -6,13 +6,12 @@ replace k8s.io/client-go => k8s.io/client-go v0.23.0
 
 replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 
-replace github.com/moby/buildkit => ../buildkit
-
 require (
 	cuelang.org/go v0.4.1-rc.2.0.20220111152641-d4d0f142317e
 	github.com/containerd/console v1.0.3
 	github.com/gorilla/websocket v1.4.2
-	github.com/moby/buildkit v0.9.3
+	github.com/ibuildthecloud/baaah v0.0.0-20220216191131-cbb56866de25
+	github.com/moby/buildkit v0.10.0-rc1.0.20220216012946-b36d860675c5
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/wrangler v0.8.10
 	github.com/rancher/wrangler-cli v0.0.0-20211112052728-f172e9bf59af
@@ -66,7 +65,7 @@ require (
 	github.com/protocolbuffers/txtpbfmt v0.0.0-20201118171849-f6a6b3f636fc // indirect
 	github.com/rancher/lasso v0.0.0-20220110204427-db9f3e569574 // indirect
 	github.com/rancher/lasso/controller-runtime v0.0.0-20220110205840-98715bdd6b5b // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tonistiigi/fsutil v0.0.0-20220115021204-b19f7f9cb274 // indirect
 	github.com/tonistiigi/units v0.0.0-20180711220420-6950e57a87ea // indirect
@@ -80,7 +79,7 @@ require (
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e // indirect
 	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/text v0.3.7 // indirect
@@ -105,10 +104,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/ibuildthecloud/baaah => ../baaah
-
 require (
 	github.com/golang/glog v1.0.0 // indirect
-	github.com/ibuildthecloud/baaah v0.0.0
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 )
