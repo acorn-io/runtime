@@ -2,9 +2,11 @@ module github.com/ibuildthecloud/herd
 
 go 1.18
 
-replace k8s.io/client-go => k8s.io/client-go v0.23.0
+replace (
+k8s.io/client-go => k8s.io/client-go v0.23.0
 
-replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
+github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
+)
 
 require (
 	cuelang.org/go v0.4.1-rc.2.0.20220111152641-d4d0f142317e
@@ -21,9 +23,6 @@ require (
 	k8s.io/apimachinery v0.23.0
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	sigs.k8s.io/controller-runtime v0.11.0
-)
-
-require (
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.1 // indirect
 	github.com/containerd/containerd v1.6.0-rc.2 // indirect
@@ -102,9 +101,7 @@ require (
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-require (
 	github.com/golang/glog v1.0.0 // indirect
+	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 )

@@ -15,7 +15,7 @@ func HerdImages(ctx context.Context) (*v1.ImageData, error) {
 	if err != nil {
 		return nil, err
 	}
-	image, err := build.Build(ctx, herdCue, &build.Opts{
+	image, err := build.Build(ctx, herdCue, &build.Options{
 		Cwd: filepath.Dir(herdCue),
 	})
 	if err != nil {

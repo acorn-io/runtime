@@ -137,11 +137,13 @@ func (w *Watcher[T]) ByName(ctx context.Context, namespace, name string, cb func
 	}
 
 	obj := typed.New[T]()
-	if err := w.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, obj); err != nil {
+	if err := w.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, obj); apierrors.IsNotFound(err) {
+	} else if err != nil {
 		return def, err
-	}
-	if done, err := cb(obj); done || err != nil {
-		return obj, err
+	} else {
+		if done, err := cb(obj); done || err != nil {
+			return obj, err
+		}
 	}
 
 	rev := obj.GetResourceVersion()

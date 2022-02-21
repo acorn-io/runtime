@@ -81,7 +81,7 @@ func (o *Options) restConfig() (*rest.Config, error) {
 	return o.RestConfig, err
 }
 
-func (o *Options) complete() (*Options, error) {
+func (o *Options) Complete() (*Options, error) {
 	if o == nil {
 		o = &Options{}
 	}
@@ -160,7 +160,7 @@ func pipe(input io.ReadCloser, output streams.Output, prefix string, timestamps 
 }
 
 func Container(ctx context.Context, pod *corev1.Pod, name string, options *Options) (err error) {
-	options, err = options.complete()
+	options, err = options.Complete()
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, options *Optio
 }
 
 func Pod(ctx context.Context, pod *corev1.Pod, options *Options) error {
-	options, err := options.complete()
+	options, err := options.Complete()
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, options *Options) error {
 }
 
 func App(ctx context.Context, app *v1.AppInstance, options *Options) error {
-	options, err := options.complete()
+	options, err := options.Complete()
 	if err != nil {
 		return err
 	}

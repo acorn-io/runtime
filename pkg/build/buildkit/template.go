@@ -158,8 +158,6 @@ func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
 								Args: []string{
 									"--debug",
 									"--addr",
-									"ignored",
-									"--addr",
 									"unix:///run/buildkit/buildkitd.sock",
 									"--addr",
 									fmt.Sprintf("tcp://0.0.0.0:%d", system.BuildkitPort),

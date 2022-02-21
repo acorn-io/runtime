@@ -1,7 +1,10 @@
 package system
 
+import "os"
+
 const (
-	Namespace = "herd-system"
+	Namespace            = "herd-system"
+	DefaultUserNamespace = "herd"
 )
 
 var (
@@ -12,3 +15,11 @@ var (
 	BuildKitName  = "buildkitd"
 	BuildkitPort  = 8080
 )
+
+func UserNamespace() string {
+	ns := os.Getenv("NAMESPACE")
+	if ns != "" {
+		return ns
+	}
+	return DefaultUserNamespace
+}

@@ -1,8 +1,7 @@
-package herd
+package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/ibuildthecloud/herd/pkg/build"
 	"github.com/rancher/wrangler-cli"
@@ -11,10 +10,14 @@ import (
 
 func NewBuild() *cobra.Command {
 	return cli.Command(&Build{}, cobra.Command{
+		Use: "build [flags] DIRECTORY",
+		Example: `
+# Build from herd.cue file in the local directory
+herd build .`,
 		SilenceUsage: true,
 		Short:        "Build an app from a herd.cue file",
-		Long:         "Build all dependent container and app images from you herd.cue file",
-		Args:         cobra.RangeArgs(0, 1),
+		Long:         "Build all dependent container and app images from your herd.cue file",
+		Args:         cobra.RangeArgs(1, 1),
 	})
 }
 
@@ -23,21 +26,9 @@ type Build struct {
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
-	var (
-		cwd string
-		err error
-	)
+	cwd := args[0]
 
-	if len(args) == 0 {
-		cwd, err = os.Getwd()
-		if err != nil {
-			return err
-		}
-	} else {
-		cwd = args[0]
-	}
-
-	image, err := build.Build(cmd.Context(), s.File, &build.Opts{
+	image, err := build.Build(cmd.Context(), s.File, &build.Options{
 		Cwd: cwd,
 	})
 	if err != nil {

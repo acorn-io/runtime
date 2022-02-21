@@ -20,6 +20,10 @@ func DeploySpec(req router.Request, resp router.Response) error {
 }
 
 func addDeployments(appInstance *v1.AppInstance, resp router.Response) {
+	var replicas *int32
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		replicas = new(int32)
+	}
 	for name, container := range appInstance.Status.AppSpec.Containers {
 		resp.Objects(&appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -27,12 +31,12 @@ func addDeployments(appInstance *v1.AppInstance, resp router.Response) {
 				Namespace: appInstance.Status.Namespace,
 				Labels: map[string]string{
 					labels.HerdAppName:       appInstance.Name,
-					labels.HerdAppPod:        "true",
 					labels.HerdAppNamespace:  appInstance.Namespace,
 					labels.HerdContainerName: name,
 				},
 			},
 			Spec: appsv1.DeploymentSpec{
+				Replicas: replicas,
 				Selector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						labels.HerdAppName:       appInstance.Name,
@@ -46,6 +50,7 @@ func addDeployments(appInstance *v1.AppInstance, resp router.Response) {
 							labels.HerdAppName:       appInstance.Name,
 							labels.HerdAppNamespace:  appInstance.Namespace,
 							labels.HerdContainerName: name,
+							labels.HerdAppPod:        "true",
 						},
 					},
 					Spec: corev1.PodSpec{

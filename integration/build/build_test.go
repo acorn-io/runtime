@@ -13,14 +13,14 @@ import (
 )
 
 func TestBuildFailed(t *testing.T) {
-	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/herd.cue", &build.Opts{
+	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/herd.cue", &build.Options{
 		Cwd: "./testdata/fail",
 	})
 	assert.Error(t, err)
 }
 
 func TestSimpleBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Opts{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Options{
 		Cwd: "./testdata/simple",
 	})
 	if err != nil {
@@ -34,7 +34,7 @@ func TestSimpleBuild(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/target/herd.cue", &build.Opts{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/target/herd.cue", &build.Options{
 		Cwd: "./testdata/target",
 	})
 	if err != nil {
@@ -47,7 +47,7 @@ func TestTarget(t *testing.T) {
 }
 
 func TestSimpleTwo(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/herd.cue", &build.Opts{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/herd.cue", &build.Options{
 		Cwd: "./testdata/simple-two",
 	})
 	if err != nil {

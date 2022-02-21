@@ -141,3 +141,57 @@ images: {
 	assert.Equal(t, "done", buildSpec.Images["none"].Image)
 	assert.Nil(t, buildSpec.Images["none"].Build)
 }
+
+func TestWatchFiles(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  file: {
+    build: "sub/dir1"
+  }
+  none: {
+    image: "done"
+  }
+  two: {
+    build: {}
+  }
+  full: {
+    build: {
+	  dockerfile: "asdf/dockerfile"
+    }
+  }
+}
+
+images: {
+  file: {
+    build: "sub/dir2"
+  }
+  none: {
+    image: "done"
+  }
+  two: {
+    build: {}
+  }
+  full: {
+    build: {
+      dockerfile: "sub/dir3/bockerfile"
+    }
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := appImage.WatchFiles("root-path")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []string{
+		"root-path/Dockerfile",
+		"root-path/asdf/dockerfile",
+		"root-path/sub/dir1/Dockerfile",
+		"root-path/sub/dir2/Dockerfile",
+		"root-path/sub/dir3/bockerfile",
+	}, files)
+}

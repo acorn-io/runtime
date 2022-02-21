@@ -12,15 +12,15 @@ import (
 	"github.com/ibuildthecloud/herd/pkg/streams"
 )
 
-type Opts struct {
+type Options struct {
 	Cwd     string
 	Streams *streams.Output
 }
 
-func (b *Opts) complete() (*Opts, error) {
-	current := b
-	if b == nil {
-		current = &Opts{}
+func (b *Options) Complete() (*Options, error) {
+	var current Options
+	if b != nil {
+		current = *b
 	}
 	if current.Cwd == "" {
 		pwd, err := os.Getwd()
@@ -32,11 +32,11 @@ func (b *Opts) complete() (*Opts, error) {
 	if current.Streams == nil {
 		current.Streams = streams.CurrentOutput()
 	}
-	return current, nil
+	return &current, nil
 }
 
-func Build(ctx context.Context, file string, opts *Opts) (*v1.AppImage, error) {
-	opts, err := opts.complete()
+func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error) {
+	opts, err := opts.Complete()
 	if err != nil {
 		return nil, err
 	}

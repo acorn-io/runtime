@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/herd"
+	herd "github.com/ibuildthecloud/herd/pkg/cli"
 	cli "github.com/rancher/wrangler-cli"
 )
 

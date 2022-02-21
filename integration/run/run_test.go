@@ -7,14 +7,17 @@ import (
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/build"
 	"github.com/ibuildthecloud/herd/pkg/client"
+	hclient "github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/ibuildthecloud/herd/pkg/run"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestSimple(t *testing.T) {
 	helper.StartController(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Opts{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Options{
 		Cwd: "./testdata/simple",
 	})
 	if err != nil {
@@ -43,4 +46,38 @@ func TestSimple(t *testing.T) {
 		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
 	})
 	assert.NotEmpty(t, appInstance.Status.Namespace)
+}
+
+func TestRun(t *testing.T) {
+	helper.EnsureCRDs(t)
+
+	ctx := helper.GetCTX(t)
+	c := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, c)
+	ns2 := ns.Name + "2"
+
+	appInstance, err := run.Run(helper.GetCTX(t), "image", &run.Options{
+		Namespace: ns2,
+		Labels: map[string]string{
+			"l1": "v1",
+		},
+		Annotations: map[string]string{
+			"a1": "va1",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		c.Delete(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: ns2,
+			},
+		})
+	})
+
+	assert.Equal(t, "v1", appInstance.Labels["l1"])
+	assert.Equal(t, "va1", appInstance.Annotations["a1"])
+	assert.Equal(t, "image", appInstance.Spec.Image)
+	assert.True(t, len(appInstance.Name) > 0)
 }

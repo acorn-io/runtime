@@ -10,3 +10,7 @@ import (
 func TestDeploySpec(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec", DeploySpec)
 }
+
+func TestDeploySpecStop(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec-stop", DeploySpec)
+}

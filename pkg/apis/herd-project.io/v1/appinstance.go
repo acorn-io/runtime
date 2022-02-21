@@ -31,6 +31,7 @@ type AppInstance struct {
 
 type AppInstanceSpec struct {
 	Image string `json:"image,omitempty"`
+	Stop  *bool  `json:"stop,omitempty"`
 }
 
 type AppInstanceStatus struct {
