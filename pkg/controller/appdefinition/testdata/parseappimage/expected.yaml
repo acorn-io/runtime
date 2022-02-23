@@ -12,8 +12,20 @@ status:
     containers:
       oneimage:
         image: "image-name"
+        command: []
+        workingDir: ""
+        entrypoint: []
+        environment: []
+        sidecars: {}
+        interactive: false
       buildimage:
         image: "sha256:build-image"
+        command: []
+        workingDir: ""
+        entrypoint: []
+        environment: []
+        sidecars: {}
+        interactive: false
         build:
           dockerfile: "custom-dockerfile"
           context: "."

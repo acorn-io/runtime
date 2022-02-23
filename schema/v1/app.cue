@@ -6,17 +6,46 @@ package v1
 	target:     string | *""
 }
 
+#EnvValue: *[...string] | {[string]: string}
+
+#Sidecar: {
+	#ContainerBase
+	init: bool | *false
+}
+
 #Container: {
-	image: string
-	build?: string | *#Build
+	#ContainerBase
+	sidecars: [string]: #Sidecar
+}
+
+#ContainerBase: {
+	image:      string
+	build?:     string | *#Build
+	entrypoint: string | *[...string]
+	*{
+		command: string | *[...string]
+	} | {
+		cmd: string | *[...string]
+	}
+	*{
+		env: #EnvValue
+	} | {
+		environment: #EnvValue
+	}
+	*{
+		workdir: string | *""
+	} | {
+		workingDir: string | *""
+	}
+	interactive: bool | *false
 }
 
 #Image: {
-	image: string
+	image:  string
 	build?: string | *#Build
 }
 
 #App: {
 	containers: [string]: #Container
-	images: [string]: #Image
+	images: [string]:     #Image
 }

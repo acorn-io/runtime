@@ -27,9 +27,28 @@ func (in Build) Hash() string {
 	return hex.EncodeToString(result[:])
 }
 
+type Sidecar struct {
+	Image       string   `json:"image,omitempty"`
+	Build       *Build   `json:"build,omitempty"`
+	Command     []string `json:"command,omitempty"`
+	Interactive bool     `json:"interactive,omitempty"`
+	Entrypoint  []string `json:"entrypoint,omitempty"`
+	Environment []string `json:"environment,omitempty"`
+	WorkingDir  string   `json:"workingDir,omitempty"`
+
+	Init bool `json:"init,omitempty"`
+}
+
 type Container struct {
-	Image string `json:"image,omitempty"`
-	Build *Build `json:"build,omitempty"`
+	Image       string   `json:"image,omitempty"`
+	Build       *Build   `json:"build,omitempty"`
+	Command     []string `json:"command,omitempty"`
+	Interactive bool     `json:"interactive,omitempty"`
+	Entrypoint  []string `json:"entrypoint,omitempty"`
+	Environment []string `json:"environment,omitempty"`
+	WorkingDir  string   `json:"workingDir,omitempty"`
+
+	Sidecars map[string]Sidecar `json:"sidecars,omitempty"`
 }
 
 type Image struct {

@@ -71,10 +71,12 @@ func TestDefaultContext(t *testing.T) {
 
 	assert.True(t, v.IsConcrete())
 
-	image := v.LookupPath(cue.ParsePath("containers.test.image"))
+	container := v.LookupPath(cue.ParsePath("containers.test"))
 	if err != nil {
 		t.Fatal(err)
 	}
+	defaultedContainer, _ := container.Default()
+	image := defaultedContainer.LookupPath(cue.ParsePath("image"))
 
 	s, err := image.String()
 	if err != nil {

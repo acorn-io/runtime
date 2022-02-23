@@ -195,3 +195,240 @@ images: {
 		"root-path/sub/dir3/bockerfile",
 	}, files)
 }
+
+func TestEntrypoint(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+	entrypoint: "hi bye"
+    image: "x"
+  }
+  a: {
+	entrypoint: ["hi2","bye2"]
+    image: "x"
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []string{"hi", "bye"}, appSpec.Containers["s"].Entrypoint)
+	assert.Equal(t, []string{"hi2", "bye2"}, appSpec.Containers["a"].Entrypoint)
+}
+
+func TestCommand(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+	command: "hi bye"
+    image: "x"
+  }
+  a: {
+	command: ["hi2","bye2"]
+    image: "x"
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []string{"hi", "bye"}, appSpec.Containers["s"].Command)
+	assert.Equal(t, []string{"hi2", "bye2"}, appSpec.Containers["a"].Command)
+}
+
+func TestEnv(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    env: hi: "bye"
+    image: ""
+  }
+  a: {
+	env: ["hi2=bye2"]
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []string{"hi=bye"}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, []string{"hi2=bye2"}, appSpec.Containers["a"].Environment)
+}
+
+func TestEnvironment(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    environment: hi: "bye"
+    image: ""
+  }
+  a: {
+	environment: ["hi2=bye2"]
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []string{"hi=bye"}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, []string{"hi2=bye2"}, appSpec.Containers["a"].Environment)
+}
+
+func TestWorkdir(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    workdir: "something"
+    image: ""
+  }
+  a: {
+	workdir: "nothing"
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "something", appSpec.Containers["s"].WorkingDir)
+	assert.Equal(t, "nothing", appSpec.Containers["a"].WorkingDir)
+}
+
+func TestWorkingDir(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    workingDir: "something"
+    image: ""
+  }
+  a: {
+	workingDir: "nothing"
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "something", appSpec.Containers["s"].WorkingDir)
+	assert.Equal(t, "nothing", appSpec.Containers["a"].WorkingDir)
+}
+
+func TestCmd(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+	cmd: "hi bye"
+    image: "x"
+  }
+  a: {
+	cmd: ["hi2","bye2"]
+    image: "x"
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []string{"hi", "bye"}, appSpec.Containers["s"].Command)
+	assert.Equal(t, []string{"hi2", "bye2"}, appSpec.Containers["a"].Command)
+}
+
+func TestInteractive(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+	interactive: true
+    image: "x"
+  }
+  a: {
+    image: "x"
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, appSpec.Containers["s"].Interactive)
+	assert.False(t, appSpec.Containers["a"].Interactive)
+}
+
+func TestSidecar(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    sidecars: left: {
+      init: true
+	  image: "y"
+	}
+    image: "x"
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "y", appSpec.Containers["s"].Sidecars["left"].Image)
+	assert.True(t, appSpec.Containers["s"].Sidecars["left"].Init)
+}
