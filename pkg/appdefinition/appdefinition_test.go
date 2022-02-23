@@ -45,7 +45,7 @@ images: {
 	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].Build.Context)
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
 
-	appImage, err = appImage.WithImageData(v1.ImageData{
+	appImage, err = appImage.WithImageData(v1.ImagesData{
 		Images: map[string]v1.ContainerData{
 			"full": {
 				Image: "full-image",
@@ -80,6 +80,11 @@ func TestAppImageBuildSpec(t *testing.T) {
 containers: {
   file: {
     build: "sub/dir1"
+    sidecars: {
+      left: {
+        build: {}
+      }
+    }
   }
   none: {
     image: "done"
@@ -130,6 +135,9 @@ images: {
 	assert.Equal(t, "done", buildSpec.Containers["none"].Image)
 	assert.Nil(t, buildSpec.Containers["none"].Build)
 
+	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["left"].Build.Dockerfile)
+	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["left"].Build.Context)
+
 	assert.Len(t, buildSpec.Images, 3)
 	assert.Equal(t, "", buildSpec.Images["file"].Image)
 	assert.Equal(t, "sub/dir1", buildSpec.Images["file"].Build.Context)
@@ -147,6 +155,13 @@ func TestWatchFiles(t *testing.T) {
 containers: {
   file: {
     build: "sub/dir1"
+    sidecars: {
+      left: {
+        build: {
+          dockerfile: "dockerfile.sidecar"
+        }
+      }
+    }
   }
   none: {
     image: "done"
@@ -190,6 +205,7 @@ images: {
 	assert.Equal(t, []string{
 		"root-path/Dockerfile",
 		"root-path/asdf/dockerfile",
+		"root-path/dockerfile.sidecar",
 		"root-path/sub/dir1/Dockerfile",
 		"root-path/sub/dir2/Dockerfile",
 		"root-path/sub/dir3/bockerfile",

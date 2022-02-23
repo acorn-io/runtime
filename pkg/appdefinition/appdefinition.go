@@ -22,7 +22,7 @@ type AppDefinition struct {
 	ctx *cue.Context
 }
 
-func (a *AppDefinition) WithImageData(imageData v1.ImageData) (*AppDefinition, error) {
+func (a *AppDefinition) WithImageData(imageData v1.ImagesData) (*AppDefinition, error) {
 	imageDataBytes, err := json.Marshal(imageData)
 	if err != nil {
 		return nil, err
@@ -69,6 +69,16 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	return spec, v.Decode(spec)
 }
 
+func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuildSpec, cwd string) {
+	for _, build := range builds {
+		addFiles(fileSet, build.Sidecars, cwd)
+		if build.Build == nil {
+			continue
+		}
+		fileSet[filepath.Join(cwd, build.Build.Dockerfile)] = true
+	}
+}
+
 func addFiles(fileSet map[string]bool, builds map[string]v1.ImageBuildSpec, cwd string) {
 	for _, build := range builds {
 		if build.Build == nil {
@@ -85,7 +95,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 		return nil, err
 	}
 
-	addFiles(fileSet, spec.Containers, cwd)
+	addContainerFiles(fileSet, spec.Containers, cwd)
 	addFiles(fileSet, spec.Images, cwd)
 
 	for k := range fileSet {

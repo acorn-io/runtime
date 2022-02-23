@@ -10,7 +10,7 @@ import (
 	"github.com/ibuildthecloud/herd/pkg/build"
 )
 
-func HerdImages(ctx context.Context) (*v1.ImageData, error) {
+func HerdImages(ctx context.Context) (*v1.ImagesData, error) {
 	herdCue, err := findHerdCue()
 	if err != nil {
 		return nil, err

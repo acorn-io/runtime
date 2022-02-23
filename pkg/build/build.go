@@ -74,10 +74,10 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams streams.Output) (v1.ImageData, error) {
-	data := v1.ImageData{
+func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams streams.Output) (v1.ImagesData, error) {
+	data := v1.ImagesData{
 		Containers: map[string]v1.ContainerData{},
-		Images:     map[string]v1.ContainerData{},
+		Images:     map[string]v1.ImageData{},
 	}
 
 	var containerKeys []string
@@ -98,7 +98,29 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams stream
 		}
 
 		data.Containers[key] = v1.ContainerData{
-			Image: id,
+			Image:    id,
+			Sidecars: map[string]v1.ImageData{},
+		}
+
+		var sidecarKeys []string
+		for k := range container.Sidecars {
+			sidecarKeys = append(sidecarKeys, k)
+		}
+		sort.Strings(sidecarKeys)
+
+		for _, sidecarKey := range sidecarKeys {
+			sidecar := container.Sidecars[sidecarKey]
+			if sidecar.Image != "" || sidecar.Build == nil {
+				continue
+			}
+
+			id, err := FromBuild(ctx, cwd, *sidecar.Build, streams.Streams())
+			if err != nil {
+				return data, err
+			}
+			data.Containers[key].Sidecars[sidecarKey] = v1.ImageData{
+				Image: id,
+			}
 		}
 	}
 
@@ -119,7 +141,7 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams stream
 			return data, err
 		}
 
-		data.Images[key] = v1.ContainerData{
+		data.Images[key] = v1.ImageData{
 			Image: id,
 		}
 	}

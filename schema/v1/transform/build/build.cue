@@ -17,7 +17,16 @@ out: {
 				image: string | *""
 				image: v.image
 				if v["build"] != _|_ {
-                    build: v.build
+					build: v.build
+				}
+				for sk, sv in v.sidecars {
+					sidecars: "\(sk)": {
+						image: string | *""
+						image: sv.image
+						if sv["build"] != _|_ {
+							build: sv.build
+						}
+					}
 				}
 			}
 		}
@@ -28,7 +37,7 @@ out: {
 				image: string | *""
 				image: v.image
 				if v["build"] != _|_ {
-                    build: v.build
+					build: v.build
 				}
 			}
 		}
