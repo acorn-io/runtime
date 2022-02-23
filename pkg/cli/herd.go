@@ -37,6 +37,8 @@ herd run --dev .`,
 	root.AddCommand(
 		NewBuild(),
 		NewRun(),
+		NewLog(),
+		NewDev(),
 	)
 	return root
 }
