@@ -46,7 +46,7 @@ images: {
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
 
 	appImage, err = appImage.WithImageData(v1.ImagesData{
-		Images: map[string]v1.ContainerData{
+		Images: map[string]v1.ImageData{
 			"full": {
 				Image: "full-image",
 			},
