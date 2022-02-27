@@ -6,6 +6,17 @@ import (
 	"encoding/json"
 )
 
+const (
+	VolumeRequestTypeEphemeral = "ephemeral"
+
+	AccessModeReadWriteMany    AccessMode = "readWriteMany"
+	AccessModeReadWriteOnce    AccessMode = "readWriteOnce"
+	AccessModeReadOnlyMany     AccessMode = "readOnlyMany"
+	AccessModeReadWriteOncePod AccessMode = "readWriteOncePod"
+)
+
+type AccessMode string
+
 type Build struct {
 	Context    string `json:"context,omitempty"`
 	Dockerfile string `json:"dockerfile,omitempty"`
@@ -28,25 +39,56 @@ func (in Build) Hash() string {
 }
 
 type Sidecar struct {
-	Image       string   `json:"image,omitempty"`
-	Build       *Build   `json:"build,omitempty"`
-	Command     []string `json:"command,omitempty"`
-	Interactive bool     `json:"interactive,omitempty"`
-	Entrypoint  []string `json:"entrypoint,omitempty"`
-	Environment []string `json:"environment,omitempty"`
-	WorkingDir  string   `json:"workingDir,omitempty"`
+	Volumes     []VolumeMount   `json:"volumes,omitempty"`
+	Files       map[string]File `json:"files,omitempty"`
+	Image       string          `json:"image,omitempty"`
+	Build       *Build          `json:"build,omitempty"`
+	Command     []string        `json:"command,omitempty"`
+	Interactive bool            `json:"interactive,omitempty"`
+	Entrypoint  []string        `json:"entrypoint,omitempty"`
+	Environment []string        `json:"environment,omitempty"`
+	WorkingDir  string          `json:"workingDir,omitempty"`
+	Ports       []Port          `json:"ports,omitempty"`
 
 	Init bool `json:"init,omitempty"`
 }
 
+type Protocol string
+
+var (
+	ProtocolTCP   = Protocol("tcp")
+	ProtocolUDP   = Protocol("udp")
+	ProtocolHTTP  = Protocol("http")
+	ProtocolHTTPS = Protocol("https")
+)
+
+type Port struct {
+	Port          int32    `json:"port,omitempty"`
+	ContainerPort int32    `json:"containerPort,omitempty"`
+	Protocol      Protocol `json:"protocol,omitempty"`
+}
+
+type File struct {
+	Content string `json:"content,omitempty"`
+}
+
+type VolumeMount struct {
+	Volume    string `json:"volume,omitempty"`
+	MountPath string `json:"mountPath,omitempty"`
+	SubPath   string `json:"subPath,omitempty"`
+}
+
 type Container struct {
-	Image       string   `json:"image,omitempty"`
-	Build       *Build   `json:"build,omitempty"`
-	Command     []string `json:"command,omitempty"`
-	Interactive bool     `json:"interactive,omitempty"`
-	Entrypoint  []string `json:"entrypoint,omitempty"`
-	Environment []string `json:"environment,omitempty"`
-	WorkingDir  string   `json:"workingDir,omitempty"`
+	Volumes     []VolumeMount   `json:"volumes,omitempty"`
+	Files       map[string]File `json:"files,omitempty"`
+	Image       string          `json:"image,omitempty"`
+	Build       *Build          `json:"build,omitempty"`
+	Command     []string        `json:"command,omitempty"`
+	Interactive bool            `json:"interactive,omitempty"`
+	Entrypoint  []string        `json:"entrypoint,omitempty"`
+	Environment []string        `json:"environment,omitempty"`
+	WorkingDir  string          `json:"workingDir,omitempty"`
+	Ports       []Port          `json:"ports,omitempty"`
 
 	Sidecars map[string]Sidecar `json:"sidecars,omitempty"`
 }
@@ -57,6 +99,13 @@ type Image struct {
 }
 
 type AppSpec struct {
-	Containers map[string]Container `json:"containers,omitempty"`
-	Images     map[string]Image     `json:"images,omitempty"`
+	Containers map[string]Container     `json:"containers,omitempty"`
+	Images     map[string]Image         `json:"images,omitempty"`
+	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
+}
+
+type VolumeRequest struct {
+	Class       string       `json:"class,omitempty"`
+	Size        int64        `json:"size,omitempty"`
+	AccessModes []AccessMode `json:"accessModes,omitempty"`
 }

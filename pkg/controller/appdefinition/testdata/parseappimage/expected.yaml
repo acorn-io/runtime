@@ -9,6 +9,7 @@ status:
       success: true
   appSpec:
     images: {}
+    volumes: {}
     containers:
       oneimage:
         image: "image-name"
@@ -18,6 +19,9 @@ status:
         environment: []
         sidecars: {}
         interactive: false
+        ports: []
+        files: {}
+        volumes: []
       buildimage:
         image: "sha256:build-image"
         command: []
@@ -29,6 +33,9 @@ status:
         build:
           dockerfile: "custom-dockerfile"
           context: "."
+        ports: []
+        files: {}
+        volumes: []
   appImage:
     herdfile: |
       containers: {

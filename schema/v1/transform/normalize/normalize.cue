@@ -4,6 +4,8 @@ import (
 	"github.com/ibuildthecloud/herd/schema/v1"
 	"path"
 	"strings"
+	"strconv"
+	"encoding/base64"
 )
 
 #ToSidecar: {
@@ -19,6 +21,9 @@ import (
 #ToContainer: {
 	IN="in": _
 	out: {
+		for k, v in IN.files {
+			files: "\(k)": content: base64.Encode(null, v)
+		}
 		image: IN.image
 		if IN["build"] != _|_ {
 			build: {
@@ -46,6 +51,28 @@ import (
 			workingDir: IN.workingDir
 		}
 		interactive: IN.interactive
+		volumes: [ for v in IN.volumes {
+			v | {
+				_namePath: strings.SplitN(v, ":", 2)
+				if len(_namePath) == 2 {
+					volume:    _namePath[0]
+					mountPath: _namePath[1]
+				}
+			}
+		}]
+		ports: [ for p in IN.ports {
+			p | {
+				_portProto: strings.SplitN(p, "/", 2)
+				if len(_portProto) == 2 {
+					protocol: _portProto[1]
+				}
+				_portPubPrivate: strings.SplitN(_portProto[0], ":", 2)
+				port:            strconv.ParseInt(_portPubPrivate[0], 10, 32)
+				if len(_portPubPrivate) == 2 {
+					containerPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
+				}
+			}
+		}]
 	}
 }
 
@@ -73,6 +100,15 @@ out:     v1.#AppSpec & {
 						context:    v.build
 					} | v.build
 				}
+			}
+		}
+	}
+	volumes: {
+		for k, v in IN.volumes {
+			"\(k)": v | {
+				class: v.class
+				size:  v.class
+				accessMode: [v.class]
 			}
 		}
 	}

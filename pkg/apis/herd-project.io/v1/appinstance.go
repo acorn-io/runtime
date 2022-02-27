@@ -30,8 +30,14 @@ type AppInstance struct {
 }
 
 type AppInstanceSpec struct {
-	Image string `json:"image,omitempty"`
-	Stop  *bool  `json:"stop,omitempty"`
+	Image   string          `json:"image,omitempty"`
+	Stop    *bool           `json:"stop,omitempty"`
+	Volumes []VolumeBinding `json:"volumes,omitempty"`
+}
+
+type VolumeBinding struct {
+	Volume        string `json:"volume,omitempty"`
+	VolumeRequest string `json:"volumeRequest,omitempty"`
 }
 
 type AppInstanceStatus struct {

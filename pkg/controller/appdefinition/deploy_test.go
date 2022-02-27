@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestDeploySpec(t *testing.T) {
@@ -117,4 +118,122 @@ func TestSidecar(t *testing.T) {
 	})[0].(*appsv1.Deployment)
 	assert.Equal(t, "sidecar", dep.Spec.Template.Spec.InitContainers[0].Image)
 	assert.Equal(t, "sidecar2", dep.Spec.Template.Spec.Containers[1].Image)
+}
+
+func TestPorts(t *testing.T) {
+	dep := toDeployments(&v1.AppInstance{
+		Status: v1.AppInstanceStatus{
+			AppSpec: v1.AppSpec{
+				Containers: map[string]v1.Container{
+					"test": {
+						Sidecars: map[string]v1.Sidecar{
+							"left": {
+								Ports: []v1.Port{
+									{
+										Port:          90,
+										ContainerPort: 91,
+										Protocol:      v1.ProtocolHTTPS,
+									},
+								},
+							},
+						},
+						WorkingDir: "something",
+						Ports: []v1.Port{
+							{
+								Port:          80,
+								ContainerPort: 81,
+								Protocol:      v1.ProtocolHTTP,
+							},
+						},
+					},
+				},
+			},
+		},
+	})[0].(*appsv1.Deployment)
+	assert.Equal(t, int32(81), dep.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
+	assert.Equal(t, corev1.ProtocolTCP, dep.Spec.Template.Spec.Containers[0].Ports[0].Protocol)
+	assert.Equal(t, int32(91), dep.Spec.Template.Spec.Containers[1].Ports[0].ContainerPort)
+	assert.Equal(t, corev1.ProtocolTCP, dep.Spec.Template.Spec.Containers[1].Ports[0].Protocol)
+}
+
+func TestFiles(t *testing.T) {
+	app := &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "app",
+		},
+		Status: v1.AppInstanceStatus{
+			AppSpec: v1.AppSpec{
+				Containers: map[string]v1.Container{
+					"test2": {
+						Files: map[string]v1.File{
+							"/a2/b/c": {
+								Content: "ZA==",
+							},
+							"/a1/b/c": {
+								Content: "ZQ==",
+							},
+						},
+						Sidecars: map[string]v1.Sidecar{
+							"left": {
+								Files: map[string]v1.File{
+									"/a/b2//c":      {Content: "ZA=="},
+									"/a/b1/c2/../c": {Content: "ZQ=="},
+								},
+							},
+						},
+					},
+					"test": {
+						Files: map[string]v1.File{
+							"/a2/b/c": {
+								Content: "ZA==",
+							},
+							"/a1/b/c": {
+								Content: "ZQ==",
+							},
+						},
+						Sidecars: map[string]v1.Sidecar{
+							"left": {
+								Files: map[string]v1.File{
+									"/a/b2//c":      {Content: "ZA=="},
+									"/a/b1/c2/../c": {Content: "ZQ=="},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	dep := toDeployments(app)[0].(*appsv1.Deployment)
+
+	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
+	assert.Equal(t, "/app/test/test/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].SubPath)
+	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
+	assert.Equal(t, "/a2/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
+	assert.Equal(t, "/app/test/test/a2/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].SubPath)
+
+	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].Name)
+	assert.Equal(t, "/a/b1/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].MountPath)
+	assert.Equal(t, "/app/test/left/a/b1/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].SubPath)
+	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].Name)
+	assert.Equal(t, "/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].MountPath)
+	assert.Equal(t, "/app/test/left/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].SubPath)
+
+	configMaps, err := toConfigMaps(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configMap := configMaps[0].(*corev1.ConfigMap)
+
+	assert.Len(t, configMap.BinaryData, 8)
+	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test/test/a2/b/c"])
+	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test2/test2/a2/b/c"])
+	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test/left/a/b2/c"])
+	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test2/left/a/b2/c"])
+	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test/test/a1/b/c"])
+	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test/left/a/b1/c"])
+	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test2/test2/a1/b/c"])
+	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test2/left/a/b1/c"])
 }

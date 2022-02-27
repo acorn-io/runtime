@@ -5,3 +5,4 @@
 *.swp
 .idea
 /herd
+/go.work

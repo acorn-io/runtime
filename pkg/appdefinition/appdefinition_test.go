@@ -448,3 +448,189 @@ containers: {
 	assert.Equal(t, "y", appSpec.Containers["s"].Sidecars["left"].Image)
 	assert.True(t, appSpec.Containers["s"].Sidecars["left"].Init)
 }
+
+func TestPorts(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    sidecars: left: {
+      image: "x"
+      ports: [
+        "80",
+        "80:81",
+        "80/http",
+        "80:81/http",
+	  ]
+    }
+	cmd: "hi bye"
+    image: "x"
+    ports: [
+      "80",
+      "80:81",
+      "80/http",
+      "80:81/http",
+	]
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[1].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[2].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[3].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[3].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[1].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[1].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[2].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[3].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[3].Protocol, v1.ProtocolHTTP)
+}
+
+func TestFiles(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    sidecars: left: {
+	  image: "y"
+	  files: {
+	  	"/etc/something-sidecar": "bye"
+	  	"/etc/something-sidecar-b": '\x00\x01bye'
+	  }
+	}
+    image: "x"
+	files: {
+		"/etc/something": "hi"
+	  	"/etc/something-b": '\x00\x01hi'
+	}
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "aGk=", appSpec.Containers["s"].Files["/etc/something"].Content)
+	assert.Equal(t, "AAFoaQ==", appSpec.Containers["s"].Files["/etc/something-b"].Content)
+	assert.Equal(t, "Ynll", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar"].Content)
+	assert.Equal(t, "AAFieWU=", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar-b"].Content)
+}
+
+func TestVolumes(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    sidecars: left: {
+      volumes: [
+        "v1:/etc",
+        {
+          volume: "v2"
+          mountPath: "/etc2"
+          subPath: "a/b"
+        }
+      ]
+	  image: "y"
+	  files: {
+	  	"/etc/something-sidecar": "bye"
+	  }
+	}
+    image: "x"
+    volumes: [
+      "v1:/etc2",
+      {
+        volume: "v21"
+        mountPath: "/etc3"
+        subPath: "a/b2"
+      }
+    ]
+	files: {
+		"/etc/something": "hi"
+	}
+  }
+}
+
+volumes: {
+  v1: {
+    class: "aclass"
+    size: 5
+  }
+  v2: {
+    class: "bclass"
+    size: 15
+  }
+  v21: {
+    class: "cclass"
+    size: 21
+  }
+  defaults: {
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "aclass", appSpec.Volumes["v1"].Class)
+	assert.Equal(t, int64(5), appSpec.Volumes["v1"].Size)
+	assert.Equal(t, "bclass", appSpec.Volumes["v2"].Class)
+	assert.Equal(t, int64(15), appSpec.Volumes["v2"].Size)
+	assert.Equal(t, "cclass", appSpec.Volumes["v21"].Class)
+	assert.Equal(t, int64(21), appSpec.Volumes["v21"].Size)
+	assert.Equal(t, "", appSpec.Volumes["defaults"].Class)
+	assert.Equal(t, int64(10), appSpec.Volumes["defaults"].Size)
+
+	assert.Equal(t, "v1", appSpec.Containers["s"].Volumes[0].Volume)
+	assert.Equal(t, "/etc2", appSpec.Containers["s"].Volumes[0].MountPath)
+	assert.Equal(t, "v21", appSpec.Containers["s"].Volumes[1].Volume)
+	assert.Equal(t, "/etc3", appSpec.Containers["s"].Volumes[1].MountPath)
+	assert.Equal(t, "a/b2", appSpec.Containers["s"].Volumes[1].SubPath)
+
+	assert.Equal(t, "v1", appSpec.Containers["s"].Sidecars["left"].Volumes[0].Volume)
+	assert.Equal(t, "/etc", appSpec.Containers["s"].Sidecars["left"].Volumes[0].MountPath)
+	assert.Equal(t, "v2", appSpec.Containers["s"].Sidecars["left"].Volumes[1].Volume)
+	assert.Equal(t, "/etc2", appSpec.Containers["s"].Sidecars["left"].Volumes[1].MountPath)
+	assert.Equal(t, "a/b", appSpec.Containers["s"].Sidecars["left"].Volumes[1].SubPath)
+
+	assert.Equal(t, "aGk=", appSpec.Containers["s"].Files["/etc/something"].Content)
+	assert.Equal(t, "Ynll", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar"].Content)
+}

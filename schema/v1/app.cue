@@ -19,6 +19,7 @@ package v1
 }
 
 #ContainerBase: {
+	files: [string]: string | bytes
 	image:      string
 	build?:     string | *#Build
 	entrypoint: string | *[...string]
@@ -38,14 +39,27 @@ package v1
 		workingDir: string | *""
 	}
 	interactive: bool | *false
+	ports: [...#Port]
+	volumes: [...#VolumeMount]
 }
+
+#Port: =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
+
+#VolumeMount: =~"[-a-zA-Z0-9]+:.*" | #VolumeMountSpec
 
 #Image: {
 	image:  string
 	build?: string | *#Build
 }
 
+#Volume: {
+	class:      string | *""
+	size:       int | *10
+	accessMode: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
+}
+
 #App: {
 	containers: [string]: #Container
 	images: [string]:     #Image
+	volumes: [string]:    #Volume
 }
