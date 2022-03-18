@@ -101,7 +101,7 @@ func TestSidecar(t *testing.T) {
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
 					"test": {
-						Sidecars: map[string]v1.Sidecar{
+						Sidecars: map[string]v1.Container{
 							"left": {
 								Image: "sidecar",
 								Init:  true,
@@ -126,7 +126,7 @@ func TestPorts(t *testing.T) {
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
 					"test": {
-						Sidecars: map[string]v1.Sidecar{
+						Sidecars: map[string]v1.Container{
 							"left": {
 								Ports: []v1.Port{
 									{
@@ -173,7 +173,7 @@ func TestFiles(t *testing.T) {
 								Content: "ZQ==",
 							},
 						},
-						Sidecars: map[string]v1.Sidecar{
+						Sidecars: map[string]v1.Container{
 							"left": {
 								Files: map[string]v1.File{
 									"/a/b2//c":      {Content: "ZA=="},
@@ -191,7 +191,7 @@ func TestFiles(t *testing.T) {
 								Content: "ZQ==",
 							},
 						},
-						Sidecars: map[string]v1.Sidecar{
+						Sidecars: map[string]v1.Container{
 							"left": {
 								Files: map[string]v1.File{
 									"/a/b2//c":      {Content: "ZA=="},

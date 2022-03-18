@@ -1,7 +1,6 @@
 package appdefinition
 
 import (
-	"encoding/json"
 	"path/filepath"
 	"sort"
 
@@ -16,22 +15,20 @@ const (
 	ImageDataFile      = "images.json"
 	BuildTransform     = "github.com/ibuildthecloud/herd/schema/v1/transform/build"
 	NormalizeTransform = "github.com/ibuildthecloud/herd/schema/v1/transform/normalize"
+	Schema             = "github.com/ibuildthecloud/herd/schema/v1"
+	AppType            = "#App"
 )
 
 type AppDefinition struct {
-	ctx *cue.Context
+	ctx       *cue.Context
+	imageData v1.ImagesData
 }
 
-func (a *AppDefinition) WithImageData(imageData v1.ImagesData) (*AppDefinition, error) {
-	imageDataBytes, err := json.Marshal(imageData)
-	if err != nil {
-		return nil, err
-	}
-
-	// Adding the ".cue" extension makes the cue parser merge the file. There's probably a better way to do that.
+func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 	return &AppDefinition{
-		ctx: a.ctx.WithFile(ImageDataFile+".cue", imageDataBytes),
-	}, nil
+		ctx:       a.ctx,
+		imageData: imageData,
+	}
 }
 
 func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
@@ -40,7 +37,7 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 		return nil, err
 	}
 
-	return appDef.WithImageData(appImage.ImageData)
+	return appDef.WithImageData(appImage.ImageData), nil
 }
 
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
@@ -54,24 +51,38 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 		WithNestedFS("schema", schema.Files).
 		WithNestedFS("cue.mod", cue_mod.Files)
 	ctx = ctx.WithFiles(files...)
-	_, err := ctx.Value()
+	err := ctx.Validate(Schema, AppType)
 	return &AppDefinition{
 		ctx: ctx,
 	}, err
 }
 
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
-	v, err := a.ctx.Transform(NormalizeTransform)
+	app, err := a.ctx.Value()
 	if err != nil {
 		return nil, err
 	}
+
+	v, err := a.ctx.Encode(map[string]interface{}{
+		"app":       app,
+		"imageData": a.imageData,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	v, err = a.ctx.TransformValue(v, NormalizeTransform)
+	if err != nil {
+		return nil, err
+	}
+
 	spec := &v1.AppSpec{}
-	return spec, v.Decode(spec)
+	return spec, a.ctx.Decode(v, spec)
 }
 
-func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuildSpec, cwd string) {
+func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuilderSpec, cwd string) {
 	for _, build := range builds {
-		addFiles(fileSet, build.Sidecars, cwd)
+		addContainerFiles(fileSet, build.Sidecars, cwd)
 		if build.Build == nil {
 			continue
 		}
@@ -79,7 +90,7 @@ func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerIm
 	}
 }
 
-func addFiles(fileSet map[string]bool, builds map[string]v1.ImageBuildSpec, cwd string) {
+func addFiles(fileSet map[string]bool, builds map[string]v1.ImageBuilderSpec, cwd string) {
 	for _, build := range builds {
 		if build.Build == nil {
 			continue
@@ -90,7 +101,7 @@ func addFiles(fileSet map[string]bool, builds map[string]v1.ImageBuildSpec, cwd 
 
 func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	fileSet := map[string]bool{}
-	spec, err := a.BuildSpec()
+	spec, err := a.BuilderSpec()
 	if err != nil {
 		return nil, err
 	}
@@ -105,11 +116,11 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	return result, nil
 }
 
-func (a *AppDefinition) BuildSpec() (*v1.BuildSpec, error) {
+func (a *AppDefinition) BuilderSpec() (*v1.BuilderSpec, error) {
 	v, err := a.ctx.Transform(BuildTransform)
 	if err != nil {
 		return nil, err
 	}
-	spec := &v1.BuildSpec{}
-	return spec, v.Decode(spec)
+	spec := &v1.BuilderSpec{}
+	return spec, a.ctx.Decode(v, spec)
 }

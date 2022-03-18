@@ -94,7 +94,7 @@ func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
 			Name:      "testlog-pod1",
 			Namespace: ns,
 			Labels: map[string]string{
-				applabels.HerdAppPod: "true",
+				applabels.HerdManaged: "true",
 			},
 		},
 		Spec: corev1.PodSpec{
@@ -122,7 +122,7 @@ func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
 			Name:      "testlog-pod2",
 			Namespace: ns,
 			Labels: map[string]string{
-				applabels.HerdAppPod: "true",
+				applabels.HerdManaged: "true",
 			},
 		},
 		Spec: corev1.PodSpec{

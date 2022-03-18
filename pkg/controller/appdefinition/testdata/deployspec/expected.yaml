@@ -5,6 +5,7 @@ metadata:
   labels:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
+    "herd-project.io/managed": "true"
 
 ---
 kind: Deployment
@@ -28,7 +29,7 @@ spec:
         "herd-project.io/app-namespace": "app-namespace"
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "oneimage"
-        "herd-project.io/pod": "true"
+        "herd-project.io/managed": "true"
     spec:
       containers:
         - name: oneimage
@@ -63,7 +64,7 @@ spec:
         "herd-project.io/app-namespace": "app-namespace"
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "buildimage"
-        "herd-project.io/pod": "true"
+        "herd-project.io/managed": "true"
     spec:
       containers:
         - name: buildimage

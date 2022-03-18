@@ -11,55 +11,48 @@ metadata:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: oneimage
+  name: container-name
   namespace: app-created-namespace
   labels:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
+    "herd-project.io/container-name": "container-name"
 spec:
-  replicas: 0
   selector:
     matchLabels:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "oneimage"
+      "herd-project.io/container-name": "container-name"
   template:
     metadata:
       labels:
         "herd-project.io/app-namespace": "app-namespace"
         "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "oneimage"
+        "herd-project.io/container-name": "container-name"
         "herd-project.io/managed": "true"
     spec:
+      volumes:
+        - name: foo
+          persistentVolumeClaim:
+            claimName: foo-bind
       containers:
-        - name: oneimage
+        - name: container-name
           image: "image-name"
+          volumeMounts:
+            - mountPath: "/var/tmp"
+              name: foo
 ---
-kind: Deployment
-apiVersion: apps/v1
+kind: PersistentVolumeClaim
+apiVersion: v1
 metadata:
-  name: buildimage
+  name: "foo-bind"
   namespace: app-created-namespace
   labels:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
 spec:
-  replicas: 0
-  selector:
-    matchLabels:
-      "herd-project.io/app-namespace": "app-namespace"
-      "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "buildimage"
-  template:
-    metadata:
-      labels:
-        "herd-project.io/app-namespace": "app-namespace"
-        "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "buildimage"
-        "herd-project.io/managed": "true"
-    spec:
-      containers:
-        - name: buildimage
-          image: "sha256:build-image"
+  volumeName: "existing-foo"
+  resources:
+    requests:
+      storage: 10_000_000_000

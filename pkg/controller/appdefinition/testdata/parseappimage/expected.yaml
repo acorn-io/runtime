@@ -12,6 +12,7 @@ status:
     volumes: {}
     containers:
       oneimage:
+        dirs: {}
         image: "image-name"
         command: []
         workingDir: ""
@@ -19,10 +20,10 @@ status:
         environment: []
         sidecars: {}
         interactive: false
-        ports: []
         files: {}
         volumes: []
       buildimage:
+        dirs: {}
         image: "sha256:build-image"
         command: []
         workingDir: ""
@@ -33,7 +34,7 @@ status:
         build:
           dockerfile: "custom-dockerfile"
           context: "."
-        ports: []
+          contextDirs: {}
         files: {}
         volumes: []
   appImage:

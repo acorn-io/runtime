@@ -1,17 +1,18 @@
 package v1
 
-type ContainerImageBuildSpec struct {
-	Image    string                    `json:"image,omitempty"`
-	Build    *Build                    `json:"build,omitempty"`
-	Sidecars map[string]ImageBuildSpec `json:"sidecars,omitempty"`
+type ContainerImageBuilderSpec struct {
+	Image string `json:"image,omitempty"`
+	Build *Build `json:"build,omitempty"`
+	// Sidecars is only populated for non-sidecar containers
+	Sidecars map[string]ContainerImageBuilderSpec `json:"sidecars,omitempty"`
 }
 
-type ImageBuildSpec struct {
+type ImageBuilderSpec struct {
 	Image string `json:"image,omitempty"`
 	Build *Build `json:"build,omitempty"`
 }
 
-type BuildSpec struct {
-	Containers map[string]ContainerImageBuildSpec `json:"containers,omitempty"`
-	Images     map[string]ImageBuildSpec          `json:"images,omitempty"`
+type BuilderSpec struct {
+	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
+	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`
 }

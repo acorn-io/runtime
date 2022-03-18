@@ -19,33 +19,30 @@ package v1
 }
 
 #ContainerBase: {
-	files: [string]: string | bytes
-	image:      string
-	build?:     string | *#Build
-	entrypoint: string | *[...string]
-	*{
-		command: string | *[...string]
-	} | {
-		cmd: string | *[...string]
-	}
-	*{
-		env: #EnvValue
-	} | {
-		environment: #EnvValue
-	}
-	*{
-		workdir: string | *""
-	} | {
-		workingDir: string | *""
-	}
-	interactive: bool | *false
-	ports: [...#Port]
-	volumes: [...#VolumeMount]
+	files: [string]:                  string | bytes
+	[=~"dirs|directories"]: [string]: #Dir
+	// 1 or both of image or build is required
+	image?:                         string
+	build?:                         string | #Build
+	entrypoint:                     string | *[...string]
+	[=~"command|cmd"]:              string | *[...string]
+	[=~"env|environment"]:          #EnvValue
+	[=~"work[dD]ir|working[dD]ir"]: string | *""
+	[=~"interactive|tty|stdin"]:    bool | *false
+	ports:                          #Port | *[...#Port]
+	publish:                        #Port | *[...#Port]
 }
 
-#Port: =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
+#ShortVolumeRef: =~"^[a-z][-a-z0-9]*$"
+#VolumeRef:      =~"^volume://.+$"
+#EphemeralRef:   =~"^ephemeral://.*$|^$"
+#ContextDirRef:  =~"^\\./.*$"
 
-#VolumeMount: =~"[-a-zA-Z0-9]+:.*" | #VolumeMountSpec
+// The below should work but doesn't. So instead we use the log regexp. This seems like a cue bug
+// #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef
+#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$"
+
+#Port: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
 
 #Image: {
 	image:  string
@@ -53,9 +50,9 @@ package v1
 }
 
 #Volume: {
-	class:      string | *""
-	size:       int | *10
-	accessMode: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
+	class:       string | *""
+	size:        int | *10
+	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 }
 
 #App: {

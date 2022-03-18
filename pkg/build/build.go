@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 
+	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
 	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
@@ -51,7 +53,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	buildSpec, err := appDefinition.BuildSpec()
+	buildSpec, err := appDefinition.BuilderSpec()
 	if err != nil {
 		return nil, err
 	}
@@ -74,20 +76,14 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams streams.Output) (v1.ImagesData, error) {
+func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
 	data := v1.ImagesData{
 		Containers: map[string]v1.ContainerData{},
 		Images:     map[string]v1.ImageData{},
 	}
 
-	var containerKeys []string
-	for k := range spec.Containers {
-		containerKeys = append(containerKeys, k)
-	}
-	sort.Strings(containerKeys)
-
-	for _, key := range containerKeys {
-		container := spec.Containers[key]
+	for _, entry := range typed.Sorted(spec.Containers) {
+		key, container := entry.Key, entry.Value
 		if container.Image != "" || container.Build == nil {
 			continue
 		}
@@ -108,8 +104,8 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuildSpec, streams stream
 		}
 		sort.Strings(sidecarKeys)
 
-		for _, sidecarKey := range sidecarKeys {
-			sidecar := container.Sidecars[sidecarKey]
+		for _, entry := range typed.Sorted(container.Sidecars) {
+			sidecarKey, sidecar := entry.Key, entry.Value
 			if sidecar.Image != "" || sidecar.Build == nil {
 				continue
 			}
@@ -158,5 +154,68 @@ func FromBuild(ctx context.Context, cwd string, build v1.Build, streams streams.
 		build.Context = "."
 	}
 
+	if build.BaseImage != "" && len(build.ContextDirs) == 0 {
+		return build.BaseImage, nil
+	}
+
+	if len(build.ContextDirs) > 0 {
+		return buildWithContext(ctx, cwd, build, streams)
+	}
+
+	return builder(ctx, cwd, build, streams)
+}
+
+func builder(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
 	return buildkit.Build(ctx, cwd, build, streams)
+}
+
+func buildWithContext(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
+	var (
+		baseImage = build.BaseImage
+		err       error
+	)
+	if baseImage == "" {
+		baseImage, err = builder(ctx, cwd, build.BaseBuild(), streams)
+		if err != nil {
+			return "", err
+		}
+	}
+	dockerfile, err := ioutil.TempFile("", "herd-dockerfile-")
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		dockerfile.Close()
+		os.Remove(dockerfile.Name())
+	}()
+
+	_, err = dockerfile.WriteString(toContextCopyDockerFile(baseImage, build.ContextDirs))
+	if err != nil {
+		return "", err
+	}
+
+	if err := dockerfile.Close(); err != nil {
+		return "", err
+	}
+
+	return builder(ctx, "", v1.Build{
+		Context:    cwd,
+		Dockerfile: dockerfile.Name(),
+	}, streams)
+}
+
+func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) string {
+	buf := strings.Builder{}
+	buf.WriteString("FROM ")
+	buf.WriteString(baseImage)
+	buf.WriteString("\n")
+	for _, to := range typed.SortedKeys(contextDirs) {
+		from := contextDirs[to]
+		buf.WriteString("COPY --link \"")
+		buf.WriteString(from)
+		buf.WriteString("\" \"")
+		buf.WriteString(to)
+		buf.WriteString("\"\n")
+	}
+	return buf.String()
 }

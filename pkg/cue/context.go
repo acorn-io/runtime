@@ -1,18 +1,22 @@
 package cue
 
 import (
+	"bytes"
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
+	"cuelang.org/go/cue/errors"
 	"cuelang.org/go/cue/load"
 )
 
 type Context struct {
 	files []File
 	fses  []fsEntry
+	ctx   *cue.Context
 }
 
 type fsEntry struct {
@@ -26,13 +30,16 @@ type File struct {
 }
 
 func NewContext() *Context {
-	return &Context{}
+	return &Context{
+		ctx: cuecontext.New(),
+	}
 }
 
 func (c Context) clone() *Context {
 	return &Context{
 		files: c.files,
 		fses:  c.fses,
+		ctx:   c.ctx,
 	}
 }
 
@@ -69,7 +76,7 @@ func (c Context) WithFiles(file ...File) *Context {
 }
 
 func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
-	ctx := cuecontext.New()
+	ctx := c.ctx
 
 	// cue needs a dir so we create a unique temporary one for each call.
 	// I wish I didn't need this.
@@ -100,11 +107,60 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 
 	values, err := ctx.BuildInstances(instances)
 	if err != nil {
-		return nil, err
+		return nil, wrapErr(err)
 	}
 
 	value := &values[0]
-	return value, value.Err()
+	return value, wrapErr(value.Err())
+}
+
+func (c *Context) Validate(path, typeName string) error {
+	currentValue, err := c.Value()
+	if err != nil {
+		return err
+	}
+
+	validation, err := c.buildValue([]string{path})
+	if err != nil {
+		return err
+	}
+	schema := validation.LookupPath(cue.ParsePath(typeName))
+
+	newValue := currentValue.Unify(schema)
+	if newValue.Err() != nil {
+		return wrapErr(newValue.Err())
+	}
+
+	return wrapErr(newValue.Validate())
+}
+
+func (c *Context) Compile(data []byte) (*cue.Value, error) {
+	v := c.ctx.CompileBytes(data)
+	return &v, wrapErr(v.Err())
+}
+
+func (c *Context) Encode(obj interface{}) (*cue.Value, error) {
+	v := c.ctx.Encode(obj)
+	return &v, wrapErr(v.Err())
+}
+
+func (c *Context) TransformValue(currentValue *cue.Value, path string) (*cue.Value, error) {
+	transformer, err := c.buildValue([]string{path})
+	if err != nil {
+		return nil, err
+	}
+
+	if transformer.Err() != nil {
+		return nil, wrapErr(transformer.Err())
+	}
+
+	transformed := transformer.FillPath(cue.ParsePath("in"), currentValue)
+	if transformed.Err() != nil {
+		return nil, wrapErr(transformed.Err())
+	}
+
+	out := transformed.LookupPath(cue.ParsePath("out"))
+	return &out, wrapErr(out.Err())
 }
 
 func (c *Context) Transform(path string) (*cue.Value, error) {
@@ -112,23 +168,7 @@ func (c *Context) Transform(path string) (*cue.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	transformer, err := c.buildValue([]string{path})
-	if err != nil {
-		return nil, err
-	}
-
-	if transformer.Err() != nil {
-		return nil, transformer.Err()
-	}
-
-	transformed := transformer.FillPath(cue.ParsePath("in"), currentValue)
-	if transformed.Err() != nil {
-		return nil, transformed.Err()
-	}
-
-	out := transformed.LookupPath(cue.ParsePath("out"))
-	return &out, out.Err()
+	return c.TransformValue(currentValue, path)
 }
 
 func (c *Context) Value() (*cue.Value, error) {
@@ -138,4 +178,33 @@ func (c *Context) Value() (*cue.Value, error) {
 	}
 
 	return c.buildValue(args, c.files...)
+}
+
+func (c *Context) Decode(v *cue.Value, obj interface{}) error {
+	err := v.Decode(obj)
+	if err != nil {
+		return fmt.Errorf("value %v: %w", v, wrapErr(err))
+	}
+	return nil
+}
+
+func wrapErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	return &wrappedErr{Err: err}
+}
+
+type wrappedErr struct {
+	Err error
+}
+
+func (w *wrappedErr) Error() string {
+	buf := &bytes.Buffer{}
+	errors.Print(buf, w.Err, nil)
+	return buf.String()
+}
+
+func (w *wrappedErr) Unwrap() error {
+	return w.Err
 }

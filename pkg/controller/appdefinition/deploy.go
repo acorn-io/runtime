@@ -18,9 +18,6 @@ import (
 
 func DeploySpec(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
-	if appInstance.Status.Namespace == "" {
-		return nil
-	}
 	addNamespace(appInstance, resp)
 	addDeployments(appInstance, resp)
 	addServices(appInstance, resp)
@@ -51,7 +48,7 @@ func toContainers(appName, name string, container v1.Container) ([]corev1.Contai
 
 	containers = append(containers, toContainer(appName, name, name, container))
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		newContainer := toContainerFromSidekick(appName, name, entry.Key, entry.Value)
+		newContainer := toContainer(appName, name, entry.Key, entry.Value)
 		if entry.Value.Init {
 			initContainers = append(initContainers, newContainer)
 		} else {
@@ -61,26 +58,24 @@ func toContainers(appName, name string, container v1.Container) ([]corev1.Contai
 	return containers, initContainers
 }
 
-func toContainerFromSidekick(appName, name, sidecarName string, sidecar v1.Sidecar) corev1.Container {
-	return toContainer(appName, name, sidecarName, v1.Container{
-		Files:       sidecar.Files,
-		Image:       sidecar.Image,
-		Build:       sidecar.Build,
-		Command:     sidecar.Command,
-		Interactive: sidecar.Interactive,
-		Entrypoint:  sidecar.Entrypoint,
-		Environment: sidecar.Environment,
-		WorkingDir:  sidecar.WorkingDir,
-		Ports:       sidecar.Ports,
-	})
-}
-
-func toMounts(appName, name, sidecarName string, container v1.Container) (result []corev1.VolumeMount) {
+func toMounts(appName, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
 		result = append(result, corev1.VolumeMount{
 			Name:      "files",
 			MountPath: path.Join("/", entry.Key),
-			SubPath:   path.Join("/", appName, name, sidecarName, entry.Key),
+			SubPath:   path.Join("/", appName, deploymentName, containerName, entry.Key),
+		})
+	}
+	for _, entry := range typed.Sorted(container.Dirs) {
+		mountPath := entry.Key
+		mount := entry.Value
+		if mount.ContextDir != "" {
+			continue
+		}
+		result = append(result, corev1.VolumeMount{
+			Name:      mount.Volume,
+			MountPath: path.Join("/", mountPath),
+			SubPath:   mount.SubPath,
 		})
 	}
 	return
@@ -101,9 +96,9 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 	return ports
 }
 
-func toContainer(appName, name, sidecarName string, container v1.Container) corev1.Container {
+func toContainer(appName, deploymentName, containerName string, container v1.Container) corev1.Container {
 	return corev1.Container{
-		Name:         sidecarName,
+		Name:         containerName,
 		Image:        container.Image,
 		Command:      container.Entrypoint,
 		Args:         container.Command,
@@ -112,7 +107,7 @@ func toContainer(appName, name, sidecarName string, container v1.Container) core
 		TTY:          container.Interactive,
 		Stdin:        container.Interactive,
 		Ports:        toPorts(container),
-		VolumeMounts: toMounts(appName, name, sidecarName, container),
+		VolumeMounts: toMounts(appName, deploymentName, containerName, container),
 	}
 }
 
@@ -148,7 +143,7 @@ func toDeployment(appInstance *v1.AppInstance, name string, container v1.Contain
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: containerLabels(appInstance, name,
-						labels.HerdAppPod, "true",
+						labels.HerdManaged, "true",
 					),
 				},
 				Spec: corev1.PodSpec{
@@ -175,6 +170,7 @@ func addNamespace(appInstance *v1.AppInstance, resp router.Response) {
 			Labels: map[string]string{
 				labels.HerdAppName:      appInstance.Name,
 				labels.HerdAppNamespace: appInstance.Namespace,
+				labels.HerdManaged:      "true",
 			},
 		},
 	})
@@ -245,13 +241,13 @@ func toService(appInstance *v1.AppInstance, name string, container v1.Container)
 	}
 }
 
-func addFileContent(data map[string][]byte, appName, name string, container v1.Container) error {
+func addFileContent(data map[string][]byte, appName, deploymentName string, container v1.Container) error {
 	for filePath, file := range container.Files {
 		content, err := base64.StdEncoding.DecodeString(file.Content)
 		if err != nil {
 			return err
 		}
-		data[path.Join("/", appName, name, name, filePath)] = content
+		data[path.Join("/", appName, deploymentName, deploymentName, filePath)] = content
 	}
 	for sidecarName, sidecar := range container.Sidecars {
 		for filePath, file := range sidecar.Files {
@@ -259,7 +255,7 @@ func addFileContent(data map[string][]byte, appName, name string, container v1.C
 			if err != nil {
 				return err
 			}
-			data[path.Join("/", appName, name, sidecarName, filePath)] = content
+			data[path.Join("/", appName, deploymentName, sidecarName, filePath)] = content
 		}
 	}
 	return nil

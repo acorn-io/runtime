@@ -1,0 +1,43 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/managed": "true"
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "container-name"
+spec:
+  selector:
+    matchLabels:
+      "herd-project.io/app-namespace": "app-namespace"
+      "herd-project.io/app-name": "app-name"
+      "herd-project.io/container-name": "container-name"
+  template:
+    metadata:
+      labels:
+        "herd-project.io/app-namespace": "app-namespace"
+        "herd-project.io/app-name": "app-name"
+        "herd-project.io/container-name": "container-name"
+        "herd-project.io/managed": "true"
+    spec:
+      volumes:
+        - name: foo
+          emptyDir:
+            sizeLimit: 10_000_000_000
+      containers:
+        - name: container-name
+          image: "image-name"
+          volumeMounts:
+            - mountPath: "/var/tmp"
+              name: foo

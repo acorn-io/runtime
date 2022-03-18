@@ -83,10 +83,6 @@ func getOutput(client router.Client, image, name, namespace string) (result appI
 
 func pullAppImage(appImageInitImage string, req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
-	if appInstance.Status.Namespace == "" {
-		return nil
-	}
-
 	cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
 
 	if appInstance.Spec.Image == appInstance.Status.AppImage.ID {

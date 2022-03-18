@@ -6,8 +6,11 @@ import (
 )
 
 IN="in": v1.#App
-_norm:   v1.#AppSpec & (normalize & {
-	in: IN
+out:     v1.#BuilderSpec
+let _norm = v1.#AppSpec & (normalize & {
+	in: {
+		app: IN
+	}
 }).out
 
 out: {
@@ -19,6 +22,7 @@ out: {
 				if v["build"] != _|_ {
 					build: v.build
 				}
+
 				for sk, sv in v.sidecars {
 					sidecars: "\(sk)": {
 						image: string | *""

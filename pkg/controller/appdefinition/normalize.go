@@ -1,6 +1,10 @@
 package appdefinition
 
 import (
+	"bytes"
+	"errors"
+
+	cueerrors "cuelang.org/go/cue/errors"
 	"github.com/ibuildthecloud/baaah/pkg/router"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
@@ -25,7 +29,9 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
-		status.Error(err)
+		buf := &bytes.Buffer{}
+		cueerrors.Print(buf, err, nil)
+		status.Error(errors.New(buf.String()))
 		return nil
 	}
 

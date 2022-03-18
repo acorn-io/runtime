@@ -1,14 +1,28 @@
 package appdefinition
 
 import (
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 
+	"github.com/ibuildthecloud/baaah/pkg/router/tester"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	"github.com/ibuildthecloud/herd/pkg/scheme"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func TestVolumeController(t *testing.T) {
+	dirs, err := ioutil.ReadDir("testdata/volumes")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, dir := range dirs {
+		tester.DefaultTest(t, scheme.Scheme, filepath.Join("testdata/volumes", dir.Name()), DeploySpec)
+	}
+}
 
 func TestVolumes(t *testing.T) {
 	app := &v1.AppInstance{
@@ -47,26 +61,22 @@ func TestVolumes(t *testing.T) {
 				},
 				Containers: map[string]v1.Container{
 					"test": {
-						Volumes: []v1.VolumeMount{
-							{
-								Volume:    "v1",
-								MountPath: "/asdf",
+						Dirs: map[string]v1.VolumeMount{
+							"/asdf": {
+								Volume: "v1",
 							},
-							{
-								Volume:    "v2",
-								MountPath: "/qwerty",
+							"/qwerty": {
+								Volume: "v2",
 							},
 						},
-						Sidecars: map[string]v1.Sidecar{
+						Sidecars: map[string]v1.Container{
 							"left": {
-								Volumes: []v1.VolumeMount{
-									{
-										Volume:    "v3",
-										MountPath: "/as-df",
+								Dirs: map[string]v1.VolumeMount{
+									"/as-df": {
+										Volume: "v3",
 									},
-									{
-										Volume:    "v4",
-										MountPath: "/qwe-rty",
+									"/qwe-rty": {
+										Volume: "v4",
 									},
 								},
 							},

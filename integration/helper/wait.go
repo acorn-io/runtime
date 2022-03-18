@@ -70,6 +70,18 @@ func retryWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T)
 	}
 }
 
+func Wait[T meta.Object](t *testing.T, watchFunc WatchFunc, list meta.ObjectList, cb func(obj T) bool) T {
+	var last T
+	retryWatch(t, func() (watch.Interface, error) {
+		ctx := GetCTX(t)
+		return watchFunc(ctx, list)
+	}, func(obj T) bool {
+		last = obj
+		return cb(obj)
+	})
+	return last
+}
+
 func WaitForObject[T meta.Object](t *testing.T, watchFunc WatchFunc, list meta.ObjectList, obj T, cb func(obj T) bool) T {
 	if done := cb(obj); done {
 		return obj

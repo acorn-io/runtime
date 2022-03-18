@@ -62,6 +62,18 @@ func TestTarget(t *testing.T) {
 	assert.True(t, len(image.ImageData.Images["isimple"].Image) > 0)
 }
 
+func TestContextDir(t *testing.T) {
+	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/herd.cue", &build.Options{
+		Cwd: "./testdata/contextdir",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Len(t, image.ImageData.Containers, 2)
+	assert.True(t, len(image.ImageData.Containers["simple"].Image) > 0)
+	assert.True(t, len(image.ImageData.Containers["fromImage"].Image) > 0)
+}
+
 func TestSimpleTwo(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/herd.cue", &build.Options{
 		Cwd: "./testdata/simple-two",

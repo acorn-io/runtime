@@ -29,56 +29,45 @@ func translateAccessModes(volumeRequest v1.VolumeRequest) (result []corev1.Persi
 func toPVCs(appInstance *v1.AppInstance) (result []meta.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Volumes) {
 		volume, volumeRequest := entry.Key, entry.Value
-		if volumeRequest.Class == v1.VolumeRequestTypeEphemeral {
-			continue
-		}
 
 		var (
 			accessModes         = translateAccessModes(volumeRequest)
 			volumeBinding, bind = isBind(appInstance, volume)
-			pvc                 corev1.PersistentVolumeClaim
 			class               *string
 		)
 
-		if bind {
-			pvc = corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      bindName(volume),
-					Namespace: appInstance.Status.Namespace,
-					Labels: map[string]string{
-						labels.HerdAppName:      appInstance.Name,
-						labels.HerdAppNamespace: appInstance.Namespace,
+		if volumeRequest.Class == v1.VolumeRequestTypeEphemeral && !bind {
+			continue
+		}
+
+		pvc := corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      volume,
+				Namespace: appInstance.Status.Namespace,
+				Labels: map[string]string{
+					labels.HerdAppName:      appInstance.Name,
+					labels.HerdAppNamespace: appInstance.Namespace,
+					labels.HerdManaged:      "true",
+				},
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: accessModes,
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: *resource.NewQuantity(volumeRequest.Size*1_000_000_000, resource.DecimalSI),
 					},
 				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes: accessModes,
-					VolumeName:  volumeBinding.Volume,
-				},
-			}
+			},
+		}
+
+		if bind {
+			pvc.Name = bindName(volume)
+			pvc.Spec.VolumeName = volumeBinding.Volume
 		} else {
 			if volumeRequest.Class != "" {
 				class = &volumeRequest.Class
 			}
-			pvc = corev1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      volume,
-					Namespace: appInstance.Status.Namespace,
-					Labels: map[string]string{
-						labels.HerdAppName:      appInstance.Name,
-						labels.HerdAppNamespace: appInstance.Namespace,
-					},
-				},
-				Spec: corev1.PersistentVolumeClaimSpec{
-					AccessModes:      accessModes,
-					StorageClassName: class,
-					VolumeName:       volumeBinding.Volume,
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceStorage: *resource.NewScaledQuantity(volumeRequest.Size, resource.Giga),
-						},
-					},
-				},
-			}
+			pvc.Spec.StorageClassName = class
 		}
 
 		result = append(result, &pvc)
@@ -117,11 +106,15 @@ func toVolumeName(appInstance *v1.AppInstance, volume string) (string, bool) {
 
 func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume) {
 	volumeNames := map[string]bool{}
-	for _, volume := range container.Volumes {
-		volumeNames[volume.Volume] = true
+	for _, volume := range container.Dirs {
+		if volume.ContextDir == "" {
+			volumeNames[volume.Volume] = true
+		}
 		for _, sidecar := range container.Sidecars {
-			for _, volume := range sidecar.Volumes {
-				volumeNames[volume.Volume] = true
+			for _, volume := range sidecar.Dirs {
+				if volume.ContextDir == "" {
+					volumeNames[volume.Volume] = true
+				}
 			}
 		}
 	}
@@ -133,7 +126,7 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 				Name: volume,
 				VolumeSource: corev1.VolumeSource{
 					EmptyDir: &corev1.EmptyDirVolumeSource{
-						SizeLimit: resource.NewScaledQuantity(int64(vr.Size), resource.Giga),
+						SizeLimit: resource.NewQuantity(vr.Size*1_000_000_000, resource.DecimalSI),
 					},
 				},
 			})

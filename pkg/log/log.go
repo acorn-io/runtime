@@ -258,7 +258,7 @@ func App(ctx context.Context, app *v1.AppInstance, options *Options) error {
 	}
 
 	podSelector := labels.SelectorFromSet(labels.Set{
-		applabels.HerdAppPod: "true",
+		applabels.HerdManaged: "true",
 	})
 
 	// Ensure that if once func finishes they are all canceled

@@ -18,9 +18,19 @@ const (
 type AccessMode string
 
 type Build struct {
-	Context    string `json:"context,omitempty"`
-	Dockerfile string `json:"dockerfile,omitempty"`
-	Target     string `json:"target,omitempty"`
+	Context     string            `json:"context,omitempty"`
+	Dockerfile  string            `json:"dockerfile,omitempty"`
+	Target      string            `json:"target,omitempty"`
+	BaseImage   string            `json:"baseImage,omitempty"`
+	ContextDirs map[string]string `json:"contextDirs,omitempty"`
+}
+
+func (in Build) BaseBuild() Build {
+	return Build{
+		Context:    in.Context,
+		Dockerfile: in.Dockerfile,
+		Target:     in.Target,
+	}
 }
 
 // Hash will return the same hash for the same object. There's no guarentee
@@ -38,21 +48,6 @@ func (in Build) Hash() string {
 	return hex.EncodeToString(result[:])
 }
 
-type Sidecar struct {
-	Volumes     []VolumeMount   `json:"volumes,omitempty"`
-	Files       map[string]File `json:"files,omitempty"`
-	Image       string          `json:"image,omitempty"`
-	Build       *Build          `json:"build,omitempty"`
-	Command     []string        `json:"command,omitempty"`
-	Interactive bool            `json:"interactive,omitempty"`
-	Entrypoint  []string        `json:"entrypoint,omitempty"`
-	Environment []string        `json:"environment,omitempty"`
-	WorkingDir  string          `json:"workingDir,omitempty"`
-	Ports       []Port          `json:"ports,omitempty"`
-
-	Init bool `json:"init,omitempty"`
-}
-
 type Protocol string
 
 var (
@@ -66,6 +61,7 @@ type Port struct {
 	Port          int32    `json:"port,omitempty"`
 	ContainerPort int32    `json:"containerPort,omitempty"`
 	Protocol      Protocol `json:"protocol,omitempty"`
+	Publish       bool     `json:"publish,omitempty"`
 }
 
 type File struct {
@@ -73,24 +69,28 @@ type File struct {
 }
 
 type VolumeMount struct {
-	Volume    string `json:"volume,omitempty"`
-	MountPath string `json:"mountPath,omitempty"`
-	SubPath   string `json:"subPath,omitempty"`
+	Volume     string `json:"volume,omitempty"`
+	SubPath    string `json:"subPath,omitempty"`
+	ContextDir string `json:"contextDir,omitempty"`
 }
 
 type Container struct {
-	Volumes     []VolumeMount   `json:"volumes,omitempty"`
-	Files       map[string]File `json:"files,omitempty"`
-	Image       string          `json:"image,omitempty"`
-	Build       *Build          `json:"build,omitempty"`
-	Command     []string        `json:"command,omitempty"`
-	Interactive bool            `json:"interactive,omitempty"`
-	Entrypoint  []string        `json:"entrypoint,omitempty"`
-	Environment []string        `json:"environment,omitempty"`
-	WorkingDir  string          `json:"workingDir,omitempty"`
-	Ports       []Port          `json:"ports,omitempty"`
+	Dirs        map[string]VolumeMount `json:"dirs,omitempty"`
+	Files       map[string]File        `json:"files,omitempty"`
+	Image       string                 `json:"image,omitempty"`
+	Build       *Build                 `json:"build,omitempty"`
+	Command     []string               `json:"command,omitempty"`
+	Interactive bool                   `json:"interactive,omitempty"`
+	Entrypoint  []string               `json:"entrypoint,omitempty"`
+	Environment []string               `json:"environment,omitempty"`
+	WorkingDir  string                 `json:"workingDir,omitempty"`
+	Ports       []Port                 `json:"ports,omitempty"`
 
-	Sidecars map[string]Sidecar `json:"sidecars,omitempty"`
+	// Init is only available on sidecars
+	Init bool `json:"init,omitempty"`
+
+	// Sidecars are not available on sidecars
+	Sidecars map[string]Container `json:"sidecars,omitempty"`
 }
 
 type Image struct {
@@ -107,5 +107,6 @@ type AppSpec struct {
 type VolumeRequest struct {
 	Class       string       `json:"class,omitempty"`
 	Size        int64        `json:"size,omitempty"`
+	ContextPath string       `json:"contextPath,omitempty"`
 	AccessModes []AccessMode `json:"accessModes,omitempty"`
 }
