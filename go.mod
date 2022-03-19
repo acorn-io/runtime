@@ -8,11 +8,11 @@ replace (
 )
 
 require (
-	cuelang.org/go v0.4.1-rc.2.0.20220111152641-d4d0f142317e
+	cuelang.org/go v0.4.3-0.20220303095503-04ac666478bb
 	github.com/containerd/console v1.0.3
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.4.2
-	github.com/ibuildthecloud/baaah v0.0.0-20220227060259-aa677329533c
+	github.com/ibuildthecloud/baaah v0.0.0-20220319060440-dc7543384bf9
 	github.com/moby/buildkit v0.10.0-rc1.0.20220216012946-b36d860675c5
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/lasso v0.0.0-20220110204427-db9f3e569574
