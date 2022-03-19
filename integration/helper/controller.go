@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -61,7 +62,7 @@ func StartController(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := c.Start(GetCTX(t)); err != nil {
+	if err := c.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 

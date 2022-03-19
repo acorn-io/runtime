@@ -43,7 +43,7 @@ func TestVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.Wait(t, client.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
+	pv := helper.Wait(t, client.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
 		return obj.Labels[labels.HerdAppName] == appInstance.Name &&
 			obj.Labels[labels.HerdAppNamespace] == appInstance.Namespace &&
 			obj.Labels[labels.HerdManaged] == "true"
@@ -53,13 +53,6 @@ func TestVolume(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	pv := helper.Wait(t, client.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
-		return obj.Status.Phase == corev1.VolumeReleased &&
-			obj.Labels[labels.HerdAppName] == appInstance.Name &&
-			obj.Labels[labels.HerdAppNamespace] == appInstance.Namespace &&
-			obj.Labels[labels.HerdManaged] == "true"
-	})
 
 	appInstance = &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
