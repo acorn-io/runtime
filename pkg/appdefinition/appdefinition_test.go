@@ -288,8 +288,8 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []string{"hi=bye"}, appSpec.Containers["s"].Environment)
-	assert.Equal(t, []string{"hi2=bye2"}, appSpec.Containers["a"].Environment)
+	assert.Equal(t, []v1.EnvVar{{Name: "hi", Value: "bye"}}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, []v1.EnvVar{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
 }
 
 func TestEnvironment(t *testing.T) {
@@ -315,8 +315,96 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []string{"hi=bye"}, appSpec.Containers["s"].Environment)
-	assert.Equal(t, []string{"hi2=bye2"}, appSpec.Containers["a"].Environment)
+	assert.Equal(t, []v1.EnvVar{{Name: "hi", Value: "bye"}}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, []v1.EnvVar{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
+}
+
+func TestSecretEnv(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    environment: {
+      hi: "bye"
+      "secret://secname/seckey?optional=true": ""
+      secretref: "secret://secname/seckey"
+      secretrefembed: "secret://secname"
+    }
+    image: ""
+  }
+  a: {
+	environment: [
+      "hi=bye",
+      "secret://secname/seckey?optional=true",
+      "secretref=secret://secname/seckey",
+      "secretrefembed=secret://secname",
+    ]
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []v1.EnvVar{
+		{
+			Secret: v1.EnvSecretVal{
+				Name:     "secname",
+				Key:      "seckey",
+				Optional: &[]bool{true}[0],
+			},
+		},
+		{
+			Name:  "hi",
+			Value: "bye",
+		},
+		{
+			Name: "secretref",
+			Secret: v1.EnvSecretVal{
+				Name: "secname",
+				Key:  "seckey",
+			},
+		},
+		{
+			Name: "secretrefembed",
+			Secret: v1.EnvSecretVal{
+				Name: "secname",
+			},
+		},
+	}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, []v1.EnvVar{
+		{
+			Secret: v1.EnvSecretVal{
+				Name:     "secname",
+				Key:      "seckey",
+				Optional: &[]bool{true}[0],
+			},
+		},
+		{
+			Name:  "hi",
+			Value: "bye",
+		},
+		{
+			Name: "secretref",
+			Secret: v1.EnvSecretVal{
+				Name: "secname",
+				Key:  "seckey",
+			},
+		},
+		{
+			Name: "secretrefembed",
+			Secret: v1.EnvSecretVal{
+				Name: "secname",
+			},
+		},
+	}, appSpec.Containers["a"].Environment)
+
 }
 
 func TestWorkdir(t *testing.T) {

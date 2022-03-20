@@ -55,6 +55,7 @@ import (
 #URI: {
 	scheme: string
 	name:   string | *""
+	path:   string | *""
 	query: [string]: [...string]
 }
 
@@ -82,11 +83,15 @@ import (
 	IN="in": string
 	out:     #URI
 	out: {
-		_schemeAndRest: strings.SplitN(IN, "://", 2)
-		scheme:         _schemeAndRest[0]
+		let _schemeAndRest = strings.SplitN(IN, "://", 2)
+		scheme: _schemeAndRest[0]
 		if len(_schemeAndRest) > 1 {
-			_nameAndQuery: strings.SplitN(_schemeAndRest[1], "?", 2)
-			name:          _nameAndQuery[0]
+			let _nameAndQuery = strings.SplitN(_schemeAndRest[1], "?", 2)
+			let _nameAndPath = strings.SplitN(_nameAndQuery[0], "/", 2)
+			name: _nameAndPath[0]
+			if len(_nameAndPath) == 2 {
+				path: _nameAndPath[1]
+			}
 			if len(_nameAndQuery) == 2 {
 				for p in strings.Split(_nameAndQuery[1], "&") {
 					let _keyValue = strings.SplitN(p, "=", 2)
@@ -251,7 +256,7 @@ import (
 		}
 		for x in ["env", "environment"] {
 			if IN.container[x] != _|_ {
-				environment: IN.container[x] | [ for k, v in IN.container[x] {"\(k)=\(v)"}]
+				environment: {#ToEnvVarSpecs & {in: IN.container[x]}}.out
 			}
 		}
 		for x in ["workdir", "workDir", "workingdir", "workingDir"] {

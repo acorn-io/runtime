@@ -6,7 +6,7 @@ package v1
 	target:     string | *""
 }
 
-#EnvValue: *[...string] | {[string]: string}
+#EnvVars: *[...string] | {[string]: string}
 
 #Sidecar: {
 	#ContainerBase
@@ -26,7 +26,7 @@ package v1
 	build?:                         string | #Build
 	entrypoint:                     string | *[...string]
 	[=~"command|cmd"]:              string | *[...string]
-	[=~"env|environment"]:          #EnvValue
+	[=~"env|environment"]:          #EnvVars
 	[=~"work[dD]ir|working[dD]ir"]: string | *""
 	[=~"interactive|tty|stdin"]:    bool | *false
 	ports:                          #Port | *[...#Port]

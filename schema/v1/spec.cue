@@ -18,12 +18,24 @@ package v1
 	sidecars: [string]: #SidecarSpec
 }
 
+#EnvSecretValue: {
+	key:       string | *""
+	name:      string
+	optional?: bool
+}
+
+#EnvVarSpec: {
+	name:    string
+	value?:  string
+	secret?: #EnvSecretValue
+}
+
 #ContainerBaseSpec: {
 	image?: string
 	build?: #BuildSpec
 	entrypoint: [...string]
 	command: [...string]
-	environment: [...string]
+	environment: [...#EnvVarSpec]
 	workingDir:  string | *""
 	interactive: bool | *false
 	ports: [...#PortSpec]

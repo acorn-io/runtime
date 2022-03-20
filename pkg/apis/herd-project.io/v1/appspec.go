@@ -74,6 +74,18 @@ type VolumeMount struct {
 	ContextDir string `json:"contextDir,omitempty"`
 }
 
+type EnvVar struct {
+	Name   string       `json:"name,omitempty"`
+	Value  string       `json:"value,omitempty"`
+	Secret EnvSecretVal `json:"secret,omitempty"`
+}
+
+type EnvSecretVal struct {
+	Name     string `json:"name,omitempty"`
+	Key      string `json:"key,omitempty"`
+	Optional *bool  `json:"optional,omitempty"`
+}
+
 type Container struct {
 	Dirs        map[string]VolumeMount `json:"dirs,omitempty"`
 	Files       map[string]File        `json:"files,omitempty"`
@@ -82,7 +94,7 @@ type Container struct {
 	Command     []string               `json:"command,omitempty"`
 	Interactive bool                   `json:"interactive,omitempty"`
 	Entrypoint  []string               `json:"entrypoint,omitempty"`
-	Environment []string               `json:"environment,omitempty"`
+	Environment []EnvVar               `json:"environment,omitempty"`
 	WorkingDir  string                 `json:"workingDir,omitempty"`
 	Ports       []Port                 `json:"ports,omitempty"`
 
