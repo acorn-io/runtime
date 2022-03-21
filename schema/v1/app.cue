@@ -58,8 +58,59 @@ package v1
 	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 }
 
+#SecretOpaque: {
+	type: "opaque"
+	params?: [string]: string
+	data: [string]:    string
+}
+
+#SecretBasicAuth: {
+	type: "basic"
+	data: {
+		username?: string
+		password?: string
+	}
+}
+
+#SecretDocker: {
+	type: "docker"
+	data: {
+		".dockerconfigjson"?: (string | bytes)
+	}
+}
+
+#SecretSSHAuth: {
+	type: "ssh-auth"
+	params: {
+		algorithm: "rsa" | *"ecdsa"
+	}
+	data: {
+		"ssh-privatekey"?: (string | bytes)
+	}
+}
+
+#SecretTLS: {
+	type: "tls"
+	params: {
+		algorithm:   "rsa" | *"ecdsa"
+		caSecret?:   string
+		commonName?: string
+		sans: [...string]
+		expireDays: int | *365
+	}
+	data: {
+		"tls.crt"?: (string | bytes)
+		"tls.key"?: (string | bytes)
+		"ca.crt"?:  (string | bytes)
+		"ca.key"?:  (string | bytes)
+	}
+}
+
+#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS
+
 #App: {
 	containers: [string]: #Container
 	images: [string]:     #Image
 	volumes: [string]:    #Volume
+	secrets: [string]:    #Secret
 }

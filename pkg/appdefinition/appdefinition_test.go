@@ -1102,3 +1102,68 @@ volumes: {
 	assert.Equal(t, "./foo/bar", sidecar.Dirs["/var/named-context-vol"].ContextDir)
 	assert.Equal(t, "./sub", appSpec.Containers["s"].Dirs["/var/named-context-vol"].ContextDir)
 }
+
+func TestSecrets(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    files: "/var/tmp/foo": "secret://file-implicit/key"
+    dirs: "/var/tmp/": "secret://dirs-merge"
+    image: ""
+  }
+}
+secrets: {
+  explicit: {
+    data: {
+      username: "bardata"
+    }
+  }
+  "dirs-merge": {
+    type: "tls"
+  }
+  explicituser: {
+    type: "basic"
+    data: {
+      username: "bardata"
+      password: "barpass"
+    }
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v1.Secret{
+		Type: "opaque",
+		Data: map[string]string{
+			"username": "bardata",
+		},
+	}, appSpec.Secrets["explicit"])
+	assert.Equal(t, v1.Secret{
+		Type: "basic",
+		Data: map[string]string{
+			"username": "bardata",
+			"password": "barpass",
+		},
+	}, appSpec.Secrets["explicituser"])
+	assert.Equal(t, v1.Secret{
+		Type: "opaque",
+		Data: map[string]string{},
+	}, appSpec.Secrets["file-implicit"])
+	assert.Equal(t, v1.Secret{
+		Type: "tls",
+		Params: map[string]interface{}{
+			"algorithm":  "ecdsa",
+			"expireDays": 365.0,
+			"sans":       []interface{}{},
+		},
+		Data: map[string]string{},
+	}, appSpec.Secrets["dirs-merge"])
+
+}

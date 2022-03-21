@@ -351,6 +351,28 @@ import (
 				}
 			}
 		}
+		secrets: {
+			for k, v in IN.secrets {
+				"\(k)": v
+			}
+			for name, container in containers {
+				for k, v in container.environment {
+					if v["secret"] != _|_ {
+						"\(v.secret.name)": {type: string | *"opaque"}
+					}
+				}
+				for k, v in container.files {
+					if v["secret"] != _|_ {
+						"\(v.secret.name)": {type: string | *"opaque"}
+					}
+				}
+				for k, v in container.dirs {
+					if v["secret"] != _|_ {
+						"\(v.secret.name)": {type: string | *"opaque"}
+					}
+				}
+			}
+		}
 	}
 }
 

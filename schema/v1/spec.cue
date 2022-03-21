@@ -82,10 +82,17 @@ package v1
 	accessModes: [#AccessMode, ...#AccessMode] | *["readWriteOnce"]
 }
 
+#SecretSpec: {
+	type: string
+	params?: [string]: _
+	data: [string]:    (string | bytes)
+}
+
 #AppSpec: {
 	containers: [string]: #ContainerSpec
 	images: [string]:     #ImageSpec
 	volumes: [string]:    #VolumeSpec
+	secrets: [string]:    #SecretSpec
 }
 
 #PortSpec: {

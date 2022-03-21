@@ -125,6 +125,13 @@ type AppSpec struct {
 	Containers map[string]Container     `json:"containers,omitempty"`
 	Images     map[string]Image         `json:"images,omitempty"`
 	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
+	Secrets    map[string]Secret        `json:"secrets,omitempty"`
+}
+
+type Secret struct {
+	Type   string            `json:"type,omitempty"`
+	Params GenericMap        `json:"params,omitempty"`
+	Data   map[string]string `json:"data,omitempty"`
 }
 
 type VolumeRequest struct {
