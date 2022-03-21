@@ -104,22 +104,53 @@ func toVolumeName(appInstance *v1.AppInstance, volume string) (string, bool) {
 	return volume, false
 }
 
-func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume) {
-	volumeNames := map[string]bool{}
+func addVolumeReferencesForContainer(volumeNames map[string]bool, container v1.Container) {
 	for _, volume := range container.Dirs {
-		if volume.ContextDir == "" {
-			volumeNames[volume.Volume] = true
+		if volume.ContextDir != "" {
+			continue
 		}
-		for _, sidecar := range container.Sidecars {
-			for _, volume := range sidecar.Dirs {
-				if volume.ContextDir == "" {
-					volumeNames[volume.Volume] = true
-				}
-			}
+		if volume.Secret.Name == "" {
+			volumeNames[volume.Volume] = true
+		} else {
+			volumeNames["secret::"+volume.Secret.Name] = true
 		}
 	}
 
+	for _, file := range container.Files {
+		if file.Secret.Name != "" {
+			volumeNames["secret::"+file.Secret.Name] = true
+		}
+	}
+}
+
+func isSecretOptional(appInstance *v1.AppInstance, secretName string) *bool {
+	opt := appInstance.Status.AppSpec.Secrets[secretName].Optional
+	b := opt != nil && *opt
+	return &b
+}
+
+func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume) {
+	volumeNames := map[string]bool{}
+	addVolumeReferencesForContainer(volumeNames, container)
+	for _, sidecar := range container.Sidecars {
+		addVolumeReferencesForContainer(volumeNames, sidecar)
+	}
+
 	for _, volume := range typed.SortedKeys(volumeNames) {
+		if strings.HasPrefix(volume, "secret::") {
+			secretName := strings.TrimPrefix(volume, "secret::")
+			result = append(result, corev1.Volume{
+				Name: volume,
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName: secretName,
+						Optional:   isSecretOptional(appInstance, secretName),
+					},
+				},
+			})
+			continue
+		}
+
 		name, bind := toVolumeName(appInstance, volume)
 		if vr, ok := isEphemeral(appInstance, volume); ok && !bind {
 			result = append(result, corev1.Volume{

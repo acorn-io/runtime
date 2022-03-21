@@ -340,7 +340,7 @@ containers: {
 
 	assert.Equal(t, map[string]v1.VolumeMount{
 		"/var/tmp/foo": {
-			Secret: &v1.VolumeSecretMount{
+			Secret: v1.VolumeSecretMount{
 				Name: "secname",
 			},
 		},
@@ -369,7 +369,7 @@ containers: {
 
 	assert.Equal(t, map[string]v1.File{
 		"/var/tmp/foo": {
-			Secret: &v1.FileSecret{
+			Secret: v1.FileSecret{
 				Name: "secname",
 				Key:  "seckey",
 			},
@@ -1108,7 +1108,9 @@ func TestSecrets(t *testing.T) {
 containers: {
   s: {
     files: "/var/tmp/foo": "secret://file-implicit/key"
+    files: "/var/tmp/foo-optional": "secret://file-implicit-opt/key?optional=true"
     dirs: "/var/tmp/": "secret://dirs-merge"
+    dirs: "/var/tmp/opt": "secret://opt?optional=true"
     image: ""
   }
 }
@@ -1119,6 +1121,7 @@ secrets: {
     }
   }
   "dirs-merge": {
+    optional: true
     type: "tls"
   }
   explicituser: {
@@ -1153,6 +1156,11 @@ secrets: {
 		},
 	}, appSpec.Secrets["explicituser"])
 	assert.Equal(t, v1.Secret{
+		Type:     "opaque",
+		Optional: &[]bool{true}[0],
+		Data:     map[string]string{},
+	}, appSpec.Secrets["file-implicit-opt"])
+	assert.Equal(t, v1.Secret{
 		Type: "opaque",
 		Data: map[string]string{},
 	}, appSpec.Secrets["file-implicit"])
@@ -1163,7 +1171,13 @@ secrets: {
 			"expireDays": 365.0,
 			"sans":       []interface{}{},
 		},
-		Data: map[string]string{},
+		Optional: &[]bool{true}[0],
+		Data:     map[string]string{},
 	}, appSpec.Secrets["dirs-merge"])
+	assert.Equal(t, v1.Secret{
+		Type:     "opaque",
+		Data:     map[string]string{},
+		Optional: &[]bool{true}[0],
+	}, appSpec.Secrets["opt"])
 
 }

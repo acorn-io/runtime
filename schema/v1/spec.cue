@@ -45,7 +45,10 @@ package v1
 
 #VolumeMountSpec: {
 	{
-		secret: name: string
+		secret: {
+			name:      string
+			optional?: bool
+		}
 	} |
 	{
 		volume:  string
@@ -57,8 +60,9 @@ package v1
 }
 
 #FileSecretSpec: {
-	name: string
-	key:  string
+	name:      string
+	key:       string
+	optional?: bool
 }
 
 #FileSpec: {
@@ -83,7 +87,8 @@ package v1
 }
 
 #SecretSpec: {
-	type: string
+	type:      string
+	optional?: bool
 	params?: [string]: _
 	data: [string]:    (string | bytes)
 }

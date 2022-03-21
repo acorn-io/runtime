@@ -43,9 +43,14 @@ func TestEnvironment(t *testing.T) {
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
 					"test": {
-						Environment: []string{
-							"hi=bye",
-							"foo",
+						Environment: []v1.EnvVar{
+							{
+								Name:  "hi",
+								Value: "bye",
+							},
+							{
+								Name: "foo",
+							},
 						},
 					},
 				},

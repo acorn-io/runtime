@@ -18,7 +18,7 @@ package v1
 	sidecars: [string]: #Sidecar
 }
 
-#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*$"} | bytes
+#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.optional=true)?$"} | bytes
 
 #ContainerBase: {
 	files: [string]:                  #FileContent
@@ -39,11 +39,11 @@ package v1
 #VolumeRef:      =~"^volume://.+$"
 #EphemeralRef:   =~"^ephemeral://.*$|^$"
 #ContextDirRef:  =~"^\\./.*$"
-#SecretRef:      =~"^secret://[a-z][-a-z0-9]*$"
+#SecretRef:      =~"^secret://[a-z][-a-z0-9]*(.optional=true)?$"
 
 // The below should work but doesn't. So instead we use the log regexp. This seems like a cue bug
 // #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef | #SecretRef
-#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*$"
+#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*(.optional=true)?$"
 
 #Port: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
 
@@ -59,13 +59,15 @@ package v1
 }
 
 #SecretOpaque: {
-	type: "opaque"
+	type:      "opaque"
+	optional?: bool
 	params?: [string]: string
 	data: [string]:    string
 }
 
 #SecretBasicAuth: {
-	type: "basic"
+	type:      "basic"
+	optional?: bool
 	data: {
 		username?: string
 		password?: string
@@ -73,14 +75,16 @@ package v1
 }
 
 #SecretDocker: {
-	type: "docker"
+	type:      "docker"
+	optional?: bool
 	data: {
 		".dockerconfigjson"?: (string | bytes)
 	}
 }
 
 #SecretSSHAuth: {
-	type: "ssh-auth"
+	type:      "ssh-auth"
+	optional?: bool
 	params: {
 		algorithm: "rsa" | *"ecdsa"
 	}
@@ -90,7 +94,8 @@ package v1
 }
 
 #SecretTLS: {
-	type: "tls"
+	type:      "tls"
+	optional?: bool
 	params: {
 		algorithm:   "rsa" | *"ecdsa"
 		caSecret?:   string

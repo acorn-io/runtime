@@ -70,8 +70,8 @@ type FileSecret struct {
 }
 
 type File struct {
-	Content string      `json:"content,omitempty"`
-	Secret  *FileSecret `json:"secret,omitempty"`
+	Content string     `json:"content,omitempty"`
+	Secret  FileSecret `json:"secret,omitempty"`
 }
 
 type VolumeSecretMount struct {
@@ -79,10 +79,10 @@ type VolumeSecretMount struct {
 }
 
 type VolumeMount struct {
-	Volume     string             `json:"volume,omitempty"`
-	SubPath    string             `json:"subPath,omitempty"`
-	ContextDir string             `json:"contextDir,omitempty"`
-	Secret     *VolumeSecretMount `json:"secret,omitempty"`
+	Volume     string            `json:"volume,omitempty"`
+	SubPath    string            `json:"subPath,omitempty"`
+	ContextDir string            `json:"contextDir,omitempty"`
+	Secret     VolumeSecretMount `json:"secret,omitempty"`
 }
 
 type EnvVar struct {
@@ -129,9 +129,10 @@ type AppSpec struct {
 }
 
 type Secret struct {
-	Type   string            `json:"type,omitempty"`
-	Params GenericMap        `json:"params,omitempty"`
-	Data   map[string]string `json:"data,omitempty"`
+	Type     string            `json:"type,omitempty"`
+	Params   GenericMap        `json:"params,omitempty"`
+	Optional *bool             `json:"optional,omitempty"`
+	Data     map[string]string `json:"data,omitempty"`
 }
 
 type VolumeRequest struct {

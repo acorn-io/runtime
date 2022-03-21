@@ -25,6 +25,9 @@ import (
 						secret: {
 							name: uri.name
 							key:  uri.path
+							if uri.query["optional"][0] != _|_ {
+								optional: uri.query.optional[0] == "true"
+							}
 						}
 					}
 					if !strings.HasPrefix(input, "secret://") {

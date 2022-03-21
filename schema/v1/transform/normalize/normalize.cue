@@ -136,7 +136,12 @@ import (
 		}
 		if (IN.dir & v1.#SecretRef) != _|_ {
 			let _uri = {#ToURI & {in: IN.dir}}.out
-			secret: name: _uri.name
+			secret: {
+				name: _uri.name
+				if _uri.query["optional"][0] != _|_ {
+					optional: _uri.query.optional[0] == "true"
+				}
+			}
 		}
 	}
 }
@@ -358,17 +363,32 @@ import (
 			for name, container in containers {
 				for k, v in container.environment {
 					if v["secret"] != _|_ {
-						"\(v.secret.name)": {type: string | *"opaque"}
+						"\(v.secret.name)": {
+							type: string | *"opaque"
+							if v.secret["optional"] != _|_ {
+								optional: v.secret.optional
+							}
+						}
 					}
 				}
 				for k, v in container.files {
 					if v["secret"] != _|_ {
-						"\(v.secret.name)": {type: string | *"opaque"}
+						"\(v.secret.name)": {
+							type: string | *"opaque"
+							if v.secret["optional"] != _|_ {
+								optional: v.secret.optional
+							}
+						}
 					}
 				}
 				for k, v in container.dirs {
 					if v["secret"] != _|_ {
-						"\(v.secret.name)": {type: string | *"opaque"}
+						"\(v.secret.name)": {
+							type: string | *"opaque"
+							if v.secret["optional"] != _|_ {
+								optional: v.secret.optional
+							}
+						}
 					}
 				}
 			}

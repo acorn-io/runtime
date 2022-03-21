@@ -29,13 +29,47 @@ func addDeployments(appInstance *v1.AppInstance, resp router.Response) {
 	resp.Objects(toDeployments(appInstance)...)
 }
 
-func toEnv(env []string) (result []corev1.EnvVar) {
-	for _, v := range env {
-		k, v, _ := strings.Cut(v, "=")
-		result = append(result, corev1.EnvVar{
-			Name:  k,
-			Value: v,
-		})
+func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
+	for _, env := range envs {
+		if env.Secret.Name != "" && env.Secret.Key == "" {
+			result = append(result, corev1.EnvFromSource{
+				Prefix: env.Value,
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: env.Secret.Name,
+					},
+					Optional: env.Secret.Optional,
+				},
+			})
+		}
+	}
+	return
+}
+
+func toEnv(envs []v1.EnvVar) (result []corev1.EnvVar) {
+	for _, env := range envs {
+		if env.Secret.Name == "" {
+			result = append(result, corev1.EnvVar{
+				Name:  env.Name,
+				Value: env.Value,
+			})
+		} else {
+			if env.Secret.Key == "" {
+				continue
+			}
+			result = append(result, corev1.EnvVar{
+				Name: env.Name,
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: env.Secret.Name,
+						},
+						Key:      env.Secret.Key,
+						Optional: env.Secret.Optional,
+					},
+				},
+			})
+		}
 	}
 	return
 }
@@ -60,11 +94,19 @@ func toContainers(appName, name string, container v1.Container) ([]corev1.Contai
 
 func toMounts(appName, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
-		result = append(result, corev1.VolumeMount{
-			Name:      "files",
-			MountPath: path.Join("/", entry.Key),
-			SubPath:   path.Join("/", appName, deploymentName, containerName, entry.Key),
-		})
+		if entry.Value.Secret.Key == "" || entry.Value.Secret.Name == "" {
+			result = append(result, corev1.VolumeMount{
+				Name:      "files",
+				MountPath: path.Join("/", entry.Key),
+				SubPath:   path.Join("/", appName, deploymentName, containerName, entry.Key),
+			})
+		} else {
+			result = append(result, corev1.VolumeMount{
+				Name:      "secret::" + entry.Value.Secret.Name,
+				MountPath: path.Join("/", entry.Key),
+				SubPath:   entry.Value.Secret.Key,
+			})
+		}
 	}
 	for _, entry := range typed.Sorted(container.Dirs) {
 		mountPath := entry.Key
@@ -72,11 +114,18 @@ func toMounts(appName, deploymentName, containerName string, container v1.Contai
 		if mount.ContextDir != "" {
 			continue
 		}
-		result = append(result, corev1.VolumeMount{
-			Name:      mount.Volume,
-			MountPath: path.Join("/", mountPath),
-			SubPath:   mount.SubPath,
-		})
+		if mount.Secret.Name == "" {
+			result = append(result, corev1.VolumeMount{
+				Name:      mount.Volume,
+				MountPath: path.Join("/", mountPath),
+				SubPath:   mount.SubPath,
+			})
+		} else {
+			result = append(result, corev1.VolumeMount{
+				Name:      "secret::" + mount.Secret.Name,
+				MountPath: path.Join("/", mountPath),
+			})
+		}
 	}
 	return
 }
@@ -104,6 +153,7 @@ func toContainer(appName, deploymentName, containerName string, container v1.Con
 		Args:         container.Command,
 		WorkingDir:   container.WorkingDir,
 		Env:          toEnv(container.Environment),
+		EnvFrom:      toEnvFrom(container.Environment),
 		TTY:          container.Interactive,
 		Stdin:        container.Interactive,
 		Ports:        toPorts(container),
