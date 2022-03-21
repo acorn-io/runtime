@@ -18,8 +18,10 @@ package v1
 	sidecars: [string]: #Sidecar
 }
 
+#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*$"} | bytes
+
 #ContainerBase: {
-	files: [string]:                  string | bytes
+	files: [string]:                  #FileContent
 	[=~"dirs|directories"]: [string]: #Dir
 	// 1 or both of image or build is required
 	image?:                         string
@@ -37,10 +39,11 @@ package v1
 #VolumeRef:      =~"^volume://.+$"
 #EphemeralRef:   =~"^ephemeral://.*$|^$"
 #ContextDirRef:  =~"^\\./.*$"
+#SecretRef:      =~"^secret://[a-z][-a-z0-9]*$"
 
 // The below should work but doesn't. So instead we use the log regexp. This seems like a cue bug
-// #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef
-#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$"
+// #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef | #SecretRef
+#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*$"
 
 #Port: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
 

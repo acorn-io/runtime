@@ -319,6 +319,67 @@ containers: {
 	assert.Equal(t, []v1.EnvVar{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
 }
 
+func TestSecretDirs(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    dirs: "/var/tmp/foo": "secret://secname"
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, map[string]v1.VolumeMount{
+		"/var/tmp/foo": {
+			Secret: &v1.VolumeSecretMount{
+				Name: "secname",
+			},
+		},
+	}, appSpec.Containers["s"].Dirs)
+}
+
+func TestSecretFiles(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    files: "/var/tmp/foo": "secret://secname/seckey"
+    files: "/var/tmp/foo2": "nonsecret"
+    image: ""
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, map[string]v1.File{
+		"/var/tmp/foo": {
+			Secret: &v1.FileSecret{
+				Name: "secname",
+				Key:  "seckey",
+			},
+		},
+		"/var/tmp/foo2": {
+			Content: "bm9uc2VjcmV0",
+		},
+	}, appSpec.Containers["s"].Files)
+}
+
 func TestSecretEnv(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
 containers: {

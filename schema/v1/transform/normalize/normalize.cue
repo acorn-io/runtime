@@ -1,7 +1,6 @@
 package normalize
 
 import (
-	"encoding/base64"
 	"github.com/ibuildthecloud/herd/schema/v1"
 	"list"
 	"path"
@@ -135,6 +134,10 @@ import (
 		if (IN.dir & v1.#ContextDirRef) != _|_ {
 			contextDir: IN.dir
 		}
+		if (IN.dir & v1.#SecretRef) != _|_ {
+			let _uri = {#ToURI & {in: IN.dir}}.out
+			secret: name: _uri.name
+		}
 	}
 }
 
@@ -238,7 +241,7 @@ import (
 	}
 	out: {
 		for k, v in IN.container.files {
-			files: "\(k)": content: base64.Encode(null, v)
+			files: "\(k)": {#ToFileSpec & {in: v}}.out
 		}
 		if IN.container["image"] != _|_ {
 			if !{#HasContextDir & {in: IN}}.out {

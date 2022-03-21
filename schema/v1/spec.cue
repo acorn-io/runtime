@@ -45,6 +45,9 @@ package v1
 
 #VolumeMountSpec: {
 	{
+		secret: name: string
+	} |
+	{
 		volume:  string
 		subPath: string | *""
 	} |
@@ -53,8 +56,17 @@ package v1
 	}
 }
 
+#FileSecretSpec: {
+	name: string
+	key:  string
+}
+
 #FileSpec: {
-	content: string
+	{
+		content: string
+	} | {
+		secret: #FileSecretSpec
+	}
 }
 
 #ImageSpec: {

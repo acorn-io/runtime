@@ -8,7 +8,7 @@ replace (
 )
 
 require (
-	cuelang.org/go v0.4.3-0.20220303095503-04ac666478bb
+	cuelang.org/go v0.4.3-beta.1
 	github.com/containerd/console v1.0.3
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.4.2
@@ -81,6 +81,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.4.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.12.0 // indirect
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e // indirect
+	golang.org/x/exp v0.0.0-20210126221216-84987778548c // indirect
 	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect

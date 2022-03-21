@@ -64,14 +64,25 @@ type Port struct {
 	Publish       bool     `json:"publish,omitempty"`
 }
 
+type FileSecret struct {
+	Name string `json:"name,omitempty"`
+	Key  string `json:"key,omitempty"`
+}
+
 type File struct {
-	Content string `json:"content,omitempty"`
+	Content string      `json:"content,omitempty"`
+	Secret  *FileSecret `json:"secret,omitempty"`
+}
+
+type VolumeSecretMount struct {
+	Name string `json:"name,omitempty"`
 }
 
 type VolumeMount struct {
-	Volume     string `json:"volume,omitempty"`
-	SubPath    string `json:"subPath,omitempty"`
-	ContextDir string `json:"contextDir,omitempty"`
+	Volume     string             `json:"volume,omitempty"`
+	SubPath    string             `json:"subPath,omitempty"`
+	ContextDir string             `json:"contextDir,omitempty"`
+	Secret     *VolumeSecretMount `json:"secret,omitempty"`
 }
 
 type EnvVar struct {
