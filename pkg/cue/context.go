@@ -6,12 +6,15 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"sync"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/errors"
 	"cuelang.org/go/cue/load"
 )
+
+var loadLock sync.Mutex
 
 type Context struct {
 	files []File
@@ -97,10 +100,13 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 		}
 	}
 
+	// https://github.com/cue-lang/cue/issues/1043
+	loadLock.Lock()
 	instances := load.Instances(args, &load.Config{
 		Dir:     dir,
 		Overlay: overrides,
 	})
+	loadLock.Unlock()
 	if err != nil {
 		return nil, err
 	}
