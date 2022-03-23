@@ -15,6 +15,7 @@ func routes(router *router.Router, c Config) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.RequireNamespace(appdefinition.DeploySpec))
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.RequireNamespace(appdefinition.CreateSecrets))
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ReleaseVolume)
 
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(map[string]string{

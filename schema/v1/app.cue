@@ -99,9 +99,11 @@ package v1
 	params: {
 		algorithm:   "rsa" | *"ecdsa"
 		caSecret?:   string
+		usage:       *"server" | "client"
 		commonName?: string
+		organization: [...string]
 		sans: [...string]
-		expireDays: int | *365
+		durationDays: int | *365
 	}
 	data: {
 		"tls.crt"?: (string | bytes)

@@ -7,8 +7,9 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type AppInstanceCondition string
 
 var (
-	AppInstanceConditionParsed = "parsed"
-	AppInstanceConditionPulled = "pulled"
+	AppInstanceConditionParsed  = "parsed"
+	AppInstanceConditionPulled  = "pulled"
+	AppInstanceConditionSecrets = "secrets"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -33,6 +34,12 @@ type AppInstanceSpec struct {
 	Image   string          `json:"image,omitempty"`
 	Stop    *bool           `json:"stop,omitempty"`
 	Volumes []VolumeBinding `json:"volumes,omitempty"`
+	Secrets []SecretBinding `json:"secrets,omitempty"`
+}
+
+type SecretBinding struct {
+	Secret        string `json:"secret,omitempty"`
+	SecretRequest string `json:"secretRequest,omitempty"`
 }
 
 type VolumeBinding struct {
