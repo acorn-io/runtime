@@ -1167,9 +1167,11 @@ secrets: {
 	assert.Equal(t, v1.Secret{
 		Type: "tls",
 		Params: map[string]interface{}{
-			"algorithm":  "ecdsa",
-			"expireDays": 365.0,
-			"sans":       []interface{}{},
+			"algorithm":    "ecdsa",
+			"durationDays": 365.0,
+			"usage":        "server",
+			"sans":         []interface{}{},
+			"organization": []interface{}{},
 		},
 		Optional: &[]bool{true}[0],
 		Data:     map[string]string{},
