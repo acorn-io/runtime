@@ -12,7 +12,7 @@ import (
 
 	"github.com/ibuildthecloud/baaah/pkg/restconfig"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
+	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	applabels "github.com/ibuildthecloud/herd/pkg/labels"
 	"github.com/ibuildthecloud/herd/pkg/streams"
 	"github.com/ibuildthecloud/herd/pkg/watcher"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/containerd/console"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/streams"
 	"github.com/ibuildthecloud/herd/pkg/system"
 	buildkit "github.com/moby/buildkit/client"
@@ -18,7 +18,7 @@ import (
 )
 
 func Build(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
-	c, err := client.Default()
+	c, err := k8sclient.Default()
 	if err != nil {
 		return "", err
 	}

@@ -10,7 +10,7 @@ import (
 
 	"github.com/ibuildthecloud/herd/integration/helper"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
+	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	applabels "github.com/ibuildthecloud/herd/pkg/labels"
 	"github.com/ibuildthecloud/herd/pkg/log"
 	"github.com/ibuildthecloud/herd/pkg/streams"

@@ -2,8 +2,8 @@ package cli
 
 import (
 	"github.com/ibuildthecloud/herd/pkg/build"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
 	"github.com/ibuildthecloud/herd/pkg/dev"
+	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/log"
 	"github.com/ibuildthecloud/herd/pkg/run"
 	"github.com/ibuildthecloud/herd/pkg/system"

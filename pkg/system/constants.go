@@ -4,6 +4,7 @@ import "os"
 
 const (
 	Namespace            = "herd-system"
+	ConfigName           = "herd-config"
 	DefaultUserNamespace = "herd"
 )
 
@@ -14,6 +15,7 @@ var (
 	BuildkitImage = "moby/buildkit:master"
 	BuildKitName  = "buildkitd"
 	BuildkitPort  = 8080
+	AppInitImage  = ""
 )
 
 func UserNamespace() string {

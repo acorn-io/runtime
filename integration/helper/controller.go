@@ -8,8 +8,8 @@ import (
 
 	"github.com/ibuildthecloud/baaah/pkg/crds"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
 	"github.com/ibuildthecloud/herd/pkg/controller"
+	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -55,7 +55,6 @@ func StartController(t *testing.T) {
 	c, err := controller.New(controller.Config{
 		Images: controller.Images{
 			AppImageInitImage: images.Images["app-image-init"].Image,
-			BuildkitImage:     images.Images["buildkitd"].Image,
 		},
 	})
 	if err != nil {

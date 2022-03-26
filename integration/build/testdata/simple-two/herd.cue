@@ -6,7 +6,7 @@ containers: {
 	    build: images.itwo.build
 	}
 	three: {
-	    image: "no-build"
+	    image: "busybox"
 	}
 }
 
@@ -21,6 +21,6 @@ images: {
 		}
 	}
 	three: {
-	    image: "no-build"
+	    image: "busybox"
 	}
 }

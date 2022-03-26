@@ -154,11 +154,7 @@ func FromBuild(ctx context.Context, cwd string, build v1.Build, streams streams.
 		build.Context = "."
 	}
 
-	if build.BaseImage != "" && len(build.ContextDirs) == 0 {
-		return build.BaseImage, nil
-	}
-
-	if len(build.ContextDirs) > 0 {
+	if build.BaseImage != "" || len(build.ContextDirs) > 0 {
 		return buildWithContext(ctx, cwd, build, streams)
 	}
 

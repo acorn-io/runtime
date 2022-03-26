@@ -26,7 +26,7 @@ func TestTransform(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	i := v.LookupPath(cue.ParsePath("containers.test.image"))
+	i := v.LookupPath(cue.ParsePath("containers.test.build.baseImage"))
 	if i.Err() != nil {
 		t.Fatal(i.Err())
 	}
@@ -40,6 +40,9 @@ func TestTransform(t *testing.T) {
 	f := &struct {
 		Containers map[string]struct {
 			Image string `json:"image,omitempty"`
+			Build struct {
+				BaseImage string `json:"baseImage,omitempty"`
+			}
 		} `json:"containers,omitempty"`
 	}{}
 
@@ -47,7 +50,7 @@ func TestTransform(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "foo", f.Containers["test"].Image)
+	assert.Equal(t, "foo", f.Containers["test"].Build.BaseImage)
 }
 
 func newContext() *Context {

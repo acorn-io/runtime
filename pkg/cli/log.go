@@ -2,7 +2,7 @@ package cli
 
 import (
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
+	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/log"
 	"github.com/ibuildthecloud/herd/pkg/system"
 	"github.com/rancher/wrangler-cli"

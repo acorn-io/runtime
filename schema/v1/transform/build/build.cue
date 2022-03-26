@@ -9,7 +9,8 @@ IN="in": v1.#App
 out:     v1.#BuilderSpec
 let _norm = v1.#AppSpec & (normalize & {
 	in: {
-		app: IN
+		app:      IN
+		forBuild: true
 	}
 }).out
 

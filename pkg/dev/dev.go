@@ -59,20 +59,6 @@ func (o *Options) Complete() (*Options, error) {
 	return &result, nil
 }
 
-func watchFiles(file, cwd string) ([]string, error) {
-	data, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, fmt.Errorf("reading %s: %w", file, err)
-	}
-
-	appSpec, err := appdefinition.NewAppDefinition(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return appSpec.WatchFiles(cwd)
-}
-
 type watcher struct {
 	file       string
 	cwd        string
@@ -81,17 +67,23 @@ type watcher struct {
 	watchingTS []time.Time
 }
 
-func (w *watcher) readFiles() ([]string, error) {
+func (w *watcher) readFiles() []string {
 	data, err := ioutil.ReadFile(w.file)
 	if err != nil {
-		return nil, err
+		logrus.Errorf("failed to read %s: %v", w.file, err)
+		return []string{w.file}
 	}
 	app, err := appdefinition.NewAppDefinition(data)
 	if err != nil {
-		return nil, err
+		logrus.Errorf("failed to parse %s: %v", w.file, err)
+		return []string{w.file}
 	}
 	files, err := app.WatchFiles(w.cwd)
-	return append([]string{w.file}, files...), err
+	if err != nil {
+		logrus.Errorf("failed to parse additional files %s: %v", w.file, err)
+		return []string{w.file}
+	}
+	return append([]string{w.file}, files...)
 }
 
 func (w *watcher) foundChanges() bool {
@@ -104,8 +96,8 @@ func (w *watcher) foundChanges() bool {
 				}
 				return true
 			}
-		} else if !w.watchingTS[i].IsZero() {
-			return true
+		} else {
+			logrus.Errorf("failed to read %s: %v", f, err)
 		}
 	}
 	return false
@@ -134,11 +126,7 @@ func (w *watcher) Wait(ctx context.Context) error {
 			}
 		}
 
-		files, err := w.readFiles()
-		if err != nil {
-			logrus.Errorf("failed to read %s: %v", w.file, err)
-			continue
-		}
+		files := w.readFiles()
 		w.watching = files
 		w.watchingTS = timestamps(files)
 		return nil
@@ -339,6 +327,30 @@ func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options
 	}
 }
 
+func readInput(ctx context.Context, trigger chan<- struct{}) error {
+	buf := make([]byte, 1)
+	for {
+		readSomething := make(chan struct{})
+		go func() {
+			_ = os.Stdin.SetReadDeadline(time.Now().Add(5 * time.Second))
+			_, err := os.Stdin.Read(buf)
+			if err != nil {
+				close(readSomething)
+			}
+			readSomething <- struct{}{}
+		}()
+		select {
+		case <-ctx.Done():
+			return nil
+		case _, ok := <-readSomething:
+			if !ok {
+				continue
+			}
+			trigger <- struct{}{}
+		}
+	}
+}
+
 func Dev(ctx context.Context, file string, opts *Options) error {
 	opts, err := opts.Complete()
 	if err != nil {
@@ -358,6 +370,9 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	apps := make(chan *v1.AppInstance, 1)
 
 	eg, ctx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		return readInput(ctx, trigger)
+	})
 	eg.Go(func() error {
 		defer close(images)
 		return buildLoop(ctx, file, opts.Build, trigger, images)

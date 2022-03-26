@@ -1,4 +1,4 @@
-package client
+package k8sclient
 
 import (
 	"github.com/ibuildthecloud/baaah/pkg/restconfig"

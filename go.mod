@@ -10,6 +10,7 @@ replace (
 require (
 	cuelang.org/go v0.4.3-beta.1
 	github.com/containerd/console v1.0.3
+	github.com/google/go-containerregistry v0.5.1
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.4.2
 	github.com/ibuildthecloud/baaah v0.0.0-20220323220114-9ff98d54c814

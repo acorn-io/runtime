@@ -8,7 +8,7 @@ import (
 	"github.com/ibuildthecloud/herd/integration/helper"
 	"github.com/ibuildthecloud/herd/pkg/build"
 	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,17 +81,19 @@ func TestSimpleTwo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Len(t, image.ImageData.Containers, 2)
+	assert.Len(t, image.ImageData.Containers, 3)
 	assert.True(t, len(image.ImageData.Containers["one"].Image) > 0)
 	assert.True(t, len(image.ImageData.Containers["two"].Image) > 0)
-	assert.Len(t, image.ImageData.Images, 2)
+	assert.True(t, len(image.ImageData.Containers["three"].Image) > 0)
+	assert.Len(t, image.ImageData.Images, 3)
 	assert.True(t, len(image.ImageData.Images["ione"].Image) > 0)
 	assert.True(t, len(image.ImageData.Images["itwo"].Image) > 0)
+	assert.True(t, len(image.ImageData.Images["three"].Image) > 0)
 	assert.Equal(t, image.ImageData.Containers["two"].Image, image.ImageData.Images["itwo"].Image)
 }
 
 func Test_GetBuildkitDialer(t *testing.T) {
-	c, err := client.Default()
+	c, err := k8sclient.Default()
 	assert.Nil(t, err)
 
 	ctx, cancel := context.WithCancel(helper.GetCTX(t))

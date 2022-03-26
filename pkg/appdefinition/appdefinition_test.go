@@ -127,8 +127,7 @@ images: {
 	assert.Equal(t, "sub/dir2", buildSpec.Containers["full"].Build.Context)
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Containers["full"].Build.Dockerfile)
 	assert.Equal(t, "other", buildSpec.Containers["full"].Build.Target)
-	assert.Equal(t, "done", buildSpec.Containers["none"].Image)
-	assert.Nil(t, buildSpec.Containers["none"].Build)
+	assert.Equal(t, "done", buildSpec.Containers["none"].Build.BaseImage)
 
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["left"].Build.Dockerfile)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["left"].Build.Context)
@@ -147,8 +146,7 @@ images: {
 	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].Build.Context)
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
 	assert.Equal(t, "other", buildSpec.Images["full"].Build.Target)
-	assert.Equal(t, "done", buildSpec.Images["none"].Image)
-	assert.Nil(t, buildSpec.Images["none"].Build)
+	assert.Equal(t, "done", buildSpec.Images["none"].Build.BaseImage)
 }
 
 func TestWatchFiles(t *testing.T) {
@@ -785,10 +783,20 @@ images: {
 	assert.Equal(t, &v1.BuilderSpec{
 		Containers: map[string]v1.ContainerImageBuilderSpec{
 			"image": {
-				Image: "image-image",
+				Build: &v1.Build{
+					BaseImage:   "image-image",
+					ContextDirs: map[string]string{},
+					Context:     ".",
+					Dockerfile:  "Dockerfile",
+				},
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
-						Image: "image-image-side",
+						Build: &v1.Build{
+							BaseImage:   "image-image-side",
+							ContextDirs: map[string]string{},
+							Context:     ".",
+							Dockerfile:  "Dockerfile",
+						},
 					},
 				},
 			},
@@ -856,10 +864,20 @@ images: {
 				},
 			},
 			"imagesimageref": {
-				Image: "images-image-image",
+				Build: &v1.Build{
+					BaseImage:   "images-image-image",
+					ContextDirs: map[string]string{},
+					Context:     ".",
+					Dockerfile:  "Dockerfile",
+				},
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
-						Image: "images-image-image",
+						Build: &v1.Build{
+							BaseImage:   "images-image-image",
+							ContextDirs: map[string]string{},
+							Context:     ".",
+							Dockerfile:  "Dockerfile",
+						},
 					},
 				},
 			},
@@ -873,7 +891,12 @@ images: {
 				},
 			},
 			"image": {
-				Image: "images-image-image",
+				Build: &v1.Build{
+					BaseImage:   "images-image-image",
+					Context:     ".",
+					Dockerfile:  "Dockerfile",
+					ContextDirs: map[string]string{},
+				},
 			},
 		},
 	}, buildSpec)

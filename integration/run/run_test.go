@@ -6,8 +6,7 @@ import (
 	"github.com/ibuildthecloud/herd/integration/helper"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/build"
-	"github.com/ibuildthecloud/herd/pkg/client"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
+	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/labels"
 	"github.com/ibuildthecloud/herd/pkg/run"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestVolume(t *testing.T) {
 	}
 
 	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(client.Default)
+	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
@@ -97,7 +96,7 @@ func TestSimple(t *testing.T) {
 	}
 
 	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(client.Default)
+	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{

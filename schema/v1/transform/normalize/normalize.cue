@@ -44,9 +44,10 @@ import (
 	IN="in": {
 		sidecarName: string
 		container:   _
+		forBuild:    bool
 	}
 	out: {
-		{#ToContainer & {in: {name: IN.sidecarName, container: IN.container}}}.out
+		{#ToContainer & {in: {name: IN.sidecarName, container: IN.container, forBuild: IN.forBuild}}}.out
 		init: IN.container.init
 	}
 }
@@ -243,14 +244,17 @@ import (
 	IN="in": {
 		name:      string
 		container: _
+		forBuild:  bool | *false
 	}
 	out: {
 		for k, v in IN.container.files {
 			files: "\(k)": {#ToFileSpec & {in: v}}.out
 		}
-		if IN.container["image"] != _|_ {
-			if !{#HasContextDir & {in: IN}}.out {
-				image: IN.container.image
+		if !IN.forBuild {
+			if IN.container["image"] != _|_ {
+				if !{#HasContextDir & {in: IN}}.out {
+					image: IN.container.image
+				}
 			}
 		}
 		if IN.container["build"] != _|_ {
@@ -299,6 +303,10 @@ import (
 			}
 		}
 
+		if IN.forBuild && IN.container["image"] != _|_ {
+			build: baseImage: IN.container.image
+		}
+
 		ports: [{#ToPort & {in: IN.container.ports}}.out] | [ for p in IN.container.ports {
 			{#ToPort & {in: p}}.out
 		}]
@@ -306,25 +314,33 @@ import (
 }
 
 #ToAppSpec: {
-	IN="in": v1.#App
-	out:     v1.#AppSpec
+	IN="in": {
+		app:      v1.#App
+		forBuild: bool | *false
+	}
+	out: v1.#AppSpec
 	out: {
 		containers: {
-			for k, v in IN.containers {
+			for k, v in IN.app.containers {
 				"\(k)": {
-					{#ToContainer & {in: {name: k, container: v}}}.out
+					{#ToContainer & {in: {name: k, container: v, forBuild: IN.forBuild}}}.out
 					for sk, sv in v.sidecars {
 						sidecars: "\(sk)": {
-							{#ToSidecar & {in: {sidecarName: sk, container: sv}}}.out
+							{#ToSidecar & {in: {sidecarName: sk, container: sv, forBuild: IN.forBuild}}}.out
 						}
 					}
 				}
 			}
 		}
 		images: {
-			for k, v in IN.images {
+			for k, v in IN.app.images {
 				"\(k)": {
-					image: v.image
+					if IN.forBuild {
+						build: baseImage: v.image
+					}
+					if !IN.forBuild {
+						image: v.image
+					}
 					if v["build"] != _|_ {
 						build: {#ToBuild & {in: v.build}}.out
 					}
@@ -332,7 +348,7 @@ import (
 			}
 		}
 		volumes: {
-			for k, v in IN.volumes {
+			for k, v in IN.app.volumes {
 				"\(k)": *v | {
 					class: v.class
 					size:  v.size
@@ -340,7 +356,7 @@ import (
 				}
 			}
 			for x in ["dirs", "directories"] {
-				for name, c in IN.containers {
+				for name, c in IN.app.containers {
 					if c[x] != _|_ {
 						for k, v in c[x] {
 							{#ToVolumeSpecMap & {in: {dir: v, containerName: name, dirname: k}}}.out
@@ -357,7 +373,7 @@ import (
 			}
 		}
 		secrets: {
-			for k, v in IN.secrets {
+			for k, v in IN.app.secrets {
 				"\(k)": v
 			}
 			for name, container in containers {
@@ -399,10 +415,11 @@ import (
 IN="in": {
 	app:       v1.#App
 	imageData: v1.#ImagesData
+	forBuild:  bool | *false
 }
 out: v1.#AppSpec
 out: {
 	let _appWithImageDataImagesSet = IN.app & {images: IN.imageData.images}
-	let _normedAppWithoutImageDataContainersSet = {#ToAppSpec & {in: _appWithImageDataImagesSet}}.out
+	let _normedAppWithoutImageDataContainersSet = {#ToAppSpec & {in: {app: _appWithImageDataImagesSet, forBuild: IN.forBuild}}}.out
 	_normedAppWithoutImageDataContainersSet & {containers: IN.imageData.containers}
 }
