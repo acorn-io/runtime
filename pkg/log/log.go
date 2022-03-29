@@ -59,7 +59,7 @@ func (w *watching) shouldWatch(kind, namespace, name string) bool {
 }
 
 type Options struct {
-	Output     streams.Output
+	Output     *streams.Output
 	RestConfig *rest.Config
 	Client     client.WithWatch
 	PodClient  v12.PodsGetter
@@ -84,6 +84,10 @@ func (o *Options) restConfig() (*rest.Config, error) {
 func (o *Options) Complete() (*Options, error) {
 	if o == nil {
 		o = &Options{}
+	}
+
+	if o.Output == nil {
+		o.Output = streams.CurrentOutput()
 	}
 
 	if !o.outputLocked {
@@ -117,7 +121,7 @@ func (o *Options) Complete() (*Options, error) {
 	return o, nil
 }
 
-func pipe(input io.ReadCloser, output streams.Output, prefix string, timestamps bool, after *metav1.Time) (*metav1.Time, error) {
+func pipe(input io.ReadCloser, output *streams.Output, prefix string, timestamps bool, after *metav1.Time) (*metav1.Time, error) {
 	defer input.Close()
 
 	var lastTS *metav1.Time

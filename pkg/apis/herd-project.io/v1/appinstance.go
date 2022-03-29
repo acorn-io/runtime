@@ -47,11 +47,19 @@ type VolumeBinding struct {
 	VolumeRequest string `json:"volumeRequest,omitempty"`
 }
 
+type ContainerStatus struct {
+	Ready        int32 `json:"ready,omitempty"`
+	ReadyDesired int32 `json:"readyDesired,omitempty"`
+	UpToDate     int32 `json:"upToDate,omitempty"`
+}
+
 type AppInstanceStatus struct {
-	Namespace  string               `json:"namespace,omitempty"`
-	AppImage   AppImage             `json:"appImage,omitempty"`
-	AppSpec    AppSpec              `json:"appSpec,omitempty"`
-	Conditions map[string]Condition `json:"conditions,omitempty"`
+	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
+	Stopped         bool                       `json:"stopped,omitempty"`
+	Namespace       string                     `json:"namespace,omitempty"`
+	AppImage        AppImage                   `json:"appImage,omitempty"`
+	AppSpec         AppSpec                    `json:"appSpec,omitempty"`
+	Conditions      map[string]Condition       `json:"conditions,omitempty"`
 }
 
 func (a *AppInstance) Conditions() *map[string]Condition {

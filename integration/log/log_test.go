@@ -46,7 +46,7 @@ func TestLog(t *testing.T) {
 	eg.Go(func() error {
 		return log.App(ctx, app, &log.Options{
 			Client: c,
-			Output: streams.Output{
+			Output: &streams.Output{
 				Out: out,
 				Err: errOut,
 			},

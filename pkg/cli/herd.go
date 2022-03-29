@@ -35,6 +35,7 @@ herd run --dev .`,
 		},
 	})
 	root.AddCommand(
+		NewApp(),
 		NewBuild(),
 		NewRun(),
 		NewLogs(),

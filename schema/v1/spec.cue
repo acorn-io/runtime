@@ -74,7 +74,7 @@ package v1
 }
 
 #ImageSpec: {
-	image:  string
+	image:  string | *""
 	build?: #BuildSpec
 }
 

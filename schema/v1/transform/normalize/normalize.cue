@@ -44,10 +44,9 @@ import (
 	IN="in": {
 		sidecarName: string
 		container:   _
-		forBuild:    bool
 	}
 	out: {
-		{#ToContainer & {in: {name: IN.sidecarName, container: IN.container, forBuild: IN.forBuild}}}.out
+		{#ToContainer & {in: {name: IN.sidecarName, container: IN.container}}}.out
 		init: IN.container.init
 	}
 }
@@ -210,23 +209,6 @@ import (
 	}
 }
 
-#HasContextDir: {
-	// This is #Container
-	IN="in": _
-	out:     bool | *false
-	out: {
-		for x in ["dirs", "directories"] {
-			if IN.container[x] != _|_ {
-				for k, v in IN.container[x] {
-					if (v & v1.#ContextDirRef) != _|_ {
-						true
-					}
-				}
-			}
-		}
-	}
-}
-
 #ToBuild: {
 	IN="in": string | v1.#Build
 	out:     v1.#BuildSpec
@@ -244,18 +226,13 @@ import (
 	IN="in": {
 		name:      string
 		container: _
-		forBuild:  bool | *false
 	}
 	out: {
 		for k, v in IN.container.files {
 			files: "\(k)": {#ToFileSpec & {in: v}}.out
 		}
-		if !IN.forBuild {
-			if IN.container["image"] != _|_ {
-				if !{#HasContextDir & {in: IN}}.out {
-					image: IN.container.image
-				}
-			}
+		if IN.container["image"] != _|_ {
+			image: IN.container.image
 		}
 		if IN.container["build"] != _|_ {
 			build: {#ToBuild & {in: IN.container.build}}.out
@@ -303,10 +280,6 @@ import (
 			}
 		}
 
-		if IN.forBuild && IN.container["image"] != _|_ {
-			build: baseImage: IN.container.image
-		}
-
 		ports: [{#ToPort & {in: IN.container.ports}}.out] | [ for p in IN.container.ports {
 			{#ToPort & {in: p}}.out
 		}]
@@ -315,18 +288,17 @@ import (
 
 #ToAppSpec: {
 	IN="in": {
-		app:      v1.#App
-		forBuild: bool | *false
+		app: v1.#App
 	}
 	out: v1.#AppSpec
 	out: {
 		containers: {
 			for k, v in IN.app.containers {
 				"\(k)": {
-					{#ToContainer & {in: {name: k, container: v, forBuild: IN.forBuild}}}.out
+					{#ToContainer & {in: {name: k, container: v}}}.out
 					for sk, sv in v.sidecars {
 						sidecars: "\(sk)": {
-							{#ToSidecar & {in: {sidecarName: sk, container: sv, forBuild: IN.forBuild}}}.out
+							{#ToSidecar & {in: {sidecarName: sk, container: sv}}}.out
 						}
 					}
 				}
@@ -335,12 +307,7 @@ import (
 		images: {
 			for k, v in IN.app.images {
 				"\(k)": {
-					if IN.forBuild {
-						build: baseImage: v.image
-					}
-					if !IN.forBuild {
-						image: v.image
-					}
+					image: v.image
 					if v["build"] != _|_ {
 						build: {#ToBuild & {in: v.build}}.out
 					}
@@ -413,13 +380,9 @@ import (
 }
 
 IN="in": {
-	app:       v1.#App
-	imageData: v1.#ImagesData
-	forBuild:  bool | *false
+	app: v1.#App
 }
 out: v1.#AppSpec
 out: {
-	let _appWithImageDataImagesSet = IN.app & {images: IN.imageData.images}
-	let _normedAppWithoutImageDataContainersSet = {#ToAppSpec & {in: {app: _appWithImageDataImagesSet, forBuild: IN.forBuild}}}.out
-	_normedAppWithoutImageDataContainersSet & {containers: IN.imageData.containers}
+	{#ToAppSpec & {in: {app: IN.app}}}.out
 }

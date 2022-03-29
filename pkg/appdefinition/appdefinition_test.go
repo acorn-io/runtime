@@ -10,62 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestContainerReferenceImage(t *testing.T) {
-	appImage, err := NewAppDefinition([]byte(`
-containers: {
-  ref: {
-    image: images.full.image
-  }
-}
-
-images: {
-  full: {
-    build: {
-      context: "sub/dir2"	
-      dockerfile: "sub/dir3/Dockerfile"
-    }
-  }
-}
-`))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	buildSpec, err := appImage.BuilderSpec()
-	if err != nil {
-		errors.Print(os.Stderr, err, nil)
-		t.Fatal(err)
-	}
-
-	assert.Len(t, buildSpec.Containers, 1)
-	assert.Equal(t, "", buildSpec.Containers["ref"].Image)
-	assert.Nil(t, buildSpec.Containers["ref"].Build)
-
-	assert.Len(t, buildSpec.Images, 1)
-	assert.Equal(t, "", buildSpec.Images["full"].Image)
-	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].Build.Context)
-	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
-
-	appImage = appImage.WithImageData(v1.ImagesData{
-		Images: map[string]v1.ImageData{
-			"full": {
-				Image: "full-image",
-			},
-		},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	appSpec, err := appImage.AppSpec()
-	if err != nil {
-		errors.Print(os.Stderr, err, nil)
-		t.Fatal(err)
-	}
-	assert.Equal(t, "full-image", appSpec.Containers["ref"].Image)
-	assert.Nil(t, appSpec.Containers["ref"].Build)
-}
-
 func TestAppImageBuildSpec(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
 containers: {
@@ -127,12 +71,12 @@ images: {
 	assert.Equal(t, "sub/dir2", buildSpec.Containers["full"].Build.Context)
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Containers["full"].Build.Dockerfile)
 	assert.Equal(t, "other", buildSpec.Containers["full"].Build.Target)
-	assert.Equal(t, "done", buildSpec.Containers["none"].Build.BaseImage)
+	assert.Equal(t, "done", buildSpec.Containers["none"].Image)
 
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["left"].Build.Dockerfile)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["left"].Build.Context)
 
-	assert.Equal(t, "", buildSpec.Containers["file"].Sidecars["right"].Image)
+	assert.Equal(t, "nginx", buildSpec.Containers["file"].Sidecars["right"].Image)
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["right"].Build.Dockerfile)
 	assert.Equal(t, "nginx", buildSpec.Containers["file"].Sidecars["right"].Build.BaseImage)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["right"].Build.Context)
@@ -146,7 +90,7 @@ images: {
 	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].Build.Context)
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
 	assert.Equal(t, "other", buildSpec.Images["full"].Build.Target)
-	assert.Equal(t, "done", buildSpec.Images["none"].Build.BaseImage)
+	assert.Equal(t, "done", buildSpec.Images["none"].Image)
 }
 
 func TestWatchFiles(t *testing.T) {
@@ -750,18 +694,6 @@ containers: {
 		  dirs: "/var/tmp": "./foo/bar"
         }
 	}
-	imagesimageref: {
-        image: images.image.image
-        sidecars: side: {
-          image: images.image.image
-     	}
-	}
-	imagesbuildref: {
-        image: images.build.image
-        sidecars: side: {
-          image: images.build.image
-        }
-	}
 }
 images: {
 	build: {
@@ -783,20 +715,10 @@ images: {
 	assert.Equal(t, &v1.BuilderSpec{
 		Containers: map[string]v1.ContainerImageBuilderSpec{
 			"image": {
-				Build: &v1.Build{
-					BaseImage:   "image-image",
-					ContextDirs: map[string]string{},
-					Context:     ".",
-					Dockerfile:  "Dockerfile",
-				},
+				Image: "image-image",
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
-						Build: &v1.Build{
-							BaseImage:   "image-image-side",
-							ContextDirs: map[string]string{},
-							Context:     ".",
-							Dockerfile:  "Dockerfile",
-						},
+						Image: "image-image-side",
 					},
 				},
 			},
@@ -837,6 +759,7 @@ images: {
 				},
 			},
 			"imagecontext": {
+				Image: "imagecontext-image",
 				Build: &v1.Build{
 					BaseImage:  "imagecontext-image",
 					Context:    ".",
@@ -847,6 +770,7 @@ images: {
 				},
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
+						Image: "imagecontext-image-side",
 						Build: &v1.Build{
 							BaseImage:  "imagecontext-image-side",
 							Context:    ".",
@@ -854,29 +778,6 @@ images: {
 							ContextDirs: map[string]string{
 								"/var/tmp": "./foo/bar",
 							},
-						},
-					},
-				},
-			},
-			"imagesbuildref": {
-				Sidecars: map[string]v1.ContainerImageBuilderSpec{
-					"side": {},
-				},
-			},
-			"imagesimageref": {
-				Build: &v1.Build{
-					BaseImage:   "images-image-image",
-					ContextDirs: map[string]string{},
-					Context:     ".",
-					Dockerfile:  "Dockerfile",
-				},
-				Sidecars: map[string]v1.ContainerImageBuilderSpec{
-					"side": {
-						Build: &v1.Build{
-							BaseImage:   "images-image-image",
-							ContextDirs: map[string]string{},
-							Context:     ".",
-							Dockerfile:  "Dockerfile",
 						},
 					},
 				},
@@ -891,12 +792,7 @@ images: {
 				},
 			},
 			"image": {
-				Build: &v1.Build{
-					BaseImage:   "images-image-image",
-					Context:     ".",
-					Dockerfile:  "Dockerfile",
-					ContextDirs: map[string]string{},
-				},
+				Image: "images-image-image",
 			},
 		},
 	}, buildSpec)
@@ -935,22 +831,6 @@ images: {
 					},
 				},
 			},
-			"imagesimageref": {
-				Image: "",
-				Sidecars: map[string]v1.ImageData{
-					"side": {
-						Image: "",
-					},
-				},
-			},
-			"imagesbuildref": {
-				Image: "",
-				Sidecars: map[string]v1.ImageData{
-					"side": {
-						Image: "",
-					},
-				},
-			},
 		},
 		Images: map[string]v1.ImageData{
 			"build": {
@@ -967,7 +847,7 @@ images: {
 		t.Fatal(err)
 	}
 
-	assert.Len(t, appSpec.Containers, 6)
+	assert.Len(t, appSpec.Containers, 4)
 	assert.Len(t, appSpec.Images, 2)
 	assert.Equal(t, "image-image", appSpec.Containers["image"].Image)
 	assert.Equal(t, "image-image-side", appSpec.Containers["image"].Sidecars["side"].Image)
@@ -977,10 +857,6 @@ images: {
 	assert.Equal(t, "buildcontext-image-side", appSpec.Containers["buildcontext"].Sidecars["side"].Image)
 	assert.Equal(t, "imagecontext-image", appSpec.Containers["imagecontext"].Image)
 	assert.Equal(t, "imagecontext-image-side", appSpec.Containers["imagecontext"].Sidecars["side"].Image)
-	assert.Equal(t, "images-image-image", appSpec.Containers["imagesimageref"].Image)
-	assert.Equal(t, "images-image-image", appSpec.Containers["imagesimageref"].Sidecars["side"].Image)
-	assert.Equal(t, "images-build-image", appSpec.Containers["imagesbuildref"].Image)
-	assert.Equal(t, "images-build-image", appSpec.Containers["imagesbuildref"].Sidecars["side"].Image)
 }
 
 func TestImageJSON(t *testing.T) {
@@ -1205,4 +1081,42 @@ secrets: {
 		Optional: &[]bool{true}[0],
 	}, appSpec.Secrets["opt"])
 
+}
+
+func TestImageDataOverride(t *testing.T) {
+	herdCue := `
+containers: db: image: "mariadb"
+images: test: image: "another"
+`
+	image := &v1.ImagesData{
+		Containers: map[string]v1.ContainerData{
+			"db": {
+				Image: "override-db",
+			},
+		},
+		Images: map[string]v1.ImageData{
+			"test": {
+				Image: "override-image",
+			},
+		},
+	}
+
+	app, err := NewAppDefinition([]byte(herdCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = app.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = app.WithImageData(*image)
+	appSpec, err := app.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "override-db", appSpec.Containers["db"].Image)
+	assert.Equal(t, "override-image", appSpec.Images["test"].Image)
 }

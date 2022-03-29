@@ -28,4 +28,5 @@ func main() {
 	if err := c.Start(ctx); err != nil {
 		logrus.Fatal(err)
 	}
+	<-ctx.Done()
 }

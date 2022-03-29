@@ -32,7 +32,9 @@ func (c *Callback) Success() {
 }
 
 func (c *Callback) Unknown() {
-	c.Set(v1.Condition{})
+	c.Set(v1.Condition{
+		Transitioning: true,
+	})
 }
 
 func (c *Callback) Error(err error) {

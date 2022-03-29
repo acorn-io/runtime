@@ -375,7 +375,7 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	})
 	eg.Go(func() error {
 		defer close(images)
-		return buildLoop(ctx, file, opts.Build, trigger, images)
+		return buildLoop(ctx, herdCue, opts.Build, trigger, images)
 	})
 	eg.Go(func() error {
 		defer close(apps)

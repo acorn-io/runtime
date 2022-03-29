@@ -20,15 +20,8 @@ const (
 )
 
 type AppDefinition struct {
-	ctx       *cue.Context
-	imageData v1.ImagesData
-}
-
-func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
-	return &AppDefinition{
-		ctx:       a.ctx,
-		imageData: imageData,
-	}
+	ctx        *cue.Context
+	imageDatas []v1.ImagesData
 }
 
 func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
@@ -38,6 +31,13 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 	}
 
 	return appDef.WithImageData(appImage.ImageData), nil
+}
+
+func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
+	return &AppDefinition{
+		ctx:        a.ctx,
+		imageDatas: append(a.imageDatas, imageData),
+	}
 }
 
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
@@ -64,8 +64,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	}
 
 	v, err := a.ctx.Encode(map[string]interface{}{
-		"app":       app,
-		"imageData": a.imageData,
+		"app": app,
 	})
 	if err != nil {
 		return nil, err
@@ -77,13 +76,38 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	}
 
 	spec := &v1.AppSpec{}
-	return spec, a.ctx.Decode(v, spec)
+	if err := a.ctx.Decode(v, spec); err != nil {
+		return nil, err
+	}
+
+	for _, imageData := range a.imageDatas {
+		for c, con := range imageData.Containers {
+			if conSpec, ok := spec.Containers[c]; ok {
+				conSpec.Image = con.Image
+				spec.Containers[c] = conSpec
+			}
+			for s, con := range con.Sidecars {
+				if conSpec, ok := spec.Containers[c].Sidecars[s]; ok {
+					conSpec.Image = con.Image
+					spec.Containers[c].Sidecars[s] = conSpec
+				}
+			}
+		}
+		for i, img := range imageData.Images {
+			if imgSpec, ok := spec.Images[i]; ok {
+				imgSpec.Image = img.Image
+				spec.Images[i] = imgSpec
+			}
+		}
+	}
+
+	return spec, nil
 }
 
 func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuilderSpec, cwd string) {
 	for _, build := range builds {
 		addContainerFiles(fileSet, build.Sidecars, cwd)
-		if build.Build == nil {
+		if build.Build == nil || build.Build.BaseImage != "" {
 			continue
 		}
 		fileSet[filepath.Join(cwd, build.Build.Dockerfile)] = true

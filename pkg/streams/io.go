@@ -17,6 +17,10 @@ type lockedWriter struct {
 }
 
 func (l *lockedWriter) Write(p []byte) (n int, err error) {
+	if l.Writer == nil {
+		return len(p), nil
+	}
+
 	l.Lock()
 	defer l.Unlock()
 	return l.Writer.Write(p)
@@ -29,8 +33,8 @@ func (o *Output) Streams() Streams {
 }
 
 // Locked with wrap both Out and Err with a Mutex to make it safe for concurrent access
-func (o *Output) Locked() Output {
-	return Output{
+func (o *Output) Locked() *Output {
+	return &Output{
 		Out: &lockedWriter{Writer: o.Out},
 		Err: &lockedWriter{Writer: o.Err},
 	}
