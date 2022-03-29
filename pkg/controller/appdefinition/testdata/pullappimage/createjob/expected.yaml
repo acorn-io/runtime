@@ -48,4 +48,5 @@ spec:
 status:
   namespace: "appInstance-namespace"
   conditions:
-    pulled: {}
+    pulled:
+      transitioning: true

@@ -84,8 +84,11 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 
 	for _, entry := range typed.Sorted(spec.Containers) {
 		key, container := entry.Key, entry.Value
-		if container.Image != "" || container.Build == nil {
-			continue
+		if container.Image != "" && container.Build == nil {
+			// this is a copy, it's fine to modify it
+			container.Build = &v1.Build{
+				BaseImage: container.Image,
+			}
 		}
 
 		id, err := FromBuild(ctx, cwd, *container.Build, streams.Streams())
@@ -107,7 +110,10 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 		for _, entry := range typed.Sorted(container.Sidecars) {
 			sidecarKey, sidecar := entry.Key, entry.Value
 			if sidecar.Image != "" || sidecar.Build == nil {
-				continue
+				// this is a copy, it's fine to modify it
+				sidecar.Build = &v1.Build{
+					BaseImage: sidecar.Image,
+				}
 			}
 
 			id, err := FromBuild(ctx, cwd, *sidecar.Build, streams.Streams())
@@ -129,7 +135,9 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 	for _, key := range imageKeys {
 		image := spec.Images[key]
 		if image.Image != "" || image.Build == nil {
-			continue
+			image.Build = &v1.Build{
+				BaseImage: image.Image,
+			}
 		}
 
 		id, err := FromBuild(ctx, cwd, *image.Build, streams.Streams())
