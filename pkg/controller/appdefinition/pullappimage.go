@@ -5,7 +5,6 @@ import (
 
 	"github.com/ibuildthecloud/baaah/pkg/meta"
 	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/condition"
 	herdlabels "github.com/ibuildthecloud/herd/pkg/labels"
@@ -29,7 +28,8 @@ type appImageWithError struct {
 }
 
 func getOutput(client router.Client, image, name, namespace string) (result appImageWithError, _ error) {
-	job, err := typed.Get[*batchv1.Job](client, name, &meta.GetOptions{
+	job := &batchv1.Job{}
+	err := client.Get(job, name, &meta.GetOptions{
 		Namespace: namespace,
 	})
 	if apierror.IsNotFound(err) {
@@ -51,7 +51,8 @@ func getOutput(client router.Client, image, name, namespace string) (result appI
 		return result, err
 	}
 
-	pods, err := typed.List[*corev1.PodList](client, &meta.ListOptions{
+	pods := &corev1.PodList{}
+	err = client.List(pods, &meta.ListOptions{
 		Namespace: namespace,
 		Selector:  sel,
 	})
@@ -103,13 +104,13 @@ func pullAppImage(appImageInitImage string, req router.Request, resp router.Resp
 	}
 
 	if appImage.ID == "" {
-		cond.Unknown()
+		cond.Unknown("waiting on pull job")
 		resp.Objects(pullJob(appInstance.Spec.Image, appImageInitImage, jobName, jobNS))
 	} else {
 		cond.Success()
 		appInstance.Status.AppImage = appImage.AppImage
-		resp.Objects(appInstance)
 	}
+	resp.Objects(appInstance)
 
 	return nil
 }

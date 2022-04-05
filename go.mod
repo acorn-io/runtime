@@ -4,6 +4,7 @@ go 1.18
 
 replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
+	github.com/rancher/wrangler => github.com/ibuildthecloud/wrangler v0.0.0-20220405013541-7c01be7907d2
 	k8s.io/client-go => k8s.io/client-go v0.23.0
 )
 
@@ -13,7 +14,7 @@ require (
 	github.com/google/go-containerregistry v0.5.1
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.4.2
-	github.com/ibuildthecloud/baaah v0.0.0-20220323220114-9ff98d54c814
+	github.com/ibuildthecloud/baaah v0.0.0-20220405043530-a2c832991588
 	github.com/moby/buildkit v0.10.0-rc1.0.20220216012946-b36d860675c5
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/lasso v0.0.0-20220110204427-db9f3e569574
@@ -68,6 +69,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
+	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/sys/signal v0.6.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

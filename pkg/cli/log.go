@@ -37,7 +37,7 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return log.App(cmd.Context(), &app, &log.Options{
+	return log.Output(cmd.Context(), &app, &log.Options{
 		Client: c,
 	})
 }

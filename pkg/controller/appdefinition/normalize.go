@@ -17,7 +17,6 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 	appImage := appInstance.Status.AppImage
 
 	if appImage.Herdfile == "" {
-		status.Unknown()
 		return nil
 	}
 

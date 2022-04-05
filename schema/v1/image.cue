@@ -7,6 +7,12 @@ package v1
 			image: string
 		}
 	}
+	jobs: [string]: {
+		image: string
+		sidecars: [string]: {
+			image: string
+		}
+	}
 	images: [string]: {
 		image: string
 	}
@@ -14,6 +20,14 @@ package v1
 
 #BuilderSpec: {
 	containers: [string]: {
+		image?: string
+		build?: #BuildSpec
+		sidecars: [string]: {
+			image?: string
+			build?: #BuildSpec
+		}
+	}
+	jobs: [string]: {
 		image?: string
 		build?: #BuildSpec
 		sidecars: [string]: {

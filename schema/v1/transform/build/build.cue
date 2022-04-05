@@ -37,6 +37,29 @@ out: {
 			}
 		}
 	}
+	jobs: {
+		for k, v in _norm.jobs {
+			"\(k)": {
+				if v["image"] != _|_ {
+					image: v.image
+				}
+				if v["build"] != _|_ {
+					build: v.build
+				}
+
+				for sk, sv in v.sidecars {
+					sidecars: "\(sk)": {
+						if sv["image"] != _|_ {
+							image: sv.image
+						}
+						if sv["build"] != _|_ {
+							build: sv.build
+						}
+					}
+				}
+			}
+		}
+	}
 	images: {
 		for k, v in _norm.images {
 			"\(k)": {

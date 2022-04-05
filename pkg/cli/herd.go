@@ -36,6 +36,7 @@ herd run --dev .`,
 	})
 	root.AddCommand(
 		NewApp(),
+		NewRm(),
 		NewBuild(),
 		NewRun(),
 		NewLogs(),
@@ -45,9 +46,10 @@ herd run --dev .`,
 }
 
 type Herd struct {
-	Kubeconfig string `usage:"Location of a kubeconfig file"`
-	Context    string `usage:"Context to use in the kubeconfig file"`
-	Namespace  string `usage:"Namespace to work in" default:"herd"`
+	Kubeconfig    string `usage:"Location of a kubeconfig file"`
+	Context       string `usage:"Context to use in the kubeconfig file"`
+	Namespace     string `usage:"Namespace to work in" default:"herd"`
+	AllNamespaces bool   `usage:"Namespace to work in" default:"herd" short:"A"`
 }
 
 func setEnv(key, value string) error {
@@ -64,7 +66,13 @@ func (a *Herd) PersistentPre(cmd *cobra.Command, args []string) error {
 	if err := setEnv("CONTEXT", a.Context); err != nil {
 		return err
 	}
-	return setEnv("NAMESPACE", a.Namespace)
+	if err := setEnv("NAMESPACE", a.Namespace); err != nil {
+		return err
+	}
+	if a.AllNamespaces {
+		return os.Setenv("NAMESPACE_ALL", "true")
+	}
+	return nil
 }
 
 func (a *Herd) Run(cmd *cobra.Command, args []string) error {

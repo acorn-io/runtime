@@ -18,6 +18,11 @@ package v1
 	sidecars: [string]: #SidecarSpec
 }
 
+#JobSpec: {
+	#ContainerBaseSpec
+	sidecars: [string]: #SidecarSpec
+}
+
 #EnvSecretValue: {
 	key:       string | *""
 	name:      string
@@ -95,6 +100,7 @@ package v1
 
 #AppSpec: {
 	containers: [string]: #ContainerSpec
+	jobs: [string]:       #JobSpec
 	images: [string]:     #ImageSpec
 	volumes: [string]:    #VolumeSpec
 	secrets: [string]:    #SecretSpec

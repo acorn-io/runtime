@@ -76,13 +76,10 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
-	data := v1.ImagesData{
-		Containers: map[string]v1.ContainerData{},
-		Images:     map[string]v1.ImageData{},
-	}
+func buildContainers(ctx context.Context, cwd string, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
+	result := map[string]v1.ContainerData{}
 
-	for _, entry := range typed.Sorted(spec.Containers) {
+	for _, entry := range typed.Sorted(containers) {
 		key, container := entry.Key, entry.Value
 		if container.Image != "" && container.Build == nil {
 			// this is a copy, it's fine to modify it
@@ -93,10 +90,10 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 
 		id, err := FromBuild(ctx, cwd, *container.Build, streams.Streams())
 		if err != nil {
-			return data, err
+			return nil, err
 		}
 
-		data.Containers[key] = v1.ContainerData{
+		result[key] = v1.ContainerData{
 			Image:    id,
 			Sidecars: map[string]v1.ImageData{},
 		}
@@ -118,22 +115,22 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 
 			id, err := FromBuild(ctx, cwd, *sidecar.Build, streams.Streams())
 			if err != nil {
-				return data, err
+				return nil, err
 			}
-			data.Containers[key].Sidecars[sidecarKey] = v1.ImageData{
+			result[key].Sidecars[sidecarKey] = v1.ImageData{
 				Image: id,
 			}
 		}
 	}
 
-	var imageKeys []string
-	for k := range spec.Images {
-		imageKeys = append(imageKeys, k)
-	}
-	sort.Strings(imageKeys)
+	return result, nil
+}
 
-	for _, key := range imageKeys {
-		image := spec.Images[key]
+func buildImages(ctx context.Context, cwd string, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
+	result := map[string]v1.ImageData{}
+
+	for _, entry := range typed.Sorted(images) {
+		key, image := entry.Key, entry.Value
 		if image.Image != "" || image.Build == nil {
 			image.Build = &v1.Build{
 				BaseImage: image.Image,
@@ -142,12 +139,38 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 
 		id, err := FromBuild(ctx, cwd, *image.Build, streams.Streams())
 		if err != nil {
-			return data, err
+			return nil, err
 		}
 
-		data.Images[key] = v1.ImageData{
+		result[key] = v1.ImageData{
 			Image: id,
 		}
+	}
+
+	return result, nil
+}
+
+func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
+	var (
+		err  error
+		data = v1.ImagesData{
+			Images: map[string]v1.ImageData{},
+		}
+	)
+
+	data.Containers, err = buildContainers(ctx, cwd, streams, spec.Containers)
+	if err != nil {
+		return data, err
+	}
+
+	data.Jobs, err = buildContainers(ctx, cwd, streams, spec.Jobs)
+	if err != nil {
+		return data, err
+	}
+
+	data.Images, err = buildImages(ctx, cwd, streams, spec.Images)
+	if err != nil {
+		return data, err
 	}
 
 	return data, nil

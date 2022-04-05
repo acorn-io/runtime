@@ -18,6 +18,8 @@ func routes(router *router.Router, c Config) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.RequireNamespace(appdefinition.CreateSecrets))
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ReleaseVolume)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.RequireNamespace(appdefinition.AppStatus))
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.RequireNamespace(appdefinition.JobStatus))
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.RequireNamespace(appdefinition.CLIStatus))
 
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(map[string]string{
 		labels.HerdManaged: "true",

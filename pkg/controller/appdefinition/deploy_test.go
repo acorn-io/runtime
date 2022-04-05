@@ -1,8 +1,11 @@
 package appdefinition
 
 import (
+	"encoding/hex"
+	"strings"
 	"testing"
 
+	"cuelang.org/go/pkg/crypto/sha256"
 	"github.com/ibuildthecloud/baaah/pkg/router/tester"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/scheme"
@@ -214,17 +217,17 @@ func TestFiles(t *testing.T) {
 
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
-	assert.Equal(t, "/app/test/test/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].SubPath)
+	assert.Equal(t, toPathHash("/app/test/test/a1/b/c"), dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].SubPath)
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
 	assert.Equal(t, "/a2/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
-	assert.Equal(t, "/app/test/test/a2/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].SubPath)
+	assert.Equal(t, toPathHash("/app/test/test/a2/b/c"), dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].SubPath)
 
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].Name)
 	assert.Equal(t, "/a/b1/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].MountPath)
-	assert.Equal(t, "/app/test/left/a/b1/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].SubPath)
+	assert.Equal(t, toPathHash("/app/test/left/a/b1/c"), dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].SubPath)
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].Name)
 	assert.Equal(t, "/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].MountPath)
-	assert.Equal(t, "/app/test/left/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].SubPath)
+	assert.Equal(t, toPathHash("/app/test/left/a/b2/c"), dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].SubPath)
 
 	configMaps, err := toConfigMaps(app)
 	if err != nil {
@@ -233,12 +236,19 @@ func TestFiles(t *testing.T) {
 	configMap := configMaps[0].(*corev1.ConfigMap)
 
 	assert.Len(t, configMap.BinaryData, 8)
-	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test/test/a2/b/c"])
-	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test2/test2/a2/b/c"])
-	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test/left/a/b2/c"])
-	assert.Equal(t, []byte("d"), configMap.BinaryData["/app/test2/left/a/b2/c"])
-	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test/test/a1/b/c"])
-	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test/left/a/b1/c"])
-	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test2/test2/a1/b/c"])
-	assert.Equal(t, []byte("e"), configMap.BinaryData["/app/test2/left/a/b1/c"])
+	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test/test/a2/b/c")])
+	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test2/test2/a2/b/c")])
+	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test/left/a/b2/c")])
+	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test2/left/a/b2/c")])
+	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test/test/a1/b/c")])
+	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test/left/a/b1/c")])
+	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test2/test2/a1/b/c")])
+	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test2/left/a/b1/c")])
+}
+
+func toPathHash(path string) string {
+	if strings.HasPrefix(path, "/") {
+		path = path[1:]
+	}
+	return hex.EncodeToString(sha256.Sum256([]byte(path))[:])[:12]
 }

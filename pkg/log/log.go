@@ -2,7 +2,6 @@ package log
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -14,7 +13,6 @@ import (
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	applabels "github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/streams"
 	"github.com/ibuildthecloud/herd/pkg/watcher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -58,13 +56,21 @@ func (w *watching) shouldWatch(kind, namespace, name string) bool {
 	return true
 }
 
+type Message struct {
+	Line          string
+	Pod           *corev1.Pod
+	ContainerName string
+	Time          time.Time
+
+	Err error
+}
+
 type Options struct {
-	Output     *streams.Output
 	RestConfig *rest.Config
 	Client     client.WithWatch
 	PodClient  v12.PodsGetter
 	TailLines  *int64
-	Timestamps bool
+	NoFollow   bool
 
 	outputLocked bool
 }
@@ -84,14 +90,6 @@ func (o *Options) restConfig() (*rest.Config, error) {
 func (o *Options) Complete() (*Options, error) {
 	if o == nil {
 		o = &Options{}
-	}
-
-	if o.Output == nil {
-		o.Output = streams.CurrentOutput()
-	}
-
-	if !o.outputLocked {
-		o.Output = o.Output.Locked()
 	}
 
 	if o.PodClient == nil {
@@ -121,7 +119,7 @@ func (o *Options) Complete() (*Options, error) {
 	return o, nil
 }
 
-func pipe(input io.ReadCloser, output *streams.Output, prefix string, timestamps bool, after *metav1.Time) (*metav1.Time, error) {
+func pipe(input io.ReadCloser, output chan<- Message, pod *corev1.Pod, name string, after *metav1.Time) (*metav1.Time, error) {
 	defer input.Close()
 
 	var lastTS *metav1.Time
@@ -142,28 +140,18 @@ func pipe(input io.ReadCloser, output *streams.Output, prefix string, timestamps
 			continue
 		}
 
-		lineBuffer := &bytes.Buffer{}
-		if timestamps {
-			lineBuffer.WriteString(line)
-			lineBuffer.WriteString(" ")
-		}
-		if prefix != "" {
-			lineBuffer.WriteString(prefix)
-			lineBuffer.WriteString(" ")
-		}
-		lineBuffer.WriteString(line)
-		lineBuffer.WriteString("\n")
-
-		_, err = output.Out.Write(lineBuffer.Bytes())
-		if err != nil {
-			return lastTS, err
+		output <- Message{
+			Line:          line,
+			Pod:           pod,
+			ContainerName: name,
+			Time:          lastTS.Time,
 		}
 	}
 
 	return lastTS, scanner.Err()
 }
 
-func Container(ctx context.Context, pod *corev1.Pod, name string, options *Options) (err error) {
+func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- Message, options *Options) (err error) {
 	options, err = options.Complete()
 	if err != nil {
 		return err
@@ -190,62 +178,197 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, options *Optio
 
 		req := options.PodClient.Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{
 			Container:  name,
-			Follow:     true,
+			Follow:     !options.NoFollow,
 			SinceTime:  since,
 			Timestamps: true,
 			TailLines:  tailLines,
 		})
 		readCloser, err := req.Stream(ctx)
 		if err != nil {
-			logrus.Debugf("failed to get logs for container %s on pod %s/%s: %v", name, pod.Namespace, pod.Name, err)
+			output <- Message{
+				Time:          time.Now(),
+				Pod:           pod,
+				ContainerName: name,
+				Err:           fmt.Errorf("failed to get logs for container %s on pod %s/%s: %v", name, pod.Namespace, pod.Name, err),
+			}
 			continue
 		}
 		// pipe will close the readCloser
-		lastTS, err := pipe(readCloser, options.Output, pod.Name+"/"+name, options.Timestamps, since)
+		lastTS, err := pipe(readCloser, output, pod, name, since)
 		if err != nil {
-			logrus.Debugf("failed to stream logs for container %s on pod %s/%s: %v", name, pod.Namespace, pod.Name, err)
+			output <- Message{
+				Time:          time.Now(),
+				Pod:           pod,
+				ContainerName: name,
+				Err:           fmt.Errorf("failed to stream logs for container %s on pod %s/%s: %v", name, pod.Namespace, pod.Name, err),
+			}
 		}
 		if lastTS != nil {
 			since = lastTS
 			tailLines = nil
 		}
+
+		if options.NoFollow {
+			break
+		}
 	}
+
+	return nil
 }
 
-func Pod(ctx context.Context, pod *corev1.Pod, options *Options) error {
+func isContainerLoggable(pod *corev1.Pod, containerName string) bool {
+	for _, status := range pod.Status.ContainerStatuses {
+		if status.Name == containerName &&
+			(status.State.Running != nil) || (status.State.Terminated != nil) {
+			return true
+		}
+	}
+	return false
+}
+
+func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *Options) error {
 	options, err := options.Complete()
 	if err != nil {
 		return err
+	}
+
+	if options.NoFollow {
+		if !pod.DeletionTimestamp.IsZero() {
+			return nil
+		}
+		for _, container := range pod.Spec.Containers {
+			if err := Container(ctx, pod, container.Name, output, options); err != nil {
+				return err
+			}
+		}
+		for _, container := range pod.Spec.InitContainers {
+			if err := Container(ctx, pod, container.Name, output, options); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	podWatcher := watcher.New[*corev1.Pod](options.Client)
 	watching := watching{}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	eg, _ := errgroup.WithContext(ctx)
 
-	_, err = podWatcher.ByName(ctx, pod.Namespace, pod.Name, func(pod *corev1.Pod) (bool, error) {
-		if !pod.DeletionTimestamp.IsZero() {
-			return true, nil
-		}
-		for _, container := range pod.Spec.Containers {
-			if watching.shouldWatch("container", pod.Namespace, container.Name) {
-				go Container(ctx, pod, container.Name, options)
+	eg.Go(func() error {
+		_, err = podWatcher.ByName(ctx, pod.Namespace, pod.Name, func(pod *corev1.Pod) (bool, error) {
+			if !pod.DeletionTimestamp.IsZero() {
+				return true, nil
 			}
-		}
-		for _, container := range pod.Spec.InitContainers {
-			if watching.shouldWatch("initcontainer", pod.Namespace, container.Name) {
-				go Container(ctx, pod, container.Name, options)
+			for _, container := range pod.Spec.Containers {
+				container := container
+				if !isContainerLoggable(pod, container.Name) {
+					continue
+				}
+				if watching.shouldWatch("container", pod.Namespace, container.Name) {
+					eg.Go(func() error {
+						err := Container(ctx, pod, container.Name, output, options)
+						if err != nil {
+							output <- Message{
+								Pod:           pod,
+								ContainerName: container.Name,
+								Time:          time.Now(),
+								Err:           err,
+							}
+						}
+						return nil
+					})
+				}
 			}
-		}
-		return false, nil
+			for _, container := range pod.Spec.InitContainers {
+				container := container
+				if !isContainerLoggable(pod, container.Name) {
+					continue
+				}
+				if watching.shouldWatch("initcontainer", pod.Namespace, container.Name) {
+					eg.Go(func() error {
+						err := Container(ctx, pod, container.Name, output, options)
+						if err != nil {
+							output <- Message{
+								Pod:           pod,
+								ContainerName: container.Name,
+								Time:          time.Now(),
+								Err:           err,
+							}
+						}
+						return nil
+					})
+				}
+			}
+			return false, nil
+		})
+		return err
 	})
-	return err
+
+	return eg.Wait()
 }
 
-func App(ctx context.Context, app *v1.AppInstance, options *Options) error {
+func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message, options *Options) error {
+	if app.Status.Namespace == "" {
+		return nil
+	}
+
+	podSelector := labels.SelectorFromSet(labels.Set{
+		applabels.HerdManaged: "true",
+	})
+
+	pods := &corev1.PodList{}
+	err := options.Client.List(ctx, pods, &client.ListOptions{
+		Namespace:     app.Status.Namespace,
+		LabelSelector: podSelector,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, pod := range pods.Items {
+		if err := Pod(ctx, &pod, output, options); err != nil {
+			return err
+		}
+	}
+
+	apps := &v1.AppInstanceList{}
+	err = options.Client.List(ctx, apps, &client.ListOptions{
+		Namespace: app.Status.Namespace,
+	})
+
+	for _, app := range apps.Items {
+		if err := App(ctx, &app, output, options); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Output(ctx context.Context, app *v1.AppInstance, options *Options) error {
+	output := make(chan Message)
+	defer close(output)
+	go func() {
+		for msg := range output {
+			if msg.Err == nil {
+				fmt.Printf("%s/%s: %s", msg.Pod.Name, msg.ContainerName, msg.Line)
+			} else {
+				logrus.Error(msg.Err)
+			}
+		}
+	}()
+	return App(ctx, app, output, options)
+}
+
+func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, options *Options) error {
 	options, err := options.Complete()
 	if err != nil {
 		return err
+	}
+
+	if options.NoFollow {
+		return appNoFollow(ctx, app, output, options)
 	}
 
 	var (
@@ -276,7 +399,16 @@ func App(ctx context.Context, app *v1.AppInstance, options *Options) error {
 		}
 		_, err := appWatcher.BySelector(ctx, app.Status.Namespace, labels.Everything(), func(app *v1.AppInstance) (bool, error) {
 			if watching.shouldWatch("AppInstance", app.Namespace, app.Name) {
-				go App(ctx, app, options)
+				eg.Go(func() error {
+					err := App(ctx, app, output, options)
+					if err != nil {
+						output <- Message{
+							Time: time.Now(),
+							Err:  err,
+						}
+					}
+					return nil
+				})
 			}
 			return false, nil
 		})
@@ -285,7 +417,17 @@ func App(ctx context.Context, app *v1.AppInstance, options *Options) error {
 	eg.Go(func() error {
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
 			if watching.shouldWatch("Pod", pod.Namespace, pod.Name) {
-				go Pod(ctx, pod, options)
+				eg.Go(func() error {
+					err := Pod(ctx, pod, output, options)
+					if err != nil {
+						output <- Message{
+							Pod:  pod,
+							Time: time.Now(),
+							Err:  err,
+						}
+					}
+					return nil
+				})
 			}
 			return false, nil
 		})
@@ -303,5 +445,6 @@ func App(ctx context.Context, app *v1.AppInstance, options *Options) error {
 	if errors.Is(err, context.Canceled) {
 		return nil
 	}
+
 	return err
 }

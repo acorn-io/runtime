@@ -1,0 +1,232 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/managed": "true"
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "herd-project.io/app-namespace": "app-namespace"
+      "herd-project.io/app-name": "app-name"
+      "herd-project.io/container-name": "oneimage"
+  template:
+    metadata:
+      labels:
+        "herd-project.io/app-namespace": "app-namespace"
+        "herd-project.io/app-name": "app-name"
+        "herd-project.io/container-name": "oneimage"
+        "herd-project.io/managed": "true"
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: oneimage
+          image: "image-name"
+          ports:
+          - containerPort: 81
+            protocol: "TCP"
+        - name: left
+          image: "foo"
+          ports:
+          - containerPort: 91
+            protocol: "TCP"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "herd-project.io/app-namespace": "app-namespace"
+      "herd-project.io/app-name": "app-name"
+      "herd-project.io/container-name": "buildimage"
+  template:
+    metadata:
+      labels:
+        "herd-project.io/app-namespace": "app-namespace"
+        "herd-project.io/app-name": "app-name"
+        "herd-project.io/container-name": "buildimage"
+        "herd-project.io/managed": "true"
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: buildimage
+          image: "sha256:build-image"
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+            - containerPort: 91
+              protocol: "TCP"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+  selector:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+    - port: 443
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+  selector:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: oneimage-90
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"
+spec:
+  rules:
+    - host: oneimage.app-namespace.localhost:90
+      http:
+        paths:
+        - backend:
+            service:
+              name: oneimage
+              port:
+                number: 90
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: oneimage-80
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"
+spec:
+  rules:
+    - host: oneimage.app-namespace.localhost
+      http:
+        paths:
+          - backend:
+              service:
+                name: oneimage
+                port:
+                  number: 80
+    - host: oneimage.app-namespace.localhost:80
+      http:
+        paths:
+          - backend:
+              service:
+                name: oneimage
+                port:
+                  number: 80
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: buildimage-80
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
+spec:
+  rules:
+    - host: buildimage.app-namespace.localhost
+      http:
+        paths:
+          - backend:
+              service:
+                name: buildimage
+                port:
+                  number: 80
+    - host: buildimage.app-namespace.localhost:80
+      http:
+        paths:
+          - backend:
+              service:
+                name: buildimage
+                port:
+                  number: 80
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: buildimage-443
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
+spec:
+  rules:
+    - host: buildimage.app-namespace.localhost:443
+      http:
+        paths:
+          - backend:
+              service:
+                name: buildimage
+                port:
+                  number: 443

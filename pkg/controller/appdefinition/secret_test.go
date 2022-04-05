@@ -175,5 +175,55 @@ func TestTLS_ExternalCA_Gen(t *testing.T) {
 	assert.True(t, len(secret.Data[corev1.TLSPrivateKeyKey]) > 0)
 	assert.True(t, len(secret.Data["ca.crt"]) == 0)
 	assert.True(t, len(secret.Data["ca.key"]) == 0)
+}
 
+func TestBasic_Gen(t *testing.T) {
+	h := tester.Harness{
+		Scheme: scheme.Scheme,
+	}
+	resp, err := h.InvokeFunc(t, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "app-name",
+			Namespace: "app-ns",
+		},
+		Status: v1.AppInstanceStatus{
+			Namespace: "app-target-ns",
+			AppSpec: v1.AppSpec{
+				Secrets: map[string]v1.Secret{
+					"pass": {Type: "basic",
+						Data: map[string]string{
+							// cue will populate empty string if not sent
+							"username": "",
+							"password": "",
+						},
+					},
+					"passuname": {
+						Type: "basic",
+						Data: map[string]string{
+							"username": "admin",
+							"password": "",
+						},
+					},
+				},
+			},
+		},
+	}, CreateSecrets)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, resp.Client.Created, 2)
+	assert.Len(t, resp.Collected, 3)
+
+	secret := resp.Client.Created[0].(*corev1.Secret)
+	assert.Equal(t, "pass", secret.Labels[labels.HerdSecretName])
+	assert.True(t, strings.HasPrefix(secret.Name, "pass-"))
+	assert.True(t, len(secret.Data["username"]) > 0)
+	assert.True(t, len(secret.Data["password"]) > 0)
+
+	secret = resp.Client.Created[1].(*corev1.Secret)
+	assert.Equal(t, "passuname", secret.Labels[labels.HerdSecretName])
+	assert.True(t, strings.HasPrefix(secret.Name, "passuname-"))
+	assert.Equal(t, []byte("admin"), secret.Data["username"])
+	assert.True(t, len(secret.Data["password"]) > 0)
 }

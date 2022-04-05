@@ -1,7 +1,9 @@
 package appdefinition
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"path"
 	"strings"
 
@@ -20,7 +22,11 @@ func DeploySpec(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
 	addNamespace(appInstance, resp)
 	addDeployments(appInstance, resp)
+	addJobs(appInstance, resp)
 	addServices(appInstance, resp)
+	if err := addIngress(appInstance, req, resp); err != nil {
+		return err
+	}
 	addPVCs(appInstance, resp)
 	return addConfigMaps(appInstance, resp)
 }
@@ -92,13 +98,19 @@ func toContainers(appName, name string, container v1.Container) ([]corev1.Contai
 	return containers, initContainers
 }
 
+func pathHash(parts ...string) string {
+	path := path.Join(parts...)
+	hash := sha256.Sum256([]byte(path))
+	return hex.EncodeToString(hash[:])[:12]
+}
+
 func toMounts(appName, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
 		if entry.Value.Secret.Key == "" || entry.Value.Secret.Name == "" {
 			result = append(result, corev1.VolumeMount{
 				Name:      "files",
 				MountPath: path.Join("/", entry.Key),
-				SubPath:   path.Join("/", appName, deploymentName, containerName, entry.Key),
+				SubPath:   pathHash(appName, deploymentName, containerName, entry.Key),
 			})
 		} else {
 			result = append(result, corev1.VolumeMount{
@@ -168,7 +180,11 @@ func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map
 		labels.HerdContainerName: name,
 	}
 	for i := 0; i+1 < len(kv); i += 2 {
-		labels[kv[i]] = kv[i+1]
+		if kv[i+1] == "" {
+			delete(labels, kv[i])
+		} else {
+			labels[kv[i]] = kv[i+1]
+		}
 	}
 	return labels
 }
@@ -183,7 +199,9 @@ func toDeployment(appInstance *v1.AppInstance, name string, container v1.Contain
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: appInstance.Status.Namespace,
-			Labels:    containerLabels(appInstance, name),
+			Labels: containerLabels(appInstance, name,
+				labels.HerdManaged, "true",
+			),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: replicas,
@@ -197,9 +215,10 @@ func toDeployment(appInstance *v1.AppInstance, name string, container v1.Contain
 					),
 				},
 				Spec: corev1.PodSpec{
-					Containers:     containers,
-					InitContainers: initContainers,
-					Volumes:        toVolumes(appInstance, container),
+					Containers:                   containers,
+					InitContainers:               initContainers,
+					Volumes:                      toVolumes(appInstance, container),
+					AutomountServiceAccountToken: new(bool),
 				},
 			},
 		},
@@ -281,7 +300,8 @@ func toService(appInstance *v1.AppInstance, name string, container v1.Container)
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: appInstance.Status.Namespace,
-			Labels:    containerLabels(appInstance, name),
+			Labels: containerLabels(appInstance, name,
+				labels.HerdManaged, "true"),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    ports,
@@ -291,13 +311,16 @@ func toService(appInstance *v1.AppInstance, name string, container v1.Container)
 	}
 }
 
-func addFileContent(data map[string][]byte, appName, deploymentName string, container v1.Container) error {
+func addFileContent(configMap *corev1.ConfigMap, appName, deploymentName string, container v1.Container) error {
+	data := configMap.BinaryData
 	for filePath, file := range container.Files {
 		content, err := base64.StdEncoding.DecodeString(file.Content)
 		if err != nil {
 			return err
 		}
-		data[path.Join("/", appName, deploymentName, deploymentName, filePath)] = content
+		hashPath := pathHash(appName, deploymentName, deploymentName, filePath)
+		data[hashPath] = content
+		configMap.Annotations[hashPath] = path.Join(appName, deploymentName, deploymentName, filePath)
 	}
 	for sidecarName, sidecar := range container.Sidecars {
 		for filePath, file := range sidecar.Files {
@@ -305,7 +328,9 @@ func addFileContent(data map[string][]byte, appName, deploymentName string, cont
 			if err != nil {
 				return err
 			}
-			data[path.Join("/", appName, deploymentName, sidecarName, filePath)] = content
+			hashPath := pathHash(appName, deploymentName, sidecarName, filePath)
+			data[hashPath] = content
+			configMap.Annotations[hashPath] = path.Join(appName, deploymentName, sidecarName, filePath)
 		}
 	}
 	return nil
@@ -322,11 +347,20 @@ func toConfigMaps(appInstance *v1.AppInstance) (result []meta.Object, err error)
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "files",
 			Namespace: appInstance.Status.Namespace,
+			Labels: map[string]string{
+				labels.HerdManaged: "true",
+			},
+			Annotations: map[string]string{},
 		},
 		BinaryData: map[string][]byte{},
 	}
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		if err := addFileContent(configMap.BinaryData, appInstance.Name, entry.Key, entry.Value); err != nil {
+		if err := addFileContent(configMap, appInstance.Name, entry.Key, entry.Value); err != nil {
+			return nil, err
+		}
+	}
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
+		if err := addFileContent(configMap, appInstance.Name, entry.Key, entry.Value); err != nil {
 			return nil, err
 		}
 	}

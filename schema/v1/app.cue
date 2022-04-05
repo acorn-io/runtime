@@ -18,6 +18,11 @@ package v1
 	sidecars: [string]: #Sidecar
 }
 
+#Job: {
+	#ContainerBase
+	sidecars: [string]: #Sidecar
+}
+
 #FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.optional=true)?$"} | bytes
 
 #ContainerBase: {
@@ -113,10 +118,21 @@ package v1
 	}
 }
 
-#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS
+#SecretGenerated: {
+	type:      "generated"
+	optional?: bool
+	params: {
+		job:    string
+		format: *"text" | "json"
+	}
+	data: {}
+}
+
+#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated
 
 #App: {
 	containers: [string]: #Container
+	jobs: [string]:       #Job
 	images: [string]:     #Image
 	volumes: [string]:    #Volume
 	secrets: [string]:    #Secret

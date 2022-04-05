@@ -11,5 +11,6 @@ type ImageData struct {
 
 type ImagesData struct {
 	Containers map[string]ContainerData `json:"containers,omitempty"`
+	Jobs       map[string]ContainerData `json:"jobs,omitempty"`
 	Images     map[string]ImageData     `json:"images,omitempty"`
 }

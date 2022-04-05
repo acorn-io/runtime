@@ -17,6 +17,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "container-name"
+    "herd-project.io/managed": "true"
 spec:
   selector:
     matchLabels:
@@ -31,6 +32,7 @@ spec:
         "herd-project.io/container-name": "container-name"
         "herd-project.io/managed": "true"
     spec:
+      automountServiceAccountToken: false
       volumes:
         - name: foo
           emptyDir:

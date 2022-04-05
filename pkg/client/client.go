@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"sort"
 
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/k8sclient"
@@ -40,13 +39,13 @@ func Default() (Client, error) {
 
 type Client interface {
 	AppList(ctx context.Context) ([]App, error)
+	AppDelete(ctx context.Context, name string) error
 	//AppUpdate(ctx context.Context, app *App) error
 	//AppCreate(ctx context.Context, app *App) (*App, error)
 	//AppGet(ctx context.Context, name string) (*App, error)
 	//AppStop(ctx context.Context, name string) error
 	//AppStart(ctx context.Context, name string) error
 
-	//Delete(ctx context.Context, obj any)
 }
 
 type client struct {
@@ -78,41 +77,6 @@ func waitAndClose[T any](eg *errgroup.Group, c chan T, err *error) {
 		*err = eg.Wait()
 		close(c)
 	}()
-}
-
-func (c *client) AppList(ctx context.Context) (result []App, err error) {
-	var (
-		apps = make(chan v1.AppInstance)
-		eg   = errgroup.Group{}
-	)
-
-	c.appsForNS(ctx, &eg, c.Namespace, apps)
-	waitAndClose(&eg, apps, &err)
-
-	for app := range apps {
-		result = append(result, App{
-			Name:        app.Name,
-			Created:     app.CreationTimestamp,
-			Revision:    app.ResourceVersion,
-			Labels:      app.Labels,
-			Annotations: app.Annotations,
-			Image:       app.Spec.Image,
-			Volumes:     app.Spec.Volumes,
-			Secrets:     app.Spec.Secrets,
-			Status:      app.Status,
-		})
-	}
-
-	sort.Slice(result, func(i, j int) bool {
-		return less(
-			result[i].Name,
-			result[j].Name,
-			result[i].Status.Namespace,
-			result[j].Status.Namespace,
-		)
-	})
-
-	return
 }
 
 func less(terms ...string) bool {

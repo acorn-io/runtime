@@ -1,12 +1,14 @@
 package appdefinition
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/ibuildthecloud/baaah/pkg/meta"
 	"github.com/ibuildthecloud/baaah/pkg/router"
+	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/certs"
 	"github.com/ibuildthecloud/herd/pkg/condition"
@@ -14,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/rancher/wrangler/pkg/randomtoken"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,6 +30,99 @@ func seedData(from map[string]string, keys ...string) map[string][]byte {
 		to[key] = []byte(from[key])
 	}
 	return to
+}
+
+var (
+	ErrJobNotDone  = errors.New("job not complete")
+	ErrJobNoOutput = errors.New("job has no output")
+)
+
+func getJobOutput(client router.Client, namespace, name string) (job *batchv1.Job, data []byte, err error) {
+	job = &batchv1.Job{}
+	err = client.Get(job, name, &meta.GetOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if job.Status.Succeeded != 1 {
+		return nil, nil, ErrJobNotDone
+	}
+
+	sel, err := metav1.LabelSelectorAsSelector(job.Spec.Selector)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pods := &corev1.PodList{}
+	err = client.List(pods, &meta.ListOptions{
+		Namespace: namespace,
+		Selector:  sel,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(pods.Items) == 0 {
+		return nil, nil, apierrors.NewNotFound(schema.GroupResource{
+			Resource: "pods",
+		}, "")
+	}
+
+	for _, pod := range pods.Items {
+		for _, status := range pod.Status.ContainerStatuses {
+			if status.State.Terminated == nil || status.State.Terminated.ExitCode != 0 {
+				continue
+			}
+			if len(status.State.Terminated.Message) > 0 {
+				return job, []byte(status.State.Terminated.Message), nil
+			}
+		}
+	}
+
+	return nil, nil, ErrJobNoOutput
+}
+
+func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
+	_, output, err := getJobOutput(req.Client, appInstance.Status.Namespace, convert.ToString(secretRef.Params["job"]))
+	if err != nil {
+		return nil, err
+	}
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: secretName + "-",
+			Namespace:    appInstance.Namespace,
+			Labels:       labelsForSecret(secretName, appInstance),
+		},
+		Data: seedData(secretRef.Data),
+		Type: "Opaque",
+	}
+
+	format := convert.ToString(secretRef.Params["format"])
+	switch format {
+	case "text":
+		secret.Data["content"] = output
+	case "json":
+		newSecret := &secretData{}
+		if err := json.Unmarshal(output, newSecret); err != nil {
+			return nil, err
+		}
+		for k, v := range newSecret.Data {
+			secret.Data[k] = []byte(v)
+		}
+		if newSecret.Type != "" {
+			secret.Type = corev1.SecretType(newSecret.Type)
+		}
+	}
+
+	return secret, nil
+}
+
+type secretData struct {
+	Type string            `json:"type,omitempty"`
+	Data map[string]string `json:"data,omitempty"`
 }
 
 func generateSSH(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
@@ -126,7 +222,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	}
 
 	for i, key := range []string{corev1.BasicAuthUsernameKey, corev1.BasicAuthPasswordKey} {
-		if len(secret.Data) == 0 {
+		if len(secret.Data[key]) == 0 {
 			// TODO: Improve with more characters (special, upper/lowercase, etc)
 			v, err := randomtoken.Generate()
 			v = v[:(i+1)*8]
@@ -211,6 +307,8 @@ func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appIn
 			return generateTLS(secrets, req, appInstance, secretName, secretRef)
 		case "ssh-auth":
 			return generateSSH(req, appInstance, secretName, secretRef)
+		case "generated":
+			return generatedSecret(req, appInstance, secretName, secretRef)
 		default:
 			return nil, err
 		}
@@ -244,6 +342,24 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 
 }
 
+type secEntry struct {
+	name   string
+	secret v1.Secret
+}
+
+func secretsOrdered(app *v1.AppInstance) (result []secEntry) {
+	var generated []secEntry
+
+	for _, entry := range typed.Sorted(app.Status.AppSpec.Secrets) {
+		if entry.Value.Type == "generated" {
+			generated = append(generated, secEntry{name: entry.Key, secret: entry.Value})
+		} else {
+			result = append(result, secEntry{name: entry.Key, secret: entry.Value})
+		}
+	}
+	return append(result, generated...)
+}
+
 func CreateSecrets(req router.Request, resp router.Response) (err error) {
 	var (
 		missing     []string
@@ -259,7 +375,6 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 			return
 		}
 
-		sort.Strings(errored)
 		buf := strings.Builder{}
 		if len(missing) > 0 {
 			sort.Strings(missing)
@@ -268,12 +383,12 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 			buf.WriteString("]")
 		}
 		if len(errored) > 0 {
-			sort.Strings(missing)
+			sort.Strings(errored)
 			if buf.Len() > 0 {
 				buf.WriteString(" ")
 			}
-			buf.WriteString("missing: [")
-			buf.WriteString(strings.Join(missing, ", "))
+			buf.WriteString("errored: [")
+			buf.WriteString(strings.Join(errored, ", "))
 			buf.WriteString("]")
 		}
 
@@ -284,7 +399,8 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	for secretName, secretRef := range appInstance.Status.AppSpec.Secrets {
+	for _, entry := range secretsOrdered(appInstance) {
+		secretName, secretRef := entry.name, entry.secret
 		secret, err := getOrCreateSecret(secrets, req, appInstance, secretName)
 		if apierrors.IsNotFound(err) {
 			if secretRef.Optional == nil || !*secretRef.Optional {

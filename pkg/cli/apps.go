@@ -1,10 +1,6 @@
 package cli
 
 import (
-	"bytes"
-	"fmt"
-
-	"github.com/ibuildthecloud/baaah/pkg/typed"
 	"github.com/ibuildthecloud/herd/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
@@ -36,15 +32,11 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter([][]string{
 		{"NAME", "Name"},
 		{"IMAGE", "Image"},
-		{"HEALTHY", "{{ready .}}"},
-		{"UPTODATE", "{{uptodate .}}"},
+		{"HEALTHY", "Status.Columns.Healthy"},
+		{"UPTODATE", "Status.Columns.UpToDate"},
 		{"CREATED", "{{ago .Created}}"},
-		{"MESSAGE", "{{msg .}}"},
+		{"MESSAGE", "Status.Columns.Message"},
 	}, "", a.Quiet, a.Output)
-
-	out.AddFormatFunc("ready", ready)
-	out.AddFormatFunc("uptodate", uptodate)
-	out.AddFormatFunc("msg", message)
 
 	apps, err := client.AppList(cmd.Context())
 	if err != nil {
@@ -56,67 +48,4 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return out.Err()
-}
-
-func message(app client.App) (string, error) {
-	buf := &bytes.Buffer{}
-	for _, entry := range typed.Sorted(app.Status.Conditions) {
-		name, conn := entry.Key, entry.Value
-		if !conn.Success && (conn.Error || conn.Transitioning) {
-			if buf.Len() > 0 {
-				buf.WriteString(", ")
-			}
-			buf.WriteString(name)
-			buf.WriteString(": ")
-			if conn.Message == "" {
-				switch {
-				case conn.Error:
-					buf.WriteString("error")
-				case conn.Transitioning:
-					buf.WriteString("unknown")
-				}
-			} else {
-				buf.WriteString(conn.Message)
-			}
-		}
-	}
-	return buf.String(), nil
-}
-
-func uptodate(app client.App) (interface{}, error) {
-	if app.Status.Namespace == "" {
-		return "creating", nil
-	}
-	if app.Status.Stopped {
-		return "stopped", nil
-	}
-	var (
-		ready, desired, uptodate int32
-	)
-	for _, status := range app.Status.ContainerStatus {
-		uptodate += status.UpToDate
-		desired += status.ReadyDesired
-		ready += status.Ready
-	}
-	if uptodate != desired {
-		return fmt.Sprintf("%d/%d", uptodate, desired), nil
-	}
-	return uptodate, nil
-}
-
-func ready(app client.App) (interface{}, error) {
-	if app.Status.Stopped || app.Status.Namespace == "" {
-		return "-", nil
-	}
-	var (
-		ready, desired int32
-	)
-	for _, status := range app.Status.ContainerStatus {
-		desired += status.ReadyDesired
-		ready += status.Ready
-	}
-	if ready != desired {
-		return fmt.Sprintf("%d/%d", ready, desired), nil
-	}
-	return ready, nil
 }

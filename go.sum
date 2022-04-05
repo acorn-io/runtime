@@ -699,8 +699,10 @@ github.com/huandu/xstrings v1.3.2/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq
 github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
-github.com/ibuildthecloud/baaah v0.0.0-20220323220114-9ff98d54c814 h1:Vb/leX9Qt3CtXGOE/1lNhNHFP9Vp0e9ouPx2kvkXtug=
-github.com/ibuildthecloud/baaah v0.0.0-20220323220114-9ff98d54c814/go.mod h1:6PcvDD56yieuT5hmhoxDEzUW4nDL5T1dscJ/Ax7fvI4=
+github.com/ibuildthecloud/baaah v0.0.0-20220405043530-a2c832991588 h1:o06vsaTxBAwwFwA43gwPtAR6RmcJ6yQHU+x+gAtho2Q=
+github.com/ibuildthecloud/baaah v0.0.0-20220405043530-a2c832991588/go.mod h1:6PcvDD56yieuT5hmhoxDEzUW4nDL5T1dscJ/Ax7fvI4=
+github.com/ibuildthecloud/wrangler v0.0.0-20220405013541-7c01be7907d2 h1:Q/I5QPu8KZxgtU2tRLJGTwZVP0GahaefQcLYfYzSdgY=
+github.com/ibuildthecloud/wrangler v0.0.0-20220405013541-7c01be7907d2/go.mod h1:Lq3WhvR2mTjuvkMayx8516uYEiN8pKsrb5Uni++E6Ug=
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.6/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.8/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
@@ -991,9 +993,6 @@ github.com/rancher/lasso v0.0.0-20220110204427-db9f3e569574 h1:YxhqGdmJVCnB7F/aa
 github.com/rancher/lasso v0.0.0-20220110204427-db9f3e569574/go.mod h1:9qZd/S8DqWzfKtjKGgSoHqGEByYmUE3qRaBaaAHwfEM=
 github.com/rancher/lasso/controller-runtime v0.0.0-20220110205840-98715bdd6b5b h1:/eTu17xA1gZsd/PNAZ34oQee1xr8O7cjpfm0GdLkK5s=
 github.com/rancher/lasso/controller-runtime v0.0.0-20220110205840-98715bdd6b5b/go.mod h1:ko/I191niqbiCCwc43kAB3g0aFCpWHaru0ApUxaxuOE=
-github.com/rancher/wrangler v0.8.8/go.mod h1:dKEaHNB4izxmPUtpq1Hvr3z3Oh+9k5pCZyFO9sUhlaY=
-github.com/rancher/wrangler v0.8.10 h1:GfM3dZyw3TconwqknRm6YO/wiKEbUIGl0/HWVqBy658=
-github.com/rancher/wrangler v0.8.10/go.mod h1:Lte9WjPtGYxYacIWeiS9qawvu2R4NujFU9xuXWJvc/0=
 github.com/rancher/wrangler-cli v0.0.0-20211112052728-f172e9bf59af h1:Lur2DGPBdBAk5fai1xRQSrx17T3phNwdl8EdCUIzzwc=
 github.com/rancher/wrangler-cli v0.0.0-20211112052728-f172e9bf59af/go.mod h1:pNIXhUzl6yYmwFedXHmOz1DF89H2SX/QOQmlwfva2m0=
 github.com/remyoudompheng/bigfft v0.0.0-20170806203942-52369c62f446/go.mod h1:uYEyJGbgTkfkS4+E/PavXkNJcbFIpEtjt2B0KDQ5+9M=

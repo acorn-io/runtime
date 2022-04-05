@@ -123,6 +123,7 @@ type Image struct {
 
 type AppSpec struct {
 	Containers map[string]Container     `json:"containers,omitempty"`
+	Jobs       map[string]Container     `json:"jobs,omitempty"`
 	Images     map[string]Image         `json:"images,omitempty"`
 	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
 	Secrets    map[string]Secret        `json:"secrets,omitempty"`

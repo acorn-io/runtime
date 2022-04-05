@@ -1,6 +1,7 @@
 package dev
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
 	"github.com/ibuildthecloud/herd/pkg/build"
@@ -138,7 +140,7 @@ func buildLoop(ctx context.Context, file string, opts build.Options, trigger <-c
 		watcher = watcher{
 			file:       file,
 			cwd:        opts.Cwd,
-			trigger:    trigger,
+			trigger:    typed.Debounce(trigger),
 			watching:   []string{file},
 			watchingTS: make([]time.Time, 1),
 		}
@@ -162,7 +164,7 @@ func buildLoop(ctx context.Context, file string, opts build.Options, trigger <-c
 func getByPathLabels(herdCue string) klabels.Set {
 	sum := sha256.Sum256([]byte(herdCue))
 	return klabels.Set{
-		labels.HerdAppCuePath: hex.EncodeToString(sum[:]),
+		labels.HerdAppCuePath: hex.EncodeToString(sum[:])[:12],
 	}
 }
 
@@ -177,18 +179,16 @@ func updateApp(ctx context.Context, client client.Client, app *v1.AppInstance, i
 }
 
 func createApp(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) error {
-	if opts.Name == "" {
-		if opts.Labels == nil {
-			opts.Labels = map[string]string{}
-		}
-		if opts.Annotations == nil {
-			opts.Annotations = map[string]string{}
-		}
-		for k, v := range getByPathLabels(herdCue) {
-			opts.Labels[k] = v
-		}
-		opts.Annotations[labels.HerdAppCuePath] = herdCue
+	if opts.Labels == nil {
+		opts.Labels = map[string]string{}
 	}
+	if opts.Annotations == nil {
+		opts.Annotations = map[string]string{}
+	}
+	for k, v := range getByPathLabels(herdCue) {
+		opts.Labels[k] = v
+	}
+	opts.Annotations[labels.HerdAppCuePath] = herdCue
 	app, err := run.Run(ctx, image, &opts)
 	if err != nil {
 		return err
@@ -198,10 +198,6 @@ func createApp(ctx context.Context, herdCue, image string, opts run.Options, app
 }
 
 func getAppName(ctx context.Context, herdCue string, opts run.Options) (string, error) {
-	if opts.Name != "" {
-		return opts.Name, nil
-	}
-
 	var apps v1.AppInstanceList
 	err := opts.Client.List(ctx, &apps, &client.ListOptions{
 		LabelSelector: getByPathSelector(herdCue),
@@ -221,11 +217,7 @@ func getAppName(ctx context.Context, herdCue string, opts run.Options) (string, 
 }
 
 func getExistingApp(ctx context.Context, herdCue string, opts run.Options) (*v1.AppInstance, error) {
-	name, err := getAppName(ctx, herdCue, opts)
-	if err != nil {
-		return nil, err
-	}
-
+	name := opts.Name
 	if name == "" {
 		return nil, apierror.NewNotFound(schema.GroupResource{
 			Group:    v1.SchemeGroupVersion.Group,
@@ -234,7 +226,7 @@ func getExistingApp(ctx context.Context, herdCue string, opts run.Options) (*v1.
 	}
 
 	var existingApp v1.AppInstance
-	err = opts.Client.Get(ctx, client.ObjectKey{Name: name, Namespace: opts.Namespace}, &existingApp)
+	err := opts.Client.Get(ctx, client.ObjectKey{Name: name, Namespace: opts.Namespace}, &existingApp)
 	return &existingApp, err
 }
 
@@ -249,7 +241,7 @@ func stop(herdCue string, opts run.Options) error {
 	} else if err != nil {
 		return err
 	}
-	if existingApp.Spec.Stop != nil && !*existingApp.Spec.Stop {
+	if existingApp.Spec.Stop == nil || !*existingApp.Spec.Stop {
 		existingApp.Spec.Stop = &[]bool{true}[0]
 		return opts.Client.Update(ctx, existingApp)
 	}
@@ -291,7 +283,7 @@ func runLoop(ctx context.Context, herdCue string, opts run.Options, images <-cha
 func doLog(ctx context.Context, app *v1.AppInstance, opts *log.Options) <-chan error {
 	result := make(chan error, 1)
 	go func() {
-		result <- log.App(ctx, app, opts)
+		result <- log.Output(ctx, app, opts)
 	}()
 	return result
 }
@@ -328,41 +320,60 @@ func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options
 }
 
 func readInput(ctx context.Context, trigger chan<- struct{}) error {
-	buf := make([]byte, 1)
-	for {
-		readSomething := make(chan struct{})
-		go func() {
-			_ = os.Stdin.SetReadDeadline(time.Now().Add(5 * time.Second))
-			_, err := os.Stdin.Read(buf)
-			if err != nil {
-				close(readSomething)
-			}
+	readSomething := make(chan struct{})
+
+	go func() {
+		line := bufio.NewScanner(os.Stdin)
+		for line.Scan() {
 			readSomething <- struct{}{}
-		}()
+		}
+		<-ctx.Done()
+		close(readSomething)
+	}()
+
+	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case _, ok := <-readSomething:
 			if !ok {
-				continue
+				<-ctx.Done()
+				return nil
 			}
 			trigger <- struct{}{}
 		}
 	}
 }
 
-func Dev(ctx context.Context, file string, opts *Options) error {
+func resolveHerdCueAndName(ctx context.Context, herdCue string, opts *Options) (string, *Options, error) {
+	nameWasSet := opts.Run.Name != ""
 	opts, err := opts.Complete()
 	if err != nil {
-		return err
+		return "", nil, err
 	}
 
-	herdCue := filepath.Join(opts.Build.Cwd, file)
 	if !filepath.IsAbs(herdCue) {
 		herdCue, err = filepath.Abs(herdCue)
 		if err != nil {
-			return fmt.Errorf("failed to resolve the location of %s: %w", file, err)
+			return "", nil, fmt.Errorf("failed to resolve the location of %s: %w", herdCue, err)
 		}
+	}
+
+	if !nameWasSet {
+		existingName, err := getAppName(ctx, herdCue, opts.Run)
+		if err != nil {
+			return "", nil, err
+		}
+		opts.Run.Name = existingName
+	}
+
+	return herdCue, opts, nil
+}
+
+func Dev(ctx context.Context, file string, opts *Options) error {
+	herdCue, opts, err := resolveHerdCueAndName(ctx, file, opts)
+	if err != nil {
+		return err
 	}
 
 	trigger := make(chan struct{}, 1)

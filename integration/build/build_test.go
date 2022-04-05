@@ -33,6 +33,22 @@ func TestSimpleBuild(t *testing.T) {
 	assert.True(t, len(image.ImageData.Images["isimple"].Image) > 0)
 }
 
+func TestJobBuild(t *testing.T) {
+	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/herd.cue", &build.Options{
+		Cwd: "./testdata/jobs",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Len(t, image.ImageData.Jobs, 1)
+	assert.True(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Image, "127.0.0.1:"))
+	assert.False(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Image, "127.0.0.1:5000"))
+
+	assert.Len(t, image.ImageData.Jobs["simple"].Sidecars, 1)
+	assert.True(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Sidecars["left"].Image, "127.0.0.1:"))
+	assert.False(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Sidecars["left"].Image, "127.0.0.1:5000"))
+}
+
 func TestSidecarBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/herd.cue", &build.Options{
 		Cwd: "./testdata/sidecar",

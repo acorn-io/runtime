@@ -8,6 +8,7 @@ const (
 	HerdVolumeName     = Prefix + "volume-name"
 	HerdSecretName     = Prefix + "secret-name"
 	HerdContainerName  = Prefix + "container-name"
+	HerdJobName        = Prefix + "job-name"
 	HerdAppImage       = Prefix + "app-image"
 	HerdAppCuePath     = Prefix + "app-cue-path"
 	HerdAppCuePathHash = Prefix + "app-cue-path-hash"

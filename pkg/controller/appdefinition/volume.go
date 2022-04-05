@@ -173,5 +173,21 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 		}
 	}
 
+	for _, file := range container.Files {
+		if file.Content != "" && file.Secret.Name == "" {
+			result = append(result, corev1.Volume{
+				Name: "files",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "files",
+						},
+					},
+				},
+			})
+			break
+		}
+	}
+
 	return
 }

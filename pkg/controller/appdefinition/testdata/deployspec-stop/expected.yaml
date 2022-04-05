@@ -17,6 +17,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"
 spec:
   replicas: 0
   selector:
@@ -32,6 +33,7 @@ spec:
         "herd-project.io/container-name": "oneimage"
         "herd-project.io/managed": "true"
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: oneimage
           image: "image-name"
@@ -45,6 +47,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
 spec:
   replicas: 0
   selector:
@@ -60,6 +63,7 @@ spec:
         "herd-project.io/container-name": "buildimage"
         "herd-project.io/managed": "true"
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: buildimage
           image: "sha256:build-image"

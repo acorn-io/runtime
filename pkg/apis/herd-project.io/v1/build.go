@@ -14,5 +14,6 @@ type ImageBuilderSpec struct {
 
 type BuilderSpec struct {
 	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
+	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
 	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`
 }

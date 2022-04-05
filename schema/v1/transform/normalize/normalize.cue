@@ -304,6 +304,18 @@ import (
 				}
 			}
 		}
+		jobs: {
+			for k, v in IN.app.jobs {
+				"\(k)": {
+					{#ToContainer & {in: {name: k, container: v}}}.out
+					for sk, sv in v.sidecars {
+						sidecars: "\(sk)": {
+							{#ToSidecar & {in: {sidecarName: sk, container: sv}}}.out
+						}
+					}
+				}
+			}
+		}
 		images: {
 			for k, v in IN.app.images {
 				"\(k)": {

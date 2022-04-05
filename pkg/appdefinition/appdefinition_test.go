@@ -713,6 +713,7 @@ images: {
 	}
 
 	assert.Equal(t, &v1.BuilderSpec{
+		Jobs: map[string]v1.ContainerImageBuilderSpec{},
 		Containers: map[string]v1.ContainerImageBuilderSpec{
 			"image": {
 				Image: "image-image",
@@ -1119,4 +1120,23 @@ images: test: image: "another"
 
 	assert.Equal(t, "override-db", appSpec.Containers["db"].Image)
 	assert.Equal(t, "override-image", appSpec.Images["test"].Image)
+}
+
+func TestJobs(t *testing.T) {
+	herdCue := `
+jobs: job1: image: "job1-image"
+jobs: job2: image: "job2-image"
+`
+	app, err := NewAppDefinition([]byte(herdCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := app.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "job1-image", appSpec.Jobs["job1"].Image)
+	assert.Equal(t, "job2-image", appSpec.Jobs["job2"].Image)
 }

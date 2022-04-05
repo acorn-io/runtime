@@ -7,9 +7,11 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type AppInstanceCondition string
 
 var (
-	AppInstanceConditionParsed  = "parsed"
-	AppInstanceConditionPulled  = "pulled"
-	AppInstanceConditionSecrets = "secrets"
+	AppInstanceConditionParsed     = "parsed"
+	AppInstanceConditionPulled     = "pulled"
+	AppInstanceConditionSecrets    = "secrets"
+	AppInstanceConditionContainers = "containers"
+	AppInstanceConditionJobs       = "jobs"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -51,10 +53,26 @@ type ContainerStatus struct {
 	Ready        int32 `json:"ready,omitempty"`
 	ReadyDesired int32 `json:"readyDesired,omitempty"`
 	UpToDate     int32 `json:"upToDate,omitempty"`
+	RestartCount int32 `json:"restartCount,omitempty"`
+}
+
+type JobStatus struct {
+	Succeed bool   `json:"succeed,omitempty"`
+	Failed  bool   `json:"failed,omitempty"`
+	Running bool   `json:"running,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+type AppColumns struct {
+	Healthy  string `json:"healthy,omitempty" column:"name=HEALTHY,jsonpath=.status.columns.healthy"`
+	UpToDate string `json:"upToDate,omitempty" column:"name=UPTODATE,jsonpath=.status.columns.upToDate"`
+	Message  string `json:"message,omitempty" column:"name=MESSAGE,jsonpath=.status.columns.message"`
 }
 
 type AppInstanceStatus struct {
+	Columns         AppColumns                 `json:"columns,omitempty"`
 	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
+	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
 	Stopped         bool                       `json:"stopped,omitempty"`
 	Namespace       string                     `json:"namespace,omitempty"`
 	AppImage        AppImage                   `json:"appImage,omitempty"`

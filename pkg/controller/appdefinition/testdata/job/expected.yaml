@@ -1,0 +1,43 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/managed": "true"
+
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/job-name": "oneimage"
+    "herd-project.io/managed": "true"
+spec:
+  template:
+    metadata:
+      labels:
+        "herd-project.io/app-namespace": "app-namespace"
+        "herd-project.io/app-name": "app-name"
+        "herd-project.io/job-name": "oneimage"
+        "herd-project.io/managed": "true"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: oneimage
+          image: "image-name"
+          ports:
+          - containerPort: 81
+            protocol: "TCP"
+          terminationMessagePath: "/run/secrets/output"
+        - name: left
+          image: "foo"
+          ports:
+          - containerPort: 91
+            protocol: "TCP"
+          terminationMessagePath: "/run/secrets/output"

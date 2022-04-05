@@ -31,8 +31,9 @@ func (c *Callback) Success() {
 	})
 }
 
-func (c *Callback) Unknown() {
+func (c *Callback) Unknown(msg string) {
 	c.Set(v1.Condition{
+		Message:       msg,
 		Transitioning: true,
 	})
 }
