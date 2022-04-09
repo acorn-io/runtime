@@ -558,6 +558,97 @@ containers: {
 	assert.True(t, appSpec.Containers["s"].Sidecars["left"].Init)
 }
 
+func TestPublish(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: {
+  s: {
+    sidecars: left: {
+      image: "x"
+      publish: [
+        "80",
+        "80:81",
+        "80/http",
+        "80:81/http",
+	  ]
+    }
+    sidecars: right: {
+      image: "x"
+      publish: "80"
+    }
+    sidecars: right2: {
+      image: "x"
+      publish: 80
+    }
+	cmd: "hi bye"
+    image: "x"
+    publish: [
+      80,
+      "80:81",
+      "80/http",
+      "80:81/http",
+	]
+  }
+}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, true, appSpec.Containers["s"].Ports[0].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Ports[1].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[1].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Ports[2].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[2].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Ports[3].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[3].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[3].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[0].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[1].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[1].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[1].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[2].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[2].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[3].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[3].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].ContainerPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[3].Protocol, v1.ProtocolHTTP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["right"].Ports[0].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Publish)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.ProtocolTCP)
+}
+
 func TestPorts(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
 containers: {
@@ -574,6 +665,10 @@ containers: {
     sidecars: right: {
       image: "x"
       ports: "80"
+    }
+    sidecars: right2: {
+      image: "x"
+      ports: 80
     }
 	cmd: "hi bye"
     image: "x"
@@ -630,6 +725,9 @@ containers: {
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.ProtocolTCP)
+
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.ProtocolTCP)
 }
 
 func TestFiles(t *testing.T) {
@@ -1139,4 +1237,14 @@ jobs: job2: image: "job2-image"
 
 	assert.Equal(t, "job1-image", appSpec.Jobs["job1"].Image)
 	assert.Equal(t, "job2-image", appSpec.Jobs["job2"].Image)
+}
+
+func TestNonUnique(t *testing.T) {
+	herdCue := `
+containers: foo: image: "test"
+jobs: foo: image: "test"
+`
+	_, err := NewAppDefinition([]byte(herdCue))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "_keysMustBeUniqueAcrossTypes.foo: conflicting values \"jobs\" and \"container\"")
 }

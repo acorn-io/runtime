@@ -5,12 +5,13 @@ import (
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
+	"k8s.io/utils/strings/slices"
 )
 
 func NewApp() *cobra.Command {
 	return cli.Command(&App{}, cobra.Command{
 		Use:     "app [flags] [APP_NAME...]",
-		Aliases: []string{"apps", "a"},
+		Aliases: []string{"apps", "a", "ps"},
 		Example: `
 herd app`,
 		SilenceUsage: true,
@@ -35,8 +36,18 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		{"HEALTHY", "Status.Columns.Healthy"},
 		{"UPTODATE", "Status.Columns.UpToDate"},
 		{"CREATED", "{{ago .Created}}"},
+		{"ENDPOINTS", "Status.Columns.Endpoints"},
 		{"MESSAGE", "Status.Columns.Message"},
 	}, "", a.Quiet, a.Output)
+
+	if len(args) == 1 {
+		app, err := client.AppGet(cmd.Context(), args[0])
+		if err != nil {
+			return err
+		}
+		out.Write(app)
+		return out.Err()
+	}
 
 	apps, err := client.AppList(cmd.Context())
 	if err != nil {
@@ -44,7 +55,13 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, app := range apps {
-		out.Write(app)
+		if len(args) > 0 {
+			if slices.Contains(args, app.Name) {
+				out.Write(app)
+			}
+		} else {
+			out.Write(app)
+		}
 	}
 
 	return out.Err()

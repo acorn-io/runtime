@@ -8,8 +8,10 @@ import (
 
 	"github.com/ibuildthecloud/baaah/pkg/meta"
 	"github.com/ibuildthecloud/baaah/pkg/router"
+	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/condition"
+	"github.com/ibuildthecloud/herd/pkg/config"
 	"github.com/ibuildthecloud/herd/pkg/labels"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -130,11 +132,18 @@ func podsStatus(req router.Request, namespace string, sel klabels.Selector) (boo
 }
 
 func AppStatus(req router.Request, resp router.Response) error {
-	app := req.Object.(*v1.AppInstance)
-	cond := condition.Setter(app, resp, v1.AppInstanceConditionContainers)
-	deps := &appsv1.DeploymentList{}
+	var (
+		app  = req.Object.(*v1.AppInstance)
+		cond = condition.Setter(app, resp, v1.AppInstanceConditionContainers)
+		deps = &appsv1.DeploymentList{}
+	)
 
-	err := req.Client.List(deps, &meta.ListOptions{
+	cfg, err := config.Get(req.Client)
+	if err != nil {
+		return err
+	}
+
+	err = req.Client.List(deps, &meta.ListOptions{
 		Namespace: app.Status.Namespace,
 		Selector: klabels.SelectorFromSet(map[string]string{
 			labels.HerdManaged: "true",
@@ -172,6 +181,7 @@ func AppStatus(req router.Request, resp router.Response) error {
 		}
 	}
 	app.Status.ContainerStatus = container
+	app.Status.Columns.Endpoints = endpoints(cfg, app)
 
 	if isTransition {
 		sort.Strings(message)
@@ -226,4 +236,44 @@ func podName(pod *corev1.Pod) string {
 		return jobName
 	}
 	return pod.Labels[labels.HerdContainerName]
+}
+
+func endpoints(cfg *config.Config, app *v1.AppInstance) string {
+	endpointTarget := map[string][]v1.Endpoint{}
+	for _, endpoint := range app.Status.Endpoints {
+		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPortNumber)
+		endpointTarget[target] = append(endpointTarget[target], endpoint)
+	}
+
+	var endpointStrings []string
+
+	for _, entry := range typed.Sorted(endpointTarget) {
+		var (
+			target, endpoints = entry.Key, entry.Value
+			publicStrings     []string
+		)
+
+		for _, endpoint := range endpoints {
+			buf := &strings.Builder{}
+			switch endpoint.Protocol {
+			case v1.PublishProtocolHTTP:
+				if cfg.TLSEnabled {
+					buf.WriteString("https://")
+				} else {
+					buf.WriteString("http://")
+				}
+			default:
+				buf.WriteString(strings.ToLower(string(endpoint.Protocol)))
+				buf.WriteString("://")
+			}
+
+			buf.WriteString(endpoint.Address)
+			publicStrings = append(publicStrings, buf.String())
+		}
+
+		endpointStrings = append(endpointStrings,
+			fmt.Sprintf("%s => %s", strings.Join(publicStrings, "|"), target))
+	}
+
+	return strings.Join(endpointStrings, ", ")
 }

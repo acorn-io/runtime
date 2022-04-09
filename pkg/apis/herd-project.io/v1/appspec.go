@@ -57,6 +57,14 @@ var (
 	ProtocolHTTPS = Protocol("https")
 )
 
+type PublishProtocol string
+
+var (
+	PublishProtocolTCP  = PublishProtocol("tcp")
+	PublishProtocolUDP  = PublishProtocol("udp")
+	PublishProtocolHTTP = PublishProtocol("http")
+)
+
 type Port struct {
 	Port          int32    `json:"port,omitempty"`
 	ContainerPort int32    `json:"containerPort,omitempty"`

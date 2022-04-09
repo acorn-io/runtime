@@ -14,8 +14,26 @@ type Getter interface {
 }
 
 type Config struct {
-	IngressClassName string   `json:"ingressClassName,omitempty"`
-	ClusterDomains   []string `json:"clusterDomains,omitempty"`
+	IngressClassName            string   `json:"ingressClassName,omitempty"`
+	ClusterDomains              []string `json:"clusterDomains,omitempty"`
+	TLSEnabled                  bool     `json:"tlsEnabled,omitempty"`
+	SetPodSecurityEnforeProfile *bool    `json:"setPodSecurityEnforeProfile,omitempty"`
+	PodSecurityEnforceProfile   string   `json:"podSecurityEnforceProfile,omitempty"`
+}
+
+func (c *Config) complete() {
+	if c.SetPodSecurityEnforeProfile == nil {
+		c.SetPodSecurityEnforeProfile = &[]bool{true}[0]
+	}
+	if c.PodSecurityEnforceProfile == "" && *c.SetPodSecurityEnforeProfile {
+		c.PodSecurityEnforceProfile = "baseline"
+	}
+}
+
+func defaultConfig() *Config {
+	cfg := &Config{}
+	cfg.complete()
+	return cfg
 }
 
 func Get(getter Getter) (*Config, error) {
@@ -24,11 +42,16 @@ func Get(getter Getter) (*Config, error) {
 		Namespace: system.Namespace,
 	})
 	if apierror.IsNotFound(err) {
-		return &Config{}, nil
+		return defaultConfig(), nil
 	} else if err != nil {
 		return nil, err
 	}
 
 	config := &Config{}
-	return config, json.Unmarshal([]byte(cm.Data["config"]), cm)
+	if err := json.Unmarshal([]byte(cm.Data["config"]), cm); err != nil {
+		return nil, err
+	}
+
+	config.complete()
+	return config, nil
 }

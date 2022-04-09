@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -37,13 +38,32 @@ func (b *Options) Complete() (*Options, error) {
 	return &current, nil
 }
 
+func FindHerdCue(cwd string) string {
+	for _, ext := range []string{"cue", "yaml", "json"} {
+		f := filepath.Join(cwd, "herd."+ext)
+		if _, err := os.Stat(f); err == nil {
+			return f
+		}
+	}
+	return filepath.Join(cwd, "herd.cue")
+}
+
+func ResolveFile(file, cwd string) string {
+	if file == "DIRECTORY/herd.cue" {
+		return FindHerdCue(cwd)
+	}
+	return file
+}
+
 func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error) {
 	opts, err := opts.Complete()
 	if err != nil {
 		return nil, err
 	}
 
-	fileData, err := ioutil.ReadFile(file)
+	file = ResolveFile(file, opts.Cwd)
+
+	fileData, err := appdefinition.ReadCUE(file)
 	if err != nil {
 		return nil, err
 	}

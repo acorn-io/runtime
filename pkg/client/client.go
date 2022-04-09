@@ -3,11 +3,17 @@ package client
 import (
 	"context"
 
+	"github.com/ibuildthecloud/baaah/pkg/restconfig"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	"github.com/ibuildthecloud/herd/pkg/client/term"
+	"github.com/ibuildthecloud/herd/pkg/k8schannel"
 	"github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/system"
 	"golang.org/x/sync/errgroup"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -25,15 +31,98 @@ type App struct {
 	Status v1.AppInstanceStatus `json:"status,omitempty"`
 }
 
+type ContainerReplica struct {
+	Name          string            `json:"name,omitempty"`
+	AppName       string            `json:"appName,omitempty"`
+	JobName       string            `json:"jobName,omitempty"`
+	ContainerName string            `json:"containerName,omitempty"`
+	SidecarName   string            `json:"sidecarName,omitempty"`
+	Created       metav1.Time       `json:"created,omitempty"`
+	Revision      string            `json:"revision,omitempty"`
+	Labels        map[string]string `json:"labels,omitempty"`
+	Annotations   map[string]string `json:"annotations,omitempty"`
+
+	Dirs        map[string]v1.VolumeMount `json:"dirs,omitempty"`
+	Files       map[string]v1.File        `json:"files,omitempty"`
+	Image       string                    `json:"image,omitempty"`
+	Build       *v1.Build                 `json:"build,omitempty"`
+	Command     []string                  `json:"command,omitempty"`
+	Interactive bool                      `json:"interactive,omitempty"`
+	Entrypoint  []string                  `json:"entrypoint,omitempty"`
+	Environment []v1.EnvVar               `json:"environment,omitempty"`
+	WorkingDir  string                    `json:"workingDir,omitempty"`
+	Ports       []v1.Port                 `json:"ports,omitempty"`
+
+	// Init is only available on sidecars
+	Init bool `json:"init,omitempty"`
+
+	// Sidecars are not available on sidecars
+	Sidecars map[string]v1.Container `json:"sidecars,omitempty"`
+
+	Status ContainerReplicaStatus `json:"status,omitempty"`
+}
+
+type ContainerReplicaColumns struct {
+	State string `json:"state,omitempty"`
+	App   string `json:"app,omitempty"`
+}
+
+type ContainerReplicaStatus struct {
+	PodName      string          `json:"podName,omitempty"`
+	PodNamespace string          `json:"podNamespace,omitempty"`
+	Phase        corev1.PodPhase `json:"phase,omitempty"`
+	PodMessage   string          `json:"message,omitempty"`
+	PodReason    string          `json:"reason,omitempty"`
+
+	Columns              ContainerReplicaColumns `json:"columns,omitempty"`
+	State                corev1.ContainerState   `json:"state,omitempty"`
+	LastTerminationState corev1.ContainerState   `json:"lastState,omitempty"`
+	Ready                bool                    `json:"ready"`
+	RestartCount         int32                   `json:"restartCount"`
+	Image                string                  `json:"image"`
+	ImageID              string                  `json:"imageID"`
+	Started              *bool                   `json:"started,omitempty"`
+}
+
 func Default() (Client, error) {
-	k8sclient, err := k8sclient.Default()
+	cfg, err := restconfig.Default()
 	if err != nil {
 		return nil, err
 	}
+
 	ns := system.UserNamespace()
+	return New(cfg, ns)
+}
+
+func New(restconfig *rest.Config, namespace string) (Client, error) {
+	k8sclient, err := k8sclient.New(restconfig)
+	if err != nil {
+		return nil, err
+	}
+
+	dialer, err := k8schannel.NewDialer(restconfig, false)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := rest.CopyConfig(restconfig)
+	cfg.APIPath = "/api"
+	cfg.GroupVersion = &schema.GroupVersion{
+		Group:   "",
+		Version: "v1",
+	}
+
+	restClient, err := rest.RESTClientFor(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	return &client{
-		Namespace: ns,
-		Client:    k8sclient,
+		Namespace:  namespace,
+		Client:     k8sclient,
+		RESTConfig: restconfig,
+		RESTClient: restClient,
+		Dialer:     dialer,
 	}, nil
 }
 
@@ -42,34 +131,35 @@ type Client interface {
 	AppDelete(ctx context.Context, name string) error
 	//AppUpdate(ctx context.Context, app *App) error
 	//AppCreate(ctx context.Context, app *App) (*App, error)
-	//AppGet(ctx context.Context, name string) (*App, error)
-	//AppStop(ctx context.Context, name string) error
-	//AppStart(ctx context.Context, name string) error
+	AppGet(ctx context.Context, name string) (*App, error)
+	AppStop(ctx context.Context, name string) error
+	AppStart(ctx context.Context, name string) error
+	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]ContainerReplica, error)
+	ContainerReplicaGet(ctx context.Context, name string) (*ContainerReplica, error)
+	ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error)
+}
 
+type ContainerReplicaExecOptions struct {
+	DebugImage string `json:"debugImage,omitempty"`
+}
+
+type ContainerReplicaListOptions struct {
+	App string `json:"app,omitempty"`
+}
+
+func (c *ContainerReplicaListOptions) complete() *ContainerReplicaListOptions {
+	if c == nil {
+		return &ContainerReplicaListOptions{}
+	}
+	return c
 }
 
 type client struct {
-	Namespace string `json:"namespace,omitempty"`
-	Client    kclient.WithWatch
-}
-
-func (c *client) appsForNS(ctx context.Context, eg *errgroup.Group, namespace string, result chan<- v1.AppInstance) {
-	eg.Go(func() error {
-		apps := &v1.AppInstanceList{}
-		err := c.Client.List(ctx, apps, &kclient.ListOptions{
-			Namespace: namespace,
-		})
-		if err != nil {
-			return err
-		}
-		for _, app := range apps.Items {
-			result <- app
-			if app.Status.Namespace != "" {
-				c.appsForNS(ctx, eg, app.Status.Namespace, result)
-			}
-		}
-		return nil
-	})
+	Namespace  string `json:"namespace,omitempty"`
+	Client     kclient.WithWatch
+	RESTConfig *rest.Config
+	RESTClient *rest.RESTClient
+	Dialer     *k8schannel.Dialer
 }
 
 func waitAndClose[T any](eg *errgroup.Group, c chan T, err *error) {

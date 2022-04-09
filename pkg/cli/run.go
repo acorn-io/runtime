@@ -28,7 +28,8 @@ func NewRun() *cobra.Command {
 }
 
 type Run struct {
-	Name string `usage:"Name of app to create" short:"n"`
+	Name     string   `usage:"Name of app to create" short:"n"`
+	Endpoint []string `usage:"Bind a published host to a friendly domain (format public:private) (ex: example.com:web)" short:"b"`
 }
 
 func (s *Run) getName() (string, bool) {
@@ -49,6 +50,11 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 			Namespace: system.UserNamespace(),
 		}
 	)
+
+	opts.Endpoints, lastErr = run.ParseEndpoints(s.Endpoint)
+	if lastErr != nil {
+		return lastErr
+	}
 
 	for i := 0; i < 3; i++ {
 		app, lastErr = run.Run(cmd.Context(), image, opts)

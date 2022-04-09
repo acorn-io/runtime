@@ -136,4 +136,14 @@ package v1
 	images: [string]:     #Image
 	volumes: [string]:    #Volume
 	secrets: [string]:    #Secret
+
+	_keysMustBeUniqueAcrossTypes: [string]: string
+	_keysMustBeUniqueAcrossTypes: {
+		for k, v in containers {
+			"\(k)": "container"
+		}
+		for k, v in jobs {
+			"\(k)": "jobs"
+		}
+	}
 }

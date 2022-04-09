@@ -33,10 +33,16 @@ type AppInstance struct {
 }
 
 type AppInstanceSpec struct {
-	Image   string          `json:"image,omitempty"`
-	Stop    *bool           `json:"stop,omitempty"`
-	Volumes []VolumeBinding `json:"volumes,omitempty"`
-	Secrets []SecretBinding `json:"secrets,omitempty"`
+	Image     string            `json:"image,omitempty"`
+	Stop      *bool             `json:"stop,omitempty"`
+	Volumes   []VolumeBinding   `json:"volumes,omitempty"`
+	Secrets   []SecretBinding   `json:"secrets,omitempty"`
+	Endpoints []EndpointBinding `json:"endpoints,omitempty"`
+}
+
+type EndpointBinding struct {
+	Target   string `json:"target,omitempty"`
+	Hostname string `json:"hostname,omitempty"`
 }
 
 type SecretBinding struct {
@@ -64,9 +70,10 @@ type JobStatus struct {
 }
 
 type AppColumns struct {
-	Healthy  string `json:"healthy,omitempty" column:"name=HEALTHY,jsonpath=.status.columns.healthy"`
-	UpToDate string `json:"upToDate,omitempty" column:"name=UPTODATE,jsonpath=.status.columns.upToDate"`
-	Message  string `json:"message,omitempty" column:"name=MESSAGE,jsonpath=.status.columns.message"`
+	Healthy   string `json:"healthy,omitempty" column:"name=HEALTHY,jsonpath=.status.columns.healthy"`
+	UpToDate  string `json:"upToDate,omitempty" column:"name=UPTODATE,jsonpath=.status.columns.upToDate"`
+	Message   string `json:"message,omitempty" column:"name=MESSAGE,jsonpath=.status.columns.message"`
+	Endpoints string `json:"endpoints,omitempty" column:"name=ENDPOINTS,jsonpath=.status.columns.endpoints"`
 }
 
 type AppInstanceStatus struct {
@@ -78,6 +85,14 @@ type AppInstanceStatus struct {
 	AppImage        AppImage                   `json:"appImage,omitempty"`
 	AppSpec         AppSpec                    `json:"appSpec,omitempty"`
 	Conditions      map[string]Condition       `json:"conditions,omitempty"`
+	Endpoints       []Endpoint                 `json:"endpoints,omitempty"`
+}
+
+type Endpoint struct {
+	Target           string          `json:"target,omitempty"`
+	TargetPortNumber int32           `json:"targetPortNumber,omitempty"`
+	Address          string          `json:"address,omitempty"`
+	Protocol         PublishProtocol `json:"protocol,omitempty"`
 }
 
 func (a *AppInstance) Conditions() *map[string]Condition {

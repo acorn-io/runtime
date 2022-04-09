@@ -6,10 +6,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/ibuildthecloud/baaah/pkg/typed"
@@ -70,7 +70,7 @@ type watcher struct {
 }
 
 func (w *watcher) readFiles() []string {
-	data, err := ioutil.ReadFile(w.file)
+	data, err := appdefinition.ReadCUE(w.file)
 	if err != nil {
 		logrus.Errorf("failed to read %s: %v", w.file, err)
 		return []string{w.file}
@@ -172,13 +172,14 @@ func getByPathSelector(herdCue string) klabels.Selector {
 	return klabels.SelectorFromSet(getByPathLabels(herdCue))
 }
 
-func updateApp(ctx context.Context, client client.Client, app *v1.AppInstance, image string) error {
+func updateApp(ctx context.Context, client client.Client, app *v1.AppInstance, image string, opts run.Options) error {
 	app.Spec.Image = image
 	app.Spec.Stop = new(bool)
+	app.Spec.Endpoints = opts.Endpoints
 	return client.Update(ctx, app)
 }
 
-func createApp(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) error {
+func createApp(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
 	if opts.Labels == nil {
 		opts.Labels = map[string]string{}
 	}
@@ -191,10 +192,10 @@ func createApp(ctx context.Context, herdCue, image string, opts run.Options, app
 	opts.Annotations[labels.HerdAppCuePath] = herdCue
 	app, err := run.Run(ctx, image, &opts)
 	if err != nil {
-		return err
+		return "", err
 	}
 	apps <- app
-	return nil
+	return app.Name, nil
 }
 
 func getAppName(ctx context.Context, herdCue string, opts run.Options) (string, error) {
@@ -248,15 +249,15 @@ func stop(herdCue string, opts run.Options) error {
 	return nil
 }
 
-func runOrUpdate(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) error {
+func runOrUpdate(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
 	existingApp, err := getExistingApp(ctx, herdCue, opts)
 	if apierror.IsNotFound(err) {
 		return createApp(ctx, herdCue, image, opts, apps)
 	} else if err != nil {
-		return err
+		return "", err
 	}
 	apps <- existingApp
-	return updateApp(ctx, opts.Client, existingApp, image)
+	return existingApp.Name, updateApp(ctx, opts.Client, existingApp, image, opts)
 }
 
 func runLoop(ctx context.Context, herdCue string, opts run.Options, images <-chan string, apps chan<- *v1.AppInstance) error {
@@ -271,8 +272,10 @@ func runLoop(ctx context.Context, herdCue string, opts run.Options, images <-cha
 			if !open {
 				return nil
 			}
-			if err := runOrUpdate(ctx, herdCue, image, opts, apps); err != nil {
+			if newName, err := runOrUpdate(ctx, herdCue, image, opts, apps); err != nil {
 				logrus.Errorf("Failed to run app: %v", err)
+			} else {
+				opts.Name = newName
 			}
 		case <-ctx.Done():
 			return ctx.Err()
@@ -293,6 +296,8 @@ func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options
 		logging = false
 		logChan <-chan error
 		lastApp *v1.AppInstance
+		cancel  = func() {}
+		logCtx  context.Context
 	)
 
 	for {
@@ -303,18 +308,22 @@ func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options
 			if lastApp == nil {
 				logging = false
 			} else {
-				logChan = doLog(ctx, lastApp, opts)
+				cancel()
+				logCtx, cancel = context.WithCancel(ctx)
+				logChan = doLog(logCtx, lastApp, opts)
 			}
 		case app, open := <-apps:
 			if !open {
 				return nil
 			}
-			lastApp = app
-			if logging {
+			if logging && lastApp == app {
 				continue
 			}
+			lastApp = app
 			logging = true
-			logChan = doLog(ctx, lastApp, opts)
+			cancel()
+			logCtx, cancel = context.WithCancel(ctx)
+			logChan = doLog(logCtx, lastApp, opts)
 		}
 	}
 }
@@ -325,7 +334,9 @@ func readInput(ctx context.Context, trigger chan<- struct{}) error {
 	go func() {
 		line := bufio.NewScanner(os.Stdin)
 		for line.Scan() {
-			readSomething <- struct{}{}
+			if strings.Contains(line.Text(), "b") {
+				readSomething <- struct{}{}
+			}
 		}
 		<-ctx.Done()
 		close(readSomething)
@@ -351,6 +362,8 @@ func resolveHerdCueAndName(ctx context.Context, herdCue string, opts *Options) (
 	if err != nil {
 		return "", nil, err
 	}
+
+	herdCue = build.ResolveFile(herdCue, opts.Build.Cwd)
 
 	if !filepath.IsAbs(herdCue) {
 		herdCue, err = filepath.Abs(herdCue)
@@ -394,6 +407,9 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	})
 	eg.Go(func() error {
 		return logLoop(ctx, apps, &opts.Log)
+	})
+	eg.Go(func() error {
+		return appStatusLoop(ctx, apps, opts)
 	})
 	err = eg.Wait()
 	if errors.Is(err, context.Canceled) {

@@ -45,6 +45,16 @@ type Streams struct {
 	In io.Reader
 }
 
+func Current() *Streams {
+	return &Streams{
+		In: os.Stdin,
+		Output: Output{
+			Out: os.Stdout,
+			Err: os.Stderr,
+		},
+	}
+}
+
 func CurrentOutput() *Output {
 	return &Output{
 		Out: os.Stdout,

@@ -1,6 +1,9 @@
 package appdefinition
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"sort"
 
@@ -8,6 +11,7 @@ import (
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/cue"
 	"github.com/ibuildthecloud/herd/schema"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -38,6 +42,28 @@ func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 		ctx:        a.ctx,
 		imageDatas: append(a.imageDatas, imageData),
 	}
+}
+
+func ReadCUE(file string) ([]byte, error) {
+	fileData, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	ext := filepath.Ext(file)
+	if ext == ".yaml" || ext == ".json" {
+		data := map[string]interface{}{}
+		err := yaml.Unmarshal(fileData, data)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %s: %w", file, err)
+		}
+		fileData, err = json.Marshal(data)
+		if err != nil {
+			return nil, fmt.Errorf("converting %s: %w", file, err)
+		}
+	}
+
+	return fileData, nil
 }
 
 func NewAppDefinition(data []byte) (*AppDefinition, error) {

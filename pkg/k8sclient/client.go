@@ -4,6 +4,7 @@ import (
 	"github.com/ibuildthecloud/baaah/pkg/restconfig"
 	"github.com/ibuildthecloud/herd/pkg/scheme"
 	"github.com/rancher/lasso/pkg/mapper"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -18,6 +19,14 @@ func Default() (client.WithWatch, error) {
 	}
 
 	return New(cfg)
+}
+
+func DefaultInterface() (kubernetes.Interface, error) {
+	cfg, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		return nil, err
+	}
+	return kubernetes.NewForConfig(cfg)
 }
 
 func New(cfg *rest.Config) (client.WithWatch, error) {

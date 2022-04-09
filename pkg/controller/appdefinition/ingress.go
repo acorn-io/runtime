@@ -2,6 +2,7 @@ package appdefinition
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/ibuildthecloud/baaah/pkg/router"
 	"github.com/ibuildthecloud/baaah/pkg/typed"
@@ -9,7 +10,6 @@ import (
 	"github.com/ibuildthecloud/herd/pkg/config"
 	"github.com/ibuildthecloud/herd/pkg/labels"
 	"github.com/ibuildthecloud/herd/pkg/system"
-	"github.com/rancher/wrangler/pkg/name"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,6 +21,8 @@ func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 			HTTP: &networkingv1.HTTPIngressRuleValue{
 				Paths: []networkingv1.HTTPIngressPath{
 					{
+						Path:     "/",
+						PathType: &[]networkingv1.PathType{networkingv1.PathTypePrefix}[0],
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
 								Name: serviceName,
@@ -37,6 +39,11 @@ func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 }
 
 func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Response) error {
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		// remove all ingress
+		return nil
+	}
+
 	cfg, err := config.Get(req.Client)
 	if err != nil {
 		return err
@@ -59,8 +66,6 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 				continue
 			}
 			switch port.Protocol {
-			case v1.ProtocolHTTPS:
-				fallthrough
 			case v1.ProtocolHTTP:
 				httpPorts[int(port.Port)] = port
 			}
@@ -71,8 +76,6 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 					continue
 				}
 				switch port.Protocol {
-				case v1.ProtocolHTTPS:
-					fallthrough
 				case v1.ProtocolHTTP:
 					httpPorts[int(port.Port)] = port
 				}
@@ -82,45 +85,57 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			continue
 		}
 
-		hostPrefix := containerName
+		hostPrefix := containerName + "." + appInstance.Name
+		if containerName == "default" {
+			hostPrefix = appInstance.Name
+		}
 		if appInstance.Namespace != system.DefaultUserNamespace {
 			hostPrefix += "." + appInstance.Namespace
 		}
 
 		defaultPort, ok := httpPorts[80]
 		if !ok {
-			defaultPort, ok = httpPorts[443]
-			if !ok {
-				defaultPort = httpPorts[typed.SortedKeys(httpPorts)[0]]
+			defaultPort = httpPorts[typed.SortedKeys(httpPorts)[0]]
+		}
+
+		var (
+			rules []networkingv1.IngressRule
+			hosts []string
+		)
+
+		for _, binding := range appInstance.Spec.Endpoints {
+			if binding.Target == containerName {
+				hosts = append(hosts, binding.Hostname)
+				rules = append(rules, rule(binding.Hostname, containerName, defaultPort.Port))
 			}
 		}
 
-		for _, entry := range typed.Sorted(httpPorts) {
-			var (
-				port  = entry.Value
-				rules []networkingv1.IngressRule
-			)
-			for _, domain := range clusterDomains {
-				if defaultPort.Port == port.Port {
-					rules = append(rules, rule(hostPrefix+domain, containerName, port.Port))
-				}
-				rules = append(rules, rule(hostPrefix+domain+":"+strconv.Itoa(int(port.Port)), containerName, port.Port))
-			}
+		addClusterDomains := len(hosts) == 0
 
-			resp.Objects(&networkingv1.Ingress{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      name.SafeConcatName(containerName, strconv.Itoa(int(port.Port))),
-					Namespace: appInstance.Status.Namespace,
-					Labels: containerLabels(appInstance, containerName,
-						labels.HerdManaged, "true"),
-				},
-				Spec: networkingv1.IngressSpec{
-					IngressClassName: ingressClassName,
-					Rules:            rules,
-				},
-			})
+		for _, domain := range clusterDomains {
+			if addClusterDomains {
+				hosts = append(hosts, hostPrefix+domain)
+			}
+			rules = append(rules, rule(hostPrefix+domain, containerName, defaultPort.Port))
 		}
+
+		resp.Objects(&networkingv1.Ingress{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      containerName,
+				Namespace: appInstance.Status.Namespace,
+				Labels:    containerLabels(appInstance, containerName),
+				Annotations: map[string]string{
+					labels.HerdHostnames:     strings.Join(hosts, ","),
+					labels.HerdPortNumber:    strconv.Itoa(int(defaultPort.ContainerPort)),
+					labels.HerdContainerName: containerName,
+				},
+			},
+			Spec: networkingv1.IngressSpec{
+				IngressClassName: ingressClassName,
+				Rules:            rules,
+			},
+		})
 	}
 
 	return nil

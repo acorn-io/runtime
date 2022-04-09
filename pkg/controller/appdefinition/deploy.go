@@ -4,18 +4,18 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"path"
-	"strings"
 
 	"github.com/ibuildthecloud/baaah/pkg/meta"
 	"github.com/ibuildthecloud/baaah/pkg/router"
 	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/labels"
+	"github.com/rancher/wrangler/pkg/data/convert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func DeploySpec(req router.Request, resp router.Response) error {
@@ -114,7 +114,7 @@ func toMounts(appName, deploymentName, containerName string, container v1.Contai
 			})
 		} else {
 			result = append(result, corev1.VolumeMount{
-				Name:      "secret::" + entry.Value.Secret.Name,
+				Name:      "secret--" + entry.Value.Secret.Name,
 				MountPath: path.Join("/", entry.Key),
 				SubPath:   entry.Value.Secret.Key,
 			})
@@ -134,7 +134,7 @@ func toMounts(appName, deploymentName, containerName string, container v1.Contai
 			})
 		} else {
 			result = append(result, corev1.VolumeMount{
-				Name:      "secret::" + mount.Secret.Name,
+				Name:      "secret--" + mount.Secret.Name,
 				MountPath: path.Join("/", mountPath),
 			})
 		}
@@ -178,6 +178,7 @@ func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map
 		labels.HerdAppName:       appInstance.Name,
 		labels.HerdAppNamespace:  appInstance.Namespace,
 		labels.HerdContainerName: name,
+		labels.HerdManaged:       "true",
 	}
 	for i := 0; i+1 < len(kv); i += 2 {
 		if kv[i+1] == "" {
@@ -187,6 +188,13 @@ func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map
 		}
 	}
 	return labels
+}
+
+func containerAnnotation(container v1.Container) string {
+	// convert to map first to sort keys
+	data, _ := convert.EncodeToMap(container)
+	json, _ := json.Marshal(data)
+	return string(json)
 }
 
 func toDeployment(appInstance *v1.AppInstance, name string, container v1.Container) *appsv1.Deployment {
@@ -213,8 +221,13 @@ func toDeployment(appInstance *v1.AppInstance, name string, container v1.Contain
 					Labels: containerLabels(appInstance, name,
 						labels.HerdManaged, "true",
 					),
+					Annotations: map[string]string{
+						labels.HerdContainerSpec: containerAnnotation(container),
+					},
 				},
 				Spec: corev1.PodSpec{
+					ShareProcessNamespace:        &[]bool{true}[0],
+					EnableServiceLinks:           new(bool),
 					Containers:                   containers,
 					InitContainers:               initContainers,
 					Volumes:                      toVolumes(appInstance, container),
@@ -237,9 +250,10 @@ func addNamespace(appInstance *v1.AppInstance, resp router.Response) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: appInstance.Status.Namespace,
 			Labels: map[string]string{
-				labels.HerdAppName:      appInstance.Name,
-				labels.HerdAppNamespace: appInstance.Namespace,
-				labels.HerdManaged:      "true",
+				labels.HerdAppName:                   appInstance.Name,
+				labels.HerdAppNamespace:              appInstance.Namespace,
+				labels.HerdManaged:                   "true",
+				"pod-security.kubernetes.io/enforce": "baseline",
 			},
 		},
 	})
@@ -247,68 +261,6 @@ func addNamespace(appInstance *v1.AppInstance, resp router.Response) {
 
 func addServices(appInstance *v1.AppInstance, resp router.Response) {
 	resp.Objects(toServices(appInstance)...)
-}
-
-func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		service := toService(appInstance, entry.Key, entry.Value)
-		if service != nil {
-			result = append(result, service)
-		}
-	}
-	return result
-}
-
-func toServicePort(port v1.Port) corev1.ServicePort {
-	servicePort := corev1.ServicePort{
-		Protocol: corev1.ProtocolTCP,
-		Port:     port.Port,
-		TargetPort: intstr.IntOrString{
-			IntVal: port.ContainerPort,
-		},
-	}
-	switch port.Protocol {
-	case v1.ProtocolTCP:
-	case v1.ProtocolUDP:
-		servicePort.Protocol = corev1.ProtocolUDP
-	case v1.ProtocolHTTP:
-		fallthrough
-	case v1.ProtocolHTTPS:
-		str := strings.ToUpper(string(port.Protocol))
-		servicePort.AppProtocol = &str
-	}
-	return servicePort
-}
-
-func toService(appInstance *v1.AppInstance, name string, container v1.Container) *corev1.Service {
-	var ports []corev1.ServicePort
-	for _, port := range container.Ports {
-		ports = append(ports, toServicePort(port))
-	}
-	for _, entry := range typed.Sorted(container.Sidecars) {
-		for _, port := range entry.Value.Ports {
-			ports = append(ports, toServicePort(port))
-		}
-	}
-
-	if len(ports) == 0 {
-		return nil
-	}
-
-	return &corev1.Service{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: appInstance.Status.Namespace,
-			Labels: containerLabels(appInstance, name,
-				labels.HerdManaged, "true"),
-		},
-		Spec: corev1.ServiceSpec{
-			Ports:    ports,
-			Selector: containerLabels(appInstance, name),
-			Type:     corev1.ServiceTypeClusterIP,
-		},
-	}
 }
 
 func addFileContent(configMap *corev1.ConfigMap, appName, deploymentName string, container v1.Container) error {

@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/goombaio/namegenerator"
@@ -19,12 +20,32 @@ var (
 	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
 )
 
+func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
+	for _, arg := range args {
+		public, private, ok := strings.Cut(arg, ":")
+		if !ok {
+			return nil, fmt.Errorf("endpoint binding must contain a \":\" in the format \"public:private\"")
+		}
+		private = strings.TrimSpace(private)
+		public = strings.TrimSpace(public)
+		if private == "" || public == "" {
+			return nil, fmt.Errorf("invalid endpoint binding [%s] must not have zero length value", arg)
+		}
+		result = append(result, v1.EndpointBinding{
+			Target:   private,
+			Hostname: public,
+		})
+	}
+	return
+}
+
 type Options struct {
 	Name        string
 	Namespace   string
 	Annotations map[string]string
 	Labels      map[string]string
-	Client      client.Client
+	Endpoints   []v1.EndpointBinding
+	Client      client.WithWatch
 }
 
 func (o *Options) Complete() (*Options, error) {
@@ -91,7 +112,8 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Annotations: opts.Annotations,
 		},
 		Spec: v1.AppInstanceSpec{
-			Image: image,
+			Image:     image,
+			Endpoints: opts.Endpoints,
 		},
 		Status: v1.AppInstanceStatus{},
 	}

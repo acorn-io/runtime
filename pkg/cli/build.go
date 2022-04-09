@@ -22,7 +22,7 @@ herd build .`,
 }
 
 type Build struct {
-	File string `short:"f" desc:"Name of the build file" default:"herd.cue"`
+	File string `short:"f" desc:"Name of the build file" default:"DIRECTORY/herd.cue"`
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {

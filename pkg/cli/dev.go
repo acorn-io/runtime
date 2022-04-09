@@ -22,13 +22,19 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File string `short:"f" desc:"Name of the dev file" default:"herd.cue"`
-	Name string `usage:"Name of app to create" short:"n"`
+	File     string   `short:"f" desc:"Name of the dev file" default:"DIRECTORY/herd.cue"`
+	Name     string   `usage:"Name of app to create" short:"n"`
+	Endpoint []string `usage:"Bind a published host to a friendly domain (format public:private) (ex: example.com:web)" short:"b"`
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 	cwd := args[0]
 	c, err := hclient.Default()
+	if err != nil {
+		return err
+	}
+
+	endpoints, err := run.ParseEndpoints(s.Endpoint)
 	if err != nil {
 		return err
 	}
@@ -41,6 +47,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 			Name:      s.Name,
 			Namespace: system.UserNamespace(),
 			Client:    c,
+			Endpoints: endpoints,
 		},
 		Log: log.Options{
 			Client: c,

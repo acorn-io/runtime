@@ -112,13 +112,13 @@ func addVolumeReferencesForContainer(volumeNames map[string]bool, container v1.C
 		if volume.Secret.Name == "" {
 			volumeNames[volume.Volume] = true
 		} else {
-			volumeNames["secret::"+volume.Secret.Name] = true
+			volumeNames["secret--"+volume.Secret.Name] = true
 		}
 	}
 
 	for _, file := range container.Files {
 		if file.Secret.Name != "" {
-			volumeNames["secret::"+file.Secret.Name] = true
+			volumeNames["secret--"+file.Secret.Name] = true
 		}
 	}
 }
@@ -137,8 +137,8 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 	}
 
 	for _, volume := range typed.SortedKeys(volumeNames) {
-		if strings.HasPrefix(volume, "secret::") {
-			secretName := strings.TrimPrefix(volume, "secret::")
+		if strings.HasPrefix(volume, "secret--") {
+			secretName := strings.TrimPrefix(volume, "secret--")
 			result = append(result, corev1.Volume{
 				Name: volume,
 				VolumeSource: corev1.VolumeSource{

@@ -18,6 +18,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -71,8 +72,6 @@ type Options struct {
 	PodClient  v12.PodsGetter
 	TailLines  *int64
 	NoFollow   bool
-
-	outputLocked bool
 }
 
 func (o *Options) restConfig() (*rest.Config, error) {
@@ -127,11 +126,13 @@ func pipe(input io.ReadCloser, output chan<- Message, pod *corev1.Pod, name stri
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
 		line := scanner.Text()
-		ts, line, _ := strings.Cut(line, " ")
+		ts, newLine, _ := strings.Cut(line, " ")
 
 		pt, err := time.Parse(time.RFC3339, ts)
 		if err != nil {
-			return lastTS, err
+			newLine = line
+			pt = time.Time{}
+			//return lastTS, err
 		}
 		lastTS = &metav1.Time{
 			Time: pt.Local(),
@@ -141,7 +142,7 @@ func pipe(input io.ReadCloser, output chan<- Message, pod *corev1.Pod, name stri
 		}
 
 		output <- Message{
-			Line:          line,
+			Line:          newLine,
 			Pod:           pod,
 			ContainerName: name,
 			Time:          lastTS.Time,
@@ -185,6 +186,10 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 		})
 		readCloser, err := req.Stream(ctx)
 		if err != nil {
+			_, newErr := options.PodClient.Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+			if apierrors.IsNotFound(newErr) {
+				return newErr
+			}
 			output <- Message{
 				Time:          time.Now(),
 				Pod:           pod,
@@ -256,6 +261,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 	eg, _ := errgroup.WithContext(ctx)
 
 	eg.Go(func() error {
+		defer cancel()
 		_, err = podWatcher.ByName(ctx, pod.Namespace, pod.Name, func(pod *corev1.Pod) (bool, error) {
 			if !pod.DeletionTimestamp.IsZero() {
 				return true, nil
@@ -352,7 +358,7 @@ func Output(ctx context.Context, app *v1.AppInstance, options *Options) error {
 	go func() {
 		for msg := range output {
 			if msg.Err == nil {
-				fmt.Printf("%s/%s: %s", msg.Pod.Name, msg.ContainerName, msg.Line)
+				fmt.Printf("%s/%s: %s\n", msg.Pod.Name, msg.ContainerName, msg.Line)
 			} else {
 				logrus.Error(msg.Err)
 			}

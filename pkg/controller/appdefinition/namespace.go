@@ -17,12 +17,12 @@ func AssignNamespace(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func RequireNamespace(h router.HandlerFunc) router.HandlerFunc {
-	return func(req router.Request, resp router.Response) error {
+func RequireNamespace(h router.Handler) router.Handler {
+	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		if appInstance.Status.Namespace == "" {
 			return nil
 		}
-		return h(req, resp)
-	}
+		return h.Handle(req, resp)
+	})
 }

@@ -16,6 +16,15 @@ import (
 	}
 }
 
+#CombinePorts: {
+	IN="in": {
+		ports: [...v1.#PortSpec]
+		publish: [...v1.#PortSpec]
+	}
+	out: [...v1.#PortSpec]
+	out: IN.ports + IN.publish
+}
+
 #ToPort: {
 	IN="in": v1.#Port
 	out:     v1.#PortSpec
@@ -280,9 +289,25 @@ import (
 			}
 		}
 
-		ports: [{#ToPort & {in: IN.container.ports}}.out] | [ for p in IN.container.ports {
-			{#ToPort & {in: p}}.out
-		}]
+		ports: {
+			if (IN.container["ports"] & string) != _|_ {
+				[{#ToPort & {in: IN.container.ports}}.out]
+			}
+			if !((IN.container["ports"] & string) != _|_) {
+				[ for p in IN.container.ports {
+					{#ToPort & {in: p}}.out
+				}]
+			}
+		} + {
+			if (IN.container["publish"] & string) != _|_ {
+				[{#ToPublishPort & {in: IN.container.publish}}.out]
+			}
+			if !((IN.container["publish"] & string) != _|_) {
+				[ for p in IN.container.publish {
+					{#ToPublishPort & {in: p}}.out
+				}]
+			}
+		}
 	}
 }
 
