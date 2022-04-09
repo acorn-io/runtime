@@ -6,6 +6,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
 
 ---
 kind: Deployment
@@ -24,6 +25,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "container-name"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -31,7 +33,11 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "container-name"
         "herd-project.io/managed": "true"
+      annotations:
+        herd-project.io/container-spec: '{"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name"}'
     spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: container-name

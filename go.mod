@@ -14,7 +14,7 @@ require (
 	github.com/google/go-containerregistry v0.5.1
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.4.2
-	github.com/ibuildthecloud/baaah v0.0.0-20220405043530-a2c832991588
+	github.com/ibuildthecloud/baaah v0.0.0-20220409233839-284f22080b24
 	github.com/moby/buildkit v0.10.0-rc1.0.20220216012946-b36d860675c5
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6
 	github.com/pkg/errors v0.9.1

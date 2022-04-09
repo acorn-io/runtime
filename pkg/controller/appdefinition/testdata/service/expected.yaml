@@ -6,6 +6,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
 
 ---
 kind: Deployment
@@ -24,6 +25,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "oneimage"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -31,20 +33,23 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "oneimage"
         "herd-project.io/managed": "true"
+      annotations:
+        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https","publish":true}]}}}'
     spec:
       enableServiceLinks: false
+      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: oneimage
           image: "image-name"
           ports:
-          - containerPort: 81
-            protocol: "TCP"
+            - containerPort: 81
+              protocol: "TCP"
         - name: left
           image: "foo"
           ports:
-          - containerPort: 91
-            protocol: "TCP"
+            - containerPort: 91
+              protocol: "TCP"
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -62,6 +67,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "buildimage"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -69,7 +75,10 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "buildimage"
         "herd-project.io/managed": "true"
+      annotations:
+        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true},{"containerPort":91,"port":443,"protocol":"https","publish":true}]}'
     spec:
+      shareProcessNamespace: true
       enableServiceLinks: false
       automountServiceAccountToken: false
       containers:
@@ -80,6 +89,29 @@ spec:
               protocol: "TCP"
             - containerPort: 91
               protocol: "TCP"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: oneimage-publish-01234567890a
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+  selector:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "oneimage"
+    herd-project.io/managed: "true"
 ---
 kind: Service
 apiVersion: v1
@@ -106,6 +138,30 @@ spec:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "oneimage"
+    herd-project.io/managed: "true"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: buildimage-publish-01234567890a
+  namespace: app-created-namespace
+  labels:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+    "herd-project.io/managed": "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 443
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+  selector:
+    "herd-project.io/app-namespace": "app-namespace"
+    "herd-project.io/app-name": "app-name"
+    "herd-project.io/container-name": "buildimage"
+    herd-project.io/managed: "true"
 ---
 kind: Service
 apiVersion: v1
@@ -132,29 +188,24 @@ spec:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "buildimage"
+    herd-project.io/managed: "true"
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: oneimage-80
+  name: oneimage
   namespace: app-created-namespace
   labels:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "oneimage"
     "herd-project.io/managed": "true"
+  annotations:
+    herd-project.io/container-name: oneimage
+    herd-project.io/hostnames: localhost
+    herd-project.io/port-number: "81"
 spec:
   rules:
-    - host: oneimage.app-namespace.localhost
-      http:
-        paths:
-          - backend:
-              service:
-                name: oneimage
-                port:
-                  number: 80
-            path: /
-            pathType: Prefix
     - host: localhost
       http:
         paths:
@@ -165,20 +216,34 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
+    - host: oneimage.app-name.app-namespace.localhost
+      http:
+        paths:
+          - backend:
+              service:
+                name: oneimage
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: buildimage-80
+  name: buildimage
   namespace: app-created-namespace
   labels:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "buildimage"
     "herd-project.io/managed": "true"
+  annotations:
+    herd-project.io/container-name: buildimage
+    herd-project.io/hostnames: buildimage.app-name.app-namespace.localhost
+    herd-project.io/port-number: "81"
 spec:
   rules:
-    - host: buildimage.app-namespace.localhost
+    - host: buildimage.app-name.app-namespace.localhost
       http:
         paths:
           - backend:

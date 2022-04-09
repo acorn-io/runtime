@@ -6,7 +6,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/managed": "true"
-
+    "pod-security.kubernetes.io/enforce": baseline
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -24,6 +24,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "oneimage"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -31,7 +32,11 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "oneimage"
         "herd-project.io/managed": "true"
+      annotations:
+        "herd-project.io/container-spec": '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https"}]}}}'
     spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: oneimage
@@ -61,6 +66,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "buildimage"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -68,8 +74,12 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "buildimage"
         "herd-project.io/managed": "true"
+      annotations:
+        "herd-project.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
       automountServiceAccountToken: false
+      enableServiceLinks: false
+      shareProcessNamespace: true
       containers:
         - name: buildimage
           image: "sha256:build-image"
@@ -99,3 +109,4 @@ spec:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "oneimage"
+    "herd-project.io/managed": "true"

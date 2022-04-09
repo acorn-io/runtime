@@ -6,6 +6,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
 
 ---
 kind: Job

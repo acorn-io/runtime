@@ -6,6 +6,7 @@ metadata:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
     "herd-project.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
 
 ---
 kind: Deployment
@@ -25,6 +26,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "oneimage"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -32,7 +34,11 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "oneimage"
         "herd-project.io/managed": "true"
+      annotations:
+        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
     spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: oneimage
@@ -55,6 +61,7 @@ spec:
       "herd-project.io/app-namespace": "app-namespace"
       "herd-project.io/app-name": "app-name"
       "herd-project.io/container-name": "buildimage"
+      "herd-project.io/managed": "true"
   template:
     metadata:
       labels:
@@ -62,7 +69,11 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/container-name": "buildimage"
         "herd-project.io/managed": "true"
+      annotations:
+        "herd-project.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: buildimage

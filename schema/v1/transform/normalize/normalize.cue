@@ -290,19 +290,27 @@ import (
 		}
 
 		ports: {
+			if (IN.container["ports"] & int) != _|_ {
+				[{#ToPort & {in: IN.container.ports}}.out]
+			}
 			if (IN.container["ports"] & string) != _|_ {
 				[{#ToPort & {in: IN.container.ports}}.out]
 			}
-			if !((IN.container["ports"] & string) != _|_) {
+			if !((IN.container["ports"] & string) != _|_ ) &&
+				!((IN.container["ports"] & int) != _|_ ) {
 				[ for p in IN.container.ports {
 					{#ToPort & {in: p}}.out
 				}]
 			}
 		} + {
+			if (IN.container["publish"] & int) != _|_ {
+				[{#ToPublishPort & {in: IN.container.publish}}.out]
+			}
 			if (IN.container["publish"] & string) != _|_ {
 				[{#ToPublishPort & {in: IN.container.publish}}.out]
 			}
-			if !((IN.container["publish"] & string) != _|_) {
+			if !((IN.container["publish"] & string) != _|_ ) &&
+				!((IN.container["publish"] & int) != _|_) {
 				[ for p in IN.container.publish {
 					{#ToPublishPort & {in: p}}.out
 				}]

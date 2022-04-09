@@ -1,6 +1,7 @@
 kind: AppInstance
 apiVersion: herd-project.io/v1
 metadata:
+  uid: "1234567890abc"
   name: app-name
   namespace: app-namespace
 spec:
