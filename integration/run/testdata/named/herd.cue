@@ -1,0 +1,1 @@
+containers: default: image: "nginx"

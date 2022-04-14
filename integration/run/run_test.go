@@ -1,6 +1,8 @@
 package run
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/ibuildthecloud/herd/integration/helper"
@@ -17,16 +19,18 @@ import (
 func TestVolume(t *testing.T) {
 	helper.StartController(t)
 
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
 	image, err := build.Build(helper.GetCTX(t), "./testdata/volume/herd.cue", &build.Options{
-		Cwd: "./testdata/volume",
+		Cwd:       "./testdata/volume",
+		Namespace: ns.Name,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(hclient.Default)
-	ns := helper.TempNamespace(t, client)
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "volume-app",
@@ -85,19 +89,74 @@ func TestVolume(t *testing.T) {
 	})
 }
 
-func TestSimple(t *testing.T) {
+func TestImageNameAnnotation(t *testing.T) {
 	helper.StartController(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Options{
-		Cwd: "./testdata/simple",
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
+	image, err := build.Build(helper.GetCTX(t), "./testdata/named/herd.cue", &build.Options{
+		Cwd:       "./testdata/simple",
+		Namespace: ns.Name,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	appInstance := &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "simple-app",
+			Namespace:    ns.Name,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image: image.ID,
+		},
+	}
+
+	err = client.Create(ctx, appInstance)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
+		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+	})
+
+	helper.Wait(t, client.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
+		if pod.Namespace != appInstance.Status.Namespace ||
+			pod.Labels[labels.HerdAppName] != appInstance.Name ||
+			pod.Annotations[labels.HerdImageMapping] == "" {
+			return false
+		}
+		mapping := map[string]string{}
+		err := json.Unmarshal([]byte(pod.Annotations[labels.HerdImageMapping]), &mapping)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, digest, _ := strings.Cut(pod.Spec.Containers[0].Image, "sha256:")
+		if mapping["sha256:"+digest] == "nginx" {
+			return true
+		}
+		return false
+	})
+}
+
+func TestSimple(t *testing.T) {
+	helper.StartController(t)
+
 	ctx := helper.GetCTX(t)
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
+
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Options{
+		Cwd:       "./testdata/simple",
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "simple-app",

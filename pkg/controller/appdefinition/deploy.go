@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"path"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/ibuildthecloud/baaah/pkg/meta"
 	"github.com/ibuildthecloud/baaah/pkg/router"
 	"github.com/ibuildthecloud/baaah/pkg/typed"
@@ -20,9 +21,20 @@ import (
 
 func DeploySpec(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
+
+	tag, err := getTag(req, appInstance)
+	if err != nil {
+		return err
+	}
+
+	pullSecrets, err := pullSecrets(req, appInstance, resp)
+	if err != nil {
+		return err
+	}
+
 	addNamespace(appInstance, resp)
-	addDeployments(appInstance, resp)
-	addJobs(appInstance, resp)
+	addDeployments(appInstance, tag, pullSecrets, resp)
+	addJobs(appInstance, tag, pullSecrets, resp)
 	addServices(appInstance, resp)
 	if err := addIngress(appInstance, req, resp); err != nil {
 		return err
@@ -31,8 +43,8 @@ func DeploySpec(req router.Request, resp router.Response) error {
 	return addConfigMaps(appInstance, resp)
 }
 
-func addDeployments(appInstance *v1.AppInstance, resp router.Response) {
-	resp.Objects(toDeployments(appInstance)...)
+func addDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
+	resp.Objects(toDeployments(appInstance, tag, pullSecrets)...)
 }
 
 func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
@@ -80,15 +92,15 @@ func toEnv(envs []v1.EnvVar) (result []corev1.EnvVar) {
 	return
 }
 
-func toContainers(appName, name string, container v1.Container) ([]corev1.Container, []corev1.Container) {
+func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
 	)
 
-	containers = append(containers, toContainer(appName, name, name, container))
+	containers = append(containers, toContainer(app, tag, name, name, container))
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		newContainer := toContainer(appName, name, entry.Key, entry.Value)
+		newContainer := toContainer(app, tag, name, entry.Key, entry.Value)
 		if entry.Value.Init {
 			initContainers = append(initContainers, newContainer)
 		} else {
@@ -157,10 +169,18 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 	return ports
 }
 
-func toContainer(appName, deploymentName, containerName string, container v1.Container) corev1.Container {
+func resolveTag(app *v1.AppInstance, tag name.Reference, containerName string, container v1.Container) string {
+	override := app.Spec.Images[containerName]
+	if override != "" {
+		return override
+	}
+	return tag.Context().Digest(container.Image).String()
+}
+
+func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
 	return corev1.Container{
 		Name:         containerName,
-		Image:        container.Image,
+		Image:        resolveTag(app, tag, containerName, container),
 		Command:      container.Entrypoint,
 		Args:         container.Command,
 		WorkingDir:   container.WorkingDir,
@@ -169,7 +189,7 @@ func toContainer(appName, deploymentName, containerName string, container v1.Con
 		TTY:          container.Interactive,
 		Stdin:        container.Interactive,
 		Ports:        toPorts(container),
-		VolumeMounts: toMounts(appName, deploymentName, containerName, container),
+		VolumeMounts: toMounts(app.Name, deploymentName, containerName, container),
 	}
 }
 
@@ -197,12 +217,47 @@ func containerAnnotation(container v1.Container) string {
 	return string(json)
 }
 
-func toDeployment(appInstance *v1.AppInstance, name string, container v1.Container) *appsv1.Deployment {
+func podAnnotations(appInstance *v1.AppInstance, containerName string, container v1.Container) map[string]string {
+	annotations := map[string]string{
+		labels.HerdContainerSpec: containerAnnotation(container),
+	}
+	images := map[string]string{}
+	addImageAnnotations(images, appInstance, containerName, container)
+
+	if len(images) == 0 {
+		return annotations
+	}
+
+	data, err := json.Marshal(images)
+	if err != nil {
+		// this should never happen
+		panic(err)
+	}
+
+	annotations[labels.HerdImageMapping] = string(data)
+	return annotations
+}
+
+func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, containerName string, container v1.Container) {
+	if container.Build != nil && container.Build.BaseImage != "" {
+		override := appInstance.Spec.Images[containerName]
+		if override == "" {
+			annotations[container.Image] = container.Build.BaseImage
+		}
+	}
+
+	for _, entry := range typed.Sorted(container.Sidecars) {
+		name, sideCar := entry.Key, entry.Value
+		addImageAnnotations(annotations, appInstance, name, sideCar)
+	}
+}
+
+func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets []corev1.LocalObjectReference) *appsv1.Deployment {
 	var replicas *int32
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		replicas = new(int32)
 	}
-	containers, initContainers := toContainers(appInstance.Name, name, container)
+	containers, initContainers := toContainers(appInstance, tag, name, container)
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -221,11 +276,10 @@ func toDeployment(appInstance *v1.AppInstance, name string, container v1.Contain
 					Labels: containerLabels(appInstance, name,
 						labels.HerdManaged, "true",
 					),
-					Annotations: map[string]string{
-						labels.HerdContainerSpec: containerAnnotation(container),
-					},
+					Annotations: podAnnotations(appInstance, name, container),
 				},
 				Spec: corev1.PodSpec{
+					ImagePullSecrets:             pullSecrets,
 					ShareProcessNamespace:        &[]bool{true}[0],
 					EnableServiceLinks:           new(bool),
 					Containers:                   containers,
@@ -238,9 +292,9 @@ func toDeployment(appInstance *v1.AppInstance, name string, container v1.Contain
 	}
 }
 
-func toDeployments(appInstance *v1.AppInstance) (result []meta.Object) {
+func toDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []meta.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		result = append(result, toDeployment(appInstance, entry.Key, entry.Value))
+		result = append(result, toDeployment(appInstance, tag, entry.Key, entry.Value, pullSecrets))
 	}
 	return result
 }

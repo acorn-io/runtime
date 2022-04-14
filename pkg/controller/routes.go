@@ -17,9 +17,9 @@ var (
 	})
 )
 
-func routes(router *router.Router, c Config) {
+func routes(router *router.Router) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).Handler(appdefinition.PullAppImage(c.Images.AppImageInitImage))
+	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.PullAppImage)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.CreateSecrets)
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.DeploySpec)

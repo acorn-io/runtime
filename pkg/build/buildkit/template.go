@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ibuildthecloud/baaah/pkg/restconfig"
+	"github.com/ibuildthecloud/baaah/pkg/router"
 	"github.com/ibuildthecloud/herd/pkg/system"
 	"github.com/rancher/wrangler/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
@@ -15,7 +16,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getRegistryPort(ctx context.Context, c client.Client) (int, error) {
+func GetRegistryPort(ctx context.Context, c router.Getter) (int, error) {
+	return getRegistryPort(ctx, router.ToReader(c))
+}
+
+func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	var service corev1.Service
 	err := c.Get(ctx, client.ObjectKey{Name: system.RegistryName, Namespace: system.Namespace}, &service)
 	if err != nil {

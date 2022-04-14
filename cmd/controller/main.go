@@ -17,11 +17,7 @@ func main() {
 		}
 		system.AppInitImage = images.Images["app-image-init"].Image
 	}
-	c, err := controller.New(controller.Config{
-		Images: controller.Images{
-			AppImageInitImage: system.AppInitImage,
-		},
-	})
+	c, err := controller.New()
 	if err != nil {
 		logrus.Fatal(err)
 	}

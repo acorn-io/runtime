@@ -47,16 +47,7 @@ func StartController(t *testing.T) {
 		return
 	}
 
-	images, err := HerdImages(GetCTX(t))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	c, err := controller.New(controller.Config{
-		Images: controller.Images{
-			AppImageInitImage: images.Images["app-image-init"].Image,
-		},
-	})
+	c, err := controller.New()
 	if err != nil {
 		t.Fatal(err)
 	}

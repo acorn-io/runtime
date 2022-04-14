@@ -27,17 +27,19 @@ spec:
         "herd-project.io/app-name": "app-name"
         "herd-project.io/job-name": "oneimage"
         "herd-project.io/managed": "true"
+      annotations:
+        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https"}]}}}'
     spec:
       restartPolicy: Never
       containers:
         - name: oneimage
-          image: "image-name"
+          image: "index.docker.io/library/test@image-name"
           ports:
           - containerPort: 81
             protocol: "TCP"
           terminationMessagePath: "/run/secrets/output"
         - name: left
-          image: "foo"
+          image: "index.docker.io/library/test@foo"
           ports:
           - containerPort: 91
             protocol: "TCP"

@@ -11,6 +11,7 @@ import (
 	"github.com/ibuildthecloud/herd/pkg/system"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
@@ -129,14 +130,51 @@ func New(restconfig *rest.Config, namespace string) (Client, error) {
 type Client interface {
 	AppList(ctx context.Context) ([]App, error)
 	AppDelete(ctx context.Context, name string) error
-	//AppUpdate(ctx context.Context, app *App) error
-	//AppCreate(ctx context.Context, app *App) (*App, error)
 	AppGet(ctx context.Context, name string) (*App, error)
 	AppStop(ctx context.Context, name string) error
 	AppStart(ctx context.Context, name string) error
+
 	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]ContainerReplica, error)
 	ContainerReplicaGet(ctx context.Context, name string) (*ContainerReplica, error)
+	ContainerReplicaDelete(ctx context.Context, name string) error
 	ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error)
+
+	VolumeCreate(ctx context.Context, name string, capacity resource.Quantity, opts *VolumeCreateOptions) (*Volume, error)
+	VolumeList(ctx context.Context) ([]Volume, error)
+	VolumeGet(ctx context.Context, name string) (*Volume, error)
+	VolumeDelete(ctx context.Context, name string) error
+}
+
+type VolumeCreateOptions struct {
+	AccessModes []v1.AccessMode `json:"accessModes,omitempty"`
+	Class       string          `json:"class,omitempty"`
+}
+
+type Volume struct {
+	Name        string            `json:"name,omitempty"`
+	Created     metav1.Time       `json:"created,omitempty"`
+	Revision    string            `json:"revision,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	Capacity    *resource.Quantity `json:"capacity,omitempty"`
+	AccessModes []v1.AccessMode    `json:"accessModes,omitempty"`
+	Class       string             `json:"class,omitempty"`
+	Status      VolumeStatus       `json:"status,omitempty"`
+}
+
+type VolumeStatus struct {
+	AppName      string        `json:"appName,omitempty"`
+	AppNamespace string        `json:"appNamespace,omitempty"`
+	VolumeName   string        `json:"volumeName,omitempty"`
+	Status       string        `json:"status,omitempty"`
+	Reason       string        `json:"reason,omitempty"`
+	Message      string        `json:"message,omitempty"`
+	Columns      VolumeColumns `json:"columns,omitempty"`
+}
+
+type VolumeColumns struct {
+	AccessModes string `json:"accessModes,omitempty"`
 }
 
 type ContainerReplicaExecOptions struct {

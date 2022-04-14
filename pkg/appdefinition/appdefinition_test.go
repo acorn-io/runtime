@@ -1248,3 +1248,55 @@ jobs: foo: image: "test"
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "_keysMustBeUniqueAcrossTypes.foo: conflicting values \"jobs\" and \"container\"")
 }
+
+func TestFriendImageNameIsSet(t *testing.T) {
+	herdCue := `
+containers: foo: image: "test"
+containers: foo: sidecars: side: image: "test"
+containers: bar: {
+  image: "test"
+  dirs: "/var/lib": "./test"
+}
+jobs: job: image: "test"
+images: image: image: "test"
+`
+	def, err := NewAppDefinition([]byte(herdCue))
+	assert.Nil(t, err)
+	appSpec, err := def.WithImageData(v1.ImagesData{
+		Containers: map[string]v1.ContainerData{
+			"foo": {
+				Image: "foo-hash",
+				Sidecars: map[string]v1.ImageData{
+					"side": {
+						Image: "side-hash",
+					},
+				},
+			},
+			"bar": {
+				Image: "bar-hash",
+			},
+		},
+		Jobs: map[string]v1.ContainerData{
+			"job": {
+				Image: "job-hash",
+			},
+		},
+		Images: map[string]v1.ImageData{
+			"image": {
+				Image: "image-hash",
+			},
+		},
+	}).AppSpec()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "foo-hash", appSpec.Containers["foo"].Image)
+	assert.Equal(t, "test", appSpec.Containers["foo"].Build.BaseImage)
+	assert.Equal(t, "side-hash", appSpec.Containers["foo"].Sidecars["side"].Image)
+	assert.Equal(t, "test", appSpec.Containers["foo"].Sidecars["side"].Build.BaseImage)
+	assert.Equal(t, "bar-hash", appSpec.Containers["bar"].Image)
+	assert.Equal(t, "test", appSpec.Containers["bar"].Build.BaseImage)
+	assert.Equal(t, "job-hash", appSpec.Jobs["job"].Image)
+	assert.Equal(t, "test", appSpec.Jobs["job"].Build.BaseImage)
+	assert.Equal(t, "image-hash", appSpec.Images["image"].Image)
+	assert.Equal(t, "test", appSpec.Images["image"].Build.BaseImage)
+}

@@ -16,20 +16,10 @@ import (
 type Controller struct {
 	Router *router.Router
 	Scheme *runtime.Scheme
-	Images Images
 	apply  apply.Apply
 }
 
-type Images struct {
-	AppImageInitImage string
-	BuildkitImage     string
-}
-
-type Config struct {
-	Images Images
-}
-
-func New(c Config) (*Controller, error) {
+func New() (*Controller, error) {
 	router, err := baaah.DefaultRouter(scheme.Scheme)
 	if err != nil {
 		return nil, err
@@ -45,12 +35,11 @@ func New(c Config) (*Controller, error) {
 		return nil, err
 	}
 
-	routes(router, c)
+	routes(router)
 
 	return &Controller{
 		Router: router,
 		Scheme: scheme.Scheme,
-		Images: c.Images,
 		apply:  apply.WithDynamicLookup(),
 	}, nil
 }

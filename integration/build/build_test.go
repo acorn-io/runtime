@@ -5,7 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/ibuildthecloud/herd/integration/helper"
+	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/build"
 	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
 	"github.com/ibuildthecloud/herd/pkg/k8sclient"
@@ -117,4 +120,49 @@ func Test_GetBuildkitDialer(t *testing.T) {
 	port, _, err := buildkit.GetBuildkitDialer(ctx, c)
 	assert.Nil(t, err)
 	assert.True(t, port > 30000)
+}
+
+func TestMultiArch(t *testing.T) {
+	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/herd.cue", &build.Options{
+		Cwd: "./testdata/multiarch",
+		Platforms: []v1.Platform{
+			{
+				Architecture: "amd64",
+				OS:           "linux",
+			},
+			{
+				Architecture: "arm64",
+				OS:           "linux",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Len(t, image.ImageData.Containers, 1)
+	assert.True(t, len(image.ImageData.Containers["web"].Image) > 0)
+
+	opts, err := build.GetRemoteOptions(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tag, err := name.ParseReference(image.ImageData.Containers["web"].Image)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	index, err := remote.Index(tag, opts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	manifest, err := index.IndexManifest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, manifest.Manifests, 2)
+	assert.Equal(t, manifest.Manifests[0].Platform.Architecture, "amd64")
+	assert.Equal(t, manifest.Manifests[1].Platform.Architecture, "arm64")
 }

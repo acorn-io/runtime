@@ -5,6 +5,7 @@ metadata:
   namespace: app-namespace
 spec:
   stop: true
+  image: test
 status:
   namespace: app-created-namespace
   appSpec:

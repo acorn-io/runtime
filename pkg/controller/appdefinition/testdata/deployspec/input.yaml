@@ -3,6 +3,8 @@ apiVersion: herd-project.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
+spec:
+    image: test
 status:
   namespace: app-created-namespace
   appSpec:

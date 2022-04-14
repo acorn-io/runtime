@@ -41,12 +41,12 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: oneimage
-          image: "image-name"
+          image: "index.docker.io/library/test@image-name"
           ports:
             - containerPort: 81
               protocol: "TCP"
         - name: left
-          image: "foo"
+          image: "index.docker.io/library/test@foo"
           ports:
             - containerPort: 91
               protocol: "TCP"
@@ -83,7 +83,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: buildimage
-          image: "sha256:build-image"
+          image: "index.docker.io/library/test@sha256:build-image"
           ports:
             - containerPort: 81
               protocol: "TCP"

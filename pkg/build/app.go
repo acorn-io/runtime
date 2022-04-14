@@ -6,13 +6,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
+	"github.com/containerd/containerd/platforms"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
 	"github.com/ibuildthecloud/herd/pkg/streams"
 )
 
-func FromAppImage(ctx context.Context, appImage *v1.AppImage, streams streams.Output) (string, error) {
+func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, streams streams.Output) (string, error) {
 	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
@@ -20,7 +22,15 @@ func FromAppImage(ctx context.Context, appImage *v1.AppImage, streams streams.Ou
 	defer os.RemoveAll(tempContext)
 
 	io := streams.Streams()
-	return FromBuild(ctx, tempContext, v1.Build{}, io)
+	tag, err := buildImageNoManifest(ctx, tempContext, namespace, v1.Platform(platforms.DefaultSpec()), v1.Build{
+		Context:    ".",
+		Dockerfile: "Dockerfile",
+	}, io)
+	if err != nil {
+		return "", err
+	}
+
+	return createAppManifest(ctx, tag, appImage.ImageData)
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
@@ -34,10 +44,15 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 		}
 	}()
 
+	imageData, err := digestOnly(appImage.ImageData)
+	if err != nil {
+		return "", err
+	}
+
 	if err := addFile(tempDir, appdefinition.HerdCueFile, []byte(appImage.Herdfile)); err != nil {
 		return "", err
 	}
-	if err := addFile(tempDir, appdefinition.ImageDataFile, appImage.ImageData); err != nil {
+	if err := addFile(tempDir, appdefinition.ImageDataFile, imageData); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, "Dockerfile", []byte("FROM scratch\nCOPY . /")); err != nil {
@@ -68,5 +83,10 @@ func addFile(tempDir, name string, obj interface{}) error {
 		return err
 	}
 
-	return ioutil.WriteFile(target, data, 0600)
+	err = ioutil.WriteFile(target, data, 0600)
+	if err != nil {
+		return err
+	}
+
+	return os.Chtimes(target, time.Time{}, time.Time{})
 }

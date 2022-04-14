@@ -45,7 +45,7 @@ spec:
             claimName: foo-bind
       containers:
         - name: container-name
-          image: "image-name"
+          image: "index.docker.io/library/test@image-name"
           volumeMounts:
             - mountPath: "/var/tmp"
               name: foo

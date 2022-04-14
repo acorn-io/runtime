@@ -83,6 +83,16 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	}, err
 }
 
+func assignImage(originalImage string, build *v1.Build, image string) (string, *v1.Build) {
+	if build == nil {
+		build = &v1.Build{}
+	}
+	if build.BaseImage == "" {
+		build.BaseImage = originalImage
+	}
+	return image, build
+}
+
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	app, err := a.ctx.Value()
 	if err != nil {
@@ -109,19 +119,31 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	for _, imageData := range a.imageDatas {
 		for c, con := range imageData.Containers {
 			if conSpec, ok := spec.Containers[c]; ok {
-				conSpec.Image = con.Image
+				conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
 				spec.Containers[c] = conSpec
 			}
 			for s, con := range con.Sidecars {
 				if conSpec, ok := spec.Containers[c].Sidecars[s]; ok {
-					conSpec.Image = con.Image
+					conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
 					spec.Containers[c].Sidecars[s] = conSpec
+				}
+			}
+		}
+		for c, con := range imageData.Jobs {
+			if conSpec, ok := spec.Jobs[c]; ok {
+				conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
+				spec.Jobs[c] = conSpec
+			}
+			for s, con := range con.Sidecars {
+				if conSpec, ok := spec.Jobs[c].Sidecars[s]; ok {
+					conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
+					spec.Jobs[c].Sidecars[s] = conSpec
 				}
 			}
 		}
 		for i, img := range imageData.Images {
 			if imgSpec, ok := spec.Images[i]; ok {
-				imgSpec.Image = img.Image
+				imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, img.Image)
 				spec.Images[i] = imgSpec
 			}
 		}

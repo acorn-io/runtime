@@ -24,12 +24,14 @@ func MarkAndSave(req router.Request, resp router.Response) error {
 
 	if pv.Labels[labels.HerdAppName] != pvc.Labels[labels.HerdAppName] ||
 		pv.Labels[labels.HerdAppNamespace] != pvc.Labels[labels.HerdAppNamespace] ||
+		pv.Labels[labels.HerdVolumeName] != pvc.Name ||
 		pv.Labels[labels.HerdManaged] != "true" ||
 		pv.Spec.PersistentVolumeReclaimPolicy != corev1.PersistentVolumeReclaimRetain {
 		if pv.Labels == nil {
 			pv.Labels = map[string]string{}
 		}
 
+		pv.Labels[labels.HerdVolumeName] = pvc.Name
 		pv.Labels[labels.HerdAppName] = pvc.Labels[labels.HerdAppName]
 		pv.Labels[labels.HerdAppNamespace] = pvc.Labels[labels.HerdAppNamespace]
 		pv.Labels[labels.HerdManaged] = "true"

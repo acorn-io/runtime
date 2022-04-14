@@ -15,13 +15,14 @@ import (
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func containerSpecToContainerReplicaIgnore(pod *corev1.Pod, containerSpec v1.Container, sidecarName string) *ContainerReplica {
-	result, err := containerSpecToContainerReplica(pod, containerSpec, sidecarName)
+func containerSpecToContainerReplicaIgnore(pod *corev1.Pod, imageMapping map[string]string, containerSpec v1.Container, sidecarName string) *ContainerReplica {
+	result, err := containerSpecToContainerReplica(pod, imageMapping, containerSpec, sidecarName)
 	if err != nil {
 		logrus.Errorf("failed to convert container spec for %s/%s (, sidecar: [%s]): %v",
 			pod.Namespace, pod.Name, sidecarName, err)
@@ -30,7 +31,7 @@ func containerSpecToContainerReplicaIgnore(pod *corev1.Pod, containerSpec v1.Con
 	return result
 }
 
-func containerSpecToContainerReplica(pod *corev1.Pod, containerSpec v1.Container, sidecarName string) (*ContainerReplica, error) {
+func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]string, containerSpec v1.Container, sidecarName string) (*ContainerReplica, error) {
 	var (
 		name                = pod.Name
 		containerName       = pod.Labels[labels.HerdContainerName]
@@ -46,6 +47,11 @@ func containerSpecToContainerReplica(pod *corev1.Pod, containerSpec v1.Container
 	result := &ContainerReplica{}
 	if err := convert.ToObj(containerSpec, result); err != nil {
 		return nil, err
+	}
+
+	friendlyImage, ok := imageMapping[result.Image]
+	if ok {
+		result.Image = friendlyImage
 	}
 
 	result.Name = name
@@ -126,8 +132,18 @@ func podToContainers(pod *corev1.Pod) (result []ContainerReplica) {
 		return nil
 	}
 
+	imageMapping := map[string]string{}
+	imageMappingData := pod.Annotations[labels.HerdImageMapping]
+	if len(imageMappingData) > 0 {
+		err := json.Unmarshal([]byte(imageMappingData), &imageMapping)
+		if err != nil {
+			logrus.Errorf("failed to unmarshal image mapping for %s/%s: %s",
+				pod.Namespace, pod.Name, imageMappingData)
+		}
+	}
+
 	for _, sideCarName := range append([]string{""}, typed.SortedKeys(containerSpec.Sidecars)...) {
-		replica := containerSpecToContainerReplicaIgnore(pod, containerSpec, sideCarName)
+		replica := containerSpecToContainerReplicaIgnore(pod, imageMapping, containerSpec, sideCarName)
 		if replica == nil {
 			return nil
 		}
@@ -249,5 +265,21 @@ func (c *client) containersForNS(ctx context.Context, eg *errgroup.Group, namesp
 		}
 
 		return nil
+	})
+}
+
+func (c *client) ContainerReplicaDelete(ctx context.Context, name string) error {
+	container, err := c.ContainerReplicaGet(ctx, name)
+	if apierrors.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	return c.Client.Delete(ctx, &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      container.Status.PodName,
+			Namespace: container.Status.PodNamespace,
+		},
 	})
 }

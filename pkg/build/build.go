@@ -2,22 +2,28 @@ package build
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/containerd/containerd/platforms"
+	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/appdefinition"
 	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
 	"github.com/ibuildthecloud/herd/pkg/streams"
+	"github.com/ibuildthecloud/herd/pkg/system"
 )
 
 type Options struct {
-	Cwd     string
-	Streams *streams.Output
+	Cwd       string
+	Namespace string
+	Platforms []v1.Platform
+	Streams   *streams.Output
 }
 
 func (b *Options) Complete() (*Options, error) {
@@ -34,6 +40,12 @@ func (b *Options) Complete() (*Options, error) {
 	}
 	if current.Streams == nil {
 		current.Streams = streams.CurrentOutput()
+	}
+	if len(current.Platforms) == 0 {
+		current.Platforms = append(current.Platforms, v1.Platform(platforms.DefaultSpec()))
+	}
+	if current.Namespace == "" {
+		current.Namespace = system.RequireUserNamespace()
 	}
 	return &current, nil
 }
@@ -77,8 +89,9 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	if err != nil {
 		return nil, err
 	}
+	buildSpec.Platforms = opts.Platforms
 
-	imageData, err := FromSpec(ctx, opts.Cwd, *buildSpec, *opts.Streams)
+	imageData, err := FromSpec(ctx, opts.Cwd, opts.Namespace, *buildSpec, *opts.Streams)
 	appImage := &v1.AppImage{
 		Herdfile:  string(fileData),
 		ImageData: imageData,
@@ -87,7 +100,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	id, err := FromAppImage(ctx, appImage, *opts.Streams)
+	id, err := FromAppImage(ctx, opts.Namespace, appImage, *opts.Streams)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +109,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, cwd string, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx context.Context, cwd, namespace string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
@@ -108,7 +121,7 @@ func buildContainers(ctx context.Context, cwd string, streams streams.Output, co
 			}
 		}
 
-		id, err := FromBuild(ctx, cwd, *container.Build, streams.Streams())
+		id, err := FromBuild(ctx, cwd, namespace, platforms, *container.Build, streams.Streams())
 		if err != nil {
 			return nil, err
 		}
@@ -133,7 +146,7 @@ func buildContainers(ctx context.Context, cwd string, streams streams.Output, co
 				}
 			}
 
-			id, err := FromBuild(ctx, cwd, *sidecar.Build, streams.Streams())
+			id, err := FromBuild(ctx, cwd, namespace, platforms, *sidecar.Build, streams.Streams())
 			if err != nil {
 				return nil, err
 			}
@@ -146,7 +159,7 @@ func buildContainers(ctx context.Context, cwd string, streams streams.Output, co
 	return result, nil
 }
 
-func buildImages(ctx context.Context, cwd string, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
+func buildImages(ctx context.Context, cwd, namespace string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(images) {
@@ -157,7 +170,7 @@ func buildImages(ctx context.Context, cwd string, streams streams.Output, images
 			}
 		}
 
-		id, err := FromBuild(ctx, cwd, *image.Build, streams.Streams())
+		id, err := FromBuild(ctx, cwd, namespace, platforms, *image.Build, streams.Streams())
 		if err != nil {
 			return nil, err
 		}
@@ -170,7 +183,7 @@ func buildImages(ctx context.Context, cwd string, streams streams.Output, images
 	return result, nil
 }
 
-func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
+func FromSpec(ctx context.Context, cwd, namespace string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
 	var (
 		err  error
 		data = v1.ImagesData{
@@ -178,17 +191,17 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 		}
 	)
 
-	data.Containers, err = buildContainers(ctx, cwd, streams, spec.Containers)
+	data.Containers, err = buildContainers(ctx, cwd, namespace, spec.Platforms, streams, spec.Containers)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, cwd, streams, spec.Jobs)
+	data.Jobs, err = buildContainers(ctx, cwd, namespace, spec.Platforms, streams, spec.Jobs)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, cwd, streams, spec.Images)
+	data.Images, err = buildImages(ctx, cwd, namespace, spec.Platforms, streams, spec.Images)
 	if err != nil {
 		return data, err
 	}
@@ -196,7 +209,7 @@ func FromSpec(ctx context.Context, cwd string, spec v1.BuilderSpec, streams stre
 	return data, nil
 }
 
-func FromBuild(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
+func FromBuild(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
 	if build.Dockerfile == "" {
 		build.Dockerfile = "Dockerfile"
 	}
@@ -206,26 +219,44 @@ func FromBuild(ctx context.Context, cwd string, build v1.Build, streams streams.
 	}
 
 	if build.BaseImage != "" || len(build.ContextDirs) > 0 {
-		return buildWithContext(ctx, cwd, build, streams)
+		return buildWithContext(ctx, cwd, namespace, platforms, build, streams)
 	}
 
-	return builder(ctx, cwd, build, streams)
+	return buildImageAndManifest(ctx, cwd, namespace, platforms, build, streams)
 }
 
-func builder(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
-	return buildkit.Build(ctx, cwd, build, streams)
+func buildImageNoManifest(ctx context.Context, cwd, namespace string, platform v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+	ids, err := buildkit.Build(ctx, cwd, namespace, []v1.Platform{platform}, build, streams)
+	if err != nil {
+		return "", err
+	}
+	return ids[0], nil
 }
 
-func buildWithContext(ctx context.Context, cwd string, build v1.Build, streams streams.Streams) (string, error) {
+func buildImageAndManifest(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+	ids, err := buildkit.Build(ctx, cwd, namespace, platforms, build, streams)
+	if err != nil {
+		return "", err
+	}
+
+	return createManifest(ctx, ids, platforms)
+}
+
+func buildWithContext(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
 	var (
 		baseImage = build.BaseImage
 		err       error
 	)
 	if baseImage == "" {
-		baseImage, err = builder(ctx, cwd, build.BaseBuild(), streams)
+		newImage, err := buildImageAndManifest(ctx, cwd, namespace, platforms, build.BaseBuild(), streams)
 		if err != nil {
 			return "", err
 		}
+		digest, err := imagename.NewDigest(newImage)
+		if err != nil {
+			return "", err
+		}
+		baseImage = strings.Replace(newImage, digest.RegistryStr(), fmt.Sprintf("127.0.0.1:%d", system.RegistryPort), 1)
 	}
 	dockerfile, err := ioutil.TempFile("", "herd-dockerfile-")
 	if err != nil {
@@ -245,7 +276,7 @@ func buildWithContext(ctx context.Context, cwd string, build v1.Build, streams s
 		return "", err
 	}
 
-	return builder(ctx, "", v1.Build{
+	return buildImageAndManifest(ctx, "", namespace, platforms, v1.Build{
 		Context:    cwd,
 		Dockerfile: dockerfile.Name(),
 	}, streams)

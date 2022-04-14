@@ -13,6 +13,7 @@ type ImageBuilderSpec struct {
 }
 
 type BuilderSpec struct {
+	Platforms  []Platform                           `json:"platforms,omitempty"`
 	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
 	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
 	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`

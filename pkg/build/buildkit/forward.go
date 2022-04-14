@@ -12,6 +12,24 @@ import (
 
 type DialerContext func(ctx context.Context, address string) (net.Conn, error)
 
+func GetRegistryDialer(ctx context.Context, client client.WithWatch) (DialerContext, error) {
+	_, pod, err := GetBuildkitPod(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := restconfig.New(client.Scheme())
+	if err != nil {
+		return nil, err
+	}
+
+	dialer, err := portforwarder.NewWebSocketDialer(cfg, pod, uint32(system.RegistryPort))
+	if err != nil {
+		return nil, err
+	}
+	return dialer.DialContext, nil
+}
+
 func GetBuildkitDialer(ctx context.Context, client client.WithWatch) (int, DialerContext, error) {
 	port, pod, err := GetBuildkitPod(ctx, client)
 	if err != nil {

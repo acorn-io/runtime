@@ -5,3 +5,11 @@ type AppImage struct {
 	Herdfile  string     `json:"herdfile,omitempty"`
 	ImageData ImagesData `json:"imageData,omitempty"`
 }
+
+type Platform struct {
+	Architecture string   `json:"architecture"`
+	OS           string   `json:"os"`
+	OSVersion    string   `json:"os.version,omitempty"`
+	OSFeatures   []string `json:"os.features,omitempty"`
+	Variant      string   `json:"variant,omitempty"`
+}

@@ -382,6 +382,20 @@ import (
 						}
 					}
 				}
+				for name, c in IN.app.jobs {
+					if c[x] != _|_ {
+						for k, v in c[x] {
+							{#ToVolumeSpecMap & {in: {dir: v, containerName: name, dirname: k}}}.out
+						}
+					}
+					for name, sidecar in c.sidecars {
+						if sidecar[x] != _|_ {
+							for k, v in sidecar[x] {
+								{#ToVolumeSpecMap & {in: {dir: v, containerName: name, dirname: k}}}.out
+							}
+						}
+					}
+				}
 			}
 		}
 		secrets: {

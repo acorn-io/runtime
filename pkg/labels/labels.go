@@ -14,6 +14,7 @@ const (
 	HerdAppCuePathHash = Prefix + "app-cue-path-hash"
 	HerdManaged        = Prefix + "managed"
 	HerdContainerSpec  = Prefix + "container-spec"
+	HerdImageMapping   = Prefix + "image-mapping"
 	HerdPortNumber     = Prefix + "port-number"
 	HerdHostnames      = Prefix + "hostnames"
 )

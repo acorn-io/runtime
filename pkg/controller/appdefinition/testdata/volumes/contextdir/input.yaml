@@ -4,6 +4,7 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
+  image: test
   volumes:
   - volumeRequest: foo
     volume: existing-foo

@@ -5,6 +5,7 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
+  image: test
   endpoints:
   - target: oneimage
     hostname: localhost

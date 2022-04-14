@@ -28,3 +28,11 @@ func UserNamespace() string {
 	}
 	return DefaultUserNamespace
 }
+
+func RequireUserNamespace() string {
+	ns := os.Getenv("NAMESPACE")
+	if ns != "" {
+		return ns
+	}
+	return DefaultUserNamespace
+}

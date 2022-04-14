@@ -36,6 +36,8 @@ herd run --dev .`,
 	})
 	root.AddCommand(
 		NewApp(),
+		NewVolume(),
+		NewVolumeCreate(),
 		NewExec(),
 		NewContainer(),
 		NewStart(),

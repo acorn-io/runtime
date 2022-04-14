@@ -41,4 +41,4 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: container-name
-          image: "image-name"
+          image: "index.docker.io/library/test@image-name"

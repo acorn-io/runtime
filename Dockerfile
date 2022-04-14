@@ -6,4 +6,3 @@ RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-
 FROM scratch AS app-image-init
 COPY --from=src /init /
 ENTRYPOINT ["/init"]
-

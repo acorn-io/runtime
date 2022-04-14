@@ -15,16 +15,18 @@ import (
 func TestText(t *testing.T) {
 	helper.StartController(t)
 
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
 	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/herd.cue", &build.Options{
-		Cwd: "./testdata/generated",
+		Cwd:       "./testdata/generated",
+		Namespace: ns.Name,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(hclient.Default)
-	ns := helper.TempNamespace(t, client)
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "simple-app",
