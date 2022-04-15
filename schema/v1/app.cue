@@ -131,6 +131,7 @@ package v1
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated
 
 #App: {
+	data: {...}
 	containers: [string]: #Container
 	jobs: [string]:       #Job
 	images: [string]:     #Image

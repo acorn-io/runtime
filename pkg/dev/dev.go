@@ -286,7 +286,9 @@ func runLoop(ctx context.Context, herdCue string, opts run.Options, images <-cha
 func doLog(ctx context.Context, app *v1.AppInstance, opts *log.Options) <-chan error {
 	result := make(chan error, 1)
 	go func() {
+		fmt.Println("Watching logs for", app.Name)
 		result <- log.Output(ctx, app, opts)
+		fmt.Println("Terminating logging for", app.Name)
 	}()
 	return result
 }
@@ -392,6 +394,7 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	trigger := make(chan struct{}, 1)
 	images := make(chan string, 1)
 	apps := make(chan *v1.AppInstance, 1)
+	appLogs, appStatus := typed.Tee(apps)
 
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
@@ -406,10 +409,10 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 		return runLoop(ctx, herdCue, opts.Run, images, apps)
 	})
 	eg.Go(func() error {
-		return logLoop(ctx, apps, &opts.Log)
+		return logLoop(ctx, appLogs, &opts.Log)
 	})
 	eg.Go(func() error {
-		return appStatusLoop(ctx, apps, opts)
+		return appStatusLoop(ctx, appStatus, opts)
 	})
 	err = eg.Wait()
 	if errors.Is(err, context.Canceled) {

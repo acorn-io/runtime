@@ -2,6 +2,8 @@ package buildkit
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/ibuildthecloud/herd/pkg/system"
 	"github.com/ibuildthecloud/herd/pkg/watcher"
@@ -40,6 +42,18 @@ func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.
 		depWatcher = watcher.New[*appsv1.Deployment](client)
 		podWatcher = watcher.New[*corev1.Pod](client)
 	)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-time.After(3 * time.Second):
+			fmt.Print("Waiting for builder to start... ")
+			<-ctx.Done()
+			fmt.Println("Ready")
+		}
+	}()
 
 	deployment, err := depWatcher.ByName(ctx, system.Namespace, system.BuildKitName, func(dep *appsv1.Deployment) (bool, error) {
 		for _, cond := range dep.Status.Conditions {

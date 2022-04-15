@@ -7,6 +7,7 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type AppInstanceCondition string
 
 var (
+	AppInstanceConditionDefined    = "defined"
 	AppInstanceConditionParsed     = "parsed"
 	AppInstanceConditionPulled     = "pulled"
 	AppInstanceConditionSecrets    = "secrets"

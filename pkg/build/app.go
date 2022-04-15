@@ -88,5 +88,5 @@ func addFile(tempDir, name string, obj interface{}) error {
 		return err
 	}
 
-	return os.Chtimes(target, time.Time{}, time.Time{})
+	return os.Chtimes(target, time.Unix(0, 0), time.Unix(0, 0))
 }

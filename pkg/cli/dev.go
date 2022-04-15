@@ -17,7 +17,7 @@ func NewDev() *cobra.Command {
 		SilenceUsage: true,
 		Short:        "Build and run an app in development mode",
 		Long:         "Build and run an app in development mode",
-		Args:         cobra.RangeArgs(1, 1),
+		Args:         cobra.MaximumNArgs(1),
 	})
 }
 
@@ -28,7 +28,11 @@ type Dev struct {
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
-	cwd := args[0]
+	cwd := "."
+	if len(args) > 0 {
+		cwd = args[0]
+	}
+
 	c, err := hclient.Default()
 	if err != nil {
 		return err

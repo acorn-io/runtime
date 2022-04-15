@@ -12,6 +12,7 @@ import (
 	"github.com/ibuildthecloud/baaah/pkg/router"
 	"github.com/ibuildthecloud/baaah/pkg/typed"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	"github.com/ibuildthecloud/herd/pkg/condition"
 	"github.com/ibuildthecloud/herd/pkg/labels"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -19,8 +20,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func DeploySpec(req router.Request, resp router.Response) error {
+func DeploySpec(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*v1.AppInstance)
+	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
+	defer func() {
+		if err == nil {
+			status.Success()
+		} else {
+			status.Error(err)
+		}
+	}()
 
 	tag, err := getTag(req, appInstance)
 	if err != nil {

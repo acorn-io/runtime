@@ -224,7 +224,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 func isContainerLoggable(pod *corev1.Pod, containerName string) bool {
 	for _, status := range pod.Status.ContainerStatuses {
 		if status.Name == containerName &&
-			(status.State.Running != nil) || (status.State.Terminated != nil) {
+			(status.State.Running != nil || status.State.Terminated != nil || status.LastTerminationState.Terminated != nil) {
 			return true
 		}
 	}

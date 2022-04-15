@@ -79,13 +79,11 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 	for i := 0; i < 3; i++ {
 		app, lastErr = run.Run(ctx, image, &runOpts)
 		if lastErr == nil {
-			fmt.Println(app.Name)
-			return nil, nil
-		}
-		if apierror.IsAlreadyExists(lastErr) && opts.Name == "" {
+			return appToApp(*app), nil
+		} else if apierror.IsAlreadyExists(lastErr) && opts.Name == "" {
 			continue
 		} else {
-			return appToApp(*app), nil
+			return nil, lastErr
 		}
 	}
 

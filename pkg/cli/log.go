@@ -38,6 +38,7 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return log.Output(cmd.Context(), &app, &log.Options{
-		Client: c,
+		Client:   c,
+		NoFollow: !s.Follow,
 	})
 }
