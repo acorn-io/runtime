@@ -15,7 +15,6 @@ var (
 	BuildkitImage = "moby/buildkit:master"
 	BuildKitName  = "buildkitd"
 	BuildkitPort  = 8080
-	AppInitImage  = ""
 )
 
 func UserNamespace() string {

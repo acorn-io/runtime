@@ -2,25 +2,108 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"sort"
+	"strings"
+	"time"
 
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/goombaio/namegenerator"
+	"github.com/ibuildthecloud/baaah/pkg/router"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/ibuildthecloud/herd/pkg/pullsecret"
+	"github.com/ibuildthecloud/herd/pkg/run"
+	"github.com/ibuildthecloud/herd/pkg/tags"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) AppDelete(ctx context.Context, name string) error {
-	err := c.Client.Delete(ctx, &v1.AppInstance{
+var (
+	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
+)
+
+func (c *client) checkRemotePermissions(ctx context.Context, image string, pullSecrets []string) error {
+	keyChain, err := pullsecret.Keychain(ctx, router.FromReader(ctx, c.Client), c.Namespace, pullSecrets...)
+	if err != nil {
+		return err
+	}
+
+	ref, err := name.ParseReference(image)
+	if err != nil {
+		return err
+	}
+
+	_, err = remote.Image(ref, remote.WithContext(ctx), remote.WithAuthFromKeychain(keyChain))
+	if err != nil {
+		return fmt.Errorf("failed to pull %s: %v", image, err)
+	}
+	return nil
+}
+
+func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*App, error) {
+	if opts == nil {
+		opts = &AppRunOptions{}
+	}
+
+	var (
+		app     *v1.AppInstance
+		lastErr error
+		runOpts = run.Options{
+			Name:             opts.Name,
+			Namespace:        c.Namespace,
+			Annotations:      opts.Annotations,
+			Labels:           opts.Labels,
+			Endpoints:        opts.Endpoints,
+			Client:           c.Client,
+			ImagePullSecrets: opts.ImagePullSecrets,
+		}
+	)
+
+	localImage, err := c.ImageGet(ctx, image)
+	if apierror.IsNotFound(err) {
+		if tags.IsLocalReference(image) {
+			return nil, err
+		}
+		if err := c.checkRemotePermissions(ctx, image, opts.ImagePullSecrets); err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	} else {
+		image = strings.TrimPrefix(localImage.Digest, "sha256:")
+	}
+
+	for i := 0; i < 3; i++ {
+		app, lastErr = run.Run(ctx, image, &runOpts)
+		if lastErr == nil {
+			fmt.Println(app.Name)
+			return nil, nil
+		}
+		if apierror.IsAlreadyExists(lastErr) && opts.Name == "" {
+			continue
+		} else {
+			return appToApp(*app), nil
+		}
+	}
+
+	return nil, fmt.Errorf("after three tried failed to create app: %w", lastErr)
+}
+
+func (c *client) AppDelete(ctx context.Context, name string) (*App, error) {
+	app, err := c.AppGet(ctx, name)
+	if errors.IsNotFound(err) {
+		return nil, nil
+	}
+
+	return app, c.Client.Delete(ctx, &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: c.Namespace,
 		},
 	})
-	if errors.IsNotFound(err) {
-		return nil
-	}
-	return err
 }
 
 func appToApp(app v1.AppInstance) *App {

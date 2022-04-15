@@ -20,7 +20,10 @@ herd rm -v some-volume`,
 }
 
 type Rm struct {
-	Volumes bool `usage:"Delete volumes" short:"v"`
+	Volumes    bool `usage:"Delete volumes" short:"v"`
+	Images     bool `usage:"Delete images" short:"i"`
+	Containers bool `usage:"Delete apps/containers" short:"c"`
+	All        bool `usage:"Delete all types" short:"a"`
 }
 
 func (a *Rm) Run(cmd *cobra.Command, args []string) error {
@@ -29,23 +32,54 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if a.All {
+		a.Volumes = true
+		a.Images = true
+		a.Containers = true
+	}
+
 	for _, arg := range args {
 		if a.Volumes {
-			err := client.VolumeDelete(cmd.Context(), arg)
+			v, err := client.VolumeDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting volume %s: %w", arg, err)
 			}
+			if v != nil {
+				fmt.Println(arg)
+				continue
+			}
 		}
 
-		err := client.AppDelete(cmd.Context(), arg)
-		if err != nil {
-			return fmt.Errorf("deleting app %s: %w", arg, err)
+		if a.Images {
+			i, err := client.ImageDelete(cmd.Context(), arg)
+			if err != nil {
+				return fmt.Errorf("deleting image %s: %w", arg, err)
+			}
+			if i != nil {
+				fmt.Println(arg)
+				continue
+			}
 		}
-		err = client.ContainerReplicaDelete(cmd.Context(), arg)
-		if err != nil {
-			return fmt.Errorf("deleting container %s: %w", arg, err)
+
+		if a.Containers || (!a.Images && !a.Volumes) {
+			app, err := client.AppDelete(cmd.Context(), arg)
+			if err != nil {
+				return fmt.Errorf("deleting app %s: %w", arg, err)
+			}
+			if app != nil {
+				fmt.Println(arg)
+				continue
+			}
+
+			replica, err := client.ContainerReplicaDelete(cmd.Context(), arg)
+			if err != nil {
+				return fmt.Errorf("deleting container %s: %w", arg, err)
+			}
+			if replica != nil {
+				fmt.Println(arg)
+				continue
+			}
 		}
-		fmt.Println(arg)
 	}
 
 	return nil

@@ -56,16 +56,18 @@ func TestText(t *testing.T) {
 func TestJSON(t *testing.T) {
 	helper.StartController(t)
 
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
 	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/herd.cue", &build.Options{
-		Cwd: "./testdata/generated-json",
+		Cwd:       "./testdata/generated-json",
+		Namespace: ns.Name,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(hclient.Default)
-	ns := helper.TempNamespace(t, client)
 	appInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "simple-app",

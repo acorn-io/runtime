@@ -268,15 +268,15 @@ func (c *client) containersForNS(ctx context.Context, eg *errgroup.Group, namesp
 	})
 }
 
-func (c *client) ContainerReplicaDelete(ctx context.Context, name string) error {
+func (c *client) ContainerReplicaDelete(ctx context.Context, name string) (*ContainerReplica, error) {
 	container, err := c.ContainerReplicaGet(ctx, name)
 	if apierrors.IsNotFound(err) {
-		return nil
+		return nil, nil
 	} else if err != nil {
-		return err
+		return nil, err
 	}
 
-	return c.Client.Delete(ctx, &corev1.Pod{
+	return container, c.Client.Delete(ctx, &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      container.Status.PodName,
 			Namespace: container.Status.PodNamespace,

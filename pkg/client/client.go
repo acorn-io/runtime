@@ -127,22 +127,44 @@ func New(restconfig *rest.Config, namespace string) (Client, error) {
 	}, nil
 }
 
+type AppRunOptions struct {
+	Name             string
+	Annotations      map[string]string
+	Labels           map[string]string
+	Endpoints        []v1.EndpointBinding
+	ImagePullSecrets []string
+}
+
 type Client interface {
 	AppList(ctx context.Context) ([]App, error)
-	AppDelete(ctx context.Context, name string) error
+	AppDelete(ctx context.Context, name string) (*App, error)
 	AppGet(ctx context.Context, name string) (*App, error)
 	AppStop(ctx context.Context, name string) error
 	AppStart(ctx context.Context, name string) error
+	AppRun(ctx context.Context, image string, opts *AppRunOptions) (*App, error)
 
 	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]ContainerReplica, error)
 	ContainerReplicaGet(ctx context.Context, name string) (*ContainerReplica, error)
-	ContainerReplicaDelete(ctx context.Context, name string) error
+	ContainerReplicaDelete(ctx context.Context, name string) (*ContainerReplica, error)
 	ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error)
 
 	VolumeCreate(ctx context.Context, name string, capacity resource.Quantity, opts *VolumeCreateOptions) (*Volume, error)
 	VolumeList(ctx context.Context) ([]Volume, error)
 	VolumeGet(ctx context.Context, name string) (*Volume, error)
-	VolumeDelete(ctx context.Context, name string) error
+	VolumeDelete(ctx context.Context, name string) (*Volume, error)
+
+	ImageList(ctx context.Context) ([]Image, error)
+	ImageGet(ctx context.Context, name string) (*Image, error)
+	ImageDelete(ctx context.Context, name string) (*Image, error)
+	ImagePush(ctx context.Context, name string) (*Image, error)
+	ImagePull(ctx context.Context, name string) (*Image, error)
+
+	Tag(ctx context.Context, image, tag string) (*Image, error)
+}
+
+type Image struct {
+	Digest string   `json:"digest,omitempty"`
+	Tags   []string `json:"tags,omitempty"`
 }
 
 type VolumeCreateOptions struct {

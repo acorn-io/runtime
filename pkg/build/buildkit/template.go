@@ -101,20 +101,12 @@ func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
 						Containers: []corev1.Container{
 							{
 								Name: "registry",
-								//Env: []corev1.EnvVar{
-								//	{
-								//		Name:  "REGISTRY_AUTH",
-								//		Value: "htpasswd",
-								//	},
-								//	{
-								//		Name:  "REGISTRY_AUTH_HTPASSWD_REALM",
-								//		Value: "Registry Realm",
-								//	},
-								//	{
-								//		Name:  "REGISTRY_AUTH_HTPASSWD_PATH",
-								//		Value: "/etc/registry/auth/htpasswd",
-								//	},
-								//},
+								Env: []corev1.EnvVar{
+									{
+										Name:  "REGISTRY_STORAGE_DELETE_ENABLED",
+										Value: "true",
+									},
+								},
 								Image: registryImage,
 								LivenessProbe: &corev1.Probe{
 									ProbeHandler: corev1.ProbeHandler{

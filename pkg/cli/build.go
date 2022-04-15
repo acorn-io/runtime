@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/ibuildthecloud/herd/pkg/build"
+	"github.com/ibuildthecloud/herd/pkg/client"
 	"github.com/rancher/wrangler-cli"
+	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 )
 
@@ -22,10 +24,16 @@ herd build .`,
 }
 
 type Build struct {
-	File string `short:"f" desc:"Name of the build file" default:"DIRECTORY/herd.cue"`
+	File string   `short:"f" desc:"Name of the build file" default:"DIRECTORY/herd.cue"`
+	Tag  []string `short:"t" desc:"Apply a tag to the final build"`
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
+	c, err := client.Default()
+	if err != nil {
+		return err
+	}
+
 	cwd := args[0]
 
 	image, err := build.Build(cmd.Context(), s.File, &build.Options{
@@ -35,6 +43,14 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var errs []error
+	for _, tag := range s.Tag {
+		_, err := c.Tag(cmd.Context(), image.ID, tag)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	fmt.Println(image.ID)
-	return err
+	return merr.NewErrors(errs...)
 }

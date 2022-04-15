@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"regexp"
 	"strings"
 
 	imagename "github.com/google/go-containerregistry/pkg/name"
@@ -21,11 +20,8 @@ import (
 	"github.com/ibuildthecloud/herd/pkg/condition"
 	"github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/pullsecret"
+	"github.com/ibuildthecloud/herd/pkg/tags"
 	"k8s.io/client-go/rest"
-)
-
-var (
-	shaPattern = regexp.MustCompile("^[a-f\\d]{64}$")
 )
 
 func getPullOptions(req router.Request, tag imagename.Reference, app *v1.AppInstance) ([]remote.Option, error) {
@@ -143,7 +139,7 @@ func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, err
 
 func getTag(req router.Request, app *v1.AppInstance) (imagename.Reference, error) {
 	image := app.Spec.Image
-	if shaPattern.MatchString(image) {
+	if tags.SHAPattern.MatchString(image) {
 		port, err := buildkit.GetRegistryPort(req.Ctx, req.Client)
 		if err != nil {
 			return nil, err

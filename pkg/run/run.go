@@ -40,12 +40,13 @@ func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
 }
 
 type Options struct {
-	Name        string
-	Namespace   string
-	Annotations map[string]string
-	Labels      map[string]string
-	Endpoints   []v1.EndpointBinding
-	Client      client.WithWatch
+	Name             string
+	Namespace        string
+	Annotations      map[string]string
+	Labels           map[string]string
+	ImagePullSecrets []string
+	Endpoints        []v1.EndpointBinding
+	Client           client.WithWatch
 }
 
 func (o *Options) Complete() (*Options, error) {
@@ -112,8 +113,9 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Annotations: opts.Annotations,
 		},
 		Spec: v1.AppInstanceSpec{
-			Image:     image,
-			Endpoints: opts.Endpoints,
+			Image:            image,
+			Endpoints:        opts.Endpoints,
+			ImagePullSecrets: opts.ImagePullSecrets,
 		},
 		Status: v1.AppInstanceStatus{},
 	}

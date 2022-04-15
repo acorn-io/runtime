@@ -118,13 +118,13 @@ func (c *client) VolumeGet(ctx context.Context, name string) (*Volume, error) {
 	return &vol, nil
 }
 
-func (c *client) VolumeDelete(ctx context.Context, name string) error {
+func (c *client) VolumeDelete(ctx context.Context, name string) (*Volume, error) {
 	// get first to ensure the namespace matches
-	_, err := c.VolumeGet(ctx, name)
+	v, err := c.VolumeGet(ctx, name)
 	if apierror.IsNotFound(err) {
-		return nil
+		return nil, nil
 	}
-	return c.Client.Delete(ctx, &corev1.PersistentVolume{
+	return v, c.Client.Delete(ctx, &corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
