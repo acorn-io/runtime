@@ -8,10 +8,11 @@ import (
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func NewBuild() *cobra.Command {
-	return cli.Command(&Build{}, cobra.Command{
+	cmd := cli.Command(&Build{}, cobra.Command{
 		Use: "build [flags] DIRECTORY",
 		Example: `
 # Build from herd.cue file in the local directory
@@ -19,8 +20,10 @@ herd build .`,
 		SilenceUsage: true,
 		Short:        "Build an app from a herd.cue file",
 		Long:         "Build all dependent container and app images from your herd.cue file",
-		Args:         cobra.RangeArgs(1, 1),
+		Args:         cobra.MinimumNArgs(1),
 	})
+	cmd.Flags().SetInterspersed(false)
+	return cmd
 }
 
 type Build struct {
@@ -36,8 +39,16 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 
 	cwd := args[0]
 
+	params, err := build.ParseParams(s.File, cwd, args)
+	if err == pflag.ErrHelp {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
 	image, err := build.Build(cmd.Context(), s.File, &build.Options{
-		Cwd: cwd,
+		Cwd:    cwd,
+		Params: params,
 	})
 	if err != nil {
 		return err

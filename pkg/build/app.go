@@ -49,17 +49,22 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 		return "", err
 	}
 
-	if err := addFile(tempDir, appdefinition.HerdCueFile, []byte(appImage.Herdfile)); err != nil {
+	if err := addFile(tempDir, appdefinition.HerdCueFile, appImage.Herdfile); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, appdefinition.ImageDataFile, imageData); err != nil {
 		return "", err
 	}
-	if err := addFile(tempDir, "Dockerfile", []byte("FROM scratch\nCOPY . /")); err != nil {
+	if err := addFile(tempDir, "Dockerfile", "FROM scratch\nCOPY . /"); err != nil {
 		return "", err
 	}
-	if err := addFile(tempDir, ".dockerignore", []byte("Dockerfile\n.dockerignore")); err != nil {
+	if err := addFile(tempDir, ".dockerignore", "Dockerfile\n.dockerignore"); err != nil {
 		return "", err
+	}
+	if len(appImage.BuildParams) > 0 {
+		if err := addFile(tempDir, "build.json", appImage.BuildParams); err != nil {
+			return "", err
+		}
 	}
 	return tempDir, nil
 }
@@ -71,6 +76,8 @@ func addFile(tempDir, name string, obj interface{}) error {
 	)
 	if d, ok := obj.([]byte); ok {
 		data = d
+	} else if s, ok := obj.(string); ok {
+		data = []byte(s)
 	} else {
 		data, err = json.Marshal(obj)
 		if err != nil {

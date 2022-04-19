@@ -64,3 +64,27 @@ spec:
     requests:
       storage: 10_000_000_000
   storageClassName: "custom-class"
+---
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        dirs:
+          "/var/tmp":
+            volume: foo
+    volumes:
+      foo:
+        class: custom-class
+        size: 10
+  conditions:
+    defined:
+      success: true

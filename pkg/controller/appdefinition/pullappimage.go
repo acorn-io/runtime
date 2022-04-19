@@ -1,12 +1,9 @@
 package appdefinition
 
 import (
-	"archive/tar"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -71,33 +68,11 @@ func getPullOptions(req router.Request, tag imagename.Reference, app *v1.AppInst
 }
 
 func tarToAppImage(tag imagename.Reference, reader io.Reader) (*v1.AppImage, error) {
-	tar := tar.NewReader(reader)
-	result := &v1.AppImage{}
-	for {
-		header, err := tar.Next()
-		if err == io.EOF {
-			break
-		}
-
-		if header.Name == appdefinition.HerdCueFile {
-			data, err := ioutil.ReadAll(tar)
-			if err != nil {
-				return nil, err
-			}
-			result.Herdfile = string(data)
-		} else if header.Name == appdefinition.ImageDataFile {
-			err := json.NewDecoder(tar).Decode(&result.ImageData)
-			if err != nil {
-				return nil, err
-			}
-		}
+	app, err := appdefinition.AppImageFromTar(reader)
+	if err != nil {
+		return nil, fmt.Errorf("invalid image %s: %v", tag, err)
 	}
-
-	if result.Herdfile == "" {
-		return nil, fmt.Errorf("invalid image %s, missing herd.cue", tag)
-	}
-
-	return result, nil
+	return app, nil
 }
 
 func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, error) {

@@ -11,6 +11,7 @@ package v1
 	dockerfile: string | *"Dockerfile"
 	target:     string | *""
 	contextDirs: [string]: string
+	args: [string]:        string
 }
 
 #ContainerSpec: {

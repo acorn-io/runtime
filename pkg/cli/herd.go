@@ -52,6 +52,7 @@ herd run --dev .`,
 		NewBuild(),
 		NewRun(),
 		NewLogs(),
+		NewContainer(),
 		NewDev(),
 	)
 	return root

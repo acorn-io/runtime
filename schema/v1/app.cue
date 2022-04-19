@@ -1,6 +1,7 @@
 package v1
 
 #Build: {
+	args: [string]: string
 	context:    string | *"."
 	dockerfile: string | *"Dockerfile"
 	target:     string | *""
@@ -131,6 +132,10 @@ package v1
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated
 
 #App: {
+	[=~"params|parameters"]: {
+		build: [string]:  _
+		deploy: [string]: _
+	}
 	data: {...}
 	containers: [string]: #Container
 	jobs: [string]:       #Job

@@ -1,0 +1,3 @@
+nested: {
+	val: "foo"
+}

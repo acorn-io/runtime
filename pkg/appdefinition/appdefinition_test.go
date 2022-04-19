@@ -823,6 +823,7 @@ images: {
 			},
 			"build": {
 				Build: &v1.Build{
+					Args:        map[string]string{},
 					Context:     ".",
 					Dockerfile:  "Dockerfile",
 					ContextDirs: map[string]string{},
@@ -830,6 +831,7 @@ images: {
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
+							Args:        map[string]string{},
 							Context:     ".",
 							Dockerfile:  "Dockerfile",
 							ContextDirs: map[string]string{},
@@ -839,6 +841,7 @@ images: {
 			},
 			"buildcontext": {
 				Build: &v1.Build{
+					Args:       map[string]string{},
 					Context:    ".",
 					Dockerfile: "Dockerfile",
 					ContextDirs: map[string]string{
@@ -848,6 +851,7 @@ images: {
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
+							Args:       map[string]string{},
 							Context:    ".",
 							Dockerfile: "Dockerfile",
 							ContextDirs: map[string]string{
@@ -860,6 +864,7 @@ images: {
 			"imagecontext": {
 				Image: "imagecontext-image",
 				Build: &v1.Build{
+					Args:       map[string]string{},
 					BaseImage:  "imagecontext-image",
 					Context:    ".",
 					Dockerfile: "Dockerfile",
@@ -871,6 +876,7 @@ images: {
 					"side": {
 						Image: "imagecontext-image-side",
 						Build: &v1.Build{
+							Args:       map[string]string{},
 							BaseImage:  "imagecontext-image-side",
 							Context:    ".",
 							Dockerfile: "Dockerfile",
@@ -885,6 +891,7 @@ images: {
 		Images: map[string]v1.ImageBuilderSpec{
 			"build": {
 				Build: &v1.Build{
+					Args:        map[string]string{},
 					Context:     ".",
 					Dockerfile:  "Dockerfile",
 					ContextDirs: map[string]string{},
@@ -1299,4 +1306,28 @@ images: image: image: "test"
 	assert.Equal(t, "test", appSpec.Jobs["job"].Build.BaseImage)
 	assert.Equal(t, "image-hash", appSpec.Images["image"].Image)
 	assert.Equal(t, "test", appSpec.Images["image"].Build.BaseImage)
+}
+
+func TestBuildParameters(t *testing.T) {
+	herdCue := `
+params: build: {
+  foo: string
+}
+containers: foo: build: args: one: params.build.foo
+`
+	def, err := NewAppDefinition([]byte(herdCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	def, err = def.WithBuildParams(map[string]interface{}{
+		"foo": "two",
+	})
+
+	buildSpec, err := def.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.Args["one"])
 }

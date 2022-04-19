@@ -228,6 +228,7 @@ import (
 		dockerfile: IN.dockerfile
 		context:    IN.context
 		target:     IN.target
+		args:       IN.args
 	}
 }
 

@@ -60,6 +60,10 @@ func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, 
 			},
 		}
 
+		for key, value := range build.Args {
+			options.FrontendAttrs["build-arg:"+key] = value
+		}
+
 		bkc, err := buildkit.New(ctx, "", buildkit.WithContextDialer(dialer))
 		if err != nil {
 			return nil, err

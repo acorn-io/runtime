@@ -18,3 +18,13 @@ type BuilderSpec struct {
 	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
 	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`
 }
+
+type ParamSpec struct {
+	Params []Param `json:"params,omitempty"`
+}
+
+type Param struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Schema      string `json:"schema,omitempty"`
+}

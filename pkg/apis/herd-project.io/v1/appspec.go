@@ -17,6 +17,7 @@ type Build struct {
 	Target      string            `json:"target,omitempty"`
 	BaseImage   string            `json:"baseImage,omitempty"`
 	ContextDirs map[string]string `json:"contextDirs,omitempty"`
+	Args        map[string]string `json:"args,omitempty"`
 }
 
 func (in Build) BaseBuild() Build {

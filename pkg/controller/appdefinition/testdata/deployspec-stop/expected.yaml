@@ -78,3 +78,29 @@ spec:
       containers:
         - name: buildimage
           image: "index.docker.io/library/test@sha256:build-image"
+---
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  stop: true
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      oneimage:
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+      buildimage:
+        image: "sha256:build-image"
+        build:
+          dockerfile: "custom-dockerfile"
+          context: "."
+  conditions:
+    defined:
+      success: true

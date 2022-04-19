@@ -1,8 +1,10 @@
 package appdefinition
 
 import (
+	"archive/tar"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
@@ -17,6 +19,7 @@ import (
 const (
 	HerdCueFile        = "herd.cue"
 	ImageDataFile      = "images.json"
+	BuildDataFile      = "build.json"
 	BuildTransform     = "github.com/ibuildthecloud/herd/schema/v1/transform/build"
 	NormalizeTransform = "github.com/ibuildthecloud/herd/schema/v1/transform/normalize"
 	Schema             = "github.com/ibuildthecloud/herd/schema/v1"
@@ -34,7 +37,8 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 		return nil, err
 	}
 
-	return appDef.WithImageData(appImage.ImageData), nil
+	appDef = appDef.WithImageData(appImage.ImageData)
+	return appDef.WithBuildParams(appImage.BuildParams)
 }
 
 func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
@@ -91,6 +95,24 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 		build.BaseImage = originalImage
 	}
 	return image, build
+}
+
+func (a *AppDefinition) WithBuildParams(params map[string]interface{}) (*AppDefinition, error) {
+	if len(params) == 0 {
+		return a, nil
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"params": map[string]interface{}{
+			"build": params,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &AppDefinition{
+		ctx:        a.ctx.WithFile("build.cue", data),
+		imageDatas: a.imageDatas,
+	}, nil
 }
 
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
@@ -195,4 +217,40 @@ func (a *AppDefinition) BuilderSpec() (*v1.BuilderSpec, error) {
 	}
 	spec := &v1.BuilderSpec{}
 	return spec, a.ctx.Decode(v, spec)
+}
+
+func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
+	tar := tar.NewReader(reader)
+	result := &v1.AppImage{}
+	for {
+		header, err := tar.Next()
+		if err == io.EOF {
+			break
+		}
+
+		if header.Name == HerdCueFile {
+			data, err := ioutil.ReadAll(tar)
+			if err != nil {
+				return nil, err
+			}
+			result.Herdfile = string(data)
+		} else if header.Name == ImageDataFile {
+			err := json.NewDecoder(tar).Decode(&result.ImageData)
+			if err != nil {
+				return nil, err
+			}
+		} else if header.Name == BuildDataFile {
+			result.BuildParams = map[string]interface{}{}
+			err := json.NewDecoder(tar).Decode(&result.BuildParams)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if result.Herdfile == "" {
+		return nil, fmt.Errorf("invalid image missing herd.cue")
+	}
+
+	return result, nil
 }

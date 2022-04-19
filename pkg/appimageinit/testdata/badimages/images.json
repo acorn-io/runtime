@@ -1,6 +1,0 @@
-{
-  "containers": {
-    "foo": {
-      "image": "image-name"
-    }
-  }

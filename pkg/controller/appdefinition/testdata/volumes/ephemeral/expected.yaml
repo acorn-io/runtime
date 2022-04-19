@@ -49,3 +49,27 @@ spec:
           volumeMounts:
             - mountPath: "/var/tmp"
               name: foo
+---
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        dirs:
+          "/var/tmp":
+            volume: foo
+    volumes:
+      foo:
+        class: ephemeral
+        size: 10
+  conditions:
+    defined:
+      success: true

@@ -110,3 +110,39 @@ spec:
     "herd-project.io/app-name": "app-name"
     "herd-project.io/container-name": "oneimage"
     "herd-project.io/managed": "true"
+---
+kind: AppInstance
+apiVersion: herd-project.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          left:
+            image: "foo"
+            ports:
+              - port: 90
+                containerPort: 91
+                protocol: https
+        ports:
+          - port: 80
+            containerPort: 81
+            protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+      buildimage:
+        image: "sha256:build-image"
+        build:
+          dockerfile: "custom-dockerfile"
+          context: "."
+  conditions:
+    defined:
+      success: true

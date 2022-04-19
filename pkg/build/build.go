@@ -23,6 +23,7 @@ type Options struct {
 	Cwd       string
 	Namespace string
 	Platforms []v1.Platform
+	Params    map[string]interface{}
 	Streams   *streams.Output
 }
 
@@ -67,6 +68,17 @@ func ResolveFile(file, cwd string) string {
 	return file
 }
 
+func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
+	file = ResolveFile(file, cwd)
+
+	fileData, err := appdefinition.ReadCUE(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return appdefinition.NewAppDefinition(fileData)
+}
+
 func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error) {
 	opts, err := opts.Complete()
 	if err != nil {
@@ -85,6 +97,11 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
+	appDefinition, err = appDefinition.WithBuildParams(opts.Params)
+	if err != nil {
+		return nil, err
+	}
+
 	buildSpec, err := appDefinition.BuilderSpec()
 	if err != nil {
 		return nil, err
@@ -93,8 +110,9 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 
 	imageData, err := FromSpec(ctx, opts.Cwd, opts.Namespace, *buildSpec, *opts.Streams)
 	appImage := &v1.AppImage{
-		Herdfile:  string(fileData),
-		ImageData: imageData,
+		Herdfile:    string(fileData),
+		ImageData:   imageData,
+		BuildParams: opts.Params,
 	}
 	if err != nil {
 		return nil, err
