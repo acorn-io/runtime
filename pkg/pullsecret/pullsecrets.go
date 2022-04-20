@@ -6,23 +6,23 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/authn/k8schain"
 	"github.com/google/go-containerregistry/pkg/authn/kubernetes"
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
 	SharedPullSecret = "shared-pull-secret"
 )
 
-func ForNamespace(c router.Getter, namespace string, secretNames ...string) ([]corev1.Secret, error) {
+func ForNamespace(ctx context.Context, c client.Reader, namespace string, secretNames ...string) ([]corev1.Secret, error) {
 	var secrets []corev1.Secret
 	for _, name := range append(secretNames, SharedPullSecret) {
 		secret := corev1.Secret{}
-		err := c.Get(&secret, name, &meta.GetOptions{
+		err := c.Get(ctx, client.ObjectKey{
+			Name:      name,
 			Namespace: namespace,
-		})
+		}, &secret)
 		if apierrors.IsNotFound(err) {
 			continue
 		} else if err != nil {
@@ -35,8 +35,8 @@ func ForNamespace(c router.Getter, namespace string, secretNames ...string) ([]c
 	return secrets, nil
 }
 
-func Keychain(ctx context.Context, c router.Getter, namespace string, secretNames ...string) (authn.Keychain, error) {
-	secrets, err := ForNamespace(c, namespace, secretNames...)
+func Keychain(ctx context.Context, c client.Reader, namespace string, secretNames ...string) (authn.Keychain, error) {
+	secrets, err := ForNamespace(ctx, c, namespace, secretNames...)
 	if err != nil {
 		return nil, err
 	}

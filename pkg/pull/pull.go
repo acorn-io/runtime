@@ -1,0 +1,139 @@
+package pull
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"strings"
+
+	imagename "github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/ibuildthecloud/baaah/pkg/router"
+	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	"github.com/ibuildthecloud/herd/pkg/appdefinition"
+	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
+	"github.com/ibuildthecloud/herd/pkg/k8sclient"
+	"github.com/ibuildthecloud/herd/pkg/pullsecret"
+	"github.com/ibuildthecloud/herd/pkg/tags"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+func AppImage(ctx context.Context, c client.Reader, namespace, image string, pullSecrets []string) (*v1.AppImage, error) {
+	tag, err := GetTag(ctx, c, namespace, image)
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := GetPullOptions(ctx, c, tag, namespace, pullSecrets)
+	if err != nil {
+		return nil, err
+	}
+
+	return pullIndex(tag, opts)
+}
+
+func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, error) {
+	img, err := remote.Index(tag, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	manifest, err := img.IndexManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(manifest.Manifests) == 0 {
+		return nil, fmt.Errorf("invalid manifest for %s, no manifest descriptors", tag)
+	}
+
+	image, err := img.Image(manifest.Manifests[0].Digest)
+	if err != nil {
+		return nil, err
+	}
+
+	layers, err := image.Layers()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(layers) == 0 {
+		return nil, fmt.Errorf("invalid image for %s, no layers", tag)
+	}
+
+	reader, err := layers[0].Uncompressed()
+	if err != nil {
+		return nil, err
+	}
+
+	return tarToAppImage(tag, reader)
+}
+
+func tarToAppImage(tag imagename.Reference, reader io.Reader) (*v1.AppImage, error) {
+	app, err := appdefinition.AppImageFromTar(reader)
+	if err != nil {
+		return nil, fmt.Errorf("invalid image %s: %v", tag, err)
+	}
+	return app, nil
+}
+
+func GetTag(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, error) {
+	if tags.SHAPattern.MatchString(image) {
+		port, err := buildkit.GetRegistryPort(ctx, router.FromReader(ctx, c))
+		if err != nil {
+			return nil, err
+		}
+
+		image = fmt.Sprintf("127.0.0.1:%d/herd/%s@sha256:%s", port, namespace, image)
+	}
+	return imagename.ParseReference(image)
+}
+
+func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Reference, namespace string, pullSecrets []string) ([]remote.Option, error) {
+	authn, err := pullsecret.Keychain(ctx, client, namespace, pullSecrets...)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []remote.Option{
+		remote.WithContext(ctx),
+		remote.WithAuthFromKeychain(authn),
+	}
+
+	if !strings.HasPrefix(tag.Context().RegistryStr(), "127.0.0.1:") {
+		return result, nil
+	}
+
+	_, err = rest.InClusterConfig()
+	if err == nil {
+		return result, nil
+	}
+
+	c, err := k8sclient.Default()
+	if err != nil {
+		return nil, err
+	}
+
+	port, err := buildkit.GetRegistryPort(ctx, router.FromReader(ctx, client))
+	if err != nil {
+		return nil, err
+	}
+
+	if tag.Context().RegistryStr() != fmt.Sprintf("127.0.0.1:%d", port) {
+		return result, nil
+	}
+
+	dialer, err := buildkit.GetRegistryDialer(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(result, remote.WithTransport(&http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return dialer(ctx, "")
+		},
+	})), nil
+}

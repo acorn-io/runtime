@@ -97,6 +97,24 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
+func (a *AppDefinition) WithDeployParams(params map[string]interface{}) (*AppDefinition, error) {
+	if len(params) == 0 {
+		return a, nil
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"params": map[string]interface{}{
+			"deploy": params,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &AppDefinition{
+		ctx:        a.ctx.WithFile("deploy.cue", data),
+		imageDatas: a.imageDatas,
+	}, nil
+}
+
 func (a *AppDefinition) WithBuildParams(params map[string]interface{}) (*AppDefinition, error) {
 	if len(params) == 0 {
 		return a, nil

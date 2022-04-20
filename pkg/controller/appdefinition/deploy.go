@@ -14,6 +14,7 @@ import (
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/condition"
 	"github.com/ibuildthecloud/herd/pkg/labels"
+	"github.com/ibuildthecloud/herd/pkg/pull"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +32,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := getTag(req, appInstance)
+	tag, err := pull.GetTag(req.Ctx, router.ToReader(req.Client), appInstance.Namespace, appInstance.Spec.Image)
 	if err != nil {
 		return err
 	}

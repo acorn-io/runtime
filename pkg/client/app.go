@@ -10,7 +10,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/goombaio/namegenerator"
-	"github.com/ibuildthecloud/baaah/pkg/router"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/pullsecret"
 	"github.com/ibuildthecloud/herd/pkg/run"
@@ -26,7 +25,7 @@ var (
 )
 
 func (c *client) checkRemotePermissions(ctx context.Context, image string, pullSecrets []string) error {
-	keyChain, err := pullsecret.Keychain(ctx, router.FromReader(ctx, c.Client), c.Namespace, pullSecrets...)
+	keyChain, err := pullsecret.Keychain(ctx, c.Client, c.Namespace, pullSecrets...)
 	if err != nil {
 		return err
 	}
@@ -41,6 +40,23 @@ func (c *client) checkRemotePermissions(ctx context.Context, image string, pullS
 		return fmt.Errorf("failed to pull %s: %v", image, err)
 	}
 	return nil
+}
+
+func (c *client) resolveTag(ctx context.Context, image string, pullSecrets []string) (string, error) {
+	localImage, err := c.ImageGet(ctx, image)
+	if apierror.IsNotFound(err) {
+		if tags.IsLocalReference(image) {
+			return "", err
+		}
+		if err := c.checkRemotePermissions(ctx, image, pullSecrets); err != nil {
+			return "", err
+		}
+	} else if err != nil {
+		return "", err
+	} else {
+		return strings.TrimPrefix(localImage.Digest, "sha256:"), nil
+	}
+	return image, nil
 }
 
 func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*App, error) {
@@ -59,21 +75,13 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 			Endpoints:        opts.Endpoints,
 			Client:           c.Client,
 			ImagePullSecrets: opts.ImagePullSecrets,
+			DeployParams:     opts.DeployParams,
 		}
 	)
 
-	localImage, err := c.ImageGet(ctx, image)
-	if apierror.IsNotFound(err) {
-		if tags.IsLocalReference(image) {
-			return nil, err
-		}
-		if err := c.checkRemotePermissions(ctx, image, opts.ImagePullSecrets); err != nil {
-			return nil, err
-		}
-	} else if err != nil {
+	image, err := c.resolveTag(ctx, image, opts.ImagePullSecrets)
+	if err != nil {
 		return nil, err
-	} else {
-		image = strings.TrimPrefix(localImage.Digest, "sha256:")
 	}
 
 	for i := 0; i < 3; i++ {

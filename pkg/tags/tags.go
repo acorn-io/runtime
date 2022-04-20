@@ -124,7 +124,20 @@ func Write(ctx context.Context, c client.Client, namespace, digest, tag string) 
 
 	configMap.Data[ConfigMapKey] = string(data)
 	if configMap.UID == "" {
-		return c.Create(ctx, configMap)
+		createErr := c.Create(ctx, configMap)
+		if apierrors.IsNotFound(createErr) {
+			err = c.Create(ctx, &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: configMap.Namespace,
+				},
+			})
+			if err != nil {
+				return createErr
+			}
+			return c.Create(ctx, configMap)
+		} else {
+			return createErr
+		}
 	}
 	return c.Update(ctx, configMap)
 }

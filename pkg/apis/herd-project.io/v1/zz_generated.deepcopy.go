@@ -123,6 +123,7 @@ func (in *AppInstanceSpec) DeepCopyInto(out *AppInstanceSpec) {
 		*out = make([]EndpointBinding, len(*in))
 		copy(*out, *in)
 	}
+	out.DeployParams = in.DeployParams.DeepCopy()
 	if in.Images != nil {
 		in, out := &in.Images, &out.Images
 		*out = make(map[string]string, len(*in))

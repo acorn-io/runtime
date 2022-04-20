@@ -132,6 +132,7 @@ type AppRunOptions struct {
 	Annotations      map[string]string
 	Labels           map[string]string
 	Endpoints        []v1.EndpointBinding
+	DeployParams     map[string]interface{}
 	ImagePullSecrets []string
 }
 
@@ -152,6 +153,8 @@ type Client interface {
 	VolumeList(ctx context.Context) ([]Volume, error)
 	VolumeGet(ctx context.Context, name string) (*Volume, error)
 	VolumeDelete(ctx context.Context, name string) (*Volume, error)
+
+	GetAppImage(ctx context.Context, imageName string, pullSecrets []string) (*v1.AppImage, error)
 
 	ImageList(ctx context.Context) ([]Image, error)
 	ImageGet(ctx context.Context, name string) (*Image, error)

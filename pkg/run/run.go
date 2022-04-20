@@ -46,6 +46,7 @@ type Options struct {
 	Labels           map[string]string
 	ImagePullSecrets []string
 	Endpoints        []v1.EndpointBinding
+	DeployParams     map[string]interface{}
 	Client           client.WithWatch
 }
 
@@ -116,8 +117,8 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Image:            image,
 			Endpoints:        opts.Endpoints,
 			ImagePullSecrets: opts.ImagePullSecrets,
+			DeployParams:     opts.DeployParams,
 		},
-		Status: v1.AppInstanceStatus{},
 	}
 
 	return app, opts.Client.Create(ctx, app)

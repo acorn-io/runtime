@@ -7,6 +7,7 @@ import (
 
 	"github.com/ibuildthecloud/herd/integration/helper"
 	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	"github.com/ibuildthecloud/herd/pkg/appdefinition"
 	"github.com/ibuildthecloud/herd/pkg/build"
 	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/ibuildthecloud/herd/pkg/labels"
@@ -210,4 +211,43 @@ func TestRun(t *testing.T) {
 	assert.Equal(t, "va1", appInstance.Annotations["a1"])
 	assert.Equal(t, "image", appInstance.Spec.Image)
 	assert.True(t, len(appInstance.Name) > 0)
+}
+
+func TestDeployParam(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
+	image, err := build.Build(ctx, "./testdata/params/herd.cue", &build.Options{
+		Cwd:       "./testdata/params",
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appDef, err := appdefinition.FromAppImage(image)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = appDef.DeployParams()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
+		Namespace: ns.Name,
+		DeployParams: map[string]interface{}{
+			"someInt": 5,
+		},
+	})
+
+	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
+		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+	})
+
+	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
 }

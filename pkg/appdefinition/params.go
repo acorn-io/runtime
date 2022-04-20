@@ -10,20 +10,34 @@ import (
 )
 
 func (a *AppDefinition) BuildParams() (*v1.ParamSpec, error) {
+	return a.params("params.build")
+}
+
+func (a *AppDefinition) DeployParams() (*v1.ParamSpec, error) {
+	return a.params("params.deploy")
+}
+
+func (a *AppDefinition) params(section string) (*v1.ParamSpec, error) {
 	app, err := a.ctx.Value()
 	if err != nil {
 		return nil, err
 	}
 
-	v := app.LookupPath(cue.ParsePath("params.build"))
+	v := app.LookupPath(cue.ParsePath(section))
 	sv, err := v.Struct()
 	if err != nil {
 		return nil, err
 	}
 
-	node := v.Syntax(cue.Docs(true))
-	s := node.(*ast.StructLit)
+	// I have no clue what I'm doing here, just poked around
+	// until something worked
+
 	result := &v1.ParamSpec{}
+	node := v.Syntax(cue.Docs(true))
+	s, ok := node.(*ast.StructLit)
+	if !ok {
+		return result, nil
+	}
 
 	for i, o := range s.Elts {
 		f := o.(*ast.Field)

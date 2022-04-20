@@ -8,7 +8,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
+	"github.com/ibuildthecloud/herd/pkg/pull"
 	"github.com/ibuildthecloud/herd/pkg/remoteopts"
 	tags2 "github.com/ibuildthecloud/herd/pkg/tags"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,6 +29,14 @@ func (c *client) Tag(ctx context.Context, imageName, tag string) (*Image, error)
 	}
 
 	return image, tags2.Write(ctx, c.Client, c.Namespace, image.Digest, fullTag.Name())
+}
+
+func (c *client) GetAppImage(ctx context.Context, imageName string, pullSecrets []string) (*v1.AppImage, error) {
+	imageName, err := c.resolveTag(ctx, imageName, pullSecrets)
+	if err != nil {
+		return nil, err
+	}
+	return pull.AppImage(ctx, c.Client, c.Namespace, imageName, pullSecrets)
 }
 
 func (c *client) ImagePull(ctx context.Context, imageName string) (*Image, error) {
