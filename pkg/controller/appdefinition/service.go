@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/ibuildthecloud/baaah/pkg/meta"
@@ -28,6 +29,7 @@ func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
 
 func toServicePort(port v1.Port) corev1.ServicePort {
 	servicePort := corev1.ServicePort{
+		Name:     strconv.Itoa(int(port.Port)),
 		Protocol: corev1.ProtocolTCP,
 		Port:     port.Port,
 		TargetPort: intstr.IntOrString{

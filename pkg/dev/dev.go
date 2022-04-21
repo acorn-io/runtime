@@ -302,6 +302,8 @@ func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options
 		logCtx  context.Context
 	)
 
+	defer cancel()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -318,7 +320,7 @@ func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options
 			if !open {
 				return nil
 			}
-			if logging && lastApp == app {
+			if logging && lastApp.Name == app.Name {
 				continue
 			}
 			lastApp = app

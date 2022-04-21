@@ -9,7 +9,7 @@ import (
 )
 
 func NewVolume() *cobra.Command {
-	return cli.Command(&Volume{}, cobra.Command{
+	cmd := cli.Command(&Volume{}, cobra.Command{
 		Use:     "volume [flags] [VOLUME_NAME...]",
 		Aliases: []string{"volumes", "v"},
 		Example: `
@@ -17,6 +17,8 @@ herd volume`,
 		SilenceUsage: true,
 		Short:        "List or get volumes",
 	})
+	cmd.AddCommand(NewVolume())
+	return cmd
 }
 
 type Volume struct {

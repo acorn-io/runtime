@@ -1,8 +1,11 @@
 package appdefinition
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -15,6 +18,7 @@ import (
 	"github.com/ibuildthecloud/herd/pkg/labels"
 	"github.com/pkg/errors"
 	"github.com/rancher/wrangler/pkg/data/convert"
+	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -33,8 +37,9 @@ func seedData(from map[string]string, keys ...string) map[string][]byte {
 }
 
 var (
-	ErrJobNotDone  = errors.New("job not complete")
-	ErrJobNoOutput = errors.New("job has no output")
+	ErrJobNotDone        = errors.New("job not complete")
+	ErrJobNoOutput       = errors.New("job has no output")
+	templateSecretRegexp = regexp.MustCompile(`\${secret://(.*?)/(.*?)}`)
 )
 
 func getJobOutput(client router.Client, namespace, name string) (job *batchv1.Job, data []byte, err error) {
@@ -155,6 +160,48 @@ func generateSSH(req router.Request, appInstance *v1.AppInstance, secretName str
 	return secret, req.Client.Create(secret)
 }
 
+func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: secretName + "-",
+			Namespace:    appInstance.Namespace,
+			Labels:       labelsForSecret(secretName, appInstance),
+		},
+		Data: seedData(secretRef.Data, "template"),
+		Type: "secrets.herd-project.io/template",
+	}
+
+	var (
+		template       = string(secret.Data["template"])
+		templateErrors []error
+	)
+	template = templateSecretRegexp.ReplaceAllStringFunc(template, func(t string) string {
+		groups := templateSecretRegexp.FindStringSubmatch(t)
+		secret, err := getOrCreateSecret(secrets, req, appInstance, groups[1])
+		if err != nil {
+			templateErrors = append(templateErrors, err)
+			return err.Error()
+		}
+
+		val := secret.Data[groups[2]]
+		if len(val) == 0 {
+			err := fmt.Errorf("failed to find key %s in secret %s", groups[2], groups[1])
+			templateErrors = append(templateErrors, err)
+			return err.Error()
+		}
+
+		return string(val)
+	})
+
+	if err := merr.NewErrors(templateErrors...); err != nil {
+		return nil, err
+	}
+
+	secret.Data["template"] = []byte(template)
+
+	return secret, req.Client.Create(secret)
+}
+
 func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -205,6 +252,33 @@ func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInsta
 	if params.CASecret == "" {
 		secret.Data["ca.crt"] = caPEM
 		secret.Data["ca.key"] = caKeyPEM
+	}
+
+	return secret, req.Client.Create(secret)
+}
+
+func generateToken(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: secretName + "-",
+			Namespace:    appInstance.Namespace,
+			Labels:       labelsForSecret(secretName, appInstance),
+		},
+		Data: seedData(secretRef.Data, "token"),
+		Type: "secrets.herd-project.io/token",
+	}
+
+	if len(secret.Data["token"]) == 0 {
+		length, err := convert.ToNumber(secretRef.Params["length"])
+		if err != nil {
+			return nil, err
+		}
+		characters := convert.ToString(secretRef.Params["characters"])
+		v, err := generate(characters, int(length))
+		if err != nil {
+			return nil, err
+		}
+		secret.Data["token"] = []byte(v)
 	}
 
 	return secret, req.Client.Create(secret)
@@ -309,6 +383,10 @@ func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appIn
 			return generateSSH(req, appInstance, secretName, secretRef)
 		case "generated":
 			return generatedSecret(req, appInstance, secretName, secretRef)
+		case "token":
+			return generateToken(req, appInstance, secretName, secretRef)
+		case "template":
+			return generateTemplate(secrets, req, appInstance, secretName, secretRef)
 		default:
 			return nil, err
 		}
@@ -351,7 +429,7 @@ func secretsOrdered(app *v1.AppInstance) (result []secEntry) {
 	var generated []secEntry
 
 	for _, entry := range typed.Sorted(app.Status.AppSpec.Secrets) {
-		if entry.Value.Type == "generated" {
+		if entry.Value.Type == "generated" || entry.Value.Type == "template" {
 			generated = append(generated, secEntry{name: entry.Key, secret: entry.Value})
 		} else {
 			result = append(result, secEntry{name: entry.Key, secret: entry.Value})
@@ -430,4 +508,16 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 	}
 
 	return nil
+}
+
+func generate(characters string, tokenLength int) (string, error) {
+	token := make([]byte, tokenLength)
+	for i := range token {
+		r, err := rand.Int(rand.Reader, big.NewInt(int64(len(characters))))
+		if err != nil {
+			return "", err
+		}
+		token[i] = characters[r.Int64()]
+	}
+	return string(token), nil
 }

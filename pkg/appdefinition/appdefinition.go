@@ -267,7 +267,7 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 	}
 
 	if result.Herdfile == "" {
-		return nil, fmt.Errorf("invalid image missing herd.cue")
+		return nil, fmt.Errorf("invalid image, empty herd.cue")
 	}
 
 	return result, nil

@@ -2,6 +2,7 @@ package appdefinition
 
 import (
 	"crypto/x509"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -226,4 +227,65 @@ func TestBasic_Gen(t *testing.T) {
 	assert.True(t, strings.HasPrefix(secret.Name, "passuname-"))
 	assert.Equal(t, []byte("admin"), secret.Data["username"])
 	assert.True(t, len(secret.Data["password"]) > 0)
+}
+
+func TestTemplateToken_Gen(t *testing.T) {
+	h := tester.Harness{
+		Scheme: scheme.Scheme,
+	}
+	resp, err := h.InvokeFunc(t, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "app-name",
+			Namespace: "app-ns",
+		},
+		Status: v1.AppInstanceStatus{
+			Namespace: "app-target-ns",
+			AppSpec: v1.AppSpec{
+				Secrets: map[string]v1.Secret{
+					"pass": {Type: "token",
+						Params: map[string]interface{}{
+							"characters": "abc",
+							"length":     5,
+						},
+					},
+					"pass2": {Type: "token",
+						Params: map[string]interface{}{
+							"characters": "xyz",
+							"length":     6,
+						},
+					},
+					"template": {
+						Type: "template",
+						Data: map[string]string{
+							"template": "A happy little ${secret://pass/token} in a string followed by ${secret://pass2/token}",
+						},
+					},
+				},
+			},
+		},
+	}, CreateSecrets)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, resp.Client.Created, 3)
+	assert.Len(t, resp.Collected, 4)
+
+	secret := resp.Client.Created[0].(*corev1.Secret)
+	assert.Equal(t, "pass", secret.Labels[labels.HerdSecretName])
+	assert.True(t, strings.HasPrefix(secret.Name, "pass-"))
+	assert.True(t, len(secret.Data["token"]) == 5)
+	assert.Len(t, regexp.MustCompile("[abc]").ReplaceAllString(string(secret.Data["token"]), ""), 0)
+
+	secret2 := resp.Client.Created[1].(*corev1.Secret)
+	assert.Equal(t, "pass2", secret2.Labels[labels.HerdSecretName])
+	assert.True(t, strings.HasPrefix(secret2.Name, "pass2-"))
+	assert.True(t, len(secret2.Data["token"]) == 6)
+	assert.Len(t, regexp.MustCompile("[xyz]").ReplaceAllString(string(secret2.Data["token"]), ""), 0)
+
+	secret3 := resp.Client.Created[2].(*corev1.Secret)
+	assert.Equal(t, "template", secret3.Labels[labels.HerdSecretName])
+	assert.True(t, strings.HasPrefix(secret3.Name, "template-"))
+	assert.Equal(t, "A happy little "+string(secret.Data["token"])+
+		" in a string followed by "+string(secret2.Data["token"]), string(secret3.Data["template"]))
 }

@@ -67,8 +67,28 @@ package v1
 #SecretOpaque: {
 	type:      "opaque"
 	optional?: bool
-	params?: [string]: string
+	params?: [string]: _
 	data: [string]:    string
+}
+
+#SecretTemplate: {
+	type:      "template"
+	optional?: bool
+	data: {
+		template: string
+	}
+}
+
+#SecretToken: {
+	type:      "token"
+	optional?: bool
+	params: {
+		characters: string | *"bcdfghjklmnpqrstvwxz2456789"
+		length:     (>=0 & <=256) | *54
+	}
+	data: {
+		token?: string
+	}
 }
 
 #SecretBasicAuth: {
@@ -129,7 +149,7 @@ package v1
 	data: {}
 }
 
-#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated
+#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated | #SecretTemplate | #SecretToken
 
 #App: {
 	[=~"params|parameters"]: {

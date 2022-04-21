@@ -42,7 +42,6 @@ herd run --dev .`,
 		NewVolume(),
 		NewImage(),
 		NewTag(),
-		NewVolumeCreate(),
 		NewExec(),
 		NewContainer(),
 		NewStart(),
@@ -52,8 +51,8 @@ herd run --dev .`,
 		NewBuild(),
 		NewRun(),
 		NewLogs(),
-		NewContainer(),
 		NewDev(),
+		NewController(),
 	)
 	return root
 }
