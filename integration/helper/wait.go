@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/meta"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"

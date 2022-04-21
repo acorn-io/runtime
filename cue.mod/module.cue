@@ -1,1 +1,1 @@
-module: "github.com/ibuildthecloud/herd"
+module: "github.com/acorn-io/acorn"

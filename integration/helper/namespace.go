@@ -13,7 +13,7 @@ func CleanNamespaces(t *testing.T, c client.Client) error {
 	nses := &corev1.NamespaceList{}
 	err := c.List(GetCTX(t), nses, &client.ListOptions{
 		LabelSelector: labels.SelectorFromSet(labels.Set{
-			"test.herd-project.io/namespace": "true",
+			"test.acorn.io/namespace": "true",
 		}),
 	})
 	if err != nil {
@@ -30,9 +30,9 @@ func CleanNamespaces(t *testing.T, c client.Client) error {
 func TempNamespace(t *testing.T, client client.Client) *corev1.Namespace {
 	ns := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "herd-test-",
+			GenerateName: "acorn-test-",
 			Labels: map[string]string{
-				"test.herd-project.io/namespace": "true",
+				"test.acorn.io/namespace": "true",
 			},
 		},
 		Spec:   corev1.NamespaceSpec{},

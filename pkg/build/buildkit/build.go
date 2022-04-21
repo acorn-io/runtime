@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/streams"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/containerd/console"
 	cplatforms "github.com/containerd/containerd/platforms"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/streams"
-	"github.com/ibuildthecloud/herd/pkg/system"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
@@ -30,7 +30,7 @@ func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, 
 		return nil, err
 	}
 
-	inPodName := fmt.Sprintf("127.0.0.1:%d/herd/%s", system.RegistryPort, namespace)
+	inPodName := fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, namespace)
 	context := filepath.Join(cwd, build.Context)
 	dockerfilePath := filepath.Dir(filepath.Join(cwd, build.Dockerfile))
 	dockerfileName := filepath.Base(build.Dockerfile)
@@ -75,7 +75,7 @@ func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, 
 			return nil, err
 		}
 
-		inClusterName := fmt.Sprintf("127.0.0.1:%d/herd/%s@%s", port, namespace, res.ExporterResponse["containerimage.digest"])
+		inClusterName := fmt.Sprintf("127.0.0.1:%d/acorn/%s@%s", port, namespace, res.ExporterResponse["containerimage.digest"])
 		result = append(result, inClusterName)
 	}
 

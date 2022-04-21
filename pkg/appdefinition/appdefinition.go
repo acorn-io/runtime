@@ -9,20 +9,20 @@ import (
 	"path/filepath"
 	"sort"
 
-	cue_mod "github.com/ibuildthecloud/herd/cue.mod"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/cue"
-	"github.com/ibuildthecloud/herd/schema"
+	cue_mod "github.com/acorn-io/acorn/cue.mod"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/cue"
+	"github.com/acorn-io/acorn/schema"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	HerdCueFile        = "herd.cue"
+	AcornCueFile       = "acorn.cue"
 	ImageDataFile      = "images.json"
 	BuildDataFile      = "build.json"
-	BuildTransform     = "github.com/ibuildthecloud/herd/schema/v1/transform/build"
-	NormalizeTransform = "github.com/ibuildthecloud/herd/schema/v1/transform/normalize"
-	Schema             = "github.com/ibuildthecloud/herd/schema/v1"
+	BuildTransform     = "github.com/acorn-io/acorn/schema/v1/transform/build"
+	NormalizeTransform = "github.com/acorn-io/acorn/schema/v1/transform/normalize"
+	Schema             = "github.com/acorn-io/acorn/schema/v1"
 	AppType            = "#App"
 )
 
@@ -32,7 +32,7 @@ type AppDefinition struct {
 }
 
 func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
-	appDef, err := NewAppDefinition([]byte(appImage.Herdfile))
+	appDef, err := NewAppDefinition([]byte(appImage.Acornfile))
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func ReadCUE(file string) ([]byte, error) {
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	files := []cue.File{
 		{
-			Name: HerdCueFile,
+			Name: AcornCueFile,
 			Data: data,
 		},
 	}
@@ -246,12 +246,12 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 			break
 		}
 
-		if header.Name == HerdCueFile {
+		if header.Name == AcornCueFile {
 			data, err := ioutil.ReadAll(tar)
 			if err != nil {
 				return nil, err
 			}
-			result.Herdfile = string(data)
+			result.Acornfile = string(data)
 		} else if header.Name == ImageDataFile {
 			err := json.NewDecoder(tar).Decode(&result.ImageData)
 			if err != nil {
@@ -266,8 +266,8 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 		}
 	}
 
-	if result.Herdfile == "" {
-		return nil, fmt.Errorf("invalid image, empty herd.cue")
+	if result.Acornfile == "" {
+		return nil, fmt.Errorf("invalid image, empty acorn.cue")
 	}
 
 	return result, nil

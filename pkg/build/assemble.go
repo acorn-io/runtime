@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
 )
 
 func digestOnlyImages(data map[string]v1.ImageData) (map[string]v1.ImageData, error) {

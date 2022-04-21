@@ -1,7 +1,7 @@
 package normalize
 
 import (
-	"github.com/ibuildthecloud/herd/schema/v1"
+	"github.com/acorn-io/acorn/schema/v1"
 	"strings"
 	"encoding/base64"
 )

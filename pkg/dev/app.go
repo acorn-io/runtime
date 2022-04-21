@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	objwatcher "github.com/ibuildthecloud/herd/pkg/watcher"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	objwatcher "github.com/acorn-io/acorn/pkg/watcher"
 )
 
 func appPrintLoop(ctx context.Context, app *v1.AppInstance, opts *Options) error {

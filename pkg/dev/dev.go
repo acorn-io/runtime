@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/build"
-	"github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/log"
-	"github.com/ibuildthecloud/herd/pkg/run"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/acorn/pkg/run"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -161,15 +161,15 @@ func buildLoop(ctx context.Context, file string, opts build.Options, trigger <-c
 	}
 }
 
-func getByPathLabels(herdCue string) klabels.Set {
-	sum := sha256.Sum256([]byte(herdCue))
+func getByPathLabels(acornCue string) klabels.Set {
+	sum := sha256.Sum256([]byte(acornCue))
 	return klabels.Set{
-		labels.HerdAppCuePath: hex.EncodeToString(sum[:])[:12],
+		labels.AcornAppCuePath: hex.EncodeToString(sum[:])[:12],
 	}
 }
 
-func getByPathSelector(herdCue string) klabels.Selector {
-	return klabels.SelectorFromSet(getByPathLabels(herdCue))
+func getByPathSelector(acornCue string) klabels.Selector {
+	return klabels.SelectorFromSet(getByPathLabels(acornCue))
 }
 
 func updateApp(ctx context.Context, client client.Client, app *v1.AppInstance, image string, opts run.Options) error {
@@ -179,17 +179,17 @@ func updateApp(ctx context.Context, client client.Client, app *v1.AppInstance, i
 	return client.Update(ctx, app)
 }
 
-func createApp(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
+func createApp(ctx context.Context, acornCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
 	if opts.Labels == nil {
 		opts.Labels = map[string]string{}
 	}
 	if opts.Annotations == nil {
 		opts.Annotations = map[string]string{}
 	}
-	for k, v := range getByPathLabels(herdCue) {
+	for k, v := range getByPathLabels(acornCue) {
 		opts.Labels[k] = v
 	}
-	opts.Annotations[labels.HerdAppCuePath] = herdCue
+	opts.Annotations[labels.AcornAppCuePath] = acornCue
 	app, err := run.Run(ctx, image, &opts)
 	if err != nil {
 		return "", err
@@ -198,10 +198,10 @@ func createApp(ctx context.Context, herdCue, image string, opts run.Options, app
 	return app.Name, nil
 }
 
-func getAppName(ctx context.Context, herdCue string, opts run.Options) (string, error) {
+func getAppName(ctx context.Context, acornCue string, opts run.Options) (string, error) {
 	var apps v1.AppInstanceList
 	err := opts.Client.List(ctx, &apps, &client.ListOptions{
-		LabelSelector: getByPathSelector(herdCue),
+		LabelSelector: getByPathSelector(acornCue),
 		Namespace:     opts.Namespace,
 	})
 	if err != nil {
@@ -217,7 +217,7 @@ func getAppName(ctx context.Context, herdCue string, opts run.Options) (string, 
 	return "", nil
 }
 
-func getExistingApp(ctx context.Context, herdCue string, opts run.Options) (*v1.AppInstance, error) {
+func getExistingApp(ctx context.Context, acornCue string, opts run.Options) (*v1.AppInstance, error) {
 	name := opts.Name
 	if name == "" {
 		return nil, apierror.NewNotFound(schema.GroupResource{
@@ -231,12 +231,12 @@ func getExistingApp(ctx context.Context, herdCue string, opts run.Options) (*v1.
 	return &existingApp, err
 }
 
-func stop(herdCue string, opts run.Options) error {
+func stop(acornCue string, opts run.Options) error {
 	// Don't use a passed context, because it will be canceled already
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	existingApp, err := getExistingApp(ctx, herdCue, opts)
+	existingApp, err := getExistingApp(ctx, acornCue, opts)
 	if apierror.IsNotFound(err) {
 		return nil
 	} else if err != nil {
@@ -249,10 +249,10 @@ func stop(herdCue string, opts run.Options) error {
 	return nil
 }
 
-func runOrUpdate(ctx context.Context, herdCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
-	existingApp, err := getExistingApp(ctx, herdCue, opts)
+func runOrUpdate(ctx context.Context, acornCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
+	existingApp, err := getExistingApp(ctx, acornCue, opts)
 	if apierror.IsNotFound(err) {
-		return createApp(ctx, herdCue, image, opts, apps)
+		return createApp(ctx, acornCue, image, opts, apps)
 	} else if err != nil {
 		return "", err
 	}
@@ -260,9 +260,9 @@ func runOrUpdate(ctx context.Context, herdCue, image string, opts run.Options, a
 	return existingApp.Name, updateApp(ctx, opts.Client, existingApp, image, opts)
 }
 
-func runLoop(ctx context.Context, herdCue string, opts run.Options, images <-chan string, apps chan<- *v1.AppInstance) error {
+func runLoop(ctx context.Context, acornCue string, opts run.Options, images <-chan string, apps chan<- *v1.AppInstance) error {
 	defer func() {
-		if err := stop(herdCue, opts); err != nil {
+		if err := stop(acornCue, opts); err != nil {
 			logrus.Errorf("Failed to stop app: %v", err)
 		}
 	}()
@@ -272,7 +272,7 @@ func runLoop(ctx context.Context, herdCue string, opts run.Options, images <-cha
 			if !open {
 				return nil
 			}
-			if newName, err := runOrUpdate(ctx, herdCue, image, opts, apps); err != nil {
+			if newName, err := runOrUpdate(ctx, acornCue, image, opts, apps); err != nil {
 				logrus.Errorf("Failed to run app: %v", err)
 			} else {
 				opts.Name = newName
@@ -360,35 +360,35 @@ func readInput(ctx context.Context, trigger chan<- struct{}) error {
 	}
 }
 
-func resolveHerdCueAndName(ctx context.Context, herdCue string, opts *Options) (string, *Options, error) {
+func resolveAcornCueAndName(ctx context.Context, acornCue string, opts *Options) (string, *Options, error) {
 	nameWasSet := opts.Run.Name != ""
 	opts, err := opts.Complete()
 	if err != nil {
 		return "", nil, err
 	}
 
-	herdCue = build.ResolveFile(herdCue, opts.Build.Cwd)
+	acornCue = build.ResolveFile(acornCue, opts.Build.Cwd)
 
-	if !filepath.IsAbs(herdCue) {
-		herdCue, err = filepath.Abs(herdCue)
+	if !filepath.IsAbs(acornCue) {
+		acornCue, err = filepath.Abs(acornCue)
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to resolve the location of %s: %w", herdCue, err)
+			return "", nil, fmt.Errorf("failed to resolve the location of %s: %w", acornCue, err)
 		}
 	}
 
 	if !nameWasSet {
-		existingName, err := getAppName(ctx, herdCue, opts.Run)
+		existingName, err := getAppName(ctx, acornCue, opts.Run)
 		if err != nil {
 			return "", nil, err
 		}
 		opts.Run.Name = existingName
 	}
 
-	return herdCue, opts, nil
+	return acornCue, opts, nil
 }
 
 func Dev(ctx context.Context, file string, opts *Options) error {
-	herdCue, opts, err := resolveHerdCueAndName(ctx, file, opts)
+	acornCue, opts, err := resolveAcornCueAndName(ctx, file, opts)
 	if err != nil {
 		return err
 	}
@@ -404,11 +404,11 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	})
 	eg.Go(func() error {
 		defer close(images)
-		return buildLoop(ctx, herdCue, opts.Build, trigger, images)
+		return buildLoop(ctx, acornCue, opts.Build, trigger, images)
 	})
 	eg.Go(func() error {
 		defer close(apps)
-		return runLoop(ctx, herdCue, opts.Run, images, apps)
+		return runLoop(ctx, acornCue, opts.Run, images, apps)
 	})
 	eg.Go(func() error {
 		return logLoop(ctx, appLogs, &opts.Log)

@@ -3,9 +3,9 @@ apiVersion: v1
 metadata:
   name: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
     pod-security.kubernetes.io/enforce: baseline
 
 ---
@@ -15,26 +15,26 @@ metadata:
   name: container-name
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "container-name"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
 spec:
   selector:
     matchLabels:
-      "herd-project.io/app-namespace": "app-namespace"
-      "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "container-name"
-      "herd-project.io/managed": "true"
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
   template:
     metadata:
       labels:
-        "herd-project.io/app-namespace": "app-namespace"
-        "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "container-name"
-        "herd-project.io/managed": "true"
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "container-name"
+        "acorn.io/managed": "true"
       annotations:
-        herd-project.io/container-spec: '{"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name"}'
+        acorn.io/container-spec: '{"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name"}'
     spec:
       enableServiceLinks: false
       shareProcessNamespace: true
@@ -44,7 +44,7 @@ spec:
           image: "index.docker.io/library/test@image-name"
 ---
 kind: AppInstance
-apiVersion: herd-project.io/v1
+apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace

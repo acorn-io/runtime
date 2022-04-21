@@ -3,7 +3,7 @@ package flagparams
 import (
 	"testing"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/stretchr/testify/assert"
 )
@@ -49,7 +49,7 @@ func TestParse(t *testing.T) {
 		},
 	}
 
-	flags := New("herd.cue", &params)
+	flags := New("acorn.cue", &params)
 	val, err := flags.Parse([]string{
 		"--int", "1",
 		"--int-with-default", "2",

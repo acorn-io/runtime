@@ -9,14 +9,14 @@ import (
 	"sort"
 	"strings"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/build/buildkit"
+	"github.com/acorn-io/acorn/pkg/streams"
+	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/containerd/containerd/platforms"
 	imagename "github.com/google/go-containerregistry/pkg/name"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
-	"github.com/ibuildthecloud/herd/pkg/streams"
-	"github.com/ibuildthecloud/herd/pkg/system"
 )
 
 type Options struct {
@@ -51,19 +51,19 @@ func (b *Options) Complete() (*Options, error) {
 	return &current, nil
 }
 
-func FindHerdCue(cwd string) string {
+func FindAcornCue(cwd string) string {
 	for _, ext := range []string{"cue", "yaml", "json"} {
-		f := filepath.Join(cwd, "herd."+ext)
+		f := filepath.Join(cwd, "acorn."+ext)
 		if _, err := os.Stat(f); err == nil {
 			return f
 		}
 	}
-	return filepath.Join(cwd, "herd.cue")
+	return filepath.Join(cwd, "acorn.cue")
 }
 
 func ResolveFile(file, cwd string) string {
-	if file == "DIRECTORY/herd.cue" {
-		return FindHerdCue(cwd)
+	if file == "DIRECTORY/acorn.cue" {
+		return FindAcornCue(cwd)
 	}
 	return file
 }
@@ -110,7 +110,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 
 	imageData, err := FromSpec(ctx, opts.Cwd, opts.Namespace, *buildSpec, *opts.Streams)
 	appImage := &v1.AppImage{
-		Herdfile:    string(fileData),
+		Acornfile:   string(fileData),
 		ImageData:   imageData,
 		BuildParams: opts.Params,
 	}
@@ -276,7 +276,7 @@ func buildWithContext(ctx context.Context, cwd, namespace string, platforms []v1
 		}
 		baseImage = strings.Replace(newImage, digest.RegistryStr(), fmt.Sprintf("127.0.0.1:%d", system.RegistryPort), 1)
 	}
-	dockerfile, err := ioutil.TempFile("", "herd-dockerfile-")
+	dockerfile, err := ioutil.TempFile("", "acorn-dockerfile-")
 	if err != nil {
 		return "", err
 	}

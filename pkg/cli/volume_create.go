@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
+	hclient "github.com/acorn-io/acorn/pkg/client"
 	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -14,7 +14,7 @@ func NewVolumeCreate() *cobra.Command {
 		Use:     "volume create [flags] VOLUME_NAME CAPACITY",
 		Aliases: []string{"volumes", "v"},
 		Example: `
-herd volume create my-vol 10G`,
+acorn volume create my-vol 10G`,
 		SilenceUsage: true,
 		Short:        "List or get volumes",
 		Args:         cobra.ExactArgs(2),

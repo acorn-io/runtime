@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"cuelang.org/go/cue/errors"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1190,7 +1190,7 @@ secrets: {
 }
 
 func TestImageDataOverride(t *testing.T) {
-	herdCue := `
+	acornCue := `
 containers: db: image: "mariadb"
 images: test: image: "another"
 `
@@ -1207,7 +1207,7 @@ images: test: image: "another"
 		},
 	}
 
-	app, err := NewAppDefinition([]byte(herdCue))
+	app, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1228,11 +1228,11 @@ images: test: image: "another"
 }
 
 func TestJobs(t *testing.T) {
-	herdCue := `
+	acornCue := `
 jobs: job1: image: "job1-image"
 jobs: job2: image: "job2-image"
 `
-	app, err := NewAppDefinition([]byte(herdCue))
+	app, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1247,17 +1247,17 @@ jobs: job2: image: "job2-image"
 }
 
 func TestNonUnique(t *testing.T) {
-	herdCue := `
+	acornCue := `
 containers: foo: image: "test"
 jobs: foo: image: "test"
 `
-	_, err := NewAppDefinition([]byte(herdCue))
+	_, err := NewAppDefinition([]byte(acornCue))
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "_keysMustBeUniqueAcrossTypes.foo: conflicting values \"jobs\" and \"container\"")
 }
 
 func TestFriendImageNameIsSet(t *testing.T) {
-	herdCue := `
+	acornCue := `
 containers: foo: image: "test"
 containers: foo: sidecars: side: image: "test"
 containers: bar: {
@@ -1267,7 +1267,7 @@ containers: bar: {
 jobs: job: image: "test"
 images: image: image: "test"
 `
-	def, err := NewAppDefinition([]byte(herdCue))
+	def, err := NewAppDefinition([]byte(acornCue))
 	assert.Nil(t, err)
 	appSpec, err := def.WithImageData(v1.ImagesData{
 		Containers: map[string]v1.ContainerData{
@@ -1309,13 +1309,13 @@ images: image: image: "test"
 }
 
 func TestBuildParameters(t *testing.T) {
-	herdCue := `
+	acornCue := `
 params: build: {
   foo: string
 }
 containers: foo: build: args: one: params.build.foo
 `
-	def, err := NewAppDefinition([]byte(herdCue))
+	def, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}

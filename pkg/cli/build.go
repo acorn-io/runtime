@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/ibuildthecloud/herd/pkg/build"
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
@@ -15,11 +15,11 @@ func NewBuild() *cobra.Command {
 	cmd := cli.Command(&Build{}, cobra.Command{
 		Use: "build [flags] DIRECTORY",
 		Example: `
-# Build from herd.cue file in the local directory
-herd build .`,
+# Build from acorn.cue file in the local directory
+acorn build .`,
 		SilenceUsage: true,
-		Short:        "Build an app from a herd.cue file",
-		Long:         "Build all dependent container and app images from your herd.cue file",
+		Short:        "Build an app from a acorn.cue file",
+		Long:         "Build all dependent container and app images from your acorn.cue file",
 		Args:         cobra.MinimumNArgs(1),
 	})
 	cmd.Flags().SetInterspersed(false)
@@ -27,7 +27,7 @@ herd build .`,
 }
 
 type Build struct {
-	File string   `short:"f" desc:"Name of the build file" default:"DIRECTORY/herd.cue"`
+	File string   `short:"f" desc:"Name of the build file" default:"DIRECTORY/acorn.cue"`
 	Tag  []string `short:"t" desc:"Apply a tag to the final build"`
 }
 

@@ -2,7 +2,7 @@ package v1
 
 type AppImage struct {
 	ID          string     `json:"id,omitempty"`
-	Herdfile    string     `json:"herdfile,omitempty"`
+	Acornfile   string     `json:"acornfile,omitempty"`
 	ImageData   ImagesData `json:"imageData,omitempty"`
 	BuildParams GenericMap `json:"buildParams,omitempty"`
 }

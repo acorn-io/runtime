@@ -9,13 +9,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/certs"
-	"github.com/ibuildthecloud/herd/pkg/condition"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/certs"
+	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/pkg/errors"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/rancher/wrangler/pkg/merr"
@@ -168,7 +168,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(secretRef.Data, "template"),
-		Type: "secrets.herd-project.io/template",
+		Type: "secrets.acorn.io/template",
 	}
 
 	var (
@@ -265,7 +265,7 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(secretRef.Data, "token"),
-		Type: "secrets.herd-project.io/token",
+		Type: "secrets.acorn.io/token",
 	}
 
 	if len(secret.Data["token"]) == 0 {
@@ -329,11 +329,11 @@ func generateDocker(req router.Request, appInstance *v1.AppInstance, name string
 
 func labelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
 	return map[string]string{
-		labels.HerdAppName:      appInstance.Name,
-		labels.HerdAppNamespace: appInstance.Namespace,
-		labels.HerdManaged:      "true",
-		labels.HerdAppUID:       string(appInstance.UID),
-		labels.HerdSecretName:   secretName,
+		labels.AcornAppName:      appInstance.Name,
+		labels.AcornAppNamespace: appInstance.Namespace,
+		labels.AcornManaged:      "true",
+		labels.AcornAppUID:       string(appInstance.UID),
+		labels.AcornSecretName:   secretName,
 	}
 }
 
@@ -497,9 +497,9 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 				Name:      secretName,
 				Namespace: appInstance.Status.Namespace,
 				Labels: map[string]string{
-					labels.HerdAppName:      appInstance.Name,
-					labels.HerdAppNamespace: appInstance.Namespace,
-					labels.HerdManaged:      "true",
+					labels.AcornAppName:      appInstance.Name,
+					labels.AcornAppNamespace: appInstance.Namespace,
+					labels.AcornManaged:      "true",
 				},
 			},
 			Data: secret.Data,

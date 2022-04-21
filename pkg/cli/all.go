@@ -12,7 +12,7 @@ func NewAll() *cobra.Command {
 	return cli.Command(&All{}, cobra.Command{
 		Use: "all",
 		Example: `
-herd all`,
+acorn all`,
 		SilenceUsage: true,
 		Short:        "List all objects",
 	})

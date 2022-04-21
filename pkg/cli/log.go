@@ -1,10 +1,10 @@
 package cli
 
 import (
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/log"
-	"github.com/ibuildthecloud/herd/pkg/system"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )

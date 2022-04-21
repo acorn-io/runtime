@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
@@ -13,7 +13,7 @@ func NewContainer() *cobra.Command {
 		Use:     "container [flags] [APP_NAME...]",
 		Aliases: []string{"containers", "c"},
 		Example: `
-herd containers`,
+acorn containers`,
 		SilenceUsage: true,
 		Short:        "List or get running containers",
 	})

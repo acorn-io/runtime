@@ -3,7 +3,7 @@ package term
 import (
 	"io"
 
-	"github.com/ibuildthecloud/herd/pkg/streams"
+	"github.com/acorn-io/acorn/pkg/streams"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/kubectl/pkg/util/term"
 )

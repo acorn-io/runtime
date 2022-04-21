@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ibuildthecloud/baaah/pkg/crds"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/controller"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/scheme"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/controller"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/crds"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

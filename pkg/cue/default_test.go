@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"cuelang.org/go/cue"
-	cue_mod "github.com/ibuildthecloud/herd/cue.mod"
-	"github.com/ibuildthecloud/herd/schema"
+	cue_mod "github.com/acorn-io/acorn/cue.mod"
+	"github.com/acorn-io/acorn/schema"
 	"github.com/stretchr/testify/assert"
 )
 
-var testHerdfile = []byte(`
-import "github.com/ibuildthecloud/herd/schema/v1"
+var testAcornfile = []byte(`
+import "github.com/acorn-io/acorn/schema/v1"
 
 v1.#App & {
   containers: test: {
@@ -21,8 +21,8 @@ v1.#App & {
 
 func TestTransform(t *testing.T) {
 	ctx := newContext()
-	ctx = ctx.WithFile("herd.cue", testHerdfile)
-	v, err := ctx.Transform("github.com/ibuildthecloud/herd/schema/v1/transform/build")
+	ctx = ctx.WithFile("acorn.cue", testAcornfile)
+	v, err := ctx.Transform("github.com/acorn-io/acorn/schema/v1/transform/build")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func newContext() *Context {
 
 func TestDefaultContext(t *testing.T) {
 	ctx := newContext()
-	ctx = ctx.WithFile("herd.cue", testHerdfile)
+	ctx = ctx.WithFile("acorn.cue", testAcornfile)
 	v, err := ctx.Value()
 	if err != nil {
 		t.Fatal(err)

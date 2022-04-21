@@ -1,12 +1,12 @@
 package appdefinition
 
 import (
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,17 +38,17 @@ func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReferenc
 			Name:      name,
 			Namespace: appInstance.Status.Namespace,
 			Labels: containerLabels(appInstance, name,
-				labels.HerdManaged, "true",
-				labels.HerdJobName, name,
-				labels.HerdContainerName, ""),
+				labels.AcornManaged, "true",
+				labels.AcornJobName, name,
+				labels.AcornContainerName, ""),
 		},
 		Spec: batchv1.JobSpec{
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: containerLabels(appInstance, name,
-						labels.HerdManaged, "true",
-						labels.HerdJobName, name,
-						labels.HerdContainerName, ""),
+						labels.AcornManaged, "true",
+						labels.AcornJobName, name,
+						labels.AcornContainerName, ""),
 					Annotations: podAnnotations(appInstance, name, container),
 				},
 				Spec: corev1.PodSpec{

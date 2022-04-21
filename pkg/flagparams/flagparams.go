@@ -3,9 +3,9 @@ package flagparams
 import (
 	"strings"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/cue"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/spf13/pflag"
 )

@@ -6,17 +6,17 @@ import (
 	"os"
 	"path/filepath"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/build"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
 )
 
-func HerdImages(ctx context.Context) (*v1.ImagesData, error) {
-	herdCue, err := findHerdCue()
+func AcornImages(ctx context.Context) (*v1.ImagesData, error) {
+	acornCue, err := findAcornCue()
 	if err != nil {
 		return nil, err
 	}
-	image, err := build.Build(ctx, herdCue, &build.Options{
-		Cwd: filepath.Dir(herdCue),
+	image, err := build.Build(ctx, acornCue, &build.Options{
+		Cwd: filepath.Dir(acornCue),
 	})
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func HerdImages(ctx context.Context) (*v1.ImagesData, error) {
 	return &image.ImageData, nil
 }
 
-func findHerdCue() (string, error) {
+func findAcornCue() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -33,16 +33,16 @@ func findHerdCue() (string, error) {
 }
 
 func traverse(dir string) (string, error) {
-	herdCue := filepath.Join(dir, "herd.cue")
-	_, err := os.Stat(herdCue)
+	acornCue := filepath.Join(dir, "acorn.cue")
+	_, err := os.Stat(acornCue)
 	if os.IsNotExist(err) {
 		pwd := filepath.Dir(dir)
 		if dir == pwd {
-			return "", fmt.Errorf("failed to find herd.cue")
+			return "", fmt.Errorf("failed to find acorn.cue")
 		}
 		return traverse(pwd)
 	} else if err != nil {
 		return "", err
 	}
-	return herdCue, nil
+	return acornCue, nil
 }

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
@@ -12,8 +12,8 @@ func NewRm() *cobra.Command {
 	return cli.Command(&Rm{}, cobra.Command{
 		Use: "rm [flags] [APP_NAME|VOL_NAME...]",
 		Example: `
-herd rm
-herd rm -v some-volume`,
+acorn rm
+acorn rm -v some-volume`,
 		SilenceUsage: true,
 		Short:        "Delete an app, container, or volume",
 	})

@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -81,7 +81,7 @@ func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName str
 		return nil, err
 	}
 
-	portnum := ingress.Annotations[labels.HerdPortNumber]
+	portnum := ingress.Annotations[labels.AcornPortNumber]
 	if portnum == "" {
 		return nil, nil
 	}
@@ -92,7 +92,7 @@ func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName str
 			app.Namespace, app.Name)
 	}
 
-	for _, hostname := range strings.Split(ingress.Annotations[labels.HerdHostnames], ",") {
+	for _, hostname := range strings.Split(ingress.Annotations[labels.AcornHostnames], ",") {
 		hostname = strings.TrimSpace(hostname)
 		if hostname == "" {
 			continue

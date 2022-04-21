@@ -3,9 +3,9 @@ apiVersion: v1
 metadata:
   name: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
     pod-security.kubernetes.io/enforce: baseline
 
 ---
@@ -15,27 +15,27 @@ metadata:
   name: oneimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
 spec:
   replicas: 0
   selector:
     matchLabels:
-      "herd-project.io/app-namespace": "app-namespace"
-      "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "oneimage"
-      "herd-project.io/managed": "true"
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
   template:
     metadata:
       labels:
-        "herd-project.io/app-namespace": "app-namespace"
-        "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "oneimage"
-        "herd-project.io/managed": "true"
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
       annotations:
-        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
     spec:
       enableServiceLinks: false
       shareProcessNamespace: true
@@ -50,27 +50,27 @@ metadata:
   name: buildimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
 spec:
   replicas: 0
   selector:
     matchLabels:
-      "herd-project.io/app-namespace": "app-namespace"
-      "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "buildimage"
-      "herd-project.io/managed": "true"
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "buildimage"
+      "acorn.io/managed": "true"
   template:
     metadata:
       labels:
-        "herd-project.io/app-namespace": "app-namespace"
-        "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "buildimage"
-        "herd-project.io/managed": "true"
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "buildimage"
+        "acorn.io/managed": "true"
       annotations:
-        "herd-project.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
+        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
       enableServiceLinks: false
       shareProcessNamespace: true
@@ -80,7 +80,7 @@ spec:
           image: "index.docker.io/library/test@sha256:build-image"
 ---
 kind: AppInstance
-apiVersion: herd-project.io/v1
+apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace

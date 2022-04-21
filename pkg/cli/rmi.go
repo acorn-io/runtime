@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,7 @@ func NewRmi() *cobra.Command {
 	return cli.Command(&Rmi{}, cobra.Command{
 		Use: "rmi [flags] [IMAGE_NAME|TAG...]",
 		Example: `
-herd rmi some-image`,
+acorn rmi some-image`,
 		SilenceUsage: true,
 		Short:        "Delete an image or tag",
 	})

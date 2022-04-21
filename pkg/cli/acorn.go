@@ -25,11 +25,11 @@ func sheep() string {
 }
 
 func New() *cobra.Command {
-	root := cli.Command(&Herd{}, cobra.Command{
-		Long: "\n   Herd" + sheep() + "Building cute fluffy apps since 2022.",
+	root := cli.Command(&Acorn{}, cobra.Command{
+		Long: "\n   Acorn" + sheep() + "Building cute fluffy apps since 2022.",
 		Example: `
 # Build and run an app
-herd run --dev .`,
+acorn run --dev .`,
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
@@ -57,11 +57,11 @@ herd run --dev .`,
 	return root
 }
 
-type Herd struct {
+type Acorn struct {
 	Kubeconfig    string `usage:"Location of a kubeconfig file"`
 	Context       string `usage:"Context to use in the kubeconfig file"`
-	Namespace     string `usage:"Namespace to work in" default:"herd"`
-	AllNamespaces bool   `usage:"Namespace to work in" default:"herd" short:"A"`
+	Namespace     string `usage:"Namespace to work in" default:"acorn"`
+	AllNamespaces bool   `usage:"Namespace to work in" default:"acorn" short:"A"`
 }
 
 func setEnv(key, value string) error {
@@ -71,7 +71,7 @@ func setEnv(key, value string) error {
 	return nil
 }
 
-func (a *Herd) PersistentPre(cmd *cobra.Command, args []string) error {
+func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 	if err := setEnv("KUBECONFIG", a.Kubeconfig); err != nil {
 		return err
 	}
@@ -87,6 +87,6 @@ func (a *Herd) PersistentPre(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (a *Herd) Run(cmd *cobra.Command, args []string) error {
+func (a *Acorn) Run(cmd *cobra.Command, args []string) error {
 	return cmd.Help()
 }

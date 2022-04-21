@@ -1,8 +1,8 @@
 package appdefinition
 
 import (
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/name"
 )
 

@@ -1,5 +1,5 @@
 kind: AppInstance
-apiVersion: herd-project.io/v1
+apiVersion: acorn.io/v1
 metadata:
   name: default
   namespace: random
@@ -39,7 +39,7 @@ status:
         files: {}
         volumes: []
   appImage:
-    herdfile: |
+    acornfile: |
       containers: {
         oneimage: image: "image-name"
         buildimage: build: {

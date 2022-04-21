@@ -3,9 +3,9 @@ package system
 import "os"
 
 const (
-	Namespace            = "herd-system"
-	ConfigName           = "herd-config"
-	DefaultUserNamespace = "herd"
+	Namespace            = "acorn-system"
+	ConfigName           = "acorn-config"
+	DefaultUserNamespace = "acorn"
 )
 
 var (

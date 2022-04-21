@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/build"
-	"github.com/ibuildthecloud/herd/pkg/dev"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/log"
-	"github.com/ibuildthecloud/herd/pkg/run"
-	"github.com/ibuildthecloud/herd/pkg/system"
+	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/dev"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/acorn/pkg/run"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +22,7 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File     string   `short:"f" desc:"Name of the dev file" default:"DIRECTORY/herd.cue"`
+	File     string   `short:"f" desc:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
 	Name     string   `usage:"Name of app to create" short:"n"`
 	Endpoint []string `usage:"Bind a published host to a friendly domain (format public:private) (ex: example.com:web)" short:"b"`
 }

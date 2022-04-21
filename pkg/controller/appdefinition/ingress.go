@@ -4,12 +4,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/config"
-	"github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/system"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -126,9 +126,9 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 				Namespace: appInstance.Status.Namespace,
 				Labels:    containerLabels(appInstance, containerName),
 				Annotations: map[string]string{
-					labels.HerdHostnames:     strings.Join(hosts, ","),
-					labels.HerdPortNumber:    strconv.Itoa(int(defaultPort.ContainerPort)),
-					labels.HerdContainerName: containerName,
+					labels.AcornHostnames:     strings.Join(hosts, ","),
+					labels.AcornPortNumber:    strconv.Itoa(int(defaultPort.ContainerPort)),
+					labels.AcornContainerName: containerName,
 				},
 			},
 			Spec: networkingv1.IngressSpec{

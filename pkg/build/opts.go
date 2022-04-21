@@ -3,9 +3,9 @@ package build
 import (
 	"context"
 
+	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/remoteopts"
 )
 
 func GetRemoteOptions(ctx context.Context) ([]remote.Option, error) {

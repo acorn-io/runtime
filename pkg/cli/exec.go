@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
-	"github.com/ibuildthecloud/herd/pkg/client/term"
-	"github.com/ibuildthecloud/herd/pkg/streams"
+	hclient "github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )

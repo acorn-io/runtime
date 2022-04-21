@@ -1,6 +1,6 @@
 package build
 
-import "github.com/ibuildthecloud/herd/pkg/flagparams"
+import "github.com/acorn-io/acorn/pkg/flagparams"
 
 func ParseParams(file, cwd string, args []string) (map[string]interface{}, error) {
 	appDefinition, err := ResolveAndParse(file, cwd)

@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"strings"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build/buildkit"
+	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/remoteopts"
+	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
-	"github.com/ibuildthecloud/herd/pkg/pull"
-	"github.com/ibuildthecloud/herd/pkg/remoteopts"
-	tags2 "github.com/ibuildthecloud/herd/pkg/tags"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -141,7 +141,7 @@ func (c *client) ImageGet(ctx context.Context, imageName string) (*Image, error)
 		return nil, err
 	} else if !ok {
 		return nil, apierrors.NewNotFound(schema.GroupResource{
-			Group:    "herd.project.io",
+			Group:    "acorn.project.io",
 			Resource: "images",
 		}, imageName)
 	}
@@ -194,13 +194,13 @@ func (c *client) imageGet(ctx context.Context, image string) (*Image, string, er
 	}
 
 	return nil, "", apierrors.NewNotFound(schema.GroupResource{
-		Group:    "herd-project.io",
+		Group:    "acorn.io",
 		Resource: "images",
 	}, image)
 }
 
 func (c *client) getRepo() (name.Repository, error) {
-	return name.NewRepository("127.0.0.1:5000/herd/" + c.Namespace)
+	return name.NewRepository("127.0.0.1:5000/acorn/" + c.Namespace)
 }
 
 func (c *client) ImageList(ctx context.Context) (result []Image, _ error) {

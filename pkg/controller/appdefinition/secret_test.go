@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ibuildthecloud/baaah/pkg/router/tester"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/certs"
-	"github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/scheme"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/certs"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -162,7 +162,7 @@ func TestTLS_ExternalCA_Gen(t *testing.T) {
 	assert.Len(t, resp.Collected, 3)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
-	assert.Equal(t, "tls-ca", secret.Labels[labels.HerdSecretName])
+	assert.Equal(t, "tls-ca", secret.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret.Name, "tls-ca"))
 	assert.True(t, len(secret.Data[corev1.TLSCertKey]) > 0)
 	assert.True(t, len(secret.Data[corev1.TLSPrivateKeyKey]) > 0)
@@ -170,7 +170,7 @@ func TestTLS_ExternalCA_Gen(t *testing.T) {
 	assert.True(t, len(secret.Data["ca.key"]) > 0)
 
 	secret = resp.Client.Created[1].(*corev1.Secret)
-	assert.Equal(t, "tls", secret.Labels[labels.HerdSecretName])
+	assert.Equal(t, "tls", secret.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret.Name, "tls-"))
 	assert.True(t, len(secret.Data[corev1.TLSCertKey]) > 0)
 	assert.True(t, len(secret.Data[corev1.TLSPrivateKeyKey]) > 0)
@@ -217,13 +217,13 @@ func TestBasic_Gen(t *testing.T) {
 	assert.Len(t, resp.Collected, 3)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
-	assert.Equal(t, "pass", secret.Labels[labels.HerdSecretName])
+	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret.Name, "pass-"))
 	assert.True(t, len(secret.Data["username"]) > 0)
 	assert.True(t, len(secret.Data["password"]) > 0)
 
 	secret = resp.Client.Created[1].(*corev1.Secret)
-	assert.Equal(t, "passuname", secret.Labels[labels.HerdSecretName])
+	assert.Equal(t, "passuname", secret.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret.Name, "passuname-"))
 	assert.Equal(t, []byte("admin"), secret.Data["username"])
 	assert.True(t, len(secret.Data["password"]) > 0)
@@ -272,19 +272,19 @@ func TestTemplateToken_Gen(t *testing.T) {
 	assert.Len(t, resp.Collected, 4)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
-	assert.Equal(t, "pass", secret.Labels[labels.HerdSecretName])
+	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret.Name, "pass-"))
 	assert.True(t, len(secret.Data["token"]) == 5)
 	assert.Len(t, regexp.MustCompile("[abc]").ReplaceAllString(string(secret.Data["token"]), ""), 0)
 
 	secret2 := resp.Client.Created[1].(*corev1.Secret)
-	assert.Equal(t, "pass2", secret2.Labels[labels.HerdSecretName])
+	assert.Equal(t, "pass2", secret2.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret2.Name, "pass2-"))
 	assert.True(t, len(secret2.Data["token"]) == 6)
 	assert.Len(t, regexp.MustCompile("[xyz]").ReplaceAllString(string(secret2.Data["token"]), ""), 0)
 
 	secret3 := resp.Client.Created[2].(*corev1.Secret)
-	assert.Equal(t, "template", secret3.Labels[labels.HerdSecretName])
+	assert.Equal(t, "template", secret3.Labels[labels.AcornSecretName])
 	assert.True(t, strings.HasPrefix(secret3.Name, "template-"))
 	assert.Equal(t, "A happy little "+string(secret.Data["token"])+
 		" in a string followed by "+string(secret2.Data["token"]), string(secret3.Data["template"]))

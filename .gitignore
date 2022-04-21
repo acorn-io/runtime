@@ -4,5 +4,5 @@
 /dist
 *.swp
 .idea
-/herd
+/acorn
 /go.work

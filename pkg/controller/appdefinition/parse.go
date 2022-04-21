@@ -5,10 +5,10 @@ import (
 	"errors"
 
 	cueerrors "cuelang.org/go/cue/errors"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/condition"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/baaah/pkg/router"
 )
 
 func ParseAppImage(req router.Request, resp router.Response) error {
@@ -16,7 +16,7 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionParsed)
 	appImage := appInstance.Status.AppImage
 
-	if appImage.Herdfile == "" {
+	if appImage.Acornfile == "" {
 		return nil
 	}
 

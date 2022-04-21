@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
@@ -13,7 +13,7 @@ func NewApp() *cobra.Command {
 		Use:     "app [flags] [APP_NAME...]",
 		Aliases: []string{"apps", "a", "ps"},
 		Example: `
-herd app`,
+acorn app`,
 		SilenceUsage: true,
 		Short:        "List or get apps",
 	})

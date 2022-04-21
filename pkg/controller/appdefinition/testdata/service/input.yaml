@@ -1,5 +1,5 @@
 kind: AppInstance
-apiVersion: herd-project.io/v1
+apiVersion: acorn.io/v1
 metadata:
   uid: 01234567890abcdef
   name: app-name

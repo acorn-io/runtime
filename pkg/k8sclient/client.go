@@ -1,8 +1,8 @@
 package k8sclient
 
 import (
-	"github.com/ibuildthecloud/baaah/pkg/restconfig"
-	"github.com/ibuildthecloud/herd/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/rancher/lasso/pkg/mapper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

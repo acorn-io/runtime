@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ibuildthecloud/baaah/pkg/restconfig"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/herd/pkg/system"
+	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -47,7 +47,7 @@ func applyObjects(ctx context.Context) error {
 	return apply.
 		WithContext(ctx).
 		WithDynamicLookup().
-		WithSetID("herd-buildkitd").
+		WithSetID("acorn-buildkitd").
 		ApplyObjects(objects(system.Namespace, system.BuildkitImage, system.RegistryImage)...)
 }
 

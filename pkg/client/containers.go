@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	"github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/sirupsen/logrus"
@@ -34,7 +34,7 @@ func containerSpecToContainerReplicaIgnore(pod *corev1.Pod, imageMapping map[str
 func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]string, containerSpec v1.Container, sidecarName string) (*ContainerReplica, error) {
 	var (
 		name                = pod.Name
-		containerName       = pod.Labels[labels.HerdContainerName]
+		containerName       = pod.Labels[labels.AcornContainerName]
 		containerStatusName = containerName
 	)
 
@@ -55,8 +55,8 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 	}
 
 	result.Name = name
-	result.AppName = pod.Labels[labels.HerdAppName]
-	result.JobName = pod.Labels[labels.HerdJobName]
+	result.AppName = pod.Labels[labels.AcornAppName]
+	result.JobName = pod.Labels[labels.AcornJobName]
 	result.ContainerName = containerName
 	result.SidecarName = sidecarName
 	result.Created = pod.CreationTimestamp
@@ -64,7 +64,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 	result.Labels = pod.Labels
 	result.Annotations = pod.Annotations
 
-	delete(result.Annotations, labels.HerdContainerSpec)
+	delete(result.Annotations, labels.AcornContainerSpec)
 
 	containerStatus := pod.Status.ContainerStatuses
 	if result.Init {
@@ -119,7 +119,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 }
 
 func podToContainers(pod *corev1.Pod) (result []ContainerReplica) {
-	containerSpecData := []byte(pod.Annotations[labels.HerdContainerSpec])
+	containerSpecData := []byte(pod.Annotations[labels.AcornContainerSpec])
 	if len(containerSpecData) == 0 {
 		return nil
 	}
@@ -133,7 +133,7 @@ func podToContainers(pod *corev1.Pod) (result []ContainerReplica) {
 	}
 
 	imageMapping := map[string]string{}
-	imageMappingData := pod.Annotations[labels.HerdImageMapping]
+	imageMappingData := pod.Annotations[labels.AcornImageMapping]
 	if len(imageMappingData) > 0 {
 		err := json.Unmarshal([]byte(imageMappingData), &imageMapping)
 		if err != nil {
@@ -253,7 +253,7 @@ func (c *client) containersForNS(ctx context.Context, eg *errgroup.Group, namesp
 		err := c.Client.List(ctx, podList, &kclient.ListOptions{
 			Namespace: namespace,
 			LabelSelector: klabels.SelectorFromSet(map[string]string{
-				labels.HerdManaged: "true",
+				labels.AcornManaged: "true",
 			}),
 		})
 		if err != nil {

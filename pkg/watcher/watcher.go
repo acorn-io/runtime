@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta2 "k8s.io/apimachinery/pkg/api/meta"

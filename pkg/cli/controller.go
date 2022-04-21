@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/controller"
+	"github.com/acorn-io/acorn/pkg/controller"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )

@@ -8,15 +8,15 @@ import (
 	"net/http"
 	"strings"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/build/buildkit"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/pullsecret"
+	"github.com/acorn-io/acorn/pkg/tags"
+	"github.com/acorn-io/baaah/pkg/router"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
-	"github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/pullsecret"
-	"github.com/ibuildthecloud/herd/pkg/tags"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -87,7 +87,7 @@ func GetTag(ctx context.Context, c client.Reader, namespace, image string) (imag
 			return nil, err
 		}
 
-		image = fmt.Sprintf("127.0.0.1:%d/herd/%s@sha256:%s", port, namespace, image)
+		image = fmt.Sprintf("127.0.0.1:%d/acorn/%s@sha256:%s", port, namespace, image)
 	}
 	return imagename.ParseReference(image)
 }

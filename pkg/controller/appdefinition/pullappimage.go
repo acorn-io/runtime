@@ -1,10 +1,10 @@
 package appdefinition
 
 import (
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/condition"
-	"github.com/ibuildthecloud/herd/pkg/pull"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/baaah/pkg/router"
 )
 
 func PullAppImage(req router.Request, resp router.Response) error {

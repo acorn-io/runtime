@@ -3,10 +3,10 @@ package run
 import (
 	"testing"
 
-	"github.com/ibuildthecloud/herd/integration/helper"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/build"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
+	"github.com/acorn-io/acorn/integration/helper"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +19,7 @@ func TestText(t *testing.T) {
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/acorn.cue", &build.Options{
 		Cwd:       "./testdata/generated",
 		Namespace: ns.Name,
 	})
@@ -60,7 +60,7 @@ func TestJSON(t *testing.T) {
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/acorn.cue", &build.Options{
 		Cwd:       "./testdata/generated-json",
 		Namespace: ns.Name,
 	})

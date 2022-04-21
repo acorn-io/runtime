@@ -3,11 +3,11 @@ package appdefinition
 import (
 	"strings"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -45,9 +45,9 @@ func toPVCs(appInstance *v1.AppInstance) (result []meta.Object) {
 				Name:      volume,
 				Namespace: appInstance.Status.Namespace,
 				Labels: map[string]string{
-					labels.HerdAppName:      appInstance.Name,
-					labels.HerdAppNamespace: appInstance.Namespace,
-					labels.HerdManaged:      "true",
+					labels.AcornAppName:      appInstance.Name,
+					labels.AcornAppNamespace: appInstance.Namespace,
+					labels.AcornManaged:      "true",
 				},
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{

@@ -1,4 +1,4 @@
-module github.com/ibuildthecloud/herd
+module github.com/acorn-io/acorn
 
 go 1.18
 
@@ -11,6 +11,7 @@ replace (
 require (
 	cuelang.org/go v0.4.3-beta.1
 	github.com/AlecAivazis/survey/v2 v2.3.4
+	github.com/acorn-io/baaah v0.0.0-20220421210609-1a2b1e00697f
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.0-rc.2
 	github.com/google/go-containerregistry v0.8.1-0.20220110151055-a61fd0a8e2bb
@@ -18,7 +19,6 @@ require (
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220413173345-f1b065c6cb3d
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.4.2
-	github.com/ibuildthecloud/baaah v0.0.0-20220419175848-b53f32e0abbc
 	github.com/moby/buildkit v0.10.0-rc1.0.20220216012946-b36d860675c5
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
 	github.com/pkg/errors v0.9.1

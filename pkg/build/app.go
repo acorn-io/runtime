@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"time"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/containerd/containerd/platforms"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/streams"
 )
 
 func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, streams streams.Output) (string, error) {
@@ -34,7 +34,7 @@ func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, 
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
-	tempDir, err := ioutil.TempDir("", "herd-app-image-context")
+	tempDir, err := ioutil.TempDir("", "acorn-app-image-context")
 	if err != nil {
 		return "", err
 	}
@@ -49,7 +49,7 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 		return "", err
 	}
 
-	if err := addFile(tempDir, appdefinition.HerdCueFile, appImage.Herdfile); err != nil {
+	if err := addFile(tempDir, appdefinition.AcornCueFile, appImage.Acornfile); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, appdefinition.ImageDataFile, imageData); err != nil {

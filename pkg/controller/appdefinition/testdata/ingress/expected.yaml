@@ -3,9 +3,9 @@ apiVersion: v1
 metadata:
   name: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
     pod-security.kubernetes.io/enforce: baseline
 
 ---
@@ -15,26 +15,26 @@ metadata:
   name: oneimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
 spec:
   selector:
     matchLabels:
-      "herd-project.io/app-namespace": "app-namespace"
-      "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "oneimage"
-      "herd-project.io/managed": "true"
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
   template:
     metadata:
       labels:
-        "herd-project.io/app-namespace": "app-namespace"
-        "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "oneimage"
-        "herd-project.io/managed": "true"
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
       annotations:
-        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https","publish":true}]}}}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https","publish":true}]}}}'
     spec:
       enableServiceLinks: false
       shareProcessNamespace: true
@@ -57,26 +57,26 @@ metadata:
   name: buildimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
 spec:
   selector:
     matchLabels:
-      "herd-project.io/app-namespace": "app-namespace"
-      "herd-project.io/app-name": "app-name"
-      "herd-project.io/container-name": "buildimage"
-      "herd-project.io/managed": "true"
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "buildimage"
+      "acorn.io/managed": "true"
   template:
     metadata:
       labels:
-        "herd-project.io/app-namespace": "app-namespace"
-        "herd-project.io/app-name": "app-name"
-        "herd-project.io/container-name": "buildimage"
-        "herd-project.io/managed": "true"
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "buildimage"
+        "acorn.io/managed": "true"
       annotations:
-        herd-project.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true},{"containerPort":91,"port":443,"protocol":"https","publish":true}]}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true},{"containerPort":91,"port":443,"protocol":"https","publish":true}]}'
     spec:
       enableServiceLinks: false
       shareProcessNamespace: true
@@ -96,10 +96,10 @@ metadata:
   name: oneimage-publish-1234567890ab
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
 spec:
   type: LoadBalancer
   ports:
@@ -109,10 +109,10 @@ spec:
       appProtocol: "HTTPS"
       name: "90"
   selector:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    herd-project.io/managed: "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    acorn.io/managed: "true"
 ---
 kind: Service
 apiVersion: v1
@@ -120,10 +120,10 @@ metadata:
   name: oneimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
 spec:
   type: ClusterIP
   ports:
@@ -138,10 +138,10 @@ spec:
       appProtocol: "HTTPS"
       name: "90"
   selector:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    herd-project.io/managed: "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    acorn.io/managed: "true"
 ---
 kind: Service
 apiVersion: v1
@@ -149,10 +149,10 @@ metadata:
   name: buildimage-publish-1234567890ab
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
 spec:
   type: LoadBalancer
   ports:
@@ -162,10 +162,10 @@ spec:
       appProtocol: "HTTPS"
       name: "443"
   selector:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    herd-project.io/managed: "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    acorn.io/managed: "true"
 ---
 kind: Service
 apiVersion: v1
@@ -173,10 +173,10 @@ metadata:
   name: buildimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
 spec:
   type: ClusterIP
   ports:
@@ -191,10 +191,10 @@ spec:
       appProtocol: "HTTPS"
       name: "443"
   selector:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    herd-project.io/managed: "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    acorn.io/managed: "true"
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
@@ -202,14 +202,14 @@ metadata:
   name: oneimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "oneimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
   annotations:
-    herd-project.io/container-name: oneimage
-    herd-project.io/hostnames: localhost
-    herd-project.io/port-number: "81"
+    acorn.io/container-name: oneimage
+    acorn.io/hostnames: localhost
+    acorn.io/port-number: "81"
 spec:
   rules:
     - host: localhost
@@ -239,14 +239,14 @@ metadata:
   name: buildimage
   namespace: app-created-namespace
   labels:
-    "herd-project.io/app-namespace": "app-namespace"
-    "herd-project.io/app-name": "app-name"
-    "herd-project.io/container-name": "buildimage"
-    "herd-project.io/managed": "true"
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
   annotations:
-    herd-project.io/container-name: buildimage
-    herd-project.io/hostnames: buildimage.app-name.app-namespace.localhost
-    herd-project.io/port-number: "81"
+    acorn.io/container-name: buildimage
+    acorn.io/hostnames: buildimage.app-name.app-namespace.localhost
+    acorn.io/port-number: "81"
 spec:
   rules:
     - host: buildimage.app-name.app-namespace.localhost
@@ -261,7 +261,7 @@ spec:
             pathType: Prefix
 ---
 kind: AppInstance
-apiVersion: herd-project.io/v1
+apiVersion: acorn.io/v1
 metadata:
   uid: "1234567890abc"
   name: app-name

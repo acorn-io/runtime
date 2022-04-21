@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/condition"
-	"github.com/ibuildthecloud/herd/pkg/config"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -28,8 +28,8 @@ func JobStatus(req router.Request, resp router.Response) error {
 	err := req.Client.List(jobs, &meta.ListOptions{
 		Namespace: app.Status.Namespace,
 		Selector: klabels.SelectorFromSet(map[string]string{
-			labels.HerdManaged: "true",
-			labels.HerdAppName: app.Name,
+			labels.AcornManaged: "true",
+			labels.AcornAppName: app.Name,
 		}),
 	})
 	if err != nil {
@@ -52,8 +52,8 @@ func JobStatus(req router.Request, resp router.Response) error {
 		}
 
 		_, messages, err := podsStatus(req, app.Status.Namespace, klabels.SelectorFromSet(map[string]string{
-			labels.HerdManaged: "true",
-			labels.HerdJobName: job.Name,
+			labels.AcornManaged: "true",
+			labels.AcornJobName: job.Name,
 		}))
 		if err != nil {
 			return err
@@ -146,22 +146,22 @@ func AppStatus(req router.Request, resp router.Response) error {
 	err = req.Client.List(deps, &meta.ListOptions{
 		Namespace: app.Status.Namespace,
 		Selector: klabels.SelectorFromSet(map[string]string{
-			labels.HerdManaged: "true",
-			labels.HerdAppName: app.Name,
+			labels.AcornManaged: "true",
+			labels.AcornAppName: app.Name,
 		}),
 	})
 	if err != nil {
 		return err
 	}
 
-	notJob, err := klabels.NewRequirement(labels.HerdContainerName, selection.Exists, nil)
+	notJob, err := klabels.NewRequirement(labels.AcornContainerName, selection.Exists, nil)
 	if err != nil {
 		return err
 	}
 
 	isTransition, message, err := podsStatus(req, app.Status.Namespace, klabels.SelectorFromSet(map[string]string{
-		labels.HerdManaged: "true",
-		labels.HerdAppName: app.Name,
+		labels.AcornManaged: "true",
+		labels.AcornAppName: app.Name,
 	}).Add(*notJob))
 	if err != nil {
 		return err
@@ -169,15 +169,15 @@ func AppStatus(req router.Request, resp router.Response) error {
 
 	container := map[string]v1.ContainerStatus{}
 	for _, dep := range deps.Items {
-		status := container[dep.Labels[labels.HerdContainerName]]
+		status := container[dep.Labels[labels.AcornContainerName]]
 		status.Ready = dep.Status.ReadyReplicas
 		status.ReadyDesired = dep.Status.Replicas
 		status.UpToDate = dep.Status.UpdatedReplicas
-		container[dep.Labels[labels.HerdContainerName]] = status
+		container[dep.Labels[labels.AcornContainerName]] = status
 
 		if status.Ready != status.ReadyDesired {
 			isTransition = true
-			message = append(message, dep.Labels[labels.HerdAppName]+" is not ready")
+			message = append(message, dep.Labels[labels.AcornAppName]+" is not ready")
 		}
 	}
 	app.Status.ContainerStatus = container
@@ -231,11 +231,11 @@ func containerMessages(pod *corev1.Pod, status []corev1.ContainerStatus) (messag
 }
 
 func podName(pod *corev1.Pod) string {
-	jobName := pod.Labels[labels.HerdJobName]
+	jobName := pod.Labels[labels.AcornJobName]
 	if jobName != "" {
 		return jobName
 	}
-	return pod.Labels[labels.HerdContainerName]
+	return pod.Labels[labels.AcornContainerName]
 }
 
 func endpoints(cfg *config.Config, app *v1.AppInstance) string {

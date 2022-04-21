@@ -7,14 +7,14 @@ import (
 	"encoding/json"
 	"path"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	"github.com/ibuildthecloud/baaah/pkg/typed"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/condition"
-	"github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/pull"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -205,10 +205,10 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 
 func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	labels := map[string]string{
-		labels.HerdAppName:       appInstance.Name,
-		labels.HerdAppNamespace:  appInstance.Namespace,
-		labels.HerdContainerName: name,
-		labels.HerdManaged:       "true",
+		labels.AcornAppName:       appInstance.Name,
+		labels.AcornAppNamespace:  appInstance.Namespace,
+		labels.AcornContainerName: name,
+		labels.AcornManaged:       "true",
 	}
 	for i := 0; i+1 < len(kv); i += 2 {
 		if kv[i+1] == "" {
@@ -229,7 +229,7 @@ func containerAnnotation(container v1.Container) string {
 
 func podAnnotations(appInstance *v1.AppInstance, containerName string, container v1.Container) map[string]string {
 	annotations := map[string]string{
-		labels.HerdContainerSpec: containerAnnotation(container),
+		labels.AcornContainerSpec: containerAnnotation(container),
 	}
 	images := map[string]string{}
 	addImageAnnotations(images, appInstance, containerName, container)
@@ -244,7 +244,7 @@ func podAnnotations(appInstance *v1.AppInstance, containerName string, container
 		panic(err)
 	}
 
-	annotations[labels.HerdImageMapping] = string(data)
+	annotations[labels.AcornImageMapping] = string(data)
 	return annotations
 }
 
@@ -273,7 +273,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 			Name:      name,
 			Namespace: appInstance.Status.Namespace,
 			Labels: containerLabels(appInstance, name,
-				labels.HerdManaged, "true",
+				labels.AcornManaged, "true",
 			),
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -284,7 +284,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: containerLabels(appInstance, name,
-						labels.HerdManaged, "true",
+						labels.AcornManaged, "true",
 					),
 					Annotations: podAnnotations(appInstance, name, container),
 				},
@@ -314,9 +314,9 @@ func addNamespace(appInstance *v1.AppInstance, resp router.Response) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: appInstance.Status.Namespace,
 			Labels: map[string]string{
-				labels.HerdAppName:                   appInstance.Name,
-				labels.HerdAppNamespace:              appInstance.Namespace,
-				labels.HerdManaged:                   "true",
+				labels.AcornAppName:                  appInstance.Name,
+				labels.AcornAppNamespace:             appInstance.Namespace,
+				labels.AcornManaged:                  "true",
 				"pod-security.kubernetes.io/enforce": "baseline",
 			},
 		},
@@ -364,7 +364,7 @@ func toConfigMaps(appInstance *v1.AppInstance) (result []meta.Object, err error)
 			Name:      "files",
 			Namespace: appInstance.Status.Namespace,
 			Labels: map[string]string{
-				labels.HerdManaged: "true",
+				labels.AcornManaged: "true",
 			},
 			Annotations: map[string]string{},
 		},

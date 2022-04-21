@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ibuildthecloud/herd/integration/helper"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	applabels "github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/log"
+	"github.com/acorn-io/acorn/integration/helper"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	applabels "github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,7 +70,7 @@ func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
 	app := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    ns,
-			GenerateName: "herd-test-app-",
+			GenerateName: "acorn-test-app-",
 		},
 		Spec: v1.AppInstanceSpec{},
 	}
@@ -79,7 +79,7 @@ func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
 			Name:      "testlog-pod1",
 			Namespace: ns,
 			Labels: map[string]string{
-				applabels.HerdManaged: "true",
+				applabels.AcornManaged: "true",
 			},
 		},
 		Spec: corev1.PodSpec{
@@ -107,7 +107,7 @@ func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
 			Name:      "testlog-pod2",
 			Namespace: ns,
 			Labels: map[string]string{
-				applabels.HerdManaged: "true",
+				applabels.AcornManaged: "true",
 			},
 		},
 		Spec: corev1.PodSpec{

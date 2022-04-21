@@ -7,7 +7,7 @@ import (
 )
 
 func TestParamSpec(t *testing.T) {
-	herdCue := `
+	acornCue := `
 params: build: {
   // Description of a string param
   foo: string
@@ -24,7 +24,7 @@ params: build: {
   }
 }
 `
-	def, err := NewAppDefinition([]byte(herdCue))
+	def, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
@@ -12,9 +12,9 @@ func NewStop() *cobra.Command {
 	return cli.Command(&Stop{}, cobra.Command{
 		Use: "stop [flags] [APP_NAME...]",
 		Example: `
-herd stop my-app
+acorn stop my-app
 
-herd stop my-app1 my-app2`,
+acorn stop my-app1 my-app2`,
 		SilenceUsage: true,
 		Short:        "Stop an app",
 	})

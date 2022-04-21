@@ -1,10 +1,10 @@
 package appdefinition
 
 import (
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/pullsecret"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/pullsecret"
+	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,9 +32,9 @@ func pullSecrets(req router.Request, appInstance *v1.AppInstance, resp router.Re
 				Name:      secret.Name + suffix,
 				Namespace: appInstance.Status.Namespace,
 				Labels: map[string]string{
-					labels.HerdAppName:      appInstance.Name,
-					labels.HerdAppNamespace: appInstance.Namespace,
-					labels.HerdManaged:      "true",
+					labels.AcornAppName:      appInstance.Name,
+					labels.AcornAppNamespace: appInstance.Namespace,
+					labels.AcornManaged:      "true",
 				},
 			},
 			Data: secret.Data,

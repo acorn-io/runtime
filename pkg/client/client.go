@@ -3,12 +3,12 @@ package client
 import (
 	"context"
 
-	"github.com/ibuildthecloud/baaah/pkg/restconfig"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/client/term"
-	"github.com/ibuildthecloud/herd/pkg/k8schannel"
-	"github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/system"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/acorn/pkg/k8schannel"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"

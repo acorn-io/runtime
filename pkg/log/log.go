@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ibuildthecloud/baaah/pkg/restconfig"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	applabels "github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/watcher"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	applabels "github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/watcher"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
@@ -326,7 +326,7 @@ func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message
 	}
 
 	podSelector := labels.SelectorFromSet(labels.Set{
-		applabels.HerdManaged: "true",
+		applabels.AcornManaged: "true",
 	})
 
 	pods := &corev1.PodList{}
@@ -397,7 +397,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	}
 
 	podSelector := labels.SelectorFromSet(labels.Set{
-		applabels.HerdManaged: "true",
+		applabels.AcornManaged: "true",
 	})
 
 	// Ensure that if once func finishes they are all canceled

@@ -1,19 +1,19 @@
 package controller
 
 import (
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/controller/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/controller/namespace"
-	"github.com/ibuildthecloud/herd/pkg/controller/pvc"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
+	"github.com/acorn-io/acorn/pkg/controller/namespace"
+	"github.com/acorn-io/acorn/pkg/controller/pvc"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 )
 
 var (
 	managedSelector = klabels.SelectorFromSet(map[string]string{
-		labels.HerdManaged: "true",
+		labels.AcornManaged: "true",
 	})
 )
 

@@ -3,7 +3,7 @@ package registry
 import (
 	"fmt"
 
-	"github.com/ibuildthecloud/herd/pkg/system"
+	"github.com/acorn-io/acorn/pkg/system"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

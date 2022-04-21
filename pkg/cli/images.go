@@ -3,8 +3,8 @@ package cli
 import (
 	"strings"
 
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/ibuildthecloud/herd/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/sirupsen/logrus"
@@ -16,7 +16,7 @@ func NewImage() *cobra.Command {
 		Use:     "image [flags] [APP_NAME...]",
 		Aliases: []string{"images", "i"},
 		Example: `
-herd images`,
+acorn images`,
 		SilenceUsage: true,
 		Short:        "List images",
 		Args:         cobra.MaximumNArgs(1),

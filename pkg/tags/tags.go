@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	ConfigMapName = "herd-tags"
-	ConfigMapKey  = "herd-tags"
+	ConfigMapName = "acorn-tags"
+	ConfigMapKey  = "acorn-tags"
 )
 
 var (

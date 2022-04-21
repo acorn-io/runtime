@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ibuildthecloud/herd/pkg/client/term"
-	"github.com/ibuildthecloud/herd/pkg/watcher"
+	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/rancher/wrangler/pkg/name"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	"github.com/sirupsen/logrus"

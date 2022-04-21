@@ -1,5 +1,5 @@
 build:
-	go build -o bin/herd .
+	go build -o bin/acorn .
 
 test:
 	go test ./...

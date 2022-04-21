@@ -1,8 +1,8 @@
 package build
 
 import (
-	"github.com/ibuildthecloud/herd/schema/v1"
-	"github.com/ibuildthecloud/herd/schema/v1/transform/normalize"
+	"github.com/acorn-io/acorn/schema/v1"
+	"github.com/acorn-io/acorn/schema/v1/transform/normalize"
 )
 
 IN="in": v1.#App

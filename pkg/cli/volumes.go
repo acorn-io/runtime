@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
@@ -13,7 +13,7 @@ func NewVolume() *cobra.Command {
 		Use:     "volume [flags] [VOLUME_NAME...]",
 		Aliases: []string{"volumes", "v"},
 		Example: `
-herd volume`,
+acorn volume`,
 		SilenceUsage: true,
 		Short:        "List or get volumes",
 	})

@@ -3,10 +3,10 @@ package appdefinition
 import (
 	"testing"
 
-	"github.com/ibuildthecloud/baaah/pkg/router/tester"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/scheme"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/router/tester"
 )
 
 func TestParseAppImage(t *testing.T) {
@@ -18,8 +18,8 @@ func TestParseAppImageBug(t *testing.T) {
 		ImageData: v1.ImagesData{
 			Containers: map[string]v1.ContainerData{},
 		},
-		Herdfile: "",
-		ID:       "",
+		Acornfile: "",
+		ID:        "",
 	}
 	app, err := appdefinition.FromAppImage(appImage)
 	if err != nil {

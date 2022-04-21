@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"cuelang.org/go/pkg/crypto/sha256"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/ibuildthecloud/baaah/pkg/router/tester"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/scheme"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

@@ -4,12 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ibuildthecloud/baaah/pkg/restconfig"
-	"github.com/ibuildthecloud/herd/integration/helper"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/build"
-	hclient "github.com/ibuildthecloud/herd/pkg/client"
-	kclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
+	"github.com/acorn-io/acorn/integration/helper"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
+	hclient "github.com/acorn-io/acorn/pkg/client"
+	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,7 +21,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	client := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/acorn.cue", &build.Options{
 		Cwd:       "./testdata/nginx",
 		Namespace: ns.Name,
 	})

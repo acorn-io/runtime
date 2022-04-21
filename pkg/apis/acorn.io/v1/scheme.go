@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"github.com/ibuildthecloud/herd/pkg/apis/herd-project.io"
+	acorn_io "github.com/acorn-io/acorn/pkg/apis/acorn.io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -10,7 +10,7 @@ import (
 const Version = "v1"
 
 var SchemeGroupVersion = schema.GroupVersion{
-	Group:   herd_project_io.Group,
+	Group:   acorn_io.Group,
 	Version: Version,
 }
 

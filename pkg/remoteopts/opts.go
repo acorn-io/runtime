@@ -6,10 +6,10 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/google/go-containerregistry/pkg/authn"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

@@ -5,13 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ibuildthecloud/herd/integration/helper"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/appdefinition"
-	"github.com/ibuildthecloud/herd/pkg/build"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/labels"
-	"github.com/ibuildthecloud/herd/pkg/run"
+	"github.com/acorn-io/acorn/integration/helper"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/build"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,7 +24,7 @@ func TestVolume(t *testing.T) {
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/volume/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/volume/acorn.cue", &build.Options{
 		Cwd:       "./testdata/volume",
 		Namespace: ns.Name,
 	})
@@ -48,9 +48,9 @@ func TestVolume(t *testing.T) {
 	}
 
 	pv := helper.Wait(t, client.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
-		return obj.Labels[labels.HerdAppName] == appInstance.Name &&
-			obj.Labels[labels.HerdAppNamespace] == appInstance.Namespace &&
-			obj.Labels[labels.HerdManaged] == "true"
+		return obj.Labels[labels.AcornAppName] == appInstance.Name &&
+			obj.Labels[labels.AcornAppNamespace] == appInstance.Namespace &&
+			obj.Labels[labels.AcornManaged] == "true"
 	})
 
 	err = client.Delete(ctx, appInstance)
@@ -80,9 +80,9 @@ func TestVolume(t *testing.T) {
 
 	helper.WaitForObject(t, client.Watch, &corev1.PersistentVolumeList{}, pv, func(obj *corev1.PersistentVolume) bool {
 		return obj.Status.Phase == corev1.VolumeBound &&
-			obj.Labels[labels.HerdAppName] == appInstance.Name &&
-			obj.Labels[labels.HerdAppNamespace] == appInstance.Namespace &&
-			obj.Labels[labels.HerdManaged] == "true"
+			obj.Labels[labels.AcornAppName] == appInstance.Name &&
+			obj.Labels[labels.AcornAppNamespace] == appInstance.Namespace &&
+			obj.Labels[labels.AcornManaged] == "true"
 	})
 
 	helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
@@ -97,7 +97,7 @@ func TestImageNameAnnotation(t *testing.T) {
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/named/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/named/acorn.cue", &build.Options{
 		Cwd:       "./testdata/simple",
 		Namespace: ns.Name,
 	})
@@ -126,12 +126,12 @@ func TestImageNameAnnotation(t *testing.T) {
 
 	helper.Wait(t, client.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
 		if pod.Namespace != appInstance.Status.Namespace ||
-			pod.Labels[labels.HerdAppName] != appInstance.Name ||
-			pod.Annotations[labels.HerdImageMapping] == "" {
+			pod.Labels[labels.AcornAppName] != appInstance.Name ||
+			pod.Annotations[labels.AcornImageMapping] == "" {
 			return false
 		}
 		mapping := map[string]string{}
-		err := json.Unmarshal([]byte(pod.Annotations[labels.HerdImageMapping]), &mapping)
+		err := json.Unmarshal([]byte(pod.Annotations[labels.AcornImageMapping]), &mapping)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -150,7 +150,7 @@ func TestSimple(t *testing.T) {
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
 		Cwd:       "./testdata/simple",
 		Namespace: ns.Name,
 	})
@@ -220,7 +220,7 @@ func TestDeployParam(t *testing.T) {
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(ctx, "./testdata/params/herd.cue", &build.Options{
+	image, err := build.Build(ctx, "./testdata/params/acorn.cue", &build.Options{
 		Cwd:       "./testdata/params",
 		Namespace: ns.Name,
 	})

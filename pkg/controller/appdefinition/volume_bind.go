@@ -1,9 +1,9 @@
 package appdefinition
 
 import (
-	"github.com/ibuildthecloud/baaah/pkg/router"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -14,7 +14,7 @@ func ReleaseVolume(req router.Request, resp router.Response) error {
 		if err := req.Client.Get(pv, bind.Volume, nil); err != nil {
 			return err
 		}
-		if pv.Labels[labels.HerdManaged] == "true" &&
+		if pv.Labels[labels.AcornManaged] == "true" &&
 			pv.Status.Phase == corev1.VolumeReleased &&
 			pv.Spec.ClaimRef != nil {
 			pv.Spec.ClaimRef = nil

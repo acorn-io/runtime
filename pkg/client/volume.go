@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/labels"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -50,9 +50,9 @@ func pvToVolume(pv corev1.PersistentVolume) Volume {
 		AccessModes: accessModes,
 		Class:       pv.Spec.StorageClassName,
 		Status: VolumeStatus{
-			AppName:      pv.Labels[labels.HerdAppName],
-			AppNamespace: pv.Labels[labels.HerdAppNamespace],
-			VolumeName:   pv.Labels[labels.HerdVolumeName],
+			AppName:      pv.Labels[labels.AcornAppName],
+			AppNamespace: pv.Labels[labels.AcornAppNamespace],
+			VolumeName:   pv.Labels[labels.AcornVolumeName],
 			Status:       strings.ToLower(string(pv.Status.Phase)),
 			Message:      pv.Status.Message,
 			Reason:       pv.Status.Reason,
@@ -70,17 +70,17 @@ func pvToVolume(pv corev1.PersistentVolume) Volume {
 func (c *client) VolumeList(ctx context.Context) (result []Volume, _ error) {
 	var sel klabels.Selector
 	if c.Namespace == "" {
-		rel, err := klabels.NewRequirement(labels.HerdAppNamespace, selection.Exists, nil)
+		rel, err := klabels.NewRequirement(labels.AcornAppNamespace, selection.Exists, nil)
 		if err != nil {
 			return nil, err
 		}
 		sel = klabels.SelectorFromSet(map[string]string{
-			labels.HerdManaged: "true",
+			labels.AcornManaged: "true",
 		}).Add(*rel)
 	} else {
 		sel = klabels.SelectorFromSet(map[string]string{
-			labels.HerdAppNamespace: c.Namespace,
-			labels.HerdManaged:      "true",
+			labels.AcornAppNamespace: c.Namespace,
+			labels.AcornManaged:      "true",
 		})
 	}
 	pvs := &corev1.PersistentVolumeList{}
@@ -107,9 +107,9 @@ func (c *client) VolumeGet(ctx context.Context, name string) (*Volume, error) {
 		return nil, err
 	}
 
-	if c.Namespace != "" && pv.Labels[labels.HerdAppNamespace] != c.Namespace {
+	if c.Namespace != "" && pv.Labels[labels.AcornAppNamespace] != c.Namespace {
 		return nil, apierror.NewNotFound(schema.GroupResource{
-			Group:    "herd-project.io",
+			Group:    "acorn.io",
 			Resource: "volumes",
 		}, name)
 	}

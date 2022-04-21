@@ -9,7 +9,7 @@ import (
 
 func TestParamsHelp(t *testing.T) {
 	var (
-		file = "testdata/params/herd.cue"
+		file = "testdata/params/acorn.cue"
 		cwd  = "testdata/params"
 	)
 	_, err := ParseParams(file, cwd, []string{
@@ -27,7 +27,7 @@ func TestParamsHelp(t *testing.T) {
 
 func TestParams(t *testing.T) {
 	var (
-		file = "testdata/params/herd.cue"
+		file = "testdata/params/acorn.cue"
 		cwd  = "testdata/params"
 	)
 	params, err := ParseParams(file, cwd, []string{

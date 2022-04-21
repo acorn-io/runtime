@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/ibuildthecloud/herd/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )

@@ -7,19 +7,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ibuildthecloud/herd/integration/helper"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/build"
-	"github.com/ibuildthecloud/herd/pkg/dev"
-	hclient "github.com/ibuildthecloud/herd/pkg/k8sclient"
-	"github.com/ibuildthecloud/herd/pkg/log"
-	"github.com/ibuildthecloud/herd/pkg/run"
-	"github.com/ibuildthecloud/herd/pkg/watcher"
+	"github.com/acorn-io/acorn/integration/helper"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/dev"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/acorn/pkg/run"
+	"github.com/acorn-io/acorn/pkg/watcher"
 	"golang.org/x/sync/errgroup"
 )
 
 const (
-	herdCue = `
+	acornCue = `
 containers: default: build: {}
 `
 	dockerfile1 = `
@@ -37,7 +37,7 @@ func TestDev(t *testing.T) {
 	defer cancel()
 	client := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, client)
-	tmp, err := ioutil.TempDir("", "herd-test-dev")
+	tmp, err := ioutil.TempDir("", "acorn-test-dev")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,8 +45,8 @@ func TestDev(t *testing.T) {
 		os.RemoveAll(tmp)
 	})
 
-	herdCueFile := filepath.Join(tmp, "herd.cue")
-	err = ioutil.WriteFile(herdCueFile, []byte(herdCue), 0600)
+	acornCueFile := filepath.Join(tmp, "acorn.cue")
+	err = ioutil.WriteFile(acornCueFile, []byte(acornCue), 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestDev(t *testing.T) {
 
 	eg := errgroup.Group{}
 	eg.Go(func() error {
-		return dev.Dev(subCtx, herdCueFile, &dev.Options{
+		return dev.Dev(subCtx, acornCueFile, &dev.Options{
 			Build: build.Options{
 				Cwd: tmp,
 			},

@@ -3,7 +3,7 @@ package normalize
 import (
 	"list"
 	"strings"
-	"github.com/ibuildthecloud/herd/schema/v1"
+	"github.com/acorn-io/acorn/schema/v1"
 )
 
 #ToEnvVarSpecFromString: {

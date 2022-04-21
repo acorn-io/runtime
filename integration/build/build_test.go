@@ -5,25 +5,25 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/acorn-io/acorn/integration/helper"
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/build/buildkit"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/ibuildthecloud/herd/integration/helper"
-	v1 "github.com/ibuildthecloud/herd/pkg/apis/herd-project.io/v1"
-	"github.com/ibuildthecloud/herd/pkg/build"
-	"github.com/ibuildthecloud/herd/pkg/build/buildkit"
-	"github.com/ibuildthecloud/herd/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildFailed(t *testing.T) {
-	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/herd.cue", &build.Options{
+	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/acorn.cue", &build.Options{
 		Cwd: "./testdata/fail",
 	})
 	assert.Error(t, err)
 }
 
 func TestSimpleBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
 		Cwd: "./testdata/simple",
 	})
 	if err != nil {
@@ -37,7 +37,7 @@ func TestSimpleBuild(t *testing.T) {
 }
 
 func TestJobBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/acorn.cue", &build.Options{
 		Cwd: "./testdata/jobs",
 	})
 	if err != nil {
@@ -53,7 +53,7 @@ func TestJobBuild(t *testing.T) {
 }
 
 func TestSidecarBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/acorn.cue", &build.Options{
 		Cwd: "./testdata/sidecar",
 	})
 	if err != nil {
@@ -69,7 +69,7 @@ func TestSidecarBuild(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/target/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/target/acorn.cue", &build.Options{
 		Cwd: "./testdata/target",
 	})
 	if err != nil {
@@ -82,7 +82,7 @@ func TestTarget(t *testing.T) {
 }
 
 func TestContextDir(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/acorn.cue", &build.Options{
 		Cwd: "./testdata/contextdir",
 	})
 	if err != nil {
@@ -94,7 +94,7 @@ func TestContextDir(t *testing.T) {
 }
 
 func TestSimpleTwo(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/acorn.cue", &build.Options{
 		Cwd: "./testdata/simple-two",
 	})
 	if err != nil {
@@ -123,7 +123,7 @@ func Test_GetBuildkitDialer(t *testing.T) {
 }
 
 func TestMultiArch(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/herd.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/acorn.cue", &build.Options{
 		Cwd: "./testdata/multiarch",
 		Platforms: []v1.Platform{
 			{

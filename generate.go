@@ -1,3 +1,3 @@
-//go:generate go run github.com/ibuildthecloud/baaah/cmd/deepcopy ./pkg/apis/herd-project.io/v1/
+//go:generate go run github.com/acorn-io/baaah/cmd/deepcopy ./pkg/apis/acorn.io/v1/
 
 package main

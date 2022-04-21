@@ -3,8 +3,8 @@ package config
 import (
 	"encoding/json"
 
-	"github.com/ibuildthecloud/baaah/pkg/meta"
-	"github.com/ibuildthecloud/herd/pkg/system"
+	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/meta"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )

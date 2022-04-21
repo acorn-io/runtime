@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/ibuildthecloud/herd/pkg/k8schannel"
+	"github.com/acorn-io/acorn/pkg/k8schannel"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
