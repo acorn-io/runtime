@@ -17,7 +17,7 @@ herd volume`,
 		SilenceUsage: true,
 		Short:        "List or get volumes",
 	})
-	cmd.AddCommand(NewVolume())
+	cmd.AddCommand(NewVolumeCreate())
 	return cmd
 }
 
