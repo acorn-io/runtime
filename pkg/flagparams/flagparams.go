@@ -14,6 +14,7 @@ type Flags struct {
 	FlagSet *pflag.FlagSet
 	ints    map[string]*int
 	strings map[string]*string
+	Usage   func()
 }
 
 func New(filename string, param *v1.ParamSpec) *Flags {
@@ -41,6 +42,13 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 
 func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	result := map[string]interface{}{}
+
+	if f.Usage != nil {
+		f.FlagSet.Usage = func() {
+			f.Usage()
+			f.FlagSet.PrintDefaults()
+		}
+	}
 
 	if err := f.FlagSet.Parse(args); err != nil {
 		return nil, err

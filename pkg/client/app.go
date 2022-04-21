@@ -76,6 +76,8 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 			Client:           c.Client,
 			ImagePullSecrets: opts.ImagePullSecrets,
 			DeployParams:     opts.DeployParams,
+			Volumes:          opts.Volumes,
+			Secrets:          opts.Secrets,
 		}
 	)
 

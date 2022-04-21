@@ -20,6 +20,44 @@ var (
 	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
 )
 
+func ParseSecrets(args []string) (result []v1.SecretBinding, _ error) {
+	for _, arg := range args {
+		existing, secName, ok := strings.Cut(arg, ":")
+		if !ok {
+			return nil, fmt.Errorf("secret binding must contain a \":\" in the format \"existing:app-sec\"")
+		}
+		secName = strings.TrimSpace(secName)
+		existing = strings.TrimSpace(existing)
+		if secName == "" || existing == "" {
+			return nil, fmt.Errorf("invalid endpoint binding [%s] must not have zero length value", arg)
+		}
+		result = append(result, v1.SecretBinding{
+			Secret:        existing,
+			SecretRequest: secName,
+		})
+	}
+	return
+}
+
+func ParseVolumes(args []string) (result []v1.VolumeBinding, _ error) {
+	for _, arg := range args {
+		existing, volName, ok := strings.Cut(arg, ":")
+		if !ok {
+			return nil, fmt.Errorf("volume binding must contain a \":\" in the format \"existing:vol-name\"")
+		}
+		volName = strings.TrimSpace(volName)
+		existing = strings.TrimSpace(existing)
+		if volName == "" || existing == "" {
+			return nil, fmt.Errorf("invalid endpoint binding [%s] must not have zero length value", arg)
+		}
+		result = append(result, v1.VolumeBinding{
+			Volume:        existing,
+			VolumeRequest: volName,
+		})
+	}
+	return
+}
+
 func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
 	for _, arg := range args {
 		public, private, ok := strings.Cut(arg, ":")
@@ -46,6 +84,8 @@ type Options struct {
 	Labels           map[string]string
 	ImagePullSecrets []string
 	Endpoints        []v1.EndpointBinding
+	Volumes          []v1.VolumeBinding
+	Secrets          []v1.SecretBinding
 	DeployParams     map[string]interface{}
 	Client           client.WithWatch
 }
@@ -117,6 +157,8 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Image:            image,
 			Endpoints:        opts.Endpoints,
 			ImagePullSecrets: opts.ImagePullSecrets,
+			Volumes:          opts.Volumes,
+			Secrets:          opts.Secrets,
 			DeployParams:     opts.DeployParams,
 		},
 	}

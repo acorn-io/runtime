@@ -132,6 +132,8 @@ type AppRunOptions struct {
 	Annotations      map[string]string
 	Labels           map[string]string
 	Endpoints        []v1.EndpointBinding
+	Volumes          []v1.VolumeBinding
+	Secrets          []v1.SecretBinding
 	DeployParams     map[string]interface{}
 	ImagePullSecrets []string
 }
