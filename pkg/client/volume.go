@@ -15,9 +15,10 @@ import (
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/kubernetes/pkg/apis/storage/v1/util"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const IsDefaultStorageClassAnnotation = "storageclass.kubernetes.io/is-default-class"
 
 func pvToVolume(pv corev1.PersistentVolume) Volume {
 	var (
@@ -175,7 +176,7 @@ func (c *client) VolumeCreate(ctx context.Context, name string, capacity resourc
 			return nil, err
 		}
 		for _, class := range storageClasses.Items {
-			if class.Annotations[util.IsDefaultStorageClassAnnotation] == "true" {
+			if class.Annotations[IsDefaultStorageClassAnnotation] == "true" {
 				pv.Spec.StorageClassName = class.Name
 			}
 		}

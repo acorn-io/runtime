@@ -14,9 +14,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/goombaio/namegenerator"
+	"k8s.io/apimachinery/pkg/api/errors"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/api/errors"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
