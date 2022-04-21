@@ -1,0 +1,112 @@
+dist: releases
+release:
+  github:
+    owner: acorn-io
+    name: acorn
+  extra_files:
+    - glob: ./cosign.pub
+builds:
+  - id: default
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - "7"
+    ignore:
+      - goos: windows
+        goarch: arm64
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
+    ldflags:
+      - -s
+      - -w
+      - -X '{{ .ModulePath }}/cmd.BuildVersion={{ .Version }}'
+      - -X '{{ .ModulePath }}/cmd.BuildDate={{ .Date }}'
+      - -X '{{ .ModulePath }}/cmd.BuildHash={{ .Commit }}'
+archives:
+  - id: default
+    builds:
+      - default
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ .Arm }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile.goreleaser
+    image_templates:
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
+      - "--platform=linux/amd64"
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: Dockerfile.goreleaser
+    image_templates:
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
+      - "--platform=linux/arm64"
+  - use: buildx
+    goos: linux
+    goarch: arm
+    goarm: "7"
+    dockerfile: Dockerfile.goreleaser
+    image_templates:
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
+      - "--platform=linux/arm/v7"
+docker_manifests:
+  - use: docker
+    name_template: ghcr.io/acorn-io/acorn:v{{ .Version }}
+    image_templates:
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
+signs:
+  - cmd: cosign
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+    args:
+      ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
+    artifacts: all
+docker_signs:
+  - artifacts: all
+    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: '{{ trimprefix .Summary "v" }}'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
