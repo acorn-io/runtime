@@ -6,3 +6,4 @@
 .idea
 /acorn
 /go.work
+/cosign.key
