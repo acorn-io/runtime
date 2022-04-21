@@ -101,10 +101,12 @@ spec:
       targetPort: 81
       protocol: "TCP"
       appProtocol: "HTTP"
+      name: "80"
     - port: 90
       targetPort: 91
       protocol: "TCP"
       appProtocol: "HTTPS"
+      name: "90"
   selector:
     "herd-project.io/app-namespace": "app-namespace"
     "herd-project.io/app-name": "app-name"
