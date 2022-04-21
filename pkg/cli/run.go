@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -51,16 +52,16 @@ func usage(app *v1.AppSpec) func() {
 	return func() {
 		fmt.Println()
 		if len(app.Volumes) == 0 {
-			fmt.Println("Volumes: <none>")
+			fmt.Println("Volumes:   <none>")
 		} else {
-			fmt.Print("Volumes: ")
+			fmt.Print("Volumes:   ")
 			fmt.Println(strings.Join(typed.Keys(app.Volumes), ", "))
 		}
 
 		if len(app.Secrets) == 0 {
-			fmt.Println("Secrets: <none>")
+			fmt.Println("Secrets:   <none>")
 		} else {
-			fmt.Print("Secrets: ")
+			fmt.Print("Secrets:   ")
 			fmt.Println(strings.Join(typed.Keys(app.Secrets), ", "))
 		}
 
@@ -70,6 +71,31 @@ func usage(app *v1.AppSpec) func() {
 			fmt.Print("Container: ")
 			fmt.Println(strings.Join(typed.Keys(app.Containers), ", "))
 		}
+
+		var ports []string
+		for containerName, container := range app.Containers {
+			for _, port := range container.Ports {
+				if port.Publish {
+					ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
+				}
+			}
+			for _, sidecar := range container.Sidecars {
+				for _, port := range sidecar.Ports {
+					if port.Publish {
+						ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
+					}
+				}
+			}
+		}
+		sort.Strings(ports)
+
+		if len(ports) == 0 {
+			fmt.Println("Ports:     <none>")
+		} else {
+			fmt.Print("Ports:     ")
+			fmt.Println(strings.Join(ports, ", "))
+		}
+
 		fmt.Println()
 	}
 }
