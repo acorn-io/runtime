@@ -9,7 +9,7 @@ replace (
 )
 
 require (
-	cuelang.org/go v0.4.3-beta.1
+	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/acorn-io/baaah v0.0.0-20220421210609-1a2b1e00697f
 	github.com/containerd/console v1.0.3
