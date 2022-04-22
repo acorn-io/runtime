@@ -29,9 +29,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X '{{ .ModulePath }}/cmd.BuildVersion={{ .Version }}'
-      - -X '{{ .ModulePath }}/cmd.BuildDate={{ .Date }}'
-      - -X '{{ .ModulePath }}/cmd.BuildHash={{ .Commit }}'
+      - -x 'main.Version={{ .version }}'
 archives:
   - id: default
     builds:
