@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,7 @@ func NewAll() *cobra.Command {
 		Example: `
 acorn all`,
 		SilenceUsage: true,
-		Short:        "List all objects",
+		Short:        "List (almost) all objects",
 	})
 }
 

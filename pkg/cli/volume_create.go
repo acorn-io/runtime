@@ -10,23 +10,22 @@ import (
 )
 
 func NewVolumeCreate() *cobra.Command {
-	return cli.Command(&VolumeCreate{}, cobra.Command{
-		Use:     "volume create [flags] VOLUME_NAME CAPACITY",
-		Aliases: []string{"volumes", "v"},
+	return cli.Command(&Create{}, cobra.Command{
+		Use: "create [flags] VOLUME_NAME CAPACITY",
 		Example: `
 acorn volume create my-vol 10G`,
 		SilenceUsage: true,
-		Short:        "List or get volumes",
+		Short:        "Create a volume",
 		Args:         cobra.ExactArgs(2),
 	})
 }
 
-type VolumeCreate struct {
+type Create struct {
 	Class      string   `usage:"Storage class, values are environment specific"`
 	AccessMode []string `usage:"Access modes rwo/rwx/rox/rwop"`
 }
 
-func (a *VolumeCreate) Run(cmd *cobra.Command, args []string) error {
+func (a *Create) Run(cmd *cobra.Command, args []string) error {
 	c, err := hclient.Default()
 	if err != nil {
 		return err

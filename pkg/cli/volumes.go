@@ -13,7 +13,8 @@ func NewVolume() *cobra.Command {
 		Use:     "volume [flags] [VOLUME_NAME...]",
 		Aliases: []string{"volumes", "v"},
 		Example: `
-acorn volume`,
+acorn volume
+acorn volume create my-vol 10G`,
 		SilenceUsage: true,
 		Short:        "List or get volumes",
 	})

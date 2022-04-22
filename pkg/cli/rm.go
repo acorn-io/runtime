@@ -21,7 +21,7 @@ acorn rm -v some-volume`,
 
 type Rm struct {
 	Volumes    bool `usage:"Delete volumes" short:"v"`
-	Images     bool `usage:"Delete images" short:"i"`
+	Images     bool `usage:"Delete images/tags" short:"i"`
 	Containers bool `usage:"Delete apps/containers" short:"c"`
 	All        bool `usage:"Delete all types" short:"a"`
 }

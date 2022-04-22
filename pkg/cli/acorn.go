@@ -2,34 +2,14 @@ package cli
 
 import (
 	"os"
-	"strings"
 
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
 
-func sheep() string {
-	// Artist:  Bob Allison
-	return strings.ReplaceAll(`
-           __  _
-       .-.'  !; !-._  __  _
-      (_,         .-:'  !; !-._
-    ,'o"(        (_,           )
-   (__,-'      ,'o"(            )>
-      (       (__,-'            )
-       !-'._.--._(             )
-          |||  |||!-'._.--._.-'
-                     |||  |||   (Artist: Bob Allison)
-
-`, "!", "`")
-}
-
 func New() *cobra.Command {
 	root := cli.Command(&Acorn{}, cobra.Command{
-		Long: "\n   Acorn" + sheep() + "Building cute fluffy apps since 2022.",
-		Example: `
-# Build and run an app
-acorn run --dev .`,
+		Long: "Acorn: Portable Kubernetes Applications",
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
@@ -47,13 +27,13 @@ acorn run --dev .`,
 		NewStart(),
 		NewStop(),
 		NewRm(),
-		NewRmi(),
 		NewBuild(),
 		NewRun(),
 		NewLogs(),
 		NewDev(),
 		NewController(),
 	)
+	root.InitDefaultHelpCmd()
 	return root
 }
 
