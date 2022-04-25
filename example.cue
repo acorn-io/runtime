@@ -1,6 +1,3 @@
-### WARNING: Consuming this project can expose you to chemicals, which are known to the State of California to cause cancer and birth defects or other reproductive harm.
-
-```cue
 // The acorn file is a cue syntax. CUE is a superset of JSON, so all valid JSON is CUE.  In CUE you don't
 // need to quote most keys, comments using // are supported, and trailing commas are optional.
 
@@ -236,4 +233,3 @@ data: {
 		key: "value"
 	}
 }
-```
