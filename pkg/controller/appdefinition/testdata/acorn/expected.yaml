@@ -1,0 +1,107 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "pod-security.kubernetes.io/enforce": baseline
+
+---
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  name: acorn-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/acorn-name": "acorn-name"
+    "acorn.io/managed": "true"
+
+spec:
+  image: index.docker.io/library/test@foo
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: acorn-name-publish-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/acorn-name": "acorn-name"
+spec:
+  type: LoadBalancer
+  internalTrafficPolicy: Local
+  ports:
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/acorn-name": "acorn-name"
+    "acorn.io/managed": "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: acorn-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/acorn-name": "acorn-name"
+spec:
+  internalTrafficPolicy: Local
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/acorn-name": "acorn-name"
+    "acorn.io/managed": "true"
+
+---
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  uid: 1234567890ab
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    acorns:
+      acorn-name:
+        image: "foo"
+        ports:
+          - port: 80
+            containerPort: 81
+            protocol: http
+            publish: true
+          - port: 90
+            containerPort: 91
+            protocol: tcp
+            publish: true
+  conditions:
+    defined:
+      success: true

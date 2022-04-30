@@ -35,7 +35,7 @@ func NewRun() *cobra.Command {
 
 type Run struct {
 	Name        string   `usage:"Name of app to create" short:"n"`
-	Publish     []string `usage:"Published a container to a friendly domain (format public:private) (ex: example.com:web)" short:"p"`
+	DNS         []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
 	PullSecrets []string `usage:"Secret names to authenticate pull images in cluster" short:"l"`
 	Volumes     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
 	Secrets     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
@@ -144,7 +144,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		DeployParams:     deployParams,
 	}
 
-	opts.Endpoints, err = run.ParseEndpoints(s.Publish)
+	opts.Endpoints, err = run.ParseEndpoints(s.DNS)
 	if err != nil {
 		return err
 	}

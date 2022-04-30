@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
@@ -24,7 +25,35 @@ func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
 			result = append(result, publishService)
 		}
 	}
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
+		service := toService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
+		if service != nil {
+			result = append(result, toAcornService(service))
+		}
+		publishService := toPublishService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
+		if publishService != nil {
+			result = append(result, toAcornService(publishService))
+		}
+	}
 	return result
+}
+
+func toAcornLabels(l map[string]string) map[string]string {
+	result := map[string]string{}
+	for k, v := range l {
+		if k == labels.AcornContainerName {
+			k = labels.AcornAcornName
+		}
+		result[k] = v
+	}
+	return result
+}
+
+func toAcornService(svc *corev1.Service) *corev1.Service {
+	svc.Labels = toAcornLabels(svc.Labels)
+	svc.Spec.Selector = toAcornLabels(svc.Spec.Selector)
+	svc.Spec.InternalTrafficPolicy = &[]corev1.ServiceInternalTrafficPolicyType{corev1.ServiceInternalTrafficPolicyLocal}[0]
+	return svc
 }
 
 func toServicePort(port v1.Port) corev1.ServicePort {

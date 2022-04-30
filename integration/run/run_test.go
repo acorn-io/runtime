@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/stretchr/testify/assert"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -176,7 +177,19 @@ func TestSimple(t *testing.T) {
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
 		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
 	})
-	assert.NotEmpty(t, appInstance.Status.Namespace)
+
+	helper.Wait(t, client.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
+		if pod.Namespace != appInstance.Status.Namespace ||
+			pod.Labels[labels.AcornContainerName] != "tester" {
+			return false
+		}
+		for _, cond := range pod.Status.Conditions {
+			if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
+				return true
+			}
+		}
+		return false
+	})
 }
 
 func TestRun(t *testing.T) {
@@ -250,4 +263,36 @@ func TestDeployParam(t *testing.T) {
 	})
 
 	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
+}
+
+func TestNested(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
+	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
+		Cwd:       "./testdata/nested",
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
+		Namespace: ns.Name,
+	})
+
+	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
+		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+	})
+
+	helper.Wait(t, client.Watch, &batchv1.JobList{}, func(job *batchv1.Job) bool {
+		if job.Namespace != appInstance.Status.Namespace ||
+			job.Labels[labels.AcornJobName] != "tester" {
+			return false
+		}
+		return job.Status.Succeeded == 1
+	})
 }

@@ -12,11 +12,17 @@ type ImageBuilderSpec struct {
 	Build *Build `json:"build,omitempty"`
 }
 
+type AcornBuilderSpec struct {
+	Image string      `json:"image,omitempty"`
+	Build *AcornBuild `json:"build,omitempty"`
+}
+
 type BuilderSpec struct {
 	Platforms  []Platform                           `json:"platforms,omitempty"`
 	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
 	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
 	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`
+	Acorns     map[string]AcornBuilderSpec          `json:"acorns,omitempty"`
 }
 
 type ParamSpec struct {

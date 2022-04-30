@@ -24,7 +24,7 @@ func ParseSecrets(args []string) (result []v1.SecretBinding, _ error) {
 	for _, arg := range args {
 		existing, secName, ok := strings.Cut(arg, ":")
 		if !ok {
-			return nil, fmt.Errorf("secret binding must contain a \":\" in the format \"existing:app-sec\"")
+			secName = existing
 		}
 		secName = strings.TrimSpace(secName)
 		existing = strings.TrimSpace(existing)
@@ -43,7 +43,7 @@ func ParseVolumes(args []string) (result []v1.VolumeBinding, _ error) {
 	for _, arg := range args {
 		existing, volName, ok := strings.Cut(arg, ":")
 		if !ok {
-			return nil, fmt.Errorf("volume binding must contain a \":\" in the format \"existing:vol-name\"")
+			volName = existing
 		}
 		volName = strings.TrimSpace(volName)
 		existing = strings.TrimSpace(existing)
@@ -62,7 +62,7 @@ func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
 	for _, arg := range args {
 		public, private, ok := strings.Cut(arg, ":")
 		if !ok {
-			return nil, fmt.Errorf("endpoint binding must contain a \":\" in the format \"public:private\"")
+			private = public
 		}
 		private = strings.TrimSpace(private)
 		public = strings.TrimSpace(public)

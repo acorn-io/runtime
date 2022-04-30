@@ -1,0 +1,5 @@
+images: {
+	foo: {
+		build: "./foo"
+	}
+}

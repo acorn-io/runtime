@@ -1,0 +1,19 @@
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    acorns:
+      acorn-name:
+        ports:
+          - port: 80
+            containerPort: 81
+            protocol: https
+          - port: 90
+            containerPort: 91
+            protocol: tcp

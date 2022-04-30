@@ -22,6 +22,16 @@ func TestBuildFailed(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestNestedBuild(t *testing.T) {
+	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/acorn.cue", &build.Options{
+		Cwd: "./testdata/nested",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Len(t, image.ImageData.Acorns, 2)
+}
+
 func TestSimpleBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
 		Cwd: "./testdata/simple",

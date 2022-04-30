@@ -14,7 +14,11 @@ import (
 	"github.com/containerd/containerd/platforms"
 )
 
-func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, streams streams.Output) (string, error) {
+type AppImageOptions struct {
+	FullTag bool
+}
+
+func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, streams streams.Output, opts *AppImageOptions) (string, error) {
 	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
@@ -30,7 +34,12 @@ func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, 
 		return "", err
 	}
 
-	return createAppManifest(ctx, tag, appImage.ImageData)
+	var fullTag bool
+	if opts != nil {
+		fullTag = opts.FullTag
+	}
+
+	return createAppManifest(ctx, tag, appImage.ImageData, fullTag)
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {

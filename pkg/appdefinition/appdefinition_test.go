@@ -52,6 +52,27 @@ images: {
     }
   }
 }
+
+acorns: {
+  afile: {
+    build: "sub/dir1"
+  }
+  anone: {
+    image: "done"
+  }
+  afull: {
+    build: {
+      context: "sub/dir2"	
+      acornfile: "sub/dir3/acorn.cue"
+      params: {
+        key: "value"
+        key2: {
+          key3: "value3"
+		}
+	  }
+    }
+  }
+}
 `))
 	if err != nil {
 		t.Fatal(err)
@@ -91,6 +112,17 @@ images: {
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
 	assert.Equal(t, "other", buildSpec.Images["full"].Build.Target)
 	assert.Equal(t, "done", buildSpec.Images["none"].Image)
+
+	assert.Len(t, buildSpec.Acorns, 3)
+	assert.Equal(t, "", buildSpec.Acorns["afile"].Image)
+	assert.Equal(t, "sub/dir1", buildSpec.Acorns["afile"].Build.Context)
+	assert.Equal(t, "sub/dir1/acorn.cue", buildSpec.Acorns["afile"].Build.Acornfile)
+	assert.Equal(t, "", buildSpec.Acorns["afull"].Image)
+	assert.Equal(t, "sub/dir2", buildSpec.Acorns["afull"].Build.Context)
+	assert.Equal(t, "sub/dir3/acorn.cue", buildSpec.Acorns["afull"].Build.Acornfile)
+	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.Params["key"])
+	assert.Equal(t, map[string]interface{}{"key3": "value3"}, buildSpec.Acorns["afull"].Build.Params["key2"])
+	assert.Equal(t, "done", buildSpec.Acorns["anone"].Image)
 }
 
 func TestWatchFiles(t *testing.T) {
@@ -1330,4 +1362,81 @@ containers: foo: build: args: one: params.build.foo
 	}
 
 	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.Args["one"])
+}
+
+func TestAcorn(t *testing.T) {
+	acornCue := `
+acorns: foo: {
+	image: "foo"
+	params: {
+		x: "y"
+		z: true
+	}
+	ports: [
+		80,
+		"123:456/http"
+	]
+	volumes: [
+		"src-vol:dest-vol",
+		"src-vol2:dest-vol2"
+	]
+	secrets: [
+		"src-sec:dest-sec",
+		"src-sec2:dest-sec2"
+	]
+}
+`
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	def, err = def.WithBuildParams(map[string]interface{}{
+		"foo": "two",
+	})
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acorn := appSpec.Acorns["foo"]
+
+	assert.Equal(t, "foo", acorn.Image)
+	assert.Equal(t, v1.GenericMap(map[string]interface{}{
+		"x": "y",
+		"z": true,
+	}), acorn.Params)
+	assert.Equal(t, []v1.Port{
+		{
+			Port:          80,
+			ContainerPort: 80,
+			Protocol:      "tcp",
+		},
+		{
+			Port:          123,
+			ContainerPort: 456,
+			Protocol:      "http",
+		},
+	}, acorn.Ports)
+	assert.Equal(t, []v1.VolumeBinding{
+		{
+			Volume:        "src-vol",
+			VolumeRequest: "dest-vol",
+		},
+		{
+			Volume:        "src-vol2",
+			VolumeRequest: "dest-vol2",
+		},
+	}, acorn.Volumes)
+	assert.Equal(t, []v1.SecretBinding{
+		{
+			Secret:        "src-sec",
+			SecretRequest: "dest-sec",
+		},
+		{
+			Secret:        "src-sec2",
+			SecretRequest: "dest-sec2",
+		},
+	}, acorn.Secrets)
 }

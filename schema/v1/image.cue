@@ -39,4 +39,8 @@ package v1
 		image?: string
 		build?: #BuildSpec
 	}
+	acorns: [string]: {
+		image?: string
+		build?: #AcornBuildSpec
+	}
 }

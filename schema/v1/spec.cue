@@ -5,6 +5,12 @@ package v1
 	init: bool | *false
 }
 
+#AcornBuildSpec: {
+	context:   string | *"."
+	acornfile: string | *"acorn.cue"
+	params: [string]: _
+}
+
 #BuildSpec: {
 	baseImage:  string | *""
 	context:    string | *"."
@@ -99,12 +105,32 @@ package v1
 	data: [string]:    (string | bytes)
 }
 
+#VolumeBinding: {
+	volume:        string
+	volumeRequest: string
+}
+
+#SecretBinding: {
+	secret:        string
+	secretRequest: string
+}
+
+#AcornSpec: {
+	image?: string
+	build?: #AcornBuildSpec
+	ports: [...#PortSpec]
+	volumes: [...#VolumeBinding]
+	secrets: [...#SecretBinding]
+	params: [string]: _
+}
+
 #AppSpec: {
 	containers: [string]: #ContainerSpec
 	jobs: [string]:       #JobSpec
 	images: [string]:     #ImageSpec
 	volumes: [string]:    #VolumeSpec
 	secrets: [string]:    #SecretSpec
+	acorns: [string]:     #AcornSpec
 }
 
 #PortSpec: {

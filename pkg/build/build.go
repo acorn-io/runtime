@@ -17,6 +17,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/containerd/containerd/platforms"
 	imagename "github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 type Options struct {
@@ -25,6 +26,7 @@ type Options struct {
 	Platforms []v1.Platform
 	Params    map[string]interface{}
 	Streams   *streams.Output
+	FullTag   bool
 }
 
 func (b *Options) Complete() (*Options, error) {
@@ -118,7 +120,9 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	id, err := FromAppImage(ctx, opts.Namespace, appImage, *opts.Streams)
+	id, err := FromAppImage(ctx, opts.Namespace, appImage, *opts.Streams, &AppImageOptions{
+		FullTag: opts.FullTag,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +181,55 @@ func buildContainers(ctx context.Context, cwd, namespace string, platforms []v1.
 	return result, nil
 }
 
+func buildAcorns(ctx context.Context, cwd, namespace string, platforms []v1.Platform, streams streams.Output, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
+	result := map[string]v1.ImageData{}
+
+	for _, entry := range typed.Sorted(acorns) {
+		key, acornImage := entry.Key, entry.Value
+		if acornImage.Image != "" {
+			tag, err := imagename.ParseReference(acornImage.Image)
+			if err != nil {
+				return nil, err
+			}
+
+			opts, err := GetRemoteOptions(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			index, err := remote.Index(tag, opts...)
+			if err != nil {
+				return nil, err
+			}
+
+			digest, err := index.Digest()
+			if err != nil {
+				return nil, err
+			}
+
+			result[key] = v1.ImageData{
+				Image: tag.Context().Digest(digest.String()).Name(),
+			}
+		} else if acornImage.Build != nil {
+			appImage, err := Build(ctx, filepath.Join(cwd, acornImage.Build.Acornfile), &Options{
+				Cwd:       filepath.Join(cwd, acornImage.Build.Context),
+				Namespace: namespace,
+				Platforms: platforms,
+				Params:    acornImage.Build.Params,
+				Streams:   &streams,
+				FullTag:   true,
+			})
+			if err != nil {
+				return nil, err
+			}
+			result[key] = v1.ImageData{
+				Image: appImage.ID,
+			}
+		}
+	}
+
+	return result, nil
+}
 func buildImages(ctx context.Context, cwd, namespace string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
@@ -224,6 +277,11 @@ func FromSpec(ctx context.Context, cwd, namespace string, spec v1.BuilderSpec, s
 		return data, err
 	}
 
+	data.Acorns, err = buildAcorns(ctx, cwd, namespace, spec.Platforms, streams, spec.Acorns)
+	if err != nil {
+		return data, err
+	}
+
 	return data, nil
 }
 
@@ -265,6 +323,7 @@ func buildWithContext(ctx context.Context, cwd, namespace string, platforms []v1
 		baseImage = build.BaseImage
 		err       error
 	)
+
 	if baseImage == "" {
 		newImage, err := buildImageAndManifest(ctx, cwd, namespace, platforms, build.BaseBuild(), streams)
 		if err != nil {

@@ -11,6 +11,13 @@ const (
 
 type AccessMode string
 
+type AcornBuild struct {
+	OriginalImage string     `json:"originalImage,omitempty"`
+	Context       string     `json:"context,omitempty"`
+	Acornfile     string     `json:"acornfile,omitempty"`
+	Params        GenericMap `json:"params,omitempty"`
+}
+
 type Build struct {
 	Context     string            `json:"context,omitempty"`
 	Dockerfile  string            `json:"dockerfile,omitempty"`
@@ -115,6 +122,16 @@ type AppSpec struct {
 	Images     map[string]Image         `json:"images,omitempty"`
 	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
 	Secrets    map[string]Secret        `json:"secrets,omitempty"`
+	Acorns     map[string]Acorn         `json:"acorns,omitempty"`
+}
+
+type Acorn struct {
+	Image   string          `json:"image,omitempty"`
+	Build   *AcornBuild     `json:"build,omitempty"`
+	Params  GenericMap      `json:"params,omitempty"`
+	Ports   []Port          `json:"ports,omitempty"`
+	Secrets []SecretBinding `json:"secrets,omitempty"`
+	Volumes []VolumeBinding `json:"volumes,omitempty"`
 }
 
 type Secret struct {

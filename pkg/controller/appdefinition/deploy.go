@@ -50,7 +50,11 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 	addPVCs(appInstance, resp)
-	return addConfigMaps(appInstance, resp)
+	if err := addConfigMaps(appInstance, resp); err != nil {
+		return err
+	}
+	addAcorns(appInstance, tag, pullSecrets, resp)
+	return nil
 }
 
 func addDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {

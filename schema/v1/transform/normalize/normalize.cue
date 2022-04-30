@@ -25,6 +25,26 @@ import (
 	out: IN.ports + IN.publish
 }
 
+#ToKVSplit: {
+	IN="in": string
+	out: {
+		key:   string
+		value: string
+	}
+	out: {
+		let parts = strings.SplitN(IN, ":", 2)
+		if len(parts) == 1 {
+			key:   parts[0]
+			value: parts[0]
+		}
+		if len(parts) == 2 {
+			key:   parts[0]
+			value: parts[1]
+		}
+
+	}
+}
+
 #ToPort: {
 	IN="in": v1.#Port
 	out:     v1.#PortSpec
@@ -218,6 +238,19 @@ import (
 	}
 }
 
+#ToAcornBuild: {
+	IN="in": string | v1.#AcornBuild
+	out:     v1.#AcornBuildSpec
+	out:     {
+		acornfile: path.Join([IN, "acorn.cue"])
+		context:   IN
+	} | {
+		acornfile: IN.acornfile
+		context:   IN.context
+		params:    IN.params
+	}
+}
+
 #ToBuild: {
 	IN="in": string | v1.#Build
 	out:     v1.#BuildSpec
@@ -313,6 +346,69 @@ import (
 			if !((IN.container["publish"] & string) != _|_ ) &&
 				!((IN.container["publish"] & int) != _|_) {
 				[ for p in IN.container.publish {
+					{#ToPublishPort & {in: p}}.out
+				}]
+			}
+		}
+	}
+}
+
+#ToSecretBinding: {
+	IN="in": string
+	out:     v1.#SecretBinding
+	out: {
+		let _parts = {#ToKVSplit & {in: IN}}.out
+		secret:        _parts.key
+		secretRequest: _parts.value
+	}
+}
+
+#ToVolumeBinding: {
+	IN="in": string
+	out:     v1.#VolumeBinding
+	out: {
+		let _parts = {#ToKVSplit & {in: IN}}.out
+		volume:        _parts.key
+		volumeRequest: _parts.value
+	}
+}
+
+#ToAcorn: {
+	IN="in": v1.#Acorn
+	out:     v1.#AcornSpec
+	out: {
+		if IN["image"] != _|_ {
+			image: IN.image
+		}
+		if IN["build"] != _|_ {
+			build: {#ToAcornBuild & {in: IN.build}}.out
+		}
+		params: IN.params
+		volumes: [ for v in IN.volumes {{#ToVolumeBinding & {in: v}}.out}]
+		secrets: [ for v in IN.secrets {{#ToSecretBinding & {in: v}}.out}]
+		ports: {
+			if (IN["ports"] & int) != _|_ {
+				[{#ToPort & {in: IN.ports}}.out]
+			}
+			if (IN["ports"] & string) != _|_ {
+				[{#ToPort & {in: IN.ports}}.out]
+			}
+			if !((IN["ports"] & string) != _|_ ) &&
+				!((IN["ports"] & int) != _|_ ) {
+				[ for p in IN.ports {
+					{#ToPort & {in: p}}.out
+				}]
+			}
+		} + {
+			if (IN["publish"] & int) != _|_ {
+				[{#ToPublishPort & {in: IN.publish}}.out]
+			}
+			if (IN["publish"] & string) != _|_ {
+				[{#ToPublishPort & {in: IN.publish}}.out]
+			}
+			if !((IN["publish"] & string) != _|_ ) &&
+				!((IN["publish"] & int) != _|_) {
+				[ for p in IN.publish {
 					{#ToPublishPort & {in: p}}.out
 				}]
 			}
@@ -433,6 +529,13 @@ import (
 							}
 						}
 					}
+				}
+			}
+		}
+		acorns: {
+			for k, v in IN.app.acorns {
+				"\(k)": {
+					{#ToAcorn & {in: v}}.out
 				}
 			}
 		}

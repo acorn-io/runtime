@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -41,7 +42,11 @@ func GetRemoteOptions(ctx context.Context, c client.WithWatch) ([]remote.Option,
 
 	return append(opts, remote.WithTransport(&http.Transport{
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return dialer(ctx, "")
+			if strings.HasPrefix(addr, "127.0.0.1") {
+				return dialer(ctx, "")
+			}
+			n := net.Dialer{}
+			return n.DialContext(ctx, network, addr)
 		},
 	})), nil
 }

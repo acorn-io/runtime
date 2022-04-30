@@ -1,5 +1,11 @@
 package v1
 
+#AcornBuild: {
+	params: [string]: _
+	context:   string | *"."
+	acornfile: string | *"acorn.cue"
+}
+
 #Build: {
 	args: [string]: string
 	context:    string | *"."
@@ -151,6 +157,16 @@ package v1
 
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated | #SecretTemplate | #SecretToken
 
+#Acorn: {
+	image?:  string
+	build?:  string | #AcornBuild
+	ports:   #Port | *[...#Port]
+	publish: #Port | *[...#Port]
+	volumes: [...string]
+	secrets: [...string]
+	params: [string]: _
+}
+
 #App: {
 	[=~"params|parameters"]: {
 		build: [string]:  _
@@ -162,6 +178,7 @@ package v1
 	images: [string]:     #Image
 	volumes: [string]:    #Volume
 	secrets: [string]:    #Secret
+	acorns: [string]:     #Acorn
 
 	_keysMustBeUniqueAcrossTypes: [string]: string
 	_keysMustBeUniqueAcrossTypes: {
@@ -169,7 +186,10 @@ package v1
 			"\(k)": "container"
 		}
 		for k, v in jobs {
-			"\(k)": "jobs"
+			"\(k)": "job"
+		}
+		for k, v in acorns {
+			"\(k)": "acorn"
 		}
 	}
 }

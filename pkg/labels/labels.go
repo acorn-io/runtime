@@ -4,6 +4,7 @@ const (
 	Prefix              = "acorn.io/"
 	AcornAppNamespace   = Prefix + "app-namespace"
 	AcornAppName        = Prefix + "app-name"
+	AcornAcornName      = Prefix + "acorn-name"
 	AcornAppUID         = Prefix + "app-uid"
 	AcornVolumeName     = Prefix + "volume-name"
 	AcornSecretName     = Prefix + "secret-name"

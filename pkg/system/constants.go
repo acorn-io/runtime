@@ -9,12 +9,13 @@ const (
 )
 
 var (
-	RegistryName  = "registry"
-	RegistryImage = "registry:2.7.1"
-	RegistryPort  = 5000
-	BuildkitImage = "moby/buildkit:master"
-	BuildKitName  = "buildkitd"
-	BuildkitPort  = 8080
+	RegistryName   = "registry"
+	RegistryImage  = "registry:2.7.1"
+	RegistryPort   = 5000
+	BuildkitImage  = "moby/buildkit:master"
+	BuildKitName   = "buildkitd"
+	BuildkitPort   = 8080
+	KlipperLBImage = "rancher/klipper-lb:v0.3.4"
 )
 
 func UserNamespace() string {

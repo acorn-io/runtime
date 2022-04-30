@@ -103,6 +103,11 @@ func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
 	}
 
 	result.Images, err = digestOnlyImages(imageData.Images)
+	if err != nil {
+		return
+	}
+
+	result.Acorns, err = digestOnlyImages(imageData.Acorns)
 	return
 }
 
@@ -125,10 +130,16 @@ func allImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageI
 	}
 	result = append(result, remoteImages...)
 
+	remoteImages, err = images(data.Acorns, opts)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, remoteImages...)
+
 	return
 }
 
-func createAppManifest(ctx context.Context, ref string, data v1.ImagesData) (string, error) {
+func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, fullDigest bool) (string, error) {
 	d, err := name.NewDigest(ref)
 	if err != nil {
 		return "", err
@@ -167,6 +178,10 @@ func createAppManifest(ctx context.Context, ref string, data v1.ImagesData) (str
 	err = remote.WriteIndex(d.Tag(h.Hex), index, opts...)
 	if err != nil {
 		return "", err
+	}
+
+	if fullDigest {
+		return d.Digest(h.String()).Name(), nil
 	}
 
 	return h.Hex, nil

@@ -72,4 +72,16 @@ out: {
 			}
 		}
 	}
+	acorns: {
+		for k, v in _norm.acorns {
+			"\(k)": {
+				if v["image"] != _|_ {
+					image: v.image
+				}
+				if v["build"] != _|_ {
+					build: v.build
+				}
+			}
+		}
+	}
 }
