@@ -177,19 +177,7 @@ func TestSimple(t *testing.T) {
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
 		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
 	})
-
-	helper.Wait(t, client.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
-		if pod.Namespace != appInstance.Status.Namespace ||
-			pod.Labels[labels.AcornContainerName] != "tester" {
-			return false
-		}
-		for _, cond := range pod.Status.Conditions {
-			if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
-				return true
-			}
-		}
-		return false
-	})
+	assert.NotEmpty(t, appInstance.Status.Namespace)
 }
 
 func TestRun(t *testing.T) {

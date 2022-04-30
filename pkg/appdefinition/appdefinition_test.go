@@ -933,6 +933,7 @@ images: {
 				Image: "images-image-image",
 			},
 		},
+		Acorns: map[string]v1.AcornBuilderSpec{},
 	}, buildSpec)
 
 	app := appImage.WithImageData(v1.ImagesData{
@@ -1285,7 +1286,7 @@ jobs: foo: image: "test"
 `
 	_, err := NewAppDefinition([]byte(acornCue))
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "_keysMustBeUniqueAcrossTypes.foo: conflicting values \"jobs\" and \"container\"")
+	assert.Contains(t, err.Error(), "_keysMustBeUniqueAcrossTypes.foo: conflicting values \"job\" and \"container\"")
 }
 
 func TestFriendImageNameIsSet(t *testing.T) {
