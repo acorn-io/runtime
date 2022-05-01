@@ -7,7 +7,9 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 )
@@ -33,4 +35,6 @@ func routes(router *router.Router) {
 
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
+
+	router.Type(&appsv1.DaemonSet{}).Namespace(system.Namespace).HandlerFunc(acornrouter.GCAcornRouter)
 }
