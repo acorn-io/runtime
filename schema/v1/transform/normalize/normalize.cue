@@ -280,6 +280,9 @@ import (
 		if IN.container["build"] != _|_ {
 			build: {#ToBuild & {in: IN.container.build}}.out
 		}
+		if IN.container["schedule"] != _|_ {
+			schedule: IN.container.schedule
+		}
 		entrypoint: IN.container.entrypoint | strings.Split(IN.container.entrypoint, " ")
 		for x in ["command", "cmd"] {
 			if IN.container[x] != _|_ {

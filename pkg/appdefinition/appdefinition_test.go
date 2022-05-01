@@ -1441,3 +1441,23 @@ acorns: foo: {
 		},
 	}, acorn.Secrets)
 }
+
+func TestCronJob(t *testing.T) {
+	acornCue := `
+jobs: foo: {
+  image: "image"
+  schedule: "daily"
+}`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "daily", appSpec.Jobs["foo"].Schedule)
+}

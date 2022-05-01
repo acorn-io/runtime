@@ -104,6 +104,9 @@ type Container struct {
 	WorkingDir  string                 `json:"workingDir,omitempty"`
 	Ports       []Port                 `json:"ports,omitempty"`
 
+	// Schedule is only available on jobs
+	Schedule string `json:"schedule,omitempty"`
+
 	// Init is only available on sidecars
 	Init bool `json:"init,omitempty"`
 

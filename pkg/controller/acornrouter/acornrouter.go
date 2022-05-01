@@ -1,8 +1,6 @@
 package acornrouter
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -110,9 +108,8 @@ func getPortMappings(req router.Request, acorn v1.Acorn, childApp v1.AppInstance
 	return portMappings, nil
 }
 
-func toName(name, namespace string) string {
-	hash := sha256.Sum256([]byte(name + " " + namespace))
-	return name2.SafeConcatName(name, namespace, hex.EncodeToString(hash[:])[:8])
+func toName(app *v1.AppInstance, name, namespace string) string {
+	return name2.SafeConcatName(name, namespace, string(app.UID[:12]))
 }
 
 func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acorn v1.Acorn) (*appsv1.DaemonSet, error) {
@@ -148,7 +145,7 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 	}
 	ds := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      toName(acornName, app.Status.Namespace),
+			Name:      toName(app, acornName, app.Status.Namespace),
 			Namespace: system.Namespace,
 			Labels:    labels,
 		},

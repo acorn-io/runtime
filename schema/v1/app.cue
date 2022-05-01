@@ -27,6 +27,7 @@ package v1
 
 #Job: {
 	#ContainerBase
+	schedule: string | *""
 	sidecars: [string]: #Sidecar
 }
 

@@ -1,0 +1,14 @@
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    jobs:
+      oneimage:
+        schedule: "daily"
+        image: "image-name"

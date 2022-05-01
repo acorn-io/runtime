@@ -1,6 +1,8 @@
 package appdefinition
 
 import (
+	"strings"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/meta"
@@ -31,34 +33,66 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
-func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference, name string, container v1.Container) *batchv1.Job {
+func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference, name string, container v1.Container) meta.Object {
 	containers, initContainers := toContainers(appInstance, tag, name, container)
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: appInstance.Status.Namespace,
-			Labels: containerLabels(appInstance, name,
-				labels.AcornManaged, "true",
-				labels.AcornJobName, name,
-				labels.AcornContainerName, ""),
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: containerLabels(appInstance, name,
-						labels.AcornManaged, "true",
-						labels.AcornJobName, name,
-						labels.AcornContainerName, ""),
-					Annotations: podAnnotations(appInstance, name, container),
-				},
-				Spec: corev1.PodSpec{
-					ImagePullSecrets: pullSecrets,
-					RestartPolicy:    corev1.RestartPolicyNever,
-					Containers:       setTerminationPath(containers),
-					InitContainers:   setTerminationPath(initContainers),
-					Volumes:          toVolumes(appInstance, container),
-				},
+	jobSpec := batchv1.JobSpec{
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: containerLabels(appInstance, name,
+					labels.AcornManaged, "true",
+					labels.AcornJobName, name,
+					labels.AcornContainerName, ""),
+				Annotations: podAnnotations(appInstance, name, container),
+			},
+			Spec: corev1.PodSpec{
+				ImagePullSecrets: pullSecrets,
+				RestartPolicy:    corev1.RestartPolicyNever,
+				Containers:       setTerminationPath(containers),
+				InitContainers:   setTerminationPath(initContainers),
+				Volumes:          toVolumes(appInstance, container),
 			},
 		},
 	}
+
+	if container.Schedule == "" {
+		return &batchv1.Job{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: appInstance.Status.Namespace,
+				Labels:    jobSpec.Template.Labels,
+			},
+			Spec: jobSpec,
+		}
+	}
+	return &batchv1.CronJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: appInstance.Status.Namespace,
+			Labels:    jobSpec.Template.Labels,
+		},
+		Spec: batchv1.CronJobSpec{
+			Schedule: toCronJobSchedule(container.Schedule),
+			JobTemplate: batchv1.JobTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: jobSpec.Template.Labels,
+				},
+				Spec: jobSpec,
+			},
+		},
+	}
+}
+
+func toCronJobSchedule(schedule string) string {
+	switch strings.TrimSpace(schedule) {
+	case "year":
+	case "annually":
+	case "monthly":
+	case "weekly":
+	case "daily":
+	case "midnight":
+	case "hourly":
+	default:
+		return schedule
+	}
+	return "@" + strings.TrimSpace(schedule)
 }

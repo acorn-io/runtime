@@ -1,0 +1,64 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
+
+---
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/job-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  schedule: "@daily"
+  jobTemplate:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/job-name": "oneimage"
+        "acorn.io/managed": "true"
+    spec:
+      template:
+        metadata:
+          labels:
+            "acorn.io/app-namespace": "app-namespace"
+            "acorn.io/app-name": "app-name"
+            "acorn.io/job-name": "oneimage"
+            "acorn.io/managed": "true"
+          annotations:
+            acorn.io/container-spec: '{"image":"image-name","schedule":"daily"}'
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: oneimage
+              image: "index.docker.io/library/test@image-name"
+              terminationMessagePath: "/run/secrets/output"
+---
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    jobs:
+      oneimage:
+        schedule: "daily"
+        image: "image-name"
+  conditions:
+    defined:
+      success: true

@@ -27,6 +27,7 @@ package v1
 
 #JobSpec: {
 	#ContainerBaseSpec
+	schedule: string | *""
 	sidecars: [string]: #SidecarSpec
 }
 

@@ -10,3 +10,7 @@ import (
 func TestJobs(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/job", DeploySpec)
 }
+
+func TestCronJobs(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/cronjob", DeploySpec)
+}
