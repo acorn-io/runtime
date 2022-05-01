@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
@@ -28,11 +29,13 @@ func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
 		service := toService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
 		if service != nil {
-			result = append(result, toAcornService(service))
+			service, ptrService := toAcornService(appInstance, service)
+			result = append(result, service, ptrService)
 		}
 		publishService := toPublishService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
 		if publishService != nil {
-			result = append(result, toAcornService(publishService))
+			publishService, _ = toAcornService(appInstance, publishService)
+			result = append(result, publishService)
 		}
 	}
 	return result
@@ -49,11 +52,25 @@ func toAcornLabels(l map[string]string) map[string]string {
 	return result
 }
 
-func toAcornService(svc *corev1.Service) *corev1.Service {
+func toAcornService(app *v1.AppInstance, svc *corev1.Service) (*corev1.Service, *corev1.Service) {
+	systemName := name2.SafeConcatName(svc.Name, svc.Namespace, string(app.UID[:12]))
+	ptrSvc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      svc.Name,
+			Namespace: svc.Namespace,
+			Labels:    toAcornLabels(svc.Labels),
+		},
+		Spec: corev1.ServiceSpec{
+			Type:         corev1.ServiceTypeExternalName,
+			ExternalName: systemName + "." + system.Namespace + "." + system.ClusterDomain,
+		},
+	}
+	svc.Name = systemName
+	svc.Namespace = system.Namespace
 	svc.Labels = toAcornLabels(svc.Labels)
 	svc.Spec.Selector = toAcornLabels(svc.Spec.Selector)
 	svc.Spec.InternalTrafficPolicy = &[]corev1.ServiceInternalTrafficPolicyType{corev1.ServiceInternalTrafficPolicyLocal}[0]
-	return svc
+	return svc, ptrSvc
 }
 
 func toServicePort(port v1.Port) corev1.ServicePort {

@@ -28,10 +28,6 @@ func TestDeploySpecStop(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec-stop", DeploySpec)
 }
 
-func TestAcorn(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/acorn", DeploySpec)
-}
-
 func TestEntrypointCommand(t *testing.T) {
 	dep := toDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{

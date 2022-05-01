@@ -1,5 +1,7 @@
 #!/bin/bash
 
 set -e -x
-sleep 2
-curl -v http://service:82
+while true; do
+  curl --connect-timeout 3 -v http://service:82 && exit 0
+  sleep 1
+done

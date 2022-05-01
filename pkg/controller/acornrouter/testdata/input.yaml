@@ -3,6 +3,7 @@ apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
+  uid: 1234567890ab
 spec:
   image: test
 status:

@@ -16,6 +16,7 @@ var (
 	BuildKitName   = "buildkitd"
 	BuildkitPort   = 8080
 	KlipperLBImage = "rancher/klipper-lb:v0.3.4"
+	ClusterDomain  = "svc.cluster.local"
 )
 
 func UserNamespace() string {

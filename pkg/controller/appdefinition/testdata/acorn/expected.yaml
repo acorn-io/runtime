@@ -27,8 +27,8 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: acorn-name-publish-1234567890ab
-  namespace: app-created-namespace
+  name: acorn-name-publish-1234567890ab-app-created-namespace-123-fb3a8
+  namespace: acorn-system
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
@@ -54,6 +54,21 @@ apiVersion: v1
 metadata:
   name: acorn-name
   namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/acorn-name": "acorn-name"
+spec:
+  type: ExternalName
+  externalName: acorn-name-app-created-namespace-1234567890ab.acorn-system.svc.cluster.local
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: acorn-name-app-created-namespace-1234567890ab
+  namespace: acorn-system
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"

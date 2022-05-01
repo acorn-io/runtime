@@ -1,8 +1,8 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: acorn-name
-  namespace: app-created-namespace
+  name: acorn-name-app-created-namespace-1234567890ab
+  namespace: acorn-system
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace

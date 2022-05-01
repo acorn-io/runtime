@@ -1,6 +1,8 @@
 package acornrouter
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	name2 "github.com/rancher/wrangler/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -107,6 +110,11 @@ func getPortMappings(req router.Request, acorn v1.Acorn, childApp v1.AppInstance
 	return portMappings, nil
 }
 
+func toName(name, namespace string) string {
+	hash := sha256.Sum256([]byte(name + " " + namespace))
+	return name2.SafeConcatName(name, namespace, hex.EncodeToString(hash[:])[:8])
+}
+
 func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acorn v1.Acorn) (*appsv1.DaemonSet, error) {
 	if len(acorn.Ports) == 0 {
 		return nil, nil
@@ -140,8 +148,8 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 	}
 	ds := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      acornName,
-			Namespace: app.Status.Namespace,
+			Name:      toName(acornName, app.Status.Namespace),
+			Namespace: system.Namespace,
 			Labels:    labels,
 		},
 		Spec: appsv1.DaemonSetSpec{
