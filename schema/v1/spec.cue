@@ -124,7 +124,7 @@ package v1
 #AcornSpec: {
 	image?: string
 	build?: #AcornBuildSpec
-	ports: [...#PortSpec]
+	ports: [...#AppPortSpec]
 	volumes: [...#VolumeBinding]
 	secrets: [...#SecretBinding]
 	params: [string]: _
@@ -137,6 +137,13 @@ package v1
 	volumes: [string]:    #VolumeSpec
 	secrets: [string]:    #SecretSpec
 	acorns: [string]:     #AcornSpec
+}
+
+#AppPortSpec: {
+	publish:    bool | *false
+	port:       int
+	targetPort: int | *port
+	protocol:   *"tcp" | "udp" | "http" | "https"
 }
 
 #PortSpec: {

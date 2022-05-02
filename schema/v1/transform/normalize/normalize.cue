@@ -16,6 +16,14 @@ import (
 	}
 }
 
+#ToAppPublishPort: {
+	IN="in": v1.#AppPort
+	out:     v1.#AppPortSpec
+	out:     {#ToAppPort & {in: IN}}.out & {
+		publish: true
+	}
+}
+
 #CombinePorts: {
 	IN="in": {
 		ports: [...v1.#PortSpec]
@@ -42,6 +50,30 @@ import (
 			value: parts[1]
 		}
 
+	}
+}
+
+#ToAppPort: {
+	IN="in": v1.#AppPort
+	out:     v1.#AppPortSpec
+	_inStr:  string
+	_inInt:  int & IN
+	if _inInt != _|_ {
+		_inStr: strconv.FormatInt(IN, 10)
+	}
+	if !( _inInt != _|_ ) {
+		_inStr: IN
+	}
+	out: IN | {
+		_portProto: strings.SplitN(_inStr, "/", 2)
+		if len(_portProto) == 2 {
+			protocol: _portProto[1]
+		}
+		_portPubPrivate: strings.SplitN(_portProto[0], ":", 2)
+		port:            strconv.ParseInt(_portPubPrivate[0], 10, 32)
+		if len(_portPubPrivate) == 2 {
+			targetPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
+		}
 	}
 }
 
@@ -399,28 +431,28 @@ import (
 		secrets: [ for v in IN.secrets {{#ToSecretBinding & {in: v}}.out}]
 		ports: {
 			if (IN["ports"] & int) != _|_ {
-				[{#ToPort & {in: IN.ports}}.out]
+				[{#ToAppPort & {in: IN.ports}}.out]
 			}
 			if (IN["ports"] & string) != _|_ {
-				[{#ToPort & {in: IN.ports}}.out]
+				[{#ToAppPort & {in: IN.ports}}.out]
 			}
 			if !((IN["ports"] & string) != _|_ ) &&
 				!((IN["ports"] & int) != _|_ ) {
 				[ for p in IN.ports {
-					{#ToPort & {in: p}}.out
+					{#ToAppPort & {in: p}}.out
 				}]
 			}
 		} + {
 			if (IN["publish"] & int) != _|_ {
-				[{#ToPublishPort & {in: IN.publish}}.out]
+				[{#ToAppPublishPort & {in: IN.publish}}.out]
 			}
 			if (IN["publish"] & string) != _|_ {
-				[{#ToPublishPort & {in: IN.publish}}.out]
+				[{#ToAppPublishPort & {in: IN.publish}}.out]
 			}
 			if !((IN["publish"] & string) != _|_ ) &&
 				!((IN["publish"] & int) != _|_) {
 				[ for p in IN.publish {
-					{#ToPublishPort & {in: p}}.out
+					{#ToAppPublishPort & {in: p}}.out
 				}]
 			}
 		}

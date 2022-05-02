@@ -8,10 +8,10 @@ spec:
   image: test
   ports:
   - port: 80
-    containerPort: 81
+    targetPort: 81
     protocol: https
   - port: 90
-    containerPort: 91
+    targetPort: 91
     protocol: tcp
 status:
   namespace: app-created-namespace

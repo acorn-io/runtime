@@ -61,6 +61,8 @@ package v1
 
 #Port: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
 
+#AppPort: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #AppPortSpec
+
 #Image: {
 	image:  string
 	build?: string | *#Build
@@ -162,8 +164,8 @@ package v1
 #Acorn: {
 	image?:  string
 	build?:  string | #AcornBuild
-	ports:   #Port | *[...#Port]
-	publish: #Port | *[...#Port]
+	ports:   #AppPort | *[...#AppPort]
+	publish: #AppPort | *[...#AppPort]
 	volumes: [...string]
 	secrets: [...string]
 	params: [string]: _

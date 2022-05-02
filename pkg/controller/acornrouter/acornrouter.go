@@ -55,7 +55,7 @@ func isPublishable(app *v1.AppInstance, port v1.Port) bool {
 		return true
 	}
 	for _, appPort := range app.Spec.Ports {
-		if appPort.ContainerPort == port.Port && protosMatch(appPort.Protocol, port.Protocol) {
+		if appPort.TargetPort == port.Port && protosMatch(appPort.Protocol, port.Protocol) {
 			return true
 		}
 	}
@@ -121,12 +121,24 @@ func getPortMappings(req router.Request, app *v1.AppInstance) (map[string]PortMa
 	}
 
 	for _, entry := range typed.Sorted(app.Status.AppSpec.Acorns) {
-		if err := addMappings(req, app, portMappings, entry.Key, entry.Value.Ports); err != nil {
+		if err := addMappings(req, app, portMappings, entry.Key, appPortsToPorts(entry.Value.Ports)); err != nil {
 			return nil, err
 		}
 	}
 
 	return portMappings, nil
+}
+
+func appPortsToPorts(ports []v1.AppPort) (result []v1.Port) {
+	for _, port := range ports {
+		result = append(result, v1.Port{
+			Port:          port.Port,
+			ContainerPort: port.TargetPort,
+			Protocol:      port.Protocol,
+			Publish:       port.Publish,
+		})
+	}
+	return
 }
 
 type PortMapping struct {

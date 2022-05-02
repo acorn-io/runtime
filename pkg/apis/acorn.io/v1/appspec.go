@@ -52,6 +52,13 @@ var (
 	PublishProtocolHTTP = PublishProtocol("http")
 )
 
+type AppPort struct {
+	Port       int32    `json:"port,omitempty" wrangler:"required"`
+	TargetPort int32    `json:"targetPort,omitempty" wrangler:"required"`
+	Protocol   Protocol `json:"protocol,omitempty" wrangler:"required"`
+	Publish    bool     `json:"publish,omitempty"`
+}
+
 type Port struct {
 	Port          int32    `json:"port,omitempty"`
 	ContainerPort int32    `json:"containerPort,omitempty"`
@@ -139,7 +146,7 @@ type Acorn struct {
 	Image   string          `json:"image,omitempty"`
 	Build   *AcornBuild     `json:"build,omitempty"`
 	Params  GenericMap      `json:"params,omitempty"`
-	Ports   []Port          `json:"ports,omitempty"`
+	Ports   []AppPort       `json:"ports,omitempty"`
 	Secrets []SecretBinding `json:"secrets,omitempty"`
 	Volumes []VolumeBinding `json:"volumes,omitempty"`
 }

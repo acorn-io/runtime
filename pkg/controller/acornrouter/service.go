@@ -12,7 +12,7 @@ import (
 )
 
 func toService(appInstance *v1.AppInstance) []meta.Object {
-	service := appdefinition.ToService(appInstance, appInstance.Name, v1.Container{Ports: appInstance.Spec.Ports})
+	service := appdefinition.ToService(appInstance, appInstance.Name, v1.Container{Ports: appPortsToPorts(appInstance.Spec.Ports)})
 	if service != nil {
 		service, ptrService := toAcornService(appInstance, service)
 		return []meta.Object{service, ptrService}

@@ -126,7 +126,7 @@ func publishablePort(appInstance *v1.AppInstance, port v1.Port) (result v1.Port)
 		return
 	}
 	for _, appPort := range appInstance.Spec.Ports {
-		if appPort.ContainerPort == port.Port {
+		if appPort.TargetPort == port.Port {
 			result = port
 			// possibly remap
 			result.Port = appPort.Port

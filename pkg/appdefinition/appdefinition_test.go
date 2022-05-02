@@ -1408,16 +1408,16 @@ acorns: foo: {
 		"x": "y",
 		"z": true,
 	}), acorn.Params)
-	assert.Equal(t, []v1.Port{
+	assert.Equal(t, []v1.AppPort{
 		{
-			Port:          80,
-			ContainerPort: 80,
-			Protocol:      "tcp",
+			Port:       80,
+			TargetPort: 80,
+			Protocol:   "tcp",
 		},
 		{
-			Port:          123,
-			ContainerPort: 456,
-			Protocol:      "http",
+			Port:       123,
+			TargetPort: 456,
+			Protocol:   "http",
 		},
 	}, acorn.Ports)
 	assert.Equal(t, []v1.VolumeBinding{
