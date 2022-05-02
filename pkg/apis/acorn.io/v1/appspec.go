@@ -3,10 +3,9 @@ package v1
 const (
 	VolumeRequestTypeEphemeral = "ephemeral"
 
-	AccessModeReadWriteMany    AccessMode = "readWriteMany"
-	AccessModeReadWriteOnce    AccessMode = "readWriteOnce"
-	AccessModeReadOnlyMany     AccessMode = "readOnlyMany"
-	AccessModeReadWriteOncePod AccessMode = "readWriteOncePod"
+	AccessModeReadWriteMany AccessMode = "readWriteMany"
+	AccessModeReadWriteOnce AccessMode = "readWriteOnce"
+	AccessModeReadOnlyMany  AccessMode = "readOnlyMany"
 )
 
 type AccessMode string
@@ -114,6 +113,9 @@ type Container struct {
 	Environment []EnvVar               `json:"environment,omitempty"`
 	WorkingDir  string                 `json:"workingDir,omitempty"`
 	Ports       []Port                 `json:"ports,omitempty"`
+
+	// Scale is only available on containers, not sidecars or jobs
+	Scale *int32 `json:"scale,omitempty"`
 
 	// Alias is only available on containers, not sidecars or jobs
 	Aliases []Alias `json:"aliases,omitempty"`

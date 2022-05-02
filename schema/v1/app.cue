@@ -22,7 +22,8 @@ package v1
 
 #Container: {
 	#ContainerBase
-	alias: string | [...string]
+	scale?: >=0
+	alias:  string | [...string]
 	sidecars: [string]: #Sidecar
 }
 

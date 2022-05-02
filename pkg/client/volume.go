@@ -36,9 +36,6 @@ func pvToVolume(pv corev1.PersistentVolume) Volume {
 		case corev1.ReadWriteMany:
 			accessModes = append(accessModes, v1.AccessModeReadWriteMany)
 			shortAccessModes = append(shortAccessModes, "RWX")
-		case corev1.ReadWriteOncePod:
-			accessModes = append(accessModes, v1.AccessModeReadWriteOncePod)
-			shortAccessModes = append(shortAccessModes, "RWOP")
 		}
 	}
 	vol := Volume{
@@ -159,8 +156,6 @@ func (c *client) VolumeCreate(ctx context.Context, name string, capacity resourc
 				pv.Spec.AccessModes = append(pv.Spec.AccessModes, corev1.ReadOnlyMany)
 			case v1.AccessModeReadWriteMany:
 				pv.Spec.AccessModes = append(pv.Spec.AccessModes, corev1.ReadWriteMany)
-			case v1.AccessModeReadWriteOncePod:
-				pv.Spec.AccessModes = append(pv.Spec.AccessModes, corev1.ReadWriteOncePod)
 			default:
 				return nil, fmt.Errorf("unknown access mode: %s", accessMode)
 			}
@@ -204,8 +199,6 @@ func ToAccessModes(accessModes []string) (result []v1.AccessMode, _ error) {
 			result = append(result, v1.AccessModeReadOnlyMany)
 		case "readwritemany", "rwm", "rwx":
 			result = append(result, v1.AccessModeReadWriteMany)
-		case "readwriteoncepod":
-			result = append(result, v1.AccessModeReadWriteOncePod)
 		default:
 			return nil, fmt.Errorf("unknown access mode: %s", accessMode)
 		}

@@ -26,6 +26,7 @@ package v1
 
 #ContainerSpec: {
 	#ContainerBaseSpec
+	scale?: >=0
 	aliases: [...#AliasSpec]
 	sidecars: [string]: #SidecarSpec
 }
@@ -96,7 +97,7 @@ package v1
 	build?: #BuildSpec
 }
 
-#AccessMode: "readWriteMany" | "readWriteOnce" | "readOnlyMany" | "readWriteOncePod"
+#AccessMode: "readWriteMany" | "readWriteOnce" | "readOnlyMany"
 
 #VolumeSpec: {
 	class:       string | *""

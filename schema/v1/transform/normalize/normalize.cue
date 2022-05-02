@@ -309,6 +309,9 @@ import (
 		if IN.container["image"] != _|_ {
 			image: IN.container.image
 		}
+		if IN.container["scale"] != _|_ {
+			scale: IN.container.scale
+		}
 		if IN.container["build"] != _|_ {
 			build: {#ToBuild & {in: IN.container.build}}.out
 		}

@@ -1341,6 +1341,27 @@ images: image: image: "test"
 	assert.Equal(t, "test", appSpec.Images["image"].Build.BaseImage)
 }
 
+func TestScale(t *testing.T) {
+	acornCue := `
+containers: nil: {}
+containers: one: scale: 1
+containers: zero: scale: 0
+`
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, (*int32)(nil), appSpec.Containers["nil"].Scale)
+	assert.Equal(t, int32(1), *appSpec.Containers["one"].Scale)
+	assert.Equal(t, int32(0), *appSpec.Containers["zero"].Scale)
+}
+
 func TestBuildParameters(t *testing.T) {
 	acornCue := `
 params: build: {

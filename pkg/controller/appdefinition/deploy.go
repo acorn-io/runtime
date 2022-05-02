@@ -266,26 +266,38 @@ func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInsta
 	}
 }
 
+func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
+	for _, dir := range container.Dirs {
+		for volName, vol := range appInstance.Status.AppSpec.Volumes {
+			if dir.Volume == volName {
+				for _, accessMode := range vol.AccessModes {
+					if accessMode == v1.AccessModeReadWriteOnce {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
+}
+
 func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets []corev1.LocalObjectReference) *appsv1.Deployment {
 	var (
-		replicas    *int32
 		aliasLabels []string
+		stateful    = isStateful(appInstance, container)
 	)
 	for _, alias := range container.Aliases {
 		aliasLabels = append(aliasLabels, labels.AcornAlias+alias.Name, "true")
 	}
-	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
-		replicas = new(int32)
-	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
-	return &appsv1.Deployment{
+	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: appInstance.Status.Namespace,
 			Labels:    containerLabels(appInstance, name),
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: replicas,
+			Replicas: container.Scale,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: containerLabels(appInstance, name),
 			},
@@ -308,6 +320,15 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 			},
 		},
 	}
+	if stateful {
+		dep.Spec.Replicas = &[]int32{1}[0]
+		dep.Spec.Template.Spec.Hostname = dep.Name
+		dep.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
+	}
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		dep.Spec.Replicas = new(int32)
+	}
+	return dep
 }
 
 func toDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []meta.Object) {

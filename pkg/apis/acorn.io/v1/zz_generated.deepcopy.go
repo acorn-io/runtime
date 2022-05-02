@@ -494,6 +494,11 @@ func (in *Container) DeepCopyInto(out *Container) {
 		*out = make([]Port, len(*in))
 		copy(*out, *in)
 	}
+	if in.Scale != nil {
+		in, out := &in.Scale, &out.Scale
+		*out = new(int32)
+		**out = **in
+	}
 	if in.Aliases != nil {
 		in, out := &in.Aliases, &out.Aliases
 		*out = make([]Alias, len(*in))
