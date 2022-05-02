@@ -22,6 +22,7 @@ package v1
 
 #Container: {
 	#ContainerBase
+	alias: string | [...string]
 	sidecars: [string]: #Sidecar
 }
 
@@ -185,6 +186,16 @@ package v1
 	_keysMustBeUniqueAcrossTypes: {
 		for k, v in containers {
 			"\(k)": "container"
+			if v["alias"] != _|_ {
+				if (v.alias & string) != _|_ {
+					"\(v.alias)": "alias"
+				}
+				if !((v.alias & string) != _|_) {
+					for alias in v.alias {
+						"\(alias)": "alias"
+					}
+				}
+			}
 		}
 		for k, v in jobs {
 			"\(k)": "job"

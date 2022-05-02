@@ -1461,3 +1461,52 @@ jobs: foo: {
 
 	assert.Equal(t, "daily", appSpec.Jobs["foo"].Schedule)
 }
+
+func TestAliasNotMatchContainer(t *testing.T) {
+	acornCue := `
+containers: foo: {
+  alias: "foo"
+  image: "image"
+}
+`
+
+	_, err := NewAppDefinition([]byte(acornCue))
+	assert.Contains(t, err.Error(), "conflicting values \"alias\" and \"container\"")
+
+	acornCue = `
+containers: foo: {
+  alias: ["abc", "foo"]
+  image: "image"
+}
+`
+
+	_, err = NewAppDefinition([]byte(acornCue))
+	assert.Contains(t, err.Error(), "conflicting values \"alias\" and \"container\"")
+}
+
+func TestAlias(t *testing.T) {
+	acornCue := `
+containers: foo: {
+  alias: "foo2"
+  image: "image"
+}
+containers: foo3: {
+  alias: ["foo4", "foo5"]
+  image: "image"
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "foo2", appSpec.Containers["foo"].Aliases[0].Name)
+	assert.Equal(t, "foo4", appSpec.Containers["foo3"].Aliases[0].Name)
+	assert.Equal(t, "foo5", appSpec.Containers["foo3"].Aliases[1].Name)
+}

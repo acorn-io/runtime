@@ -1,0 +1,399 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: con1
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con1"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "con1"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "con1"
+        "alias.acorn.io/svc1": "true"
+        "acorn.io/managed": "true"
+      annotations:
+        acorn.io/container-spec: '{"aliases":[{"name":"svc1"}],"image":"foo","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}]}'
+    spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      containers:
+        - name: con1
+          image: "index.docker.io/library/test@foo"
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: con2
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con2"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "con2"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "con2"
+        "acorn.io/managed": "true"
+        "alias.acorn.io/svc1": "true"
+      annotations:
+        acorn.io/container-spec: '{"aliases":[{"name":"svc1"}],"image":"foo","ports":[{"containerPort":81,"port":80,"protocol":"tcp","publish":true},{"containerPort":91,"port":90,"protocol":"https","publish":true}]}'
+    spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      containers:
+        - name: con2
+          image: "index.docker.io/library/test@foo"
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+            - containerPort: 91
+              protocol: "TCP"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: con3
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con3"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "con3"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "con3"
+        "acorn.io/managed": "true"
+        "alias.acorn.io/svc2": "true"
+      annotations:
+        acorn.io/container-spec: '{"aliases":[{"name":"svc2"}],"image":"foo","ports":[{"containerPort":101,"port":100,"protocol":"udp","publish":true}]}'
+    spec:
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      containers:
+        - name: con3
+          image: "index.docker.io/library/test@foo"
+          ports:
+            - containerPort: 101
+              protocol: "UDP"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: con1
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con1"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con1"
+    acorn.io/managed: "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: con2
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con2"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con2"
+    acorn.io/managed: "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: con3
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con3"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 100
+      targetPort: 101
+      protocol: "UDP"
+      name: "100"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con3"
+    acorn.io/managed: "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: svc1
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con1"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "alias.acorn.io/svc1": "true"
+    acorn.io/managed: "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: svc1-publish-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con2"
+    "acorn.io/managed": "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      appProtocol: "HTTPS"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "alias.acorn.io/svc1": "true"
+    acorn.io/managed: "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: svc2
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con3"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 100
+      targetPort: 101
+      protocol: "UDP"
+      name: "100"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "alias.acorn.io/svc2": "true"
+    acorn.io/managed: "true"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: svc2-publish-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con3"
+    "acorn.io/managed": "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 100
+      targetPort: 101
+      protocol: "UDP"
+      name: "100"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "alias.acorn.io/svc2": "true"
+    acorn.io/managed: "true"
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: con1
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con1"
+    "acorn.io/managed": "true"
+  annotations:
+    acorn.io/container-name: con1
+    acorn.io/hostnames: "con1.app-name.app-namespace.localhost,svc1.app-name.app-namespace.localhost"
+    acorn.io/port-number: "81"
+spec:
+  rules:
+    - host: con1.app-name.app-namespace.localhost
+      http:
+        paths:
+          - backend:
+              service:
+                name: con1
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    - host: svc1.app-name.app-namespace.localhost
+      http:
+        paths:
+          - backend:
+              service:
+                name: svc1
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+
+---
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+  endpoints:
+    - target: oneimage
+      hostname: localhost
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      con1:
+        aliases:
+          - name: svc1
+        image: "foo"
+        ports:
+          - port: 80
+            containerPort: 81
+            publish: true
+            protocol: http
+      con2:
+        aliases:
+          - name: svc1
+        image: "foo"
+        ports:
+          - port: 80
+            containerPort: 81
+            publish: true
+            protocol: tcp
+          - port: 90
+            containerPort: 91
+            publish: true
+            protocol: https
+      con3:
+        aliases:
+          - name: svc2
+        image: "foo"
+        ports:
+          - port: 100
+            containerPort: 101
+            publish: true
+            protocol: udp
+  conditions:
+    defined:
+      success: true

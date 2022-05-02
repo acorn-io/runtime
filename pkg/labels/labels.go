@@ -18,4 +18,5 @@ const (
 	AcornImageMapping   = Prefix + "image-mapping"
 	AcornPortNumber     = Prefix + "port-number"
 	AcornHostnames      = Prefix + "hostnames"
+	AcornAlias          = "alias." + Prefix
 )

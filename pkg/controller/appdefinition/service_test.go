@@ -10,3 +10,7 @@ import (
 func TestService(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/service", DeploySpec)
 }
+
+func TestAlias(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/alias", DeploySpec)
+}

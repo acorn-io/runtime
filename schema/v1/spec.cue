@@ -20,8 +20,13 @@ package v1
 	args: [string]:        string
 }
 
+#AliasSpec: {
+	name: string
+}
+
 #ContainerSpec: {
 	#ContainerBaseSpec
+	aliases: [...#AliasSpec]
 	sidecars: [string]: #SidecarSpec
 }
 

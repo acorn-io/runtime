@@ -267,7 +267,13 @@ func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInsta
 }
 
 func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets []corev1.LocalObjectReference) *appsv1.Deployment {
-	var replicas *int32
+	var (
+		replicas    *int32
+		aliasLabels []string
+	)
+	for _, alias := range container.Aliases {
+		aliasLabels = append(aliasLabels, labels.AcornAlias+alias.Name, "true")
+	}
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		replicas = new(int32)
 	}
@@ -276,9 +282,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: appInstance.Status.Namespace,
-			Labels: containerLabels(appInstance, name,
-				labels.AcornManaged, "true",
-			),
+			Labels:    containerLabels(appInstance, name),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: replicas,
@@ -288,7 +292,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: containerLabels(appInstance, name,
-						labels.AcornManaged, "true",
+						aliasLabels...,
 					),
 					Annotations: podAnnotations(appInstance, name, container),
 				},

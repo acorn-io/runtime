@@ -283,6 +283,14 @@ import (
 		if IN.container["schedule"] != _|_ {
 			schedule: IN.container.schedule
 		}
+		if IN.container["alias"] != _|_ {
+			if (IN.container.alias & string) != _|_ {
+				aliases: [{name: IN.container.alias}]
+			}
+			if !((IN.container.alias & string) != _|_) {
+				aliases: [ for alias in IN.container.alias {name: alias}]
+			}
+		}
 		entrypoint: IN.container.entrypoint | strings.Split(IN.container.entrypoint, " ")
 		for x in ["command", "cmd"] {
 			if IN.container[x] != _|_ {

@@ -15,17 +15,65 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+func addAlias(aliases []*corev1.Service, aliasServiceName, aliasTarget string, svc *corev1.Service) []*corev1.Service {
+	for _, existing := range aliases {
+		if existing.Name == aliasServiceName {
+			for _, newPort := range svc.Spec.Ports {
+				found := false
+				for _, existingPort := range existing.Spec.Ports {
+					if existingPort.Port == newPort.Port {
+						found = true
+						break
+					}
+				}
+				if !found {
+					existing.Spec.Ports = append(existing.Spec.Ports, newPort)
+				}
+			}
+			return aliases
+		}
+	}
+
+	newSvc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      aliasServiceName,
+			Namespace: svc.Namespace,
+			Labels:    svc.Labels,
+		},
+		Spec: svc.Spec,
+	}
+	newSvc.Spec.Selector = map[string]string{
+		labels.AcornAlias + aliasTarget: "true",
+		labels.AcornAppNamespace:        svc.Spec.Selector[labels.AcornAppNamespace],
+		labels.AcornAppName:             svc.Spec.Selector[labels.AcornAppName],
+		labels.AcornManaged:             "true",
+	}
+
+	return append(aliases, newSvc)
+}
+
 func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
+	var aliases []*corev1.Service
+
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		service := toService(appInstance, entry.Key, entry.Value)
 		if service != nil {
+			for _, alias := range entry.Value.Aliases {
+				aliases = addAlias(aliases, alias.Name, alias.Name, service)
+			}
 			result = append(result, service)
 		}
 		publishService := toPublishService(appInstance, entry.Key, entry.Value)
 		if publishService != nil {
-			result = append(result, publishService)
+			if len(entry.Value.Aliases) > 0 {
+				alias := entry.Value.Aliases[0]
+				aliases = addAlias(aliases, PublishServiceName(appInstance, alias.Name), alias.Name, publishService)
+			} else {
+				result = append(result, publishService)
+			}
 		}
 	}
+
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
 		service := toService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
 		if service != nil {
@@ -38,6 +86,11 @@ func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
 			result = append(result, publishService)
 		}
 	}
+
+	for _, alias := range aliases {
+		result = append(result, alias)
+	}
+
 	return result
 }
 
@@ -117,6 +170,10 @@ func toPublishService(appInstance *v1.AppInstance, containerName string, contain
 	var (
 		ports []corev1.ServicePort
 	)
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		// remove all publishes
+		return nil
+	}
 	for _, port := range container.Ports {
 		if port.Publish && isLayer4Port(port) {
 			ports = append(ports, toServicePort(port))

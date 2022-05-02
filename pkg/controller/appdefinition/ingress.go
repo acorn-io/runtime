@@ -38,6 +38,17 @@ func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 	}
 }
 
+func toPrefix(containerName string, appInstance *v1.AppInstance) string {
+	hostPrefix := containerName + "." + appInstance.Name
+	if containerName == "default" {
+		hostPrefix = appInstance.Name
+	}
+	if appInstance.Namespace != system.DefaultUserNamespace {
+		hostPrefix += "." + appInstance.Namespace
+	}
+	return hostPrefix
+}
+
 func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Response) error {
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		// remove all ingress
@@ -85,13 +96,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			continue
 		}
 
-		hostPrefix := containerName + "." + appInstance.Name
-		if containerName == "default" {
-			hostPrefix = appInstance.Name
-		}
-		if appInstance.Namespace != system.DefaultUserNamespace {
-			hostPrefix += "." + appInstance.Namespace
-		}
+		hostPrefix := toPrefix(containerName, appInstance)
 
 		defaultPort, ok := httpPorts[80]
 		if !ok {
@@ -117,6 +122,13 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 				hosts = append(hosts, hostPrefix+domain)
 			}
 			rules = append(rules, rule(hostPrefix+domain, containerName, defaultPort.Port))
+			for _, alias := range entry.Value.Aliases {
+				aliasPrefix := toPrefix(alias.Name, appInstance)
+				if addClusterDomains {
+					hosts = append(hosts, aliasPrefix+domain)
+				}
+				rules = append(rules, rule(aliasPrefix+domain, alias.Name, defaultPort.Port))
+			}
 		}
 
 		resp.Objects(&networkingv1.Ingress{

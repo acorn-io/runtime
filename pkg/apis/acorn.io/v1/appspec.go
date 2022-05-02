@@ -92,6 +92,10 @@ type EnvSecretVal struct {
 	Optional *bool  `json:"optional,omitempty"`
 }
 
+type Alias struct {
+	Name string `json:"name,omitempty"`
+}
+
 type Container struct {
 	Dirs        map[string]VolumeMount `json:"dirs,omitempty"`
 	Files       map[string]File        `json:"files,omitempty"`
@@ -103,6 +107,9 @@ type Container struct {
 	Environment []EnvVar               `json:"environment,omitempty"`
 	WorkingDir  string                 `json:"workingDir,omitempty"`
 	Ports       []Port                 `json:"ports,omitempty"`
+
+	// Alias is only available on containers, not sidecars or jobs
+	Aliases []Alias `json:"aliases,omitempty"`
 
 	// Schedule is only available on jobs
 	Schedule string `json:"schedule,omitempty"`
