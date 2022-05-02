@@ -355,6 +355,7 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
+  publishAllPorts: true
   image: test
   endpoints:
     - target: oneimage

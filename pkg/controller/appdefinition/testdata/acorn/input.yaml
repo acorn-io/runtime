@@ -5,6 +5,7 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
+  publishAllPorts: true
   image: test
 status:
   namespace: app-created-namespace

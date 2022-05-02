@@ -39,6 +39,8 @@ type AppInstanceSpec struct {
 	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
 	Secrets          []SecretBinding   `json:"secrets,omitempty"`
 	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`
+	PublishAllPorts  bool              `json:"publishAllPorts,omitempty"`
+	Ports            []Port            `json:"ports,omitempty"`
 	DeployParams     GenericMap        `json:"deployParams,omitempty"`
 	Images           map[string]string `json:"images,omitempty"`
 	ImagePullSecrets []string          `json:"imagePullSecrets,omitempty"`

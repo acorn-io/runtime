@@ -1,26 +1,26 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: acorn-name-app-created-namespace-1234567890ab
+  name: app-name-app-namespace-1234567890ab
   namespace: acorn-system
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
-    acorn.io/acorn-name: acorn-name
     acorn.io/managed: "true"
+    acorn.io/acorn-name: app-name
 spec:
   selector:
     matchLabels:
       acorn.io/app-name: app-name
       acorn.io/app-namespace: app-namespace
-      acorn.io/acorn-name: acorn-name
+      acorn.io/acorn-name: app-name
       acorn.io/managed: "true"
   template:
     metadata:
       labels:
         acorn.io/app-name: app-name
         acorn.io/app-namespace: app-namespace
-        acorn.io/acorn-name: acorn-name
+        acorn.io/acorn-name: app-name
         acorn.io/managed: "true"
     spec:
       automountServiceAccountToken: false
@@ -53,7 +53,7 @@ spec:
             - name: "DEST_PORT"
               value: "91"
             - name: "DEST_IPS"
-              value: "2.2.2.2 1::2"
+              value: "1.1.1.1 1::1"
           ports:
             - containerPort: 91
               protocol: TCP
@@ -61,3 +61,48 @@ spec:
             capabilities:
               add:
                 - NET_ADMIN
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/acorn-name: app-name
+    acorn.io/managed: "true"
+spec:
+  type: ExternalName
+  externalName: app-name-app-namespace-1234567890ab.acorn-system.svc.cluster.local
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-name-app-namespace-1234567890ab
+  namespace: acorn-system
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/acorn-name: app-name
+    acorn.io/managed: "true"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 81
+    protocol: TCP
+    appProtocol: HTTPS
+    name: "80"
+  - port: 90
+    targetPort: 91
+    protocol: TCP
+    name: "90"
+  internalTrafficPolicy: Local
+  selector:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/acorn-name: app-name
+    acorn.io/managed: "true"

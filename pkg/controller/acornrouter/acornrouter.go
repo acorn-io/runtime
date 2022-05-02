@@ -21,15 +21,13 @@ import (
 func AcornRouter(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
 
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
-		acornName, acorn := entry.Key, entry.Value
-		ds, err := toDaemonSet(req, appInstance, acornName, acorn)
-		if err != nil {
-			return err
-		}
-		if ds != nil {
-			resp.Objects(ds)
-		}
+	ds, err := toDaemonSet(req, appInstance)
+	if err != nil {
+		return err
+	}
+	if ds != nil {
+		resp.Objects(ds)
+		resp.Objects(toService(appInstance)...)
 	}
 
 	return nil
@@ -49,26 +47,86 @@ func protosMatch(left, right v1.Protocol) bool {
 	return normalizeProto(left) == normalizeProto(right)
 }
 
-func findPortServiceName(srcPort v1.Port, app v1.AppInstance) string {
-	for _, entry := range typed.Sorted(app.Status.AppSpec.Containers) {
-		for _, port := range entry.Value.Ports {
-			if port.Publish && port.Port == srcPort.ContainerPort &&
-				protosMatch(srcPort.Protocol, port.Protocol) {
-				return entry.Key
+func isPublishable(app *v1.AppInstance, port v1.Port) bool {
+	if !port.Publish {
+		return false
+	}
+	if app.Spec.PublishAllPorts {
+		return true
+	}
+	for _, appPort := range app.Spec.Ports {
+		if appPort.ContainerPort == port.Port && protosMatch(appPort.Protocol, port.Protocol) {
+			return true
+		}
+	}
+	return false
+}
+
+func addMappings(req router.Request, app *v1.AppInstance, portMappings map[string]PortMapping, serviceName string, ports []v1.Port) error {
+	for _, port := range ports {
+		portKey := strconv.Itoa(int(port.Port)) + "/" + string(normalizeProto(port.Protocol))
+		if _, ok := portMappings[portKey]; ok {
+			continue
+		}
+		if isPublishable(app, port) {
+			var service corev1.Service
+			err := req.Client.Get(&service, serviceName, &meta.GetOptions{
+				Namespace: app.Status.Namespace,
+			})
+			if apierrors.IsNotFound(err) {
+				continue
+			} else if err != nil {
+				return err
 			}
+
+			if service.Spec.Type == corev1.ServiceTypeExternalName {
+				if !strings.HasSuffix(service.Spec.ExternalName, system.Namespace+"."+system.ClusterDomain) {
+					continue
+				}
+				serviceName, _, _ := strings.Cut(service.Spec.ExternalName, ".")
+				err := req.Client.Get(&service, serviceName, &meta.GetOptions{
+					Namespace: system.Namespace,
+				})
+				if apierrors.IsNotFound(err) {
+					continue
+				} else if err != nil {
+					return err
+				}
+			}
+
+			if service.Spec.ClusterIP == "" {
+				continue
+			}
+
+			portMappings[portKey] = PortMapping{
+				Port:    port,
+				DestIPs: append([]string{service.Spec.ClusterIP}, service.Spec.ClusterIPs...),
+			}
+		}
+	}
+	return nil
+}
+
+func getPortMappings(req router.Request, app *v1.AppInstance) (map[string]PortMapping, error) {
+	portMappings := map[string]PortMapping{}
+
+	for _, entry := range typed.Sorted(app.Status.AppSpec.Containers) {
+		name := entry.Key
+		if len(entry.Value.Aliases) > 0 {
+			name = entry.Value.Aliases[0].Name
+		}
+		if err := addMappings(req, app, portMappings, name, entry.Value.Ports); err != nil {
+			return nil, err
 		}
 	}
 
 	for _, entry := range typed.Sorted(app.Status.AppSpec.Acorns) {
-		for _, port := range entry.Value.Ports {
-			if port.Publish && port.Port == srcPort.ContainerPort &&
-				protosMatch(srcPort.Protocol, port.Protocol) {
-				return entry.Key
-			}
+		if err := addMappings(req, app, portMappings, entry.Key, entry.Value.Ports); err != nil {
+			return nil, err
 		}
 	}
 
-	return ""
+	return portMappings, nil
 }
 
 type PortMapping struct {
@@ -76,59 +134,16 @@ type PortMapping struct {
 	Port    v1.Port
 }
 
-func getPortMappings(req router.Request, acorn v1.Acorn, childApp v1.AppInstance) (map[int32]PortMapping, error) {
-	portMappings := map[int32]PortMapping{}
-
-	for _, port := range acorn.Ports {
-		serviceName := findPortServiceName(port, childApp)
-		if serviceName == "" {
-			continue
-		}
-
-		var service corev1.Service
-		err := req.Client.Get(&service, serviceName, &meta.GetOptions{
-			Namespace: childApp.Status.Namespace,
-		})
-		if apierrors.IsNotFound(err) {
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-
-		if service.Spec.ClusterIP == "" {
-			continue
-		}
-
-		portMappings[port.Port] = PortMapping{
-			Port:    port,
-			DestIPs: append([]string{service.Spec.ClusterIP}, service.Spec.ClusterIPs...),
-		}
-	}
-
-	return portMappings, nil
-}
-
 func toName(app *v1.AppInstance, name, namespace string) string {
 	return name2.SafeConcatName(name, namespace, string(app.UID[:12]))
 }
 
-func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acorn v1.Acorn) (*appsv1.DaemonSet, error) {
-	if len(acorn.Ports) == 0 {
+func toDaemonSet(req router.Request, app *v1.AppInstance) (*appsv1.DaemonSet, error) {
+	if len(app.Spec.Ports) == 0 && !app.Spec.PublishAllPorts {
 		return nil, nil
 	}
 
-	var childApp v1.AppInstance
-
-	err := req.Client.Get(&childApp, acornName, &meta.GetOptions{
-		Namespace: app.Status.Namespace,
-	})
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	portMappings, err := getPortMappings(req, acorn, childApp)
+	portMappings, err := getPortMappings(req, app)
 	if err != nil {
 		return nil, err
 	}
@@ -140,12 +155,12 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 	labels := map[string]string{
 		labels.AcornAppName:      app.Name,
 		labels.AcornAppNamespace: app.Namespace,
-		labels.AcornAcornName:    acornName,
 		labels.AcornManaged:      "true",
+		labels.AcornAcornName:    app.Name,
 	}
 	ds := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      toName(app, acornName, app.Status.Namespace),
+			Name:      toName(app, app.Name, app.Namespace),
 			Namespace: system.Namespace,
 			Labels:    labels,
 		},
@@ -165,7 +180,7 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 	for _, entry := range typed.Sorted(portMappings) {
 		portSpec := entry.Value
 		ds.Spec.Template.Spec.Containers = append(ds.Spec.Template.Spec.Containers, corev1.Container{
-			Name:  fmt.Sprintf("port-%d", portSpec.Port.ContainerPort),
+			Name:  fmt.Sprintf("port-%d", portSpec.Port.Port),
 			Image: system.KlipperLBImage,
 			SecurityContext: &corev1.SecurityContext{
 				Capabilities: &corev1.Capabilities{
@@ -177,7 +192,7 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 			Env: []corev1.EnvVar{
 				{
 					Name:  "SRC_PORT",
-					Value: strconv.Itoa(int(portSpec.Port.ContainerPort)),
+					Value: strconv.Itoa(int(portSpec.Port.Port)),
 				},
 				{
 					Name:  "DEST_PROTO",
@@ -185,7 +200,7 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 				},
 				{
 					Name:  "DEST_PORT",
-					Value: strconv.Itoa(int(portSpec.Port.ContainerPort)),
+					Value: strconv.Itoa(int(portSpec.Port.Port)),
 				},
 				{
 					Name:  "DEST_IPS",
@@ -194,7 +209,7 @@ func toDaemonSet(req router.Request, app *v1.AppInstance, acornName string, acor
 			},
 			Ports: []corev1.ContainerPort{
 				{
-					ContainerPort: portSpec.Port.ContainerPort,
+					ContainerPort: portSpec.Port.Port,
 					Protocol:      corev1.Protocol(strings.ToUpper(string(normalizeProto(portSpec.Port.Protocol)))),
 				},
 			},

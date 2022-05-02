@@ -35,6 +35,6 @@ func routes(router *router.Router) {
 
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
-
 	router.Type(&appsv1.DaemonSet{}).Namespace(system.Namespace).HandlerFunc(acornrouter.GCAcornRouter)
+	router.Type(&corev1.Service{}).Namespace(system.Namespace).HandlerFunc(acornrouter.GCAcornRouterService)
 }

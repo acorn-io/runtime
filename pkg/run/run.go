@@ -154,6 +154,7 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Annotations: opts.Annotations,
 		},
 		Spec: v1.AppInstanceSpec{
+			PublishAllPorts:  true,
 			Image:            image,
 			Endpoints:        opts.Endpoints,
 			ImagePullSecrets: opts.ImagePullSecrets,

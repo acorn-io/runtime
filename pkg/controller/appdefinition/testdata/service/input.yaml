@@ -6,6 +6,7 @@ metadata:
   namespace: app-namespace
 spec:
   image: test
+  publishAllPorts: true
   endpoints:
   - target: oneimage
     hostname: localhost

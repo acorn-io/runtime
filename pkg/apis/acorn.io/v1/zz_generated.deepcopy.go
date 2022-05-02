@@ -210,6 +210,11 @@ func (in *AppInstanceSpec) DeepCopyInto(out *AppInstanceSpec) {
 		*out = make([]EndpointBinding, len(*in))
 		copy(*out, *in)
 	}
+	if in.Ports != nil {
+		in, out := &in.Ports, &out.Ports
+		*out = make([]Port, len(*in))
+		copy(*out, *in)
+	}
 	out.DeployParams = in.DeployParams.DeepCopy()
 	if in.Images != nil {
 		in, out := &in.Images, &out.Images

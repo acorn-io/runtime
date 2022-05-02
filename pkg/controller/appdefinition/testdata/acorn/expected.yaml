@@ -22,76 +22,15 @@ metadata:
 
 spec:
   image: index.docker.io/library/test@foo
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: acorn-name-publish-1234567890ab-app-created-namespace-123-fb3a8
-  namespace: acorn-system
-  labels:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/managed": "true"
-    "acorn.io/acorn-name": "acorn-name"
-spec:
-  type: LoadBalancer
-  internalTrafficPolicy: Local
   ports:
-    - port: 90
-      targetPort: 91
-      protocol: "TCP"
-      name: "90"
-  selector:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/acorn-name": "acorn-name"
-    "acorn.io/managed": "true"
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: acorn-name
-  namespace: app-created-namespace
-  labels:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/managed": "true"
-    "acorn.io/acorn-name": "acorn-name"
-spec:
-  type: ExternalName
-  externalName: acorn-name-app-created-namespace-1234567890ab.acorn-system.svc.cluster.local
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: acorn-name-app-created-namespace-1234567890ab
-  namespace: acorn-system
-  labels:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/managed": "true"
-    "acorn.io/acorn-name": "acorn-name"
-spec:
-  internalTrafficPolicy: Local
-  type: ClusterIP
-  ports:
-    - port: 80
-      targetPort: 81
-      protocol: "TCP"
-      appProtocol: "HTTP"
-      name: "80"
-    - port: 90
-      targetPort: 91
-      protocol: "TCP"
-      name: "90"
-  selector:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/acorn-name": "acorn-name"
-    "acorn.io/managed": "true"
+  - port: 80
+    containerPort: 81
+    protocol: http
+    publish: true
+  - port: 90
+    containerPort: 91
+    protocol: tcp
+    publish: true
 
 ---
 kind: AppInstance
@@ -102,6 +41,7 @@ metadata:
   namespace: app-namespace
 spec:
   image: test
+  publishAllPorts: true
 status:
   namespace: app-created-namespace
   appSpec:

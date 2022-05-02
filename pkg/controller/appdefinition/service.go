@@ -6,7 +6,6 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
@@ -56,13 +55,14 @@ func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
 	var aliases []*corev1.Service
 
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		service := toService(appInstance, entry.Key, entry.Value)
+		service := ToService(appInstance, entry.Key, entry.Value)
 		if service != nil {
 			for _, alias := range entry.Value.Aliases {
 				aliases = addAlias(aliases, alias.Name, alias.Name, service)
 			}
 			result = append(result, service)
 		}
+
 		publishService := toPublishService(appInstance, entry.Key, entry.Value)
 		if publishService != nil {
 			if len(entry.Value.Aliases) > 0 {
@@ -74,56 +74,11 @@ func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
 		}
 	}
 
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
-		service := toService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
-		if service != nil {
-			service, ptrService := toAcornService(appInstance, service)
-			result = append(result, service, ptrService)
-		}
-		publishService := toPublishService(appInstance, entry.Key, v1.Container{Ports: entry.Value.Ports})
-		if publishService != nil {
-			publishService, _ = toAcornService(appInstance, publishService)
-			result = append(result, publishService)
-		}
-	}
-
 	for _, alias := range aliases {
 		result = append(result, alias)
 	}
 
 	return result
-}
-
-func toAcornLabels(l map[string]string) map[string]string {
-	result := map[string]string{}
-	for k, v := range l {
-		if k == labels.AcornContainerName {
-			k = labels.AcornAcornName
-		}
-		result[k] = v
-	}
-	return result
-}
-
-func toAcornService(app *v1.AppInstance, svc *corev1.Service) (*corev1.Service, *corev1.Service) {
-	systemName := name2.SafeConcatName(svc.Name, svc.Namespace, string(app.UID[:12]))
-	ptrSvc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      svc.Name,
-			Namespace: svc.Namespace,
-			Labels:    toAcornLabels(svc.Labels),
-		},
-		Spec: corev1.ServiceSpec{
-			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: systemName + "." + system.Namespace + "." + system.ClusterDomain,
-		},
-	}
-	svc.Name = systemName
-	svc.Namespace = system.Namespace
-	svc.Labels = toAcornLabels(svc.Labels)
-	svc.Spec.Selector = toAcornLabels(svc.Spec.Selector)
-	svc.Spec.InternalTrafficPolicy = &[]corev1.ServiceInternalTrafficPolicyType{corev1.ServiceInternalTrafficPolicyLocal}[0]
-	return svc, ptrSvc
 }
 
 func toServicePort(port v1.Port) corev1.ServicePort {
@@ -166,6 +121,24 @@ func PublishServiceName(appInstance *v1.AppInstance, containerName string) strin
 	return name2.SafeConcatName(containerName, "publish", string(appInstance.UID)[:12])
 }
 
+func publishablePort(appInstance *v1.AppInstance, port v1.Port) (result v1.Port) {
+	if !port.Publish {
+		return
+	}
+	for _, appPort := range appInstance.Spec.Ports {
+		if appPort.ContainerPort == port.Port {
+			result = port
+			// possibly remap
+			result.Port = appPort.Port
+			return
+		}
+	}
+	if appInstance.Spec.PublishAllPorts {
+		return port
+	}
+	return
+}
+
 func toPublishService(appInstance *v1.AppInstance, containerName string, container v1.Container) *corev1.Service {
 	var (
 		ports []corev1.ServicePort
@@ -175,14 +148,16 @@ func toPublishService(appInstance *v1.AppInstance, containerName string, contain
 		return nil
 	}
 	for _, port := range container.Ports {
-		if port.Publish && isLayer4Port(port) {
+		port = publishablePort(appInstance, port)
+		if isLayer4Port(port) {
 			ports = append(ports, toServicePort(port))
 		}
 	}
 
 	for _, entry := range typed.Sorted(container.Sidecars) {
 		for _, port := range entry.Value.Ports {
-			if port.Publish && isLayer4Port(port) {
+			port = publishablePort(appInstance, port)
+			if isLayer4Port(port) {
 				ports = append(ports, toServicePort(port))
 			}
 		}
@@ -207,7 +182,7 @@ func toPublishService(appInstance *v1.AppInstance, containerName string, contain
 	}
 }
 
-func toService(appInstance *v1.AppInstance, name string, container v1.Container) *corev1.Service {
+func ToService(appInstance *v1.AppInstance, name string, container v1.Container) *corev1.Service {
 	var (
 		ports []corev1.ServicePort
 	)

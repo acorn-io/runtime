@@ -1,52 +1,16 @@
-kind: AppInstance
-apiVersion: acorn.io/v1
-metadata:
-  name: acorn-name
-  namespace: app-created-namespace
-status:
-  namespace: nested-app-created-namespace
-  appSpec:
-    containers:
-      c:
-        ports:
-          - port: 81
-            containerPort: 82
-            protocol: tcp
-            publish: true
-    acorns:
-      a:
-        ports:
-          - port: 91
-            containerPort: 92
-            protocol: http
-            publish: true
-
----
 kind: Service
 apiVersion: v1
 metadata:
-  name: c
-  namespace: nested-app-created-namespace
+  name: foo
+  namespace: app-created-namespace
 spec:
   ports:
+    - port: 91
+      targetPort: 92
+      protocol: TCP
     - port: 81
       targetPort: 82
       protocol: TCP
   clusterIP: 1.1.1.1
   clusterIPs:
     - 1::1
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: a
-  namespace: nested-app-created-namespace
-spec:
-  ports:
-    - port: 91
-      targetPort: 92
-      protocol: TCP
-  clusterIP: 2.2.2.2
-  clusterIPs:
-    - 1::2
