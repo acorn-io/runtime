@@ -125,8 +125,8 @@ github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbt
 github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/acorn-io/baaah v0.0.0-20220430010854-13aeb3c9602e h1:3CrpZwiWXOWcy6DC4kag50MnnqPWKn1ToZ4INxULVvg=
-github.com/acorn-io/baaah v0.0.0-20220430010854-13aeb3c9602e/go.mod h1:9FvNcgPq6o0x8Z8Nfq9EvG6tTvw7yVkagoNcMjvcm10=
+github.com/acorn-io/baaah v0.0.0-20220502034350-51d2afe1a8be h1:y1TCH0owQ1GKX8IvwNDxL512bKipHCot2pV4bJe/Mzo=
+github.com/acorn-io/baaah v0.0.0-20220502034350-51d2afe1a8be/go.mod h1:9FvNcgPq6o0x8Z8Nfq9EvG6tTvw7yVkagoNcMjvcm10=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=

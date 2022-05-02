@@ -11,7 +11,7 @@ replace (
 require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.4
-	github.com/acorn-io/baaah v0.0.0-20220430010854-13aeb3c9602e
+	github.com/acorn-io/baaah v0.0.0-20220502034350-51d2afe1a8be
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6
 	github.com/google/go-containerregistry v0.8.1-0.20220414143355-892d7a808387
