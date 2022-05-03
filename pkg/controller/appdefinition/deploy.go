@@ -269,11 +269,12 @@ func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInsta
 func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 	for _, dir := range container.Dirs {
 		for volName, vol := range appInstance.Status.AppSpec.Volumes {
+			if vol.Class == "ephemeral" {
+				continue
+			}
 			if dir.Volume == volName {
-				for _, accessMode := range vol.AccessModes {
-					if accessMode == v1.AccessModeReadWriteOnce {
-						return true
-					}
+				if len(vol.AccessModes) == 0 || (len(vol.AccessModes) == 1 && vol.AccessModes[0] == v1.AccessModeReadWriteOnce) {
+					return true
 				}
 			}
 		}

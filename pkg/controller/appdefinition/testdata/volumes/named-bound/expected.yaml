@@ -26,6 +26,9 @@ spec:
       "acorn.io/app-name": "app-name"
       "acorn.io/container-name": "container-name"
       "acorn.io/managed": "true"
+  replicas: 1
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -36,6 +39,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name"}'
     spec:
+      hostname: container-name
       shareProcessNamespace: true
       enableServiceLinks: false
       automountServiceAccountToken: false
