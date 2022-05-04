@@ -34,12 +34,18 @@ spec:
       containers:
         - name: oneimage
           image: "index.docker.io/library/test@image-name"
+          readinessProbe:
+            tcpSocket:
+              port: 81
           ports:
           - containerPort: 81
             protocol: "TCP"
           terminationMessagePath: "/run/secrets/output"
         - name: left
           image: "index.docker.io/library/test@foo"
+          readinessProbe:
+            tcpSocket:
+              port: 91
           ports:
           - containerPort: 91
             protocol: "TCP"

@@ -102,6 +102,39 @@ type Alias struct {
 	Name string `json:"name,omitempty"`
 }
 
+type ExecProbe struct {
+	Command []string `json:"command,omitempty"`
+}
+
+type TCPProbe struct {
+	URL string `json:"url,omitempty"`
+}
+
+type HTTPProbe struct {
+	URL     string            `json:"url,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
+}
+
+type ProbeType string
+
+const (
+	ReadinessProbeType ProbeType = "readiness"
+	LivenessProbeType  ProbeType = "liveness"
+	StartupProbeType   ProbeType = "startup"
+)
+
+type Probe struct {
+	Type                ProbeType  `json:"type,omitempty"`
+	Exec                *ExecProbe `json:"exec,omitempty"`
+	HTTP                *HTTPProbe `json:"http,omitempty"`
+	TCP                 *TCPProbe  `json:"tcp,omitempty"`
+	InitialDelaySeconds int32      `json:"initialDelaySeconds,omitempty"`
+	TimeoutSeconds      int32      `json:"timeoutSeconds,omitempty"`
+	PeriodSeconds       int32      `json:"periodSeconds,omitempty"`
+	SuccessThreshold    int32      `json:"successThreshold,omitempty"`
+	FailureThreshold    int32      `json:"failureThreshold,omitempty"`
+}
+
 type Container struct {
 	Dirs        map[string]VolumeMount `json:"dirs,omitempty"`
 	Files       map[string]File        `json:"files,omitempty"`
@@ -113,6 +146,7 @@ type Container struct {
 	Environment []EnvVar               `json:"environment,omitempty"`
 	WorkingDir  string                 `json:"workingDir,omitempty"`
 	Ports       []Port                 `json:"ports,omitempty"`
+	Probes      []Probe                `json:"probes,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`

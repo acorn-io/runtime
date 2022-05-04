@@ -33,6 +33,12 @@ package v1
 	sidecars: [string]: #Sidecar
 }
 
+#ProbeMap: {
+	[=~"ready|readiness|liveness|startup"]: string | #ProbeSpec
+}
+
+#Probes: string | #ProbeMap | [...#ProbeSpec]
+
 #FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.optional=true)?$"} | bytes
 
 #ContainerBase: {
@@ -48,6 +54,7 @@ package v1
 	[=~"interactive|tty|stdin"]:    bool | *false
 	ports:                          #Port | *[...#Port]
 	publish:                        #Port | *[...#Port]
+	[=~"probes|probe"]:             #Probes
 }
 
 #ShortVolumeRef: =~"^[a-z][-a-z0-9]*$"

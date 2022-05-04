@@ -36,6 +36,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name"}'
     spec:
+      terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false

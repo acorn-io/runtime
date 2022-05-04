@@ -33,7 +33,7 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https"}]}}}'
+        "acorn.io/container-spec": '{"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -50,47 +50,23 @@ spec:
               port: 81
         - name: left
           image: "index.docker.io/library/test@foo"
-          ports:
-          - containerPort: 91
-            protocol: "TCP"
           readinessProbe:
+            httpGet:
+              port: 80
+              path: "/foo/bar"
+              httpHeaders:
+                - name: foo
+                  value: bar
+          livenessProbe:
+            exec:
+              command:
+                - /bin/true
+          startupProbe:
             tcpSocket:
-              port: 91
----
-kind: Deployment
-apiVersion: apps/v1
-metadata:
-  name: buildimage
-  namespace: app-created-namespace
-  labels:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "buildimage"
-    "acorn.io/managed": "true"
-spec:
-  selector:
-    matchLabels:
-      "acorn.io/app-namespace": "app-namespace"
-      "acorn.io/app-name": "app-name"
-      "acorn.io/container-name": "buildimage"
-      "acorn.io/managed": "true"
-  template:
-    metadata:
-      labels:
-        "acorn.io/app-namespace": "app-namespace"
-        "acorn.io/app-name": "app-name"
-        "acorn.io/container-name": "buildimage"
-        "acorn.io/managed": "true"
-      annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
-    spec:
-      terminationGracePeriodSeconds: 5
-      automountServiceAccountToken: false
-      enableServiceLinks: false
-      shareProcessNamespace: true
-      containers:
-        - name: buildimage
-          image: "index.docker.io/library/test@sha256:build-image"
+              port: 1234
+              host: 1.1.1.1
+
+
 ---
 kind: Service
 apiVersion: v1
@@ -110,16 +86,12 @@ spec:
       protocol: "TCP"
       appProtocol: "HTTP"
       name: "80"
-    - port: 90
-      targetPort: 91
-      protocol: "TCP"
-      appProtocol: "HTTPS"
-      name: "90"
   selector:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "oneimage"
     "acorn.io/managed": "true"
+
 ---
 kind: AppInstance
 apiVersion: acorn.io/v1
@@ -136,23 +108,23 @@ status:
         sidecars:
           left:
             image: "foo"
-            ports:
-              - port: 90
-                containerPort: 91
-                protocol: https
+            probes:
+              - type: "readiness"
+                http:
+                  url: "http://localhost/foo/bar"
+                  headers:
+                    foo: bar
+              - type: "startup"
+                tcp:
+                  url: "garbage://1.1.1.1:1234/foo/bar"
+              - type: "liveness"
+                exec:
+                  command: ["/bin/true"]
         ports:
           - port: 80
             containerPort: 81
             protocol: http
         image: "image-name"
-        build:
-          dockerfile: "Dockerfile"
-          context: "."
-      buildimage:
-        image: "sha256:build-image"
-        build:
-          dockerfile: "custom-dockerfile"
-          context: "."
   conditions:
     defined:
       success: true

@@ -37,6 +37,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
     spec:
+      terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
@@ -72,6 +73,7 @@ spec:
       annotations:
         "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
+      terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false

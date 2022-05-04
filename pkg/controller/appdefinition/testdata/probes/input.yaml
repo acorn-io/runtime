@@ -1,0 +1,32 @@
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+spec:
+    image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          left:
+            image: "foo"
+            probes:
+            - type: "readiness"
+              http:
+                url: "http://localhost/foo/bar"
+                headers:
+                  foo: bar
+            - type: "startup"
+              tcp:
+                url: "garbage://1.1.1.1:1234/foo/bar"
+            - type: "liveness"
+              exec:
+                command: ["/bin/true"]
+        ports:
+        - port: 80
+          containerPort: 81
+          protocol: http
+        image: "image-name"

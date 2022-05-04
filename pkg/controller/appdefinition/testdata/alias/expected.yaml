@@ -37,12 +37,16 @@ spec:
       annotations:
         acorn.io/container-spec: '{"aliases":[{"name":"svc1"}],"image":"foo","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}]}'
     spec:
+      terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: con1
           image: "index.docker.io/library/test@foo"
+          readinessProbe:
+            tcpSocket:
+              port: 81
           ports:
             - containerPort: 81
               protocol: "TCP"
@@ -75,12 +79,16 @@ spec:
       annotations:
         acorn.io/container-spec: '{"aliases":[{"name":"svc1"}],"image":"foo","ports":[{"containerPort":81,"port":80,"protocol":"tcp","publish":true},{"containerPort":91,"port":90,"protocol":"https","publish":true}]}'
     spec:
+      terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: con2
           image: "index.docker.io/library/test@foo"
+          readinessProbe:
+            tcpSocket:
+              port: 81
           ports:
             - containerPort: 81
               protocol: "TCP"
@@ -115,6 +123,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"aliases":[{"name":"svc2"}],"image":"foo","ports":[{"containerPort":101,"port":100,"protocol":"udp","publish":true}]}'
     spec:
+      terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false

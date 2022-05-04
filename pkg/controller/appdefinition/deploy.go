@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	url2 "net/url"
 	"path"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
@@ -19,6 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func DeploySpec(req router.Request, resp router.Response) (err error) {
@@ -191,19 +193,114 @@ func resolveTag(app *v1.AppInstance, tag name.Reference, containerName string, c
 	return tag.Context().Digest(container.Image).String()
 }
 
+func parseURLForProbe(probeURL string) (scheme corev1.URIScheme, host string, port intstr.IntOrString, path string, ok bool) {
+	u, err := url2.Parse(probeURL)
+	if err != nil {
+		return
+	}
+	if u.Scheme == "https" {
+		scheme = corev1.URISchemeHTTPS
+	}
+	host = u.Hostname()
+	if host == "localhost" || host == "127.0.0.1" {
+		host = ""
+	}
+	port = intstr.Parse(u.Port())
+	if port.IntValue() == 0 {
+		if scheme == corev1.URISchemeHTTPS {
+			port = intstr.FromInt(443)
+		}
+		port = intstr.FromInt(80)
+	}
+	path = u.Path
+	ok = true
+	return
+}
+
+func toProbeHandler(probe v1.Probe) corev1.ProbeHandler {
+	var (
+		ok bool
+		ph corev1.ProbeHandler
+	)
+
+	if probe.TCP != nil {
+		socket := &corev1.TCPSocketAction{}
+		_, socket.Host, socket.Port, _, ok = parseURLForProbe(probe.TCP.URL)
+		if ok {
+			ph.TCPSocket = socket
+		}
+	}
+	if probe.Exec != nil {
+		ph.Exec = &corev1.ExecAction{
+			Command: probe.Exec.Command,
+		}
+	}
+	if probe.HTTP != nil {
+		http := &corev1.HTTPGetAction{}
+		for _, entry := range typed.Sorted(probe.HTTP.Headers) {
+			http.HTTPHeaders = append(http.HTTPHeaders, corev1.HTTPHeader{
+				Name:  entry.Key,
+				Value: entry.Value,
+			})
+		}
+		http.Scheme, http.Host, http.Port, http.Path, ok = parseURLForProbe(probe.HTTP.URL)
+		if ok {
+			ph.HTTPGet = http
+		}
+	}
+	return ph
+}
+
+func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
+	for _, probe := range container.Probes {
+		if probe.Type == probeType {
+			return &corev1.Probe{
+				ProbeHandler:        toProbeHandler(probe),
+				InitialDelaySeconds: probe.InitialDelaySeconds,
+				TimeoutSeconds:      probe.TimeoutSeconds,
+				PeriodSeconds:       probe.PeriodSeconds,
+				SuccessThreshold:    probe.SuccessThreshold,
+				FailureThreshold:    probe.FailureThreshold,
+			}
+		}
+	}
+
+	if probeType == v1.ReadinessProbeType &&
+		len(container.Probes) == 0 &&
+		len(container.Ports) > 0 {
+		for _, port := range container.Ports {
+			if port.Protocol == v1.ProtocolUDP {
+				continue
+			}
+			return &corev1.Probe{
+				ProbeHandler: corev1.ProbeHandler{
+					TCPSocket: &corev1.TCPSocketAction{
+						Port: intstr.FromInt(int(port.ContainerPort)),
+					},
+				},
+			}
+		}
+	}
+
+	return nil
+}
+
 func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
 	return corev1.Container{
-		Name:         containerName,
-		Image:        resolveTag(app, tag, containerName, container),
-		Command:      container.Entrypoint,
-		Args:         container.Command,
-		WorkingDir:   container.WorkingDir,
-		Env:          toEnv(container.Environment),
-		EnvFrom:      toEnvFrom(container.Environment),
-		TTY:          container.Interactive,
-		Stdin:        container.Interactive,
-		Ports:        toPorts(container),
-		VolumeMounts: toMounts(app.Name, deploymentName, containerName, container),
+		Name:           containerName,
+		Image:          resolveTag(app, tag, containerName, container),
+		Command:        container.Entrypoint,
+		Args:           container.Command,
+		WorkingDir:     container.WorkingDir,
+		Env:            toEnv(container.Environment),
+		EnvFrom:        toEnvFrom(container.Environment),
+		TTY:            container.Interactive,
+		Stdin:          container.Interactive,
+		Ports:          toPorts(container),
+		VolumeMounts:   toMounts(app.Name, deploymentName, containerName, container),
+		LivenessProbe:  toProbe(container, v1.LivenessProbeType),
+		StartupProbe:   toProbe(container, v1.StartupProbeType),
+		ReadinessProbe: toProbe(container, v1.ReadinessProbeType),
 	}
 }
 
@@ -310,13 +407,14 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 					Annotations: podAnnotations(appInstance, name, container),
 				},
 				Spec: corev1.PodSpec{
-					ImagePullSecrets:             pullSecrets,
-					ShareProcessNamespace:        &[]bool{true}[0],
-					EnableServiceLinks:           new(bool),
-					Containers:                   containers,
-					InitContainers:               initContainers,
-					Volumes:                      toVolumes(appInstance, container),
-					AutomountServiceAccountToken: new(bool),
+					TerminationGracePeriodSeconds: &[]int64{5}[0],
+					ImagePullSecrets:              pullSecrets,
+					ShareProcessNamespace:         &[]bool{true}[0],
+					EnableServiceLinks:            new(bool),
+					Containers:                    containers,
+					InitContainers:                initContainers,
+					Volumes:                       toVolumes(appInstance, container),
+					AutomountServiceAccountToken:  new(bool),
 				},
 			},
 		},

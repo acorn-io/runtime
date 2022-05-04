@@ -348,6 +348,12 @@ import (
 			}
 		}
 
+		for x in ["probe", "probes"] {
+			if IN.container[x] != _|_ {
+				probes: {#ToProbeSpecs & {in: IN.container[x]}}.out
+			}
+		}
+
 		for x in ["dirs", "directories"] {
 			if IN.container[x] != _|_ {
 				for k, v in IN.container[x] {

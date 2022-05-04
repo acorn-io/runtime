@@ -1531,3 +1531,82 @@ containers: foo3: {
 	assert.Equal(t, "foo4", appSpec.Containers["foo3"].Aliases[0].Name)
 	assert.Equal(t, "foo5", appSpec.Containers["foo3"].Aliases[1].Name)
 }
+
+func TestProbes(t *testing.T) {
+	acornCue := `
+containers: tcp: {
+	probe: "tcp://localhost:1234"
+}
+containers: http: {
+	probe: "http://localhost:1234"
+}
+containers: https: {
+	probe: "https://localhost:1234"
+}
+containers: cmd: {
+	probe: "/usr/bin/true"
+}
+containers: spec: {
+	probes: [{
+		type: "startup"
+		exec: command: ["/usr/bin/false"]
+		initialDelaySeconds: 1
+		timeoutSeconds:      2
+		periodSeconds :      3
+		successThreshold:    4
+		failureThreshold:    5
+	}]
+}
+containers: map: {
+	probe: liveness: "/usr/bin/true"
+	probe: startup: {
+		exec: command: ["/usr/bin/false"]
+		initialDelaySeconds: 1
+		timeoutSeconds:      2
+		periodSeconds :      3
+		successThreshold:    4
+		failureThreshold:    5
+	}
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v1.ProbeType("readiness"), appSpec.Containers["tcp"].Probes[0].Type)
+	assert.Equal(t, "tcp://localhost:1234", appSpec.Containers["tcp"].Probes[0].TCP.URL)
+
+	assert.Equal(t, v1.ProbeType("readiness"), appSpec.Containers["http"].Probes[0].Type)
+	assert.Equal(t, "http://localhost:1234", appSpec.Containers["http"].Probes[0].HTTP.URL)
+
+	assert.Equal(t, v1.ProbeType("readiness"), appSpec.Containers["https"].Probes[0].Type)
+	assert.Equal(t, "https://localhost:1234", appSpec.Containers["https"].Probes[0].HTTP.URL)
+
+	assert.Equal(t, v1.ProbeType("readiness"), appSpec.Containers["cmd"].Probes[0].Type)
+	assert.Equal(t, []string{"/usr/bin/true"}, appSpec.Containers["cmd"].Probes[0].Exec.Command)
+
+	assert.Equal(t, v1.ProbeType("liveness"), appSpec.Containers["map"].Probes[0].Type)
+	assert.Equal(t, []string{"/usr/bin/true"}, appSpec.Containers["map"].Probes[0].Exec.Command)
+	assert.Equal(t, v1.ProbeType("startup"), appSpec.Containers["map"].Probes[1].Type)
+	assert.Equal(t, []string{"/usr/bin/false"}, appSpec.Containers["map"].Probes[1].Exec.Command)
+	assert.Equal(t, int32(1), appSpec.Containers["map"].Probes[1].InitialDelaySeconds)
+	assert.Equal(t, int32(2), appSpec.Containers["map"].Probes[1].TimeoutSeconds)
+	assert.Equal(t, int32(3), appSpec.Containers["map"].Probes[1].PeriodSeconds)
+	assert.Equal(t, int32(4), appSpec.Containers["map"].Probes[1].SuccessThreshold)
+	assert.Equal(t, int32(5), appSpec.Containers["map"].Probes[1].FailureThreshold)
+
+	assert.Equal(t, v1.ProbeType("startup"), appSpec.Containers["spec"].Probes[0].Type)
+	assert.Equal(t, []string{"/usr/bin/false"}, appSpec.Containers["spec"].Probes[0].Exec.Command)
+	assert.Equal(t, int32(1), appSpec.Containers["spec"].Probes[0].InitialDelaySeconds)
+	assert.Equal(t, int32(2), appSpec.Containers["spec"].Probes[0].TimeoutSeconds)
+	assert.Equal(t, int32(3), appSpec.Containers["spec"].Probes[0].PeriodSeconds)
+	assert.Equal(t, int32(4), appSpec.Containers["spec"].Probes[0].SuccessThreshold)
+	assert.Equal(t, int32(5), appSpec.Containers["spec"].Probes[0].FailureThreshold)
+}

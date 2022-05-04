@@ -20,6 +20,25 @@ package v1
 	args: [string]:        string
 }
 
+#ProbeSpec: {
+	type: *"readiness" | "liveness" | "startup"
+	exec?: {
+		command: [...string]
+	}
+	http?: {
+		url: string
+		headers: [string]: string
+	}
+	tcp?: {
+		url: string
+	}
+	initialDelaySeconds: uint32 | *0
+	timeoutSeconds:      uint32 | *1
+	periodSeconds:       uint32 | *10
+	successThreshold:    uint32 | *1
+	failureThreshold:    uint32 | *3
+}
+
 #AliasSpec: {
 	name: string
 }
@@ -60,6 +79,7 @@ package v1
 	ports: [...#PortSpec]
 	files: [string]: #FileSpec
 	dirs: [string]:  #VolumeMountSpec
+	probes: [...#ProbeSpec]
 }
 
 #VolumeMountSpec: {
