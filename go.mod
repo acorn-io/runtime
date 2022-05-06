@@ -19,7 +19,7 @@ require (
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220421132737-1db6ac0805d4
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.5.0
-	github.com/moby/buildkit v0.10.1
+	github.com/moby/buildkit v0.10.3
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
 	github.com/pkg/errors v0.9.1
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
