@@ -1,6 +1,23 @@
 package build
 
-import "github.com/acorn-io/acorn/pkg/flagparams"
+import (
+	"fmt"
+
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/flagparams"
+	cplatforms "github.com/containerd/containerd/platforms"
+)
+
+func ParsePlatforms(platforms []string) (result []v1.Platform, _ error) {
+	for _, platformString := range platforms {
+		p, err := cplatforms.Parse(platformString)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %s: %w", platformString, err)
+		}
+		result = append(result, v1.Platform(p))
+	}
+	return
+}
 
 func ParseParams(file, cwd string, args []string) (map[string]interface{}, error) {
 	appDefinition, err := ResolveAndParse(file, cwd)
