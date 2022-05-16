@@ -15,7 +15,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"github.com/containerd/containerd/platforms"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
@@ -43,9 +42,6 @@ func (b *Options) Complete() (*Options, error) {
 	}
 	if current.Streams == nil {
 		current.Streams = streams.CurrentOutput()
-	}
-	if len(current.Platforms) == 0 {
-		current.Platforms = append(current.Platforms, v1.Platform(platforms.DefaultSpec()))
 	}
 	if current.Namespace == "" {
 		current.Namespace = system.RequireUserNamespace()
@@ -301,8 +297,8 @@ func FromBuild(ctx context.Context, cwd, namespace string, platforms []v1.Platfo
 	return buildImageAndManifest(ctx, cwd, namespace, platforms, build, streams)
 }
 
-func buildImageNoManifest(ctx context.Context, cwd, namespace string, platform v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
-	ids, err := buildkit.Build(ctx, cwd, namespace, []v1.Platform{platform}, build, streams)
+func buildImageNoManifest(ctx context.Context, cwd, namespace string, build v1.Build, streams streams.Streams) (string, error) {
+	_, ids, err := buildkit.Build(ctx, cwd, namespace, nil, build, streams)
 	if err != nil {
 		return "", err
 	}
@@ -310,7 +306,7 @@ func buildImageNoManifest(ctx context.Context, cwd, namespace string, platform v
 }
 
 func buildImageAndManifest(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
-	ids, err := buildkit.Build(ctx, cwd, namespace, platforms, build, streams)
+	platforms, ids, err := buildkit.Build(ctx, cwd, namespace, platforms, build, streams)
 	if err != nil {
 		return "", err
 	}

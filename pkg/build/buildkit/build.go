@@ -19,21 +19,52 @@ import (
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (result []string, _ error) {
+func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) ([]v1.Platform, []string, error) {
 	c, err := k8sclient.Default()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	port, dialer, err := GetBuildkitDialer(ctx, c)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	inPodName := fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, namespace)
-	context := filepath.Join(cwd, build.Context)
-	dockerfilePath := filepath.Dir(filepath.Join(cwd, build.Dockerfile))
-	dockerfileName := filepath.Base(build.Dockerfile)
+	bkc, err := buildkit.New(ctx, "", buildkit.WithContextDialer(dialer))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer bkc.Close()
+
+	var (
+		inPodName      = fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, namespace)
+		context        = filepath.Join(cwd, build.Context)
+		dockerfilePath = filepath.Dir(filepath.Join(cwd, build.Dockerfile))
+		dockerfileName = filepath.Base(build.Dockerfile)
+		result         []string
+	)
+
+	if len(platforms) == 0 {
+		workers, err := bkc.ListWorkers(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(workers) == 0 {
+			return nil, nil, fmt.Errorf("no workers found on buildkit server")
+		}
+		if len(workers[0].Platforms) == 0 {
+			return nil, nil, fmt.Errorf("no platforms found on workers on buildkit server")
+		}
+		platforms = []v1.Platform{
+			{
+				Architecture: workers[0].Platforms[0].Architecture,
+				OS:           workers[0].Platforms[0].OS,
+				OSVersion:    workers[0].Platforms[0].OSVersion,
+				OSFeatures:   workers[0].Platforms[0].OSFeatures,
+				Variant:      workers[0].Platforms[0].Variant,
+			},
+		}
+	}
 
 	for _, platform := range platforms {
 		options := buildkit.SolveOpt{
@@ -64,22 +95,16 @@ func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, 
 			options.FrontendAttrs["build-arg:"+key] = value
 		}
 
-		bkc, err := buildkit.New(ctx, "", buildkit.WithContextDialer(dialer))
-		if err != nil {
-			return nil, err
-		}
-		defer bkc.Close()
-
 		res, err := bkc.Solve(ctx, nil, options, progress(ctx, streams))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		inClusterName := fmt.Sprintf("127.0.0.1:%d/acorn/%s@%s", port, namespace, res.ExporterResponse["containerimage.digest"])
 		result = append(result, inClusterName)
 	}
 
-	return result, nil
+	return platforms, result, nil
 }
 
 func progress(ctx context.Context, streams streams.Streams) chan *buildkit.SolveStatus {

@@ -11,7 +11,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/streams"
-	"github.com/containerd/containerd/platforms"
 )
 
 type AppImageOptions struct {
@@ -26,7 +25,7 @@ func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, 
 	defer os.RemoveAll(tempContext)
 
 	io := streams.Streams()
-	tag, err := buildImageNoManifest(ctx, tempContext, namespace, v1.Platform(platforms.DefaultSpec()), v1.Build{
+	tag, err := buildImageNoManifest(ctx, tempContext, namespace, v1.Build{
 		Context:    ".",
 		Dockerfile: "Dockerfile",
 	}, io)
