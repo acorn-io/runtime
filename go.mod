@@ -15,7 +15,7 @@ require (
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6
 	github.com/google/go-containerregistry v0.8.1-0.20220414143355-892d7a808387
-	github.com/google/go-containerregistry/pkg/authn/k8schain v0.0.0-20220421132737-1db6ac0805d4
+	github.com/google/go-containerregistry/pkg/authn/k8schain 84eb52633e96
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220421132737-1db6ac0805d4
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/websocket v1.5.0
