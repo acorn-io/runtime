@@ -5,6 +5,10 @@ import (
 	"runtime/debug"
 )
 
+var (
+	Tag string
+)
+
 func Version(tag string) string {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {

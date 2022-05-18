@@ -329,11 +329,12 @@ func generateDocker(req router.Request, appInstance *v1.AppInstance, name string
 
 func labelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
 	return map[string]string{
-		labels.AcornAppName:      appInstance.Name,
-		labels.AcornAppNamespace: appInstance.Namespace,
-		labels.AcornManaged:      "true",
-		labels.AcornAppUID:       string(appInstance.UID),
-		labels.AcornSecretName:   secretName,
+		labels.AcornAppName:         appInstance.Name,
+		labels.AcornAppNamespace:    appInstance.Namespace,
+		labels.AcornManaged:         "true",
+		labels.AcornAppUID:          string(appInstance.UID),
+		labels.AcornSecretName:      secretName,
+		labels.AcornSecretGenerated: "true",
 	}
 }
 

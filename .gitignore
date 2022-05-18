@@ -6,5 +6,6 @@
 .idea
 /acorn
 /go.work
+/go.work.sum
 /cosign.key
 /releases

@@ -52,7 +52,7 @@ func (r *registry) List(ctx context.Context) ([]string, error) {
 		eg.Go(func() error {
 			defer sema.Release(1)
 
-			tags, err := remote.ListWithContext(ctx, rep, r.options...)
+			tags, err := remote.List(rep, append(r.options, remote.WithContext(ctx))...)
 			if err != nil {
 				return err
 			}

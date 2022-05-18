@@ -1,6 +1,0 @@
-FROM alpine:3.15.4
-RUN apk add --no-cache ca-certificates 
-RUN adduser -D acorn
-COPY acorn /usr/local/bin/acorn
-USER acorn
-ENTRYPOINT ["/usr/local/bin/acorn"]

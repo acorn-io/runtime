@@ -1377,6 +1377,9 @@ containers: foo: build: args: one: params.build.foo
 	def, err = def.WithBuildParams(map[string]interface{}{
 		"foo": "two",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	buildSpec, err := def.BuilderSpec()
 	if err != nil {
@@ -1416,6 +1419,9 @@ acorns: foo: {
 	def, err = def.WithBuildParams(map[string]interface{}{
 		"foo": "two",
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	appSpec, err := def.AppSpec()
 	if err != nil {

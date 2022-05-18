@@ -60,9 +60,6 @@ func doWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bo
 }
 
 func retryWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) {
-	ctx := GetCTX(t)
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(WatchTimeoutSeconds)*time.Second)
-	defer cancel()
 	for {
 		if done := doWatch(t, watchFunc, cb); done {
 			return

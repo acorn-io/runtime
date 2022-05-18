@@ -2,7 +2,10 @@
 
 package v1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 type AppInstanceCondition string
 
@@ -36,6 +39,8 @@ type AppInstance struct {
 type AppInstanceSpec struct {
 	Image            string            `json:"image,omitempty"`
 	Stop             *bool             `json:"stop,omitempty"`
+	ReattachVolumes  *bool             `json:"reattachVolumes,omitempty"`
+	ReattachSecrets  *bool             `json:"reattachSecrets,omitempty"`
 	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
 	Secrets          []SecretBinding   `json:"secrets,omitempty"`
 	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`
@@ -57,8 +62,11 @@ type SecretBinding struct {
 }
 
 type VolumeBinding struct {
-	Volume        string `json:"volume,omitempty"`
-	VolumeRequest string `json:"volumeRequest,omitempty"`
+	Volume        string            `json:"volume,omitempty"`
+	VolumeRequest string            `json:"volumeRequest,omitempty"`
+	Capacity      resource.Quantity `json:"capacity,omitempty"`
+	AccessModes   []AccessMode      `json:"accessModes,omitempty"`
+	Class         string            `json:"class,omitempty"`
 }
 
 type ContainerStatus struct {
@@ -95,10 +103,10 @@ type AppInstanceStatus struct {
 }
 
 type Endpoint struct {
-	Target           string          `json:"target,omitempty"`
-	TargetPortNumber int32           `json:"targetPortNumber,omitempty"`
-	Address          string          `json:"address,omitempty"`
-	Protocol         PublishProtocol `json:"protocol,omitempty"`
+	Target     string          `json:"target,omitempty"`
+	TargetPort int32           `json:"targetPort,omitempty"`
+	Address    string          `json:"address,omitempty"`
+	Protocol   PublishProtocol `json:"protocol,omitempty"`
 }
 
 func (a *AppInstance) Conditions() *map[string]Condition {

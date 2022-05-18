@@ -348,6 +348,9 @@ func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message
 	err = options.Client.List(ctx, apps, &client.ListOptions{
 		Namespace: app.Status.Namespace,
 	})
+	if err != nil {
+		return err
+	}
 
 	for _, app := range apps.Items {
 		if err := App(ctx, &app, output, options); err != nil {

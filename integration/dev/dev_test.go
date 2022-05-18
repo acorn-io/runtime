@@ -89,7 +89,7 @@ func TestDev(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
+	_, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
 		return app.Spec.Image != oldImage && app.Spec.Image != "", nil
 	})
 	if err != nil {
@@ -97,7 +97,7 @@ func TestDev(t *testing.T) {
 	}
 
 	cancel()
-	app, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
+	_, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
 		return app.Spec.Stop != nil && *app.Spec.Stop, nil
 	})
 	if err != nil {

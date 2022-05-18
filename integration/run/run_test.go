@@ -136,11 +136,9 @@ func TestImageNameAnnotation(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		_, digest, _ := strings.Cut(pod.Spec.Containers[0].Image, "sha256:")
-		if mapping["sha256:"+digest] == "nginx" {
-			return true
-		}
-		return false
+		return mapping["sha256:"+digest] == "nginx"
 	})
 }
 
@@ -201,7 +199,7 @@ func TestRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		c.Delete(ctx, &corev1.Namespace{
+		_ = c.Delete(ctx, &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: ns2,
 			},
@@ -245,6 +243,9 @@ func TestDeployParam(t *testing.T) {
 			"someInt": 5,
 		},
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
 		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
@@ -271,6 +272,9 @@ func TestNested(t *testing.T) {
 	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
 		Namespace: ns.Name,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
 		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success

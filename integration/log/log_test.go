@@ -42,7 +42,7 @@ func TestLog(t *testing.T) {
 
 	output := make(chan log.Message)
 	go func() {
-		log.App(ctx, app, output, &log.Options{
+		_ = log.App(ctx, app, output, &log.Options{
 			Client: c,
 		})
 		close(output)

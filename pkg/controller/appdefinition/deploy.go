@@ -60,7 +60,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 }
 
 func addDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
-	resp.Objects(toDeployments(appInstance, tag, pullSecrets)...)
+	resp.Objects(ToDeployments(appInstance, tag, pullSecrets)...)
 }
 
 func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
@@ -430,7 +430,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 	return dep
 }
 
-func toDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []meta.Object) {
+func ToDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []meta.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		result = append(result, toDeployment(appInstance, tag, entry.Key, entry.Value, pullSecrets))
 	}

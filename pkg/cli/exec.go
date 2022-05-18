@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	hclient "github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/streams"
@@ -31,7 +32,7 @@ type Exec struct {
 	DebugImage  string `usage:"Use image as container root for command" short:"d"`
 }
 
-func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *hclient.App, args []string) error {
+func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, args []string) error {
 	containers, err := c.ContainerReplicaList(ctx, &hclient.ContainerReplicaListOptions{
 		App: app.Name,
 	})

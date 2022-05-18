@@ -11,4 +11,6 @@ jobs:
       - uses: debianmaster/actions-k3s@v1.0.5
         with:
           version: 'latest'
+      - run: make setup-ci-env
+      - run: make validate
       - run: make test

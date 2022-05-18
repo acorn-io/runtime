@@ -3,6 +3,7 @@ package cli
 import (
 	"strings"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler-cli"
@@ -59,13 +60,13 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		return strings.TrimPrefix(str, "sha256:")[:12]
 	})
 
-	var images []client.Image
+	var images []apiv1.Image
 	if len(args) == 1 {
 		img, err := c.ImageGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
-		images = []client.Image{*img}
+		images = []apiv1.Image{*img}
 	} else {
 		images, err = c.ImageList(cmd.Context())
 		if err != nil {

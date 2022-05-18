@@ -33,7 +33,7 @@ func (d *Dialer) DialContext(ctx context.Context, url string, headers http.Heade
 
 	conn, resp, err := d.dialer.DialContext(ctx, url, newHeaders)
 	if err != nil {
-		if resp.Body != nil {
+		if resp != nil && resp.Body != nil {
 			data, readErr := ioutil.ReadAll(resp.Body)
 			if readErr == nil && len(data) > 0 {
 				return nil, fmt.Errorf("%w: %s", err, data)
