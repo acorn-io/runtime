@@ -41,28 +41,27 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance, containerName str
 		for _, ingress := range service.Status.LoadBalancer.Ingress {
 			if ingress.Hostname != "" {
 				endpoints = append(endpoints, v1.Endpoint{
-					Target:           containerName,
-					TargetPortNumber: port.TargetPort.IntVal,
-					Address:          fmt.Sprintf("%s:%d", ingress.Hostname, port.Port),
-					Protocol:         protocol,
+					Target:     containerName,
+					TargetPort: port.TargetPort.IntVal,
+					Address:    fmt.Sprintf("%s:%d", ingress.Hostname, port.Port),
+					Protocol:   protocol,
 				})
 			} else if ingress.IP != "" {
 				endpoints = append(endpoints, v1.Endpoint{
-					Target:           containerName,
-					TargetPortNumber: port.TargetPort.IntVal,
-					Address:          fmt.Sprintf("%s:%d", ingress.IP, port.Port),
-					Protocol:         protocol,
+					Target:     containerName,
+					TargetPort: port.TargetPort.IntVal,
+					Address:    fmt.Sprintf("%s:%d", ingress.IP, port.Port),
+					Protocol:   protocol,
 				})
-			} else {
 			}
 		}
 
 		if len(service.Status.LoadBalancer.Ingress) == 0 {
 			endpoints = append(endpoints, v1.Endpoint{
-				Target:           containerName,
-				TargetPortNumber: port.TargetPort.IntVal,
-				Address:          fmt.Sprintf("<pending>:%d", port.Port),
-				Protocol:         protocol,
+				Target:     containerName,
+				TargetPort: port.TargetPort.IntVal,
+				Address:    fmt.Sprintf("<pending>:%d", port.Port),
+				Protocol:   protocol,
 			})
 		}
 	}
@@ -99,10 +98,10 @@ func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName str
 		}
 
 		endpoints = append(endpoints, v1.Endpoint{
-			Target:           containerName,
-			TargetPortNumber: int32(port),
-			Address:          hostname,
-			Protocol:         v1.PublishProtocolHTTP,
+			Target:     containerName,
+			TargetPort: int32(port),
+			Address:    hostname,
+			Protocol:   v1.PublishProtocolHTTP,
 		})
 	}
 

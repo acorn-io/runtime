@@ -26,6 +26,5 @@ func (s *Tag) Run(cmd *cobra.Command, args []string) error {
 
 	src, tag := args[0], args[1]
 
-	_, err = client.Tag(cmd.Context(), src, tag)
-	return err
+	return client.ImageTag(cmd.Context(), src, tag)
 }

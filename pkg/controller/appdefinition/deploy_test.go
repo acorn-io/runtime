@@ -33,7 +33,7 @@ func TestProbe(t *testing.T) {
 }
 
 func TestEntrypointCommand(t *testing.T) {
-	dep := toDeployments(&v1.AppInstance{
+	dep := ToDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -50,7 +50,7 @@ func TestEntrypointCommand(t *testing.T) {
 }
 
 func TestEnvironment(t *testing.T) {
-	dep := toDeployments(&v1.AppInstance{
+	dep := ToDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -82,7 +82,7 @@ func TestEnvironment(t *testing.T) {
 }
 
 func TestWorkdir(t *testing.T) {
-	dep := toDeployments(&v1.AppInstance{
+	dep := ToDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -97,7 +97,7 @@ func TestWorkdir(t *testing.T) {
 }
 
 func TestInteractive(t *testing.T) {
-	dep := toDeployments(&v1.AppInstance{
+	dep := ToDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -113,7 +113,7 @@ func TestInteractive(t *testing.T) {
 }
 
 func TestSidecar(t *testing.T) {
-	dep := toDeployments(&v1.AppInstance{
+	dep := ToDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -138,7 +138,7 @@ func TestSidecar(t *testing.T) {
 }
 
 func TestPorts(t *testing.T) {
-	dep := toDeployments(&v1.AppInstance{
+	dep := ToDeployments(&v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -222,7 +222,7 @@ func TestFiles(t *testing.T) {
 		},
 	}
 
-	dep := toDeployments(app, testTag, nil)[0].(*appsv1.Deployment)
+	dep := ToDeployments(app, testTag, nil)[0].(*appsv1.Deployment)
 
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
@@ -256,8 +256,6 @@ func TestFiles(t *testing.T) {
 }
 
 func toPathHash(path string) string {
-	if strings.HasPrefix(path, "/") {
-		path = path[1:]
-	}
+	path = strings.TrimPrefix(path, "/")
 	return hex.EncodeToString(sha256.Sum256([]byte(path))[:])[:12]
 }

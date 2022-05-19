@@ -79,6 +79,7 @@ func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
 
 type Options struct {
 	Name             string
+	GenerateName     string
 	Namespace        string
 	Annotations      map[string]string
 	Labels           map[string]string
@@ -99,7 +100,7 @@ func (o *Options) Complete() (*Options, error) {
 		opts = *o
 	}
 
-	if opts.Name == "" {
+	if opts.Name == "" && opts.GenerateName == "" {
 		opts.Name = nameGenerator.Generate()
 	}
 
@@ -148,10 +149,11 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 
 	app := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        opts.Name,
-			Namespace:   opts.Namespace,
-			Labels:      opts.Labels,
-			Annotations: opts.Annotations,
+			Name:         opts.Name,
+			GenerateName: opts.GenerateName,
+			Namespace:    opts.Namespace,
+			Labels:       opts.Labels,
+			Annotations:  opts.Annotations,
 		},
 		Spec: v1.AppInstanceSpec{
 			PublishAllPorts:  true,

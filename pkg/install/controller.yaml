@@ -1,0 +1,27 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: acorn-system
+  namespace: acorn-system
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: acorn-controller
+  namespace: acorn-system
+spec:
+  selector:
+    matchLabels:
+      app: acorn-controller
+  template:
+    metadata:
+      labels:
+        app: acorn-controller
+    spec:
+      containers:
+        - name: acorn-controller
+          image: ibuildthecloud/test:a
+          args:
+            - controller
+      serviceAccountName: acorn-system

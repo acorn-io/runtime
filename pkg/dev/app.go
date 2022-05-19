@@ -26,11 +26,13 @@ func appStatusLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *Optio
 		displayCancel = func() {}
 		subCtx        context.Context
 	)
-
 	for app := range apps {
 		displayCancel()
 		subCtx, displayCancel = context.WithCancel(ctx)
-		go appPrintLoop(subCtx, app, opts)
+		app := app
+		go func() { _ = appPrintLoop(subCtx, app, opts) }()
 	}
+
+	displayCancel()
 	return nil
 }

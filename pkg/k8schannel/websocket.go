@@ -21,7 +21,6 @@ type Connection struct {
 	conn        *websocket.Conn
 	streamsLock sync.Mutex
 	streams     map[uint8]*stream
-	readCond    sync.Cond
 	err         error
 }
 
@@ -65,7 +64,6 @@ func (c *Connection) pushStreamData(streamNum uint8, data []byte) {
 
 	stream.buf = append(stream.buf, data...)
 	stream.cond.Broadcast()
-	return
 }
 
 func (c *Connection) read() {

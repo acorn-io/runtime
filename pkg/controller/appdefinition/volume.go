@@ -18,8 +18,8 @@ func addPVCs(appInstance *v1.AppInstance, resp router.Response) {
 	resp.Objects(toPVCs(appInstance)...)
 }
 
-func translateAccessModes(volumeRequest v1.VolumeRequest) (result []corev1.PersistentVolumeAccessMode) {
-	for _, accessMode := range volumeRequest.AccessModes {
+func translateAccessModes(accessModes []v1.AccessMode) (result []corev1.PersistentVolumeAccessMode) {
+	for _, accessMode := range accessModes {
 		newMode := strings.ToUpper(string(accessMode[0:1])) + string(accessMode[1:])
 		result = append(result, corev1.PersistentVolumeAccessMode(newMode))
 	}
@@ -31,7 +31,7 @@ func toPVCs(appInstance *v1.AppInstance) (result []meta.Object) {
 		volume, volumeRequest := entry.Key, entry.Value
 
 		var (
-			accessModes         = translateAccessModes(volumeRequest)
+			accessModes         = translateAccessModes(volumeRequest.AccessModes)
 			volumeBinding, bind = isBind(appInstance, volume)
 			class               *string
 		)
@@ -68,6 +68,17 @@ func toPVCs(appInstance *v1.AppInstance) (result []meta.Object) {
 				class = &volumeRequest.Class
 			}
 			pvc.Spec.StorageClassName = class
+			if volumeBinding.Class != "" {
+				pvc.Spec.StorageClassName = &volumeBinding.Class
+			}
+
+			if len(volumeBinding.AccessModes) > 0 {
+				pvc.Spec.AccessModes = translateAccessModes(volumeBinding.AccessModes)
+			}
+		}
+
+		if !volumeBinding.Capacity.IsZero() {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = volumeBinding.Capacity
 		}
 
 		result = append(result, &pvc)

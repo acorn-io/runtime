@@ -15,6 +15,7 @@ var (
 func main() {
 	cmd := acorn.New()
 	cmd.Version = version.Version(Version)
+	version.Tag = Version
 	cmd.InitDefaultVersionFlag()
 
 	ctx := signals.SetupSignalContext()

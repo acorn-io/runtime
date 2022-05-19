@@ -1,0 +1,56 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acorn-system
+rules:
+  - verbs: ["*"]
+    apiGroups: ["api.acorn.io", "acorn.io"]
+    resources: ["*"]
+  - verbs: ["*"]
+    apiGroups: [""]
+    resources:
+      - pods
+      - pods/portforward
+      - configmaps
+      - secrets
+      - namespaces
+      - services
+      - serviceaccounts
+      - persistentvolumes
+      - persistentvolumeclaims
+  - verbs: ["*"]
+    apiGroups: ["apiextensions.k8s.io"]
+    resources:
+      - customresourcedefinitions
+  - verbs: ["*"]
+    apiGroups: ["apiregistration.k8s.io"]
+    resources:
+      - apiservices
+  - verbs: ["*"]
+    apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingresses
+  - verbs: ["*"]
+    apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+  - verbs: ["*"]
+    apiGroups: ["apps"]
+    resources:
+      - deployments
+      - daemonsets
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acorn-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: acorn-system
+subjects:
+  - kind: ServiceAccount
+    namespace: acorn-system
+    name: acorn-system

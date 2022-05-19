@@ -2,3 +2,4 @@ go.work
 go.work.sum
 bin
 cosign.key
+releases

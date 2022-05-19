@@ -24,6 +24,6 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = c.ImagePush(cmd.Context(), args[0])
+	_, err = c.ImagePush(cmd.Context(), args[0], nil)
 	return err
 }

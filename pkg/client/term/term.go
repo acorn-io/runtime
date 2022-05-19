@@ -45,7 +45,7 @@ func Pipe(execIO *ExecIO, streams *streams.Streams) (int, error) {
 				}
 			}
 		}()
-		t.Safe(func() error {
+		_ = t.Safe(func() error {
 			<-copyIO(execIO, streams)
 			return nil
 		})
@@ -60,8 +60,8 @@ func copyIO(cIO *ExecIO, streams *streams.Streams) <-chan struct{} {
 	result := make(chan struct{})
 
 	go func() {
-		io.Copy(cIO.Stdin, streams.In)
-		cIO.Stdin.Close()
+		_, _ = io.Copy(cIO.Stdin, streams.In)
+		_ = cIO.Stdin.Close()
 	}()
 
 	eg := errgroup.Group{}
@@ -74,7 +74,7 @@ func copyIO(cIO *ExecIO, streams *streams.Streams) <-chan struct{} {
 		return err
 	})
 	go func() {
-		eg.Wait()
+		_ = eg.Wait()
 		result <- struct{}{}
 	}()
 

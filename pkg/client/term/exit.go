@@ -20,10 +20,17 @@ func ToExitCode(conn io.ReadCloser) ExitCode {
 
 	status := metav1.Status{}
 	data, err := ioutil.ReadAll(conn)
+	if err != nil {
+		return ExitCode{
+			Code: 1,
+			Err:  err,
+		}
+	}
 	err = json.Unmarshal(data, &status)
 	if err != nil {
 		return ExitCode{
 			Code: 1,
+			Err:  err,
 		}
 	}
 

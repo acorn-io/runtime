@@ -241,7 +241,7 @@ func podName(pod *corev1.Pod) string {
 func endpoints(cfg *config.Config, app *v1.AppInstance) string {
 	endpointTarget := map[string][]v1.Endpoint{}
 	for _, endpoint := range app.Status.Endpoints {
-		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPortNumber)
+		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPort)
 		endpointTarget[target] = append(endpointTarget[target], endpoint)
 	}
 

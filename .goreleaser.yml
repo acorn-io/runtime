@@ -29,7 +29,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -x 'main.Version={{ .version }}'
+      - -X 'main.Version={{ .Version }}'
 archives:
   - id: default
     builds:
@@ -46,6 +46,7 @@ dockers:
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
     build_flag_templates:
+      - "--target=goreleaser"
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
@@ -60,6 +61,7 @@ dockers:
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
     build_flag_templates:
+      - "--target=goreleaser"
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
@@ -75,6 +77,7 @@ dockers:
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
     build_flag_templates:
+      - "--target=goreleaser"
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"

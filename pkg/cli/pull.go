@@ -1,9 +1,8 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
@@ -26,10 +25,10 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	image, err := c.ImagePull(cmd.Context(), args[0])
+	progress, err := c.ImagePull(cmd.Context(), args[0], nil)
 	if err != nil {
 		return err
 	}
-	fmt.Println(image.Digest)
-	return nil
+
+	return progressbar.Print(progress)
 }
