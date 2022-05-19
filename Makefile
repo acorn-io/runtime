@@ -8,7 +8,7 @@ image:
 	docker build .
 
 validate:
-	golangci-lint run
+	golangci-lint --timeout 5m run
 
 test:
 	go test -v -test.v ./...
