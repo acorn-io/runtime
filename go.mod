@@ -22,7 +22,7 @@ require (
 	github.com/moby/buildkit v0.10.1
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
 	github.com/pkg/errors v0.9.1
-	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
+	github.com/rancher/lasso 700f167d8324
 	github.com/rancher/wrangler v0.8.10
 	github.com/rancher/wrangler-cli v0.0.0-20211112052728-f172e9bf59af
 	github.com/sirupsen/logrus v1.8.1
