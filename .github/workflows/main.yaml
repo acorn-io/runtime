@@ -52,7 +52,9 @@ jobs:
         run: |
           VERSION=v$(cat releases/metadata.json | jq -r .version)
           IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$VERSION")
-          echo ${IMAGES} | xargs -L1 docker push
+          for i in ${IMAGES}; do
+            docker push $i
+          done
           docker manifest create ghcr.io/acorn-io/acorn:main ${IMAGES}
           docker manifest push ghcr.io/acorn-io/acorn:main
           docker manifest create ghcr.io/acorn-io/acorn:${VERSION} ${IMAGES}
