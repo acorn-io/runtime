@@ -53,7 +53,7 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
       - name: Push Docker Images (for branches)
         run: |
-          docker push acron-io/acorn:main
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -v latest | grep "acorn-io/acorn" | xargs -L1 docker push
       - name: Save Build Artifacts (for branches)
         uses: actions/upload-artifact@v3
         with:

@@ -42,7 +42,7 @@ dockers:
   - use: buildx
     goos: linux
     goarch: amd64
-    dockerfile: Dockerfile.goreleaser
+    dockerfile: Dockerfile
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
     build_flag_templates:
@@ -57,7 +57,7 @@ dockers:
   - use: buildx
     goos: linux
     goarch: arm64
-    dockerfile: Dockerfile.goreleaser
+    dockerfile: Dockerfile
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
     build_flag_templates:
@@ -73,7 +73,7 @@ dockers:
     goos: linux
     goarch: arm
     goarm: "7"
-    dockerfile: Dockerfile.goreleaser
+    dockerfile: Dockerfile
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
     build_flag_templates:
@@ -88,6 +88,12 @@ dockers:
 docker_manifests:
   - use: docker
     name_template: ghcr.io/acorn-io/acorn:v{{ .Version }}
+    image_templates:
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
+      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
+  - use: docker
+    name_template: ghcr.io/acorn-io/acorn:latest
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
