@@ -21,9 +21,6 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Set up QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1

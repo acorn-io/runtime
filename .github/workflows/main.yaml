@@ -48,12 +48,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-      - name: Push Docker Images (for branches)
+      - name: Push Docker Images
         run: |
-          docker images --format "{{.Repository}}:{{.Tag}}" | grep -v latest | grep "acorn-io/acorn" | xargs -L1 docker push
-          docker manifest create ghcr.io/acorn-io/acorn:main $(docker images --format "{{.Repository}}:{{.Tag}}" | grep -v latest | grep "acorn-io/acorn")
+          apt-get update
+          apt-get install -y jq
+          VERSION=v$(cat releases/metadata.json | jq -r .version)
+          IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$VERSION")
+          docker push ${IMAGES}
+          docker manifest create ghcr.io/acorn-io/acorn:main ${IMAGES}
           docker manifest push ghcr.io/acorn-io/acorn:main
-      - name: Save Build Artifacts (for branches)
+          docker manifest create ghcr.io/acorn-io/acorn:${VERSION} ${IMAGES}
+          docker manifest push ghcr.io/acorn-io/acorn:${VERSION}
+      - name: Save Build Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: releases
