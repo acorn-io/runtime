@@ -29,7 +29,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X 'main.Version={{ .Version }}'
+      - -X 'main.Version=v{{ .Version }}'
 archives:
   - id: default
     builds:
@@ -94,12 +94,6 @@ docker_manifests:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
   - use: docker
     name_template: ghcr.io/acorn-io/acorn:latest
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
-  - use: docker
-    name_template: ghcr.io/acorn-io/acorn:main
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64

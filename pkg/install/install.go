@@ -30,6 +30,7 @@ import (
 var (
 	InstallImage  = "ghcr.io/acorn-io/acorn"
 	DefaultBranch = "main"
+	devTag        = "v0.0.0-dev"
 
 	//go:embed *.yaml
 	files embed.FS
@@ -41,7 +42,7 @@ type Options struct {
 
 func DefaultImage() string {
 	var image = fmt.Sprintf("%s:%s", InstallImage, version.Tag)
-	if strings.Contains(image, "v0.0.0") {
+	if version.Tag == devTag {
 		image = fmt.Sprintf("%s:%s", InstallImage, DefaultBranch)
 	}
 	return image
