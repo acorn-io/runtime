@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2004
     steps:
       - name: Checkout
         uses: actions/checkout@v3
