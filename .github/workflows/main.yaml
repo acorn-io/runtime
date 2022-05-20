@@ -63,4 +63,15 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: releases
-          path: releases/
+          path: |
+            acorn-*-darwin-arm64.tar.gz
+            acorn-*-darwin-arm64.tar.gz.sig
+            acorn-*-linux-amd64.tar.gz
+            acorn-*-linux-amd64.tar.gz.sig
+            acorn-*-windows-amd64.zip
+            acorn-*-windows-amd64.zip.sig
+            artifacts.json
+            checksums.txt
+            checksums.txt.sig
+            config.yaml
+            metadata.json
