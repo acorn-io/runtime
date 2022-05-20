@@ -2,7 +2,7 @@
 
 ### Quick Start 
 
-##### Prerequisistes 
+##### Prerequisites 
 To try out acorn you will need admin access to a Kubernetes cluster. Docker Desktop, Rancher Desktop, and K3s are all great options for trying out acorn for testing/development.
 
 ##### Install
