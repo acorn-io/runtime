@@ -64,14 +64,14 @@ jobs:
         with:
           name: releases
           path: |
-            acorn-*-darwin-arm64.tar.gz
-            acorn-*-darwin-arm64.tar.gz.sig
-            acorn-*-linux-amd64.tar.gz
-            acorn-*-linux-amd64.tar.gz.sig
-            acorn-*-windows-amd64.zip
-            acorn-*-windows-amd64.zip.sig
-            artifacts.json
-            checksums.txt
-            checksums.txt.sig
-            config.yaml
-            metadata.json
+            releases/acorn-*-darwin-arm64.tar.gz
+            releases/acorn-*-darwin-arm64.tar.gz.sig
+            releases/acorn-*-linux-amd64.tar.gz
+            releases/acorn-*-linux-amd64.tar.gz.sig
+            releases/acorn-*-windows-amd64.zip
+            releases/acorn-*-windows-amd64.zip.sig
+            releases/artifacts.json
+            releases/checksums.txt
+            releases/checksums.txt.sig
+            releases/config.yaml
+            releases/metadata.json
