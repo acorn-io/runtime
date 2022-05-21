@@ -38,7 +38,7 @@ func TestContainerList(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != ""
+		return app.Status.ContainerStatus["default"].Ready == 1
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
@@ -31,16 +32,7 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter([][]string{
-		{"NAME", "Name"},
-		{"APPNAME", "Status.AppName"},
-		{"BOUNDVOLUME", "Status.VolumeName"},
-		{"CAPACITY", "Capacity"},
-		{"STATUS", "Status.Status"},
-		{"ACCESSMODES", "Status.Columns.AccessModes"},
-		{"CREATED", "{{ago .Created}}"},
-		{"MESSAGE", "Status.Message"},
-	}, "", a.Quiet, a.Output)
+	out := table.NewWriter(tables.Volume, "", a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		volume, err := client.VolumeGet(cmd.Context(), args[0])

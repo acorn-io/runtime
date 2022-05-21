@@ -10,6 +10,7 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/namespace"
+	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -27,11 +28,8 @@ import (
 
 func NewStorage(c client.WithWatch) *Storage {
 	return &Storage{
-		TableConvertor: rest.NewDefaultTableConvertor(schema.GroupResource{
-			Group:    api.Group,
-			Resource: "volumes",
-		}),
-		client: c,
+		TableConvertor: tables.VolumeConverter,
+		client:         c,
 	}
 }
 

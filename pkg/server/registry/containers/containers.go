@@ -10,6 +10,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/namespace"
+	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/data/convert"
@@ -30,11 +31,8 @@ import (
 
 func NewStorage(c client.WithWatch) *Storage {
 	return &Storage{
-		TableConvertor: rest.NewDefaultTableConvertor(schema.GroupResource{
-			Group:    api.Group,
-			Resource: "containerreplicas",
-		}),
-		client: c,
+		TableConvertor: tables.ContainerConverter,
+		client:         c,
 	}
 }
 

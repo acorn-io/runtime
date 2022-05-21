@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/rancher/wrangler-cli"
 	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
@@ -30,15 +31,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter([][]string{
-		{"NAME", "Name"},
-		{"IMAGE", "Image"},
-		{"HEALTHY", "Status.Columns.Healthy"},
-		{"UPTODATE", "Status.Columns.UpToDate"},
-		{"CREATED", "{{ago .Created}}"},
-		{"ENDPOINTS", "Status.Columns.Endpoints"},
-		{"MESSAGE", "Status.Columns.Message"},
-	}, "", a.Quiet, a.Output)
+	out := table.NewWriter(tables.App, "", a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		app, err := client.AppGet(cmd.Context(), args[0])

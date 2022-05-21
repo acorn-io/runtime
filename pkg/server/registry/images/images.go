@@ -9,6 +9,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/remoteopts"
+	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -25,11 +26,8 @@ import (
 
 func NewStorage(c client.WithWatch) *Storage {
 	return &Storage{
-		TableConvertor: rest.NewDefaultTableConvertor(schema.GroupResource{
-			Group:    api.Group,
-			Resource: "images",
-		}),
-		client: c,
+		TableConvertor: tables.ImageConverter,
+		client:         c,
 	}
 }
 
@@ -95,18 +93,32 @@ func (s *Storage) ImageList(ctx context.Context) (apiv1.ImageList, error) {
 	}
 
 	result := apiv1.ImageList{}
-	for _, name := range names {
-		if !tags2.SHAPattern.MatchString(name) {
+	for _, imageName := range names {
+		if !tags2.SHAPattern.MatchString(imageName) {
 			continue
 		}
-		result.Items = append(result.Items, apiv1.Image{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: ns,
-			},
-			Digest: "sha256:" + name,
-			Tags:   tags[name],
-		})
+		tags := tags[imageName]
+		if len(tags) == 0 {
+			tags = append(tags, "")
+		}
+		for _, tag := range tags {
+			image := apiv1.Image{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      imageName,
+					Namespace: ns,
+				},
+				Digest:    "sha256:" + imageName,
+				Reference: tag,
+			}
+			if tag != "" {
+				parsedTag, err := name.NewTag(tag)
+				if err == nil {
+					image.Repository = strings.TrimSuffix(tag, ":"+parsedTag.TagStr())
+					image.Tag = parsedTag.TagStr()
+				}
+			}
+			result.Items = append(result.Items, image)
+		}
 	}
 
 	return result, nil
@@ -117,7 +129,7 @@ func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptio
 }
 
 func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-	image, tagName, err := s.imageGet(ctx, name)
+	image, matchedReference, err := s.imageGet(ctx, name)
 	if apierrors.IsNotFound(err) {
 		return nil, false, nil
 	} else if err != nil {
@@ -130,9 +142,11 @@ func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest
 		}
 	}
 
-	if tagName != "" && len(image.Tags) > 1 {
-		removed, err := tags2.Remove(ctx, s.client, image.Namespace, image.Digest, tagName)
-		return image, removed, err
+	if matchedReference != "" {
+		tagCount, err := tags2.Remove(ctx, s.client, image.Namespace, image.Digest, matchedReference)
+		if tagCount > 0 || err != nil {
+			return nil, true, err
+		}
 	}
 
 	repo, err := getRepo(image.Namespace)
@@ -164,7 +178,7 @@ func (s *Storage) ImageGet(ctx context.Context, name string) (*apiv1.Image, erro
 	return image, err
 }
 
-func (s *Storage) imageGet(ctx context.Context, image string) (*apiv1.Image, string, error) {
+func (s *Storage) imageGet(ctx context.Context, imageName string) (*apiv1.Image, string, error) {
 	images, err := s.ImageList(ctx)
 	if err != nil {
 		return nil, "", err
@@ -176,14 +190,14 @@ func (s *Storage) imageGet(ctx context.Context, image string) (*apiv1.Image, str
 		tagName      string
 	)
 
-	if strings.HasPrefix(image, "sha256:") {
-		digest = image
-	} else if tags2.SHAPattern.MatchString(image) {
-		digest = "sha256:" + image
-	} else if tags2.SHAShortPattern.MatchString(image) {
-		digestPrefix = "sha256:" + image
+	if strings.HasPrefix(imageName, "sha256:") {
+		digest = imageName
+	} else if tags2.SHAPattern.MatchString(imageName) {
+		digest = "sha256:" + imageName
+	} else if tags2.SHAShortPattern.MatchString(imageName) {
+		digestPrefix = "sha256:" + imageName
 	} else {
-		tag, err := name.ParseReference(image)
+		tag, err := name.ParseReference(imageName)
 		if err != nil {
 			return nil, "", err
 		}
@@ -195,14 +209,15 @@ func (s *Storage) imageGet(ctx context.Context, image string) (*apiv1.Image, str
 			return &image, "", nil
 		} else if digestPrefix != "" && strings.HasPrefix(image.Digest, digestPrefix) {
 			return &image, "", nil
-		}
-		for _, imageTag := range image.Tags {
-			imageParsedTag, err := name.NewTag(imageTag)
+		} else if image.Reference == imageName {
+			return &image, image.Tag, nil
+		} else if image.Reference != "" {
+			imageParsedTag, err := name.NewTag(image.Reference)
 			if err != nil {
 				continue
 			}
 			if imageParsedTag.Name() == tagName {
-				return &image, imageTag, nil
+				return &image, image.Reference, nil
 			}
 		}
 	}
@@ -210,7 +225,7 @@ func (s *Storage) imageGet(ctx context.Context, image string) (*apiv1.Image, str
 	return nil, "", apierrors.NewNotFound(schema.GroupResource{
 		Group:    api.Group,
 		Resource: "images",
-	}, image)
+	}, imageName)
 }
 
 func getRepo(namespace string) (name.Repository, error) {

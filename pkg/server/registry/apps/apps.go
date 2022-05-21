@@ -4,15 +4,14 @@ import (
 	"context"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
-	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
+	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -21,12 +20,9 @@ import (
 
 func NewStorage(c client.WithWatch, images *images.Storage) *Storage {
 	return &Storage{
-		TableConvertor: rest.NewDefaultTableConvertor(schema.GroupResource{
-			Group:    api.Group,
-			Resource: "apps",
-		}),
-		client: c,
-		images: images,
+		TableConvertor: tables.AppConverter,
+		client:         c,
+		images:         images,
 	}
 }
 
