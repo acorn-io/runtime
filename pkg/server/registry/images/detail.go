@@ -62,8 +62,8 @@ func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Obje
 
 	return &apiv1.ImageDetails{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      image.Name,
-			Namespace: image.Namespace,
+			Name:      imageName,
+			Namespace: ns,
 		},
 		PullSecrets: opts.PullSecrets,
 		AppImage:    *appImage,

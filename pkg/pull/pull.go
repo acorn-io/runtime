@@ -17,7 +17,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -104,11 +103,6 @@ func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Ref
 	}
 
 	if !strings.HasPrefix(tag.Context().RegistryStr(), "127.0.0.1:") {
-		return result, nil
-	}
-
-	_, err = rest.InClusterConfig()
-	if err == nil {
 		return result, nil
 	}
 

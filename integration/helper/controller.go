@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server"
 	"github.com/acorn-io/baaah/pkg/crds"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/google/go-containerregistry/pkg/registry"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -107,6 +109,11 @@ func StartAPI(t *testing.T) *rest.Config {
 
 	t.Fatal("failed to start API")
 	return nil
+}
+
+func StartRegistry(t *testing.T) (string, func()) {
+	srv := httptest.NewServer(registry.New())
+	return srv.Listener.Addr().String(), srv.Close
 }
 
 func StartController(t *testing.T) {

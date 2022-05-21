@@ -72,7 +72,7 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 		return nil, err
 	}
 
-	result := make(chan ImageProgress)
+	result := make(chan ImageProgress, 1000)
 	go func() {
 		defer close(result)
 		lines := bufio.NewScanner(resp)

@@ -3,7 +3,6 @@ package images
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -55,28 +54,6 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 	}
 
 	image := imageObj.(*apiv1.Image)
-
-	found := false
-	for _, tag := range image.Tags {
-		if tag == id {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return nil, apierrors.NewInvalid(schema.GroupKind{
-			Group: api.Group,
-			Kind:  "Image",
-		}, image.Name, field.ErrorList{
-			{
-				Type:     field.ErrorTypeInvalid,
-				Field:    "tags",
-				BadValue: id,
-				Detail:   fmt.Sprintf("image %s is not tagged with %s", image.Name, id),
-			},
-		})
-	}
 
 	_, process, err := i.ImagePush(ctx, image, id, options.(*apiv1.ImagePush).PullSecrets)
 	if err != nil {

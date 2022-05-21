@@ -44,30 +44,28 @@ func getConfigMap(ctx context.Context, c client.Reader, namespace string) (*core
 	}, configMap)
 }
 
-func Remove(ctx context.Context, c client.Client, namespace, digest, tag string) (bool, error) {
+func Remove(ctx context.Context, c client.Client, namespace, digest, tag string) (int, error) {
 	configMap, err := getConfigMap(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
-		return false, nil
+		return 0, nil
 	} else if err != nil {
-		return false, err
+		return 0, err
 	}
 
 	mapData := map[string][]string{}
 	data := []byte(configMap.Data[ConfigMapKey])
 	if len(data) == 0 {
-		return false, nil
+		return 0, nil
 	}
 
 	if err := json.Unmarshal(data, &mapData); err != nil {
-		return false, err
+		return 0, err
 	}
 
-	removed := false
 	key := strings.TrimPrefix(digest, "sha256:")
 	var newTags []string
 	for _, oldTag := range mapData[key] {
 		if oldTag == tag {
-			removed = true
 			continue
 		}
 		newTags = append(newTags, oldTag)
@@ -81,11 +79,11 @@ func Remove(ctx context.Context, c client.Client, namespace, digest, tag string)
 
 	data, err = json.Marshal(mapData)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
 
 	configMap.Data[ConfigMapKey] = string(data)
-	return removed, c.Update(ctx, configMap)
+	return len(newTags), c.Update(ctx, configMap)
 }
 
 func Write(ctx context.Context, c client.Client, namespace, digest, tag string) error {

@@ -105,14 +105,15 @@ func TestImageTag(t *testing.T) {
 	}
 
 	assert.Equal(t, image.Name, newImage.Name)
-	assert.Equal(t, []string{"foo", "bar",
-		"ghcr.io/acorn-io/acorn/test:v0.0.0-abc",
-		"ghcr.io/acorn-io/acorn/test:v0.0.0-def",
-	}, newImage.Tags)
+	assert.Equal(t, "ghcr.io/acorn-io/acorn/test:v0.0.0-abc", newImage.Reference)
+	assert.Equal(t, "ghcr.io/acorn-io/acorn/test", newImage.Repository)
+	assert.Equal(t, "v0.0.0-abc", newImage.Tag)
 }
 
 func TestImagePush(t *testing.T) {
 	helper.StartController(t)
+	registry, close := helper.StartRegistry(t)
+	defer close()
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
@@ -133,13 +134,14 @@ func TestImagePush(t *testing.T) {
 	assert.Len(t, images, 1)
 
 	image := images[0]
+	tagName := registry + "/test:ci"
 
-	err = c.ImageTag(ctx, image.Name, "ghcr.io/acorn-io/acorn/test:ci")
+	err = c.ImageTag(ctx, image.Name, tagName)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	progress, err := c.ImagePush(ctx, "ghcr.io/acorn-io/acorn/test:ci", nil)
+	progress, err := c.ImagePush(ctx, tagName, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,6 +155,8 @@ func TestImagePush(t *testing.T) {
 
 func TestImagePull(t *testing.T) {
 	helper.StartController(t)
+	registry, close := helper.StartRegistry(t)
+	defer close()
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
@@ -164,7 +168,33 @@ func TestImagePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	progress, err := c.ImagePull(ctx, "ghcr.io/acorn-io/acorn/test:ci", nil)
+	id := newImage(t, ns.Name)
+	tagName := registry + "/test:ci"
+
+	err = c.ImageTag(ctx, id, tagName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progress, err := c.ImagePush(ctx, tagName, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for update := range progress {
+		if update.Error != "" {
+			t.Fatal(update.Error)
+		}
+	}
+
+	ns = helper.TempNamespace(t, kclient)
+
+	c, err = client.New(restConfig, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progress, err = c.ImagePull(ctx, tagName, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,11 +213,13 @@ func TestImagePull(t *testing.T) {
 	assert.Len(t, images, 1)
 
 	image := images[0]
-	assert.Equal(t, "ghcr.io/acorn-io/acorn/test:ci", image.Tags[0])
+	assert.Equal(t, tagName, image.Reference)
 }
 
 func TestImageDetails(t *testing.T) {
 	helper.StartController(t)
+	registry, close := helper.StartRegistry(t)
+	defer close()
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
@@ -199,16 +231,47 @@ func TestImageDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	id := newImage(t, ns.Name)
+	remoteTagName := registry + "/test:ci"
+
+	err = c.ImageTag(ctx, id, remoteTagName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progress, err := c.ImagePush(ctx, remoteTagName, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for update := range progress {
+		if update.Error != "" {
+			t.Fatal(update.Error)
+		}
+	}
+
+	ns = helper.TempNamespace(t, kclient)
+
+	c, err = client.New(restConfig, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	imageID := newImage(t, ns.Name)
 
-	details, err := c.ImageDetails(ctx, imageID, nil)
+	err = c.ImageTag(ctx, imageID, "foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	details, err := c.ImageDetails(ctx, "foo:latest", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.True(t, strings.Contains(details.AppImage.Acornfile, "nginx"))
 
-	details, err = c.ImageDetails(ctx, "docker.io/ibuildthecloud/test:ci", nil)
+	details, err = c.ImageDetails(ctx, remoteTagName, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
