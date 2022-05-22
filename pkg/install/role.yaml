@@ -10,6 +10,7 @@ rules:
     apiGroups: [""]
     resources:
       - pods
+      - pods/exec
       - pods/portforward
       - configmaps
       - secrets
