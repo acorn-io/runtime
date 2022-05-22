@@ -6,7 +6,7 @@ var (
 		{"IMAGE", "Spec.Image"},
 		{"HEALTHY", "Status.Columns.Healthy"},
 		{"UPTODATE", "Status.Columns.UpToDate"},
-		{"CREATED", "{{ago .Created}}"},
+		{"CREATED", "{{ago .CreationTimestamp}}"},
 		{"ENDPOINTS", "Status.Columns.Endpoints"},
 		{"MESSAGE", "Status.Columns.Message"},
 	}
@@ -19,8 +19,7 @@ var (
 		{"CAPACITY", "Spec.Capacity"},
 		{"STATUS", "Status.Status"},
 		{"ACCESSMODES", "Status.Columns.AccessModes"},
-		{"CREATED", "{{ago .Created}}"},
-		{"MESSAGE", "Status.Message"},
+		{"CREATED", "{{ago .CreationTimestamp}}"},
 	}
 	VolumeConverter = MustConverter(Volume)
 
@@ -37,7 +36,7 @@ var (
 		{"IMAGE", "Status.Image"},
 		{"STATE", "Status.Columns.State"},
 		{"RESTARTCOUNT", "Status.RestartCount"},
-		{"CREATED", "{{ago .Created}}"},
+		{"CREATED", "{{ago .CreationTimestamp}}"},
 		{"MESSAGE", "Status.PodMessage"},
 	}
 	ContainerConverter = MustConverter(Container)
