@@ -8,11 +8,94 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const (
+	kubernetesTLSSecretType         = "kubernetes.io/tls"
+	certManagerCommonNameAnnotation = "cert-manager.io/common-name"
+	certManagerDNSNamesAnnotation   = "cert-manager.io/alt-names"
+)
+
+type TLSCert struct {
+	CommonName string          `json:"common-name,omitempty"`
+	SANS       map[string]bool `json:"names,omitempty"`
+	SecretName string          `json:"secret-name,omitempty"`
+}
+
+func (cert *TLSCert) certForThisDomain(name string) bool {
+	if t, ok := cert.SANS[name]; ok {
+		return t
+	}
+	return false
+}
+
+func (cert *TLSCert) sansList() (sans []string) {
+	for k, _ := range cert.SANS {
+		sans = append(sans, k)
+	}
+	return
+}
+
+func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
+	result := []*TLSCert{}
+
+	var secrets corev1.SecretList
+	err := req.Client.List(&secrets, &meta.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	if len(secrets.Items) > 0 {
+		for _, secret := range secrets.Items {
+			if secret.Type != kubernetesTLSSecretType {
+				continue
+			}
+			cert := &TLSCert{
+				SANS: make(map[string]bool),
+			}
+
+			name, ok := secret.Annotations[certManagerCommonNameAnnotation]
+			if !ok {
+				continue
+			}
+
+			cert.CommonName = name
+			cert.SecretName = secret.Name
+			cert.SANS[name] = true
+
+			if alts, ok := secret.Annotations[certManagerDNSNamesAnnotation]; ok {
+				for _, dnsName := range strings.Split(alts, ",") {
+					cert.SANS[dnsName] = true
+				}
+			}
+
+			result = append(result, cert)
+		}
+	}
+	return result, nil
+}
+
+func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (ingressTLS []networkingv1.IngressTLS) {
+	for _, rule := range rules {
+		for _, cert := range certs {
+			if cert.certForThisDomain(rule.Host) {
+				ingressTLS = append(ingressTLS, networkingv1.IngressTLS{
+					Hosts:      cert.sansList(),
+					SecretName: cert.SecretName,
+				})
+			}
+		}
+	}
+	return
+}
 
 func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 	return networkingv1.IngressRule{
@@ -59,6 +142,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 	if err != nil {
 		return err
 	}
+
 	var ingressClassName *string
 	if cfg.IngressClassName != "" {
 		ingressClassName = &cfg.IngressClassName
@@ -67,6 +151,12 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 	clusterDomains := cfg.ClusterDomains
 	if len(clusterDomains) == 0 {
 		clusterDomains = []string{".localhost"}
+	}
+
+	// Look for Secrets in the app namespace that contain cert manager TLS certs
+	tlsCerts, err := getCerts(appInstance.Status.Namespace, req)
+	if err != nil {
+		return err
 	}
 
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
@@ -131,6 +221,8 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			}
 		}
 
+		tls := getCertsForPublishedHosts(rules, tlsCerts)
+
 		resp.Objects(&networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
@@ -146,6 +238,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			Spec: networkingv1.IngressSpec{
 				IngressClassName: ingressClassName,
 				Rules:            rules,
+				TLS:              tls,
 			},
 		})
 	}
