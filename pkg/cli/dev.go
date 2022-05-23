@@ -7,7 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
 
@@ -22,9 +22,9 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File     string   `short:"f" desc:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
-	Name     string   `usage:"Name of app to create" short:"n"`
-	Endpoint []string `usage:"Bind a published host to a friendly domain (format public:private) (ex: example.com:web)" short:"b"`
+	File string   `short:"f" desc:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	Name string   `usage:"Name of app to create" short:"n"`
+	DNS  []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"b"`
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
@@ -38,7 +38,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	endpoints, err := run.ParseEndpoints(s.Endpoint)
+	endpoints, err := run.ParseEndpoints(s.DNS)
 	if err != nil {
 		return err
 	}
