@@ -11,7 +11,7 @@ validate:
 	golangci-lint --timeout 5m run
 
 test:
-	go test -v -test.v ./...
+	go test ./...
 
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist

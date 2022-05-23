@@ -75,7 +75,7 @@ func TestContainerDelete(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != ""
+		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].Ready == 1
 	})
 
 	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
@@ -98,12 +98,10 @@ func TestContainerDelete(t *testing.T) {
 
 	assert.NotNil(t, con)
 
-	con, err = c.ContainerReplicaDelete(ctx, cons[0].Name)
+	_, err = c.ContainerReplicaDelete(ctx, cons[0].Name)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	assert.Nil(t, con)
 }
 
 func TestContainerGet(t *testing.T) {
