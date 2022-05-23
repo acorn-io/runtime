@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/moby/locker"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,6 +23,7 @@ const (
 var (
 	SHAShortPattern = regexp.MustCompile(`^[a-f\d]{12}$`)
 	SHAPattern      = regexp.MustCompile(`^[a-f\d]{64}$`)
+	tagLock         locker.Locker
 )
 
 func IsLocalReference(image string) bool {
@@ -45,6 +48,9 @@ func getConfigMap(ctx context.Context, c client.Reader, namespace string) (*core
 }
 
 func Remove(ctx context.Context, c client.Client, namespace, digest, tag string) (int, error) {
+	tagLock.Lock(namespace)
+	defer func() { _ = tagLock.Unlock(namespace) }()
+
 	configMap, err := getConfigMap(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return 0, nil
@@ -87,6 +93,9 @@ func Remove(ctx context.Context, c client.Client, namespace, digest, tag string)
 }
 
 func Write(ctx context.Context, c client.Client, namespace, digest, tag string) error {
+	tagLock.Lock(namespace)
+	defer func() { _ = tagLock.Unlock(namespace) }()
+
 	configMap, err := getConfigMap(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		configMap = &corev1.ConfigMap{
@@ -110,6 +119,21 @@ func Write(ctx context.Context, c client.Client, namespace, digest, tag string) 
 	key := strings.TrimPrefix(digest, "sha256:")
 	if slices.Contains(mapData[key], tag) {
 		return nil
+	}
+
+	normalizedTag, err := name.NewTag(tag)
+	if err != nil {
+		return err
+	}
+
+	for key, tags := range mapData {
+		for i, existingTag := range tags {
+			normalizedExistingTag, err := name.NewTag(existingTag)
+			if err != nil || normalizedExistingTag.Name() == normalizedTag.Name() {
+				mapData[key] = append(tags[:i], tags[i+1:]...)
+				continue
+			}
+		}
 	}
 
 	mapData[key] = append(mapData[key], tag)

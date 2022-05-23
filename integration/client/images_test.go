@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
+	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
@@ -54,6 +55,57 @@ func TestImageListGetDelete(t *testing.T) {
 
 	_, err = c.ImageGet(ctx, image.Name)
 	assert.True(t, apierrors.IsNotFound(err))
+}
+
+func TestImageTagMove(t *testing.T) {
+	helper.StartController(t)
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	c, err := client.New(restConfig, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imageID := newImage(t, ns.Name)
+	image2, err := build.Build(helper.GetCTX(t), "./testdata/nginx2/acorn.cue", &build.Options{
+		Cwd:       "./testdata/nginx2",
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c.ImageTag(ctx, imageID, "foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c.ImageTag(ctx, image2.ID, "foo:latest")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	images, err := c.ImageList(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, image := range images {
+		if image.Name == imageID {
+			assert.Equal(t, "", image.Tag)
+			assert.Equal(t, "", image.Repository)
+		} else if image.Name == image2.ID {
+			assert.Equal(t, "latest", image.Tag)
+			assert.Equal(t, "foo", image.Repository)
+			assert.Equal(t, "foo:latest", image.Reference)
+		} else {
+			t.Fatal(err, "invalid image")
+		}
+	}
 }
 
 func TestImageTag(t *testing.T) {
