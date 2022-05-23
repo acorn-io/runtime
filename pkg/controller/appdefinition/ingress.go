@@ -154,7 +154,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 	}
 
 	// Look for Secrets in the app namespace that contain cert manager TLS certs
-	tlsCerts, err := getCerts(appInstance.Status.Namespace, req)
+	tlsCerts, err := getCerts(appInstance.Namespace, req)
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,27 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			}
 		}
 
-		tls := getCertsForPublishedHosts(rules, tlsCerts)
+		tlsIngress := getCertsForPublishedHosts(rules, tlsCerts)
+		for i, ing := range tlsIngress {
+			originalSecret := &corev1.Secret{}
+			err := req.Client.Get(originalSecret, ing.SecretName, nil)
+			if err != nil {
+				return err
+			}
+			secretName := ing.SecretName + "-" + string(originalSecret.UID)[:8]
+			resp.Objects(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        secretName,
+					Namespace:   appInstance.Status.Namespace,
+					Labels:      labelsForSecret(originalSecret.Name, appInstance),
+					Annotations: originalSecret.Annotations,
+				},
+				Type: corev1.SecretTypeTLS,
+				Data: originalSecret.Data,
+			})
+			//Override the secret name to the copied name
+			tlsIngress[i].SecretName = secretName
+		}
 
 		resp.Objects(&networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
@@ -238,7 +258,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			Spec: networkingv1.IngressSpec{
 				IngressClassName: ingressClassName,
 				Rules:            rules,
-				TLS:              tls,
+				TLS:              tlsIngress,
 			},
 		})
 	}
