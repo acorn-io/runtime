@@ -189,7 +189,7 @@ func applyRoles(apply apply.Apply) error {
 		if merrs, ok := err.(merr.Errors); ok {
 			for _, err := range merrs {
 				if apierror.IsForbidden(err) {
-					return fmt.Errorf("insufficient privileges to install into cluster: %w", err)
+					return fmt.Errorf("insufficient privileges to install into the cluster: %w", err)
 				}
 			}
 		}
