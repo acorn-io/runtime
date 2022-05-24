@@ -86,6 +86,12 @@ type Client interface {
 	AppStart(ctx context.Context, name string) error
 	AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error)
 
+	CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialList(ctx context.Context) ([]apiv1.Credential, error)
+	CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
+	CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
+
 	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error)
 	ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
 	ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error)

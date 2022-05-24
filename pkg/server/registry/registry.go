@@ -5,6 +5,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
 	"github.com/acorn-io/acorn/pkg/server/registry/containers"
+	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -33,6 +34,7 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 		"volumes":                volumes.NewStorage(c),
 		"containerreplicas":      containerStorage,
 		"containerreplicas/exec": containerExec,
+		"credentials":            credentials.NewStorage(c),
 	}
 
 	return &apiGroupInfo, nil
