@@ -1,6 +1,8 @@
 package appdefinition
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"strconv"
 	"strings"
 
@@ -11,35 +13,51 @@ import (
 	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	kubernetesTLSSecretType         = "kubernetes.io/tls"
-	certManagerCommonNameAnnotation = "cert-manager.io/common-name"
-	certManagerDNSNamesAnnotation   = "cert-manager.io/alt-names"
+	kubernetesTLSSecretType = "kubernetes.io/tls"
 )
 
 type TLSCert struct {
-	CommonName string          `json:"common-name,omitempty"`
-	SANS       map[string]bool `json:"names,omitempty"`
-	SecretName string          `json:"secret-name,omitempty"`
+	Certificate x509.Certificate `json:"certificate,omitempty"`
+	SecretName  string           `json:"secret-name,omitempty"`
 }
 
 func (cert *TLSCert) certForThisDomain(name string) bool {
-	if t, ok := cert.SANS[name]; ok {
-		return t
+	if valid := cert.Certificate.VerifyHostname(name); valid == nil {
+		return true
 	}
 	return false
 }
 
-func (cert *TLSCert) sansList() (sans []string) {
-	for k := range cert.SANS {
-		sans = append(sans, k)
+func convertTLSSecretToTLSCert(secret corev1.Secret) (*TLSCert, error) {
+	cert := &TLSCert{}
+
+	tlsPEM, ok := secret.Data["tls.crt"]
+	if !ok {
+		return nil, errors.Errorf("Key tls.crt not found in secret %s", secret.Name)
 	}
-	return
+
+	tlsCertBytes, _ := pem.Decode([]byte(tlsPEM))
+	if tlsCertBytes == nil {
+		return nil, errors.Errorf("Failed to parse Cert PEM stored in secret %s", secret.Name)
+	}
+
+	tlsDataObj, err := x509.ParseCertificate(tlsCertBytes.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	cert.SecretName = secret.Name
+	cert.Certificate = *tlsDataObj
+
+	return cert, nil
 }
 
 func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
@@ -58,23 +76,10 @@ func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
 			if secret.Type != kubernetesTLSSecretType {
 				continue
 			}
-			cert := &TLSCert{
-				SANS: make(map[string]bool),
-			}
-
-			name, ok := secret.Annotations[certManagerCommonNameAnnotation]
-			if !ok {
+			cert, err := convertTLSSecretToTLSCert(secret)
+			if err != nil {
+				logrus.Error(err)
 				continue
-			}
-
-			cert.CommonName = name
-			cert.SecretName = secret.Name
-			cert.SANS[name] = true
-
-			if alts, ok := secret.Annotations[certManagerDNSNamesAnnotation]; ok {
-				for _, dnsName := range strings.Split(alts, ",") {
-					cert.SANS[dnsName] = true
-				}
 			}
 
 			result = append(result, cert)
@@ -84,15 +89,19 @@ func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
 }
 
 func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (ingressTLS []networkingv1.IngressTLS) {
+	certSecretToHostMapping := map[string][]string{}
 	for _, rule := range rules {
 		for _, cert := range certs {
 			if cert.certForThisDomain(rule.Host) {
-				ingressTLS = append(ingressTLS, networkingv1.IngressTLS{
-					Hosts:      cert.sansList(),
-					SecretName: cert.SecretName,
-				})
+				certSecretToHostMapping[cert.SecretName] = append(certSecretToHostMapping[cert.SecretName], rule.Host)
 			}
 		}
+	}
+	for secret, hosts := range certSecretToHostMapping {
+		ingressTLS = append(ingressTLS, networkingv1.IngressTLS{
+			Hosts:      hosts,
+			SecretName: secret,
+		})
 	}
 	return
 }
