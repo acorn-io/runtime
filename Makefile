@@ -10,6 +10,15 @@ image:
 validate:
 	golangci-lint --timeout 5m run
 
+validate-ci:
+	go generate
+	go mod tidy
+	if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then \
+		git status --porcelain --untracked-files=no; \
+		echo "Encountered dirty repo!"; \
+		exit 1 \
+	;fi
+
 test:
 	go test ./...
 
