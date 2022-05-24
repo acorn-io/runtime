@@ -27,9 +27,9 @@ acorn build .`,
 }
 
 type Build struct {
-	File      string   `short:"f" desc:"Name of the build file" default:"DIRECTORY/acorn.cue"`
-	Tag       []string `short:"t" desc:"Apply a tag to the final build"`
-	Platforms []string `short:"p" desc:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
+	File      string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/acorn.cue"`
+	Tag       []string `short:"t" usage:"Apply a tag to the final build"`
+	Platforms []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {

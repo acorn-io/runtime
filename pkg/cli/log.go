@@ -19,7 +19,7 @@ func NewLogs() *cobra.Command {
 }
 
 type Logs struct {
-	Follow bool `short:"f" desc:"Follow log output"`
+	Follow bool `short:"f" usage:"Follow log output"`
 }
 
 func (s *Logs) Run(cmd *cobra.Command, args []string) error {

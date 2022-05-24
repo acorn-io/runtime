@@ -24,9 +24,9 @@ acorn images`,
 }
 
 type Image struct {
-	Quiet   bool   `desc:"Output only names" short:"q"`
-	NoTrunc bool   `desc:"Don't truncate IDs"`
-	Output  string `desc:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	Quiet   bool   `usage:"Output only names" short:"q"`
+	NoTrunc bool   `usage:"Don't truncate IDs"`
+	Output  string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 }
 
 func (a *Image) Run(cmd *cobra.Command, args []string) error {
