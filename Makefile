@@ -21,3 +21,6 @@ setup-ci-env:
 
 serve-docs:
 	docker run -it --rm --workdir=/docs -p 3000:3000 -v $${PWD}/docs:/docs node:18-buster yarn start --host=0.0.0.0
+
+generate-cli-docs:
+	go run cmd/gendocs/main.go
