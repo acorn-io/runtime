@@ -8,6 +8,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/acorn-io/acorn/pkg/watcher"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
@@ -15,6 +16,7 @@ import (
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -220,4 +222,28 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 	}
 
 	return result, nil
+}
+
+func (s *Storage) Watch(ctx context.Context, options *internalversion.ListOptions) (watch.Interface, error) {
+	ns, _ := request.NamespaceFrom(ctx)
+
+	opts := watcher.ListOptions(ns, options)
+	opts.FieldSelector = nil
+	opts.Raw.FieldSelector = ""
+	opts.LabelSelector = klabels.SelectorFromSet(map[string]string{
+		labels.AcornCredential: "true",
+		labels.AcornManaged:    "true",
+	})
+
+	w, err := s.client.Watch(ctx, &corev1.SecretList{}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return watcher.Transform(w, func(object runtime.Object) []runtime.Object {
+		sec := object.(*corev1.Secret)
+		return []runtime.Object{
+			secretToCredential(*sec),
+		}
+	}), nil
 }
