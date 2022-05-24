@@ -36,7 +36,7 @@ func (cert *TLSCert) certForThisDomain(name string) bool {
 }
 
 func (cert *TLSCert) sansList() (sans []string) {
-	for k, _ := range cert.SANS {
+	for k := range cert.SANS {
 		sans = append(sans, k)
 	}
 	return
