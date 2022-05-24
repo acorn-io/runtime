@@ -28,6 +28,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ImagePull{},
 		&Volume{},
 		&VolumeList{},
+		&Credential{},
+		&CredentialList{},
 		&ContainerReplica{},
 		&ContainerReplicaList{},
 		&ContainerReplicaExecOptions{},

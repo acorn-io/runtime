@@ -40,4 +40,11 @@ var (
 		{"MESSAGE", "Status.PodMessage"},
 	}
 	ContainerConverter = MustConverter(Container)
+
+	Credential = [][]string{
+		{"SERVER", "ServerAddress"},
+		{"USERNAME", "Username"},
+		{"CREATED", "{{ago .CreationTimestamp}}"},
+	}
+	CredentialConverter = MustConverter(Credential)
 )

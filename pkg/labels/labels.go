@@ -21,4 +21,5 @@ const (
 	AcornHostnames       = Prefix + "hostnames"
 	AcornAlias           = "alias." + Prefix
 	AcornChildNamespaces = Prefix + "child-namespaces"
+	AcornCredential      = Prefix + "credential"
 )
