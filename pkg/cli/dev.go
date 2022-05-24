@@ -22,7 +22,7 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File string   `short:"f" desc:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	File string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
 	Name string   `usage:"Name of app to create" short:"n"`
 	DNS  []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"b"`
 }

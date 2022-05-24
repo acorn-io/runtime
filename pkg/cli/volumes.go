@@ -22,8 +22,8 @@ acorn volume`,
 }
 
 type Volume struct {
-	Quiet  bool   `desc:"Output only names" short:"q"`
-	Output string `desc:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	Quiet  bool   `usage:"Output only names" short:"q"`
+	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 }
 
 func (a *Volume) Run(cmd *cobra.Command, args []string) error {

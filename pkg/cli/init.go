@@ -18,8 +18,8 @@ acorn init`,
 }
 
 type Init struct {
-	Image  string `desc:"Override the default image used for the deployment"`
-	Output string `desc:"Output manifests instead of applying them (json, yaml)" short:"o"`
+	Image  string `usage:"Override the default image used for the deployment"`
+	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 }
 
 func (i *Init) Run(cmd *cobra.Command, args []string) error {

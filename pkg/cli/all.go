@@ -19,9 +19,9 @@ acorn all`,
 }
 
 type All struct {
-	Quiet  bool   `desc:"Output only names" short:"q"`
-	Output string `desc:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	Images bool   `desc:"Include images in output" short:"i"`
+	Quiet  bool   `usage:"Output only names" short:"q"`
+	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	Images bool   `usage:"Include images in output" short:"i"`
 }
 
 func (a *All) Run(cmd *cobra.Command, args []string) error {
