@@ -19,6 +19,7 @@ jobs:
         with:
           version: 'v1.23.6-k3s1'
       - run: make setup-ci-env
-      - run: make build
+      - run: make validate-ci
       - run: make validate
+      - run: make build
       - run: make test
