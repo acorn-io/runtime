@@ -1,6 +1,8 @@
 package appdefinition
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"strconv"
 	"strings"
 
@@ -8,11 +10,100 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const (
+	kubernetesTLSSecretType = "kubernetes.io/tls"
+)
+
+type TLSCert struct {
+	Certificate x509.Certificate `json:"certificate,omitempty"`
+	SecretName  string           `json:"secret-name,omitempty"`
+}
+
+func (cert *TLSCert) certForThisDomain(name string) bool {
+	if valid := cert.Certificate.VerifyHostname(name); valid == nil {
+		return true
+	}
+	return false
+}
+
+func convertTLSSecretToTLSCert(secret corev1.Secret) (*TLSCert, error) {
+	cert := &TLSCert{}
+
+	tlsPEM, ok := secret.Data["tls.crt"]
+	if !ok {
+		return nil, errors.Errorf("Key tls.crt not found in secret %s", secret.Name)
+	}
+
+	tlsCertBytes, _ := pem.Decode([]byte(tlsPEM))
+	if tlsCertBytes == nil {
+		return nil, errors.Errorf("Failed to parse Cert PEM stored in secret %s", secret.Name)
+	}
+
+	tlsDataObj, err := x509.ParseCertificate(tlsCertBytes.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	cert.SecretName = secret.Name
+	cert.Certificate = *tlsDataObj
+
+	return cert, nil
+}
+
+func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
+	result := []*TLSCert{}
+
+	var secrets corev1.SecretList
+	err := req.Client.List(&secrets, &meta.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return result, err
+	}
+
+	for _, secret := range secrets.Items {
+		if secret.Type != kubernetesTLSSecretType {
+			continue
+		}
+		cert, err := convertTLSSecretToTLSCert(secret)
+		if err != nil {
+			logrus.Errorf("Error processing TLScertificate in secret %s/%s. Recieved %s", secret.Namespace, secret.Name, err)
+			continue
+		}
+
+		result = append(result, cert)
+	}
+
+	return result, nil
+}
+
+func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (ingressTLS []networkingv1.IngressTLS) {
+	certSecretToHostMapping := map[string][]string{}
+	for _, rule := range rules {
+		for _, cert := range certs {
+			if cert.certForThisDomain(rule.Host) {
+				certSecretToHostMapping[cert.SecretName] = append(certSecretToHostMapping[cert.SecretName], rule.Host)
+			}
+		}
+	}
+	for secret, hosts := range certSecretToHostMapping {
+		ingressTLS = append(ingressTLS, networkingv1.IngressTLS{
+			Hosts:      hosts,
+			SecretName: secret,
+		})
+	}
+	return
+}
 
 func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 	return networkingv1.IngressRule{
@@ -59,6 +150,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 	if err != nil {
 		return err
 	}
+
 	var ingressClassName *string
 	if cfg.IngressClassName != "" {
 		ingressClassName = &cfg.IngressClassName
@@ -67,6 +159,12 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 	clusterDomains := cfg.ClusterDomains
 	if len(clusterDomains) == 0 {
 		clusterDomains = []string{".localhost"}
+	}
+
+	// Look for Secrets in the app namespace that contain cert manager TLS certs
+	tlsCerts, err := getCerts(appInstance.Namespace, req)
+	if err != nil {
+		return err
 	}
 
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
@@ -131,6 +229,28 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			}
 		}
 
+		tlsIngress := getCertsForPublishedHosts(rules, tlsCerts)
+		for i, ing := range tlsIngress {
+			originalSecret := &corev1.Secret{}
+			err := req.Client.Get(originalSecret, ing.SecretName, nil)
+			if err != nil {
+				return err
+			}
+			secretName := ing.SecretName + "-" + string(originalSecret.UID)[:8]
+			resp.Objects(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        secretName,
+					Namespace:   appInstance.Status.Namespace,
+					Labels:      labelsForSecret(originalSecret.Name, appInstance),
+					Annotations: originalSecret.Annotations,
+				},
+				Type: corev1.SecretTypeTLS,
+				Data: originalSecret.Data,
+			})
+			//Override the secret name to the copied name
+			tlsIngress[i].SecretName = secretName
+		}
+
 		resp.Objects(&networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
@@ -146,6 +266,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 			Spec: networkingv1.IngressSpec{
 				IngressClassName: ingressClassName,
 				Rules:            rules,
+				TLS:              tlsIngress,
 			},
 		})
 	}

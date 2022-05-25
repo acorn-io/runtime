@@ -16,7 +16,7 @@ require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/acorn-io/baaah v0.0.0-20220519155208-f18a5cb8b58f
+	github.com/acorn-io/baaah v0.0.0-20220524223350-b2d78c8fc733
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6

@@ -10,6 +10,8 @@ spec:
   endpoints:
   - target: oneimage
     hostname: localhost
+  - target: oneimage
+    hostname: ci1.acorn.not
 status:
   namespace: app-created-namespace
   appSpec:
