@@ -34,15 +34,20 @@ func TestParse(t *testing.T) {
 			{
 				Name:        "jsonFile",
 				Description: "",
-				Schema:      "string",
+				Schema:      "complex",
 			},
 			{
 				Name:        "yamlFile",
 				Description: "",
-				Schema:      "string",
+				Schema:      "complex",
 			},
 			{
 				Name:        "cueFile",
+				Description: "",
+				Schema:      "complex",
+			},
+			{
+				Name:        "cueString",
 				Description: "",
 				Schema:      "string",
 			},
@@ -58,6 +63,7 @@ func TestParse(t *testing.T) {
 		"--json-file", "@testdata/test.json",
 		"--yaml-file", "@testdata/test.yaml",
 		"--cue-file", "@testdata/test.cue",
+		"--cue-string", "@testdata/test.cue",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -82,5 +88,6 @@ func TestParse(t *testing.T) {
 		"cueFile": map[string]interface{}{
 			"value": "cue",
 		},
+		"cueString": "{\n\tvalue: \"cue\"\n}\n",
 	}, normalizedVars)
 }

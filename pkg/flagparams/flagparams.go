@@ -1,6 +1,7 @@
 package flagparams
 
 import (
+	"io/ioutil"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
@@ -11,10 +12,11 @@ import (
 )
 
 type Flags struct {
-	FlagSet *pflag.FlagSet
-	ints    map[string]*int
-	strings map[string]*string
-	Usage   func()
+	FlagSet       *pflag.FlagSet
+	ints          map[string]*int
+	strings       map[string]*string
+	complexValues map[string]*string
+	Usage         func()
 }
 
 func New(filename string, param *v1.ParamSpec) *Flags {
@@ -22,21 +24,25 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 	flagSet := pflag.NewFlagSet(filename, pflag.ContinueOnError)
 	ints := map[string]*int{}
 	stringValues := map[string]*string{}
+	complexValues := map[string]*string{}
 
 	for _, param := range param.Params {
 		name := strings.ReplaceAll(convert.ToYAMLKey(param.Name), "_", "-")
 		flagToParam[name] = param.Name
 		if isType(param.Schema, "int") {
 			ints[param.Name] = flagSet.Int(name, 0, param.Description)
-		} else {
+		} else if isType(param.Schema, "string") {
 			stringValues[param.Name] = flagSet.String(name, "", param.Description)
+		} else {
+			complexValues[param.Name] = flagSet.String(name, "", param.Description)
 		}
 	}
 
 	return &Flags{
-		ints:    ints,
-		strings: stringValues,
-		FlagSet: flagSet,
+		ints:          ints,
+		strings:       stringValues,
+		complexValues: complexValues,
+		FlagSet:       flagSet,
 	}
 }
 
@@ -54,7 +60,7 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	for name, pValue := range f.strings {
+	for name, pValue := range f.complexValues {
 		value := *pValue
 		if value == "" {
 			continue
@@ -72,6 +78,22 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 				return nil, err
 			}
 			result[name] = val
+		} else {
+			result[name] = value
+		}
+	}
+
+	for name, pValue := range f.strings {
+		value := *pValue
+		if value == "" {
+			continue
+		} else if strings.HasPrefix(value, "@") {
+			fName := value[1:]
+			data, err := ioutil.ReadFile(fName)
+			if err != nil {
+				return nil, err
+			}
+			result[name] = string(data)
 		} else {
 			result[name] = value
 		}
