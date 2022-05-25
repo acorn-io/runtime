@@ -71,20 +71,19 @@ func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
 		return result, err
 	}
 
-	if len(secrets.Items) > 0 {
-		for _, secret := range secrets.Items {
-			if secret.Type != kubernetesTLSSecretType {
-				continue
-			}
-			cert, err := convertTLSSecretToTLSCert(secret)
-			if err != nil {
-				logrus.Error(err)
-				continue
-			}
-
-			result = append(result, cert)
+	for _, secret := range secrets.Items {
+		if secret.Type != kubernetesTLSSecretType {
+			continue
 		}
+		cert, err := convertTLSSecretToTLSCert(secret)
+		if err != nil {
+			logrus.Errorf("Error processing TLScertificate in secret %s/%s. Recieved %s", secret.Namespace, secret.Name, err)
+			continue
+		}
+
+		result = append(result, cert)
 	}
+
 	return result, nil
 }
 
