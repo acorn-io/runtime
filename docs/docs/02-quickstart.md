@@ -19,8 +19,9 @@ tar -xzvf <release>.tar.gz
 ./acorn 
 ```
 
-*note*: On macOS systems, you will need to go to system preferences -> security & privacy -> General to allow the binary to run.
-
+> **Note**: On macOS systems, after extracting the binary from the tar file, you'll be prevented from running the binary from the command line because macOS cannot verify it. You can get it to run by finding the binary in the Finder app, right-clicking it, opening it with Terminal, and then following the prompts to allow a security exception for it to run.
+> 
+> TODO: Fix this once we are able to [do code-signing](https://github.com/acorn-io/acorn/issues/46)
 ### Build/Run First Acorn
 
 Create a new `acorn.cue` in your working directory and add the following contents.
