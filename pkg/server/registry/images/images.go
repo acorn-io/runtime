@@ -2,6 +2,7 @@ package images
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -184,6 +185,10 @@ func (s *Storage) imageGet(ctx context.Context, imageName string) (*apiv1.Image,
 		return nil, "", err
 	}
 
+	return findImageMatch(images, imageName)
+}
+
+func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, string, error) {
 	var (
 		digest       string
 		digestPrefix string
@@ -194,7 +199,7 @@ func (s *Storage) imageGet(ctx context.Context, imageName string) (*apiv1.Image,
 		digest = imageName
 	} else if tags2.SHAPattern.MatchString(imageName) {
 		digest = "sha256:" + imageName
-	} else if tags2.SHAShortPattern.MatchString(imageName) {
+	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
 	} else {
 		tag, err := name.ParseReference(imageName)
@@ -204,11 +209,16 @@ func (s *Storage) imageGet(ctx context.Context, imageName string) (*apiv1.Image,
 		tagName = tag.Name()
 	}
 
+	var matchedImage apiv1.Image
 	for _, image := range images.Items {
 		if image.Digest == digest {
 			return &image, "", nil
 		} else if digestPrefix != "" && strings.HasPrefix(image.Digest, digestPrefix) {
-			return &image, "", nil
+			if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
+				reason := fmt.Sprintf("Image identifier %v is not unique", imageName)
+				return nil, "", apierrors.NewBadRequest(reason)
+			}
+			matchedImage = image
 		} else if image.Reference == imageName {
 			return &image, image.Tag, nil
 		} else if image.Reference != "" {
@@ -220,6 +230,10 @@ func (s *Storage) imageGet(ctx context.Context, imageName string) (*apiv1.Image,
 				return &image, image.Reference, nil
 			}
 		}
+	}
+
+	if matchedImage.Digest != "" {
+		return &matchedImage, "", nil
 	}
 
 	return nil, "", apierrors.NewNotFound(schema.GroupResource{
