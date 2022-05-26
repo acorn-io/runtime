@@ -11,14 +11,14 @@ func ReleaseVolume(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
 	for _, bind := range appInstance.Spec.Volumes {
 		pv := &corev1.PersistentVolume{}
-		if err := req.Client.Get(pv, bind.Volume, nil); err != nil {
+		if err := req.Get(pv, "", bind.Volume); err != nil {
 			return err
 		}
 		if pv.Labels[labels.AcornManaged] == "true" &&
 			pv.Status.Phase == corev1.VolumeReleased &&
 			pv.Spec.ClaimRef != nil {
 			pv.Spec.ClaimRef = nil
-			return req.Client.Update(pv)
+			return req.Client.Update(req.Ctx, pv)
 		}
 	}
 	return nil

@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func MarkAndSave(req router.Request, resp router.Response) error {
@@ -16,7 +17,7 @@ func MarkAndSave(req router.Request, resp router.Response) error {
 	}
 
 	var pv corev1.PersistentVolume
-	if err := req.Client.Get(&pv, pvc.Spec.VolumeName, nil); apierrors.IsNotFound(err) {
+	if err := req.Client.Get(req.Ctx, kclient.ObjectKey{Name: pvc.Spec.VolumeName}, &pv); apierrors.IsNotFound(err) {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("looking up pv %s", pvc.Spec.VolumeName)
@@ -36,7 +37,7 @@ func MarkAndSave(req router.Request, resp router.Response) error {
 		pv.Labels[labels.AcornAppNamespace] = pvc.Labels[labels.AcornAppNamespace]
 		pv.Labels[labels.AcornManaged] = "true"
 		pv.Spec.PersistentVolumeReclaimPolicy = corev1.PersistentVolumeReclaimRetain
-		return req.Client.Update(&pv)
+		return req.Client.Update(req.Ctx, &pv)
 	}
 
 	return nil

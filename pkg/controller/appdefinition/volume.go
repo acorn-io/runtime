@@ -5,13 +5,13 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func addPVCs(appInstance *v1.AppInstance, resp router.Response) {
@@ -26,7 +26,7 @@ func translateAccessModes(accessModes []v1.AccessMode) (result []corev1.Persiste
 	return
 }
 
-func toPVCs(appInstance *v1.AppInstance) (result []meta.Object) {
+func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Volumes) {
 		volume, volumeRequest := entry.Key, entry.Value
 

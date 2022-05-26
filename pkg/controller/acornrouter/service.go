@@ -5,17 +5,17 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/baaah/pkg/meta"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toService(appInstance *v1.AppInstance) []meta.Object {
+func toService(appInstance *v1.AppInstance) []kclient.Object {
 	service := appdefinition.ToService(appInstance, appInstance.Name, v1.Container{Ports: appPortsToPorts(appInstance.Spec.Ports)})
 	if service != nil {
 		service, ptrService := toAcornService(appInstance, service)
-		return []meta.Object{service, ptrService}
+		return []kclient.Object{service, ptrService}
 	}
 	return nil
 }

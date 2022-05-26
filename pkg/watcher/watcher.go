@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -24,7 +23,7 @@ var (
 
 type watchFunc func() (watch.Interface, error)
 
-func doWatch[T meta.Object](ctx context.Context, watchFunc watchFunc, cb func(obj T) (bool, error)) (cont bool, nonTerminal error, terminal error) {
+func doWatch[T client.Object](ctx context.Context, watchFunc watchFunc, cb func(obj T) (bool, error)) (cont bool, nonTerminal error, terminal error) {
 	result, err := watchFunc()
 	if err != nil {
 		return false, err, nil
@@ -46,7 +45,7 @@ func doWatch[T meta.Object](ctx context.Context, watchFunc watchFunc, cb func(ob
 			switch event.Type {
 			case watch.Deleted:
 				o := event.Object.DeepCopyObject()
-				mo := o.(meta.Object)
+				mo := o.(client.Object)
 				if mo.GetDeletionTimestamp().IsZero() {
 					now := metav1.Now()
 					mo.SetDeletionTimestamp(&now)
@@ -70,7 +69,7 @@ func doWatch[T meta.Object](ctx context.Context, watchFunc watchFunc, cb func(ob
 	}
 }
 
-func retryWatch[T meta.Object](ctx context.Context, watchFunc watchFunc, cb func(obj T) (bool, error)) (T, error) {
+func retryWatch[T client.Object](ctx context.Context, watchFunc watchFunc, cb func(obj T) (bool, error)) (T, error) {
 	var last T
 	newCB := func(obj T) (bool, error) {
 		last = obj
@@ -96,12 +95,12 @@ func retryWatch[T meta.Object](ctx context.Context, watchFunc watchFunc, cb func
 	}
 }
 
-type Watcher[T meta.Object] struct {
+type Watcher[T client.Object] struct {
 	client client.WithWatch
 	scheme *runtime.Scheme
 }
 
-func New[T meta.Object](client client.WithWatch) *Watcher[T] {
+func New[T client.Object](client client.WithWatch) *Watcher[T] {
 	return &Watcher[T]{
 		client: client,
 		scheme: client.Scheme(),

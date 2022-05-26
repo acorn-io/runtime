@@ -7,7 +7,6 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
@@ -17,9 +16,7 @@ import (
 
 func serviceEndpoints(req router.Request, app *v1.AppInstance, containerName string) (endpoints []v1.Endpoint, _ error) {
 	service := &corev1.Service{}
-	err := req.Client.Get(service, PublishServiceName(app, containerName), &meta.GetOptions{
-		Namespace: app.Status.Namespace,
-	})
+	err := req.Get(service, app.Status.Namespace, PublishServiceName(app, containerName))
 	if apierrors.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {
@@ -71,9 +68,7 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance, containerName str
 
 func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName string) (endpoints []v1.Endpoint, _ error) {
 	ingress := &networkingv1.Ingress{}
-	err := req.Client.Get(ingress, containerName, &meta.GetOptions{
-		Namespace: app.Status.Namespace,
-	})
+	err := req.Get(ingress, app.Status.Namespace, containerName)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {

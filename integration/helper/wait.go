@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/acorn-io/baaah/pkg/meta"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -21,7 +20,7 @@ var (
 type WatchFunc func(ctx context.Context, obj client.ObjectList, opts ...client.ListOption) (watch.Interface, error)
 type watchFunc func() (watch.Interface, error)
 
-func doWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) bool {
+func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) bool {
 	ctx := GetCTX(t)
 	result, err := watchFunc()
 	if err != nil {
@@ -59,7 +58,7 @@ func doWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bo
 	}
 }
 
-func retryWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) {
+func retryWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) {
 	for {
 		if done := doWatch(t, watchFunc, cb); done {
 			return
@@ -67,7 +66,7 @@ func retryWatch[T meta.Object](t *testing.T, watchFunc watchFunc, cb func(obj T)
 	}
 }
 
-func Wait[T meta.Object](t *testing.T, watchFunc WatchFunc, list meta.ObjectList, cb func(obj T) bool) T {
+func Wait[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, cb func(obj T) bool) T {
 	var last T
 	retryWatch(t, func() (watch.Interface, error) {
 		ctx := GetCTX(t)
@@ -79,7 +78,7 @@ func Wait[T meta.Object](t *testing.T, watchFunc WatchFunc, list meta.ObjectList
 	return last
 }
 
-func WaitForObject[T meta.Object](t *testing.T, watchFunc WatchFunc, list meta.ObjectList, obj T, cb func(obj T) bool) T {
+func WaitForObject[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, obj T, cb func(obj T) bool) T {
 	if done := cb(obj); done {
 		return obj
 	}

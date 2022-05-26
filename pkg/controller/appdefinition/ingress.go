@@ -10,7 +10,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/pkg/errors"
@@ -18,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -64,7 +64,7 @@ func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
 	result := []*TLSCert{}
 
 	var secrets corev1.SecretList
-	err := req.Client.List(&secrets, &meta.ListOptions{
+	err := req.List(&secrets, &client.ListOptions{
 		Namespace: namespace,
 	})
 	if err != nil {
@@ -146,7 +146,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 		return nil
 	}
 
-	cfg, err := config.Get(req.Client)
+	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 		tlsIngress := getCertsForPublishedHosts(rules, tlsCerts)
 		for i, ing := range tlsIngress {
 			originalSecret := &corev1.Secret{}
-			err := req.Client.Get(originalSecret, ing.SecretName, nil)
+			err := req.Get(originalSecret, "", ing.SecretName)
 			if err != nil {
 				return err
 			}

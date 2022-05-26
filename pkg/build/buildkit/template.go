@@ -6,7 +6,6 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
-	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -16,8 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetRegistryPort(ctx context.Context, c router.Getter) (int, error) {
-	return getRegistryPort(ctx, router.ToReader(c))
+func GetRegistryPort(ctx context.Context, c client.Reader) (int, error) {
+	return getRegistryPort(ctx, c)
 }
 
 func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {

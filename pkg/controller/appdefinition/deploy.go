@@ -12,7 +12,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pull"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -21,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func DeploySpec(req router.Request, resp router.Response) (err error) {
@@ -34,7 +34,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := pull.GetTag(req.Ctx, router.ToReader(req.Client), appInstance.Namespace, appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
 	if err != nil {
 		return err
 	}
@@ -430,7 +430,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 	return dep
 }
 
-func ToDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []meta.Object) {
+func ToDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		result = append(result, toDeployment(appInstance, tag, entry.Key, entry.Value, pullSecrets))
 	}
@@ -486,7 +486,7 @@ func addConfigMaps(appInstance *v1.AppInstance, resp router.Response) error {
 	return err
 }
 
-func toConfigMaps(appInstance *v1.AppInstance) (result []meta.Object, err error) {
+func toConfigMaps(appInstance *v1.AppInstance) (result []kclient.Object, err error) {
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "files",
@@ -511,5 +511,5 @@ func toConfigMaps(appInstance *v1.AppInstance) (result []meta.Object, err error)
 	if len(configMap.BinaryData) == 0 {
 		return nil, nil
 	}
-	return []meta.Object{configMap}, nil
+	return []kclient.Object{configMap}, nil
 }

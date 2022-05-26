@@ -129,8 +129,8 @@ github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdc
 github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=
 github.com/acorn-io/apiserver v0.23.6-ot-1 h1:kC3VGOg6qMpNu2Y1M/pmQJqkFqo9JBV9N5VAlYizNFg=
 github.com/acorn-io/apiserver v0.23.6-ot-1/go.mod h1:o9OQj+ocR0onRxWMDtPTB6b106zDDKx7Q7f9l9LEwvY=
-github.com/acorn-io/baaah v0.0.0-20220524223350-b2d78c8fc733 h1:KrDQmbsQ20fSPN0aCWK0GrQJCqHlDXxE3exZq4b4uqU=
-github.com/acorn-io/baaah v0.0.0-20220524223350-b2d78c8fc733/go.mod h1:9FvNcgPq6o0x8Z8Nfq9EvG6tTvw7yVkagoNcMjvcm10=
+github.com/acorn-io/baaah v0.0.0-20220526012813-1b7eaa66f6c5 h1:KeM7/Cl1ZrTuAOSh3IeR8b5yOhhH2pIR7iukpX0vJ7Y=
+github.com/acorn-io/baaah v0.0.0-20220526012813-1b7eaa66f6c5/go.mod h1:9FvNcgPq6o0x8Z8Nfq9EvG6tTvw7yVkagoNcMjvcm10=
 github.com/acorn-io/component-base v0.23.6-ot-1 h1:h2KhdnVjqSYf7WuJHvM7J+4SK6tfvi+zfSOg7yBUlro=
 github.com/acorn-io/component-base v0.23.6-ot-1/go.mod h1:3Cpp8qJzRasPHxbe3Ae5r0wOeS2s/yL5/Wuim3zFkPc=
 github.com/acorn-io/etcd/server/v3 v3.5.0-ot-1 h1:ENMjSuyJrdQ2aBAId7otAcyRLYAskXj5ZIN2qz3n3Iw=

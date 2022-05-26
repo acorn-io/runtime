@@ -1,17 +1,15 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-type Getter interface {
-	Get(obj meta.Object, name string, opts *meta.GetOptions) error
-}
 
 type Config struct {
 	IngressClassName            string   `json:"ingressClassName,omitempty"`
@@ -36,11 +34,9 @@ func defaultConfig() *Config {
 	return cfg
 }
 
-func Get(getter Getter) (*Config, error) {
+func Get(ctx context.Context, getter kclient.Reader) (*Config, error) {
 	cm := &corev1.ConfigMap{}
-	err := getter.Get(cm, system.ConfigName, &meta.GetOptions{
-		Namespace: system.Namespace,
-	})
+	err := getter.Get(ctx, router.Key(system.Namespace, system.ConfigName), cm)
 	if apierror.IsNotFound(err) {
 		return defaultConfig(), nil
 	} else if err != nil {

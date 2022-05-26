@@ -13,7 +13,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/certs"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/pkg/errors"
@@ -26,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func seedData(from map[string]string, keys ...string) map[string][]byte {
@@ -42,11 +42,9 @@ var (
 	templateSecretRegexp = regexp.MustCompile(`\${secret://(.*?)/(.*?)}`)
 )
 
-func getJobOutput(client router.Client, namespace, name string) (job *batchv1.Job, data []byte, err error) {
+func getJobOutput(req router.Request, namespace, name string) (job *batchv1.Job, data []byte, err error) {
 	job = &batchv1.Job{}
-	err = client.Get(job, name, &meta.GetOptions{
-		Namespace: namespace,
-	})
+	err = req.Get(job, namespace, name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -61,9 +59,9 @@ func getJobOutput(client router.Client, namespace, name string) (job *batchv1.Jo
 	}
 
 	pods := &corev1.PodList{}
-	err = client.List(pods, &meta.ListOptions{
-		Namespace: namespace,
-		Selector:  sel,
+	err = req.List(pods, &kclient.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: sel,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -90,7 +88,7 @@ func getJobOutput(client router.Client, namespace, name string) (job *batchv1.Jo
 }
 
 func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
-	_, output, err := getJobOutput(req.Client, appInstance.Status.Namespace, convert.ToString(secretRef.Params["job"]))
+	_, output, err := getJobOutput(req, appInstance.Status.Namespace, convert.ToString(secretRef.Params["job"]))
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +140,7 @@ func generateSSH(req router.Request, appInstance *v1.AppInstance, secretName str
 	}
 
 	if len(secret.Data[corev1.SSHAuthPrivateKey]) > 0 {
-		return secret, req.Client.Create(secret)
+		return secret, req.Client.Create(req.Ctx, secret)
 	}
 
 	params := v1.TLSParams{}
@@ -157,7 +155,7 @@ func generateSSH(req router.Request, appInstance *v1.AppInstance, secretName str
 	}
 
 	secret.Data[corev1.SSHAuthPrivateKey] = key
-	return secret, req.Client.Create(secret)
+	return secret, req.Client.Create(req.Ctx, secret)
 }
 
 func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
@@ -199,7 +197,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 
 	secret.Data["template"] = []byte(template)
 
-	return secret, req.Client.Create(secret)
+	return secret, req.Client.Create(req.Ctx, secret)
 }
 
 func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
@@ -214,7 +212,7 @@ func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInsta
 	}
 
 	if len(secret.Data[corev1.TLSCertKey]) > 0 && len(secret.Data[corev1.TLSPrivateKeyKey]) > 0 {
-		return secret, req.Client.Create(secret)
+		return secret, req.Client.Create(req.Ctx, secret)
 	}
 
 	params := v1.TLSParams{}
@@ -254,7 +252,7 @@ func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInsta
 		secret.Data["ca.key"] = caKeyPEM
 	}
 
-	return secret, req.Client.Create(secret)
+	return secret, req.Client.Create(req.Ctx, secret)
 }
 
 func generateToken(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
@@ -281,7 +279,7 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 		secret.Data["token"] = []byte(v)
 	}
 
-	return secret, req.Client.Create(secret)
+	return secret, req.Client.Create(req.Ctx, secret)
 }
 
 func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret) (*corev1.Secret, error) {
@@ -307,7 +305,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 		}
 	}
 
-	return secret, req.Client.Create(secret)
+	return secret, req.Client.Create(req.Ctx, secret)
 }
 
 func generateDocker(req router.Request, appInstance *v1.AppInstance, name string, secretRef v1.Secret) (*corev1.Secret, error) {
@@ -324,7 +322,7 @@ func generateDocker(req router.Request, appInstance *v1.AppInstance, name string
 	if len(secret.Data[corev1.DockerConfigJsonKey]) == 0 {
 		secret.Data[corev1.DockerConfigJsonKey] = []byte("{}")
 	}
-	return secret, req.Client.Create(secret)
+	return secret, req.Client.Create(req.Ctx, secret)
 }
 
 func labelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
@@ -342,8 +340,8 @@ func getSecret(req router.Request, appInstance *v1.AppInstance, name string) (*c
 	l := labelsForSecret(name, appInstance)
 
 	var secrets corev1.SecretList
-	err := req.Client.List(&secrets, &meta.ListOptions{
-		Selector: klabels.SelectorFromSet(l),
+	err := req.List(&secrets, &kclient.ListOptions{
+		LabelSelector: klabels.SelectorFromSet(l),
 	})
 	if err != nil {
 		return nil, err
@@ -403,7 +401,7 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	for _, binding := range appInstance.Spec.Secrets {
 		if binding.SecretRequest == secretName {
 			existingSecret := &corev1.Secret{}
-			err := req.Client.Get(existingSecret, binding.Secret, nil)
+			err := req.Get(existingSecret, "", binding.Secret)
 			if err != nil {
 				return nil, err
 			}

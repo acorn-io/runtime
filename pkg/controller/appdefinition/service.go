@@ -6,12 +6,12 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func addAlias(aliases []*corev1.Service, aliasServiceName, aliasTarget string, svc *corev1.Service) []*corev1.Service {
@@ -51,7 +51,7 @@ func addAlias(aliases []*corev1.Service, aliasServiceName, aliasTarget string, s
 	return append(aliases, newSvc)
 }
 
-func toServices(appInstance *v1.AppInstance) (result []meta.Object) {
+func toServices(appInstance *v1.AppInstance) (result []kclient.Object) {
 	var aliases []*corev1.Service
 
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
