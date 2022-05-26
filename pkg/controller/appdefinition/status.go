@@ -10,7 +10,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	appsv1 "k8s.io/api/apps/v1"
@@ -18,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func JobStatus(req router.Request, resp router.Response) error {
@@ -25,9 +25,9 @@ func JobStatus(req router.Request, resp router.Response) error {
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionJobs)
 	jobs := &batchv1.JobList{}
 
-	err := req.Client.List(jobs, &meta.ListOptions{
+	err := req.List(jobs, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
-		Selector: klabels.SelectorFromSet(map[string]string{
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged: "true",
 			labels.AcornAppName: app.Name,
 		}),
@@ -97,9 +97,9 @@ func podsStatus(req router.Request, namespace string, sel klabels.Selector) (boo
 		message      []string
 		pods         = &corev1.PodList{}
 	)
-	err := req.Client.List(pods, &meta.ListOptions{
-		Namespace: namespace,
-		Selector:  sel,
+	err := req.List(pods, &kclient.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: sel,
 	})
 	if err != nil {
 		return false, nil, err
@@ -138,14 +138,14 @@ func AppStatus(req router.Request, resp router.Response) error {
 		deps = &appsv1.DeploymentList{}
 	)
 
-	cfg, err := config.Get(req.Client)
+	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
 	}
 
-	err = req.Client.List(deps, &meta.ListOptions{
+	err = req.List(deps, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
-		Selector: klabels.SelectorFromSet(map[string]string{
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged: "true",
 			labels.AcornAppName: app.Name,
 		}),

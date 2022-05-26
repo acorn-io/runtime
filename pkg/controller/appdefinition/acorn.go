@@ -5,18 +5,18 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func addAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
 	resp.Objects(toAcorns(appInstance, tag, pullSecrets)...)
 }
 
-func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []meta.Object) {
+func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []kclient.Object) {
 	for acornName, acorn := range appInstance.Status.AppSpec.Acorns {
 		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
 	}

@@ -2,12 +2,12 @@ package condition
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Conditions interface {
-	meta.Object
+	kclient.Object
 	Conditions() *map[string]v1.Condition
 }
 

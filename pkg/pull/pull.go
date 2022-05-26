@@ -14,7 +14,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
-	"github.com/acorn-io/baaah/pkg/router"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -81,7 +80,7 @@ func tarToAppImage(tag imagename.Reference, reader io.Reader) (*v1.AppImage, err
 
 func GetTag(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, error) {
 	if tags.SHAPattern.MatchString(image) {
-		port, err := buildkit.GetRegistryPort(ctx, router.FromReader(ctx, c))
+		port, err := buildkit.GetRegistryPort(ctx, c)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +110,7 @@ func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Ref
 		return nil, err
 	}
 
-	port, err := buildkit.GetRegistryPort(ctx, router.FromReader(ctx, client))
+	port, err := buildkit.GetRegistryPort(ctx, client)
 	if err != nil {
 		return nil, err
 	}

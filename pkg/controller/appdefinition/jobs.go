@@ -5,20 +5,20 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func addJobs(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
 	resp.Objects(toJobs(appInstance, pullSecrets, tag)...)
 }
 
-func toJobs(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference) (result []meta.Object) {
+func toJobs(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
 		result = append(result, toJob(appInstance, pullSecrets, tag, entry.Key, entry.Value))
 	}
@@ -33,7 +33,7 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
-func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference, name string, container v1.Container) meta.Object {
+func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference, name string, container v1.Container) kclient.Object {
 	containers, initContainers := toContainers(appInstance, tag, name, container)
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{

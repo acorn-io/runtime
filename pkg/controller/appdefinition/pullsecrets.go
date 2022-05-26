@@ -11,7 +11,7 @@ import (
 
 func pullSecrets(req router.Request, appInstance *v1.AppInstance, resp router.Response) ([]corev1.LocalObjectReference, error) {
 	secrets, err := pullsecret.ForNamespace(req.Ctx,
-		router.ToReader(req.Client),
+		req.Client,
 		appInstance.Namespace, appInstance.Spec.ImagePullSecrets...)
 	if err != nil {
 		return nil, err

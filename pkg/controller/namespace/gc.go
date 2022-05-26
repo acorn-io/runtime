@@ -6,13 +6,13 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/namespace"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"golang.org/x/exp/maps"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func DeleteOrphaned(req router.Request, resp router.Response) error {
@@ -24,11 +24,9 @@ func DeleteOrphaned(req router.Request, resp router.Response) error {
 	appName := req.Object.GetLabels()[labels.AcornAppName]
 	appNamespace := req.Object.GetLabels()[labels.AcornAppNamespace]
 
-	err := req.Client.Get(&v1.AppInstance{}, appName, &meta.GetOptions{
-		Namespace: appNamespace,
-	})
+	err := req.Client.Get(req.Ctx, router.Key(appNamespace, appName), &v1.AppInstance{})
 	if apierror.IsNotFound(err) {
-		return req.Client.Delete(ns)
+		return req.Client.Delete(req.Ctx, ns)
 	}
 	return err
 }
@@ -40,7 +38,7 @@ func SetupHierarchy(req router.Request, resp router.Response) error {
 	}
 
 	appInstances := &v1.AppInstanceList{}
-	err := req.Client.List(appInstances, &meta.ListOptions{
+	err := req.Client.List(req.Ctx, appInstances, &kclient.ListOptions{
 		Namespace: ns.Name,
 	})
 	if err != nil {
@@ -55,7 +53,7 @@ func SetupHierarchy(req router.Request, resp router.Response) error {
 		newChildren[appInstance.Name] = appInstance.Status.Namespace
 
 		childNS := &corev1.Namespace{}
-		err := req.Client.Get(childNS, appInstance.Status.Namespace, nil)
+		err := req.Client.Get(req.Ctx, router.Key(appInstance.Status.Namespace, ""), childNS)
 		if apierror.IsNotFound(err) {
 			continue
 		} else if err != nil {
@@ -85,7 +83,7 @@ func SetupHierarchy(req router.Request, resp router.Response) error {
 		if err := namespace.SetChildren(ns, newChildren); err != nil {
 			return err
 		}
-		return req.Client.Update(ns)
+		return req.Client.Update(req.Ctx, ns)
 	}
 
 	return nil
@@ -113,8 +111,8 @@ func addOrphans(oldChildren, newChildren map[string]string, req router.Request) 
 		return err
 	}
 
-	err = req.Client.List(pvs, &meta.ListOptions{
-		Selector: klabels.NewSelector().Add(*nsReq),
+	err = req.Client.List(req.Ctx, pvs, &kclient.ListOptions{
+		LabelSelector: klabels.NewSelector().Add(*nsReq),
 	})
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@ package acornrouter
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
@@ -23,11 +22,9 @@ func GCAcornRouter(req router.Request, resp router.Response) error {
 	}
 
 	var app v1.AppInstance
-	err := req.Client.Get(&app, name, &meta.GetOptions{
-		Namespace: namespace,
-	})
+	err := req.Get(&app, namespace, name)
 	if apierrors.IsNotFound(err) {
-		err := req.Client.Delete(ds)
+		err := req.Client.Delete(req.Ctx, ds)
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
@@ -47,11 +44,9 @@ func GCAcornRouterService(req router.Request, resp router.Response) error {
 	}
 
 	var app v1.AppInstance
-	err := req.Client.Get(&app, name, &meta.GetOptions{
-		Namespace: namespace,
-	})
+	err := req.Get(&app, namespace, name)
 	if apierrors.IsNotFound(err) {
-		err := req.Client.Delete(ds)
+		err := req.Client.Delete(req.Ctx, ds)
 		if apierrors.IsNotFound(err) {
 			return nil
 		}

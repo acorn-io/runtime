@@ -8,7 +8,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/baaah/pkg/meta"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
@@ -70,9 +69,7 @@ func addMappings(req router.Request, app *v1.AppInstance, portMappings map[strin
 		}
 		if isPublishable(app, port) {
 			var service corev1.Service
-			err := req.Client.Get(&service, serviceName, &meta.GetOptions{
-				Namespace: app.Status.Namespace,
-			})
+			err := req.Get(&service, app.Status.Namespace, serviceName)
 			if apierrors.IsNotFound(err) {
 				continue
 			} else if err != nil {
@@ -84,9 +81,7 @@ func addMappings(req router.Request, app *v1.AppInstance, portMappings map[strin
 					continue
 				}
 				serviceName, _, _ := strings.Cut(service.Spec.ExternalName, ".")
-				err := req.Client.Get(&service, serviceName, &meta.GetOptions{
-					Namespace: system.Namespace,
-				})
+				err := req.Get(&service, system.Namespace, serviceName)
 				if apierrors.IsNotFound(err) {
 					continue
 				} else if err != nil {
