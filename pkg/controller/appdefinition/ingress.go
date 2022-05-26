@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -84,6 +85,10 @@ func getCerts(namespace string, req router.Request) ([]*TLSCert, error) {
 		result = append(result, cert)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].SecretName < result[j].SecretName
+	})
+
 	return result, nil
 }
 
@@ -91,8 +96,10 @@ func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCer
 	certSecretToHostMapping := map[string][]string{}
 	for _, rule := range rules {
 		for _, cert := range certs {
+			// Find the first cert and stop looking
 			if cert.certForThisDomain(rule.Host) {
 				certSecretToHostMapping[cert.SecretName] = append(certSecretToHostMapping[cert.SecretName], rule.Host)
+				break
 			}
 		}
 	}
