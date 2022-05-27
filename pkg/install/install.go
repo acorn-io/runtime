@@ -17,6 +17,7 @@ import (
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/yaml"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -73,11 +74,11 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	if err := waitAPI(ctx, kclient); err != nil {
+	if err := waitController(ctx, image, kclient); err != nil {
 		return err
 	}
 
-	if err := waitController(ctx, kclient); err != nil {
+	if err := waitAPI(ctx, image, kclient); err != nil {
 		return err
 	}
 
@@ -85,45 +86,54 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	return nil
 }
 
-func waitDeployment(ctx context.Context, client client.WithWatch, name string) error {
+func waitDeployment(ctx context.Context, client client.WithWatch, imageName, name string) error {
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	go func() {
-		_, _ = watcher.New[*corev1.Pod](client).BySelector(childCtx, "acorn-system", labels.SelectorFromSet(map[string]string{
+	eg, _ := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		_, err := watcher.New[*corev1.Pod](client).BySelector(childCtx, "acorn-system", labels.SelectorFromSet(map[string]string{
 			"app": name,
 		}), func(pod *corev1.Pod) (bool, error) {
+			if pod.Spec.Containers[0].Image != imageName {
+				return false, nil
+			}
 			status := podstatus.GetStatus(pod)
-			if status.Reason != "Running" {
-				logrus.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
+			if status.Reason == "Running" {
+				return true, nil
+			}
+			logrus.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
+			return false, nil
+		})
+		return err
+	})
+
+	eg.Go(func() error {
+		_, err := watcher.New[*appsv1.Deployment](client).ByName(ctx, "acorn-system", name, func(dep *appsv1.Deployment) (bool, error) {
+			for _, cond := range dep.Status.Conditions {
+				if cond.Type == appsv1.DeploymentAvailable {
+					logrus.Infof("Deployment acorn-system/%s: %s=%s (%s) %s", name, cond.Type, cond.Status, cond.Reason, cond.Message)
+					if cond.Status == corev1.ConditionTrue && dep.Generation == dep.Status.ObservedGeneration && dep.Status.UpdatedReplicas == 1 && dep.Status.ReadyReplicas == 1 {
+						return true, nil
+					}
+				}
 			}
 			return false, nil
 		})
-	}()
-
-	_, err := watcher.New[*appsv1.Deployment](client).ByName(ctx, "acorn-system", name, func(dep *appsv1.Deployment) (bool, error) {
-		for _, cond := range dep.Status.Conditions {
-			if cond.Type == appsv1.DeploymentAvailable {
-				logrus.Infof("Deployment acorn-system/%s: %s=%s (%s) %s", name, cond.Type, cond.Status, cond.Reason, cond.Message)
-				if cond.Status == corev1.ConditionTrue {
-					return true, nil
-				}
-			}
-		}
-		return false, nil
+		return err
 	})
 
-	return err
+	return eg.Wait()
 }
 
-func waitController(ctx context.Context, client client.WithWatch) error {
+func waitController(ctx context.Context, image string, client client.WithWatch) error {
 	logrus.Info("Waiting for controller deployment to be available")
-	return waitDeployment(ctx, client, "acorn-controller")
+	return waitDeployment(ctx, client, image, "acorn-controller")
 }
 
-func waitAPI(ctx context.Context, client client.WithWatch) error {
+func waitAPI(ctx context.Context, image string, client client.WithWatch) error {
 	logrus.Info("Waiting for API server deployment to be available")
-	if err := waitDeployment(ctx, client, "acorn-api"); err != nil {
+	if err := waitDeployment(ctx, client, image, "acorn-api"); err != nil {
 		return err
 	}
 
