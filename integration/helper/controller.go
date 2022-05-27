@@ -109,6 +109,7 @@ func StartAPI(t *testing.T) *rest.Config {
 			continue
 		}
 		apiRESTConfig = restConfig
+		EnsureCRDs(t)
 		apiStarted = true
 		return restConfig
 	}
@@ -146,6 +147,7 @@ func StartController(t *testing.T) {
 		}
 	})
 
+	EnsureCRDs(t)
 	controllerStarted = true
 }
 
