@@ -219,3 +219,22 @@ type CredentialList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Credential `json:"items"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Secret struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Type string            `json:"type,omitempty"`
+	Data map[string][]byte `json:"data,omitempty"`
+	Keys []string          `json:"keys,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type SecretList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Secret `json:"items"`
+}

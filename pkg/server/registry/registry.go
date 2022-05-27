@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/containers"
 	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
+	"github.com/acorn-io/acorn/pkg/server/registry/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -36,6 +37,8 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 		"containerreplicas":      containerStorage,
 		"containerreplicas/exec": containerExec,
 		"credentials":            credentials.NewStorage(c),
+		"secrets":                secrets.NewStorage(c),
+		"secrets/expose":         secrets.NewExpose(c),
 	}
 	apiGroupInfo.NegotiatedSerializer = &noProtobufSerializer{r: apiGroupInfo.NegotiatedSerializer}
 

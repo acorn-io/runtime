@@ -13,7 +13,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/schema"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -46,28 +45,6 @@ func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 		ctx:        a.ctx,
 		imageDatas: append(a.imageDatas, imageData),
 	}
-}
-
-func ReadCUE(file string) ([]byte, error) {
-	fileData, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	ext := filepath.Ext(file)
-	if ext == ".yaml" || ext == ".json" {
-		data := map[string]interface{}{}
-		err := yaml.Unmarshal(fileData, data)
-		if err != nil {
-			return nil, fmt.Errorf("parsing %s: %w", file, err)
-		}
-		fileData, err = json.Marshal(data)
-		if err != nil {
-			return nil, fmt.Errorf("converting %s: %w", file, err)
-		}
-	}
-
-	return fileData, nil
 }
 
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
@@ -223,7 +200,7 @@ func addAcorns(fileSet map[string]bool, builds map[string]v1.AcornBuilderSpec, c
 		if build.Build == nil {
 			continue
 		}
-		data, err := ReadCUE(filepath.Join(cwd, build.Build.Acornfile))
+		data, err := cue.ReadCUE(filepath.Join(cwd, build.Build.Acornfile))
 		if err != nil {
 			return
 		}

@@ -47,4 +47,11 @@ var (
 		{"CREATED", "{{ago .CreationTimestamp}}"},
 	}
 	CredentialConverter = MustConverter(Credential)
+
+	Secret = [][]string{
+		{"NAME", "Name"},
+		{"TYPE", "Type"},
+		{"KEYS", "Keys"},
+	}
+	SecretConverter = MustConverter(Secret)
 )

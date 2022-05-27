@@ -33,6 +33,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ContainerReplica{},
 		&ContainerReplicaList{},
 		&ContainerReplicaExecOptions{},
+		&Secret{},
+		&SecretList{},
 	)
 
 	// Add common types

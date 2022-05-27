@@ -40,7 +40,6 @@ require (
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99
 	k8s.io/api v0.23.6
 	k8s.io/apimachinery v0.23.6
 	k8s.io/apiserver v0.23.6
@@ -173,6 +172,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99 // indirect
 	k8s.io/apiextensions-apiserver v0.23.6 // indirect
 	k8s.io/component-base v0.23.6 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect

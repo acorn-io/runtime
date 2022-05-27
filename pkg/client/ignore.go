@@ -164,7 +164,6 @@ func (c IgnoreUninstalled) CredentialList(ctx context.Context) ([]apiv1.Credenti
 
 func (c IgnoreUninstalled) CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
 	return c.client.CredentialGet(ctx, serverAddress)
-
 }
 
 func (c IgnoreUninstalled) CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
@@ -173,4 +172,30 @@ func (c IgnoreUninstalled) CredentialUpdate(ctx context.Context, serverAddress, 
 
 func (c IgnoreUninstalled) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
 	return c.client.CredentialDelete(ctx, serverAddress)
+}
+
+func (c IgnoreUninstalled) SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error) {
+	return promptInstall(ctx, func() (*apiv1.Secret, error) {
+		return c.client.SecretCreate(ctx, name, secretType, data)
+	})
+}
+
+func (c IgnoreUninstalled) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
+	return ignoreUninstalled(c.client.SecretList(ctx))
+}
+
+func (c IgnoreUninstalled) SecretGet(ctx context.Context, name string) (*apiv1.Secret, error) {
+	return c.client.SecretGet(ctx, name)
+}
+
+func (c IgnoreUninstalled) SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error) {
+	return c.client.SecretExpose(ctx, name)
+}
+
+func (c IgnoreUninstalled) SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error) {
+	return c.client.SecretUpdate(ctx, name, data)
+}
+
+func (c IgnoreUninstalled) SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error) {
+	return c.client.SecretDelete(ctx, name)
 }

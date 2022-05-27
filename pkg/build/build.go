@@ -12,6 +12,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
+	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -69,7 +70,7 @@ func ResolveFile(file, cwd string) string {
 func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
 	file = ResolveFile(file, cwd)
 
-	fileData, err := appdefinition.ReadCUE(file)
+	fileData, err := cue.ReadCUE(file)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +86,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 
 	file = ResolveFile(file, opts.Cwd)
 
-	fileData, err := appdefinition.ReadCUE(file)
+	fileData, err := cue.ReadCUE(file)
 	if err != nil {
 		return nil, err
 	}
