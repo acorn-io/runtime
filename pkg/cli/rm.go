@@ -22,6 +22,7 @@ acorn rm -v some-volume`,
 type Rm struct {
 	Volumes    bool `usage:"Delete volumes" short:"v"`
 	Images     bool `usage:"Delete images/tags" short:"i"`
+	Secrets    bool `usage:"Delete secrets" short:"s"`
 	Containers bool `usage:"Delete apps/containers" short:"c"`
 	All        bool `usage:"Delete all types" short:"a"`
 }
@@ -32,10 +33,19 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// If nothing is set default to containers
+	if !(a.Images ||
+		a.Volumes ||
+		a.Secrets ||
+		a.Containers) {
+		a.Containers = true
+	}
+
 	if a.All {
 		a.Volumes = true
 		a.Images = true
 		a.Containers = true
+		a.Secrets = true
 	}
 
 	for _, arg := range args {
@@ -61,7 +71,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		if a.Containers || (!a.Images && !a.Volumes) {
+		if a.Containers {
 			app, err := client.AppDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting app %s: %w", arg, err)
@@ -76,6 +86,17 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 				return fmt.Errorf("deleting container %s: %w", arg, err)
 			}
 			if replica != nil {
+				fmt.Println(arg)
+				continue
+			}
+		}
+
+		if a.Secrets {
+			secret, err := client.SecretDelete(cmd.Context(), arg)
+			if err != nil {
+				return fmt.Errorf("deleting secret %s: %w", arg, err)
+			}
+			if secret != nil {
 				fmt.Println(arg)
 				continue
 			}

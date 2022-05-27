@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/spf13/pflag"
@@ -66,7 +65,7 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 			continue
 		} else if strings.HasPrefix(value, "@") {
 			fName := value[1:]
-			data, err := appdefinition.ReadCUE(fName)
+			data, err := cue.ReadCUE(fName)
 			if err != nil {
 				return nil, err
 			}

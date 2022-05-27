@@ -15,6 +15,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/acorn/pkg/run"
@@ -70,7 +71,7 @@ type watcher struct {
 }
 
 func (w *watcher) readFiles() []string {
-	data, err := appdefinition.ReadCUE(w.file)
+	data, err := cue.ReadCUE(w.file)
 	if err != nil {
 		logrus.Errorf("failed to read %s: %v", w.file, err)
 		return []string{w.file}

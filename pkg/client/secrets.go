@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"sort"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,6 +19,10 @@ func (c *client) SecretCreate(ctx context.Context, name, secretType string, data
 		},
 		Type: secretType,
 		Data: data,
+	}
+	if strings.HasSuffix(secret.Name, "-") {
+		secret.GenerateName = secret.Name
+		secret.Name = ""
 	}
 	return secret, c.Client.Create(ctx, secret)
 }
