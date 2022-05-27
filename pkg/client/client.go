@@ -91,6 +91,13 @@ type Client interface {
 	CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
 	CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
 
+	SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error)
+	SecretList(ctx context.Context) ([]apiv1.Secret, error)
+	SecretGet(ctx context.Context, name string) (*apiv1.Secret, error)
+	SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error)
+	SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error)
+	SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error)
+
 	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error)
 	ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
 	ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
