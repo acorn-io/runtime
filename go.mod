@@ -45,7 +45,7 @@ require (
 	k8s.io/apiserver v0.23.6
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/kube-aggregator v0.23.6
-	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf
+	k8s.io/kube-openapi 5e7f5fdc6da6
 	k8s.io/kubectl v0.23.6
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	sigs.k8s.io/controller-runtime v0.11.2
