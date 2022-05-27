@@ -40,7 +40,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.23.6
 	k8s.io/apimachinery v0.23.6
 	k8s.io/apiserver v0.23.6
