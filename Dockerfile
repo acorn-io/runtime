@@ -3,7 +3,7 @@ COPY / /src
 WORKDIR /src
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build make build
 
-FROM alpine:3.15.4 AS base
+FROM alpine:3.16.0 AS base
 RUN apk add --no-cache ca-certificates 
 RUN adduser -D acorn
 RUN mkdir apiserver.local.config && chown acorn apiserver.local.config
