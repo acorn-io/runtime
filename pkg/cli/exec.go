@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	hclient "github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/streams"
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +31,7 @@ type Exec struct {
 	Interactive bool   `usage:"Not used" short:"i"`
 	TTY         bool   `usage:"Not used" short:"t"`
 	DebugImage  string `usage:"Use image as container root for command" short:"d"`
+	Container   string `usage:"Name of container to exec into" short:"c"`
 }
 
 func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, args []string) error {
@@ -40,9 +42,13 @@ func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, ar
 		return err
 	}
 
+	appRequestedContainerPfx := strings.Join([]string{app.Name, s.Container}, ".")
+
 	var names []string
 	for _, container := range containers {
-		names = append(names, container.Name)
+		if strings.HasPrefix(container.Name, appRequestedContainerPfx) {
+			names = append(names, container.Name)
+		}
 	}
 
 	if len(containers) == 0 {
