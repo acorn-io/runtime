@@ -1,0 +1,19 @@
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 123456789ab
+spec:
+    image: foo.io/test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          left:
+            image: "sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300"
+        image: "sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300"
+      buildimage:
+        image: "sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300"

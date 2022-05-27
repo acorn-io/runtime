@@ -58,14 +58,13 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 }
 
 type AppRunOptions struct {
-	Name             string
-	Annotations      map[string]string
-	Labels           map[string]string
-	Endpoints        []v1.EndpointBinding
-	Volumes          []v1.VolumeBinding
-	Secrets          []v1.SecretBinding
-	DeployParams     map[string]interface{}
-	ImagePullSecrets []string
+	Name         string
+	Annotations  map[string]string
+	Labels       map[string]string
+	Endpoints    []v1.EndpointBinding
+	Volumes      []v1.VolumeBinding
+	Secrets      []v1.SecretBinding
+	DeployParams map[string]interface{}
 }
 
 type ImageProgress struct {
@@ -119,7 +118,6 @@ type ImagePushOptions struct {
 }
 
 type ImageDetailsOptions struct {
-	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
 type ContainerReplicaExecOptions struct {

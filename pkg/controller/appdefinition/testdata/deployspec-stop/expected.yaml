@@ -41,9 +41,11 @@ spec:
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: oneimage-pull-12345678
       containers:
         - name: oneimage
-          image: "index.docker.io/library/test@image-name"
+          image: "image-name"
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -77,15 +79,42 @@ spec:
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: buildimage-pull-12345678
       containers:
         - name: buildimage
-          image: "index.docker.io/library/test@sha256:build-image"
+          image: "sha256:build-image"
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: buildimage-pull-12345678
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX0=
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: oneimage-pull-12345678
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX0=
 ---
 kind: AppInstance
 apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
+  uid: 12345678ab
 spec:
   stop: true
   image: test

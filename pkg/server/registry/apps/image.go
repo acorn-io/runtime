@@ -12,8 +12,8 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func (s *Storage) checkRemotePermissions(ctx context.Context, namespace, image string, pullSecrets []string) error {
-	keyChain, err := pullsecret.Keychain(ctx, s.client, namespace, pullSecrets...)
+func (s *Storage) checkRemotePermissions(ctx context.Context, namespace, image string) error {
+	keyChain, err := pullsecret.Keychain(ctx, s.client, namespace)
 	if err != nil {
 		return err
 	}
@@ -30,13 +30,13 @@ func (s *Storage) checkRemotePermissions(ctx context.Context, namespace, image s
 	return nil
 }
 
-func (s *Storage) resolveTag(ctx context.Context, namespace, image string, pullSecrets []string) (string, error) {
+func (s *Storage) resolveTag(ctx context.Context, namespace, image string) (string, error) {
 	localImage, err := s.images.ImageGet(ctx, image)
 	if apierror.IsNotFound(err) {
 		if tags.IsLocalReference(image) {
 			return "", err
 		}
-		if err := s.checkRemotePermissions(ctx, namespace, image, pullSecrets); err != nil {
+		if err := s.checkRemotePermissions(ctx, namespace, image); err != nil {
 			return "", err
 		}
 	} else if err != nil {

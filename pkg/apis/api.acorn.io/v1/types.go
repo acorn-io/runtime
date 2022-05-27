@@ -105,16 +105,12 @@ type Image struct {
 
 type ImagePush struct {
 	metav1.TypeMeta `json:",inline"`
-
-	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ImagePull struct {
 	metav1.TypeMeta `json:",inline"`
-
-	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -123,8 +119,7 @@ type ImageDetails struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	PullSecrets []string    `json:"pullSecrets,omitempty"`
-	AppImage    v1.AppImage `json:"appImage,omitempty"`
+	AppImage v1.AppImage `json:"appImage,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

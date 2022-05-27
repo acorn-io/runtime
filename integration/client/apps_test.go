@@ -192,7 +192,6 @@ func TestAppRun(t *testing.T) {
 		DeployParams: map[string]interface{}{
 			"key": "value",
 		},
-		ImagePullSecrets: []string{"pullSecret"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -204,5 +203,4 @@ func TestAppRun(t *testing.T) {
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
 	assert.Equal(t, "secret", app.Spec.Secrets[0].Secret)
 	assert.Equal(t, "value", app.Spec.DeployParams["key"])
-	assert.Equal(t, "pullSecret", app.Spec.ImagePullSecrets[0])
 }

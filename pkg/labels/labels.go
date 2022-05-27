@@ -22,4 +22,5 @@ const (
 	AcornAlias           = "alias." + Prefix
 	AcornChildNamespaces = Prefix + "child-namespaces"
 	AcornCredential      = Prefix + "credential"
+	AcornPullSecret      = Prefix + "pull-secret"
 )

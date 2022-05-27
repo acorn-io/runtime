@@ -43,7 +43,6 @@ func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Obje
 		}
 	}
 
-	opts := obj.(*apiv1.ImageDetails)
 	ns, _ := request.NamespaceFrom(ctx)
 	imageName := name
 
@@ -55,7 +54,7 @@ func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Obje
 		imageName = image.Name
 	}
 
-	appImage, err := pull.AppImage(ctx, s.client, ns, imageName, opts.PullSecrets)
+	appImage, err := pull.AppImage(ctx, s.client, ns, imageName)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +64,6 @@ func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Obje
 			Name:      imageName,
 			Namespace: ns,
 		},
-		PullSecrets: opts.PullSecrets,
-		AppImage:    *appImage,
+		AppImage: *appImage,
 	}, nil
 }

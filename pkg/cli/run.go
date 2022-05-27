@@ -28,11 +28,10 @@ func NewRun() *cobra.Command {
 }
 
 type Run struct {
-	Name        string   `usage:"Name of app to create" short:"n"`
-	DNS         []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
-	PullSecrets []string `usage:"Secret names to authenticate pull images in cluster" short:"l"`
-	Volumes     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
-	Secrets     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Name    string   `usage:"Name of app to create" short:"n"`
+	DNS     []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
+	Volumes []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
+	Secrets []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
 }
 
 func usage(app *v1.AppSpec) func() {
@@ -95,9 +94,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	image := args[0]
 
-	imageDetails, err := c.ImageDetails(cmd.Context(), image, &client.ImageDetailsOptions{
-		PullSecrets: s.PullSecrets,
-	})
+	imageDetails, err := c.ImageDetails(cmd.Context(), image, nil)
 	if err != nil {
 		return err
 	}
@@ -128,9 +125,8 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := client.AppRunOptions{
-		Name:             s.Name,
-		ImagePullSecrets: s.PullSecrets,
-		DeployParams:     deployParams,
+		Name:         s.Name,
+		DeployParams: deployParams,
 	}
 
 	opts.Endpoints, err = run.ParseEndpoints(s.DNS)

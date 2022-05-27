@@ -55,7 +55,7 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 
 	image := imageObj.(*apiv1.Image)
 
-	_, process, err := i.ImagePush(ctx, image, id, options.(*apiv1.ImagePush).PullSecrets)
+	_, process, err := i.ImagePush(ctx, image, id)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ type ImageProgress struct {
 	Error    string `json:"error,omitempty"`
 }
 
-func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, pullSecrets []string) (*apiv1.Image, <-chan ggcrv1.Update, error) {
+func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string) (*apiv1.Image, <-chan ggcrv1.Update, error) {
 	pushTag, err := name.NewTag(tagName, name.WithDefaultRegistry(DefaultRegistry))
 	if err != nil {
 		return nil, nil, err
@@ -132,7 +132,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		return nil, nil, err
 	}
 
-	keyChain, err := pullsecret.Keychain(ctx, i.client, image.Namespace, pullSecrets...)
+	keyChain, err := pullsecret.Keychain(ctx, i.client, image.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}

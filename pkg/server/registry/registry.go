@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	clientgo "k8s.io/client-go/rest"
@@ -36,6 +37,31 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 		"containerreplicas/exec": containerExec,
 		"credentials":            credentials.NewStorage(c),
 	}
+	apiGroupInfo.NegotiatedSerializer = &noProtobufSerializer{r: apiGroupInfo.NegotiatedSerializer}
 
 	return &apiGroupInfo, nil
+}
+
+type noProtobufSerializer struct {
+	r runtime.NegotiatedSerializer
+}
+
+func (n *noProtobufSerializer) SupportedMediaTypes() []runtime.SerializerInfo {
+	si := n.r.SupportedMediaTypes()
+	result := make([]runtime.SerializerInfo, 0, len(si))
+	for _, s := range si {
+		if s.MediaType == runtime.ContentTypeProtobuf {
+			continue
+		}
+		result = append(result, s)
+	}
+	return result
+}
+
+func (n *noProtobufSerializer) EncoderForVersion(serializer runtime.Encoder, gv runtime.GroupVersioner) runtime.Encoder {
+	return n.r.EncoderForVersion(serializer, gv)
+}
+
+func (n *noProtobufSerializer) DecoderToVersion(serializer runtime.Decoder, gv runtime.GroupVersioner) runtime.Decoder {
+	return n.r.DecoderToVersion(serializer, gv)
 }

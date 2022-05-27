@@ -7,38 +7,36 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/name"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
+func addAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
 	resp.Objects(toAcorns(appInstance, tag, pullSecrets)...)
 }
 
-func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []kclient.Object) {
+func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
 	for acornName, acorn := range appInstance.Status.AppSpec.Acorns {
 		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
 	}
 	return result
 }
 
-func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, acornName string, acorn v1.Acorn) *v1.AppInstance {
+func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
 	var (
-		pullSecretNames []string
-		images          = map[string]string{}
-		imagePrefix     = acornName + "."
+		images      = map[string]string{}
+		imagePrefix = acornName + "."
 	)
-
-	for _, pullSecret := range pullSecrets {
-		pullSecretNames = append(pullSecretNames, pullSecret.Name)
-	}
 
 	for k, v := range appInstance.Spec.Images {
 		if strings.HasPrefix(k, imagePrefix) {
 			images[strings.TrimPrefix(k, imagePrefix)] = v
 		}
 	}
+
+	image := resolveTag(appInstance, tag, acornName, v1.Container{Image: acorn.Image})
+	// Ensure secret gets copied
+	pullSecrets.ForAcorn(acornName, image)
 
 	return &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
@@ -49,15 +47,14 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []core
 				labels.AcornAcornName, acornName),
 		},
 		Spec: v1.AppInstanceSpec{
-			ReattachSecrets:  appInstance.Spec.ReattachSecrets,
-			ReattachVolumes:  appInstance.Spec.ReattachVolumes,
-			Image:            resolveTag(appInstance, tag, acornName, v1.Container{Image: acorn.Image}),
-			Volumes:          acorn.Volumes,
-			Secrets:          acorn.Secrets,
-			DeployParams:     acorn.Params,
-			Images:           images,
-			ImagePullSecrets: pullSecretNames,
-			Ports:            acorn.Ports,
+			ReattachSecrets: appInstance.Spec.ReattachSecrets,
+			ReattachVolumes: appInstance.Spec.ReattachVolumes,
+			Image:           image,
+			Volumes:         acorn.Volumes,
+			Secrets:         acorn.Secrets,
+			DeployParams:    acorn.Params,
+			Images:          images,
+			Ports:           acorn.Ports,
 		},
 	}
 }

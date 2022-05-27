@@ -39,6 +39,8 @@ spec:
       annotations:
         acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name"}'
     spec:
+      imagePullSecrets:
+        - name: container-name-pull-12345678
       terminationGracePeriodSeconds: 5
       hostname: container-name
       enableServiceLinks: false
@@ -50,7 +52,7 @@ spec:
             claimName: foo
       containers:
         - name: container-name
-          image: "index.docker.io/library/test@image-name"
+          image: "image-name"
           volumeMounts:
             - mountPath: "/var/tmp"
               name: foo
@@ -75,6 +77,7 @@ apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
+  uid: 12345678ab
 spec:
   image: test
 status:

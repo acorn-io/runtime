@@ -39,17 +39,32 @@ spec:
           annotations:
             acorn.io/container-spec: '{"image":"image-name","schedule":"daily"}'
         spec:
+          imagePullSecrets:
+            - name: oneimage-pull-12345678
           restartPolicy: Never
           containers:
             - name: oneimage
-              image: "index.docker.io/library/test@image-name"
+              image: "image-name"
               terminationMessagePath: "/run/secrets/output"
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: oneimage-pull-12345678
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX0=
 ---
 kind: AppInstance
 apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
+  uid: 12345678ab
 spec:
   image: test
 status:

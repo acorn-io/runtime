@@ -16,7 +16,7 @@ func PullAppImage(req router.Request, resp router.Response) error {
 		return nil
 	}
 
-	appImage, err := pull.AppImage(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image, appInstance.Spec.ImagePullSecrets)
+	appImage, err := pull.AppImage(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
 	if err != nil {
 		cond.Error(err)
 		return nil

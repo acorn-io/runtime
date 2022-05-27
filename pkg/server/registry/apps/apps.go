@@ -102,21 +102,20 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 	var (
 		app     *v1.AppInstance
 		runOpts = run.Options{
-			Name:             params.Name,
-			GenerateName:     params.GenerateName,
-			Namespace:        params.Namespace,
-			Annotations:      params.Annotations,
-			Labels:           params.Labels,
-			Endpoints:        params.Spec.Endpoints,
-			Client:           s.client,
-			ImagePullSecrets: params.Spec.ImagePullSecrets,
-			DeployParams:     params.Spec.DeployParams,
-			Volumes:          params.Spec.Volumes,
-			Secrets:          params.Spec.Secrets,
+			Name:         params.Name,
+			GenerateName: params.GenerateName,
+			Namespace:    params.Namespace,
+			Annotations:  params.Annotations,
+			Labels:       params.Labels,
+			Endpoints:    params.Spec.Endpoints,
+			Client:       s.client,
+			DeployParams: params.Spec.DeployParams,
+			Volumes:      params.Spec.Volumes,
+			Secrets:      params.Spec.Secrets,
 		}
 	)
 
-	image, err := s.resolveTag(ctx, params.Namespace, params.Spec.Image, params.Spec.ImagePullSecrets)
+	image, err := s.resolveTag(ctx, params.Namespace, params.Spec.Image)
 	if err != nil {
 		return nil, err
 	}

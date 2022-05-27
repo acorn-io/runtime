@@ -19,13 +19,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func AppImage(ctx context.Context, c client.Reader, namespace, image string, pullSecrets []string) (*v1.AppImage, error) {
+func AppImage(ctx context.Context, c client.Reader, namespace, image string) (*v1.AppImage, error) {
 	tag, err := GetTag(ctx, c, namespace, image)
 	if err != nil {
 		return nil, err
 	}
 
-	opts, err := GetPullOptions(ctx, c, tag, namespace, pullSecrets)
+	opts, err := GetPullOptions(ctx, c, tag, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -90,8 +90,8 @@ func GetTag(ctx context.Context, c client.Reader, namespace, image string) (imag
 	return imagename.ParseReference(image)
 }
 
-func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Reference, namespace string, pullSecrets []string) ([]remote.Option, error) {
-	authn, err := pullsecret.Keychain(ctx, client, namespace, pullSecrets...)
+func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Reference, namespace string) ([]remote.Option, error) {
+	authn, err := pullsecret.Keychain(ctx, client, namespace)
 	if err != nil {
 		return nil, err
 	}

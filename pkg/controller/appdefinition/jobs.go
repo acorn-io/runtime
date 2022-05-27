@@ -14,11 +14,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addJobs(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
+func addJobs(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
 	resp.Objects(toJobs(appInstance, pullSecrets, tag)...)
 }
 
-func toJobs(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference) (result []kclient.Object) {
+func toJobs(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
 		result = append(result, toJob(appInstance, pullSecrets, tag, entry.Key, entry.Value))
 	}
@@ -33,7 +33,7 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
-func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReference, tag name.Reference, name string, container v1.Container) kclient.Object {
+func toJob(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container) kclient.Object {
 	containers, initContainers := toContainers(appInstance, tag, name, container)
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
@@ -45,7 +45,7 @@ func toJob(appInstance *v1.AppInstance, pullSecrets []corev1.LocalObjectReferenc
 				Annotations: podAnnotations(appInstance, name, container),
 			},
 			Spec: corev1.PodSpec{
-				ImagePullSecrets: pullSecrets,
+				ImagePullSecrets: pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				RestartPolicy:    corev1.RestartPolicyNever,
 				Containers:       setTerminationPath(containers),
 				InitContainers:   setTerminationPath(initContainers),
