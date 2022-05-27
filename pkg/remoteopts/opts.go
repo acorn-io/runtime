@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -15,7 +14,6 @@ import (
 func GetRemoteWriteOptions(ctx context.Context, c client.WithWatch) ([]remote.Option, error) {
 	return []remote.Option{
 		remote.WithContext(ctx),
-		remote.WithAuthFromKeychain(authn.DefaultKeychain),
 	}, nil
 }
 

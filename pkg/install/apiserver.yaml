@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: acorn-api
-          image: ibuildthecloud/test:a
+          image: ghcr.io/acorn-io/acorn
           args:
             - api-server
           ports:

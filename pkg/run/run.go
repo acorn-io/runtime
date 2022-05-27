@@ -78,17 +78,16 @@ func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
 }
 
 type Options struct {
-	Name             string
-	GenerateName     string
-	Namespace        string
-	Annotations      map[string]string
-	Labels           map[string]string
-	ImagePullSecrets []string
-	Endpoints        []v1.EndpointBinding
-	Volumes          []v1.VolumeBinding
-	Secrets          []v1.SecretBinding
-	DeployParams     map[string]interface{}
-	Client           client.WithWatch
+	Name         string
+	GenerateName string
+	Namespace    string
+	Annotations  map[string]string
+	Labels       map[string]string
+	Endpoints    []v1.EndpointBinding
+	Volumes      []v1.VolumeBinding
+	Secrets      []v1.SecretBinding
+	DeployParams map[string]interface{}
+	Client       client.WithWatch
 }
 
 func (o *Options) Complete() (*Options, error) {
@@ -156,13 +155,12 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Annotations:  opts.Annotations,
 		},
 		Spec: v1.AppInstanceSpec{
-			PublishAllPorts:  true,
-			Image:            image,
-			Endpoints:        opts.Endpoints,
-			ImagePullSecrets: opts.ImagePullSecrets,
-			Volumes:          opts.Volumes,
-			Secrets:          opts.Secrets,
-			DeployParams:     opts.DeployParams,
+			PublishAllPorts: true,
+			Image:           image,
+			Endpoints:       opts.Endpoints,
+			Volumes:         opts.Volumes,
+			Secrets:         opts.Secrets,
+			DeployParams:    opts.DeployParams,
 		},
 	}
 

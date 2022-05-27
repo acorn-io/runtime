@@ -10,7 +10,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
-	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,16 +33,9 @@ func (s *ImageDetails) New() runtime.Object {
 	return &apiv1.ImageDetails{}
 }
 
-func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
+func (s *ImageDetails) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
 	name = strings.ReplaceAll(name, "+", "/")
 
-	if createValidation != nil {
-		if err := createValidation(ctx, obj); err != nil {
-			return nil, err
-		}
-	}
-
-	opts := obj.(*apiv1.ImageDetails)
 	ns, _ := request.NamespaceFrom(ctx)
 	imageName := name
 
@@ -55,7 +47,7 @@ func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Obje
 		imageName = image.Name
 	}
 
-	appImage, err := pull.AppImage(ctx, s.client, ns, imageName, opts.PullSecrets)
+	appImage, err := pull.AppImage(ctx, s.client, ns, imageName)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +57,6 @@ func (s *ImageDetails) Create(ctx context.Context, name string, obj runtime.Obje
 			Name:      imageName,
 			Namespace: ns,
 		},
-		PullSecrets: opts.PullSecrets,
-		AppImage:    *appImage,
+		AppImage: *appImage,
 	}, nil
 }

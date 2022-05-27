@@ -25,12 +25,11 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				Labels:      opts.Labels,
 			},
 			Spec: v1.AppInstanceSpec{
-				Image:            image,
-				Endpoints:        opts.Endpoints,
-				ImagePullSecrets: opts.ImagePullSecrets,
-				DeployParams:     opts.DeployParams,
-				Volumes:          opts.Volumes,
-				Secrets:          opts.Secrets,
+				Image:        image,
+				Endpoints:    opts.Endpoints,
+				DeployParams: opts.DeployParams,
+				Volumes:      opts.Volumes,
+				Secrets:      opts.Secrets,
 			},
 		}
 	)

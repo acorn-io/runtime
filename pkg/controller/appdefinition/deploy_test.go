@@ -133,8 +133,8 @@ func TestSidecar(t *testing.T) {
 			},
 		},
 	}, testTag, nil)[0].(*appsv1.Deployment)
-	assert.Equal(t, "index.docker.io/library/test@sidecar", dep.Spec.Template.Spec.InitContainers[0].Image)
-	assert.Equal(t, "index.docker.io/library/test@sidecar2", dep.Spec.Template.Spec.Containers[1].Image)
+	assert.Equal(t, "sidecar", dep.Spec.Template.Spec.InitContainers[0].Image)
+	assert.Equal(t, "sidecar2", dep.Spec.Template.Spec.Containers[1].Image)
 }
 
 func TestPorts(t *testing.T) {

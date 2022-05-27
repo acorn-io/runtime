@@ -3,8 +3,8 @@ package tables
 import (
 	"bytes"
 	"context"
-	"html/template"
 	"strings"
+	"text/template"
 
 	"github.com/Masterminds/sprig"
 	"github.com/rancher/wrangler-cli/pkg/table"
@@ -39,7 +39,7 @@ func NewConverter(tableDef [][]string) (*Converter, error) {
 
 	_, valueFormat := table.SimpleFormat(tableDef)
 
-	funcs := sprig.FuncMap()
+	funcs := sprig.TxtFuncMap()
 	for k, v := range localFuncMap {
 		funcs[k] = v
 	}
@@ -62,29 +62,21 @@ func (c Converter) ConvertToTable(ctx context.Context, object runtime.Object, ta
 
 	appendRow := func(obj runtime.Object) error {
 		out := &bytes.Buffer{}
-		if err := c.template.Execute(out, object); err != nil {
+		if err := c.template.Execute(out, obj); err != nil {
 			return err
 		}
 		var (
 			cells []interface{}
-			raw   runtime.Object
 		)
 
-		if opt, ok := tableOptions.(*metav1.TableOptions); ok {
-			switch opt.IncludeObject {
-			case metav1.IncludeObject:
-				raw = object
-			}
-		}
-
 		for _, cell := range strings.Split(out.String(), "\t") {
-			cells = append(cells, cell)
+			cells = append(cells, strings.TrimSpace(cell))
 		}
 
 		rows = append(rows, metav1.TableRow{
 			Cells: cells,
 			Object: runtime.RawExtension{
-				Object: raw,
+				Object: obj,
 			},
 		})
 

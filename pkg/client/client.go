@@ -58,14 +58,13 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 }
 
 type AppRunOptions struct {
-	Name             string
-	Annotations      map[string]string
-	Labels           map[string]string
-	Endpoints        []v1.EndpointBinding
-	Volumes          []v1.VolumeBinding
-	Secrets          []v1.SecretBinding
-	DeployParams     map[string]interface{}
-	ImagePullSecrets []string
+	Name         string
+	Annotations  map[string]string
+	Labels       map[string]string
+	Endpoints    []v1.EndpointBinding
+	Volumes      []v1.VolumeBinding
+	Secrets      []v1.SecretBinding
+	DeployParams map[string]interface{}
 }
 
 type ImageProgress struct {
@@ -85,6 +84,12 @@ type Client interface {
 	AppStop(ctx context.Context, name string) error
 	AppStart(ctx context.Context, name string) error
 	AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error)
+
+	CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialList(ctx context.Context) ([]apiv1.Credential, error)
+	CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
+	CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
 
 	ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error)
 	ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
@@ -113,7 +118,6 @@ type ImagePushOptions struct {
 }
 
 type ImageDetailsOptions struct {
-	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
 type ContainerReplicaExecOptions struct {

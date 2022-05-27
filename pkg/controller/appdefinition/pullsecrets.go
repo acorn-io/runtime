@@ -2,49 +2,79 @@ package appdefinition
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/rancher/wrangler/pkg/merr"
+	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func pullSecrets(req router.Request, appInstance *v1.AppInstance, resp router.Response) ([]corev1.LocalObjectReference, error) {
-	secrets, err := pullsecret.ForNamespace(req.Ctx,
-		req.Client,
-		appInstance.Namespace, appInstance.Spec.ImagePullSecrets...)
+type PullSecrets struct {
+	objects  []kclient.Object
+	keychain authn.Keychain
+	app      *v1.AppInstance
+	errs     []error
+}
+
+func NewPullSecrets(req router.Request, appInstance *v1.AppInstance) (*PullSecrets, error) {
+	keychain, err := pullsecret.Keychain(req.Ctx, req.Client, appInstance.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(secrets) == 0 {
-		return nil, nil
+	return &PullSecrets{
+		keychain: keychain,
+		app:      appInstance,
+	}, nil
+}
+
+func (p *PullSecrets) Err() error {
+	if p == nil {
+		return nil
+	}
+	return merr.NewErrors(p.errs...)
+}
+
+func (p *PullSecrets) Objects() []kclient.Object {
+	if p == nil {
+		return nil
+	}
+	return p.objects
+}
+
+func (p *PullSecrets) ForAcorn(acornName, image string) []corev1.LocalObjectReference {
+	return p.ForContainer(acornName, []corev1.Container{
+		{
+			Image: image,
+		},
+	})
+
+}
+
+func (p *PullSecrets) ForContainer(containerName string, containers []corev1.Container) []corev1.LocalObjectReference {
+	if p == nil {
+		return nil
 	}
 
-	var (
-		result []corev1.LocalObjectReference
-		suffix = "-" + string(appInstance.UID[:8])
-	)
+	var images []string
 
-	for _, secret := range secrets {
-		sec := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secret.Name + suffix,
-				Namespace: appInstance.Status.Namespace,
-				Labels: map[string]string{
-					labels.AcornAppName:      appInstance.Name,
-					labels.AcornAppNamespace: appInstance.Namespace,
-					labels.AcornManaged:      "true",
-				},
-			},
-			Data: secret.Data,
-			Type: secret.Type,
-		}
-		result = append(result, corev1.LocalObjectReference{
-			Name: sec.Name,
-		})
-		resp.Objects(sec)
+	for _, container := range containers {
+		images = append(images, container.Image)
 	}
 
-	return result, nil
+	secretName := name.SafeConcatName(containerName, "pull", string(p.app.UID[:8]))
+	secret, err := pullsecret.ForImages(secretName, p.app.Status.Namespace, p.keychain, images...)
+	if err != nil {
+		p.errs = append(p.errs, err)
+		return nil
+	}
+
+	p.objects = append(p.objects, secret)
+	return []corev1.LocalObjectReference{
+		{
+			Name: secretName,
+		},
+	}
 }

@@ -37,18 +37,17 @@ type AppInstance struct {
 }
 
 type AppInstanceSpec struct {
-	Image            string            `json:"image,omitempty"`
-	Stop             *bool             `json:"stop,omitempty"`
-	ReattachVolumes  *bool             `json:"reattachVolumes,omitempty"`
-	ReattachSecrets  *bool             `json:"reattachSecrets,omitempty"`
-	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
-	Secrets          []SecretBinding   `json:"secrets,omitempty"`
-	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`
-	PublishAllPorts  bool              `json:"publishAllPorts,omitempty"`
-	Ports            []AppPort         `json:"ports,omitempty"`
-	DeployParams     GenericMap        `json:"deployParams,omitempty"`
-	Images           map[string]string `json:"images,omitempty"`
-	ImagePullSecrets []string          `json:"imagePullSecrets,omitempty"`
+	Image           string            `json:"image,omitempty"`
+	Stop            *bool             `json:"stop,omitempty"`
+	ReattachVolumes *bool             `json:"reattachVolumes,omitempty"`
+	ReattachSecrets *bool             `json:"reattachSecrets,omitempty"`
+	Volumes         []VolumeBinding   `json:"volumes,omitempty"`
+	Secrets         []SecretBinding   `json:"secrets,omitempty"`
+	Endpoints       []EndpointBinding `json:"endpoints,omitempty"`
+	PublishAllPorts bool              `json:"publishAllPorts,omitempty"`
+	Ports           []AppPort         `json:"ports,omitempty"`
+	DeployParams    GenericMap        `json:"deployParams,omitempty"`
+	Images          map[string]string `json:"images,omitempty"`
 }
 
 type EndpointBinding struct {

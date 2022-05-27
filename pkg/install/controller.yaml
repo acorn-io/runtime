@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: acorn-controller
-          image: ibuildthecloud/test:a
+          image: ghcr.io/acorn-io/acorn
           args:
             - controller
       serviceAccountName: acorn-system

@@ -32,19 +32,13 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 func (c *client) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "/", "+")
 
-	if opts == nil {
-		opts = &ImageDetailsOptions{}
-	}
-
 	detailsResult := &apiv1.ImageDetails{}
-	err := c.RESTClient.Post().
+	err := c.RESTClient.Get().
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(imageName).
 		SubResource("details").
-		Body(&apiv1.ImageDetails{
-			PullSecrets: opts.PullSecrets,
-		}).Do(ctx).Into(detailsResult)
+		Do(ctx).Into(detailsResult)
 	if err != nil {
 		return nil, err
 	}
@@ -55,18 +49,12 @@ func (c *client) ImageDetails(ctx context.Context, imageName string, opts *Image
 }
 
 func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePullOptions) (<-chan ImageProgress, error) {
-	if opts == nil {
-		opts = &ImagePullOptions{}
-	}
-
 	resp, err := c.RESTClient.Post().
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(strings.ReplaceAll(imageName, "/", "+")).
 		SubResource("pull").
-		Body(&apiv1.ImagePull{
-			PullSecrets: opts.PullSecrets,
-		}).
+		Body(&apiv1.ImagePull{}).
 		Stream(ctx)
 	if err != nil {
 		return nil, err
@@ -105,18 +93,12 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 		return nil, err
 	}
 
-	if opts == nil {
-		opts = &ImagePushOptions{}
-	}
-
 	resp, err := c.RESTClient.Post().
 		Namespace(image.Namespace).
 		Resource("images").
 		Name(strings.ReplaceAll(imageName, "/", "+")).
 		SubResource("push").
-		Body(&apiv1.ImagePush{
-			PullSecrets: opts.PullSecrets,
-		}).
+		Body(&apiv1.ImagePush{}).
 		Stream(ctx)
 	if err != nil {
 		return nil, err

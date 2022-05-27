@@ -48,7 +48,7 @@ func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Obje
 	id = strings.ReplaceAll(id, "+", "/")
 	ns, _ := request.NamespaceFrom(ctx)
 
-	progress, err := i.ImagePull(ctx, ns, id, options.(*apiv1.ImagePull).PullSecrets)
+	progress, err := i.ImagePull(ctx, ns, id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +75,13 @@ func (i *ImagePull) ConnectMethods() []string {
 	return []string{"POST"}
 }
 
-func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, pullSecrets []string) (<-chan ggcrv1.Update, error) {
+func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) (<-chan ggcrv1.Update, error) {
 	writeOpts, err := remoteopts.GetRemoteWriteOptions(ctx, i.client)
 	if err != nil {
 		return nil, err
 	}
 
-	keyChain, err := pullsecret.Keychain(ctx, i.client, namespace, pullSecrets...)
+	keyChain, err := pullsecret.Keychain(ctx, i.client, namespace)
 	if err != nil {
 		return nil, err
 	}

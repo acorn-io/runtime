@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/rancher/wrangler/pkg/merr"
+	"github.com/rancher/wrangler/pkg/ratelimit"
 	"github.com/spf13/pflag"
 	"k8s.io/apiserver/pkg/endpoints/openapi"
 	"k8s.io/apiserver/pkg/server"
@@ -63,8 +64,9 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 	if err != nil {
 		return err
 	}
+	cfg.RateLimiter = ratelimit.None
 
-	c, err := kclient.Default()
+	c, err := kclient.New(cfg)
 	if err != nil {
 		return err
 	}

@@ -151,3 +151,26 @@ func (c IgnoreUninstalled) ImageDetails(ctx context.Context, imageName string, o
 		return c.client.ImageDetails(ctx, imageName, opts)
 	})
 }
+
+func (c IgnoreUninstalled) CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
+	return promptInstall(ctx, func() (*apiv1.Credential, error) {
+		return c.client.CredentialCreate(ctx, serverAddress, username, password)
+	})
+}
+
+func (c IgnoreUninstalled) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
+	return ignoreUninstalled(c.client.CredentialList(ctx))
+}
+
+func (c IgnoreUninstalled) CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
+	return c.client.CredentialGet(ctx, serverAddress)
+
+}
+
+func (c IgnoreUninstalled) CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
+	return c.client.CredentialUpdate(ctx, serverAddress, username, password)
+}
+
+func (c IgnoreUninstalled) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
+	return c.client.CredentialDelete(ctx, serverAddress)
+}

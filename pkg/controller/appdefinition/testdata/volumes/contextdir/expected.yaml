@@ -36,19 +36,34 @@ spec:
       annotations:
         acorn.io/container-spec: '{"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name"}'
     spec:
+      imagePullSecrets:
+        - name: container-name-pull-12345678
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: container-name
-          image: "index.docker.io/library/test@image-name"
+          image: "image-name"
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: container-name-pull-12345678
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX0=
 ---
 kind: AppInstance
 apiVersion: acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
+  uid: 12345678ab
 spec:
   image: test
   volumes:

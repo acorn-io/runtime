@@ -12,18 +12,18 @@ import (
 )
 
 type Config struct {
-	IngressClassName            string   `json:"ingressClassName,omitempty"`
-	ClusterDomains              []string `json:"clusterDomains,omitempty"`
-	TLSEnabled                  bool     `json:"tlsEnabled,omitempty"`
-	SetPodSecurityEnforeProfile *bool    `json:"setPodSecurityEnforeProfile,omitempty"`
-	PodSecurityEnforceProfile   string   `json:"podSecurityEnforceProfile,omitempty"`
+	IngressClassName             string   `json:"ingressClassName,omitempty"`
+	ClusterDomains               []string `json:"clusterDomains,omitempty"`
+	TLSEnabled                   bool     `json:"tlsEnabled,omitempty"`
+	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile,omitempty"`
+	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile,omitempty"`
 }
 
 func (c *Config) complete() {
-	if c.SetPodSecurityEnforeProfile == nil {
-		c.SetPodSecurityEnforeProfile = &[]bool{true}[0]
+	if c.SetPodSecurityEnforceProfile == nil {
+		c.SetPodSecurityEnforceProfile = &[]bool{true}[0]
 	}
-	if c.PodSecurityEnforceProfile == "" && *c.SetPodSecurityEnforeProfile {
+	if c.PodSecurityEnforceProfile == "" && *c.SetPodSecurityEnforceProfile {
 		c.PodSecurityEnforceProfile = "baseline"
 	}
 }

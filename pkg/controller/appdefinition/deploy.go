@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	url2 "net/url"
 	"path"
+	"regexp"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
@@ -21,6 +22,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+var (
+	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 )
 
 func DeploySpec(req router.Request, resp router.Response) (err error) {
@@ -39,7 +44,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	pullSecrets, err := pullSecrets(req, appInstance, resp)
+	pullSecrets, err := NewPullSecrets(req, appInstance)
 	if err != nil {
 		return err
 	}
@@ -56,10 +61,12 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 	addAcorns(appInstance, tag, pullSecrets, resp)
-	return nil
+
+	resp.Objects(pullSecrets.Objects()...)
+	return pullSecrets.Err()
 }
 
-func addDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference, resp router.Response) {
+func addDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
 	resp.Objects(ToDeployments(appInstance, tag, pullSecrets)...)
 }
 
@@ -190,7 +197,10 @@ func resolveTag(app *v1.AppInstance, tag name.Reference, containerName string, c
 	if override != "" {
 		return override
 	}
-	return tag.Context().Digest(container.Image).String()
+	if DigestPattern.MatchString(container.Image) {
+		return tag.Context().Digest(container.Image).String()
+	}
+	return container.Image
 }
 
 func parseURLForProbe(probeURL string) (scheme corev1.URIScheme, host string, port intstr.IntOrString, path string, ok bool) {
@@ -379,7 +389,7 @@ func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 	return false
 }
 
-func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets []corev1.LocalObjectReference) *appsv1.Deployment {
+func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets) *appsv1.Deployment {
 	var (
 		aliasLabels []string
 		stateful    = isStateful(appInstance, container)
@@ -388,6 +398,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 		aliasLabels = append(aliasLabels, labels.AcornAlias+alias.Name, "true")
 	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
+
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -408,7 +419,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: &[]int64{5}[0],
-					ImagePullSecrets:              pullSecrets,
+					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 					ShareProcessNamespace:         &[]bool{true}[0],
 					EnableServiceLinks:            new(bool),
 					Containers:                    containers,
@@ -430,7 +441,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 	return dep
 }
 
-func ToDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets []corev1.LocalObjectReference) (result []kclient.Object) {
+func ToDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		result = append(result, toDeployment(appInstance, tag, entry.Key, entry.Value, pullSecrets))
 	}

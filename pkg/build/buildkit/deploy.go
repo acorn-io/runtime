@@ -29,11 +29,14 @@ func Exists(ctx context.Context, c client.WithWatch) (bool, error) {
 }
 
 func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.Pod, error) {
-	if err := applyObjects(ctx); err != nil {
-		return 0, nil, err
-	}
-
 	port, err := getRegistryPort(ctx, client)
+	if apierror.IsNotFound(err) {
+		err = applyObjects(ctx)
+		if err != nil {
+			return 0, nil, err
+		}
+		port, err = getRegistryPort(ctx, client)
+	}
 	if err != nil {
 		return 0, nil, err
 	}

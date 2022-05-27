@@ -38,7 +38,7 @@ func TestContainerList(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["default"].Ready == 1
+		return app.Status.ContainerStatus["default"].UpToDate == 1
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -75,7 +75,7 @@ func TestContainerDelete(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].Ready == 1
+		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].UpToDate == 1
 	})
 
 	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
@@ -193,7 +193,7 @@ func TestContainerExec(t *testing.T) {
 	assert.Len(t, cons, 1)
 
 	con := helper.WaitForObject(t, lclient.Watch, &apiv1.ContainerReplicaList{}, &cons[0], func(con *apiv1.ContainerReplica) bool {
-		return con.Status.Ready
+		return con.Status.Phase == corev1.PodRunning
 	})
 
 	io, err := c.ContainerReplicaExec(ctx, con.Name, []string{"echo", "test"}, false, nil)
@@ -252,7 +252,7 @@ func TestContainerDebugExec(t *testing.T) {
 	assert.Len(t, cons, 1)
 
 	con := helper.WaitForObject(t, lclient.Watch, &apiv1.ContainerReplicaList{}, &cons[0], func(con *apiv1.ContainerReplica) bool {
-		return con.Status.Ready
+		return con.Status.Phase == corev1.PodRunning
 	})
 
 	io, err := c.ContainerReplicaExec(ctx, con.Name, []string{"cat", "/etc/os-release"}, false, &client.ContainerReplicaExecOptions{

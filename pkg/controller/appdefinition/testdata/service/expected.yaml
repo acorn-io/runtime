@@ -37,12 +37,14 @@ spec:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https","publish":true}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+        - name: oneimage-pull-01234567
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: oneimage
-          image: "index.docker.io/library/test@image-name"
+          image: "image-name"
           readinessProbe:
             tcpSocket:
               port: 81
@@ -50,7 +52,7 @@ spec:
             - containerPort: 81
               protocol: "TCP"
         - name: left
-          image: "index.docker.io/library/test@foo"
+          image: "foo"
           readinessProbe:
             tcpSocket:
               port: 91
@@ -86,12 +88,14 @@ spec:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true},{"containerPort":91,"port":443,"protocol":"https","publish":true}]}'
     spec:
       terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+        - name: buildimage-pull-01234567
       shareProcessNamespace: true
       enableServiceLinks: false
       automountServiceAccountToken: false
       containers:
         - name: buildimage
-          image: "index.docker.io/library/test@sha256:build-image"
+          image: "sha256:build-image"
           readinessProbe:
             tcpSocket:
               port: 81

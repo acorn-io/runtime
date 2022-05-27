@@ -9,3 +9,5 @@
 /go.work.sum
 /cosign.key
 /releases
+/integration/client/apiserver.local.config
+/apiserver.local.config

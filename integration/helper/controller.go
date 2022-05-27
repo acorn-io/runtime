@@ -13,12 +13,18 @@ import (
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/crds"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/google/go-containerregistry/pkg/registry"
+	uuid2 "github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 var (
@@ -124,14 +130,53 @@ func StartController(t *testing.T) {
 		return
 	}
 
-	c, err := controller.New()
+	k8s, err := hclient.DefaultInterface()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := c.Start(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+	lock(context.Background(), k8s, func(ctx context.Context) {
+		c, err := controller.New()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err := c.Start(ctx); err != nil {
+			t.Fatal(err)
+		}
+	})
 
 	controllerStarted = true
+}
+
+func lock(ctx context.Context, client kubernetes.Interface, cb func(ctx context.Context)) {
+	id := uuid2.New().String()
+	rl, err := resourcelock.New(resourcelock.ConfigMapsLeasesResourceLock,
+		system.Namespace,
+		"acorn-controller",
+		client.CoreV1(),
+		client.CoordinationV1(),
+		resourcelock.ResourceLockConfig{
+			Identity: id,
+		})
+	if err != nil {
+		logrus.Fatalf("error creating leader lost for %s/%s id: %s", system.Namespace, "acorn-controller", id)
+	}
+
+	go leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+		Lock:          rl,
+		LeaseDuration: 3 * time.Second,
+		RenewDeadline: 2 * time.Second,
+		RetryPeriod:   time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(ctx context.Context) {
+				go cb(ctx)
+			},
+			OnStoppedLeading: func() {
+			},
+		},
+		WatchDog:        nil,
+		ReleaseOnCancel: true,
+		Name:            "",
+	})
 }

@@ -21,7 +21,7 @@ metadata:
     "acorn.io/managed": "true"
 
 spec:
-  image: index.docker.io/library/test@foo
+  image: foo
   ports:
   - port: 80
     containerPort: 81
