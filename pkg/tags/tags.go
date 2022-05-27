@@ -21,19 +21,16 @@ const (
 )
 
 var (
-	SHAShortPattern = regexp.MustCompile(`^[a-f\d]{12}$`)
-	SHAPattern      = regexp.MustCompile(`^[a-f\d]{64}$`)
-	tagLock         locker.Locker
+	SHAPermissivePrefixPattern = regexp.MustCompile(`^[a-f\d]{3,64}$`)
+	SHAPattern                 = regexp.MustCompile(`^[a-f\d]{64}$`)
+	tagLock                    locker.Locker
 )
 
 func IsLocalReference(image string) bool {
 	if strings.HasPrefix(image, "sha256:") {
 		return true
 	}
-	if SHAPattern.MatchString(image) {
-		return true
-	}
-	if SHAShortPattern.MatchString(image) {
+	if SHAPermissivePrefixPattern.MatchString(image) {
 		return true
 	}
 	return false

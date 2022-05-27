@@ -316,7 +316,17 @@ func TestImageDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	details, err := c.ImageDetails(ctx, "foo:latest", nil)
+	details, err := c.ImageDetails(ctx, imageID[:3], nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, strings.Contains(details.AppImage.Acornfile, "nginx"))
+
+	_, err = c.ImageDetails(ctx, "a12", nil)
+	assert.True(t, apierrors.IsNotFound(err))
+
+	details, err = c.ImageDetails(ctx, "foo:latest", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

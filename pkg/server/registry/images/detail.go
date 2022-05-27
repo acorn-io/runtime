@@ -6,6 +6,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/tags"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,6 +42,8 @@ func (s *ImageDetails) Get(ctx context.Context, name string, options *metav1.Get
 
 	image, err := s.images.ImageGet(ctx, name)
 	if err != nil && !apierror.IsNotFound(err) {
+		return nil, err
+	} else if err != nil && apierror.IsNotFound(err) && tags.IsLocalReference(name) {
 		return nil, err
 	} else if err == nil {
 		ns = image.Namespace
