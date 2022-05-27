@@ -9,7 +9,7 @@ import (
 
 func New() *cobra.Command {
 	root := cli.Command(&Acorn{}, cobra.Command{
-		Long: "Acorn: Portable Container Application Package",
+		Long: "Acorn: Containerized Application Packaging Framework",
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
