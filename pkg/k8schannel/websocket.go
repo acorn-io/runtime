@@ -21,6 +21,7 @@ type Connection struct {
 	conn        *websocket.Conn
 	streamsLock sync.Mutex
 	streams     map[uint8]*stream
+	writeLock   sync.Mutex
 	err         error
 }
 
@@ -31,6 +32,7 @@ func NewConnection(conn *websocket.Conn, needsInit bool) *Connection {
 		streams:   map[uint8]*stream{},
 	}
 	go c.read()
+	go c.ping()
 	return c
 }
 
@@ -105,6 +107,17 @@ func (c *Connection) Read(streamNum uint8, b []byte) (n int, err error) {
 	}
 }
 
+func (c *Connection) ping() {
+	for cont := true; cont; {
+		time.Sleep(time.Minute)
+		cont = func() bool {
+			c.writeLock.Lock()
+			defer c.writeLock.Unlock()
+			return c.conn.WriteControl(websocket.PingMessage, []byte("ping"), time.Now().Add(2*time.Second)) == nil
+		}()
+	}
+}
+
 func (c *Connection) Write(streamNum uint8, b []byte) (n int, err error) {
 	if len(b) == 0 {
 		return 0, nil
@@ -120,6 +133,10 @@ func (c *Connection) Write(streamNum uint8, b []byte) (n int, err error) {
 		n2, err := c.Write(streamNum, b[1024:])
 		return n + n2, err
 	}
+
+	c.writeLock.Lock()
+	defer c.writeLock.Unlock()
+
 	m, err := c.conn.NextWriter(websocket.BinaryMessage)
 	if err != nil {
 		return 0, err

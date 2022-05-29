@@ -11,10 +11,11 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/rancher/wrangler/pkg/merr"
-	"github.com/rancher/wrangler/pkg/ratelimit"
 	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apiserver/pkg/endpoints/openapi"
 	"k8s.io/apiserver/pkg/server"
+	"k8s.io/apiserver/pkg/server/filters"
 	"k8s.io/apiserver/pkg/server/options"
 	netutils "k8s.io/utils/net"
 )
@@ -40,6 +41,10 @@ func (s *Server) NewConfig(version string) (*Config, error) {
 	serverConfig.OpenAPIConfig = server.DefaultOpenAPIConfig(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(scheme.Scheme))
 	serverConfig.OpenAPIConfig.Info.Title = "Acorn"
 	serverConfig.OpenAPIConfig.Info.Version = version
+	serverConfig.LongRunningFunc = filters.BasicLongRunningRequestCheck(
+		sets.NewString("watch", "proxy"),
+		sets.NewString("attach", "exec", "proxy", "log", "portforward"),
+	)
 
 	if err := s.Options.ApplyTo(serverConfig); err != nil {
 		return nil, err
@@ -64,7 +69,6 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 	if err != nil {
 		return err
 	}
-	cfg.RateLimiter = ratelimit.None
 
 	c, err := kclient.New(cfg)
 	if err != nil {
