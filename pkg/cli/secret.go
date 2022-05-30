@@ -20,6 +20,7 @@ acorn secret`,
 	})
 	cmd.AddCommand(NewSecretCreate())
 	cmd.AddCommand(NewSecretDelete())
+	cmd.AddCommand(NewSecretExpose())
 	return cmd
 }
 
