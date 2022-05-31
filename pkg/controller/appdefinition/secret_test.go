@@ -264,6 +264,40 @@ func TestBasic_Gen(t *testing.T) {
 	assert.True(t, len(secret.Data["password"]) > 0)
 }
 
+func TestTemplateTokenMissing_Gen(t *testing.T) {
+	h := tester.Harness{
+		Scheme: scheme.Scheme,
+	}
+	resp, err := h.InvokeFunc(t, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "app-name",
+			Namespace: "app-ns",
+		},
+		Status: v1.AppInstanceStatus{
+			Namespace: "app-target-ns",
+			AppSpec: v1.AppSpec{
+				Secrets: map[string]v1.Secret{
+					"template": {
+						Type: "template",
+						Data: map[string]string{
+							"template": "A happy little ${secret://pass/token} in a string",
+						},
+					},
+				},
+			},
+		},
+	}, CreateSecrets)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, resp.Client.Created, 0)
+	assert.Len(t, resp.Collected, 1)
+
+	app := resp.Collected[0].(*v1.AppInstance)
+	assert.Equal(t, "missing: [pass]", app.Status.Conditions["secrets"].Message)
+}
+
 func TestTemplateToken_Gen(t *testing.T) {
 	h := tester.Harness{
 		Scheme: scheme.Scheme,

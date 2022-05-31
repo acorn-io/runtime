@@ -516,7 +516,11 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 		secretName := entry.name
 		secret, err := getOrCreateSecret(secrets, req, appInstance, secretName)
 		if apierrors.IsNotFound(err) {
-			missing = append(missing, secretName)
+			if status := (*apierrors.StatusError)(nil); errors.As(err, &status) && status.ErrStatus.Details != nil {
+				missing = append(missing, status.ErrStatus.Details.Name)
+			} else {
+				missing = append(missing, secretName)
+			}
 			continue
 		} else if apiError := apierrors.APIStatus(nil); errors.As(err, &apiError) {
 			cond.Error(err)
