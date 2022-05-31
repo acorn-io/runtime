@@ -134,12 +134,6 @@ func addVolumeReferencesForContainer(volumeNames map[string]bool, container v1.C
 	}
 }
 
-func isSecretOptional(appInstance *v1.AppInstance, secretName string) *bool {
-	opt := appInstance.Status.AppSpec.Secrets[secretName].Optional
-	b := opt != nil && *opt
-	return &b
-}
-
 func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume) {
 	volumeNames := map[string]bool{}
 	addVolumeReferencesForContainer(volumeNames, container)
@@ -155,7 +149,6 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
 						SecretName: secretName,
-						Optional:   isSecretOptional(appInstance, secretName),
 					},
 				},
 			})
