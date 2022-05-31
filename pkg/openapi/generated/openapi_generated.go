@@ -2175,12 +2175,6 @@ func schema_pkg_apis_acornio_v1_Secret(ref common.ReferenceCallback) common.Open
 							},
 						},
 					},
-					"optional": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
 					"data": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},

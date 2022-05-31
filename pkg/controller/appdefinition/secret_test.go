@@ -47,9 +47,7 @@ func TestSecretDirsToMounts(t *testing.T) {
 					},
 				},
 				Secrets: map[string]v1.Secret{
-					"dir-side-secret": {
-						Optional: &[]bool{true}[0],
-					},
+					"dir-side-secret": {},
 				},
 			},
 		},
@@ -65,8 +63,6 @@ func TestSecretDirsToMounts(t *testing.T) {
 	assert.Equal(t, "dir-secret", dep.Spec.Template.Spec.Volumes[0].Secret.SecretName)
 	assert.Equal(t, "secret--dir-side-secret", dep.Spec.Template.Spec.Volumes[1].Name)
 	assert.Equal(t, "dir-side-secret", dep.Spec.Template.Spec.Volumes[1].Secret.SecretName)
-	assert.Equal(t, true, *dep.Spec.Template.Spec.Volumes[1].Secret.Optional)
-	assert.Equal(t, false, *dep.Spec.Template.Spec.Volumes[0].Secret.Optional)
 }
 
 func TestTLSGen(t *testing.T) {

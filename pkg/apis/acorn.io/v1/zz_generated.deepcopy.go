@@ -962,11 +962,6 @@ func (in *Probe) DeepCopy() *Probe {
 func (in *Secret) DeepCopyInto(out *Secret) {
 	*out = *in
 	out.Params = in.Params.DeepCopy()
-	if in.Optional != nil {
-		in, out := &in.Optional, &out.Optional
-		*out = new(bool)
-		**out = **in
-	}
 	if in.Data != nil {
 		in, out := &in.Data, &out.Data
 		*out = make(map[string]string, len(*in))
