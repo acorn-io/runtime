@@ -174,6 +174,45 @@ func TestTLS_ExternalCA_Gen(t *testing.T) {
 	assert.True(t, len(secret.Data["ca.key"]) == 0)
 }
 
+func TestOpaque_Gen(t *testing.T) {
+	h := tester.Harness{
+		Scheme: scheme.Scheme,
+	}
+	resp, err := h.InvokeFunc(t, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "app-name",
+			Namespace: "app-ns",
+		},
+		Status: v1.AppInstanceStatus{
+			Namespace: "app-target-ns",
+			AppSpec: v1.AppSpec{
+				Secrets: map[string]v1.Secret{
+					"pass": {
+						Type: "opaque",
+						Data: map[string]string{
+							"key1": "",
+							"key2": "value",
+						},
+					},
+				},
+			},
+		},
+	}, CreateSecrets)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, resp.Client.Created, 1)
+	assert.Len(t, resp.Collected, 2)
+
+	secret := resp.Client.Created[0].(*corev1.Secret)
+	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
+	assert.True(t, strings.HasPrefix(secret.Name, "pass-"))
+	_, ok := secret.Data["key1"]
+	assert.True(t, ok)
+	assert.True(t, len(secret.Data["key2"]) > 0)
+}
+
 func TestBasic_Gen(t *testing.T) {
 	h := tester.Harness{
 		Scheme: scheme.Scheme,
