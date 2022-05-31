@@ -18,7 +18,7 @@ import (
 
 func NewRun() *cobra.Command {
 	cmd := cli.Command(&Run{}, cobra.Command{
-		Use:          "run [flags] IMAGE",
+		Use:          "run [flags] IMAGE [deploy flags]",
 		SilenceUsage: true,
 		Short:        "Run an app from an app image",
 		Args:         cobra.MinimumNArgs(1),
