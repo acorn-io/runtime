@@ -19,6 +19,7 @@ import (
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/randomtoken"
+	"golang.org/x/exp/maps"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -289,6 +290,20 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 	return updateOrCreate(req, existing, secret)
 }
 
+func generateOpaque(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret, existing *corev1.Secret) (*corev1.Secret, error) {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: secretName + "-",
+			Namespace:    appInstance.Namespace,
+			Labels:       labelsForSecret(secretName, appInstance),
+		},
+		Data: seedData(existing, secretRef.Data, maps.Keys(secretRef.Data)...),
+		Type: corev1.SecretTypeOpaque,
+	}
+
+	return updateOrCreate(req, existing, secret)
+}
+
 func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret, existing *corev1.Secret) (*corev1.Secret, error) {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -393,6 +408,8 @@ func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appIn
 		}, secretName)
 	}
 	switch secretRef.Type {
+	case "opaque":
+		return generateOpaque(req, appInstance, secretName, secretRef, existing)
 	case "docker":
 		return generateDocker(req, appInstance, secretName, secretRef, existing)
 	case "basic":
