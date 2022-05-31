@@ -57,6 +57,16 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 	}, nil
 }
 
+type AppUpdateOptions struct {
+	Annotations  map[string]string
+	Labels       map[string]string
+	Endpoints    []v1.EndpointBinding
+	Volumes      []v1.VolumeBinding
+	Secrets      []v1.SecretBinding
+	DeployParams map[string]interface{}
+	Image        string
+}
+
 type AppRunOptions struct {
 	Name         string
 	Annotations  map[string]string
@@ -84,6 +94,7 @@ type Client interface {
 	AppStop(ctx context.Context, name string) error
 	AppStart(ctx context.Context, name string) error
 	AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error)
+	AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error)
 
 	CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
 	CredentialList(ctx context.Context) ([]apiv1.Credential, error)

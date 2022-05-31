@@ -31,6 +31,7 @@ func New() *cobra.Command {
 		NewPush(),
 		NewRm(),
 		NewRun(),
+		NewUpdate(),
 		NewSecret(),
 		NewStart(),
 		NewStop(),

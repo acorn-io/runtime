@@ -90,6 +90,10 @@ func (c IgnoreUninstalled) AppRun(ctx context.Context, image string, opts *AppRu
 	})
 }
 
+func (c IgnoreUninstalled) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+	return c.client.AppUpdate(ctx, name, opts)
+}
+
 func (c IgnoreUninstalled) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
 	return ignoreUninstalled(c.client.ContainerReplicaList(ctx, opts))
 }
