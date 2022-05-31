@@ -21,12 +21,14 @@ import (
 				input: string & IN
 				out: {
 					if strings.HasPrefix(input, "secret://") {
-						let uri = {#ToURI & {in: input}}.out
+						let _uri = {#ToURI & {in: input}}.out
 						secret: {
-							name: uri.name
-							key:  uri.path
-							if uri.query["optional"][0] != _|_ {
-								optional: uri.query.optional[0] == "true"
+							name: _uri.name
+							key:  _uri.path
+							if _uri.query["onchange"] != _|_ {
+								if _uri.query["onchange"][0] == "no-action" {
+									onChange: "noAction"
+								}
 							}
 						}
 					}

@@ -315,7 +315,8 @@ containers: {
 	assert.Equal(t, map[string]v1.VolumeMount{
 		"/var/tmp/foo": {
 			Secret: v1.VolumeSecretMount{
-				Name: "secname",
+				Name:     "secname",
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 	}, appSpec.Containers["s"].Dirs)
@@ -344,8 +345,9 @@ containers: {
 	assert.Equal(t, map[string]v1.File{
 		"/var/tmp/foo": {
 			Secret: v1.FileSecret{
-				Name: "secname",
-				Key:  "seckey",
+				Name:     "secname",
+				Key:      "seckey",
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 		"/var/tmp/foo2": {
@@ -360,7 +362,7 @@ containers: {
   s: {
     environment: {
       hi: "bye"
-      "secret://secname/seckey?optional=true": ""
+      "secret://secname/seckey?onchange=no-action": ""
       secretref: "secret://secname/seckey"
       secretrefembed: "secret://secname"
     }
@@ -369,7 +371,7 @@ containers: {
   a: {
 	environment: [
       "hi=bye",
-      "secret://secname/seckey?optional=true",
+      "secret://secname/seckey?onchange=redeploy",
       "secretref=secret://secname/seckey",
       "secretrefembed=secret://secname",
     ]
@@ -392,7 +394,7 @@ containers: {
 			Secret: v1.EnvSecretVal{
 				Name:     "secname",
 				Key:      "seckey",
-				Optional: &[]bool{true}[0],
+				OnChange: v1.ChangeTypeOnAction,
 			},
 		},
 		{
@@ -402,14 +404,16 @@ containers: {
 		{
 			Name: "secretref",
 			Secret: v1.EnvSecretVal{
-				Name: "secname",
-				Key:  "seckey",
+				Name:     "secname",
+				Key:      "seckey",
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 		{
 			Name: "secretrefembed",
 			Secret: v1.EnvSecretVal{
-				Name: "secname",
+				Name:     "secname",
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 	}, appSpec.Containers["s"].Environment)
@@ -418,7 +422,7 @@ containers: {
 			Secret: v1.EnvSecretVal{
 				Name:     "secname",
 				Key:      "seckey",
-				Optional: &[]bool{true}[0],
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 		{
@@ -428,14 +432,16 @@ containers: {
 		{
 			Name: "secretref",
 			Secret: v1.EnvSecretVal{
-				Name: "secname",
-				Key:  "seckey",
+				Name:     "secname",
+				Key:      "seckey",
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 		{
 			Name: "secretrefembed",
 			Secret: v1.EnvSecretVal{
-				Name: "secname",
+				Name:     "secname",
+				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 	}, appSpec.Containers["a"].Environment)
@@ -1146,9 +1152,9 @@ func TestSecrets(t *testing.T) {
 containers: {
   s: {
     files: "/var/tmp/foo": "secret://file-implicit/key"
-    files: "/var/tmp/foo-optional": "secret://file-implicit-opt/key?optional=true"
+    files: "/var/tmp/foo-optional": "secret://file-implicit-opt/key?onchange=redeploy"
     dirs: "/var/tmp/": "secret://dirs-merge"
-    dirs: "/var/tmp/opt": "secret://opt?optional=true"
+    dirs: "/var/tmp/opt": "secret://opt?onchange=no-action"
     image: ""
   }
 }
@@ -1159,7 +1165,6 @@ secrets: {
     }
   }
   "dirs-merge": {
-    optional: true
     type: "tls"
   }
   explicituser: {
@@ -1194,9 +1199,8 @@ secrets: {
 		},
 	}, appSpec.Secrets["explicituser"])
 	assert.Equal(t, v1.Secret{
-		Type:     "opaque",
-		Optional: &[]bool{true}[0],
-		Data:     map[string]string{},
+		Type: "opaque",
+		Data: map[string]string{},
 	}, appSpec.Secrets["file-implicit-opt"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
@@ -1211,13 +1215,11 @@ secrets: {
 			"sans":         []interface{}{},
 			"organization": []interface{}{},
 		},
-		Optional: &[]bool{true}[0],
-		Data:     map[string]string{},
+		Data: map[string]string{},
 	}, appSpec.Secrets["dirs-merge"])
 	assert.Equal(t, v1.Secret{
-		Type:     "opaque",
-		Data:     map[string]string{},
-		Optional: &[]bool{true}[0],
+		Type: "opaque",
+		Data: map[string]string{},
 	}, appSpec.Secrets["opt"])
 
 }

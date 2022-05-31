@@ -25,8 +25,10 @@ import (
 					secret: {
 						name: _uri.name
 						key:  _uri.path
-						if _uri.query["optional"][0] != _|_ {
-							optional: _uri.query["optional"][0] == "true"
+						if _uri.query["onchange"] != _|_ {
+							if _uri.query["onchange"][0] == "no-action" {
+								onChange: "noAction"
+							}
 						}
 					}
 
@@ -43,8 +45,10 @@ import (
 					secret: {
 						name: _uri.name
 						key:  _uri.path
-						if _uri.query["optional"][0] != _|_ {
-							optional: _uri.query["optional"][0] == "true"
+						if _uri.query["onchange"] != _|_ {
+							if _uri.query["onchange"][0] == "no-action" {
+								onChange: "noAction"
+							}
 						}
 					}
 				}

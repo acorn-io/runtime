@@ -61,7 +61,12 @@ func TestSecretDirsToMounts(t *testing.T) {
 		},
 	}
 
-	dep := appdefinition.ToDeployments(app, testTag, nil)[0].(*appsv1.Deployment)
+	req := tester.NewRequest(t, scheme.Scheme, &v1.AppInstance{})
+	deps, err := appdefinition.ToDeployments(req, app, testTag, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dep := deps[0].(*appsv1.Deployment)
 	assert.Equal(t, "/dir", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
 	assert.Equal(t, "secret--dir-secret", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 	assert.Equal(t, "/dir-side", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].MountPath)

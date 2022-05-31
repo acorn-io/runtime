@@ -39,7 +39,7 @@ package v1
 
 #Probes: string | #ProbeMap | [...#ProbeSpec]
 
-#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.optional=true)?$"} | bytes
+#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action))?$"} | bytes
 
 #ContainerBase: {
 	files: [string]:                  #FileContent
@@ -61,11 +61,11 @@ package v1
 #VolumeRef:      =~"^volume://.+$"
 #EphemeralRef:   =~"^ephemeral://.*$|^$"
 #ContextDirRef:  =~"^\\./.*$"
-#SecretRef:      =~"^secret://[a-z][-a-z0-9]*(.optional=true)?$"
+#SecretRef:      =~"^secret://[a-z][-a-z0-9]*(.onchange=(redeploy|no-action))?$"
 
 // The below should work but doesn't. So instead we use the log regexp. This seems like a cue bug
 // #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef | #SecretRef
-#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*(.optional=true)?$"
+#Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*(.onchange=(redploy|no-action))?$"
 
 #Port: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
 
@@ -83,26 +83,25 @@ package v1
 }
 
 #SecretOpaque: {
-	type:      "opaque"
-	optional?: bool
+	type: "opaque"
 	params?: [string]: _
 	data: [string]:    string
 }
 
 #SecretTemplate: {
-	type:      "template"
-	optional?: bool
+	type: "template"
 	data: {
 		template: string
 	}
 }
 
 #SecretToken: {
-	type:      "token"
-	optional?: bool
+	type: "token"
 	params: {
+		// The character set used in the generated string
 		characters: string | *"bcdfghjklmnpqrstvwxz2456789"
-		length:     (>=0 & <=256) | *54
+		// The length of the token to be generated
+		length: (>=0 & <=256) | *54
 	}
 	data: {
 		token?: string
@@ -110,8 +109,7 @@ package v1
 }
 
 #SecretBasicAuth: {
-	type:      "basic"
-	optional?: bool
+	type: "basic"
 	data: {
 		username?: string
 		password?: string
@@ -119,16 +117,14 @@ package v1
 }
 
 #SecretDocker: {
-	type:      "docker"
-	optional?: bool
+	type: "docker"
 	data: {
 		".dockerconfigjson"?: (string | bytes)
 	}
 }
 
 #SecretSSHAuth: {
-	type:      "ssh-auth"
-	optional?: bool
+	type: "ssh-auth"
 	params: {
 		algorithm: "rsa" | *"ecdsa"
 	}
@@ -138,8 +134,7 @@ package v1
 }
 
 #SecretTLS: {
-	type:      "tls"
-	optional?: bool
+	type: "tls"
 	params: {
 		algorithm:   "rsa" | *"ecdsa"
 		caSecret?:   string
@@ -158,8 +153,7 @@ package v1
 }
 
 #SecretGenerated: {
-	type:      "generated"
-	optional?: bool
+	type: "generated"
 	params: {
 		job:    string
 		format: *"text" | "json"

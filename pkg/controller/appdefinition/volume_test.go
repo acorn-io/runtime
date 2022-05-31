@@ -87,7 +87,7 @@ func TestVolumes(t *testing.T) {
 		},
 	}
 
-	dep := ToDeployments(app, testTag, nil)[0].(*appsv1.Deployment)
+	dep := ToDeploymentsTest(t, app, testTag, nil)[0].(*appsv1.Deployment)
 
 	assert.Equal(t, "v1-bind", dep.Spec.Template.Spec.Volumes[0].PersistentVolumeClaim.ClaimName)
 	assert.Equal(t, "v2-bind", dep.Spec.Template.Spec.Volumes[1].PersistentVolumeClaim.ClaimName)

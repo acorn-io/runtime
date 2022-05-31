@@ -199,8 +199,10 @@ import (
 			let _uri = {#ToURI & {in: IN.dir}}.out
 			secret: {
 				name: _uri.name
-				if _uri.query["optional"][0] != _|_ {
-					optional: _uri.query.optional[0] == "true"
+				if _uri.query["onchange"] != _|_ {
+					if _uri.query["onchange"][0] == "no-action" {
+						onChange: "noAction"
+					}
 				}
 			}
 		}
@@ -556,9 +558,6 @@ import (
 					if v["secret"] != _|_ {
 						"\(v.secret.name)": {
 							type: string | *"opaque"
-							if v.secret["optional"] != _|_ {
-								optional: v.secret.optional
-							}
 						}
 					}
 				}
@@ -566,9 +565,6 @@ import (
 					if v["secret"] != _|_ {
 						"\(v.secret.name)": {
 							type: string | *"opaque"
-							if v.secret["optional"] != _|_ {
-								optional: v.secret.optional
-							}
 						}
 					}
 				}
@@ -576,9 +572,6 @@ import (
 					if v["secret"] != _|_ {
 						"\(v.secret.name)": {
 							type: string | *"opaque"
-							if v.secret["optional"] != _|_ {
-								optional: v.secret.optional
-							}
 						}
 					}
 				}

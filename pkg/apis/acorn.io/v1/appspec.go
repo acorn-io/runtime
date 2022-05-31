@@ -10,6 +10,13 @@ const (
 
 type AccessMode string
 
+const (
+	ChangeTypeRedeploy = "redeploy"
+	ChangeTypeOnAction = "noAction"
+)
+
+type ChangeType string
+
 type AcornBuild struct {
 	OriginalImage string     `json:"originalImage,omitempty"`
 	Context       string     `json:"context,omitempty"`
@@ -66,8 +73,9 @@ type Port struct {
 }
 
 type FileSecret struct {
-	Name string `json:"name,omitempty"`
-	Key  string `json:"key,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	Key      string     `json:"key,omitempty"`
+	OnChange ChangeType `json:"onChange,omitempty"`
 }
 
 type File struct {
@@ -76,7 +84,8 @@ type File struct {
 }
 
 type VolumeSecretMount struct {
-	Name string `json:"name,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	OnChange ChangeType `json:"onChange,omitempty"`
 }
 
 type VolumeMount struct {
@@ -93,9 +102,9 @@ type EnvVar struct {
 }
 
 type EnvSecretVal struct {
-	Name     string `json:"name,omitempty"`
-	Key      string `json:"key,omitempty"`
-	Optional *bool  `json:"optional,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	Key      string     `json:"key,omitempty"`
+	OnChange ChangeType `json:"onChange,omitempty"`
 }
 
 type Alias struct {
