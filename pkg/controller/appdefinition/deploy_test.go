@@ -14,6 +14,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -32,8 +33,17 @@ func TestProbe(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/probes", DeploySpec)
 }
 
+func ToDeploymentsTest(t *testing.T, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
+	req := tester.NewRequest(t, scheme.Scheme, appInstance)
+	deps, err := ToDeployments(req, appInstance, tag, pullSecrets)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return deps
+}
+
 func TestEntrypointCommand(t *testing.T) {
-	dep := ToDeployments(&v1.AppInstance{
+	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -50,7 +60,7 @@ func TestEntrypointCommand(t *testing.T) {
 }
 
 func TestEnvironment(t *testing.T) {
-	dep := ToDeployments(&v1.AppInstance{
+	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -82,7 +92,7 @@ func TestEnvironment(t *testing.T) {
 }
 
 func TestWorkdir(t *testing.T) {
-	dep := ToDeployments(&v1.AppInstance{
+	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -97,7 +107,7 @@ func TestWorkdir(t *testing.T) {
 }
 
 func TestInteractive(t *testing.T) {
-	dep := ToDeployments(&v1.AppInstance{
+	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -113,7 +123,7 @@ func TestInteractive(t *testing.T) {
 }
 
 func TestSidecar(t *testing.T) {
-	dep := ToDeployments(&v1.AppInstance{
+	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -138,7 +148,7 @@ func TestSidecar(t *testing.T) {
 }
 
 func TestPorts(t *testing.T) {
-	dep := ToDeployments(&v1.AppInstance{
+	dep := ToDeploymentsTest(t, &v1.AppInstance{
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
@@ -222,7 +232,7 @@ func TestFiles(t *testing.T) {
 		},
 	}
 
-	dep := ToDeployments(app, testTag, nil)[0].(*appsv1.Deployment)
+	dep := ToDeploymentsTest(t, app, testTag, nil)[0].(*appsv1.Deployment)
 
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)

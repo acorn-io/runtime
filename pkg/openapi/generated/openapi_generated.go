@@ -1605,9 +1605,9 @@ func schema_pkg_apis_acornio_v1_EnvSecretVal(ref common.ReferenceCallback) commo
 							Format: "",
 						},
 					},
-					"optional": {
+					"onChange": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
+							Type:   []string{"string"},
 							Format: "",
 						},
 					},
@@ -1714,6 +1714,12 @@ func schema_pkg_apis_acornio_v1_FileSecret(ref common.ReferenceCallback) common.
 						},
 					},
 					"key": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"onChange": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -2451,6 +2457,12 @@ func schema_pkg_apis_acornio_v1_VolumeSecretMount(ref common.ReferenceCallback) 
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"onChange": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

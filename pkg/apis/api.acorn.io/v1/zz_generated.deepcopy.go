@@ -207,9 +207,7 @@ func (in *ContainerReplicaSpec) DeepCopyInto(out *ContainerReplicaSpec) {
 	if in.Environment != nil {
 		in, out := &in.Environment, &out.Environment
 		*out = make([]acorn_iov1.EnvVar, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		copy(*out, *in)
 	}
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports

@@ -14,15 +14,24 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addJobs(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
-	resp.Objects(toJobs(appInstance, pullSecrets, tag)...)
+func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
+	jobs, err := toJobs(req, appInstance, pullSecrets, tag)
+	if err != nil {
+		return err
+	}
+	resp.Objects(jobs...)
+	return nil
 }
 
-func toJobs(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference) (result []kclient.Object) {
+func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
-		result = append(result, toJob(appInstance, pullSecrets, tag, entry.Key, entry.Value))
+		job, err := toJob(req, appInstance, pullSecrets, tag, entry.Key, entry.Value)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, job)
 	}
-	return result
+	return result, nil
 }
 
 func setTerminationPath(containers []corev1.Container) (result []corev1.Container) {
@@ -33,8 +42,14 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
-func toJob(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container) kclient.Object {
+func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container) (kclient.Object, error) {
 	containers, initContainers := toContainers(appInstance, tag, name, container)
+
+	secretAnnotations, err := getSecretAnnotations(req, container)
+	if err != nil {
+		return nil, err
+	}
+
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
@@ -42,7 +57,7 @@ func toJob(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Refer
 					labels.AcornManaged, "true",
 					labels.AcornJobName, name,
 					labels.AcornContainerName, ""),
-				Annotations: podAnnotations(appInstance, name, container),
+				Annotations: typed.Concat(podAnnotations(appInstance, name, container), secretAnnotations),
 			},
 			Spec: corev1.PodSpec{
 				ImagePullSecrets: pullSecrets.ForContainer(name, append(containers, initContainers...)),
@@ -62,7 +77,7 @@ func toJob(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Refer
 				Labels:    jobSpec.Template.Labels,
 			},
 			Spec: jobSpec,
-		}
+		}, nil
 	}
 	return &batchv1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{
@@ -79,7 +94,7 @@ func toJob(appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Refer
 				Spec: jobSpec,
 			},
 		},
-	}
+	}, nil
 }
 
 func toCronJobSchedule(schedule string) string {

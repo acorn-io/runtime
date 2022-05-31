@@ -57,9 +57,9 @@ package v1
 }
 
 #EnvSecretValue: {
-	key:       string | *""
-	name:      string
-	optional?: bool
+	key:      string | *""
+	name:     string
+	onChange: *"redeploy" | "noAction"
 }
 
 #EnvVarSpec: {
@@ -85,8 +85,8 @@ package v1
 #VolumeMountSpec: {
 	{
 		secret: {
-			name:      string
-			optional?: bool
+			name:     string
+			onChange: *"redeploy" | "noAction"
 		}
 	} |
 	{
@@ -99,9 +99,9 @@ package v1
 }
 
 #FileSecretSpec: {
-	name:      string
-	key:       string
-	optional?: bool
+	name:     string
+	key:      string
+	onChange: *"redeploy" | "noAction"
 }
 
 #FileSpec: {
@@ -126,8 +126,7 @@ package v1
 }
 
 #SecretSpec: {
-	type:      string
-	optional?: bool
+	type: string
 	params?: [string]: _
 	data: [string]:    (string | bytes)
 }

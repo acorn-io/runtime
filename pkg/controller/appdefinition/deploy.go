@@ -19,6 +19,7 @@ import (
 	"github.com/rancher/wrangler/pkg/data/convert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -50,8 +51,12 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	}
 
 	addNamespace(appInstance, resp)
-	addDeployments(appInstance, tag, pullSecrets, resp)
-	addJobs(appInstance, tag, pullSecrets, resp)
+	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
+		return err
+	}
+	if err := addJobs(req, appInstance, tag, pullSecrets, resp); err != nil {
+		return err
+	}
 	addServices(appInstance, resp)
 	if err := addIngress(appInstance, req, resp); err != nil {
 		return err
@@ -66,8 +71,13 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	return pullSecrets.Err()
 }
 
-func addDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
-	resp.Objects(ToDeployments(appInstance, tag, pullSecrets)...)
+func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
+	deps, err := ToDeployments(req, appInstance, tag, pullSecrets)
+	if err != nil {
+		return err
+	}
+	resp.Objects(deps...)
+	return nil
 }
 
 func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
@@ -79,7 +89,6 @@ func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: env.Secret.Name,
 					},
-					Optional: env.Secret.Optional,
 				},
 			})
 		}
@@ -105,8 +114,7 @@ func toEnv(envs []v1.EnvVar) (result []corev1.EnvVar) {
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: env.Secret.Name,
 						},
-						Key:      env.Secret.Key,
-						Optional: env.Secret.Optional,
+						Key: env.Secret.Key,
 					},
 				},
 			})
@@ -389,7 +397,53 @@ func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 	return false
 }
 
-func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets) *appsv1.Deployment {
+func getRevision(req router.Request, namespace, secretName string) (string, error) {
+	secret := &corev1.Secret{}
+	if err := req.Get(secret, namespace, secretName); apierror.IsNotFound(err) {
+		return "0", nil
+	} else if err != nil {
+		return "0", err
+	}
+	return secret.ResourceVersion, nil
+}
+
+func getSecretAnnotations(req router.Request, container v1.Container) (map[string]string, error) {
+	var (
+		secrets []string
+		result  = map[string]string{}
+	)
+
+	for _, env := range container.Environment {
+		if env.Secret.OnChange == v1.ChangeTypeRedeploy {
+			secrets = append(secrets, env.Secret.Name)
+		}
+	}
+	for _, file := range container.Files {
+		if file.Secret.OnChange == v1.ChangeTypeRedeploy {
+			secrets = append(secrets, file.Secret.Name)
+		}
+	}
+	for _, dir := range container.Dirs {
+		if dir.Secret.OnChange == v1.ChangeTypeRedeploy {
+			secrets = append(secrets, dir.Secret.Name)
+		}
+	}
+
+	for _, secret := range secrets {
+		if secret == "" {
+			continue
+		}
+		rev, err := getRevision(req, req.Namespace, secret)
+		if err != nil {
+			return nil, err
+		}
+		result[labels.AcornSecretRevPrefix+secret] = rev
+	}
+
+	return result, nil
+}
+
+func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets) (*appsv1.Deployment, error) {
 	var (
 		aliasLabels []string
 		stateful    = isStateful(appInstance, container)
@@ -398,6 +452,11 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 		aliasLabels = append(aliasLabels, labels.AcornAlias+alias.Name, "true")
 	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
+
+	secretAnnotations, err := getSecretAnnotations(req, container)
+	if err != nil {
+		return nil, err
+	}
 
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -415,7 +474,7 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 					Labels: containerLabels(appInstance, name,
 						aliasLabels...,
 					),
-					Annotations: podAnnotations(appInstance, name, container),
+					Annotations: typed.Concat(podAnnotations(appInstance, name, container), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: &[]int64{5}[0],
@@ -438,14 +497,18 @@ func toDeployment(appInstance *v1.AppInstance, tag name.Reference, name string, 
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		dep.Spec.Replicas = new(int32)
 	}
-	return dep
+	return dep, nil
 }
 
-func ToDeployments(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
+func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		result = append(result, toDeployment(appInstance, tag, entry.Key, entry.Value, pullSecrets))
+		dep, err := toDeployment(req, appInstance, tag, entry.Key, entry.Value, pullSecrets)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, dep)
 	}
-	return result
+	return result, nil
 }
 
 func addNamespace(appInstance *v1.AppInstance, resp router.Response) {

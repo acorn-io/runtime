@@ -55,7 +55,7 @@ func TestSecretDirsToMounts(t *testing.T) {
 		},
 	}
 
-	dep := ToDeployments(app, testTag, nil)[0].(*appsv1.Deployment)
+	dep := ToDeploymentsTest(t, app, testTag, nil)[0].(*appsv1.Deployment)
 	assert.Equal(t, "/dir", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
 	assert.Equal(t, "secret--dir-secret", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 	assert.Equal(t, "/dir-side", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].MountPath)
@@ -288,4 +288,8 @@ func TestTemplateToken_Gen(t *testing.T) {
 	assert.True(t, strings.HasPrefix(secret3.Name, "template-"))
 	assert.Equal(t, "A happy little "+string(secret.Data["token"])+
 		" in a string followed by "+string(secret2.Data["token"]), string(secret3.Data["template"]))
+}
+
+func TestSecretRedeploy(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/secret", DeploySpec)
 }
