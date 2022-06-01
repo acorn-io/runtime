@@ -407,7 +407,7 @@ func getRevision(req router.Request, namespace, secretName string) (string, erro
 	return secret.ResourceVersion, nil
 }
 
-func getSecretAnnotations(req router.Request, container v1.Container) (map[string]string, error) {
+func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, container v1.Container) (map[string]string, error) {
 	var (
 		secrets []string
 		result  = map[string]string{}
@@ -433,7 +433,7 @@ func getSecretAnnotations(req router.Request, container v1.Container) (map[strin
 		if secret == "" {
 			continue
 		}
-		rev, err := getRevision(req, req.Namespace, secret)
+		rev, err := getRevision(req, appInstance.Status.Namespace, secret)
 		if err != nil {
 			return nil, err
 		}
@@ -453,7 +453,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
 
-	secretAnnotations, err := getSecretAnnotations(req, container)
+	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
 	if err != nil {
 		return nil, err
 	}

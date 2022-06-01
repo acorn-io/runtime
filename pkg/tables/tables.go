@@ -33,7 +33,7 @@ var (
 	Container = [][]string{
 		{"NAME", "Name"},
 		{"APP", "Status.Columns.App"},
-		{"IMAGE", "Status.Image"},
+		{"IMAGE", "Spec.Image"},
 		{"STATE", "Status.Columns.State"},
 		{"RESTARTCOUNT", "Status.RestartCount"},
 		{"CREATED", "{{ago .CreationTimestamp}}"},
@@ -52,6 +52,7 @@ var (
 		{"NAME", "Name"},
 		{"TYPE", "Type"},
 		{"KEYS", "Keys"},
+		{"CREATED", "{{ago .CreationTimestamp}}"},
 	}
 	SecretConverter = MustConverter(Secret)
 )

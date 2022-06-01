@@ -38,7 +38,12 @@ func seedData(exising *corev1.Secret, from map[string]string, keys ...string) ma
 		}
 	}
 	for _, key := range keys {
-		to[key] = []byte(from[key])
+		if v, ok := from[key]; ok {
+			// don't override a non-zero length value with zero length
+			if len(v) > 0 || len(to[key]) == 0 {
+				to[key] = []byte(v)
+			}
+		}
 	}
 	return to
 }
@@ -214,10 +219,6 @@ func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInsta
 		},
 		Data: seedData(existing, secretRef.Data, corev1.TLSCertKey, corev1.TLSPrivateKeyKey, "ca.crt", "ca.key"),
 		Type: corev1.SecretTypeTLS,
-	}
-
-	if len(secret.Data[corev1.TLSCertKey]) > 0 && len(secret.Data[corev1.TLSPrivateKeyKey]) > 0 {
-		return secret, req.Client.Create(req.Ctx, secret)
 	}
 
 	params := v1.TLSParams{}

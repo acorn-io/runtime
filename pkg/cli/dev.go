@@ -22,9 +22,11 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
-	Name string   `usage:"Name of app to create" short:"n"`
-	DNS  []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
+	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	Name    string   `usage:"Name of app to create" short:"n"`
+	DNS     []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
+	Volumes []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
+	Secrets []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
@@ -43,6 +45,16 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	volumes, err := run.ParseVolumes(s.Volumes)
+	if err != nil {
+		return err
+	}
+
+	secrets, err := run.ParseSecrets(s.Secrets)
+	if err != nil {
+		return err
+	}
+
 	return dev.Dev(cmd.Context(), s.File, &dev.Options{
 		Build: build.Options{
 			Cwd: cwd,
@@ -52,6 +64,8 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 			Namespace: system.UserNamespace(),
 			Client:    c,
 			Endpoints: endpoints,
+			Volumes:   volumes,
+			Secrets:   secrets,
 		},
 		Log: log.Options{
 			Client: c,
