@@ -28,10 +28,11 @@ func NewRun() *cobra.Command {
 }
 
 type Run struct {
-	Name    string   `usage:"Name of app to create" short:"n"`
-	DNS     []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
-	Volumes []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
-	Secrets []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Name   string   `usage:"Name of app to create" short:"n"`
+	DNS    []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
+	Volume []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
+	Secret []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Link   []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
 }
 
 func usage(app *v1.AppSpec) func() {
@@ -134,12 +135,17 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts.Volumes, err = run.ParseVolumes(s.Volumes)
+	opts.Volumes, err = run.ParseVolumes(s.Volume)
 	if err != nil {
 		return err
 	}
 
-	opts.Secrets, err = run.ParseSecrets(s.Secrets)
+	opts.Secrets, err = run.ParseSecrets(s.Secret)
+	if err != nil {
+		return err
+	}
+
+	opts.Services, err = run.ParseLinks(s.Link)
 	if err != nil {
 		return err
 	}

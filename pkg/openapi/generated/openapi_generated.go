@@ -55,6 +55,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.Probe":                           schema_pkg_apis_acornio_v1_Probe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.Secret":                          schema_pkg_apis_acornio_v1_Secret(ref),
 		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.SecretBinding":                   schema_pkg_apis_acornio_v1_SecretBinding(ref),
+		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.ServiceBinding":                  schema_pkg_apis_acornio_v1_ServiceBinding(ref),
 		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.TCPProbe":                        schema_pkg_apis_acornio_v1_TCPProbe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.TLSParams":                       schema_pkg_apis_acornio_v1_TLSParams(ref),
 		"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.VolumeBinding":                   schema_pkg_apis_acornio_v1_VolumeBinding(ref),
@@ -761,6 +762,19 @@ func schema_pkg_apis_acornio_v1_AppInstanceSpec(ref common.ReferenceCallback) co
 							},
 						},
 					},
+					"services": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.ServiceBinding"),
+									},
+								},
+							},
+						},
+					},
 					"publishAllPorts": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
@@ -813,7 +827,7 @@ func schema_pkg_apis_acornio_v1_AppInstanceSpec(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.AppPort", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.EndpointBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.AppPort", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.EndpointBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.VolumeBinding"},
 	}
 }
 
@@ -2209,6 +2223,30 @@ func schema_pkg_apis_acornio_v1_SecretBinding(ref common.ReferenceCallback) comm
 						},
 					},
 					"secretRequest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_acornio_v1_ServiceBinding(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"target": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"service": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

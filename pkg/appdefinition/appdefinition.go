@@ -120,6 +120,15 @@ func (a *AppDefinition) WithBuildParams(params map[string]interface{}) (*AppDefi
 	}, nil
 }
 
+func (a *AppDefinition) JSON() (string, error) {
+	app, err := a.ctx.Value()
+	if err != nil {
+		return "", err
+	}
+	data, err := json.MarshalIndent(app, "", "  ")
+	return string(data), err
+}
+
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	app, err := a.ctx.Value()
 	if err != nil {

@@ -12,21 +12,24 @@ import (
 )
 
 func NewDev() *cobra.Command {
-	return cli.Command(&Dev{}, cobra.Command{
+	cmd := cli.Command(&Dev{}, cobra.Command{
 		Use:          "dev [flags] DIRECTORY",
 		SilenceUsage: true,
 		Short:        "Build and run an app in development mode",
 		Long:         "Build and run an app in development mode",
 		Args:         cobra.MaximumNArgs(1),
 	})
+	cmd.AddCommand(NewRender())
+	return cmd
 }
 
 type Dev struct {
-	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
-	Name    string   `usage:"Name of app to create" short:"n"`
-	DNS     []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
-	Volumes []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
-	Secrets []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	File   string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	Name   string   `usage:"Name of app to create" short:"n"`
+	DNS    []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
+	Volume []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
+	Secret []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Link   []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
@@ -45,12 +48,17 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	volumes, err := run.ParseVolumes(s.Volumes)
+	volumes, err := run.ParseVolumes(s.Volume)
 	if err != nil {
 		return err
 	}
 
-	secrets, err := run.ParseSecrets(s.Secrets)
+	secrets, err := run.ParseSecrets(s.Secret)
+	if err != nil {
+		return err
+	}
+
+	services, err := run.ParseLinks(s.Link)
 	if err != nil {
 		return err
 	}
@@ -66,6 +74,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 			Endpoints: endpoints,
 			Volumes:   volumes,
 			Secrets:   secrets,
+			Services:  services,
 		},
 		Log: log.Options{
 			Client: c,

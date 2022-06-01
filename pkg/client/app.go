@@ -31,6 +31,7 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				DeployParams: opts.DeployParams,
 				Volumes:      opts.Volumes,
 				Secrets:      opts.Secrets,
+				Services:     opts.Services,
 			},
 		}
 	)
@@ -57,9 +58,28 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Spec.Volumes = mergeVolumes(app.Spec.Volumes, opts.Volumes)
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
 	app.Spec.Endpoints = mergeEndpoints(app.Spec.Endpoints, opts.Endpoints)
+	app.Spec.Services = mergeServices(app.Spec.Services, opts.Services)
 	app.Spec.DeployParams = typed.Concat(app.Spec.DeployParams, opts.DeployParams)
 
 	return app, c.Client.Update(ctx, app)
+}
+
+func mergeServices(appServices, optsServices []v1.ServiceBinding) []v1.ServiceBinding {
+	for _, newService := range optsServices {
+		found := false
+		for i, existingService := range appServices {
+			if existingService.Target == newService.Target {
+				appServices[i] = newService
+				found = true
+				break
+			}
+		}
+		if !found {
+			appServices = append(appServices, newService)
+		}
+	}
+
+	return appServices
 }
 
 func mergeEndpoints(appEndpoints, optsEndpoints []v1.EndpointBinding) []v1.EndpointBinding {

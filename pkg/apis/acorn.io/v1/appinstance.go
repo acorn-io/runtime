@@ -44,10 +44,16 @@ type AppInstanceSpec struct {
 	Volumes         []VolumeBinding   `json:"volumes,omitempty"`
 	Secrets         []SecretBinding   `json:"secrets,omitempty"`
 	Endpoints       []EndpointBinding `json:"endpoints,omitempty"`
+	Services        []ServiceBinding  `json:"services,omitempty"`
 	PublishAllPorts bool              `json:"publishAllPorts,omitempty"`
 	Ports           []AppPort         `json:"ports,omitempty"`
 	DeployParams    GenericMap        `json:"deployParams,omitempty"`
 	Images          map[string]string `json:"images,omitempty"`
+}
+
+type ServiceBinding struct {
+	Target  string `json:"target,omitempty"`
+	Service string `json:"service,omitempty"`
 }
 
 type EndpointBinding struct {
