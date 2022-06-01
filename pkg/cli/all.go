@@ -55,6 +55,16 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 	}
 	volErr := vol.Run(cmd, nil)
 
+	sec := &Secret{
+		Quiet:  a.Quiet,
+		Output: a.Output,
+	}
+	if !a.Quiet {
+		fmt.Println("")
+		fmt.Println("SECRETS:")
+	}
+	secErr := sec.Run(cmd, nil)
+
 	var imgErr error
 
 	if a.Images {
@@ -69,5 +79,5 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 		imgErr = img.Run(cmd, nil)
 	}
 
-	return merr.NewErrors(appErr, conErr, volErr, imgErr)
+	return merr.NewErrors(appErr, conErr, volErr, secErr, imgErr)
 }

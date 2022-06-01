@@ -226,8 +226,13 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 		name                = pod.Labels[labels.AcornAppName] + "." + pod.Name
 		uid                 = pod.UID
 		containerName       = pod.Labels[labels.AcornContainerName]
+		jobName             = pod.Labels[labels.AcornJobName]
 		containerStatusName = containerName
 	)
+
+	if containerStatusName == "" {
+		containerStatusName = jobName
+	}
 
 	if sidecarName != "" {
 		containerSpec = containerSpec.Sidecars[sidecarName]
@@ -252,7 +257,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 	result.UID = uid
 	result.Namespace = pod.Labels[labels.AcornAppNamespace]
 	result.Spec.AppName = pod.Labels[labels.AcornAppName]
-	result.Spec.JobName = pod.Labels[labels.AcornJobName]
+	result.Spec.JobName = jobName
 	result.Spec.ContainerName = containerName
 	result.Spec.SidecarName = sidecarName
 	result.Labels = pod.Labels
@@ -292,7 +297,14 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 				result.Status.Columns.State += ": " + status.State.Waiting.Message
 			}
 		} else if status.State.Terminated != nil {
-			result.Status.Columns.State = "stopped: " + status.State.Terminated.Message
+			if status.State.Terminated.ExitCode == 0 && jobName != "" {
+				// Don't include message here because it will be the termination message which
+				// is a secret.  We need a secure implementation that doesn't put the secret in the
+				// termination message.
+				result.Status.Columns.State = "stopped"
+			} else {
+				result.Status.Columns.State = "stopped: " + status.State.Terminated.Message
+			}
 		}
 
 		if result.Spec.JobName != "" {
