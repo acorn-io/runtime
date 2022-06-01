@@ -1,7 +1,7 @@
 ### WARNING: Consuming this project can expose you to chemicals, which are known to the State of California to cause cancer and birth defects or other reproductive harm.
 
 ### Quick Start 
-Please see [the Quick Start documentation](docs/docs/02-quickstart.md)
+Please see [the Quick Start documentation](docs/docs/20-quickstart.md)
 
 ### Reference acorn.cue file
 ```cue
