@@ -12,13 +12,15 @@ import (
 )
 
 func NewDev() *cobra.Command {
-	return cli.Command(&Dev{}, cobra.Command{
+	cmd := cli.Command(&Dev{}, cobra.Command{
 		Use:          "dev [flags] DIRECTORY",
 		SilenceUsage: true,
 		Short:        "Build and run an app in development mode",
 		Long:         "Build and run an app in development mode",
 		Args:         cobra.MaximumNArgs(1),
 	})
+	cmd.AddCommand(NewRender())
+	return cmd
 }
 
 type Dev struct {
