@@ -63,6 +63,7 @@ type AppUpdateOptions struct {
 	Endpoints    []v1.EndpointBinding
 	Volumes      []v1.VolumeBinding
 	Secrets      []v1.SecretBinding
+	Services     []v1.ServiceBinding
 	DeployParams map[string]interface{}
 	Image        string
 }
@@ -74,6 +75,7 @@ type AppRunOptions struct {
 	Endpoints    []v1.EndpointBinding
 	Volumes      []v1.VolumeBinding
 	Secrets      []v1.SecretBinding
+	Services     []v1.ServiceBinding
 	DeployParams map[string]interface{}
 }
 

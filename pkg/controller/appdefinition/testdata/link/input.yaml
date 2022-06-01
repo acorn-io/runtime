@@ -1,0 +1,22 @@
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  uid: 01234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+  services:
+    - target: acrn
+      service: acrn-link
+    - target: con
+      service: con-link
+status:
+  namespace: app-created-namespace
+  appSpec:
+    acorns:
+      acrn:
+        image: "acorn"
+    containers:
+      con:
+        image: "image-name"

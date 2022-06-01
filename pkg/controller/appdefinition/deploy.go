@@ -58,6 +58,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 	addServices(appInstance, resp)
+	addLinks(appInstance, resp)
 	if err := addIngress(appInstance, req, resp); err != nil {
 		return err
 	}
@@ -502,6 +503,9 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
+		if isLinked(appInstance, entry.Key) {
+			continue
+		}
 		dep, err := toDeployment(req, appInstance, tag, entry.Key, entry.Value, pullSecrets)
 		if err != nil {
 			return nil, err

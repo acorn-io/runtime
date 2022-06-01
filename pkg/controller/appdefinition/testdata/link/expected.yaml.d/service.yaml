@@ -1,0 +1,18 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: acrn
+  namespace: app-created-namespace
+spec:
+  type: ExternalName
+  externalName: acrn-link.app-namespace.svc.cluster.local
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: con
+  namespace: app-created-namespace
+spec:
+  type: ExternalName
+  externalName: con-link.app-namespace.svc.cluster.local

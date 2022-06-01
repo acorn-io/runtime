@@ -51,10 +51,23 @@ func addAlias(aliases []*corev1.Service, aliasServiceName, aliasTarget string, s
 	return append(aliases, newSvc)
 }
 
+func isLinked(appInstance *v1.AppInstance, serviceName string) bool {
+	for _, link := range appInstance.Spec.Services {
+		if link.Target == serviceName {
+			return true
+		}
+	}
+	return false
+}
+
 func toServices(appInstance *v1.AppInstance) (result []kclient.Object) {
 	var aliases []*corev1.Service
 
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
+		if isLinked(appInstance, entry.Key) {
+			continue
+		}
+
 		service := ToService(appInstance, entry.Key, entry.Value)
 		if service != nil {
 			for _, alias := range entry.Value.Aliases {

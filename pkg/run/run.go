@@ -20,6 +20,25 @@ var (
 	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
 )
 
+func ParseLinks(args []string) (result []v1.ServiceBinding, _ error) {
+	for _, arg := range args {
+		existing, secName, ok := strings.Cut(arg, ":")
+		if !ok {
+			secName = existing
+		}
+		secName = strings.TrimSpace(secName)
+		existing = strings.TrimSpace(existing)
+		if secName == "" || existing == "" {
+			return nil, fmt.Errorf("invalid service binding [%s] must not have zero length value", arg)
+		}
+		result = append(result, v1.ServiceBinding{
+			Target:  secName,
+			Service: existing,
+		})
+	}
+	return
+}
+
 func ParseSecrets(args []string) (result []v1.SecretBinding, _ error) {
 	for _, arg := range args {
 		existing, secName, ok := strings.Cut(arg, ":")
@@ -86,6 +105,7 @@ type Options struct {
 	Endpoints    []v1.EndpointBinding
 	Volumes      []v1.VolumeBinding
 	Secrets      []v1.SecretBinding
+	Services     []v1.ServiceBinding
 	DeployParams map[string]interface{}
 	Client       client.WithWatch
 }
@@ -160,6 +180,7 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Endpoints:       opts.Endpoints,
 			Volumes:         opts.Volumes,
 			Secrets:         opts.Secrets,
+			Services:        opts.Services,
 			DeployParams:    opts.DeployParams,
 		},
 	}

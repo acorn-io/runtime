@@ -17,6 +17,9 @@ func addAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pul
 
 func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
 	for acornName, acorn := range appInstance.Status.AppSpec.Acorns {
+		if isLinked(appInstance, acornName) {
+			continue
+		}
 		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
 	}
 	return result

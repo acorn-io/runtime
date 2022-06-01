@@ -28,6 +28,7 @@ type Update struct {
 	DNS     []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
 	Volumes []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
 	Secrets []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Link    []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {
@@ -92,6 +93,11 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts.Secrets, err = run.ParseSecrets(s.Secrets)
+	if err != nil {
+		return err
+	}
+
+	opts.Services, err = run.ParseLinks(s.Link)
 	if err != nil {
 		return err
 	}
