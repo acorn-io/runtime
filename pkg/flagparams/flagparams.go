@@ -14,6 +14,7 @@ type Flags struct {
 	FlagSet       *pflag.FlagSet
 	ints          map[string]*int
 	strings       map[string]*string
+	bools         map[string]*bool
 	complexValues map[string]*string
 	Usage         func()
 }
@@ -23,6 +24,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 	flagSet := pflag.NewFlagSet(filename, pflag.ContinueOnError)
 	ints := map[string]*int{}
 	stringValues := map[string]*string{}
+	bools := map[string]*bool{}
 	complexValues := map[string]*string{}
 
 	for _, param := range param.Params {
@@ -32,6 +34,8 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 			ints[param.Name] = flagSet.Int(name, 0, param.Description)
 		} else if isType(param.Schema, "string") {
 			stringValues[param.Name] = flagSet.String(name, "", param.Description)
+		} else if isType(param.Schema, "bool") {
+			bools[param.Name] = flagSet.Bool(name, false, param.Description)
 		} else {
 			complexValues[param.Name] = flagSet.String(name, "", param.Description)
 		}
@@ -40,6 +44,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 	return &Flags{
 		ints:          ints,
 		strings:       stringValues,
+		bools:         bools,
 		complexValues: complexValues,
 		FlagSet:       flagSet,
 	}
@@ -101,6 +106,14 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	for name, pValue := range f.ints {
 		value := *pValue
 		if value == 0 {
+			continue
+		}
+		result[name] = value
+	}
+
+	for name, pValue := range f.bools {
+		value := *pValue
+		if !value {
 			continue
 		}
 		result[name] = value
