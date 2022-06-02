@@ -51,6 +51,16 @@ func TestParse(t *testing.T) {
 				Description: "",
 				Schema:      "string",
 			},
+			{
+				Name:        "abool",
+				Description: "",
+				Schema:      "bool",
+			},
+			{
+				Name:        "aDefaultBool",
+				Description: "",
+				Schema:      "*false | bool",
+			},
 		},
 	}
 
@@ -64,6 +74,8 @@ func TestParse(t *testing.T) {
 		"--yaml-file", "@testdata/test.yaml",
 		"--cue-file", "@testdata/test.cue",
 		"--cue-string", "@testdata/test.cue",
+		"--abool",
+		"--a-default-bool",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -88,6 +100,8 @@ func TestParse(t *testing.T) {
 		"cueFile": map[string]interface{}{
 			"value": "cue",
 		},
-		"cueString": "{\n\tvalue: \"cue\"\n}\n",
+		"cueString":    "{\n\tvalue: \"cue\"\n}\n",
+		"abool":        true,
+		"aDefaultBool": true,
 	}, normalizedVars)
 }
