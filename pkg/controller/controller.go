@@ -4,6 +4,7 @@ import (
 	"context"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah"
 	"github.com/acorn-io/baaah/pkg/crds"
@@ -11,10 +12,12 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/apply"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Controller struct {
 	Router *router.Router
+	client client.Client
 	Scheme *runtime.Scheme
 	apply  apply.Apply
 }
@@ -30,6 +33,11 @@ func New() (*Controller, error) {
 		return nil, err
 	}
 
+	client, err := k8sclient.New(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	apply, err := apply.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -39,6 +47,7 @@ func New() (*Controller, error) {
 
 	return &Controller{
 		Router: router,
+		client: client,
 		Scheme: scheme.Scheme,
 		apply:  apply.WithDynamicLookup(),
 	}, nil

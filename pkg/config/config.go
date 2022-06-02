@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,6 +35,21 @@ func defaultConfig() *Config {
 	return cfg
 }
 
+func Init(ctx context.Context, client kclient.Client) error {
+	cm := &corev1.ConfigMap{}
+	err := client.Get(ctx, router.Key(system.Namespace, system.ConfigName), cm)
+	if apierror.IsNotFound(err) {
+		return client.Create(ctx, &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      system.ConfigName,
+				Namespace: system.Namespace,
+			},
+			Data: map[string]string{"config": "{}"},
+		})
+	}
+	return err
+}
+
 func Get(ctx context.Context, getter kclient.Reader) (*Config, error) {
 	cm := &corev1.ConfigMap{}
 	err := getter.Get(ctx, router.Key(system.Namespace, system.ConfigName), cm)
@@ -44,7 +60,7 @@ func Get(ctx context.Context, getter kclient.Reader) (*Config, error) {
 	}
 
 	config := &Config{}
-	if err := json.Unmarshal([]byte(cm.Data["config"]), cm); err != nil {
+	if err := json.Unmarshal([]byte(cm.Data["config"]), config); err != nil {
 		return nil, err
 	}
 
