@@ -128,7 +128,7 @@ func TestContainerGet(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != ""
+		return app.Status.ContainerStatus["default"].UpToDate == 1
 	})
 
 	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
