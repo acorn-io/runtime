@@ -12,6 +12,10 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var (
+	ClusterDomainDefault = ".local.on-acorn.io"
+)
+
 type Config struct {
 	IngressClassName             string   `json:"ingressClassName,omitempty"`
 	ClusterDomains               []string `json:"clusterDomains,omitempty"`
@@ -26,6 +30,9 @@ func (c *Config) complete() {
 	}
 	if c.PodSecurityEnforceProfile == "" && *c.SetPodSecurityEnforceProfile {
 		c.PodSecurityEnforceProfile = "baseline"
+	}
+	if len(c.ClusterDomains) == 0 {
+		c.ClusterDomains = []string{ClusterDomainDefault}
 	}
 }
 
