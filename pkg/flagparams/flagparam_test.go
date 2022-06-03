@@ -17,6 +17,11 @@ func TestParse(t *testing.T) {
 				Schema:      "*4 | int",
 			},
 			{
+				Name:        "intWithDefaultAllowZero",
+				Description: "",
+				Schema:      "*4 | int",
+			},
+			{
 				Name:        "int",
 				Description: "",
 				Schema:      "int",
@@ -68,6 +73,7 @@ func TestParse(t *testing.T) {
 	val, err := flags.Parse([]string{
 		"--int", "1",
 		"--int-with-default", "2",
+		"--int-with-default-allow-zero", "0",
 		"--str", "a string",
 		"--str-with-default", "b string",
 		"--json-file", "@testdata/test.json",
@@ -87,10 +93,11 @@ func TestParse(t *testing.T) {
 	}
 
 	assert.Equal(t, map[string]interface{}{
-		"int":            float64(1),
-		"intWithDefault": float64(2),
-		"str":            "a string",
-		"strWithDefault": "b string",
+		"int":                     float64(1),
+		"intWithDefault":          float64(2),
+		"intWithDefaultAllowZero": float64(0),
+		"str":                     "a string",
+		"strWithDefault":          "b string",
 		"jsonFile": map[string]interface{}{
 			"value": "json",
 		},

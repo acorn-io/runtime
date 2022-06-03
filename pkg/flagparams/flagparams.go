@@ -104,11 +104,7 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	}
 
 	for name, pValue := range f.ints {
-		value := *pValue
-		if value == 0 {
-			continue
-		}
-		result[name] = value
+		result[name] = *pValue
 	}
 
 	for name, pValue := range f.bools {
