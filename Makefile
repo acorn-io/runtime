@@ -13,6 +13,7 @@ validate:
 validate-ci:
 	go generate
 	go mod tidy
+	go run tools/gendocs/main.go
 	if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then \
 		git status --porcelain --untracked-files=no; \
 		echo "Encountered dirty repo!"; \
@@ -36,5 +37,5 @@ init-docs:
 serve-docs:
 	docker run -it --rm --workdir=/docs -p 3000:3000 -v $${PWD}/docs:/docs node:18-buster yarn start --host=0.0.0.0
 
-gen-cli-docs:
+gen-docs:
 	go run tools/gendocs/main.go
