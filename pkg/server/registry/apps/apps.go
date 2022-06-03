@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
 	"github.com/acorn-io/acorn/pkg/tables"
+	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,6 +56,8 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 		return nil, err
 	}
 
+	tags, _ := tags2.Get(ctx, s.client, ns)
+
 	result := &apiv1.AppList{
 		ListMeta: metav1.ListMeta{
 			ResourceVersion: apps.ResourceVersion,
@@ -62,13 +65,17 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 	}
 
 	for _, app := range apps.Items {
-		result.Items = append(result.Items, *appToApp(app))
+		result.Items = append(result.Items, *appToApp(app, tags))
 	}
 
 	return result, nil
 }
 
-func appToApp(app v1.AppInstance) *apiv1.App {
+func appToApp(app v1.AppInstance, tags map[string][]string) *apiv1.App {
+	possibleTags := tags[app.Spec.Image]
+	if len(possibleTags) > 0 {
+		app.Spec.Image = possibleTags[0]
+	}
 	return &apiv1.App{
 		ObjectMeta: app.ObjectMeta,
 		Spec:       app.Spec,
@@ -87,7 +94,8 @@ func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptio
 		return nil, err
 	}
 
-	return appToApp(*app), nil
+	tags, _ := tags2.Get(ctx, s.client, ns)
+	return appToApp(*app, tags), nil
 }
 
 func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
@@ -126,7 +134,8 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 		return nil, err
 	}
 
-	return appToApp(*app), err
+	tags, _ := tags2.Get(ctx, s.client, app.Namespace)
+	return appToApp(*app, tags), err
 }
 
 func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
@@ -140,7 +149,9 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 		return nil, false, err
 	}
 
-	oldObj := appToApp(*oldApp)
+	tags, _ := tags2.Get(ctx, s.client, ns)
+
+	oldObj := appToApp(*oldApp, tags)
 	newObj, err := objInfo.UpdatedObject(ctx, oldObj)
 	if err != nil {
 		return nil, false, err
@@ -154,6 +165,15 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 	}
 
 	newApp := newObj.(*apiv1.App)
+
+	if newApp.Spec.Image != oldApp.Spec.Image {
+		image, err := s.resolveTag(ctx, ns, newApp.Spec.Image)
+		if err != nil {
+			return nil, false, err
+		}
+		newApp.Spec.Image = image
+	}
+
 	oldApp.ObjectMeta = newApp.ObjectMeta
 	oldApp.Spec = newApp.Spec
 
@@ -161,7 +181,7 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 		return nil, false, err
 	}
 
-	return appToApp(*oldApp), false, nil
+	return appToApp(*oldApp, tags), false, nil
 }
 
 func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
@@ -190,8 +210,9 @@ func (s *Storage) Watch(ctx context.Context, options *internalversion.ListOption
 	}
 
 	return watcher.Transform(w, func(obj runtime.Object) []runtime.Object {
+		tags, _ := tags2.Get(ctx, s.client, ns)
 		return []runtime.Object{
-			appToApp(*obj.(*v1.AppInstance)),
+			appToApp(*obj.(*v1.AppInstance), tags),
 		}
 	}), nil
 }

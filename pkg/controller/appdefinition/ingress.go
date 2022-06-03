@@ -163,11 +163,6 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 		ingressClassName = &cfg.IngressClassName
 	}
 
-	clusterDomains := cfg.ClusterDomains
-	if len(clusterDomains) == 0 {
-		clusterDomains = []string{".localhost"}
-	}
-
 	// Look for Secrets in the app namespace that contain cert manager TLS certs
 	tlsCerts, err := getCerts(appInstance.Namespace, req)
 	if err != nil {
@@ -222,7 +217,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 
 		addClusterDomains := len(hosts) == 0
 
-		for _, domain := range clusterDomains {
+		for _, domain := range cfg.ClusterDomains {
 			if addClusterDomains {
 				hosts = append(hosts, hostPrefix+domain)
 			}

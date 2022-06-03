@@ -337,11 +337,11 @@ metadata:
     "acorn.io/managed": "true"
   annotations:
     acorn.io/container-name: con1
-    acorn.io/hostnames: "con1.app-name.app-namespace.localhost,svc1.app-name.app-namespace.localhost"
+    acorn.io/hostnames: "con1.app-name.app-namespace.local.on-acorn.io,svc1.app-name.app-namespace.local.on-acorn.io"
     acorn.io/port-number: "81"
 spec:
   rules:
-    - host: con1.app-name.app-namespace.localhost
+    - host: con1.app-name.app-namespace.local.on-acorn.io
       http:
         paths:
           - backend:
@@ -351,7 +351,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: svc1.app-name.app-namespace.localhost
+    - host: svc1.app-name.app-namespace.local.on-acorn.io
       http:
         paths:
           - backend:

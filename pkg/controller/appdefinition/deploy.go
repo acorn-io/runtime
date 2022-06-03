@@ -11,6 +11,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pull"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -50,7 +51,12 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	addNamespace(appInstance, resp)
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	}
+
+	addNamespace(cfg, appInstance, resp)
 	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
@@ -515,16 +521,21 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 	return result, nil
 }
 
-func addNamespace(appInstance *v1.AppInstance, resp router.Response) {
+func addNamespace(cfg *config.Config, appInstance *v1.AppInstance, resp router.Response) {
+	labels := map[string]string{
+		labels.AcornAppName:      appInstance.Name,
+		labels.AcornAppNamespace: appInstance.Namespace,
+		labels.AcornManaged:      "true",
+	}
+
+	if *cfg.SetPodSecurityEnforceProfile {
+		labels["pod-security.kubernetes.io/enforce"] = cfg.PodSecurityEnforceProfile
+	}
+
 	resp.Objects(&corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: appInstance.Status.Namespace,
-			Labels: map[string]string{
-				labels.AcornAppName:                  appInstance.Name,
-				labels.AcornAppNamespace:             appInstance.Namespace,
-				labels.AcornManaged:                  "true",
-				"pod-security.kubernetes.io/enforce": "baseline",
-			},
+			Name:   appInstance.Status.Namespace,
+			Labels: labels,
 		},
 	})
 }
