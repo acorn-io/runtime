@@ -24,4 +24,4 @@ Acorn image and referenced Docker images.
 
 ## CLI
 
-Credentials are managed with the [acorn credential](../100-Reference/01-command-line/acorn_credential.md) command.
+Credentials are managed with the `acorn credential` command.
