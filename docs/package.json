@@ -3,15 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
-    "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "docusaurus": "./node_modules/.bin/docusaurus",
+    "start": "./node_modules/.bin/docusaurus start",
+    "build": "./node_modules/.bin/docusaurus build",
+    "swizzle": "./node_modules/.bin/docusaurus swizzle",
+    "deploy": "./node_modules/.bin/docusaurus deploy",
+    "clear": "./node_modules/.bin/docusaurus clear",
+    "serve": "./node_modules/.bin/docusaurus serve",
+    "write-translations": "./node_modules/.bin/docusaurus write-translations",
+    "write-heading-ids": "./node_modules/.bin/docusaurus write-heading-ids"
   },
   "dependencies": {
     "@docusaurus/core": "2.0.0-beta.21",
@@ -24,6 +24,9 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.0.0-beta.21"
+  },
+  "engines": {
+    "node": ">=16.14"
   },
   "browserslist": {
     "production": [
