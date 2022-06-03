@@ -247,7 +247,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: oneimage.app-name.app-namespace.localhost
+    - host: oneimage.app-name.app-namespace.local.on-acorn.io
       http:
         paths:
           - backend:
@@ -274,11 +274,11 @@ metadata:
     "acorn.io/managed": "true"
   annotations:
     acorn.io/container-name: buildimage
-    acorn.io/hostnames: buildimage.app-name.app-namespace.localhost
+    acorn.io/hostnames: buildimage.app-name.app-namespace.local.on-acorn.io
     acorn.io/port-number: "81"
 spec:
   rules:
-    - host: buildimage.app-name.app-namespace.localhost
+    - host: buildimage.app-name.app-namespace.local.on-acorn.io
       http:
         paths:
           - backend:
