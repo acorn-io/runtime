@@ -1,8 +1,8 @@
-name: test
+name: Validate docs build
 on:
   push: {}
   pull_request:
-    paths-ignore:
+    paths:
       - docs/**
     branches:
       - main
@@ -17,11 +17,5 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - uses: debianmaster/actions-k3s@v1.0.5
-        with:
-          version: 'v1.23.6-k3s1'
-      - run: make setup-ci-env
-      - run: make validate-ci
-      - run: make validate
-      - run: make build
-      - run: make test
+      - run: make init-docs
+      - run: make validate-docs
