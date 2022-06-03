@@ -12,6 +12,7 @@ import (
 
 type Flags struct {
 	FlagSet       *pflag.FlagSet
+	paramToFlag   map[string]interface{}
 	ints          map[string]*int
 	strings       map[string]*string
 	bools         map[string]*bool
@@ -20,7 +21,7 @@ type Flags struct {
 }
 
 func New(filename string, param *v1.ParamSpec) *Flags {
-	flagToParam := map[string]interface{}{}
+	paramToFlag := map[string]interface{}{}
 	flagSet := pflag.NewFlagSet(filename, pflag.ContinueOnError)
 	ints := map[string]*int{}
 	stringValues := map[string]*string{}
@@ -29,7 +30,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 
 	for _, param := range param.Params {
 		name := strings.ReplaceAll(convert.ToYAMLKey(param.Name), "_", "-")
-		flagToParam[name] = param.Name
+		paramToFlag[param.Name] = name
 		if isType(param.Schema, "int") {
 			ints[param.Name] = flagSet.Int(name, 0, param.Description)
 		} else if isType(param.Schema, "string") {
@@ -46,6 +47,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 		strings:       stringValues,
 		bools:         bools,
 		complexValues: complexValues,
+		paramToFlag:   paramToFlag,
 		FlagSet:       flagSet,
 	}
 }
@@ -104,7 +106,15 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	}
 
 	for name, pValue := range f.ints {
-		result[name] = *pValue
+		value := *pValue
+		if value == 0 {
+			if fname, ok := f.paramToFlag[name]; ok {
+				if !f.FlagSet.Lookup(fname.(string)).Changed {
+					continue
+				}
+			}
+		}
+		result[name] = value
 	}
 
 	for name, pValue := range f.bools {

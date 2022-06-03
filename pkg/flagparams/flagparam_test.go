@@ -22,6 +22,11 @@ func TestParse(t *testing.T) {
 				Schema:      "*4 | int",
 			},
 			{
+				Name:        "shouldNotBeInParamMap",
+				Description: "",
+				Schema:      "*4 | int",
+			},
+			{
 				Name:        "int",
 				Description: "",
 				Schema:      "int",
