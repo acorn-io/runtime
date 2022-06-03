@@ -3,7 +3,7 @@ package cli
 import (
 	"os"
 
-	cli "github.com/rancher/wrangler-cli"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +26,7 @@ func New() *cobra.Command {
 		NewExec(),
 		NewImage(),
 		NewInit(),
+		NewInfo(),
 		NewLogs(),
 		NewPull(),
 		NewPush(),

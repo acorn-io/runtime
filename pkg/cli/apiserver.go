@@ -1,8 +1,8 @@
 package cli
 
 import (
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/server"
-	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
 

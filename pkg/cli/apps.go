@@ -1,10 +1,10 @@
 package cli
 
 import (
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/rancher/wrangler-cli"
-	"github.com/rancher/wrangler-cli/pkg/table"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )

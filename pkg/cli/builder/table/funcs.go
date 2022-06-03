@@ -1,4 +1,4 @@
-package tables
+package table
 
 import (
 	"encoding/json"
@@ -7,31 +7,37 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
-	"github.com/docker/go-units"
-	"github.com/rancher/wrangler-cli/pkg/table/types"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/duration"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
 
 var (
-	localFuncMap = map[string]interface{}{
+	FuncMap = map[string]interface{}{
 		"ago":         FormatCreated,
 		"json":        FormatJSON,
 		"jsoncompact": FormatJSONCompact,
 		"yaml":        FormatYAML,
 		"first":       FormatFirst,
-		"dump":        FormatSpew,
 		"toJson":      ToJSON,
 		"boolToStar":  BoolToStar,
 		"array":       ToArray,
 		"arrayFirst":  ToArrayFirst,
 		"graph":       Graph,
 		"pointer":     Pointer,
+		"fullID":      FormatID,
+		"trunc":       Trunc,
 	}
 )
+
+func Trunc(s string) string {
+	if len(s) > 12 {
+		return s[:12]
+	}
+	return s
+}
 
 func ToArray(s []string) (string, error) {
 	return strings.Join(s, ", "), nil
@@ -64,9 +70,8 @@ func Pointer(data interface{}) string {
 	return fmt.Sprint(data)
 }
 
-func FormatID(obj runtime.Object, namespace string) (string, error) {
-	r, err := types.FromObject(obj)
-	return r.StringDefaultNamespace(namespace), err
+func FormatID(obj kclient.Object) (string, error) {
+	return obj.GetName(), nil
 }
 
 func FormatCreated(data interface{}) (string, error) {
@@ -75,7 +80,7 @@ func FormatCreated(data interface{}) (string, error) {
 		return "", nil
 	}
 
-	return units.HumanDuration(time.Now().UTC().Sub(t.Time)) + " ago", nil
+	return duration.HumanDuration(time.Now().UTC().Sub(t.Time)) + " ago", nil
 }
 
 func FormatJSON(data interface{}) (string, error) {
@@ -91,10 +96,6 @@ func FormatJSONCompact(data interface{}) (string, error) {
 func FormatYAML(data interface{}) (string, error) {
 	bytes, err := yaml.Marshal(data)
 	return string(bytes) + "\n", err
-}
-
-func FormatSpew(data interface{}) (string, error) {
-	return spew.Sdump(data), nil
 }
 
 func FormatFirst(data, data2 interface{}) (string, error) {

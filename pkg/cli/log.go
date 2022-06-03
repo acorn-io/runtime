@@ -5,7 +5,7 @@ import (
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 

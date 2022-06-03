@@ -6,19 +6,38 @@ import (
 )
 
 var (
-	Tag string
+	Tag = "v0.0.0-dev"
 )
 
-func Version(tag string) string {
+type Version struct {
+	Tag    string `json:"tag,omitempty"`
+	Commit string `json:"commit,omitempty"`
+	Dirty  bool   `json:"dirty,omitempty"`
+}
+
+func (v Version) String() string {
+	if len(v.Commit) < 12 {
+		return v.Tag
+	} else if v.Dirty {
+		return fmt.Sprintf("%s-%s-dirty", v.Tag, v.Commit[:8])
+	}
+
+	return fmt.Sprintf("%s+%s", v.Tag, v.Commit[:8])
+}
+
+func Get() Version {
+	v := Version{
+		Tag: Tag,
+	}
+	v.Commit, v.Dirty = GitCommit()
+	return v
+}
+
+func GitCommit() (commit string, dirty bool) {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
-		return tag
+		return "", false
 	}
-	var (
-		dirty  bool
-		commit string
-	)
-
 	for _, setting := range bi.Settings {
 		switch setting.Key {
 		case "vcs.modified":
@@ -28,11 +47,5 @@ func Version(tag string) string {
 		}
 	}
 
-	if len(commit) < 12 {
-		return tag
-	} else if dirty {
-		return fmt.Sprintf("%s-%s-dirty", tag, commit[:8])
-	}
-
-	return fmt.Sprintf("%s+%s", tag, commit[:8])
+	return
 }

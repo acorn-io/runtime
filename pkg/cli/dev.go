@@ -2,12 +2,12 @@ package cli
 
 import (
 	"github.com/acorn-io/acorn/pkg/build"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/dev"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/system"
-	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
 

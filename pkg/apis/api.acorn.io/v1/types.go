@@ -238,3 +238,39 @@ type SecretList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Secret `json:"items"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Info struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec InfoSpec `json:"spec,omitempty"`
+}
+
+type InfoSpec struct {
+	Version         string `json:"version"`
+	Tag             string `json:"tag"`
+	GitCommit       string `json:"gitCommit"`
+	Dirty           bool   `json:"dirty"`
+	ControllerImage string `json:"controllerImage"`
+	APIServerImage  string `json:"apiServerImage,omitempty"`
+	Config          Config `json:"config"`
+	UserConfig      Config `json:"userConfig"`
+}
+
+type Config struct {
+	IngressClassName             string   `json:"ingressClassName"`
+	ClusterDomains               []string `json:"clusterDomains"`
+	TLSEnabled                   bool     `json:"tlsEnabled"`
+	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile"`
+	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type InfoList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Info `json:"items"`
+}

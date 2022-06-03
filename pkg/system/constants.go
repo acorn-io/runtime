@@ -14,6 +14,8 @@ var (
 	RegistryPort   = 5000
 	BuildkitImage  = "moby/buildkit:master"
 	BuildKitName   = "buildkitd"
+	ControllerName = "acorn-controller"
+	APIServerName  = "acorn-api"
 	BuildkitPort   = 8080
 	KlipperLBImage = "rancher/klipper-lb:v0.3.4"
 	ClusterDomain  = "svc.cluster.local"

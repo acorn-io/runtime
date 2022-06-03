@@ -8,10 +8,10 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	hclient "github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/streams"
-	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 )
 

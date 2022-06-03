@@ -10,6 +10,7 @@ import (
 	"regexp"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -521,7 +522,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 	return result, nil
 }
 
-func addNamespace(cfg *config.Config, appInstance *v1.AppInstance, resp router.Response) {
+func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance, resp router.Response) {
 	labels := map[string]string{
 		labels.AcornAppName:      appInstance.Name,
 		labels.AcornAppNamespace: appInstance.Namespace,

@@ -127,6 +127,8 @@ type Client interface {
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (<-chan ImageProgress, error)
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
+
+	Info(ctx context.Context) (*apiv1.Info, error)
 }
 
 type ImagePullOptions struct {

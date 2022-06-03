@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
@@ -16,15 +17,7 @@ var (
 	ClusterDomainDefault = ".local.on-acorn.io"
 )
 
-type Config struct {
-	IngressClassName             string   `json:"ingressClassName,omitempty"`
-	ClusterDomains               []string `json:"clusterDomains,omitempty"`
-	TLSEnabled                   bool     `json:"tlsEnabled,omitempty"`
-	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile,omitempty"`
-	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile,omitempty"`
-}
-
-func (c *Config) complete() {
+func complete(c *apiv1.Config) {
 	if c.SetPodSecurityEnforceProfile == nil {
 		c.SetPodSecurityEnforceProfile = &[]bool{true}[0]
 	}
@@ -34,12 +27,6 @@ func (c *Config) complete() {
 	if len(c.ClusterDomains) == 0 {
 		c.ClusterDomains = []string{ClusterDomainDefault}
 	}
-}
-
-func defaultConfig() *Config {
-	cfg := &Config{}
-	cfg.complete()
-	return cfg
 }
 
 func Init(ctx context.Context, client kclient.Client) error {
@@ -57,20 +44,28 @@ func Init(ctx context.Context, client kclient.Client) error {
 	return err
 }
 
-func Get(ctx context.Context, getter kclient.Reader) (*Config, error) {
+func Incomplete(ctx context.Context, getter kclient.Reader) (*apiv1.Config, error) {
 	cm := &corev1.ConfigMap{}
 	err := getter.Get(ctx, router.Key(system.Namespace, system.ConfigName), cm)
 	if apierror.IsNotFound(err) {
-		return defaultConfig(), nil
+		return &apiv1.Config{}, nil
 	} else if err != nil {
 		return nil, err
 	}
 
-	config := &Config{}
+	config := &apiv1.Config{}
 	if err := json.Unmarshal([]byte(cm.Data["config"]), config); err != nil {
 		return nil, err
 	}
 
-	config.complete()
 	return config, nil
+}
+
+func Get(ctx context.Context, getter kclient.Reader) (*apiv1.Config, error) {
+	cfg, err := Incomplete(ctx, getter)
+	if err != nil {
+		return nil, err
+	}
+	complete(cfg)
+	return cfg, nil
 }

@@ -2,57 +2,63 @@ package tables
 
 var (
 	App = [][]string{
-		{"NAME", "Name"},
-		{"IMAGE", "Spec.Image"},
-		{"HEALTHY", "Status.Columns.Healthy"},
-		{"UPTODATE", "Status.Columns.UpToDate"},
-		{"CREATED", "{{ago .CreationTimestamp}}"},
-		{"ENDPOINTS", "Status.Columns.Endpoints"},
-		{"MESSAGE", "Status.Columns.Message"},
+		{"Name", "Name"},
+		{"Image", "Spec.Image"},
+		{"Healthy", "Status.Columns.Healthy"},
+		{"Up-To-Date", "Status.Columns.UpToDate"},
+		{"Created", "{{ago .CreationTimestamp}}"},
+		{"Endpoints", "Status.Columns.Endpoints"},
+		{"Message", "Status.Columns.Message"},
 	}
 	AppConverter = MustConverter(App)
 
 	Volume = [][]string{
-		{"NAME", "Name"},
-		{"APPNAME", "Status.AppName"},
-		{"BOUNDVOLUME", "Status.VolumeName"},
-		{"CAPACITY", "Spec.Capacity"},
-		{"STATUS", "Status.Status"},
-		{"ACCESSMODES", "Status.Columns.AccessModes"},
-		{"CREATED", "{{ago .CreationTimestamp}}"},
+		{"Name", "Name"},
+		{"App-Name", "Status.AppName"},
+		{"Bound-Volume", "Status.VolumeName"},
+		{"Capacity", "Spec.Capacity"},
+		{"Status", "Status.Status"},
+		{"Access-Modes", "Status.Columns.AccessModes"},
+		{"Created", "{{ago .CreationTimestamp}}"},
 	}
 	VolumeConverter = MustConverter(Volume)
 
 	Image = [][]string{
-		{"REPOSITORY", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
-		{"TAG", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
-		{"IMAGEID", "{{trunc .Name}}"},
+		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
+		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
+		{"Image-ID", "{{trunc .Name}}"},
 	}
 	ImageConverter = MustConverter(Image)
 
 	Container = [][]string{
-		{"NAME", "Name"},
-		{"APP", "Status.Columns.App"},
-		{"IMAGE", "Spec.Image"},
-		{"STATE", "Status.Columns.State"},
-		{"RESTARTCOUNT", "Status.RestartCount"},
-		{"CREATED", "{{ago .CreationTimestamp}}"},
-		{"MESSAGE", "Status.PodMessage"},
+		{"Name", "Name"},
+		{"App", "Status.Columns.App"},
+		{"Image", "Spec.Image"},
+		{"State", "Status.Columns.State"},
+		{"RestartCount", "Status.RestartCount"},
+		{"Created", "{{ago .CreationTimestamp}}"},
+		{"Message", "Status.PodMessage"},
 	}
 	ContainerConverter = MustConverter(Container)
 
 	Credential = [][]string{
-		{"SERVER", "ServerAddress"},
-		{"USERNAME", "Username"},
-		{"CREATED", "{{ago .CreationTimestamp}}"},
+		{"Server", "ServerAddress"},
+		{"Username", "Username"},
+		{"Created", "{{ago .CreationTimestamp}}"},
 	}
 	CredentialConverter = MustConverter(Credential)
 
 	Secret = [][]string{
-		{"NAME", "Name"},
-		{"TYPE", "Type"},
-		{"KEYS", "Keys"},
-		{"CREATED", "{{ago .CreationTimestamp}}"},
+		{"Name", "Name"},
+		{"Type", "Type"},
+		{"Keys", "Keys"},
+		{"Created", "{{ago .CreationTimestamp}}"},
 	}
 	SecretConverter = MustConverter(Secret)
+
+	Info = [][]string{
+		{"Version", "Version"},
+		{"Controller-Image", "ControllerImage"},
+	}
+	InfoConverter = MustConverter(Info)
 )

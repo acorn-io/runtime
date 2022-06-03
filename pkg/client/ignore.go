@@ -203,3 +203,7 @@ func (c IgnoreUninstalled) SecretUpdate(ctx context.Context, name string, data m
 func (c IgnoreUninstalled) SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error) {
 	return c.client.SecretDelete(ctx, name)
 }
+
+func (c IgnoreUninstalled) Info(ctx context.Context) (*apiv1.Info, error) {
+	return c.client.Info(ctx)
+}

@@ -33,6 +33,7 @@ acorn [flags]
 * [acorn dev](acorn_dev.md)	 - Build and run an app in development mode
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
 * [acorn image](acorn_image.md)	 - List images
+* [acorn info](acorn_info.md)	 - Info about acorn installation
 * [acorn init](acorn_init.md)	 - Initial cluster for acorn use
 * [acorn logs](acorn_logs.md)	 - Log all pods from app
 * [acorn pull](acorn_pull.md)	 - Pull an image to a remote registry
