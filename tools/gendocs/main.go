@@ -17,7 +17,9 @@ title: "%s"
 `
 
 func main() {
-	err := doc.GenMarkdownTreeCustom(acorn.New(), "docs/docs/100-Reference/01-command-line", filePrepender, linkHandler)
+	cmd := acorn.New()
+	cmd.DisableAutoGenTag = true
+	err := doc.GenMarkdownTreeCustom(cmd, "docs/docs/100-Reference/01-command-line", filePrepender, linkHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
