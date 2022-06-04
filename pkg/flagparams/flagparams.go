@@ -12,6 +12,7 @@ import (
 
 type Flags struct {
 	FlagSet       *pflag.FlagSet
+	paramToFlag   map[string]string
 	ints          map[string]*int
 	strings       map[string]*string
 	bools         map[string]*bool
@@ -20,7 +21,7 @@ type Flags struct {
 }
 
 func New(filename string, param *v1.ParamSpec) *Flags {
-	flagToParam := map[string]interface{}{}
+	paramToFlag := map[string]string{}
 	flagSet := pflag.NewFlagSet(filename, pflag.ContinueOnError)
 	ints := map[string]*int{}
 	stringValues := map[string]*string{}
@@ -29,7 +30,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 
 	for _, param := range param.Params {
 		name := strings.ReplaceAll(convert.ToYAMLKey(param.Name), "_", "-")
-		flagToParam[name] = param.Name
+		paramToFlag[param.Name] = name
 		if isType(param.Schema, "int") {
 			ints[param.Name] = flagSet.Int(name, 0, param.Description)
 		} else if isType(param.Schema, "string") {
@@ -46,6 +47,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 		strings:       stringValues,
 		bools:         bools,
 		complexValues: complexValues,
+		paramToFlag:   paramToFlag,
 		FlagSet:       flagSet,
 	}
 }
@@ -67,7 +69,10 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	for name, pValue := range f.complexValues {
 		value := *pValue
 		if value == "" {
-			continue
+			if !f.flagChanged(name) {
+				continue
+			}
+			result[name] = value
 		} else if strings.HasPrefix(value, "@") {
 			fName := value[1:]
 			data, err := cue.ReadCUE(fName)
@@ -90,7 +95,10 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	for name, pValue := range f.strings {
 		value := *pValue
 		if value == "" {
-			continue
+			if !f.flagChanged(name) {
+				continue
+			}
+			result[name] = value
 		} else if strings.HasPrefix(value, "@") {
 			fName := value[1:]
 			data, err := ioutil.ReadFile(fName)
@@ -106,7 +114,9 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	for name, pValue := range f.ints {
 		value := *pValue
 		if value == 0 {
-			continue
+			if !f.flagChanged(name) {
+				continue
+			}
 		}
 		result[name] = value
 	}
@@ -114,12 +124,20 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 	for name, pValue := range f.bools {
 		value := *pValue
 		if !value {
-			continue
+			if !f.flagChanged(name) {
+				continue
+			}
 		}
 		result[name] = value
 	}
 
 	return result, nil
+}
+func (f *Flags) flagChanged(name string) bool {
+	if fName, ok := f.paramToFlag[name]; ok {
+		return f.FlagSet.Lookup(fName).Changed
+	}
+	return false
 }
 
 func isType(schema, typeName string) bool {
