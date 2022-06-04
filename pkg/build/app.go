@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
@@ -98,10 +97,5 @@ func addFile(tempDir, name string, obj interface{}) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(target, data, 0600)
-	if err != nil {
-		return err
-	}
-
-	return os.Chtimes(target, time.Unix(0, 0), time.Unix(0, 0))
+	return ioutil.WriteFile(target, data, 0600)
 }

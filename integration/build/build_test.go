@@ -46,6 +46,26 @@ func TestSimpleBuild(t *testing.T) {
 	assert.True(t, len(image.ImageData.Images["isimple"].Image) > 0)
 }
 
+func TestSimilarBuilds(t *testing.T) {
+	// This tests a scenario where two builds only differ by a single character in the acorn.cue file and otherwise all
+	// the file names and sizes are the same. A caching bug caused the second build to result in the image from the first
+	image, err := build.Build(helper.GetCTX(t), "./testdata/similar/one/acorn.cue", &build.Options{
+		Cwd: "./testdata/similar/one",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	image2, err := build.Build(helper.GetCTX(t), "./testdata/similar/two/acorn.cue", &build.Options{
+		Cwd: "./testdata/similar/two",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.NotEqual(t, image.ID, image2.ID)
+}
+
 func TestJobBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/acorn.cue", &build.Options{
 		Cwd: "./testdata/jobs",
