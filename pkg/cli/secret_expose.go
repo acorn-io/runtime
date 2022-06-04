@@ -2,10 +2,10 @@ package cli
 
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"github.com/rancher/wrangler-cli"
-	"github.com/rancher/wrangler-cli/pkg/table"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 

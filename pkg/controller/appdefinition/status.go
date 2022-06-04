@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -238,7 +239,7 @@ func podName(pod *corev1.Pod) string {
 	return pod.Labels[labels.AcornContainerName]
 }
 
-func endpoints(cfg *config.Config, app *v1.AppInstance) string {
+func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 	endpointTarget := map[string][]v1.Endpoint{}
 	for _, endpoint := range app.Status.Endpoints {
 		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPort)

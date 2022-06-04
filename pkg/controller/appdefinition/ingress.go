@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -42,12 +42,12 @@ func convertTLSSecretToTLSCert(secret corev1.Secret) (*TLSCert, error) {
 
 	tlsPEM, ok := secret.Data["tls.crt"]
 	if !ok {
-		return nil, errors.Errorf("Key tls.crt not found in secret %s", secret.Name)
+		return nil, fmt.Errorf("key tls.crt not found in secret %s", secret.Name)
 	}
 
-	tlsCertBytes, _ := pem.Decode([]byte(tlsPEM))
+	tlsCertBytes, _ := pem.Decode(tlsPEM)
 	if tlsCertBytes == nil {
-		return nil, errors.Errorf("Failed to parse Cert PEM stored in secret %s", secret.Name)
+		return nil, fmt.Errorf("failed to parse Cert PEM stored in secret %s", secret.Name)
 	}
 
 	tlsDataObj, err := x509.ParseCertificate(tlsCertBytes.Bytes)

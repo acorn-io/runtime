@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	cli "github.com/rancher/wrangler-cli"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 )

@@ -11,7 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/flagparams"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

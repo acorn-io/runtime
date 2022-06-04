@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 

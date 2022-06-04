@@ -6,8 +6,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig"
-	"github.com/rancher/wrangler-cli/pkg/table"
+	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,13 +37,7 @@ func NewConverter(tableDef [][]string) (*Converter, error) {
 	}
 
 	_, valueFormat := table.SimpleFormat(tableDef)
-
-	funcs := sprig.TxtFuncMap()
-	for k, v := range localFuncMap {
-		funcs[k] = v
-	}
-
-	t, err := template.New("").Funcs(funcs).Parse(valueFormat)
+	t, err := template.New("").Funcs(table.FuncMap).Parse(valueFormat)
 	if err != nil {
 		return nil, err
 	}

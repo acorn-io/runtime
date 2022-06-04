@@ -5,9 +5,9 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/pkg/flagparams"
-	cli "github.com/rancher/wrangler-cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

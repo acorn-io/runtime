@@ -26,6 +26,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ImageTag{},
 		&ImagePush{},
 		&ImagePull{},
+		&Info{},
+		&InfoList{},
 		&Volume{},
 		&VolumeList{},
 		&Credential{},

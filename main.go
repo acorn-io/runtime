@@ -8,14 +8,9 @@ import (
 	"github.com/rancher/wrangler/pkg/signals"
 )
 
-var (
-	Version = "v0.0.0-dev"
-)
-
 func main() {
 	cmd := acorn.New()
-	cmd.Version = version.Version(Version)
-	version.Tag = Version
+	cmd.Version = version.Get().String()
 	cmd.InitDefaultVersionFlag()
 
 	ctx := signals.SetupSignalContext()

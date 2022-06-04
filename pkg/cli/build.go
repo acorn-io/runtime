@@ -5,7 +5,7 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/rancher/wrangler-cli"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
