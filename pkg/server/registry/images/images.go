@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
@@ -15,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,10 +62,36 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 
 func (s *Storage) ImageList(ctx context.Context) (apiv1.ImageList, error) {
 	ns, _ := request.NamespaceFrom(ctx)
-	if ns == "" {
-		return apiv1.ImageList{}, nil
+	if ns != "" {
+		return s.forNamespace(ctx, ns)
 	}
 
+	var (
+		result     apiv1.ImageList
+		namespaces = &corev1.NamespaceList{}
+	)
+
+	err := s.client.List(ctx, namespaces)
+	if err != nil {
+		return result, err
+	}
+
+	sort.Slice(namespaces.Items, func(i, j int) bool {
+		return namespaces.Items[i].Name < namespaces.Items[j].Name
+	})
+
+	for _, ns := range namespaces.Items {
+		list, err := s.forNamespace(ctx, ns.Name)
+		if err != nil {
+			return result, err
+		}
+		result.Items = append(result.Items, list.Items...)
+	}
+
+	return result, nil
+}
+
+func (s *Storage) forNamespace(ctx context.Context, ns string) (apiv1.ImageList, error) {
 	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
 		return apiv1.ImageList{}, err
 	} else if !ok {

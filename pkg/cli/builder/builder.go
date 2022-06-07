@@ -80,12 +80,15 @@ func Main(cmd *cobra.Command) {
 
 func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	var (
-		envs     []func()
-		arrays   = map[string]reflect.Value{}
-		slices   = map[string]reflect.Value{}
-		maps     = map[string]reflect.Value{}
-		ptrValue = reflect.ValueOf(obj)
-		objValue = ptrValue.Elem()
+		envs      []func()
+		arrays    = map[string]reflect.Value{}
+		slices    = map[string]reflect.Value{}
+		maps      = map[string]reflect.Value{}
+		optString = map[string]reflect.Value{}
+		optBool   = map[string]reflect.Value{}
+		optInt    = map[string]reflect.Value{}
+		ptrValue  = reflect.ValueOf(obj)
+		objValue  = ptrValue.Elem()
 	)
 
 	c := cmd
@@ -129,6 +132,18 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 			flags.StringSliceP(name, alias, nil, usage)
 		case reflect.Bool:
 			flags.BoolVarP((*bool)(unsafe.Pointer(v.Addr().Pointer())), name, alias, false, usage)
+		case reflect.Pointer:
+			switch fieldType.Type.Elem().Kind() {
+			case reflect.Int:
+				optInt[name] = v
+				flags.IntP(name, alias, defInt, usage)
+			case reflect.String:
+				optString[name] = v
+				flags.StringP(name, alias, defValue, usage)
+			case reflect.Bool:
+				optBool[name] = v
+				flags.BoolP(name, alias, false, usage)
+			}
 		default:
 			panic("Unknown kind on field " + fieldType.Name + " on " + objValue.Type().Name())
 		}
@@ -155,9 +170,9 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	}
 
 	c.RunE = obj.Run
-	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, envs)
-	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, envs)
-	c.RunE = bind(c.RunE, arrays, slices, maps, envs)
+	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, optInt, optBool, optString, envs)
+	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, optInt, optBool, optString, envs)
+	c.RunE = bind(c.RunE, arrays, slices, maps, optInt, optBool, optString, envs)
 
 	cust, ok := obj.(customizer)
 	if ok {
@@ -165,6 +180,51 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	}
 
 	return &c
+}
+
+func assignOptBool(app *cobra.Command, maps map[string]reflect.Value) error {
+	for k, v := range maps {
+		k = contextKey(k)
+		if !app.Flags().Lookup(k).Changed {
+			continue
+		}
+		i, err := app.Flags().GetBool(k)
+		if err != nil {
+			return err
+		}
+		v.Set(reflect.ValueOf(&i))
+	}
+	return nil
+}
+
+func assignOptString(app *cobra.Command, maps map[string]reflect.Value) error {
+	for k, v := range maps {
+		k = contextKey(k)
+		if !app.Flags().Lookup(k).Changed {
+			continue
+		}
+		i, err := app.Flags().GetString(k)
+		if err != nil {
+			return err
+		}
+		v.Set(reflect.ValueOf(&i))
+	}
+	return nil
+}
+
+func assignOptInt(app *cobra.Command, maps map[string]reflect.Value) error {
+	for k, v := range maps {
+		k = contextKey(k)
+		if !app.Flags().Lookup(k).Changed {
+			continue
+		}
+		i, err := app.Flags().GetInt(k)
+		if err != nil {
+			return err
+		}
+		v.Set(reflect.ValueOf(&i))
+	}
+	return nil
 }
 
 func assignMaps(app *cobra.Command, maps map[string]reflect.Value) error {
@@ -245,6 +305,9 @@ func bind(next func(*cobra.Command, []string) error,
 	arrays map[string]reflect.Value,
 	slices map[string]reflect.Value,
 	maps map[string]reflect.Value,
+	optInt map[string]reflect.Value,
+	optBool map[string]reflect.Value,
+	optString map[string]reflect.Value,
 	envs []func()) func(*cobra.Command, []string) error {
 	if next == nil {
 		return nil
@@ -260,6 +323,15 @@ func bind(next func(*cobra.Command, []string) error,
 			return err
 		}
 		if err := assignMaps(cmd, maps); err != nil {
+			return err
+		}
+		if err := assignOptInt(cmd, optInt); err != nil {
+			return err
+		}
+		if err := assignOptBool(cmd, optBool); err != nil {
+			return err
+		}
+		if err := assignOptString(cmd, optString); err != nil {
 			return err
 		}
 

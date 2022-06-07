@@ -260,11 +260,14 @@ type InfoSpec struct {
 }
 
 type Config struct {
-	IngressClassName             string   `json:"ingressClassName"`
-	ClusterDomains               []string `json:"clusterDomains"`
-	TLSEnabled                   bool     `json:"tlsEnabled"`
-	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile"`
-	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile"`
+	// Do not set omitEmpty on the json fields.  Also make strings and bool a
+	// pointer unless the default value (false, "") is not a valid configuration
+
+	IngressClassName             *string  `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
+	ClusterDomains               []string `json:"clusterDomains" usage:"The externally addressable cluster domain (default .local.on-acorn.io)"`
+	TLSEnabled                   *bool    `json:"tlsEnabled" name:"tls-enabled" usage:"If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)"`
+	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
+	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

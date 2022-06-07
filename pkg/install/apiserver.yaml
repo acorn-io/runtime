@@ -1,9 +1,3 @@
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: acorn-system
-
----
 kind: APIService
 apiVersion: apiregistration.k8s.io/v1
 metadata:
@@ -40,6 +34,7 @@ metadata:
   name: acorn-api
   namespace: acorn-system
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: acorn-api

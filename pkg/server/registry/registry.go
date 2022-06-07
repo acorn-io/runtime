@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIGroupInfo, error) {
+func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storage, error) {
 	imagesStorage := images.NewStorage(c)
 	containerStorage := containers.NewStorage(c)
 	tagsStorage := images.NewTagStorage(c, imagesStorage)
@@ -26,8 +26,7 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 		return nil, err
 	}
 
-	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(api.Group, scheme.Scheme, scheme.ParameterCodec, scheme.Codecs)
-	apiGroupInfo.VersionedResourcesStorageMap["v1"] = map[string]rest.Storage{
+	return map[string]rest.Storage{
 		"apps":                   apps.NewStorage(c, imagesStorage),
 		"images":                 imagesStorage,
 		"images/tag":             tagsStorage,
@@ -41,9 +40,18 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 		"secrets":                secrets.NewStorage(c),
 		"secrets/expose":         secrets.NewExpose(c),
 		"infos":                  info.NewStorage(c),
-	}
-	apiGroupInfo.NegotiatedSerializer = &noProtobufSerializer{r: apiGroupInfo.NegotiatedSerializer}
+	}, nil
+}
 
+func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIGroupInfo, error) {
+	stores, err := APIStores(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(api.Group, scheme.Scheme, scheme.ParameterCodec, scheme.Codecs)
+	apiGroupInfo.VersionedResourcesStorageMap["v1"] = stores
+	apiGroupInfo.NegotiatedSerializer = &noProtobufSerializer{r: apiGroupInfo.NegotiatedSerializer}
 	return &apiGroupInfo, nil
 }
 
