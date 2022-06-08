@@ -42,6 +42,10 @@ spec:
           imagePullSecrets:
             - name: oneimage-pull-12345678
           restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          shareProcessNamespace: true
+          terminationGracePeriodSeconds: 5
           containers:
             - name: oneimage
               image: "image-name"
