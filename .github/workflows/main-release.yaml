@@ -1,5 +1,9 @@
 name: main-release
 
+concurrency:
+  group: main-release
+  cancel-in-progress: true
+
 on:
   push:
     branches:
