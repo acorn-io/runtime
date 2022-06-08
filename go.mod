@@ -27,7 +27,7 @@ require (
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/moby/buildkit v0.10.1
+	github.com/moby/buildkit v0.10.3
 	github.com/moby/locker v1.0.1
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
