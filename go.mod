@@ -20,7 +20,7 @@ require (
 	github.com/acorn-io/baaah v0.0.0-20220531150438-f72533f31d03
 	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/containerd/console v1.0.3
-	github.com/containerd/containerd v1.6.4
+	github.com/containerd/containerd v1.6.6
 	github.com/google/go-containerregistry v0.9.0
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220526175912-f74686f9f86f
 	github.com/google/uuid v1.3.0
