@@ -11,6 +11,7 @@ metadata:
   name: acorn-controller
   namespace: acorn-system
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: acorn-controller

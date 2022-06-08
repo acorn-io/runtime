@@ -8,15 +8,20 @@ import (
 	"os"
 	"strings"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/install/progress"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/podstatus"
+	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/yaml"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -37,8 +42,30 @@ var (
 	files embed.FS
 )
 
+type Mode string
+
 type Options struct {
 	OutputFormat string
+	Config       apiv1.Config
+	Mode         uiv1.InstallMode
+	Progress     progress.Builder
+}
+
+func (o *Options) complete() *Options {
+	if o == nil {
+		o := &Options{}
+		return o.complete()
+	}
+
+	if o.Mode == "" {
+		o.Mode = uiv1.InstallModeBoth
+	}
+
+	if o.Progress == nil {
+		o.Progress = &term.Builder{}
+	}
+
+	return o
 }
 
 func DefaultImage() string {
@@ -50,8 +77,9 @@ func DefaultImage() string {
 }
 
 func Install(ctx context.Context, image string, opts *Options) error {
-	if opts != nil && opts.OutputFormat != "" {
-		return printObject(image, opts.OutputFormat)
+	opts = opts.complete()
+	if opts.OutputFormat != "" {
+		return printObject(image, opts.OutputFormat, opts.Config)
 	}
 
 	apply, err := newApply(ctx)
@@ -59,34 +87,48 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	logrus.Info("Installing ClusterRoles")
-	if err := applyRoles(apply); err != nil {
-		return err
+	if opts.Mode.DoConfig() {
+		c, err := kclient.Default()
+		if err != nil {
+			return err
+		}
+		if err := config.Set(ctx, c, &opts.Config); err != nil {
+			return err
+		}
 	}
 
-	logrus.Info("Installing APIServer and Controller")
-	if err := applyDeployments(image, apply); err != nil {
-		return err
+	if opts.Mode.DoResources() {
+		s := opts.Progress.New("Installing ClusterRoles")
+		if err := applyRoles(apply); err != nil {
+			return s.Fail(err)
+		}
+		s.Success()
+
+		s = opts.Progress.New("Installing APIServer and Controller")
+		if err := applyDeployments(image, apply); err != nil {
+			return s.Fail(err)
+		}
+		s.Success()
+
+		kclient, err := kclient.Default()
+		if err != nil {
+			return err
+		}
+
+		if err := waitController(ctx, opts.Progress, image, kclient); err != nil {
+			return err
+		}
+
+		if err := waitAPI(ctx, opts.Progress, image, kclient); err != nil {
+			return err
+		}
 	}
 
-	kclient, err := kclient.Default()
-	if err != nil {
-		return err
-	}
-
-	if err := waitController(ctx, image, kclient); err != nil {
-		return err
-	}
-
-	if err := waitAPI(ctx, image, kclient); err != nil {
-		return err
-	}
-
-	logrus.Info("Installation done")
+	pterm.Success.Println("Installation done")
 	return nil
 }
 
-func waitDeployment(ctx context.Context, client client.WithWatch, imageName, name string) error {
+func waitDeployment(ctx context.Context, s progress.Progress, client client.WithWatch, imageName, name string) error {
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -102,7 +144,7 @@ func waitDeployment(ctx context.Context, client client.WithWatch, imageName, nam
 			if status.Reason == "Running" {
 				return true, nil
 			}
-			logrus.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
+			s.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
 			return false, nil
 		})
 		return err
@@ -112,7 +154,7 @@ func waitDeployment(ctx context.Context, client client.WithWatch, imageName, nam
 		_, err := watcher.New[*appsv1.Deployment](client).ByName(ctx, "acorn-system", name, func(dep *appsv1.Deployment) (bool, error) {
 			for _, cond := range dep.Status.Conditions {
 				if cond.Type == appsv1.DeploymentAvailable {
-					logrus.Infof("Deployment acorn-system/%s: %s=%s (%s) %s", name, cond.Type, cond.Status, cond.Reason, cond.Message)
+					//s.Infof("Deployment acorn-system/%s: %s=%s (%s) %s", name, cond.Type, cond.Status, cond.Reason, cond.Message)
 					if cond.Status == corev1.ConditionTrue && dep.Generation == dep.Status.ObservedGeneration && dep.Status.UpdatedReplicas == 1 && dep.Status.ReadyReplicas == 1 {
 						return true, nil
 					}
@@ -126,22 +168,22 @@ func waitDeployment(ctx context.Context, client client.WithWatch, imageName, nam
 	return eg.Wait()
 }
 
-func waitController(ctx context.Context, image string, client client.WithWatch) error {
-	logrus.Info("Waiting for controller deployment to be available")
-	return waitDeployment(ctx, client, image, "acorn-controller")
+func waitController(ctx context.Context, p progress.Builder, image string, client client.WithWatch) error {
+	s := p.New("Waiting for controller deployment to be available")
+	return s.Fail(waitDeployment(ctx, s, client, image, "acorn-controller"))
 }
 
-func waitAPI(ctx context.Context, image string, client client.WithWatch) error {
-	logrus.Info("Waiting for API server deployment to be available")
-	if err := waitDeployment(ctx, client, image, "acorn-api"); err != nil {
-		return err
+func waitAPI(ctx context.Context, p progress.Builder, image string, client client.WithWatch) error {
+	s := p.New("Waiting for API server deployment to be available")
+	if err := waitDeployment(ctx, s, client, image, "acorn-api"); err != nil {
+		return s.Fail(err)
 	}
 
-	logrus.Info("Waiting for API service to be available")
+	s.Infof("Waiting for API service to be available")
 	_, err := watcher.New[*v1.APIService](client).ByName(ctx, "", "v1.api.acorn.io", func(apiService *v1.APIService) (bool, error) {
 		for _, cond := range apiService.Status.Conditions {
 			if cond.Type == v1.Available {
-				logrus.Infof("APIServer v1.api.acorn.io: %s=%s (%s) %s", cond.Type, cond.Status, cond.Reason, cond.Message)
+				s.Infof("APIServer v1.api.acorn.io: %s=%s (%s) %s", cond.Type, cond.Status, cond.Reason, cond.Message)
 				if cond.Status == v1.ConditionTrue {
 					return true, nil
 				}
@@ -149,30 +191,47 @@ func waitAPI(ctx context.Context, image string, client client.WithWatch) error {
 		}
 		return false, nil
 	})
-	return err
+	return s.Fail(err)
 }
 
-func printObject(image, format string) error {
+func printObject(image, format string, cfg apiv1.Config) error {
+	var objs []runtime.Object
+
 	roles, err := Roles()
 	if err != nil {
 		return err
 	}
+	objs = append(objs, roles...)
+
+	namespace, err := Namespace()
+	if err != nil {
+		return err
+	}
+	objs = append(objs, namespace...)
 
 	deps, err := Deployments(image)
 	if err != nil {
 		return err
 	}
+	objs = append(objs, deps...)
+
+	cfgs, err := Config(cfg)
+	if err != nil {
+		return err
+	}
+
+	objs = append(objs, cfgs...)
 
 	if format == "json" {
 		m := map[string]interface{}{
-			"items": deps,
+			"items": objs,
 		}
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		return enc.Encode(m)
 	}
 
-	data, err := yaml.Export(append(roles, deps...)...)
+	data, err := yaml.Export(objs...)
 	if err != nil {
 		return err
 	}
@@ -182,10 +241,17 @@ func printObject(image, format string) error {
 }
 
 func applyDeployments(imageName string, apply apply.Apply) error {
-	objs, err := Deployments(imageName)
+	objs, err := Namespace()
 	if err != nil {
 		return err
 	}
+
+	deps, err := Deployments(imageName)
+	if err != nil {
+		return err
+	}
+
+	objs = append(objs, deps...)
 	return apply.ApplyObjects(objs...)
 }
 
@@ -206,6 +272,18 @@ func applyRoles(apply apply.Apply) error {
 		return err
 	}
 	return nil
+}
+
+func Config(cfg apiv1.Config) ([]runtime.Object, error) {
+	cfgObj, err := config.AsConfigMap(&cfg)
+	if err != nil {
+		return nil, err
+	}
+	return []runtime.Object{cfgObj}, nil
+}
+
+func Namespace() ([]runtime.Object, error) {
+	return objectsFromFile("namespace.yaml")
 }
 
 func Deployments(runtimeImage string) ([]runtime.Object, error) {

@@ -21,6 +21,10 @@ func Default() (client.WithWatch, error) {
 	return New(cfg)
 }
 
+func DefaultConfig() (*rest.Config, error) {
+	return restconfig.New(scheme.Scheme)
+}
+
 func DefaultInterface() (kubernetes.Interface, error) {
 	cfg, err := restconfig.New(scheme.Scheme)
 	if err != nil {

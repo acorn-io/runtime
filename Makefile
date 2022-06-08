@@ -1,3 +1,9 @@
+download-latest-ui:
+	curl -sL https://cdn.acrn.io/ui/latest.tar.gz | tar xvzf - -C pkg/ui/server/static/dashboard --strip-components=1
+
+download-ui:
+	curl -sL https://cdn.acrn.io/ui/latest.tar.gz | tar xvzf - -C pkg/ui/server/static/dashboard --strip-components=1
+
 build:
 	CGO_ENABLED=0 go build -o bin/acorn -ldflags "-s -w" .
 

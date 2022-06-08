@@ -26,6 +26,10 @@ func Default() (Client, error) {
 }
 
 func New(restConfig *rest.Config, namespace string) (Client, error) {
+	if namespace == "" {
+		namespace = system.UserNamespace()
+	}
+
 	k8sclient, err := k8sclient.New(restConfig)
 	if err != nil {
 		return nil, err
