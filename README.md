@@ -1,5 +1,7 @@
 ### WARNING: Consuming this project can expose you to chemicals, which are known to the State of California to cause cancer and birth defects or other reproductive harm.
 
+[![main-release](https://github.com/acorn-io/acorn/actions/workflows/main-release.yaml/badge.svg)](https://github.com/acorn-io/acorn/actions/workflows/main-release.yaml)
+
 ### Quick Start 
 Please see [the Quick Start documentation](docs/docs/20-quickstart.md)
 
