@@ -121,6 +121,6 @@ func progress(ctx context.Context, streams streams.Streams) chan *buildkit.Solve
 	}
 
 	ch := make(chan *buildkit.SolveStatus, 1)
-	go func() { _, _ = progressui.DisplaySolveStatus(ctx, "", c, streams.Out, ch) }()
+	go func() { _, _ = progressui.DisplaySolveStatus(ctx, "", c, streams.Err, ch) }()
 	return ch
 }
