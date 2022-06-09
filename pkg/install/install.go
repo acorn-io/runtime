@@ -143,22 +143,24 @@ func waitDeployment(ctx context.Context, s progress.Progress, client client.With
 	defer cancel()
 
 	eg, _ := errgroup.WithContext(ctx)
-	eg.Go(func() error {
-		_, err := watcher.New[*corev1.Pod](client).BySelector(childCtx, "acorn-system", labels.SelectorFromSet(map[string]string{
-			"app": name,
-		}), func(pod *corev1.Pod) (bool, error) {
-			if pod.Spec.Containers[0].Image != imageName {
+	if scale > 0 {
+		eg.Go(func() error {
+			_, err := watcher.New[*corev1.Pod](client).BySelector(childCtx, "acorn-system", labels.SelectorFromSet(map[string]string{
+				"app": name,
+			}), func(pod *corev1.Pod) (bool, error) {
+				if pod.Spec.Containers[0].Image != imageName {
+					return false, nil
+				}
+				status := podstatus.GetStatus(pod)
+				if status.Reason == "Running" {
+					return true, nil
+				}
+				s.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
 				return false, nil
-			}
-			status := podstatus.GetStatus(pod)
-			if status.Reason == "Running" {
-				return true, nil
-			}
-			s.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
-			return false, nil
+			})
+			return err
 		})
-		return err
-	})
+	}
 
 	eg.Go(func() error {
 		_, err := watcher.New[*appsv1.Deployment](client).ByName(ctx, "acorn-system", name, func(dep *appsv1.Deployment) (bool, error) {
@@ -187,6 +189,10 @@ func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string
 	s := p.New("Waiting for API server deployment to be available")
 	if err := waitDeployment(ctx, s, client, image, "acorn-api", int32(replicas)); err != nil {
 		return s.Fail(err)
+	}
+
+	if replicas == 0 {
+		return nil
 	}
 
 	s.Infof("Waiting for API service to be available")
