@@ -19,7 +19,9 @@ acorn init
 ### Options
 
 ```
+      --api-server-replicas int               acorn-api deployment replica count
       --cluster-domains strings               The externally addressable cluster domain (default .local.on-acorn.io)
+      --controller-replicas int               acorn-controller deployment replica count
   -h, --help                                  help for init
       --image string                          Override the default image used for the deployment
       --ingress-class-name string             The ingress class name to assign to all created ingress resources (default '')
