@@ -11,3 +11,4 @@
 /releases
 /integration/client/apiserver.local.config
 /apiserver.local.config
+/pkg/ui/server/static/dashboard
