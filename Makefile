@@ -20,7 +20,7 @@ validate-ci:
 	go generate
 	go mod tidy
 	go run tools/gendocs/main.go
-	if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then \
+	if [ -n "$$(git status --porcelain)" ]; then \
 		git status --porcelain --untracked-files=no; \
 		echo "Encountered dirty repo!"; \
 		exit 1 \

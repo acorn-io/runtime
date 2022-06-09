@@ -22,6 +22,9 @@ type Init struct {
 	Image  string `usage:"Override the default image used for the deployment"`
 	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 
+	APIServerReplicas  *int `usage:"acorn-api deployment replica count" name:"api-server-replicas"`
+	ControllerReplicas *int `usage:"acorn-controller deployment replica count"`
+
 	apiv1.Config
 
 	Mode string `usage:"Initialize only 'config', 'resources', or 'both' (default 'both')"`
@@ -34,7 +37,9 @@ func (i *Init) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return install.Install(cmd.Context(), image, &install.Options{
-		OutputFormat: i.Output,
-		Config:       i.Config,
+		OutputFormat:       i.Output,
+		Config:             i.Config,
+		APIServerReplicas:  i.APIServerReplicas,
+		ControllerReplicas: i.ControllerReplicas,
 	})
 }

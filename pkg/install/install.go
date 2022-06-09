@@ -45,10 +45,12 @@ var (
 type Mode string
 
 type Options struct {
-	OutputFormat string
-	Config       apiv1.Config
-	Mode         uiv1.InstallMode
-	Progress     progress.Builder
+	OutputFormat       string
+	APIServerReplicas  *int
+	ControllerReplicas *int
+	Config             apiv1.Config
+	Mode               uiv1.InstallMode
+	Progress           progress.Builder
 }
 
 func (o *Options) complete() *Options {
@@ -65,6 +67,14 @@ func (o *Options) complete() *Options {
 		o.Progress = &term.Builder{}
 	}
 
+	if o.APIServerReplicas == nil {
+		o.APIServerReplicas = &[]int{1}[0]
+	}
+
+	if o.ControllerReplicas == nil {
+		o.ControllerReplicas = &[]int{1}[0]
+	}
+
 	return o
 }
 
@@ -79,7 +89,7 @@ func DefaultImage() string {
 func Install(ctx context.Context, image string, opts *Options) error {
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
-		return printObject(image, opts.OutputFormat, opts.Config)
+		return printObject(image, opts)
 	}
 
 	apply, err := newApply(ctx)
@@ -105,7 +115,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		s.Success()
 
 		s = opts.Progress.New("Installing APIServer and Controller")
-		if err := applyDeployments(image, apply); err != nil {
+		if err := applyDeployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply); err != nil {
 			return s.Fail(err)
 		}
 		s.Success()
@@ -115,11 +125,11 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			return err
 		}
 
-		if err := waitController(ctx, opts.Progress, image, kclient); err != nil {
+		if err := waitController(ctx, opts.Progress, *opts.ControllerReplicas, image, kclient); err != nil {
 			return err
 		}
 
-		if err := waitAPI(ctx, opts.Progress, image, kclient); err != nil {
+		if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, kclient); err != nil {
 			return err
 		}
 	}
@@ -128,7 +138,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	return nil
 }
 
-func waitDeployment(ctx context.Context, s progress.Progress, client client.WithWatch, imageName, name string) error {
+func waitDeployment(ctx context.Context, s progress.Progress, client client.WithWatch, imageName, name string, scale int32) error {
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -155,7 +165,7 @@ func waitDeployment(ctx context.Context, s progress.Progress, client client.With
 			for _, cond := range dep.Status.Conditions {
 				if cond.Type == appsv1.DeploymentAvailable {
 					//s.Infof("Deployment acorn-system/%s: %s=%s (%s) %s", name, cond.Type, cond.Status, cond.Reason, cond.Message)
-					if cond.Status == corev1.ConditionTrue && dep.Generation == dep.Status.ObservedGeneration && dep.Status.UpdatedReplicas == 1 && dep.Status.ReadyReplicas == 1 {
+					if cond.Status == corev1.ConditionTrue && dep.Generation == dep.Status.ObservedGeneration && dep.Status.UpdatedReplicas == scale && dep.Status.ReadyReplicas == scale {
 						return true, nil
 					}
 				}
@@ -168,14 +178,14 @@ func waitDeployment(ctx context.Context, s progress.Progress, client client.With
 	return eg.Wait()
 }
 
-func waitController(ctx context.Context, p progress.Builder, image string, client client.WithWatch) error {
+func waitController(ctx context.Context, p progress.Builder, replicas int, image string, client client.WithWatch) error {
 	s := p.New("Waiting for controller deployment to be available")
-	return s.Fail(waitDeployment(ctx, s, client, image, "acorn-controller"))
+	return s.Fail(waitDeployment(ctx, s, client, image, "acorn-controller", int32(replicas)))
 }
 
-func waitAPI(ctx context.Context, p progress.Builder, image string, client client.WithWatch) error {
+func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string, client client.WithWatch) error {
 	s := p.New("Waiting for API server deployment to be available")
-	if err := waitDeployment(ctx, s, client, image, "acorn-api"); err != nil {
+	if err := waitDeployment(ctx, s, client, image, "acorn-api", int32(replicas)); err != nil {
 		return s.Fail(err)
 	}
 
@@ -194,7 +204,7 @@ func waitAPI(ctx context.Context, p progress.Builder, image string, client clien
 	return s.Fail(err)
 }
 
-func printObject(image, format string, cfg apiv1.Config) error {
+func printObject(image string, opts *Options) error {
 	var objs []runtime.Object
 
 	roles, err := Roles()
@@ -209,20 +219,20 @@ func printObject(image, format string, cfg apiv1.Config) error {
 	}
 	objs = append(objs, namespace...)
 
-	deps, err := Deployments(image)
+	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas)
 	if err != nil {
 		return err
 	}
 	objs = append(objs, deps...)
 
-	cfgs, err := Config(cfg)
+	cfgs, err := Config(opts.Config)
 	if err != nil {
 		return err
 	}
 
 	objs = append(objs, cfgs...)
 
-	if format == "json" {
+	if opts.OutputFormat == "json" {
 		m := map[string]interface{}{
 			"items": objs,
 		}
@@ -240,13 +250,13 @@ func printObject(image, format string, cfg apiv1.Config) error {
 	return err
 }
 
-func applyDeployments(imageName string, apply apply.Apply) error {
+func applyDeployments(imageName string, apiServerReplicas, controllerReplicas int, apply apply.Apply) error {
 	objs, err := Namespace()
 	if err != nil {
 		return err
 	}
 
-	deps, err := Deployments(imageName)
+	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas)
 	if err != nil {
 		return err
 	}
@@ -286,7 +296,7 @@ func Namespace() ([]runtime.Object, error) {
 	return objectsFromFile("namespace.yaml")
 }
 
-func Deployments(runtimeImage string) ([]runtime.Object, error) {
+func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int) ([]runtime.Object, error) {
 	apiServerObjects, err := objectsFromFile("apiserver.yaml")
 	if err != nil {
 		return nil, err
@@ -297,7 +307,30 @@ func Deployments(runtimeImage string) ([]runtime.Object, error) {
 		return nil, err
 	}
 
+	apiServerObjects, err = replaceReplicas(apiServerReplicas, apiServerObjects)
+	if err != nil {
+		return nil, err
+	}
+
+	controllerObjects, err = replaceReplicas(controllerReplicas, controllerObjects)
+	if err != nil {
+		return nil, err
+	}
+
 	return replaceImage(runtimeImage, append(apiServerObjects, controllerObjects...))
+}
+
+func replaceReplicas(replicas int, objs []runtime.Object) ([]runtime.Object, error) {
+	for _, obj := range objs {
+		ustr := obj.(*unstructured.Unstructured)
+		if ustr.GetKind() == "Deployment" {
+			err := unstructured.SetNestedField(ustr.Object, int64(replicas), "spec", "replicas")
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return objs, nil
 }
 
 func replaceImage(image string, objs []runtime.Object) ([]runtime.Object, error) {
