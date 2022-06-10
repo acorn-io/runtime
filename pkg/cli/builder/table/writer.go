@@ -42,7 +42,7 @@ func NewWriter(values [][]string, namespace string, quiet bool, format string) W
 		t.HeaderFormat = ""
 		t.ValueFormat = "{{.Obj | fullID }}\n"
 		for _, row := range values {
-			if len(row) > 1 && row[0] == "NAME" {
+			if len(row) > 1 && row[0] == "Name" {
 				_, t.ValueFormat = SimpleFormat([][]string{row})
 			}
 		}
