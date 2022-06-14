@@ -12,9 +12,11 @@ import (
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/run"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -254,6 +256,89 @@ func TestDeployParam(t *testing.T) {
 	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
 }
 
+func TestPublishAcornHTTP(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
+	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
+		Cwd:       "./testdata/nested",
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(appInstance *v1.AppInstance) bool {
+		return appInstance.Status.Namespace != ""
+	})
+
+	childApp := helper.Wait(t, client.Watch, &v1.AppInstanceList{}, func(app *v1.AppInstance) bool {
+		return app.Namespace == appInstance.Status.Namespace && app.Status.Namespace != ""
+	})
+
+	ingress := helper.Wait(t, client.Watch, &networkingv1.IngressList{}, func(ingress *networkingv1.Ingress) bool {
+		return ingress.Namespace == childApp.Status.Namespace &&
+			ingress.Name == "nginx"
+	})
+
+	assert.Equal(t, "/", ingress.Spec.Rules[0].HTTP.Paths[0].Path)
+	assert.Equal(t, int32(81), ingress.Spec.Rules[0].HTTP.Paths[0].Backend.Service.Port.Number)
+	assert.Equal(t, "nginx", ingress.Spec.Rules[0].HTTP.Paths[0].Backend.Service.Name)
+}
+
+func TestAcornServiceExists(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, client)
+
+	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
+		Cwd:       "./testdata/nested",
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
+		Namespace: ns.Name,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = helper.Wait(t, client.Watch, &corev1.ServiceList{}, func(obj *corev1.Service) bool {
+		if !(obj.Namespace == appInstance.Namespace &&
+			obj.Name == appInstance.Name &&
+			obj.Spec.Type == corev1.ServiceTypeExternalName) {
+			return false
+		}
+
+		service := &corev1.Service{}
+		parts := strings.Split(obj.Spec.ExternalName, ".")
+		err := client.Get(ctx, router.Key(parts[1], parts[0]), service)
+		if err == nil {
+			assert.Len(t, service.Spec.Ports, 1)
+			assert.Equal(t, int32(83), service.Spec.Ports[0].Port)
+			assert.Equal(t, int32(83), service.Spec.Ports[0].TargetPort.IntVal)
+			return true
+		}
+
+		return false
+	})
+}
+
 func TestNested(t *testing.T) {
 	helper.StartController(t)
 
@@ -287,4 +372,16 @@ func TestNested(t *testing.T) {
 		}
 		return job.Status.Succeeded == 1
 	})
+
+	service := &v1.AppInstance{}
+	if err := client.Get(ctx, router.Key(appInstance.Status.Namespace, "service"), service); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, service.Spec.Ports, 3)
+	assert.False(t, service.Spec.Ports[0].Publish)
+	assert.False(t, service.Spec.Ports[1].Publish)
+	assert.True(t, service.Spec.Ports[2].Publish)
+	assert.Equal(t, int32(83), service.Spec.Ports[2].Port)
+	assert.Equal(t, int32(81), service.Spec.Ports[2].TargetPort)
 }

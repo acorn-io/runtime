@@ -26,12 +26,14 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				Labels:      opts.Labels,
 			},
 			Spec: v1.AppInstanceSpec{
-				Image:        image,
-				Endpoints:    opts.Endpoints,
-				DeployParams: opts.DeployParams,
-				Volumes:      opts.Volumes,
-				Secrets:      opts.Secrets,
-				Services:     opts.Services,
+				Image:            image,
+				Endpoints:        opts.Endpoints,
+				DeployParams:     opts.DeployParams,
+				Volumes:          opts.Volumes,
+				Secrets:          opts.Secrets,
+				Services:         opts.Services,
+				PublishProtocols: opts.PublishProtocols,
+				Ports:            opts.Ports,
 			},
 		}
 	)
@@ -59,9 +61,31 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
 	app.Spec.Endpoints = mergeEndpoints(app.Spec.Endpoints, opts.Endpoints)
 	app.Spec.Services = mergeServices(app.Spec.Services, opts.Services)
+	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
 	app.Spec.DeployParams = typed.Concat(app.Spec.DeployParams, opts.DeployParams)
+	if len(opts.PublishProtocols) > 0 {
+		app.Spec.PublishProtocols = opts.PublishProtocols
+	}
 
 	return app, c.Client.Update(ctx, app)
+}
+
+func mergePorts(appPorts, optsPorts []v1.PortBinding) []v1.PortBinding {
+	for _, newPort := range optsPorts {
+		found := false
+		for i, existingPort := range appPorts {
+			if existingPort.TargetPort == newPort.TargetPort {
+				appPorts[i] = newPort
+				found = true
+				break
+			}
+		}
+		if !found {
+			appPorts = append(appPorts, newPort)
+		}
+	}
+
+	return appPorts
 }
 
 func mergeServices(appServices, optsServices []v1.ServiceBinding) []v1.ServiceBinding {

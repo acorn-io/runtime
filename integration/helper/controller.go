@@ -142,7 +142,7 @@ func StartController(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := c.Start(ctx); err != nil {
+		if err := c.Start(context.Background()); err != nil {
 			t.Fatal(err)
 		}
 	})

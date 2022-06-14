@@ -62,25 +62,29 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 }
 
 type AppUpdateOptions struct {
-	Annotations  map[string]string
-	Labels       map[string]string
-	Endpoints    []v1.EndpointBinding
-	Volumes      []v1.VolumeBinding
-	Secrets      []v1.SecretBinding
-	Services     []v1.ServiceBinding
-	DeployParams map[string]interface{}
-	Image        string
+	Annotations      map[string]string
+	Labels           map[string]string
+	Endpoints        []v1.EndpointBinding
+	Volumes          []v1.VolumeBinding
+	Secrets          []v1.SecretBinding
+	Services         []v1.ServiceBinding
+	Ports            []v1.PortBinding
+	PublishProtocols []v1.Protocol
+	DeployParams     map[string]interface{}
+	Image            string
 }
 
 type AppRunOptions struct {
-	Name         string
-	Annotations  map[string]string
-	Labels       map[string]string
-	Endpoints    []v1.EndpointBinding
-	Volumes      []v1.VolumeBinding
-	Secrets      []v1.SecretBinding
-	Services     []v1.ServiceBinding
-	DeployParams map[string]interface{}
+	Name             string
+	Annotations      map[string]string
+	Labels           map[string]string
+	Endpoints        []v1.EndpointBinding
+	Volumes          []v1.VolumeBinding
+	Secrets          []v1.SecretBinding
+	Services         []v1.ServiceBinding
+	Ports            []v1.PortBinding
+	PublishProtocols []v1.Protocol
+	DeployParams     map[string]interface{}
 }
 
 type ImageProgress struct {

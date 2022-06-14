@@ -15,10 +15,10 @@ status:
         image: "foo"
         ports:
           - port: 80
-            containerPort: 81
+            internalPort: 81
             protocol: http
-            publish: true
+            expose: true
           - port: 90
-            containerPort: 91
+            internalPort: 91
             protocol: tcp
-            publish: true
+            expose: true

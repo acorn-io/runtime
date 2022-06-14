@@ -37,18 +37,17 @@ type AppInstance struct {
 }
 
 type AppInstanceSpec struct {
-	Image           string            `json:"image,omitempty"`
-	Stop            *bool             `json:"stop,omitempty"`
-	ReattachVolumes *bool             `json:"reattachVolumes,omitempty"`
-	ReattachSecrets *bool             `json:"reattachSecrets,omitempty"`
-	Volumes         []VolumeBinding   `json:"volumes,omitempty"`
-	Secrets         []SecretBinding   `json:"secrets,omitempty"`
-	Endpoints       []EndpointBinding `json:"endpoints,omitempty"`
-	Services        []ServiceBinding  `json:"services,omitempty"`
-	PublishAllPorts bool              `json:"publishAllPorts,omitempty"`
-	Ports           []AppPort         `json:"ports,omitempty"`
-	DeployParams    GenericMap        `json:"deployParams,omitempty"`
-	Images          map[string]string `json:"images,omitempty"`
+	Image            string            `json:"image,omitempty"`
+	Stop             *bool             `json:"stop,omitempty"`
+	ReattachVolumes  *bool             `json:"reattachVolumes,omitempty"`
+	ReattachSecrets  *bool             `json:"reattachSecrets,omitempty"`
+	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
+	Secrets          []SecretBinding   `json:"secrets,omitempty"`
+	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`
+	Services         []ServiceBinding  `json:"services,omitempty"`
+	PublishProtocols []Protocol        `json:"publishProtocols,omitempty"`
+	Ports            []PortBinding     `json:"ports,omitempty"`
+	DeployParams     GenericMap        `json:"deployParams,omitempty"`
 }
 
 type ServiceBinding struct {
@@ -89,10 +88,11 @@ type JobStatus struct {
 }
 
 type AppColumns struct {
-	Healthy   string `json:"healthy,omitempty" column:"name=HEALTHY,jsonpath=.status.columns.healthy"`
-	UpToDate  string `json:"upToDate,omitempty" column:"name=UPTODATE,jsonpath=.status.columns.upToDate"`
-	Message   string `json:"message,omitempty" column:"name=MESSAGE,jsonpath=.status.columns.message"`
-	Endpoints string `json:"endpoints,omitempty" column:"name=ENDPOINTS,jsonpath=.status.columns.endpoints"`
+	Healthy   string `json:"healthy,omitempty" column:"name=Healthy,jsonpath=.status.columns.healthy"`
+	UpToDate  string `json:"upToDate,omitempty" column:"name=Up-To-Date,jsonpath=.status.columns.upToDate"`
+	Message   string `json:"message,omitempty" column:"name=Message,jsonpath=.status.columns.message"`
+	Endpoints string `json:"endpoints,omitempty" column:"name=Endpoints,jsonpath=.status.columns.endpoints"`
+	Created   string `json:"created,omitempty" column:"name=Created,jsonpath=.metadata.creationTimestamp"`
 }
 
 type AppInstanceStatus struct {
@@ -108,10 +108,10 @@ type AppInstanceStatus struct {
 }
 
 type Endpoint struct {
-	Target     string          `json:"target,omitempty"`
-	TargetPort int32           `json:"targetPort,omitempty"`
-	Address    string          `json:"address,omitempty"`
-	Protocol   PublishProtocol `json:"protocol,omitempty"`
+	Target     string   `json:"target,omitempty"`
+	TargetPort int32    `json:"targetPort,omitempty"`
+	Address    string   `json:"address,omitempty"`
+	Protocol   Protocol `json:"protocol,omitempty"`
 }
 
 func (a *AppInstance) Conditions() *map[string]Condition {

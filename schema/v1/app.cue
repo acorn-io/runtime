@@ -23,7 +23,7 @@ package v1
 #Container: {
 	#ContainerBase
 	scale?: >=0
-	alias:  string | [...string]
+	alias?: string
 	sidecars: [string]: #Sidecar
 }
 
@@ -53,7 +53,7 @@ package v1
 	[=~"work[dD]ir|working[dD]ir"]: string | *""
 	[=~"interactive|tty|stdin"]:    bool | *false
 	ports:                          #Port | *[...#Port]
-	publish:                        #Port | *[...#Port]
+	expose:                         #Port | *[...#Port]
 	[=~"probes|probe"]:             #Probes
 }
 
@@ -164,10 +164,10 @@ package v1
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated | #SecretTemplate | #SecretToken
 
 #Acorn: {
-	image?:  string
-	build?:  string | #AcornBuild
-	ports:   #AppPort | *[...#AppPort]
-	publish: #AppPort | *[...#AppPort]
+	image?: string
+	build?: string | #AcornBuild
+	ports:  #AppPort | *[...#AppPort]
+	expose: #AppPort | *[...#AppPort]
 	volumes: [...string]
 	secrets: [...string]
 	params: [string]: _
@@ -191,14 +191,7 @@ package v1
 		for k, v in containers {
 			"\(k)": "container"
 			if v["alias"] != _|_ {
-				if (v.alias & string) != _|_ {
-					"\(v.alias)": "alias"
-				}
-				if !((v.alias & string) != _|_) {
-					for alias in v.alias {
-						"\(alias)": "alias"
-					}
-				}
+				"\(v.alias)": "alias"
 			}
 		}
 		for k, v in jobs {

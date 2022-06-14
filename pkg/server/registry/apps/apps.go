@@ -110,17 +110,19 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 	var (
 		app     *v1.AppInstance
 		runOpts = run.Options{
-			Name:         params.Name,
-			GenerateName: params.GenerateName,
-			Namespace:    params.Namespace,
-			Annotations:  params.Annotations,
-			Labels:       params.Labels,
-			Endpoints:    params.Spec.Endpoints,
-			Client:       s.client,
-			DeployParams: params.Spec.DeployParams,
-			Volumes:      params.Spec.Volumes,
-			Secrets:      params.Spec.Secrets,
-			Services:     params.Spec.Services,
+			Name:             params.Name,
+			GenerateName:     params.GenerateName,
+			Namespace:        params.Namespace,
+			Annotations:      params.Annotations,
+			Labels:           params.Labels,
+			Endpoints:        params.Spec.Endpoints,
+			Client:           s.client,
+			DeployParams:     params.Spec.DeployParams,
+			Volumes:          params.Spec.Volumes,
+			Secrets:          params.Spec.Secrets,
+			Services:         params.Spec.Services,
+			Ports:            params.Spec.Ports,
+			PublishProtocols: params.Spec.PublishProtocols,
 		}
 	)
 

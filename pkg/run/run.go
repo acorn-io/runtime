@@ -3,10 +3,12 @@ package run
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/goombaio/namegenerator"
@@ -19,6 +21,57 @@ import (
 var (
 	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
 )
+
+func validProto(p string) (v1.Protocol, bool) {
+	ret := v1.Protocol(p)
+	switch ret {
+	case v1.ProtocolTCP:
+		fallthrough
+	case v1.ProtocolUDP:
+		fallthrough
+	case v1.ProtocolHTTP:
+		fallthrough
+	case v1.ProtocolAll:
+		fallthrough
+	case v1.ProtocolNone:
+		return ret, true
+	}
+	return ret, false
+}
+
+func ParsePorts(args []string) (result []v1.PortBinding, protos []v1.Protocol, _ error) {
+	for _, arg := range args {
+		if p, ok := validProto(arg); ok {
+			protos = append(protos, p)
+			continue
+		}
+
+		port, proto, _ := strings.Cut(arg, "/")
+		port, targetPort, ok := strings.Cut(port, ":")
+		if !ok {
+			targetPort = port
+		}
+		targetPort = strings.TrimSpace(targetPort)
+		port = strings.TrimSpace(port)
+		if targetPort == "" || port == "" {
+			return nil, nil, fmt.Errorf("invalid service binding [%s] must not have zero length value", arg)
+		}
+		iTargetPort, err := strconv.Atoi(targetPort)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid port %s: %w", targetPort, err)
+		}
+		iPort, err := strconv.Atoi(port)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid port %s: %w", port, err)
+		}
+		result = append(result, v1.PortBinding{
+			TargetPort: int32(iTargetPort),
+			Port:       int32(iPort),
+			Protocol:   v1.Protocol(proto),
+		})
+	}
+	return
+}
 
 func ParseLinks(args []string) (result []v1.ServiceBinding, _ error) {
 	for _, arg := range args {
@@ -97,17 +150,19 @@ func ParseEndpoints(args []string) (result []v1.EndpointBinding, _ error) {
 }
 
 type Options struct {
-	Name         string
-	GenerateName string
-	Namespace    string
-	Annotations  map[string]string
-	Labels       map[string]string
-	Endpoints    []v1.EndpointBinding
-	Volumes      []v1.VolumeBinding
-	Secrets      []v1.SecretBinding
-	Services     []v1.ServiceBinding
-	DeployParams map[string]interface{}
-	Client       client.WithWatch
+	Name             string
+	GenerateName     string
+	Namespace        string
+	Annotations      map[string]string
+	Labels           map[string]string
+	Endpoints        []v1.EndpointBinding
+	Volumes          []v1.VolumeBinding
+	Secrets          []v1.SecretBinding
+	Services         []v1.ServiceBinding
+	PublishProtocols []v1.Protocol
+	Ports            []v1.PortBinding
+	DeployParams     map[string]interface{}
+	Client           client.WithWatch
 }
 
 func (o *Options) Complete() (*Options, error) {
@@ -175,14 +230,25 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Annotations:  opts.Annotations,
 		},
 		Spec: v1.AppInstanceSpec{
-			PublishAllPorts: true,
-			Image:           image,
-			Endpoints:       opts.Endpoints,
-			Volumes:         opts.Volumes,
-			Secrets:         opts.Secrets,
-			Services:        opts.Services,
-			DeployParams:    opts.DeployParams,
+			Ports:            opts.Ports,
+			Image:            image,
+			Endpoints:        opts.Endpoints,
+			Volumes:          opts.Volumes,
+			Secrets:          opts.Secrets,
+			Services:         opts.Services,
+			DeployParams:     opts.DeployParams,
+			PublishProtocols: opts.PublishProtocols,
 		},
+	}
+
+	if len(app.Spec.PublishProtocols) == 0 && len(app.Spec.Ports) == 0 {
+		cfg, err := config.Get(ctx, opts.Client)
+		if err != nil {
+			return nil, err
+		}
+		for _, protocol := range cfg.PublishProtocolsByDefault {
+			app.Spec.PublishProtocols = append(app.Spec.PublishProtocols, v1.Protocol(protocol))
+		}
 	}
 
 	return app, opts.Client.Create(ctx, app)

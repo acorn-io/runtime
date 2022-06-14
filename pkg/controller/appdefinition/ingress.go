@@ -11,6 +11,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -158,10 +159,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 		return err
 	}
 
-	var ingressClassName *string
-	if *cfg.IngressClassName != "" {
-		ingressClassName = cfg.IngressClassName
-	}
+	ingressClassName := cfg.IngressClassName
 
 	// Look for Secrets in the app namespace that contain cert manager TLS certs
 	tlsCerts, err := getCerts(appInstance.Namespace, req)
@@ -171,26 +169,10 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		containerName := entry.Key
-		httpPorts := map[int]v1.Port{}
-		for _, port := range entry.Value.Ports {
-			if !port.Publish {
-				continue
-			}
-			switch port.Protocol {
-			case v1.ProtocolHTTP:
-				httpPorts[int(port.Port)] = port
-			}
-		}
-		for _, sidecar := range entry.Value.Sidecars {
-			for _, port := range sidecar.Ports {
-				if !port.Publish {
-					continue
-				}
-				switch port.Protocol {
-				case v1.ProtocolHTTP:
-					httpPorts[int(port.Port)] = port
-				}
-			}
+		httpPorts := map[int]v1.PortDef{}
+		ports := ports.PortsForIngress(ports.CollectPorts(entry.Value), appInstance.Spec.Ports, appInstance.Spec.PublishProtocols)
+		for _, port := range ports {
+			httpPorts[int(port.Port)] = port
 		}
 		if len(httpPorts) == 0 {
 			continue
@@ -222,12 +204,12 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 				hosts = append(hosts, hostPrefix+domain)
 			}
 			rules = append(rules, rule(hostPrefix+domain, containerName, defaultPort.Port))
-			for _, alias := range entry.Value.Aliases {
-				aliasPrefix := toPrefix(alias.Name, appInstance)
+			if entry.Value.Alias.Name != "" {
+				aliasPrefix := toPrefix(entry.Value.Alias.Name, appInstance)
 				if addClusterDomains {
 					hosts = append(hosts, aliasPrefix+domain)
 				}
-				rules = append(rules, rule(aliasPrefix+domain, alias.Name, defaultPort.Port))
+				rules = append(rules, rule(aliasPrefix+domain, entry.Value.Alias.Name, defaultPort.Port))
 			}
 		}
 
@@ -261,7 +243,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 				Labels:    containerLabels(appInstance, containerName),
 				Annotations: map[string]string{
 					labels.AcornHostnames:     strings.Join(hosts, ","),
-					labels.AcornPortNumber:    strconv.Itoa(int(defaultPort.ContainerPort)),
+					labels.AcornPortNumber:    strconv.Itoa(int(defaultPort.InternalPort)),
 					labels.AcornContainerName: containerName,
 				},
 			},

@@ -3,11 +3,12 @@ package cli
 import (
 	"fmt"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/flagparams"
 	"github.com/acorn-io/acorn/pkg/run"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -24,11 +25,13 @@ func NewUpdate() *cobra.Command {
 }
 
 type Update struct {
-	Image   string   `json:"image,omitempty"`
-	DNS     []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
-	Volumes []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
-	Secrets []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
-	Link    []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
+	Image      string   `json:"image,omitempty"`
+	DNS        []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
+	Volumes    []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
+	Secrets    []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Link       []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
+	PublishAll *bool    `usage:"Publish all exposed ports of application" short:"P"`
+	Publish    []string `usage:"Publish exposed port of application (format [public:]private) (ex 81:80)" short:"p"`
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {
@@ -101,6 +104,19 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	opts.Services, err = run.ParseLinks(s.Link)
 	if err != nil {
 		return err
+	}
+
+	opts.Ports, opts.PublishProtocols, err = run.ParsePorts(s.Link)
+	if err != nil {
+		return err
+	}
+
+	if s.PublishAll != nil {
+		if *s.PublishAll {
+			opts.PublishProtocols = append(opts.PublishProtocols, v1.ProtocolAll)
+		} else {
+			opts.PublishProtocols = append(opts.PublishProtocols, v1.ProtocolNone)
+		}
 	}
 
 	app, err := c.AppUpdate(cmd.Context(), name, &opts)

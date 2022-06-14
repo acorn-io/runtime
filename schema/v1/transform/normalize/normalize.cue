@@ -8,29 +8,29 @@ import (
 	"strings"
 )
 
-#ToPublishPort: {
+#ToExposePort: {
 	IN="in": v1.#Port
 	out:     v1.#PortSpec
 	out:     {#ToPort & {in: IN}}.out & {
-		publish: true
+		expose: true
 	}
 }
 
-#ToAppPublishPort: {
+#ToAppExposePort: {
 	IN="in": v1.#AppPort
 	out:     v1.#AppPortSpec
 	out:     {#ToAppPort & {in: IN}}.out & {
-		publish: true
+		expose: true
 	}
 }
 
 #CombinePorts: {
 	IN="in": {
 		ports: [...v1.#PortSpec]
-		publish: [...v1.#PortSpec]
+		expose: [...v1.#PortSpec]
 	}
 	out: [...v1.#PortSpec]
-	out: IN.ports + IN.publish
+	out: IN.ports + IN.expose
 }
 
 #ToKVSplit: {
@@ -72,7 +72,7 @@ import (
 		_portPubPrivate: strings.SplitN(_portProto[0], ":", 2)
 		port:            strconv.ParseInt(_portPubPrivate[0], 10, 32)
 		if len(_portPubPrivate) == 2 {
-			targetPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
+			internalPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
 		}
 	}
 }
@@ -96,7 +96,7 @@ import (
 		_portPubPrivate: strings.SplitN(_portProto[0], ":", 2)
 		port:            strconv.ParseInt(_portPubPrivate[0], 10, 32)
 		if len(_portPubPrivate) == 2 {
-			containerPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
+			internalPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
 		}
 	}
 }
@@ -321,12 +321,7 @@ import (
 			schedule: IN.container.schedule
 		}
 		if IN.container["alias"] != _|_ {
-			if (IN.container.alias & string) != _|_ {
-				aliases: [{name: IN.container.alias}]
-			}
-			if !((IN.container.alias & string) != _|_) {
-				aliases: [ for alias in IN.container.alias {name: alias}]
-			}
+			alias: {name: IN.container.alias}
 		}
 		entrypoint: IN.container.entrypoint | strings.Split(IN.container.entrypoint, " ")
 		for x in ["command", "cmd"] {
@@ -391,16 +386,16 @@ import (
 				}]
 			}
 		} + {
-			if (IN.container["publish"] & int) != _|_ {
-				[{#ToPublishPort & {in: IN.container.publish}}.out]
+			if (IN.container["expose"] & int) != _|_ {
+				[{#ToExposePort & {in: IN.container.expose}}.out]
 			}
-			if (IN.container["publish"] & string) != _|_ {
-				[{#ToPublishPort & {in: IN.container.publish}}.out]
+			if (IN.container["expose"] & string) != _|_ {
+				[{#ToExposePort & {in: IN.container.expose}}.out]
 			}
-			if !((IN.container["publish"] & string) != _|_ ) &&
-				!((IN.container["publish"] & int) != _|_) {
-				[ for p in IN.container.publish {
-					{#ToPublishPort & {in: p}}.out
+			if !((IN.container["expose"] & string) != _|_ ) &&
+				!((IN.container["expose"] & int) != _|_) {
+				[ for p in IN.container.expose {
+					{#ToExposePort & {in: p}}.out
 				}]
 			}
 		}
@@ -454,16 +449,16 @@ import (
 				}]
 			}
 		} + {
-			if (IN["publish"] & int) != _|_ {
-				[{#ToAppPublishPort & {in: IN.publish}}.out]
+			if (IN["expose"] & int) != _|_ {
+				[{#ToAppExposePort & {in: IN.expose}}.out]
 			}
-			if (IN["publish"] & string) != _|_ {
-				[{#ToAppPublishPort & {in: IN.publish}}.out]
+			if (IN["expose"] & string) != _|_ {
+				[{#ToAppExposePort & {in: IN.expose}}.out]
 			}
-			if !((IN["publish"] & string) != _|_ ) &&
-				!((IN["publish"] & int) != _|_) {
-				[ for p in IN.publish {
-					{#ToAppPublishPort & {in: p}}.out
+			if !((IN["expose"] & string) != _|_ ) &&
+				!((IN["expose"] & int) != _|_) {
+				[ for p in IN.expose {
+					{#ToAppExposePort & {in: p}}.out
 				}]
 			}
 		}

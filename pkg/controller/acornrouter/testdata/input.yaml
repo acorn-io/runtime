@@ -9,7 +9,7 @@ spec:
   ports:
   - port: 80
     targetPort: 81
-    protocol: https
+    protocol: http
   - port: 90
     targetPort: 91
     protocol: tcp
@@ -21,10 +21,10 @@ status:
         image: foo
         ports:
         - port: 81
-          containerPort: 82
-          protocol: https
-          publish: true
+          internalPort: 82
+          protocol: http
+          expose: true
         - port: 91
-          containerPort: 92
+          internalPort: 92
           protocol: tcp
-          publish: true
+          expose: true

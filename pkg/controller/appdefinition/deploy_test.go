@@ -155,21 +155,21 @@ func TestPorts(t *testing.T) {
 					"test": {
 						Sidecars: map[string]v1.Container{
 							"left": {
-								Ports: []v1.Port{
+								Ports: []v1.PortDef{
 									{
-										Port:          90,
-										ContainerPort: 91,
-										Protocol:      v1.ProtocolHTTPS,
+										Port:         90,
+										InternalPort: 91,
+										Protocol:     v1.ProtocolHTTP,
 									},
 								},
 							},
 						},
 						WorkingDir: "something",
-						Ports: []v1.Port{
+						Ports: []v1.PortDef{
 							{
-								Port:          80,
-								ContainerPort: 81,
-								Protocol:      v1.ProtocolHTTP,
+								Port:         80,
+								InternalPort: 81,
+								Protocol:     v1.ProtocolHTTP,
 							},
 						},
 					},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -18,11 +19,11 @@ var (
 )
 
 func complete(c *apiv1.Config) {
-	if c.IngressClassName == nil {
-		c.IngressClassName = new(string)
-	}
 	if c.TLSEnabled == nil {
 		c.TLSEnabled = new(bool)
+	}
+	if len(c.PublishProtocolsByDefault) == 0 {
+		c.PublishProtocolsByDefault = []string{string(v1.ProtocolHTTP)}
 	}
 	if c.SetPodSecurityEnforceProfile == nil {
 		c.SetPodSecurityEnforceProfile = &[]bool{true}[0]
@@ -63,6 +64,11 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.ClusterDomains = nil
 	} else if len(newConfig.ClusterDomains) > 0 {
 		mergedConfig.ClusterDomains = newConfig.ClusterDomains
+	}
+	if len(newConfig.PublishProtocolsByDefault) > 0 && newConfig.PublishProtocolsByDefault[0] == "" {
+		mergedConfig.PublishProtocolsByDefault = nil
+	} else if len(newConfig.PublishProtocolsByDefault) > 0 {
+		mergedConfig.PublishProtocolsByDefault = newConfig.PublishProtocolsByDefault
 	}
 
 	return &mergedConfig
