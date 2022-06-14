@@ -46,7 +46,7 @@ package v1
 #ContainerSpec: {
 	#ContainerBaseSpec
 	scale?: >=0
-	aliases: [...#AliasSpec]
+	alias?: #AliasSpec
 	sidecars: [string]: #SidecarSpec
 }
 
@@ -160,15 +160,15 @@ package v1
 }
 
 #AppPortSpec: {
-	publish:    bool | *false
-	port:       int
-	targetPort: int | *port
-	protocol:   *"tcp" | "udp" | "http" | "https"
+	expose:       bool | *false
+	port:         int
+	internalPort: int | *port
+	protocol:     *"tcp" | "udp" | "http" | "https"
 }
 
 #PortSpec: {
-	publish:       bool | *false
-	port:          int
-	containerPort: int | *port
-	protocol:      *"tcp" | "udp" | "http" | "https"
+	expose:       bool | *false
+	port:         int
+	internalPort: int | *port
+	protocol:     *"tcp" | "udp" | "http" | "https"
 }

@@ -24,13 +24,13 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance, containerName str
 	}
 
 	for _, port := range service.Spec.Ports {
-		var protocol v1.PublishProtocol
+		var protocol v1.Protocol
 
 		switch port.Protocol {
 		case corev1.ProtocolTCP:
-			protocol = v1.PublishProtocolTCP
+			protocol = v1.ProtocolTCP
 		case corev1.ProtocolUDP:
-			protocol = v1.PublishProtocolTCP
+			protocol = v1.ProtocolTCP
 		default:
 			continue
 		}
@@ -96,7 +96,7 @@ func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName str
 			Target:     containerName,
 			TargetPort: int32(port),
 			Address:    hostname,
-			Protocol:   v1.PublishProtocolHTTP,
+			Protocol:   v1.ProtocolHTTP,
 		})
 	}
 

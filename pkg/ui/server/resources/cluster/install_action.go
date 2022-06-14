@@ -25,9 +25,11 @@ func Install(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	err := install.Install(req.Context(), image, &install.Options{
-		Progress: progress.NewStream(rw),
-		Config:   installOpts.Config,
-		Mode:     installOpts.Mode,
+		Progress:           progress.NewStream(rw),
+		Config:             installOpts.Config,
+		Mode:               installOpts.Mode,
+		APIServerReplicas:  installOpts.APIServerReplicas,
+		ControllerReplicas: installOpts.ControllerReplicas,
 	})
 	if err != nil {
 		apiContext.WriteError(err)

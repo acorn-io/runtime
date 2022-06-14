@@ -23,6 +23,7 @@ spec:
         acorn.io/acorn-name: app-name
         acorn.io/managed: "true"
     spec:
+      enableServiceLinks: false
       automountServiceAccountToken: false
       containers:
         - name: port-81
@@ -91,11 +92,11 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 80
-    targetPort: 81
+  - appProtocol: HTTP
+    port: 80
     protocol: TCP
-    appProtocol: HTTPS
     name: "80"
+    targetPort: 81
   - port: 90
     targetPort: 91
     protocol: TCP

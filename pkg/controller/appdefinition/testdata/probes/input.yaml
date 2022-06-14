@@ -28,6 +28,6 @@ status:
                 command: ["/bin/true"]
         ports:
         - port: 80
-          containerPort: 81
+          internalPort: 81
           protocol: http
         image: "image-name"

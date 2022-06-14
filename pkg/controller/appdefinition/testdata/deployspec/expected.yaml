@@ -33,7 +33,7 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"image":"foo","ports":[{"containerPort":91,"port":90,"protocol":"https"}]}}}'
+        acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"internalPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"alias":{},"image":"foo","ports":[{"internalPort":91,"port":90,"protocol":"tcp"}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -84,7 +84,7 @@ spec:
         "acorn.io/container-name": "buildimage"
         "acorn.io/managed": "true"
       annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
+        "acorn.io/container-spec": '{"alias":{},"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
       terminationGracePeriodSeconds: 5
       automountServiceAccountToken: false
@@ -117,7 +117,6 @@ spec:
     - port: 90
       targetPort: 91
       protocol: "TCP"
-      appProtocol: "HTTPS"
       name: "90"
   selector:
     "acorn.io/app-namespace": "app-namespace"
@@ -143,11 +142,11 @@ status:
             image: "foo"
             ports:
               - port: 90
-                containerPort: 91
-                protocol: https
+                internalPort: 91
+                protocol: tcp
         ports:
           - port: 80
-            containerPort: 81
+            internalPort: 81
             protocol: http
         image: "image-name"
         build:

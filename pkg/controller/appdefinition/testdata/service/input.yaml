@@ -6,7 +6,8 @@ metadata:
   namespace: app-namespace
 spec:
   image: test
-  publishAllPorts: true
+  publishProtocols:
+  - http
   endpoints:
   - target: oneimage
     hostname: localhost
@@ -20,13 +21,13 @@ status:
             image: "foo"
             ports:
               - port: 90
-                containerPort: 91
-                protocol: https
-                publish: true
+                internalPort: 91
+                protocol: tcp
+                expose: true
         ports:
         - port: 80
-          containerPort: 81
-          publish: true
+          internalPort: 81
+          expose: true
           protocol: http
         image: "image-name"
         build:
@@ -35,13 +36,13 @@ status:
       buildimage:
         ports:
           - port: 80
-            containerPort: 81
-            publish: true
+            internalPort: 81
+            expose: true
             protocol: http
           - port: 443
-            containerPort: 91
-            publish: true
-            protocol: https
+            internalPort: 91
+            expose: true
+            protocol: tcp
         image: "sha256:build-image"
         build:
           dockerfile: "custom-dockerfile"

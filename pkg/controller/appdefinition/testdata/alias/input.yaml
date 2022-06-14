@@ -5,7 +5,8 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
-  publishAllPorts: true
+  publishProtocols:
+  - "*"
   image: test
   endpoints:
   - target: oneimage
@@ -15,33 +16,33 @@ status:
   appSpec:
     containers:
       con1:
-        aliases:
-          - name: svc1
+        alias:
+          name: svc1
         image: "foo"
         ports:
           - port: 80
-            containerPort: 81
-            publish: true
+            internalPort: 81
+            expose: true
             protocol: http
       con2:
-        aliases:
-        - name: svc1
+        alias:
+          name: svc1
         image: "foo"
         ports:
         - port: 80
-          containerPort: 81
-          publish: true
+          internalPort: 81
+          expose: true
           protocol: tcp
         - port: 90
-          containerPort: 91
-          publish: true
-          protocol: https
+          internalPort: 91
+          expose: true
+          protocol: tcp
       con3:
-        aliases:
-          - name: svc2
+        alias:
+          name: svc2
         image: "foo"
         ports:
           - port: 100
-            containerPort: 101
-            publish: true
+            internalPort: 101
+            expose: true
             protocol: udp

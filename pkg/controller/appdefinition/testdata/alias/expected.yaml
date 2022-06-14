@@ -35,7 +35,7 @@ spec:
         "alias.acorn.io/svc1": "true"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"aliases":[{"name":"svc1"}],"image":"foo","ports":[{"containerPort":81,"port":80,"protocol":"http","publish":true}]}'
+        acorn.io/container-spec: '{"alias":{"name":"svc1"},"image":"foo","ports":[{"expose":true,"internalPort":81,"port":80,"protocol":"http"}]}'
     spec:
       imagePullSecrets:
         - name: con1-pull-12345678
@@ -79,7 +79,7 @@ spec:
         "acorn.io/managed": "true"
         "alias.acorn.io/svc1": "true"
       annotations:
-        acorn.io/container-spec: '{"aliases":[{"name":"svc1"}],"image":"foo","ports":[{"containerPort":81,"port":80,"protocol":"tcp","publish":true},{"containerPort":91,"port":90,"protocol":"https","publish":true}]}'
+        acorn.io/container-spec: '{"alias":{"name":"svc1"},"image":"foo","ports":[{"expose":true,"internalPort":81,"port":80,"protocol":"tcp"},{"expose":true,"internalPort":91,"port":90,"protocol":"tcp"}]}'
     spec:
       imagePullSecrets:
         - name: con2-pull-12345678
@@ -125,7 +125,7 @@ spec:
         "acorn.io/managed": "true"
         "alias.acorn.io/svc2": "true"
       annotations:
-        acorn.io/container-spec: '{"aliases":[{"name":"svc2"}],"image":"foo","ports":[{"containerPort":101,"port":100,"protocol":"udp","publish":true}]}'
+        acorn.io/container-spec: '{"alias":{"name":"svc2"},"image":"foo","ports":[{"expose":true,"internalPort":101,"port":100,"protocol":"udp"}]}'
     spec:
       terminationGracePeriodSeconds: 5
       imagePullSecrets:
@@ -186,7 +186,6 @@ spec:
     - port: 90
       targetPort: 91
       protocol: "TCP"
-      appProtocol: "HTTPS"
       name: "90"
   selector:
     "acorn.io/app-namespace": "app-namespace"
@@ -227,7 +226,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "con1"
+    "alias.acorn.io/svc1": "true"
     "acorn.io/managed": "true"
 spec:
   type: ClusterIP
@@ -240,7 +239,6 @@ spec:
     - port: 90
       targetPort: 91
       protocol: "TCP"
-      appProtocol: "HTTPS"
       name: "90"
   selector:
     "acorn.io/app-namespace": "app-namespace"
@@ -257,7 +255,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "con2"
+    "alias.acorn.io/svc1": "true"
     "acorn.io/managed": "true"
 spec:
   type: LoadBalancer
@@ -269,7 +267,6 @@ spec:
     - port: 90
       targetPort: 91
       protocol: "TCP"
-      appProtocol: "HTTPS"
       name: "90"
   selector:
     "acorn.io/app-namespace": "app-namespace"
@@ -286,7 +283,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "con3"
+    "alias.acorn.io/svc2": "true"
     "acorn.io/managed": "true"
 spec:
   type: ClusterIP
@@ -310,7 +307,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "con3"
+    "alias.acorn.io/svc2": "true"
     "acorn.io/managed": "true"
 spec:
   type: LoadBalancer
@@ -370,7 +367,8 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
-  publishAllPorts: true
+  publishProtocols:
+  - "*"
   image: test
   endpoints:
     - target: oneimage
@@ -380,35 +378,35 @@ status:
   appSpec:
     containers:
       con1:
-        aliases:
-          - name: svc1
+        alias:
+          name: svc1
         image: "foo"
         ports:
           - port: 80
-            containerPort: 81
-            publish: true
+            internalPort: 81
+            expose: true
             protocol: http
       con2:
-        aliases:
-          - name: svc1
+        alias:
+          name: svc1
         image: "foo"
         ports:
           - port: 80
-            containerPort: 81
-            publish: true
+            internalPort: 81
+            expose: true
             protocol: tcp
           - port: 90
-            containerPort: 91
-            publish: true
-            protocol: https
+            internalPort: 91
+            expose: true
+            protocol: tcp
       con3:
-        aliases:
-          - name: svc2
+        alias:
+          name: svc2
         image: "foo"
         ports:
           - port: 100
-            containerPort: 101
-            publish: true
+            internalPort: 101
+            expose: true
             protocol: udp
   conditions:
     defined:

@@ -16,11 +16,11 @@ status:
             image: "foo"
             ports:
               - port: 90
-                containerPort: 91
-                protocol: https
+                internalPort: 91
+                protocol: tcp
         ports:
         - port: 80
-          containerPort: 81
+          internalPort: 81
           protocol: http
         image: "image-name"
         build:

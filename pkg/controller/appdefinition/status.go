@@ -257,7 +257,7 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 		for _, endpoint := range endpoints {
 			buf := &strings.Builder{}
 			switch endpoint.Protocol {
-			case v1.PublishProtocolHTTP:
+			case v1.ProtocolHTTP:
 				if *cfg.TLSEnabled {
 					buf.WriteString("https://")
 				} else {

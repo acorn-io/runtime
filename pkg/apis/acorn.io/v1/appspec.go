@@ -44,32 +44,25 @@ func (in Build) BaseBuild() Build {
 type Protocol string
 
 var (
-	ProtocolTCP   = Protocol("tcp")
-	ProtocolUDP   = Protocol("udp")
-	ProtocolHTTP  = Protocol("http")
-	ProtocolHTTPS = Protocol("https")
+	ProtocolTCP  = Protocol("tcp")
+	ProtocolUDP  = Protocol("udp")
+	ProtocolHTTP = Protocol("http")
+	ProtocolAll  = Protocol("*")
+	ProtocolNone = Protocol("none")
 )
 
-type PublishProtocol string
-
-var (
-	PublishProtocolTCP  = PublishProtocol("tcp")
-	PublishProtocolUDP  = PublishProtocol("udp")
-	PublishProtocolHTTP = PublishProtocol("http")
-)
-
-type AppPort struct {
+type PortBinding struct {
 	Port       int32    `json:"port,omitempty" wrangler:"required"`
 	TargetPort int32    `json:"targetPort,omitempty" wrangler:"required"`
 	Protocol   Protocol `json:"protocol,omitempty" wrangler:"required"`
 	Publish    bool     `json:"publish,omitempty"`
 }
 
-type Port struct {
-	Port          int32    `json:"port,omitempty"`
-	ContainerPort int32    `json:"containerPort,omitempty"`
-	Protocol      Protocol `json:"protocol,omitempty"`
-	Publish       bool     `json:"publish,omitempty"`
+type PortDef struct {
+	Port         int32    `json:"port,omitempty"`
+	InternalPort int32    `json:"internalPort,omitempty"`
+	Protocol     Protocol `json:"protocol,omitempty" wrangler:"required"`
+	Expose       bool     `json:"expose,omitempty"`
 }
 
 type FileSecret struct {
@@ -154,14 +147,14 @@ type Container struct {
 	Entrypoint  []string               `json:"entrypoint,omitempty"`
 	Environment []EnvVar               `json:"environment,omitempty"`
 	WorkingDir  string                 `json:"workingDir,omitempty"`
-	Ports       []Port                 `json:"ports,omitempty"`
+	Ports       []PortDef              `json:"ports,omitempty"`
 	Probes      []Probe                `json:"probes,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
 
 	// Alias is only available on containers, not sidecars or jobs
-	Aliases []Alias `json:"aliases,omitempty"`
+	Alias Alias `json:"alias,omitempty"`
 
 	// Schedule is only available on jobs
 	Schedule string `json:"schedule,omitempty"`
@@ -191,7 +184,7 @@ type Acorn struct {
 	Image   string          `json:"image,omitempty"`
 	Build   *AcornBuild     `json:"build,omitempty"`
 	Params  GenericMap      `json:"params,omitempty"`
-	Ports   []AppPort       `json:"ports,omitempty"`
+	Ports   []PortDef       `json:"ports,omitempty"`
 	Secrets []SecretBinding `json:"secrets,omitempty"`
 	Volumes []VolumeBinding `json:"volumes,omitempty"`
 }

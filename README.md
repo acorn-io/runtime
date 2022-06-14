@@ -75,8 +75,8 @@ containers: {
 			"1234/udp",
 		]
 
-		// Publish these ports externally (publically accesible) and internally. The format is the same as "ports"
-		publish: [
+		// Expose these ports out side of the acorn (possibly public) and internally. The format is the same as "ports"
+		expose: [
 			22,
 			"22:2222",
 			"80/http",

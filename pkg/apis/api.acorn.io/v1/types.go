@@ -58,7 +58,7 @@ type ContainerReplicaSpec struct {
 	Entrypoint  []string                  `json:"entrypoint,omitempty"`
 	Environment []v1.EnvVar               `json:"environment,omitempty"`
 	WorkingDir  string                    `json:"workingDir,omitempty"`
-	Ports       []v1.Port                 `json:"ports,omitempty"`
+	Ports       []v1.PortDef              `json:"ports,omitempty"`
 
 	// Init is only available on sidecars
 	Init bool `json:"init,omitempty"`
@@ -268,6 +268,7 @@ type Config struct {
 	TLSEnabled                   *bool    `json:"tlsEnabled" name:"tls-enabled" usage:"If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)"`
 	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
 	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)"`
+	PublishProtocolsByDefault    []string `json:"publishProtocolsByDefault" usage:"If no port binding settings exist choose the default protocols to publish (default http)"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

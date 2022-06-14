@@ -37,7 +37,7 @@ spec:
             "acorn.io/job-name": "oneimage"
             "acorn.io/managed": "true"
           annotations:
-            acorn.io/container-spec: '{"image":"image-name","schedule":"daily"}'
+            acorn.io/container-spec: '{"alias":{},"image":"image-name","schedule":"daily"}'
         spec:
           imagePullSecrets:
             - name: oneimage-pull-12345678

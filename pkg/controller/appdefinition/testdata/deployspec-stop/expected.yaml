@@ -35,7 +35,7 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
+        acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -73,7 +73,7 @@ spec:
         "acorn.io/container-name": "buildimage"
         "acorn.io/managed": "true"
       annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
+        "acorn.io/container-spec": '{"alias":{},"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false

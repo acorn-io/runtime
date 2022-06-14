@@ -1,5 +1,7 @@
 package labels
 
+import v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+
 const (
 	Prefix               = "acorn.io/"
 	AcornAppNamespace    = Prefix + "app-namespace"
@@ -25,3 +27,19 @@ const (
 	AcornPullSecret      = Prefix + "pull-secret"
 	AcornSecretRevPrefix = "secret-rev." + Prefix
 )
+
+func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
+	labels := map[string]string{
+		AcornAppName:      appInstance.Name,
+		AcornAppNamespace: appInstance.Namespace,
+		AcornManaged:      "true",
+	}
+	for i := 0; i+1 < len(kv); i += 2 {
+		if kv[i+1] == "" {
+			delete(labels, kv[i])
+		} else {
+			labels[kv[i]] = kv[i+1]
+		}
+	}
+	return labels
+}

@@ -33,7 +33,7 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        "acorn.io/container-spec": '{"image":"image-name","ports":[{"containerPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
+        acorn.io/container-spec: '{"alias":{},"image":"image-name","ports":[{"internalPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"alias":{},"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -137,7 +137,7 @@ status:
                   command: ["/bin/true"]
         ports:
           - port: 80
-            containerPort: 81
+            internalPort: 81
             protocol: http
         image: "image-name"
   conditions:

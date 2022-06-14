@@ -201,22 +201,18 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 			protocol = corev1.ProtocolUDP
 		}
 		ports = append(ports, corev1.ContainerPort{
-			ContainerPort: port.ContainerPort,
+			ContainerPort: port.InternalPort,
 			Protocol:      protocol,
 		})
 	}
 	return ports
 }
 
-func resolveTag(app *v1.AppInstance, tag name.Reference, containerName string, container v1.Container) string {
-	override := app.Spec.Images[containerName]
-	if override != "" {
-		return override
+func resolveTag(tag name.Reference, image string) string {
+	if DigestPattern.MatchString(image) {
+		return tag.Context().Digest(image).String()
 	}
-	if DigestPattern.MatchString(container.Image) {
-		return tag.Context().Digest(container.Image).String()
-	}
-	return container.Image
+	return image
 }
 
 func parseURLForProbe(probeURL string) (scheme corev1.URIScheme, host string, port intstr.IntOrString, path string, ok bool) {
@@ -301,7 +297,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 			return &corev1.Probe{
 				ProbeHandler: corev1.ProbeHandler{
 					TCPSocket: &corev1.TCPSocketAction{
-						Port: intstr.FromInt(int(port.ContainerPort)),
+						Port: intstr.FromInt(int(port.InternalPort)),
 					},
 				},
 			}
@@ -314,7 +310,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
 	return corev1.Container{
 		Name:           containerName,
-		Image:          resolveTag(app, tag, containerName, container),
+		Image:          resolveTag(tag, container.Image),
 		Command:        container.Entrypoint,
 		Args:           container.Command,
 		WorkingDir:     container.WorkingDir,
@@ -331,20 +327,8 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 }
 
 func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
-	labels := map[string]string{
-		labels.AcornAppName:       appInstance.Name,
-		labels.AcornAppNamespace:  appInstance.Namespace,
-		labels.AcornContainerName: name,
-		labels.AcornManaged:       "true",
-	}
-	for i := 0; i+1 < len(kv); i += 2 {
-		if kv[i+1] == "" {
-			delete(labels, kv[i])
-		} else {
-			labels[kv[i]] = kv[i+1]
-		}
-	}
-	return labels
+	kv = append([]string{labels.AcornContainerName, name}, kv...)
+	return labels.Managed(appInstance, kv...)
 }
 
 func containerAnnotation(container v1.Container) string {
@@ -377,10 +361,7 @@ func podAnnotations(appInstance *v1.AppInstance, containerName string, container
 
 func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, containerName string, container v1.Container) {
 	if container.Build != nil && container.Build.BaseImage != "" {
-		override := appInstance.Spec.Images[containerName]
-		if override == "" {
-			annotations[container.Image] = container.Build.BaseImage
-		}
+		annotations[container.Image] = container.Build.BaseImage
 	}
 
 	for _, entry := range typed.Sorted(container.Sidecars) {
@@ -456,8 +437,9 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		aliasLabels []string
 		stateful    = isStateful(appInstance, container)
 	)
-	for _, alias := range container.Aliases {
-		aliasLabels = append(aliasLabels, labels.AcornAlias+alias.Name, "true")
+
+	if container.Alias.Name != "" {
+		aliasLabels = []string{labels.AcornAlias + container.Alias.Name, "true"}
 	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
 
