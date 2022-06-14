@@ -107,7 +107,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 				Type:     field.ErrorTypeInvalid,
 				Field:    "tags",
 				BadValue: tagName,
-				Detail:   "Missing registry host in the tag (ie ghcr.io)",
+				Detail:   "Missing registry host in the tag (ie ghcr.io or docker.io)",
 			},
 		})
 	}

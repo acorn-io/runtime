@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/acorn-io/acorn/pkg/client"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/spf13/cobra"
 )
 
@@ -24,6 +25,9 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = c.ImagePush(cmd.Context(), args[0], nil)
-	return err
+	prog, err := c.ImagePush(cmd.Context(), args[0], nil)
+	if err != nil {
+		return err
+	}
+	return progressbar.Print(prog)
 }

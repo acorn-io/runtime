@@ -367,7 +367,7 @@ metadata:
     acorn.io/pull-secret: "true"
 type: "kubernetes.io/dockerconfigjson"
 data:
-  ".dockerconfigjson": eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX0=
+  ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
 ---
 kind: Secret
 apiVersion: v1
@@ -379,5 +379,5 @@ metadata:
     acorn.io/pull-secret: "true"
 type: "kubernetes.io/dockerconfigjson"
 data:
-  ".dockerconfigjson": eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX0=
+  ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
 ---

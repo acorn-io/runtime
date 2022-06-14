@@ -4,13 +4,13 @@ import (
 	"errors"
 
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/cheggaaa/pb/v3"
+	"github.com/pterm/pterm"
 )
 
 func Print(progress <-chan client.ImageProgress) error {
 	var (
 		err error
-		bar *pb.ProgressBar
+		bar *pterm.ProgressbarPrinter
 	)
 
 	for update := range progress {
@@ -20,12 +20,22 @@ func Print(progress <-chan client.ImageProgress) error {
 		}
 
 		if bar == nil {
-			bar = pb.Start64(update.Total)
+			bar, _ = pterm.DefaultProgressbar.
+				WithTotal(int(update.Total)).
+				WithCurrent(int(update.Complete)).Start()
 		}
 
-		bar.SetCurrent(update.Complete)
+		if int(update.Complete) > bar.Current {
+			bar.Add(int(update.Complete) - bar.Current)
+		}
 	}
 
-	bar.Finish()
+	if bar != nil {
+		if err == nil && bar.Current != bar.Total {
+			bar.Add(bar.Total - bar.Current)
+		}
+		bar.Stop()
+	}
+
 	return err
 }

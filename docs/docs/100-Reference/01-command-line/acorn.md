@@ -36,6 +36,8 @@ acorn [flags]
 * [acorn image](acorn_image.md)	 - List images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
 * [acorn init](acorn_init.md)	 - Install and configure acorn in the cluster
+* [acorn login](acorn_login.md)	 - Add registry credentials
+* [acorn logout](acorn_logout.md)	 - Remove registry credentials
 * [acorn logs](acorn_logs.md)	 - Log all pods from app
 * [acorn pull](acorn_pull.md)	 - Pull an image to a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry

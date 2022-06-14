@@ -77,7 +77,9 @@ func ForImages(secretName, secretNamespace string, keychain authn.Keychain, imag
 		dockerConfig[registry] = config
 	}
 
-	data, err := json.Marshal(dockerConfig)
+	data, err := json.Marshal(map[string]interface{}{
+		"auths": dockerConfig,
+	})
 	if err != nil {
 		return nil, err
 	}

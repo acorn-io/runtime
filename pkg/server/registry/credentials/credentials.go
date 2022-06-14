@@ -102,6 +102,13 @@ func (s *Storage) isUnique(ctx context.Context, serverAddress string) error {
 	return nil
 }
 
+func normalizeDockerIO(s string) string {
+	if s == "docker.io" {
+		return "index.docker.io"
+	}
+	return s
+}
+
 func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
 	if createValidation != nil {
 		if err := createValidation(ctx, obj); err != nil {
@@ -110,6 +117,7 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 	}
 
 	input := obj.(*apiv1.Credential)
+	input.ServerAddress = normalizeDockerIO(input.ServerAddress)
 
 	if err := s.isUnique(ctx, input.ServerAddress); err != nil {
 		return nil, err
@@ -125,6 +133,8 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 }
 
 func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+	name = normalizeDockerIO(name)
+
 	obj, err := s.Get(ctx, name, nil)
 	if err != nil {
 		return nil, false, err
@@ -144,6 +154,8 @@ func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest
 }
 
 func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
+	name = normalizeDockerIO(name)
+
 	oldCred, err := s.CredGet(ctx, name, nil)
 	if err != nil {
 		return nil, false, err
@@ -181,6 +193,8 @@ func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptio
 }
 
 func (s *Storage) CredGet(ctx context.Context, name string, options *metav1.GetOptions) (*apiv1.Credential, error) {
+	name = normalizeDockerIO(name)
+
 	credsObj, err := s.List(ctx, nil)
 	if err != nil {
 		return nil, err
