@@ -177,7 +177,14 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 		}
 	}
 
-	for _, file := range container.Files {
+	filesForContainer := container.Files
+	for _, sideCar := range container.Sidecars {
+		for fileName, file := range sideCar.Files {
+			filesForContainer[fileName] = file
+		}
+	}
+
+	for _, file := range filesForContainer {
 		if file.Content != "" && file.Secret.Name == "" {
 			result = append(result, corev1.Volume{
 				Name: "files",
