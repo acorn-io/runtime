@@ -12,6 +12,7 @@ rules:
       - pods
       - pods/exec
       - pods/portforward
+      - pods/ephemeralcontainers
       - configmaps
       - secrets
       - namespaces

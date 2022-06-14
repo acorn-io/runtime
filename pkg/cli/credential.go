@@ -1,10 +1,10 @@
 package cli
 
 import (
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
@@ -18,8 +18,8 @@ acorn credential`,
 		SilenceUsage: true,
 		Short:        "Manage registry credentials",
 	})
-	cmd.AddCommand(NewCredentialLogin())
-	cmd.AddCommand(NewCredentialLogout())
+	cmd.AddCommand(NewCredentialLogin(false))
+	cmd.AddCommand(NewCredentialLogout(false))
 	return cmd
 }
 

@@ -106,7 +106,7 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	opts.Ports, opts.PublishProtocols, err = run.ParsePorts(s.Link)
+	opts.Ports, opts.PublishProtocols, err = run.ParsePorts(s.Publish)
 	if err != nil {
 		return err
 	}

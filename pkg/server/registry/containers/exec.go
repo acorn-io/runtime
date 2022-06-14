@@ -143,7 +143,11 @@ func (c *ContainerExec) execEphemeral(ctx context.Context, container *apiv1.Cont
 
 	for _, container := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
 		if container.Name == containerName {
-			volumeMounts = container.VolumeMounts
+			for _, volumeMount := range container.VolumeMounts {
+				if volumeMount.SubPath == "" {
+					volumeMounts = append(volumeMounts, volumeMount)
+				}
+			}
 			break
 		}
 	}

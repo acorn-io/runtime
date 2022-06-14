@@ -34,7 +34,7 @@ func Print(progress <-chan client.ImageProgress) error {
 		if err == nil && bar.Current != bar.Total {
 			bar.Add(bar.Total - bar.Current)
 		}
-		bar.Stop()
+		_, _ = bar.Stop()
 	}
 
 	return err
