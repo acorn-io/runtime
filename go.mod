@@ -32,7 +32,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pterm/pterm v0.12.41
-	github.com/rancher/apiserver v0.0.0-20220513144301-4808910b5d4d
+	github.com/rancher/apiserver 643f1d19e3fc
 	github.com/rancher/kubernetes-provider-detector v0.1.5
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
 	github.com/rancher/steve v0.0.0-20220503004032-53511a06ff37
