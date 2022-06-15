@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/acorn-io/acorn/pkg/build"
-	"github.com/acorn-io/acorn/pkg/client"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -54,7 +54,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 
 	image, err := build.Build(cmd.Context(), s.File, &build.Options{
 		Cwd:       cwd,
-		Params:    params,
+		Args:      params,
 		Platforms: platforms,
 	})
 	if err != nil {

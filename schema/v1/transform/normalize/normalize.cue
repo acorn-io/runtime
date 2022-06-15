@@ -281,7 +281,7 @@ import (
 	} | {
 		acornfile: IN.acornfile
 		context:   IN.context
-		params:    IN.params
+		buildArgs: IN.buildArgs
 	}
 }
 
@@ -295,7 +295,7 @@ import (
 		dockerfile: IN.dockerfile
 		context:    IN.context
 		target:     IN.target
-		args:       IN.args
+		buildArgs:  IN.buildArgs
 	}
 }
 
@@ -432,7 +432,7 @@ import (
 		if IN["build"] != _|_ {
 			build: {#ToAcornBuild & {in: IN.build}}.out
 		}
-		params: IN.params
+		deployArgs: IN.deployArgs
 		volumes: [ for v in IN.volumes {{#ToVolumeBinding & {in: v}}.out}]
 		secrets: [ for v in IN.secrets {{#ToSecretBinding & {in: v}}.out}]
 		ports: {

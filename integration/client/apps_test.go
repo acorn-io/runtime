@@ -159,7 +159,7 @@ func TestAppUpdate(t *testing.T) {
 				Service: "other-service2",
 			},
 		},
-		DeployParams: map[string]interface{}{
+		DeployArgs: map[string]interface{}{
 			"param1": "val1",
 			"param2": "val2",
 		},
@@ -218,7 +218,7 @@ func TestAppUpdate(t *testing.T) {
 				Service: "other-service3",
 			},
 		},
-		DeployParams: map[string]interface{}{
+		DeployArgs: map[string]interface{}{
 			"param2": "val3",
 			"param3": "val3",
 		},
@@ -314,7 +314,7 @@ func TestAppUpdate(t *testing.T) {
 		"param1": "val1",
 		"param2": "val3",
 		"param3": "val3",
-	}, thirdApp.Spec.DeployParams)
+	}, thirdApp.Spec.DeployArgs)
 
 	assert.Equal(t, imageID2, thirdApp.Spec.Image)
 }
@@ -415,7 +415,7 @@ func TestAppRun(t *testing.T) {
 				SecretRequest: "secretRequest",
 			},
 		},
-		DeployParams: map[string]interface{}{
+		DeployArgs: map[string]interface{}{
 			"key": "value",
 		},
 	})
@@ -428,5 +428,5 @@ func TestAppRun(t *testing.T) {
 	assert.Equal(t, "target", app.Spec.Endpoints[0].Target)
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
 	assert.Equal(t, "secret", app.Spec.Secrets[0].Secret)
-	assert.Equal(t, "value", app.Spec.DeployParams["key"])
+	assert.Equal(t, "value", app.Spec.DeployArgs["key"])
 }

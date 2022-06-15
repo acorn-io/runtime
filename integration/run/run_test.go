@@ -241,7 +241,7 @@ func TestDeployParam(t *testing.T) {
 
 	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
 		Namespace: ns.Name,
-		DeployParams: map[string]interface{}{
+		DeployArgs: map[string]interface{}{
 			"someInt": 5,
 		},
 	})

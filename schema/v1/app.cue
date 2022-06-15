@@ -1,13 +1,13 @@
 package v1
 
 #AcornBuild: {
-	params: [string]: _
+	buildArgs: [string]: _
 	context:   string | *"."
 	acornfile: string | *"acorn.cue"
 }
 
 #Build: {
-	args: [string]: string
+	buildArgs: [string]: string
 	context:    string | *"."
 	dockerfile: string | *"Dockerfile"
 	target:     string | *""
@@ -170,15 +170,15 @@ package v1
 	expose: #AppPort | *[...#AppPort]
 	volumes: [...string]
 	secrets: [...string]
-	params: [string]: _
+	deployArgs: [string]: _
 }
 
 #App: {
-	[=~"params|parameters"]: {
+	args: {
 		build: [string]:  _
 		deploy: [string]: _
 	}
-	data: {...}
+	[=~"local_?data"]: {...}
 	containers: [string]: #Container
 	jobs: [string]:       #Job
 	images: [string]:     #Image

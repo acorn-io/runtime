@@ -47,7 +47,7 @@ type AppInstanceSpec struct {
 	Services         []ServiceBinding  `json:"services,omitempty"`
 	PublishProtocols []Protocol        `json:"publishProtocols,omitempty"`
 	Ports            []PortBinding     `json:"ports,omitempty"`
-	DeployParams     GenericMap        `json:"deployParams,omitempty"`
+	DeployArgs       GenericMap        `json:"deployArgs,omitempty"`
 }
 
 type ServiceBinding struct {

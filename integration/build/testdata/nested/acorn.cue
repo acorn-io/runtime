@@ -6,7 +6,7 @@ acorns: {
 		build: {
 			context: "./subdir2"
 			acornfile: "./subdir2/test.cue"
-			params: {
+			buildArgs: {
 				filename: "buildfile"
 			}
 		}

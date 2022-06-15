@@ -66,7 +66,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Image:           image,
 			Volumes:         acorn.Volumes,
 			Secrets:         acorn.Secrets,
-			DeployParams:    acorn.Params,
+			DeployArgs:      acorn.DeployArgs,
 			Ports:           ports,
 		},
 	}

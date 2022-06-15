@@ -24,7 +24,7 @@ type Options struct {
 	Cwd       string
 	Namespace string
 	Platforms []v1.Platform
-	Params    map[string]interface{}
+	Args      map[string]interface{}
 	Streams   *streams.Output
 	FullTag   bool
 }
@@ -96,7 +96,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	appDefinition, err = appDefinition.WithBuildParams(opts.Params)
+	appDefinition, err = appDefinition.WithBuildArgs(opts.Args)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	appImage := &v1.AppImage{
 		Acornfile:   string(fileData),
 		ImageData:   imageData,
-		BuildParams: opts.Params,
+		BuildParams: opts.Args,
 	}
 	if err != nil {
 		return nil, err
@@ -212,7 +212,7 @@ func buildAcorns(ctx context.Context, cwd, namespace string, platforms []v1.Plat
 				Cwd:       filepath.Join(cwd, acornImage.Build.Context),
 				Namespace: namespace,
 				Platforms: platforms,
-				Params:    acornImage.Build.Params,
+				Args:      acornImage.Build.BuildArgs,
 				Streams:   &streams,
 				FullTag:   true,
 			})

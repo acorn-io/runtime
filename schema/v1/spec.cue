@@ -8,7 +8,7 @@ package v1
 #AcornBuildSpec: {
 	context:   string | *"."
 	acornfile: string | *"acorn.cue"
-	params: [string]: _
+	buildArgs: [string]: _
 }
 
 #BuildSpec: {
@@ -17,7 +17,7 @@ package v1
 	dockerfile: string | *"Dockerfile"
 	target:     string | *""
 	contextDirs: [string]: string
-	args: [string]:        string
+	buildArgs: [string]:   string
 }
 
 #ProbeSpec: {
@@ -147,7 +147,7 @@ package v1
 	ports: [...#AppPortSpec]
 	volumes: [...#VolumeBinding]
 	secrets: [...#SecretBinding]
-	params: [string]: _
+	deployArgs: [string]: _
 }
 
 #AppSpec: {

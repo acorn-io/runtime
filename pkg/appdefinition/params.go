@@ -10,14 +10,14 @@ import (
 )
 
 func (a *AppDefinition) BuildParams() (*v1.ParamSpec, error) {
-	return a.params("params.build")
+	return a.args("args.build")
 }
 
 func (a *AppDefinition) DeployParams() (*v1.ParamSpec, error) {
-	return a.params("params.deploy")
+	return a.args("args.deploy")
 }
 
-func (a *AppDefinition) params(section string) (*v1.ParamSpec, error) {
+func (a *AppDefinition) args(section string) (*v1.ParamSpec, error) {
 	app, err := a.ctx.Value()
 	if err != nil {
 		return nil, err
