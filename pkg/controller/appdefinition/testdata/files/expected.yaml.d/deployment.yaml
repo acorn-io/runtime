@@ -1,0 +1,61 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
+      annotations:
+        acorn.io/container-spec: '{"alias":{},"files":{"content-test":{"content":"YmFzZQ==","secret":{}},"content-test-mode":{"content":"YmFzZS1tb2Rl","mode":"0123","secret":{}}},"image":"image-name","sidecars":{"sidecar":{"alias":{},"files":{"sidecar-content-test":{"content":"c2lkZWNhcg==","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0123","secret":{}}},"image":"image-name"}}}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+        - name: oneimage-pull-01234567
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      containers:
+        - name: oneimage
+          image: image-name
+          volumeMounts:
+          - mountPath: /content-test
+            name: files
+            subPath: 8bbe3f160ad7
+          - mountPath: /content-test-mode
+            name: files-0123
+            subPath: 4b55bb46c09e
+        - name: sidecar
+          image: image-name
+          volumeMounts:
+            - mountPath: /sidecar-content-test
+              name: files
+              subPath: f88478b1092a
+            - mountPath: /sidecar-content-test-mode
+              name: files-0123
+              subPath: 9f61e131eb0e
+      volumes:
+      - name: files
+        configMap:
+          name: files
+      - name: files-0123
+        configMap:
+          defaultMode: 0123
+          name: files-0123
+

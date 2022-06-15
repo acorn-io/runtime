@@ -1,0 +1,36 @@
+kind: AppInstance
+apiVersion: acorn.io/v1
+metadata:
+  uid: 01234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+  publishAllPorts: true
+  endpoints:
+    - target: oneimage
+      hostname: localhost
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          sidecar:
+            image: "image-name"
+            files:
+              sidecar-content-test:
+                content: "c2lkZWNhcg=="
+              sidecar-content-test-mode:
+                content: "c2lkZWNhci1tb2Rl"
+                mode: "0123"
+        image: "image-name"
+        files:
+          content-test:
+            content: "YmFzZQ=="
+          content-test-mode:
+            content: "YmFzZS1tb2Rl"
+            mode: "0123"
+  conditions:
+    defined:
+      success: true

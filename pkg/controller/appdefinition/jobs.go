@@ -50,6 +50,11 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, err
 	}
 
+	volumes, err := toVolumes(appInstance, container)
+	if err != nil {
+		return nil, err
+	}
+
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
@@ -67,7 +72,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				RestartPolicy:                 corev1.RestartPolicyNever,
 				Containers:                    setTerminationPath(containers),
 				InitContainers:                setTerminationPath(initContainers),
-				Volumes:                       toVolumes(appInstance, container),
+				Volumes:                       volumes,
 				AutomountServiceAccountToken:  new(bool),
 			},
 		},

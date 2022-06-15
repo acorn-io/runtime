@@ -157,15 +157,19 @@ func pathHash(parts ...string) string {
 
 func toMounts(appName, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
+		suffix := ""
+		if entry.Value.Mode != "" {
+			suffix = "-" + entry.Value.Mode
+		}
 		if entry.Value.Secret.Key == "" || entry.Value.Secret.Name == "" {
 			result = append(result, corev1.VolumeMount{
-				Name:      "files",
+				Name:      "files" + suffix,
 				MountPath: path.Join("/", entry.Key),
 				SubPath:   pathHash(appName, deploymentName, containerName, entry.Key),
 			})
 		} else {
 			result = append(result, corev1.VolumeMount{
-				Name:      "secret--" + entry.Value.Secret.Name,
+				Name:      "secret--" + entry.Value.Secret.Name + suffix,
 				MountPath: path.Join("/", entry.Key),
 				SubPath:   entry.Value.Secret.Key,
 			})
@@ -448,6 +452,11 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
+	volumes, err := toVolumes(appInstance, container)
+	if err != nil {
+		return nil, err
+	}
+
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -473,7 +482,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					EnableServiceLinks:            new(bool),
 					Containers:                    containers,
 					InitContainers:                initContainers,
-					Volumes:                       toVolumes(appInstance, container),
+					Volumes:                       volumes,
 					AutomountServiceAccountToken:  new(bool),
 				},
 			},
@@ -583,5 +592,17 @@ func toConfigMaps(appInstance *v1.AppInstance) (result []kclient.Object, err err
 	if len(configMap.BinaryData) == 0 {
 		return nil, nil
 	}
-	return []kclient.Object{configMap}, nil
+
+	fileMode := getFilesFileModesForApp(appInstance)
+	for _, mode := range typed.SortedKeys(fileMode) {
+		if mode == "" {
+			result = append(result, configMap)
+		} else {
+			copy := configMap.DeepCopy()
+			copy.Name += "-" + mode
+			result = append(result, copy)
+		}
+	}
+
+	return result, nil
 }

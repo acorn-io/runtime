@@ -72,6 +72,7 @@ type FileSecret struct {
 }
 
 type File struct {
+	Mode    string     `json:"mode,omitempty"`
 	Content string     `json:"content,omitempty"`
 	Secret  FileSecret `json:"secret,omitempty"`
 }

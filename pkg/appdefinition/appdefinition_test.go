@@ -344,6 +344,7 @@ containers: {
 
 	assert.Equal(t, map[string]v1.File{
 		"/var/tmp/foo": {
+			Mode: "0644",
 			Secret: v1.FileSecret{
 				Name:     "secname",
 				Key:      "seckey",
@@ -351,6 +352,7 @@ containers: {
 			},
 		},
 		"/var/tmp/foo2": {
+			Mode:    "0644",
 			Content: "bm9uc2VjcmV0",
 		},
 	}, appSpec.Containers["s"].Files)
@@ -777,12 +779,20 @@ containers: {
 	  files: {
 	  	"/etc/something-sidecar": "bye"
 	  	"/etc/something-sidecar-b": '\x00\x01bye'
+		"/bin/secret.sh": "secret://foo/bar?mode=123"
 	  }
 	}
     image: "x"
 	files: {
 		"/etc/something": "hi"
 	  	"/etc/something-b": '\x00\x01hi'
+	  	"/exec.sh": "blah"
+	  	"/bin/exec": 'blah'
+	  	"/sbin/exec": 'blah'
+		"/full": {
+			content: "blah"
+			mode: "0127"
+		}
 	}
   }
 }
@@ -798,9 +808,18 @@ containers: {
 	}
 
 	assert.Equal(t, "aGk=", appSpec.Containers["s"].Files["/etc/something"].Content)
+	assert.Equal(t, "0644", appSpec.Containers["s"].Files["/etc/something"].Mode)
 	assert.Equal(t, "AAFoaQ==", appSpec.Containers["s"].Files["/etc/something-b"].Content)
+	assert.Equal(t, "0644", appSpec.Containers["s"].Files["/etc/something-b"].Mode)
+	assert.Equal(t, "0755", appSpec.Containers["s"].Files["/exec.sh"].Mode)
+	assert.Equal(t, "0755", appSpec.Containers["s"].Files["/bin/exec"].Mode)
+	assert.Equal(t, "0755", appSpec.Containers["s"].Files["/sbin/exec"].Mode)
+	assert.Equal(t, "blah", appSpec.Containers["s"].Files["/full"].Content)
+	assert.Equal(t, "0127", appSpec.Containers["s"].Files["/full"].Mode)
 	assert.Equal(t, "Ynll", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar"].Content)
 	assert.Equal(t, "AAFieWU=", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar-b"].Content)
+	assert.Equal(t, "0644", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar-b"].Mode)
+	assert.Equal(t, "123", appSpec.Containers["s"].Sidecars["left"].Files["/bin/secret.sh"].Mode)
 }
 
 func TestImageBuildPermutations(t *testing.T) {

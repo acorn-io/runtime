@@ -1655,6 +1655,12 @@ func schema_pkg_apis_acornio_v1_File(ref common.ReferenceCallback) common.OpenAP
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"mode": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"content": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
