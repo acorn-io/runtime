@@ -56,8 +56,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      acornName,
 			Namespace: appInstance.Status.Namespace,
-			Labels: containerLabels(appInstance, acornName,
-				labels.AcornContainerName, "",
+			Labels: labels.Managed(appInstance,
 				labels.AcornAcornName, acornName),
 		},
 		Spec: v1.AppInstanceSpec{
@@ -66,6 +65,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Image:           image,
 			Volumes:         acorn.Volumes,
 			Secrets:         acorn.Secrets,
+			Services:        acorn.Services,
 			DeployArgs:      acorn.DeployArgs,
 			Ports:           ports,
 		},

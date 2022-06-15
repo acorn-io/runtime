@@ -142,12 +142,18 @@ package v1
 	secretRequest: string
 }
 
+#ServiceBinding: {
+	service: string
+	target:  string
+}
+
 #AcornSpec: {
 	image?: string
 	build?: #AcornBuildSpec
 	ports: [...#AppPortSpec]
 	volumes: [...#VolumeBinding]
 	secrets: [...#SecretBinding]
+	services: [...#ServiceBinding]
 	deployArgs: [string]: _
 }
 

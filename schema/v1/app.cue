@@ -170,6 +170,7 @@ package v1
 	expose: #AppPort | *[...#AppPort]
 	volumes: [...string]
 	secrets: [...string]
+	links: [...string]
 	deployArgs: [string]: _
 }
 
