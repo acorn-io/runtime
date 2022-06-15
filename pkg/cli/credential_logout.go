@@ -3,13 +3,13 @@ package cli
 import (
 	"fmt"
 
-	"github.com/acorn-io/acorn/pkg/client"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewCredentialLogout() *cobra.Command {
-	return cli.Command(&CredentialLogout{}, cobra.Command{
+func NewCredentialLogout(root bool) *cobra.Command {
+	c := cli.Command(&CredentialLogout{}, cobra.Command{
 		Use:     "logout [flags] [SERVER_ADDRESS]",
 		Aliases: []string{"rm"},
 		Example: `
@@ -18,6 +18,10 @@ acorn logout ghcr.io`,
 		Short:        "Remove registry credentials",
 		Args:         cobra.ExactArgs(1),
 	})
+	if root {
+		c.Aliases = nil
+	}
+	return c
 }
 
 type CredentialLogout struct {

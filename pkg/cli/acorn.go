@@ -29,6 +29,8 @@ func New() *cobra.Command {
 		NewInit(),
 		NewInfo(),
 		NewLogs(),
+		NewCredentialLogin(true),
+		NewCredentialLogout(true),
 		NewPull(),
 		NewPush(),
 		NewRm(),

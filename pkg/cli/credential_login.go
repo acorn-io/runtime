@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/acorn-io/acorn/pkg/client"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func NewCredentialLogin() *cobra.Command {
-	return cli.Command(&CredentialLogin{}, cobra.Command{
+func NewCredentialLogin(root bool) *cobra.Command {
+	c := cli.Command(&CredentialLogin{}, cobra.Command{
 		Use:     "login [flags] [SERVER_ADDRESS]",
 		Aliases: []string{"add"},
 		Example: `
@@ -23,6 +23,10 @@ acorn login ghcr.io`,
 		Short:        "Add registry credentials",
 		Args:         cobra.ExactArgs(1),
 	})
+	if root {
+		c.Aliases = nil
+	}
+	return c
 }
 
 type CredentialLogin struct {
