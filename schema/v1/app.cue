@@ -178,7 +178,7 @@ package v1
 		build: [string]:  _
 		deploy: [string]: _
 	}
-	[=~"local_?data"]: {...}
+	[=~"local[dD]ata"]: {...}
 	containers: [string]: #Container
 	jobs: [string]:       #Job
 	images: [string]:     #Image

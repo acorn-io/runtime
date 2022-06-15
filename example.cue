@@ -227,7 +227,7 @@ args: {
 // Arbitrary information that the acorn file author can embed so that if can be
 // referenced somewhere else in the file. This is used mostly as a way to organize or better
 // format your acorn file
-local_data: {
+localData: {
 	key: "value"
 	complex: {
 		key: "value"
