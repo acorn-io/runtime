@@ -373,7 +373,7 @@ func schema_pkg_apis_acornio_v1_Acorn(ref common.ReferenceCallback) common.OpenA
 							Ref: ref("github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.AcornBuild"),
 						},
 					},
-					"params": {
+					"deployArgs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -458,7 +458,7 @@ func schema_pkg_apis_acornio_v1_AcornBuild(ref common.ReferenceCallback) common.
 							Format: "",
 						},
 					},
-					"params": {
+					"buildArgs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -812,7 +812,7 @@ func schema_pkg_apis_acornio_v1_AppInstanceSpec(ref common.ReferenceCallback) co
 							},
 						},
 					},
-					"deployParams": {
+					"deployArgs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -1076,7 +1076,7 @@ func schema_pkg_apis_acornio_v1_Build(ref common.ReferenceCallback) common.OpenA
 							},
 						},
 					},
-					"args": {
+					"buildArgs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{

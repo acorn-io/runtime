@@ -21,7 +21,7 @@ type AcornBuild struct {
 	OriginalImage string     `json:"originalImage,omitempty"`
 	Context       string     `json:"context,omitempty"`
 	Acornfile     string     `json:"acornfile,omitempty"`
-	Params        GenericMap `json:"params,omitempty"`
+	BuildArgs     GenericMap `json:"buildArgs,omitempty"`
 }
 
 type Build struct {
@@ -30,7 +30,7 @@ type Build struct {
 	Target      string            `json:"target,omitempty"`
 	BaseImage   string            `json:"baseImage,omitempty"`
 	ContextDirs map[string]string `json:"contextDirs,omitempty"`
-	Args        map[string]string `json:"args,omitempty"`
+	BuildArgs   map[string]string `json:"buildArgs,omitempty"`
 }
 
 func (in Build) BaseBuild() Build {
@@ -181,12 +181,12 @@ type AppSpec struct {
 }
 
 type Acorn struct {
-	Image   string          `json:"image,omitempty"`
-	Build   *AcornBuild     `json:"build,omitempty"`
-	Params  GenericMap      `json:"params,omitempty"`
-	Ports   []PortDef       `json:"ports,omitempty"`
-	Secrets []SecretBinding `json:"secrets,omitempty"`
-	Volumes []VolumeBinding `json:"volumes,omitempty"`
+	Image      string          `json:"image,omitempty"`
+	Build      *AcornBuild     `json:"build,omitempty"`
+	DeployArgs GenericMap      `json:"deployArgs,omitempty"`
+	Ports      []PortDef       `json:"ports,omitempty"`
+	Secrets    []SecretBinding `json:"secrets,omitempty"`
+	Volumes    []VolumeBinding `json:"volumes,omitempty"`
 }
 
 type Secret struct {

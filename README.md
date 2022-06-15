@@ -29,7 +29,7 @@ containers: {
 		// is or full build definition like below.
 		build: {
 			// Build arguments to pass to the Docker build.
-			args: {
+			buildArgs: {
 				param1: "value"
 			}
 			// The context root of the Docker build relative to the root of the acorn build
@@ -212,7 +212,7 @@ secrets: {
 }
 
 // Schema of parameters to impact behavior at build or deploy time
-params: {
+args: {
 	build: {
 		"some-string": string | *"default value"
 		"some-int": int | *5
@@ -236,7 +236,7 @@ params: {
 // Arbitrary information that the acorn file author can embed so that if can be
 // referenced somewhere else in the file. This is used mostly as a way to organize or better
 // format your acorn file
-data: {
+local_data: {
 	key: "value"
 	complex: {
 		key: "value"

@@ -64,7 +64,7 @@ acorns: {
     build: {
       context: "sub/dir2"	
       acornfile: "sub/dir3/acorn.cue"
-      params: {
+      buildArgs: {
         key: "value"
         key2: {
           key3: "value3"
@@ -120,8 +120,8 @@ acorns: {
 	assert.Equal(t, "", buildSpec.Acorns["afull"].Image)
 	assert.Equal(t, "sub/dir2", buildSpec.Acorns["afull"].Build.Context)
 	assert.Equal(t, "sub/dir3/acorn.cue", buildSpec.Acorns["afull"].Build.Acornfile)
-	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.Params["key"])
-	assert.Equal(t, map[string]interface{}{"key3": "value3"}, buildSpec.Acorns["afull"].Build.Params["key2"])
+	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.BuildArgs["key"])
+	assert.Equal(t, map[string]interface{}{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs["key2"])
 	assert.Equal(t, "done", buildSpec.Acorns["anone"].Image)
 }
 
@@ -861,7 +861,7 @@ images: {
 			},
 			"build": {
 				Build: &v1.Build{
-					Args:        map[string]string{},
+					BuildArgs:   map[string]string{},
 					Context:     ".",
 					Dockerfile:  "Dockerfile",
 					ContextDirs: map[string]string{},
@@ -869,7 +869,7 @@ images: {
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							Args:        map[string]string{},
+							BuildArgs:   map[string]string{},
 							Context:     ".",
 							Dockerfile:  "Dockerfile",
 							ContextDirs: map[string]string{},
@@ -879,7 +879,7 @@ images: {
 			},
 			"buildcontext": {
 				Build: &v1.Build{
-					Args:       map[string]string{},
+					BuildArgs:  map[string]string{},
 					Context:    ".",
 					Dockerfile: "Dockerfile",
 					ContextDirs: map[string]string{
@@ -889,7 +889,7 @@ images: {
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							Args:       map[string]string{},
+							BuildArgs:  map[string]string{},
 							Context:    ".",
 							Dockerfile: "Dockerfile",
 							ContextDirs: map[string]string{
@@ -902,7 +902,7 @@ images: {
 			"imagecontext": {
 				Image: "imagecontext-image",
 				Build: &v1.Build{
-					Args:       map[string]string{},
+					BuildArgs:  map[string]string{},
 					BaseImage:  "imagecontext-image",
 					Context:    ".",
 					Dockerfile: "Dockerfile",
@@ -914,7 +914,7 @@ images: {
 					"side": {
 						Image: "imagecontext-image-side",
 						Build: &v1.Build{
-							Args:       map[string]string{},
+							BuildArgs:  map[string]string{},
 							BaseImage:  "imagecontext-image-side",
 							Context:    ".",
 							Dockerfile: "Dockerfile",
@@ -929,7 +929,7 @@ images: {
 		Images: map[string]v1.ImageBuilderSpec{
 			"build": {
 				Build: &v1.Build{
-					Args:        map[string]string{},
+					BuildArgs:   map[string]string{},
 					Context:     ".",
 					Dockerfile:  "Dockerfile",
 					ContextDirs: map[string]string{},
@@ -1366,17 +1366,17 @@ containers: zero: scale: 0
 
 func TestBuildParameters(t *testing.T) {
 	acornCue := `
-params: build: {
+args: build: {
   foo: string
 }
-containers: foo: build: args: one: params.build.foo
+containers: foo: build: buildArgs: one: args.build.foo
 `
 	def, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	def, err = def.WithBuildParams(map[string]interface{}{
+	def, err = def.WithBuildArgs(map[string]interface{}{
 		"foo": "two",
 	})
 	if err != nil {
@@ -1388,14 +1388,14 @@ containers: foo: build: args: one: params.build.foo
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.Args["one"])
+	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.BuildArgs["one"])
 }
 
 func TestAcorn(t *testing.T) {
 	acornCue := `
 acorns: foo: {
 	image: "foo"
-	params: {
+	deployArgs: {
 		x: "y"
 		z: true
 	}
@@ -1418,7 +1418,7 @@ acorns: foo: {
 		t.Fatal(err)
 	}
 
-	def, err = def.WithBuildParams(map[string]interface{}{
+	def, err = def.WithBuildArgs(map[string]interface{}{
 		"foo": "two",
 	})
 	if err != nil {
@@ -1436,7 +1436,7 @@ acorns: foo: {
 	assert.Equal(t, v1.GenericMap(map[string]interface{}{
 		"x": "y",
 		"z": true,
-	}), acorn.Params)
+	}), acorn.DeployArgs)
 	assert.Equal(t, []v1.PortDef{
 		{
 			Port:         80,

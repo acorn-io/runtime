@@ -70,7 +70,7 @@ type AppUpdateOptions struct {
 	Services         []v1.ServiceBinding
 	Ports            []v1.PortBinding
 	PublishProtocols []v1.Protocol
-	DeployParams     map[string]interface{}
+	DeployArgs       map[string]interface{}
 	Image            string
 }
 
@@ -84,7 +84,7 @@ type AppRunOptions struct {
 	Services         []v1.ServiceBinding
 	Ports            []v1.PortBinding
 	PublishProtocols []v1.Protocol
-	DeployParams     map[string]interface{}
+	DeployArgs       map[string]interface{}
 }
 
 type ImageProgress struct {

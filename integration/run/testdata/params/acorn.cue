@@ -1,4 +1,4 @@
-params: {
+args: {
 	deploy: {
 		someInt: int
 	}
@@ -7,7 +7,7 @@ params: {
 containers: {
 	foo: {
 		env: {
-			arg: "\(params.deploy.someInt)"
+			arg: "\(args.deploy.someInt)"
 		}
 		image: "nginx"
 	}

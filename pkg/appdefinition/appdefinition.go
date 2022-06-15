@@ -37,7 +37,7 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 	}
 
 	appDef = appDef.WithImageData(appImage.ImageData)
-	return appDef.WithBuildParams(appImage.BuildParams)
+	return appDef.WithBuildArgs(appImage.BuildParams)
 }
 
 func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
@@ -84,13 +84,13 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
-func (a *AppDefinition) WithDeployParams(params map[string]interface{}) (*AppDefinition, error) {
-	if len(params) == 0 {
+func (a *AppDefinition) WithDeployArgs(args map[string]interface{}) (*AppDefinition, error) {
+	if len(args) == 0 {
 		return a, nil
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"params": map[string]interface{}{
-			"deploy": params,
+		"args": map[string]interface{}{
+			"deploy": args,
 		},
 	})
 	if err != nil {
@@ -102,13 +102,13 @@ func (a *AppDefinition) WithDeployParams(params map[string]interface{}) (*AppDef
 	}, nil
 }
 
-func (a *AppDefinition) WithBuildParams(params map[string]interface{}) (*AppDefinition, error) {
-	if len(params) == 0 {
+func (a *AppDefinition) WithBuildArgs(args map[string]interface{}) (*AppDefinition, error) {
+	if len(args) == 0 {
 		return a, nil
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"params": map[string]interface{}{
-			"build": params,
+		"args": map[string]interface{}{
+			"build": args,
 		},
 	})
 	if err != nil {

@@ -91,7 +91,7 @@ func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, 
 			},
 		}
 
-		for key, value := range build.Args {
+		for key, value := range build.BuildArgs {
 			options.FrontendAttrs["build-arg:"+key] = value
 		}
 

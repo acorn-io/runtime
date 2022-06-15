@@ -161,7 +161,7 @@ type Options struct {
 	Services         []v1.ServiceBinding
 	PublishProtocols []v1.Protocol
 	Ports            []v1.PortBinding
-	DeployParams     map[string]interface{}
+	DeployArgs       map[string]interface{}
 	Client           client.WithWatch
 }
 
@@ -236,7 +236,7 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Volumes:          opts.Volumes,
 			Secrets:          opts.Secrets,
 			Services:         opts.Services,
-			DeployParams:     opts.DeployParams,
+			DeployArgs:       opts.DeployArgs,
 			PublishProtocols: opts.PublishProtocols,
 		},
 	}

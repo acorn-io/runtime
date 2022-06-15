@@ -8,7 +8,7 @@ import (
 
 func TestParamSpec(t *testing.T) {
 	acornCue := `
-params: build: {
+args: build: {
   // Description of a string param
   foo: string
 

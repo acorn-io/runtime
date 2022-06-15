@@ -28,7 +28,7 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 			Spec: v1.AppInstanceSpec{
 				Image:            image,
 				Endpoints:        opts.Endpoints,
-				DeployParams:     opts.DeployParams,
+				DeployArgs:       opts.DeployArgs,
 				Volumes:          opts.Volumes,
 				Secrets:          opts.Secrets,
 				Services:         opts.Services,
@@ -62,7 +62,7 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Spec.Endpoints = mergeEndpoints(app.Spec.Endpoints, opts.Endpoints)
 	app.Spec.Services = mergeServices(app.Spec.Services, opts.Services)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
-	app.Spec.DeployParams = typed.Concat(app.Spec.DeployParams, opts.DeployParams)
+	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.PublishProtocols) > 0 {
 		app.Spec.PublishProtocols = opts.PublishProtocols
 	}

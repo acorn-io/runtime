@@ -1,4 +1,4 @@
-params: build: {
+args: build: {
 	// This is a string
 	str: string
 
@@ -20,5 +20,5 @@ params: build: {
 }
 
 containers: {
-	foo: image: "\(params.build.strDefault)\(params.build.iDefault)"
+	foo: image: "\(args.build.strDefault)\(args.build.iDefault)"
 }

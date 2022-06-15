@@ -64,7 +64,7 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	appDef, err = appDef.WithDeployParams(deployParams)
+	appDef, err = appDef.WithDeployArgs(deployParams)
 	if err != nil {
 		return err
 	}

@@ -82,8 +82,8 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := client.AppUpdateOptions{
-		Image:        image,
-		DeployParams: deployParams,
+		Image:      image,
+		DeployArgs: deployParams,
 	}
 
 	opts.Endpoints, err = run.ParseEndpoints(s.DNS)

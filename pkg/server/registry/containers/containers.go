@@ -86,6 +86,13 @@ func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptio
 	app, podName, _ := strings.Cut(name, ".")
 	podName, _, _ = strings.Cut(podName, "/")
 
+	if podName == "" {
+		return nil, apierrors.NewNotFound(schema.GroupResource{
+			Group:    api.Group,
+			Resource: "containers",
+		}, name)
+	}
+
 	children, err := namespace.Children(ns)
 	if err != nil {
 		return nil, err

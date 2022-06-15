@@ -128,8 +128,8 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := client.AppRunOptions{
-		Name:         s.Name,
-		DeployParams: deployParams,
+		Name:       s.Name,
+		DeployArgs: deployParams,
 	}
 
 	opts.Endpoints, err = run.ParseEndpoints(s.DNS)
