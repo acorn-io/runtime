@@ -11,9 +11,9 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/flagparams"
 	"github.com/acorn-io/acorn/pkg/run"
-	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/exp/maps"
 )
 
 func NewRun() *cobra.Command {
@@ -44,21 +44,21 @@ func usage(app *v1.AppSpec) func() {
 			fmt.Println("Volumes:   <none>")
 		} else {
 			fmt.Print("Volumes:   ")
-			fmt.Println(strings.Join(typed.Keys(app.Volumes), ", "))
+			fmt.Println(strings.Join(maps.Keys(app.Volumes), ", "))
 		}
 
 		if len(app.Secrets) == 0 {
 			fmt.Println("Secrets:   <none>")
 		} else {
 			fmt.Print("Secrets:   ")
-			fmt.Println(strings.Join(typed.Keys(app.Secrets), ", "))
+			fmt.Println(strings.Join(maps.Keys(app.Secrets), ", "))
 		}
 
 		if len(app.Secrets) == 0 {
 			fmt.Println("Container: <none>")
 		} else {
 			fmt.Print("Container: ")
-			fmt.Println(strings.Join(typed.Keys(app.Containers), ", "))
+			fmt.Println(strings.Join(maps.Keys(app.Containers), ", "))
 		}
 
 		var ports []string

@@ -39,7 +39,7 @@ package v1
 
 #Probes: string | #ProbeMap | [...#ProbeSpec]
 
-#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action))?$"} | bytes
+#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action)|.mode=[0-7]{3,4})*$"} | bytes | #FileSpec
 
 #ContainerBase: {
 	files: [string]:                  #FileContent

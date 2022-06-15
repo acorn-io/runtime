@@ -306,7 +306,7 @@ import (
 	}
 	out: {
 		for k, v in IN.container.files {
-			files: "\(k)": {#ToFileSpec & {in: v}}.out
+			files: "\(k)": {#ToFileSpec & {in: {key: k, value: v}}}.out
 		}
 		if IN.container["image"] != _|_ {
 			image: IN.container.image

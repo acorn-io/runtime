@@ -105,6 +105,7 @@ package v1
 }
 
 #FileSpec: {
+	mode: =~"^[0-7]{3,4}$" | *"0644"
 	{
 		content: string
 	} | {

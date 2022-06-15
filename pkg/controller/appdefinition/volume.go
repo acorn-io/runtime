@@ -1,6 +1,8 @@
 package appdefinition
 
 import (
+	"sort"
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
@@ -115,50 +117,118 @@ func toVolumeName(appInstance *v1.AppInstance, volume string) (string, bool) {
 	return volume, false
 }
 
-func addVolumeReferencesForContainer(volumeNames map[string]bool, container v1.Container) {
-	for _, volume := range container.Dirs {
+func addVolumeReferencesForContainer(volumeReferences map[volumeReference]bool, container v1.Container) {
+	for _, entry := range typed.Sorted(container.Dirs) {
+		volume := entry.Value
 		if volume.ContextDir != "" {
 			continue
 		}
 		if volume.Secret.Name == "" {
-			volumeNames[volume.Volume] = true
+			volumeReferences[volumeReference{name: volume.Volume}] = true
 		} else {
-			volumeNames["secret--"+volume.Secret.Name] = true
+			volumeReferences[volumeReference{secretName: volume.Secret.Name}] = true
 		}
 	}
 
-	for _, file := range container.Files {
+	for _, entry := range typed.Sorted(container.Files) {
+		file := entry.Value
 		if file.Secret.Name != "" {
-			volumeNames["secret--"+file.Secret.Name] = true
+			volumeReferences[volumeReference{secretName: file.Secret.Name, mode: file.Mode}] = true
 		}
 	}
 }
 
-func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume) {
-	volumeNames := map[string]bool{}
-	addVolumeReferencesForContainer(volumeNames, container)
-	for _, sidecar := range container.Sidecars {
-		addVolumeReferencesForContainer(volumeNames, sidecar)
+type volumeReference struct {
+	name       string
+	secretName string
+	mode       string
+}
+
+func (v volumeReference) Suffix() string {
+	if normalizeMode(v.mode) == "" {
+		return ""
+	}
+	return "-" + v.mode
+}
+
+func toMode(m string) (*int32, error) {
+	i, err := strconv.ParseInt(m, 8, 32)
+	if err != nil {
+		return nil, err
+	}
+	i32 := int32(i)
+	return &i32, nil
+}
+
+func (v volumeReference) ParseMode() (*int32, error) {
+	if normalizeMode(v.mode) == "" {
+		return nil, nil
+	}
+	return toMode(v.mode)
+}
+
+func getFilesFileModesForApp(app *v1.AppInstance) map[string]bool {
+	fileModes := map[string]bool{}
+	for _, container := range app.Status.AppSpec.Containers {
+		addFilesFileModesForContainer(fileModes, container)
+	}
+	for _, container := range app.Status.AppSpec.Jobs {
+		addFilesFileModesForContainer(fileModes, container)
+	}
+	return fileModes
+}
+
+func normalizeMode(mode string) string {
+	if mode == "0644" || mode == "644" {
+		return ""
+	}
+	return mode
+}
+
+func addFilesFileModesForContainer(fileModes map[string]bool, container v1.Container) {
+	for _, file := range container.Files {
+		if file.Content != "" && file.Secret.Name == "" {
+			fileModes[normalizeMode(file.Mode)] = true
+		}
+		for _, sidecar := range container.Sidecars {
+			for _, file := range sidecar.Files {
+				if file.Content != "" && file.Secret.Name == "" {
+					fileModes[normalizeMode(file.Mode)] = true
+				}
+			}
+		}
+	}
+}
+
+func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume, _ error) {
+	volumeReferences := map[volumeReference]bool{}
+	addVolumeReferencesForContainer(volumeReferences, container)
+	for _, entry := range typed.Sorted(container.Sidecars) {
+		addVolumeReferencesForContainer(volumeReferences, entry.Value)
 	}
 
-	for _, volume := range typed.SortedKeys(volumeNames) {
-		if strings.HasPrefix(volume, "secret--") {
-			secretName := strings.TrimPrefix(volume, "secret--")
+	for volume := range volumeReferences {
+		if volume.secretName != "" {
+			mode, err := volume.ParseMode()
+			if err != nil {
+				return nil, err
+			}
 			result = append(result, corev1.Volume{
-				Name: volume,
+				Name: "secret--" + volume.secretName + volume.Suffix(),
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
-						SecretName: secretName,
+						SecretName:  volume.secretName,
+						DefaultMode: mode,
 					},
 				},
 			})
 			continue
 		}
 
-		name, bind := toVolumeName(appInstance, volume)
-		if vr, ok := isEphemeral(appInstance, volume); ok && !bind {
+		name, bind := toVolumeName(appInstance, volume.name)
+		if vr, ok := isEphemeral(appInstance, volume.name); ok && !bind {
 			result = append(result, corev1.Volume{
-				Name: volume,
+				Name: volume.name,
 				VolumeSource: corev1.VolumeSource{
 					EmptyDir: &corev1.EmptyDirVolumeSource{
 						SizeLimit: resource.NewQuantity(vr.Size*1_000_000_000, resource.DecimalSI),
@@ -167,7 +237,7 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 			})
 		} else {
 			result = append(result, corev1.Volume{
-				Name: volume,
+				Name: volume.name,
 				VolumeSource: corev1.VolumeSource{
 					PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 						ClaimName: name,
@@ -177,21 +247,38 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 		}
 	}
 
-	for _, file := range container.Files {
-		if file.Content != "" && file.Secret.Name == "" {
-			result = append(result, corev1.Volume{
-				Name: "files",
-				VolumeSource: corev1.VolumeSource{
-					ConfigMap: &corev1.ConfigMapVolumeSource{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: "files",
-						},
+	fileModes := map[string]bool{}
+	addFilesFileModesForContainer(fileModes, container)
+
+	for _, modeString := range typed.SortedKeys(fileModes) {
+		name := "files"
+		var (
+			mode *int32
+			err  error
+		)
+		if modeString != "" {
+			name = "files-" + modeString
+			mode, err = toMode(modeString)
+			if err != nil {
+				return nil, err
+			}
+		}
+		result = append(result, corev1.Volume{
+			Name: name,
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					DefaultMode: mode,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: name,
 					},
 				},
-			})
-			break
-		}
+			},
+		})
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 
 	return
 }
