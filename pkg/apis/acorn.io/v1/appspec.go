@@ -182,12 +182,13 @@ type AppSpec struct {
 }
 
 type Acorn struct {
-	Image      string          `json:"image,omitempty"`
-	Build      *AcornBuild     `json:"build,omitempty"`
-	DeployArgs GenericMap      `json:"deployArgs,omitempty"`
-	Ports      []PortDef       `json:"ports,omitempty"`
-	Secrets    []SecretBinding `json:"secrets,omitempty"`
-	Volumes    []VolumeBinding `json:"volumes,omitempty"`
+	Image      string           `json:"image,omitempty"`
+	Build      *AcornBuild      `json:"build,omitempty"`
+	DeployArgs GenericMap       `json:"deployArgs,omitempty"`
+	Ports      []PortDef        `json:"ports,omitempty"`
+	Secrets    []SecretBinding  `json:"secrets,omitempty"`
+	Volumes    []VolumeBinding  `json:"volumes,omitempty"`
+	Services   []ServiceBinding `json:"services,omitempty"`
 }
 
 type Secret struct {

@@ -426,11 +426,24 @@ func schema_pkg_apis_acornio_v1_Acorn(ref common.ReferenceCallback) common.OpenA
 							},
 						},
 					},
+					"services": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.ServiceBinding"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.VolumeBinding"},
 	}
 }
 

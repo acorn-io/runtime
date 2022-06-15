@@ -412,6 +412,16 @@ import (
 	}
 }
 
+#ToServiceBinding: {
+	IN="in": string
+	out:     v1.#ServiceBinding
+	out: {
+		let _parts = {#ToKVSplit & {in: IN}}.out
+		service: _parts.key
+		target:  _parts.value
+	}
+}
+
 #ToVolumeBinding: {
 	IN="in": string
 	out:     v1.#VolumeBinding
@@ -435,6 +445,7 @@ import (
 		deployArgs: IN.deployArgs
 		volumes: [ for v in IN.volumes {{#ToVolumeBinding & {in: v}}.out}]
 		secrets: [ for v in IN.secrets {{#ToSecretBinding & {in: v}}.out}]
+		services: [ for v in IN.links {{#ToServiceBinding & {in: v}}.out}]
 		ports: {
 			if (IN["ports"] & int) != _|_ {
 				[{#ToAppPort & {in: IN.ports}}.out]

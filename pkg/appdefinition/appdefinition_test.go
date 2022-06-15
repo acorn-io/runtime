@@ -1522,6 +1522,27 @@ containers: foo: {
 	assert.Contains(t, err.Error(), "conflicting values \"alias\" and \"container\"")
 }
 
+func TestLink(t *testing.T) {
+	acornCue := `
+acorns: one: links: ["two:three", "one"]
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "two", appSpec.Acorns["one"].Services[0].Service)
+	assert.Equal(t, "three", appSpec.Acorns["one"].Services[0].Target)
+	assert.Equal(t, "one", appSpec.Acorns["one"].Services[1].Service)
+	assert.Equal(t, "one", appSpec.Acorns["one"].Services[1].Target)
+}
+
 func TestAlias(t *testing.T) {
 	acornCue := `
 containers: foo: {
