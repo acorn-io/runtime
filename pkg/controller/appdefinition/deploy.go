@@ -158,7 +158,7 @@ func pathHash(parts ...string) string {
 func toMounts(appName, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
 		suffix := ""
-		if entry.Value.Mode != "" {
+		if normalizeMode(entry.Value.Mode) != "" {
 			suffix = "-" + entry.Value.Mode
 		}
 		if entry.Value.Secret.Key == "" || entry.Value.Secret.Name == "" {

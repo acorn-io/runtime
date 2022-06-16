@@ -23,7 +23,7 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"alias":{},"files":{"content-test":{"content":"YmFzZQ==","secret":{}},"content-test-mode":{"content":"YmFzZS1tb2Rl","mode":"0123","secret":{}}},"image":"image-name","sidecars":{"sidecar":{"alias":{},"files":{"sidecar-content-test":{"content":"c2lkZWNhcg==","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0123","secret":{}}},"image":"image-name"}}}'
+        acorn.io/container-spec: '{"alias":{},"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"content-test-mode":{"content":"YmFzZS1tb2Rl","mode":"0123","secret":{}},"secret-test":{"mode":"644","secret":{"key":"key-name","name":"ref"}}},"image":"image-name","sidecars":{"sidecar":{"alias":{},"files":{"sidecar-content-test":{"content":"c2lkZWNhcg==","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0123","secret":{}}},"image":"image-name"}}}'
     spec:
       terminationGracePeriodSeconds: 5
       imagePullSecrets:
@@ -41,6 +41,9 @@ spec:
           - mountPath: /content-test-mode
             name: files-0123
             subPath: 4b55bb46c09e
+          - mountPath: /secret-test
+            name: secret--ref
+            subPath: key-name
         - name: sidecar
           image: image-name
           volumeMounts:
@@ -58,4 +61,7 @@ spec:
         configMap:
           defaultMode: 0123
           name: files-0123
+      - name: secret--ref
+        secret:
+          secretName: ref
 
