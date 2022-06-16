@@ -10,7 +10,9 @@ metadata:
     8bbe3f160ad7: app-name/oneimage/oneimage/content-test
     9f61e131eb0e: app-name/oneimage/sidecar/sidecar-content-test-mode
     f88478b1092a: app-name/oneimage/sidecar/sidecar-content-test
+    efa6c2e6cb88: app-name/oneimage/oneimage/secret-test
 binaryData:
+  efa6c2e6cb88: ""
   4b55bb46c09e: YmFzZS1tb2Rl
   8bbe3f160ad7: YmFzZQ==
   9f61e131eb0e: c2lkZWNhci1tb2Rl
@@ -29,7 +31,9 @@ metadata:
     8bbe3f160ad7: app-name/oneimage/oneimage/content-test
     9f61e131eb0e: app-name/oneimage/sidecar/sidecar-content-test-mode
     f88478b1092a: app-name/oneimage/sidecar/sidecar-content-test
+    efa6c2e6cb88: app-name/oneimage/oneimage/secret-test
 binaryData:
+  efa6c2e6cb88: ""
   4b55bb46c09e: YmFzZS1tb2Rl
   8bbe3f160ad7: YmFzZQ==
   9f61e131eb0e: c2lkZWNhci1tb2Rl

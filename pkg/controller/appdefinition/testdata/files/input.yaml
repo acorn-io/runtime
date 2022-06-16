@@ -26,7 +26,13 @@ status:
                 mode: "0123"
         image: "image-name"
         files:
+          secret-test:
+            mode: "644"
+            secret:
+              key: key-name
+              name: ref
           content-test:
+            mode: "0644"
             content: "YmFzZQ=="
           content-test-mode:
             content: "YmFzZS1tb2Rl"
