@@ -43,7 +43,7 @@ func (s *Server) NewConfig(version string) (*Config, error) {
 	serverConfig.OpenAPIConfig.Info.Version = version
 	serverConfig.LongRunningFunc = filters.BasicLongRunningRequestCheck(
 		sets.NewString("watch", "proxy"),
-		sets.NewString("attach", "exec", "proxy", "log", "portforward"),
+		sets.NewString("exec", "proxy", "log", "registryport", "port", "push", "pull"),
 	)
 
 	if err := s.Options.ApplyTo(serverConfig); err != nil {

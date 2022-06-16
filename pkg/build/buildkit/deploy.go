@@ -2,8 +2,6 @@ package buildkit
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/watcher"
@@ -13,6 +11,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func Delete(ctx context.Context) error {
+	return deleteObjects(ctx)
+}
 
 func Exists(ctx context.Context, c client.WithWatch) (bool, error) {
 	dep := &appsv1.Deployment{}
@@ -30,6 +32,9 @@ func Exists(ctx context.Context, c client.WithWatch) (bool, error) {
 
 func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.Pod, error) {
 	port, err := getRegistryPort(ctx, client)
+	if err == nil {
+		err = checkDeployment(ctx, client)
+	}
 	if apierror.IsNotFound(err) {
 		err = applyObjects(ctx)
 		if err != nil {
@@ -45,18 +50,6 @@ func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.
 		depWatcher = watcher.New[*appsv1.Deployment](client)
 		podWatcher = watcher.New[*corev1.Pod](client)
 	)
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	go func() {
-		select {
-		case <-ctx.Done():
-		case <-time.After(3 * time.Second):
-			fmt.Print("Waiting for builder to start... ")
-			<-ctx.Done()
-			fmt.Println("Ready")
-		}
-	}()
 
 	deployment, err := depWatcher.ByName(ctx, system.Namespace, system.BuildKitName, func(dep *appsv1.Deployment) (bool, error) {
 		for _, cond := range dep.Status.Conditions {

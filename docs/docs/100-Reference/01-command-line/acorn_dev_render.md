@@ -26,6 +26,8 @@ acorn dev render [flags] DIRECTORY
   -l, --link strings        Link external app as a service in the current app (format app-name:service-name)
   -n, --name string         Name of app to create
       --namespace string    Namespace to work in (default "acorn")
+  -p, --publish strings     Publish exposed port of application (format [public:]private) (ex 81:80)
+  -P, --publish-all         Publish all exposed ports of application
   -s, --secret strings      Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
   -v, --volume strings      Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
 ```

@@ -4,6 +4,7 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
+	"github.com/acorn-io/acorn/pkg/server/registry/builders"
 	"github.com/acorn-io/acorn/pkg/server/registry/containers"
 	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
@@ -18,6 +19,7 @@ import (
 )
 
 func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storage, error) {
+	buildersStorage := builders.NewStorage(c)
 	imagesStorage := images.NewStorage(c)
 	containerStorage := containers.NewStorage(c)
 	tagsStorage := images.NewTagStorage(c, imagesStorage)
@@ -25,9 +27,21 @@ func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storag
 	if err != nil {
 		return nil, err
 	}
+	buildersPort, err := builders.NewBuildkitPort(c, buildersStorage, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	registryPort, err := builders.NewRegistryPort(c, buildersStorage, cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	return map[string]rest.Storage{
 		"apps":                   apps.NewStorage(c, imagesStorage),
+		"builders":               builders.NewStorage(c),
+		"builders/port":          buildersPort,
+		"builders/registryport":  registryPort,
 		"images":                 imagesStorage,
 		"images/tag":             tagsStorage,
 		"images/push":            images.NewImagePush(c, imagesStorage),

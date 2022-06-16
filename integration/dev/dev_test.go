@@ -63,7 +63,8 @@ func TestDev(t *testing.T) {
 	eg.Go(func() error {
 		return dev.Dev(subCtx, acornCueFile, &dev.Options{
 			Build: build.Options{
-				Cwd: tmp,
+				Cwd:    tmp,
+				Client: helper.BuilderClient(t),
 			},
 			Run: run.Options{
 				Name:      "test-app",

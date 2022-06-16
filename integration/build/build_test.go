@@ -8,8 +8,9 @@ import (
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
-	"github.com/acorn-io/acorn/pkg/build/buildkit"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
@@ -17,14 +18,16 @@ import (
 
 func TestBuildFailed(t *testing.T) {
 	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/acorn.cue", &build.Options{
-		Cwd: "./testdata/fail",
+		Cwd:    "./testdata/fail",
+		Client: helper.BuilderClient(t),
 	})
 	assert.Error(t, err)
 }
 
 func TestNestedBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/acorn.cue", &build.Options{
-		Cwd: "./testdata/nested",
+		Cwd:    "./testdata/nested",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -34,7 +37,8 @@ func TestNestedBuild(t *testing.T) {
 
 func TestSimpleBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
-		Cwd: "./testdata/simple",
+		Cwd:    "./testdata/simple",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -50,14 +54,16 @@ func TestSimilarBuilds(t *testing.T) {
 	// This tests a scenario where two builds only differ by a single character in the acorn.cue file and otherwise all
 	// the file names and sizes are the same. A caching bug caused the second build to result in the image from the first
 	image, err := build.Build(helper.GetCTX(t), "./testdata/similar/one/acorn.cue", &build.Options{
-		Cwd: "./testdata/similar/one",
+		Cwd:    "./testdata/similar/one",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	image2, err := build.Build(helper.GetCTX(t), "./testdata/similar/two/acorn.cue", &build.Options{
-		Cwd: "./testdata/similar/two",
+		Cwd:    "./testdata/similar/two",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -68,7 +74,8 @@ func TestSimilarBuilds(t *testing.T) {
 
 func TestJobBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/acorn.cue", &build.Options{
-		Cwd: "./testdata/jobs",
+		Cwd:    "./testdata/jobs",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +91,8 @@ func TestJobBuild(t *testing.T) {
 
 func TestSidecarBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/acorn.cue", &build.Options{
-		Cwd: "./testdata/sidecar",
+		Cwd:    "./testdata/sidecar",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +108,8 @@ func TestSidecarBuild(t *testing.T) {
 
 func TestTarget(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/target/acorn.cue", &build.Options{
-		Cwd: "./testdata/target",
+		Cwd:    "./testdata/target",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -113,7 +122,8 @@ func TestTarget(t *testing.T) {
 
 func TestContextDir(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/acorn.cue", &build.Options{
-		Cwd: "./testdata/contextdir",
+		Cwd:    "./testdata/contextdir",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +135,8 @@ func TestContextDir(t *testing.T) {
 
 func TestSimpleTwo(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/acorn.cue", &build.Options{
-		Cwd: "./testdata/simple-two",
+		Cwd:    "./testdata/simple-two",
+		Client: helper.BuilderClient(t),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -142,20 +153,18 @@ func TestSimpleTwo(t *testing.T) {
 	//assert.Equal(t, image.ImageData.Containers["two"].Image, image.ImageData.Images["itwo"].Image)
 }
 
-func Test_GetBuildkitDialer(t *testing.T) {
-	c, err := k8sclient.Default()
-	assert.Nil(t, err)
-
-	ctx, cancel := context.WithCancel(helper.GetCTX(t))
-	defer cancel()
-	port, _, err := buildkit.GetBuildkitDialer(ctx, c)
-	assert.Nil(t, err)
-	assert.True(t, port > 30000)
-}
-
 func TestMultiArch(t *testing.T) {
+	cfg := helper.StartAPI(t)
+	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
+	c, err := client.New(cfg, ns.Name)
+	if err != nil {
+		t.Fatal()
+	}
+
 	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/acorn.cue", &build.Options{
-		Cwd: "./testdata/multiarch",
+		Client:    c,
+		Namespace: ns.Name,
+		Cwd:       "./testdata/multiarch",
 		Platforms: []v1.Platform{
 			{
 				Architecture: "amd64",
@@ -173,7 +182,7 @@ func TestMultiArch(t *testing.T) {
 	assert.Len(t, image.ImageData.Containers, 1)
 	assert.True(t, len(image.ImageData.Containers["web"].Image) > 0)
 
-	opts, err := build.GetRemoteOptions(context.Background())
+	opts, err := remoteopts.WithClientDialer(context.Background(), c)
 	if err != nil {
 		t.Fatal(err)
 	}

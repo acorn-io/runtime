@@ -3,11 +3,12 @@ package buildkit
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/containerd/console"
@@ -19,18 +20,15 @@ import (
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) ([]v1.Platform, []string, error) {
-	c, err := k8sclient.Default()
+func Build(ctx context.Context, client client.Client, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) ([]v1.Platform, []string, error) {
+	dialer, err := client.BuilderDialer(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	port, dialer, err := GetBuildkitDialer(ctx, c)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bkc, err := buildkit.New(ctx, "", buildkit.WithContextDialer(dialer))
+	bkc, err := buildkit.New(ctx, "", buildkit.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+		return dialer(ctx)
+	}))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -100,7 +98,7 @@ func Build(ctx context.Context, cwd, namespace string, platforms []v1.Platform, 
 			return nil, nil, err
 		}
 
-		inClusterName := fmt.Sprintf("127.0.0.1:%d/acorn/%s@%s", port, namespace, res.ExporterResponse["containerimage.digest"])
+		inClusterName := fmt.Sprintf("127.0.0.1:5001/acorn/%s@%s", namespace, res.ExporterResponse["containerimage.digest"])
 		result = append(result, inClusterName)
 	}
 

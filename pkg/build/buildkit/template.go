@@ -11,12 +11,18 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func GetRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	return getRegistryPort(ctx, c)
+}
+
+func checkDeployment(ctx context.Context, c client.Reader) error {
+	var dep appsv1.Deployment
+	return c.Get(ctx, client.ObjectKey{Name: system.BuildKitName, Namespace: system.Namespace}, &dep)
 }
 
 func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
@@ -32,6 +38,29 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	}
 
 	return 0, fmt.Errorf("failed to find node port for registry %s/%s", system.Namespace, system.RegistryName)
+}
+
+func deleteObjects(ctx context.Context) error {
+	cfg, err := restconfig.Default()
+	if err != nil {
+		return err
+	}
+	apply, err := apply.NewForConfig(cfg)
+	if err != nil {
+		return err
+	}
+	return apply.
+		WithContext(ctx).
+		WithDynamicLookup().
+		WithSetID("acorn-buildkitd").
+		WithGVK(schema.GroupVersionKind{
+			Version: "v1",
+			Kind:    "Service",
+		}, schema.GroupVersionKind{
+			Version: "v1",
+			Kind:    "Deployment",
+		}).
+		ApplyObjects()
 }
 
 func applyObjects(ctx context.Context) error {
@@ -52,11 +81,6 @@ func applyObjects(ctx context.Context) error {
 
 func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
 	return []runtime.Object{
-		&corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: namespace,
-			},
-		},
 		&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      system.RegistryName,
@@ -70,6 +94,14 @@ func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
 						Port:     int32(system.RegistryPort),
 						TargetPort: intstr.IntOrString{
 							IntVal: int32(system.RegistryPort),
+						},
+					},
+					{
+						Name:     system.BuildKitName,
+						Protocol: corev1.ProtocolTCP,
+						Port:     int32(system.BuildkitPort),
+						TargetPort: intstr.IntOrString{
+							IntVal: int32(system.BuildkitPort),
 						},
 					},
 				},

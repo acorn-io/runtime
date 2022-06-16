@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"net"
 
 	"github.com/AlecAivazis/survey/v2"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -154,6 +155,26 @@ func (c IgnoreUninstalled) ImageDetails(ctx context.Context, imageName string, o
 	return promptInstall(ctx, func() (*ImageDetails, error) {
 		return c.client.ImageDetails(ctx, imageName, opts)
 	})
+}
+
+func (c IgnoreUninstalled) BuilderCreate(ctx context.Context) (*apiv1.Builder, error) {
+	return c.client.BuilderCreate(ctx)
+}
+
+func (c IgnoreUninstalled) BuilderGet(ctx context.Context) (*apiv1.Builder, error) {
+	return ignoreUninstalled(c.client.BuilderGet(ctx))
+}
+
+func (c IgnoreUninstalled) BuilderDelete(ctx context.Context) (*apiv1.Builder, error) {
+	return ignoreUninstalled(c.client.BuilderDelete(ctx))
+}
+
+func (c IgnoreUninstalled) BuilderDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
+	return c.client.BuilderDialer(ctx)
+}
+
+func (c IgnoreUninstalled) BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
+	return c.client.BuilderRegistryDialer(ctx)
 }
 
 func (c IgnoreUninstalled) CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {

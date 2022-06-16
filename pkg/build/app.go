@@ -9,6 +9,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/streams"
 )
 
@@ -16,7 +17,7 @@ type AppImageOptions struct {
 	FullTag bool
 }
 
-func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, streams streams.Output, opts *AppImageOptions) (string, error) {
+func FromAppImage(ctx context.Context, c client.Client, namespace string, appImage *v1.AppImage, streams streams.Output, opts *AppImageOptions) (string, error) {
 	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
@@ -24,7 +25,7 @@ func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, 
 	defer os.RemoveAll(tempContext)
 
 	io := streams.Streams()
-	tag, err := buildImageNoManifest(ctx, tempContext, namespace, v1.Build{
+	tag, err := buildImageNoManifest(ctx, c, tempContext, namespace, v1.Build{
 		Context:    ".",
 		Dockerfile: "Dockerfile",
 	}, io)
@@ -37,7 +38,7 @@ func FromAppImage(ctx context.Context, namespace string, appImage *v1.AppImage, 
 		fullTag = opts.FullTag
 	}
 
-	return createAppManifest(ctx, tag, appImage.ImageData, fullTag)
+	return createAppManifest(ctx, c, tag, appImage.ImageData, fullTag)
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {

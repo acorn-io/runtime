@@ -248,6 +248,33 @@ type Info struct {
 	Spec InfoSpec `json:"spec,omitempty"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Builder struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Status BuilderStatus `json:"status,omitempty"`
+}
+
+type BuilderStatus struct {
+	Ready bool `json:"ready,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type BuilderList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Builder `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type BuilderPortOptions struct {
+	metav1.TypeMeta `json:",inline"`
+}
+
 type InfoSpec struct {
 	Version         string `json:"version"`
 	Tag             string `json:"tag"`

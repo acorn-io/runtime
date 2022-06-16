@@ -98,7 +98,7 @@ func (s *Storage) forNamespace(ctx context.Context, ns string) (apiv1.ImageList,
 		return apiv1.ImageList{}, nil
 	}
 
-	opts, err := remoteopts.GetRemoteOptions(ctx, s.client)
+	opts, err := remoteopts.WithServerDialer(ctx, s.client)
 	if err != nil {
 		return apiv1.ImageList{}, err
 	}
@@ -183,7 +183,7 @@ func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest
 		return nil, false, err
 	}
 
-	opts, err := remoteopts.GetRemoteOptions(ctx, s.client)
+	opts, err := remoteopts.WithServerDialer(ctx, s.client)
 	if err != nil {
 		return nil, false, err
 	}
