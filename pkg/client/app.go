@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"sort"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -103,7 +104,7 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 			progress := apiv1.LogMessage{}
 			if err := json.Unmarshal([]byte(line), &progress); err == nil {
 				result <- progress
-			} else {
+			} else if !errors.Is(err, context.Canceled) && err.Error() != "unexpected end of JSON input" {
 				result <- apiv1.LogMessage{
 					Error: err.Error(),
 				}
@@ -111,7 +112,7 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 		}
 
 		err := lines.Err()
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			result <- apiv1.LogMessage{
 				Error: err.Error(),
 			}
@@ -213,7 +214,7 @@ func mergeVolumes(appVolumes, optsVolumes []v1.VolumeBinding) []v1.VolumeBinding
 
 func (c *client) AppDelete(ctx context.Context, name string) (*apiv1.App, error) {
 	app, err := c.AppGet(ctx, name)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		return nil, nil
 	}
 
@@ -279,7 +280,7 @@ func (c *client) AppStop(ctx context.Context, name string) error {
 		Name:      name,
 		Namespace: c.Namespace,
 	}, app)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		return nil
 	} else if err != nil {
 		return err

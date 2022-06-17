@@ -11,6 +11,7 @@ rules:
     resources:
       - pods
       - pods/exec
+      - pods/log
       - pods/portforward
       - pods/ephemeralcontainers
       - configmaps

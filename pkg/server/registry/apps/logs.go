@@ -78,6 +78,10 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 	}()
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+		if f, ok := rw.(http.Flusher); ok {
+			f.Flush()
+		}
 		for message := range output {
 			lm := apiv1.LogMessage{
 				Line:          message.Line,
@@ -90,7 +94,7 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 			}
 
 			if message.Err != nil {
-				lm.Error = err.Error()
+				lm.Error = message.Err.Error()
 			}
 
 			data, err := json.Marshal(lm)

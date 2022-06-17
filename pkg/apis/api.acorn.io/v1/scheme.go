@@ -49,5 +49,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	// Add the watch version that applies
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 
-	return scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions)
+	if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions); err != nil {
+		return err
+	}
+	return scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), Convert_url_Values_To__LogOptions)
 }
