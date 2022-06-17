@@ -23,6 +23,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -119,7 +120,7 @@ func (w *watcher) Wait(ctx context.Context) error {
 			case <-w.trigger:
 			case <-ctx.Done():
 				return ctx.Err()
-			case <-time.After(3 * time.Second):
+			case <-time.After(time.Second):
 				continue
 			}
 		}
@@ -131,11 +132,11 @@ func (w *watcher) Wait(ctx context.Context) error {
 	}
 }
 
-func buildLoop(ctx context.Context, file string, opts *build.Options, trigger <-chan struct{}, result chan<- string) error {
+func buildLoop(ctx context.Context, file string, opts *Options, trigger <-chan struct{}, result chan<- string) error {
 	var (
 		watcher = watcher{
 			file:       file,
-			cwd:        opts.Cwd,
+			cwd:        opts.Build.Cwd,
 			trigger:    typed.Debounce(trigger),
 			watching:   []string{file},
 			watchingTS: make([]time.Time, 1),
@@ -147,7 +148,17 @@ func buildLoop(ctx context.Context, file string, opts *build.Options, trigger <-
 			return err
 		}
 
-		image, err := build.Build(ctx, file, opts)
+		args := separateBuildArgs(opts.Args)
+		params, err := build.ParseParams(file, opts.Build.Cwd, args)
+		if err == pflag.ErrHelp {
+			continue
+		} else if err != nil {
+			logrus.Errorf("Failed to parse build args %s: %v", file, err)
+			continue
+		}
+
+		opts.Build.Args = params
+		image, err := build.Build(ctx, file, &opts.Build)
 		if err != nil {
 			logrus.Errorf("Failed to build %s: %v", file, err)
 			continue
@@ -237,14 +248,39 @@ func stop(opts *Options) error {
 	return opts.Client.AppStop(ctx, existingApp.Name)
 }
 
+func separateBuildArgs(args []string) (result []string) {
+	found := false
+	for _, arg := range args {
+		if arg == "--" {
+			found = true
+			continue
+		}
+		if found {
+			result = append(result, arg)
+		}
+	}
+	return
+}
+
+func separateDeployArgs(args []string) (result []string) {
+	for _, arg := range args {
+		if arg == "--" {
+			return
+		}
+		result = append(result, arg)
+	}
+	return
+}
+
 func runOrUpdate(ctx context.Context, acornCue, image string, opts *Options, apps chan<- *apiv1.App) (string, error) {
 	_, flags, err := deployargs.ToFlagsFromImage(ctx, opts.Client, image)
 	if err != nil {
 		return "", err
 	}
 
-	if len(opts.Args) > 0 {
-		deployArgs, err := flags.Parse(opts.Args)
+	args := separateDeployArgs(opts.Args)
+	if len(args) > 0 {
+		deployArgs, err := flags.Parse(args)
 		if err != nil {
 			return "", err
 		}
@@ -408,7 +444,7 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	})
 	eg.Go(func() error {
 		defer close(images)
-		return buildLoop(ctx, acornCue, &opts.Build, trigger, images)
+		return buildLoop(ctx, acornCue, opts, trigger, images)
 	})
 	eg.Go(func() error {
 		defer close(apps)
