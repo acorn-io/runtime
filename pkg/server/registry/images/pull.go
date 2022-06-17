@@ -37,11 +37,11 @@ func (i *ImagePull) NamespaceScoped() bool {
 }
 
 func (i *ImagePull) New() runtime.Object {
-	return &apiv1.ImagePull{}
+	return &apiv1.LogOptions{}
 }
 
 func (i *ImagePull) NewConnectOptions() (runtime.Object, bool, string) {
-	return &apiv1.ImagePull{}, false, ""
+	return &apiv1.LogOptions{}, false, ""
 }
 
 func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {

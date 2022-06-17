@@ -86,6 +86,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Info":                        schema_pkg_apis_apiacornio_v1_Info(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.InfoList":                    schema_pkg_apis_apiacornio_v1_InfoList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.InfoSpec":                    schema_pkg_apis_apiacornio_v1_InfoSpec(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.LogMessage":                  schema_pkg_apis_apiacornio_v1_LogMessage(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.LogOptions":                  schema_pkg_apis_apiacornio_v1_LogOptions(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Secret":                      schema_pkg_apis_apiacornio_v1_Secret(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.SecretList":                  schema_pkg_apis_apiacornio_v1_SecretList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Volume":                      schema_pkg_apis_apiacornio_v1_Volume(ref),
@@ -3747,6 +3749,88 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_LogMessage(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"line": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"podName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"containerName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"time": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"error": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_LogOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"tailLines": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"follow": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

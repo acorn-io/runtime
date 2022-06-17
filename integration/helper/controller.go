@@ -59,8 +59,8 @@ func EnsureCRDs(t *testing.T) {
 	}
 }
 
-func BuilderClient(t *testing.T) client.Client {
-	c, err := client.New(StartAPI(t), "")
+func BuilderClient(t *testing.T, namespace string) client.Client {
+	c, err := client.New(StartAPI(t), namespace)
 	if err != nil {
 		t.Fatal(err)
 	}

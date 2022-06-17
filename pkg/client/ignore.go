@@ -12,6 +12,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type IgnoreUninstalled struct {
@@ -65,6 +66,14 @@ func ignoreUninstalled[V any](arg V, err error) (V, error) {
 	return arg, err
 }
 
+func (c IgnoreUninstalled) GetNamespace() string {
+	return c.client.GetNamespace()
+}
+
+func (c IgnoreUninstalled) GetClient() kclient.WithWatch {
+	return c.client.GetClient()
+}
+
 func (c IgnoreUninstalled) AppList(ctx context.Context) ([]apiv1.App, error) {
 	return ignoreUninstalled(c.client.AppList(ctx))
 }
@@ -93,6 +102,10 @@ func (c IgnoreUninstalled) AppRun(ctx context.Context, image string, opts *AppRu
 
 func (c IgnoreUninstalled) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
 	return c.client.AppUpdate(ctx, name, opts)
+}
+
+func (c *IgnoreUninstalled) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
+	return c.client.AppLog(ctx, name, opts)
 }
 
 func (c IgnoreUninstalled) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {

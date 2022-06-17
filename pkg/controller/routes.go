@@ -22,10 +22,12 @@ var (
 
 func routes(router *router.Router) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.PullAppImage)
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.CreateSecrets)
+
+	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.DeploySpec)
+	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.CreateSecrets)
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(acornrouter.AcornRouter)
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.AppStatus)
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.AppEndpointsStatus)

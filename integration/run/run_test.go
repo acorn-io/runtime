@@ -28,9 +28,8 @@ func TestVolume(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(helper.GetCTX(t), "./testdata/volume/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/volume",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/volume",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -102,9 +101,8 @@ func TestImageNameAnnotation(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(helper.GetCTX(t), "./testdata/named/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/simple",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/simple",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -154,9 +152,8 @@ func TestSimple(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/simple",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/simple",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -225,9 +222,8 @@ func TestDeployParam(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(ctx, "./testdata/params/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/params",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/params",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -268,9 +264,8 @@ func TestPublishAcornHTTP(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/nested",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/nested",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -309,9 +304,8 @@ func TestAcornServiceExists(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/nested",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/nested",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -353,9 +347,8 @@ func TestNested(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/nested",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/nested",
 	})
 	if err != nil {
 		t.Fatal(err)

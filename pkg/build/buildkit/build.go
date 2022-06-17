@@ -20,7 +20,7 @@ import (
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func Build(ctx context.Context, client client.Client, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) ([]v1.Platform, []string, error) {
+func Build(ctx context.Context, client client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) ([]v1.Platform, []string, error) {
 	dialer, err := client.BuilderDialer(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -35,7 +35,7 @@ func Build(ctx context.Context, client client.Client, cwd, namespace string, pla
 	defer bkc.Close()
 
 	var (
-		inPodName      = fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, namespace)
+		inPodName      = fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, client.GetNamespace())
 		context        = filepath.Join(cwd, build.Context)
 		dockerfilePath = filepath.Dir(filepath.Join(cwd, build.Dockerfile))
 		dockerfileName = filepath.Base(build.Dockerfile)
@@ -98,7 +98,7 @@ func Build(ctx context.Context, client client.Client, cwd, namespace string, pla
 			return nil, nil, err
 		}
 
-		inClusterName := fmt.Sprintf("127.0.0.1:5001/acorn/%s@%s", namespace, res.ExporterResponse["containerimage.digest"])
+		inClusterName := fmt.Sprintf("127.0.0.1:5001/acorn/%s@%s", client.GetNamespace(), res.ExporterResponse["containerimage.digest"])
 		result = append(result, inClusterName)
 	}
 

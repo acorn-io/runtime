@@ -44,6 +44,7 @@ func TestLog(t *testing.T) {
 	go func() {
 		_ = log.App(ctx, app, output, &log.Options{
 			Client: c,
+			Follow: true,
 		})
 		close(output)
 	}()

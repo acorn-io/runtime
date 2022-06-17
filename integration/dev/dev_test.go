@@ -10,10 +10,9 @@ import (
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/log"
-	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"golang.org/x/sync/errgroup"
 )
@@ -35,8 +34,8 @@ func TestDev(t *testing.T) {
 	ctx := helper.GetCTX(t)
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	client := helper.MustReturn(hclient.Default)
-	ns := helper.TempNamespace(t, client)
+	c := helper.MustReturn(hclient.Default)
+	ns := helper.TempNamespace(t, c)
 	tmp, err := ioutil.TempDir("", "acorn-test-dev")
 	if err != nil {
 		t.Fatal(err)
@@ -57,22 +56,17 @@ func TestDev(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	appWatcher := watcher.New[*v1.AppInstance](client)
+	appWatcher := watcher.New[*v1.AppInstance](c)
 
 	eg := errgroup.Group{}
 	eg.Go(func() error {
 		return dev.Dev(subCtx, acornCueFile, &dev.Options{
+			Client: helper.BuilderClient(t, ns.Name),
 			Build: build.Options{
 				Cwd:    tmp,
-				Client: helper.BuilderClient(t),
 			},
-			Run: run.Options{
+			Run: client.AppRunOptions{
 				Name:      "test-app",
-				Namespace: ns.Name,
-				Client:    client,
-			},
-			Log: log.Options{
-				Client: client,
 			},
 		})
 	})

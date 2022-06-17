@@ -5,6 +5,7 @@ import (
 
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
@@ -376,6 +377,52 @@ func TestAppList(t *testing.T) {
 	assert.Len(t, apps, 1)
 	assert.Equal(t, imageID, apps[0].Spec.Image)
 	assert.Equal(t, app.UID, apps[0].UID)
+}
+
+func TestAppLog(t *testing.T) {
+	helper.EnsureCRDs(t)
+	restConfig := helper.StartAPI(t)
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	imageID := newImage(t, ns.Name)
+
+	c, err := client.New(restConfig, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, imageID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+		return app.Status.ContainerStatus["default"].Ready == 1
+	})
+
+	msgs, err := c.AppLog(ctx, app.Name, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	msg1 := <-msgs
+	msg2 := <-msgs
+
+	assert.Equal(t, "", msg1.Error)
+	assert.Equal(t, "", msg2.Error)
+	assert.Equal(t, "default", msg1.ContainerName)
+	assert.Equal(t, "default", msg2.ContainerName)
+	assert.NotEqual(t, "", msg1.Line)
+	assert.NotEqual(t, "", msg1.Line)
+
+	go func() {
+		for range msgs {
+		}
+	}()
 }
 
 func TestAppRun(t *testing.T) {
