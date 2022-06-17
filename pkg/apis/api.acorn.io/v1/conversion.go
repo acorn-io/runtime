@@ -34,3 +34,22 @@ func convert_url_Values_To__ContainerReplicaExecOptions(in *url.Values, out *Con
 func Convert_url_Values_To__ContainerReplicaExecOptions(in, out interface{}, s conversion.Scope) error {
 	return convert_url_Values_To__ContainerReplicaExecOptions(in.(*url.Values), out.(*ContainerReplicaExecOptions), s)
 }
+
+func convert_url_Values_To__LogOptions(in *url.Values, out *LogOptions, s conversion.Scope) error {
+	if values, ok := map[string][]string(*in)["tailLines"]; ok && len(values) > 0 {
+		out.TailLines = new(int64)
+		if err := runtime.Convert_Slice_string_To_int64(&values, out.TailLines, s); err != nil {
+			return err
+		}
+	}
+	if values, ok := map[string][]string(*in)["follow"]; ok && len(values) > 0 {
+		if err := runtime.Convert_Slice_string_To_bool(&values, &out.Follow, s); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Convert_url_Values_To__LogOptions(in, out interface{}, s conversion.Scope) error {
+	return convert_url_Values_To__LogOptions(in.(*url.Values), out.(*LogOptions), s)
+}
