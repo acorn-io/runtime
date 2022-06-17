@@ -7,7 +7,7 @@ metadata:
 spec:
   image: test
   publishProtocols:
-  - http
+  - "*"
   endpoints:
   - target: oneimage
     hostname: localhost
