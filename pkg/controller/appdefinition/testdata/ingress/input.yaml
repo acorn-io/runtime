@@ -6,6 +6,7 @@ metadata:
   namespace: app-namespace
 spec:
   publishProtocols:
+  - tcp
   - http
   image: test
   endpoints:

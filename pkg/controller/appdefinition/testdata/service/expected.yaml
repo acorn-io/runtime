@@ -279,7 +279,7 @@ metadata:
   namespace: app-namespace
 spec:
   publishProtocols:
-  - http
+  - "*"
   image: test
   endpoints:
     - target: oneimage

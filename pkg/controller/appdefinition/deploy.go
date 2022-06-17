@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	url2 "net/url"
 	"path"
 	"regexp"
@@ -31,7 +33,22 @@ var (
 	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 )
 
+type ErrMissingSecret struct {
+	Name      string
+	Namespace string
+}
+
+func (e *ErrMissingSecret) Error() string {
+	return fmt.Sprintf("missing secret: %s/%s", e.Namespace, e.Name)
+}
+
 func DeploySpec(req router.Request, resp router.Response) (err error) {
+	defer func() {
+		if missing := (*ErrMissingSecret)(nil); errors.As(err, &missing) {
+			err = nil
+		}
+	}()
+
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
 	defer func() {
@@ -393,7 +410,7 @@ func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 func getRevision(req router.Request, namespace, secretName string) (string, error) {
 	secret := &corev1.Secret{}
 	if err := req.Get(secret, namespace, secretName); apierror.IsNotFound(err) {
-		return "0", nil
+		return "0", &ErrMissingSecret{Namespace: namespace, Name: secretName}
 	} else if err != nil {
 		return "0", err
 	}
