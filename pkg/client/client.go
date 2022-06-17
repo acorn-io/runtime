@@ -75,6 +75,8 @@ type AppUpdateOptions struct {
 	Image            string
 }
 
+type LogOptions apiv1.LogOptions
+
 type AppRunOptions struct {
 	Name             string
 	Annotations      map[string]string
@@ -86,6 +88,20 @@ type AppRunOptions struct {
 	Ports            []v1.PortBinding
 	PublishProtocols []v1.Protocol
 	DeployArgs       map[string]interface{}
+}
+
+func (a AppRunOptions) ToUpdate() AppUpdateOptions {
+	return AppUpdateOptions{
+		Annotations:      a.Annotations,
+		Labels:           a.Labels,
+		Endpoints:        a.Endpoints,
+		Volumes:          a.Volumes,
+		Secrets:          a.Secrets,
+		Services:         a.Services,
+		Ports:            a.Ports,
+		PublishProtocols: a.PublishProtocols,
+		DeployArgs:       a.DeployArgs,
+	}
 }
 
 type ImageProgress struct {
@@ -106,6 +122,7 @@ type Client interface {
 	AppStart(ctx context.Context, name string) error
 	AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error)
 	AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error)
+	AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error)
 
 	CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
 	CredentialList(ctx context.Context) ([]apiv1.Credential, error)
@@ -144,6 +161,9 @@ type Client interface {
 	BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error)
 
 	Info(ctx context.Context) (*apiv1.Info, error)
+
+	GetNamespace() string
+	GetClient() kclient.WithWatch
 }
 
 type ImagePullOptions struct {
@@ -166,9 +186,17 @@ type ContainerReplicaListOptions struct {
 }
 
 type client struct {
-	Namespace  string `json:"namespace,omitempty"`
+	Namespace  string
 	Client     kclient.WithWatch
 	RESTConfig *rest.Config
 	RESTClient *rest.RESTClient
 	Dialer     *k8schannel.Dialer
+}
+
+func (c *client) GetNamespace() string {
+	return c.Namespace
+}
+
+func (c *client) GetClient() kclient.WithWatch {
+	return c.Client
 }

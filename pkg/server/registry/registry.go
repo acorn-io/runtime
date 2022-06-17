@@ -37,8 +37,15 @@ func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storag
 		return nil, err
 	}
 
+	appsStorage := apps.NewStorage(c, imagesStorage)
+	logsStorage, err := apps.NewLogs(c, appsStorage, cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string]rest.Storage{
-		"apps":                   apps.NewStorage(c, imagesStorage),
+		"apps":                   appsStorage,
+		"apps/log":               logsStorage,
 		"builders":               builders.NewStorage(c),
 		"builders/port":          buildersPort,
 		"builders/registryport":  registryPort,

@@ -3,11 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cue"
-	"github.com/acorn-io/acorn/pkg/flagparams"
+	"github.com/acorn-io/acorn/pkg/deployargs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -33,29 +30,10 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 		cwd = args[0]
 	}
 
-	buildFile := build.ResolveFile(s.File, cwd)
-	data, err := cue.ReadCUE(buildFile)
+	appDef, flags, err := deployargs.ToFlagsFromFile(s.File, cwd)
 	if err != nil {
 		return err
 	}
-
-	appDef, err := appdefinition.NewAppDefinition(data)
-	if err != nil {
-		return err
-	}
-
-	appSpec, err := appDef.AppSpec()
-	if err != nil {
-		return err
-	}
-
-	params, err := appDef.DeployParams()
-	if err != nil {
-		return err
-	}
-
-	flags := flagparams.New(s.File, params)
-	flags.Usage = usage(appSpec)
 
 	deployParams, err := flags.Parse(args)
 	if pflag.ErrHelp == err {

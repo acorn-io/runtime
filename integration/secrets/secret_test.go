@@ -20,9 +20,8 @@ func TestText(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/generated",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/generated",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -62,9 +61,8 @@ func TestJSON(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/generated-json",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/generated-json",
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -17,7 +17,7 @@ type AppImageOptions struct {
 	FullTag bool
 }
 
-func FromAppImage(ctx context.Context, c client.Client, namespace string, appImage *v1.AppImage, streams streams.Output, opts *AppImageOptions) (string, error) {
+func FromAppImage(ctx context.Context, c client.Client, appImage *v1.AppImage, streams streams.Output, opts *AppImageOptions) (string, error) {
 	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
@@ -25,7 +25,7 @@ func FromAppImage(ctx context.Context, c client.Client, namespace string, appIma
 	defer os.RemoveAll(tempContext)
 
 	io := streams.Streams()
-	tag, err := buildImageNoManifest(ctx, c, tempContext, namespace, v1.Build{
+	tag, err := buildImageNoManifest(ctx, c, tempContext, v1.Build{
 		Context:    ".",
 		Dockerfile: "Dockerfile",
 	}, io)

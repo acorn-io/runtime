@@ -72,9 +72,8 @@ func TestImageTagMove(t *testing.T) {
 
 	imageID := newImage(t, ns.Name)
 	image2, err := build.Build(helper.GetCTX(t), "./testdata/nginx2/acorn.cue", &build.Options{
-		Client:    helper.BuilderClient(t),
-		Cwd:       "./testdata/nginx2",
-		Namespace: ns.Name,
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/nginx2",
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -1,11 +1,14 @@
 package client
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"sort"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,6 +71,54 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	}
 
 	return app, c.Client.Update(ctx, app)
+}
+
+func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
+	app, err := c.AppGet(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	if opts == nil {
+		opts = &LogOptions{}
+	}
+
+	resp, err := c.RESTClient.Get().
+		Namespace(app.Namespace).
+		Resource("apps").
+		Name(app.Name).
+		SubResource("log").
+		VersionedParams((*apiv1.LogOptions)(opts), scheme.ParameterCodec).
+		Stream(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(chan apiv1.LogMessage)
+	go func() {
+		defer close(result)
+		lines := bufio.NewScanner(resp)
+		for lines.Scan() {
+			line := lines.Text()
+			progress := apiv1.LogMessage{}
+			if err := json.Unmarshal([]byte(line), &progress); err == nil {
+				result <- progress
+			} else {
+				result <- apiv1.LogMessage{
+					Error: err.Error(),
+				}
+			}
+		}
+
+		err := lines.Err()
+		if err != nil {
+			result <- apiv1.LogMessage{
+				Error: err.Error(),
+			}
+		}
+	}()
+
+	return result, nil
 }
 
 func mergePorts(appPorts, optsPorts []v1.PortBinding) []v1.PortBinding {

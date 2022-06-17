@@ -25,7 +25,6 @@ import (
 type Options struct {
 	Client    client.Client
 	Cwd       string
-	Namespace string
 	Platforms []v1.Platform
 	Args      map[string]interface{}
 	Streams   *streams.Output
@@ -49,9 +48,6 @@ func (b *Options) Complete() (*Options, error) {
 	}
 	if current.Streams == nil {
 		current.Streams = streams.CurrentOutput()
-	}
-	if current.Namespace == "" {
-		current.Namespace = system.RequireUserNamespace()
 	}
 	if current.Client == nil {
 		current.Client, err = client.Default()
@@ -119,7 +115,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	}
 	buildSpec.Platforms = opts.Platforms
 
-	imageData, err := FromSpec(ctx, opts.Client, opts.Cwd, opts.Namespace, *buildSpec, *opts.Streams)
+	imageData, err := FromSpec(ctx, opts.Client, opts.Cwd, *buildSpec, *opts.Streams)
 	appImage := &v1.AppImage{
 		Acornfile:   string(fileData),
 		ImageData:   imageData,
@@ -129,7 +125,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	id, err := FromAppImage(ctx, opts.Client, opts.Namespace, appImage, *opts.Streams, &AppImageOptions{
+	id, err := FromAppImage(ctx, opts.Client, appImage, *opts.Streams, &AppImageOptions{
 		FullTag: opts.FullTag,
 	})
 	if err != nil {
@@ -140,7 +136,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, c client.Client, cwd, namespace string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
@@ -152,7 +148,7 @@ func buildContainers(ctx context.Context, c client.Client, cwd, namespace string
 			}
 		}
 
-		id, err := FromBuild(ctx, c, cwd, namespace, platforms, *container.Build, streams.Streams())
+		id, err := FromBuild(ctx, c, cwd, platforms, *container.Build, streams.Streams())
 		if err != nil {
 			return nil, err
 		}
@@ -177,7 +173,7 @@ func buildContainers(ctx context.Context, c client.Client, cwd, namespace string
 				}
 			}
 
-			id, err := FromBuild(ctx, c, cwd, namespace, platforms, *sidecar.Build, streams.Streams())
+			id, err := FromBuild(ctx, c, cwd, platforms, *sidecar.Build, streams.Streams())
 			if err != nil {
 				return nil, err
 			}
@@ -190,7 +186,7 @@ func buildContainers(ctx context.Context, c client.Client, cwd, namespace string
 	return result, nil
 }
 
-func buildAcorns(ctx context.Context, c client.Client, cwd, namespace string, platforms []v1.Platform, streams streams.Output, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
+func buildAcorns(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, streams streams.Output, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(acorns) {
@@ -223,7 +219,6 @@ func buildAcorns(ctx context.Context, c client.Client, cwd, namespace string, pl
 			appImage, err := Build(ctx, filepath.Join(cwd, acornImage.Build.Acornfile), &Options{
 				Client:    c,
 				Cwd:       filepath.Join(cwd, acornImage.Build.Context),
-				Namespace: namespace,
 				Platforms: platforms,
 				Args:      acornImage.Build.BuildArgs,
 				Streams:   &streams,
@@ -240,7 +235,7 @@ func buildAcorns(ctx context.Context, c client.Client, cwd, namespace string, pl
 
 	return result, nil
 }
-func buildImages(ctx context.Context, c client.Client, cwd, namespace string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
+func buildImages(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(images) {
@@ -251,7 +246,7 @@ func buildImages(ctx context.Context, c client.Client, cwd, namespace string, pl
 			}
 		}
 
-		id, err := FromBuild(ctx, c, cwd, namespace, platforms, *image.Build, streams.Streams())
+		id, err := FromBuild(ctx, c, cwd, platforms, *image.Build, streams.Streams())
 		if err != nil {
 			return nil, err
 		}
@@ -264,7 +259,7 @@ func buildImages(ctx context.Context, c client.Client, cwd, namespace string, pl
 	return result, nil
 }
 
-func FromSpec(ctx context.Context, c client.Client, cwd, namespace string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
+func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
 	var (
 		err  error
 		data = v1.ImagesData{
@@ -272,22 +267,22 @@ func FromSpec(ctx context.Context, c client.Client, cwd, namespace string, spec 
 		}
 	)
 
-	data.Containers, err = buildContainers(ctx, c, cwd, namespace, spec.Platforms, streams, spec.Containers)
+	data.Containers, err = buildContainers(ctx, c, cwd, spec.Platforms, streams, spec.Containers)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, c, cwd, namespace, spec.Platforms, streams, spec.Jobs)
+	data.Jobs, err = buildContainers(ctx, c, cwd, spec.Platforms, streams, spec.Jobs)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, c, cwd, namespace, spec.Platforms, streams, spec.Images)
+	data.Images, err = buildImages(ctx, c, cwd, spec.Platforms, streams, spec.Images)
 	if err != nil {
 		return data, err
 	}
 
-	data.Acorns, err = buildAcorns(ctx, c, cwd, namespace, spec.Platforms, streams, spec.Acorns)
+	data.Acorns, err = buildAcorns(ctx, c, cwd, spec.Platforms, streams, spec.Acorns)
 	if err != nil {
 		return data, err
 	}
@@ -295,7 +290,7 @@ func FromSpec(ctx context.Context, c client.Client, cwd, namespace string, spec 
 	return data, nil
 }
 
-func FromBuild(ctx context.Context, c client.Client, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+func FromBuild(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
 	if build.Dockerfile == "" {
 		build.Dockerfile = "Dockerfile"
 	}
@@ -305,22 +300,22 @@ func FromBuild(ctx context.Context, c client.Client, cwd, namespace string, plat
 	}
 
 	if build.BaseImage != "" || len(build.ContextDirs) > 0 {
-		return buildWithContext(ctx, c, cwd, namespace, platforms, build, streams)
+		return buildWithContext(ctx, c, cwd, platforms, build, streams)
 	}
 
-	return buildImageAndManifest(ctx, c, cwd, namespace, platforms, build, streams)
+	return buildImageAndManifest(ctx, c, cwd, platforms, build, streams)
 }
 
-func buildImageNoManifest(ctx context.Context, c client.Client, cwd, namespace string, build v1.Build, streams streams.Streams) (string, error) {
-	_, ids, err := buildkit.Build(ctx, c, cwd, namespace, nil, build, streams)
+func buildImageNoManifest(ctx context.Context, c client.Client, cwd string, build v1.Build, streams streams.Streams) (string, error) {
+	_, ids, err := buildkit.Build(ctx, c, cwd, nil, build, streams)
 	if err != nil {
 		return "", err
 	}
 	return ids[0], nil
 }
 
-func buildImageAndManifest(ctx context.Context, c client.Client, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
-	platforms, ids, err := buildkit.Build(ctx, c, cwd, namespace, platforms, build, streams)
+func buildImageAndManifest(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+	platforms, ids, err := buildkit.Build(ctx, c, cwd, platforms, build, streams)
 	if err != nil {
 		return "", err
 	}
@@ -328,14 +323,14 @@ func buildImageAndManifest(ctx context.Context, c client.Client, cwd, namespace 
 	return createManifest(ctx, c, ids, platforms)
 }
 
-func buildWithContext(ctx context.Context, c client.Client, cwd, namespace string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+func buildWithContext(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
 	var (
 		baseImage = build.BaseImage
 		err       error
 	)
 
 	if baseImage == "" {
-		newImage, err := buildImageAndManifest(ctx, c, cwd, namespace, platforms, build.BaseBuild(), streams)
+		newImage, err := buildImageAndManifest(ctx, c, cwd, platforms, build.BaseBuild(), streams)
 		if err != nil {
 			return "", err
 		}
@@ -363,7 +358,7 @@ func buildWithContext(ctx context.Context, c client.Client, cwd, namespace strin
 		return "", err
 	}
 
-	return buildImageAndManifest(ctx, c, "", namespace, platforms, v1.Build{
+	return buildImageAndManifest(ctx, c, "", platforms, v1.Build{
 		Context:    cwd,
 		Dockerfile: dockerfile.Name(),
 	}, streams)

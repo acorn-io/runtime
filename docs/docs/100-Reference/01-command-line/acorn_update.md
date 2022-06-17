@@ -16,10 +16,11 @@ acorn update [flags] APP_NAME [deploy flags]
   -h, --help              help for update
       --image string      
   -l, --link strings      Link external app as a service in the current app (format app-name:service-name)
+  -n, --name string       Name of app to create
   -p, --publish strings   Publish exposed port of application (format [public:]private) (ex 81:80)
   -P, --publish-all       Publish all exposed ports of application
-  -s, --secrets strings   Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
-  -v, --volumes strings   Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
+  -s, --secret strings    Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
+  -v, --volume strings    Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
 ```
 
 ### Options inherited from parent commands

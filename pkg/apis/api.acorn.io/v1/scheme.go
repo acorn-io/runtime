@@ -31,6 +31,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ImagePull{},
 		&Info{},
 		&InfoList{},
+		&LogOptions{},
 		&Volume{},
 		&VolumeList{},
 		&Credential{},

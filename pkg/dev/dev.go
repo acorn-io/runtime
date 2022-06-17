@@ -9,57 +9,51 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/cue"
+	"github.com/acorn-io/acorn/pkg/deployargs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
-	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
-	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Options struct {
-	Args  []string
-	Build build.Options
-	Run   run.Options
-	Log   log.Options
+	Args   []string
+	Client client.Client
+	Build  build.Options
+	Run    client.AppRunOptions
+	Log    client.LogOptions
 }
 
 func (o *Options) Complete() (*Options, error) {
-	result := *o
+	var (
+		result Options
+		err    error
+	)
 
-	if result.Run.Client == nil && result.Log.Client != nil {
-		result.Run.Client = result.Log.Client
+	if o != nil {
+		result = *o
 	}
 
-	buildOpts, err := result.Build.Complete()
-	if err != nil {
-		return nil, err
+	if result.Client == nil {
+		result.Client, err = client.Default()
+		if err != nil {
+			return nil, err
+		}
 	}
-	result.Build = *buildOpts
 
-	runOpts, err := result.Run.Complete()
-	if err != nil {
-		return nil, err
-	}
-	result.Run = *runOpts
-
-	logOpts, err := result.Log.Complete()
-	if err != nil {
-		return nil, err
-	}
-	result.Log = *logOpts
+	result.Build.Client = result.Client
 	return &result, nil
 }
 
@@ -137,7 +131,7 @@ func (w *watcher) Wait(ctx context.Context) error {
 	}
 }
 
-func buildLoop(ctx context.Context, file string, opts build.Options, trigger <-chan struct{}, result chan<- string) error {
+func buildLoop(ctx context.Context, file string, opts *build.Options, trigger <-chan struct{}, result chan<- string) error {
 	var (
 		watcher = watcher{
 			file:       file,
@@ -153,7 +147,7 @@ func buildLoop(ctx context.Context, file string, opts build.Options, trigger <-c
 			return err
 		}
 
-		image, err := build.Build(ctx, file, &opts)
+		image, err := build.Build(ctx, file, opts)
 		if err != nil {
 			logrus.Errorf("Failed to build %s: %v", file, err)
 			continue
@@ -163,36 +157,36 @@ func buildLoop(ctx context.Context, file string, opts build.Options, trigger <-c
 	}
 }
 
-func getByPathLabels(acornCue string) klabels.Set {
+func getPathHash(acornCue string) string {
 	sum := sha256.Sum256([]byte(acornCue))
-	return klabels.Set{
-		labels.AcornAppCuePath: hex.EncodeToString(sum[:])[:12],
-	}
+	return hex.EncodeToString(sum[:])[:12]
 }
 
-func getByPathSelector(acornCue string) klabels.Selector {
-	return klabels.SelectorFromSet(getByPathLabels(acornCue))
+func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image string, opts *Options) error {
+	if app.Spec.Stop != nil && *app.Spec.Stop {
+		err := c.AppStart(ctx, app.Name)
+		if err != nil {
+			return err
+		}
+	}
+	update := opts.Run.ToUpdate()
+	update.Image = image
+	_, err := c.AppUpdate(ctx, app.Name, &update)
+	return err
 }
 
-func updateApp(ctx context.Context, client client.Client, app *v1.AppInstance, image string, opts run.Options) error {
-	app.Spec.Image = image
-	app.Spec.Stop = new(bool)
-	app.Spec.Endpoints = opts.Endpoints
-	return client.Update(ctx, app)
-}
+func createApp(ctx context.Context, acornCue, image string, opts *Options, apps chan<- *apiv1.App) (string, error) {
+	if opts.Run.Labels == nil {
+		opts.Run.Labels = map[string]string{}
+	}
+	opts.Run.Labels[labels.AcornAppCuePath] = getPathHash(acornCue)
 
-func createApp(ctx context.Context, acornCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
-	if opts.Labels == nil {
-		opts.Labels = map[string]string{}
+	if opts.Run.Annotations == nil {
+		opts.Run.Annotations = map[string]string{}
 	}
-	if opts.Annotations == nil {
-		opts.Annotations = map[string]string{}
-	}
-	for k, v := range getByPathLabels(acornCue) {
-		opts.Labels[k] = v
-	}
-	opts.Annotations[labels.AcornAppCuePath] = acornCue
-	app, err := run.Run(ctx, image, &opts)
+	opts.Run.Annotations[labels.AcornAppCuePath] = acornCue
+
+	app, err := opts.Client.AppRun(ctx, image, &opts.Run)
 	if err != nil {
 		return "", err
 	}
@@ -200,59 +194,64 @@ func createApp(ctx context.Context, acornCue, image string, opts run.Options, ap
 	return app.Name, nil
 }
 
-func getAppName(ctx context.Context, acornCue string, opts run.Options) (string, error) {
-	var apps v1.AppInstanceList
-	err := opts.Client.List(ctx, &apps, &client.ListOptions{
-		LabelSelector: getByPathSelector(acornCue),
-		Namespace:     opts.Namespace,
-	})
+func getAppName(ctx context.Context, acornCue string, opts *Options) (string, error) {
+	apps, err := opts.Client.AppList(ctx)
 	if err != nil {
 		return "", err
 	}
-	if len(apps.Items) > 0 {
-		sort.Slice(apps.Items, func(i, j int) bool {
-			return apps.Items[i].Name < apps.Items[j].Name
-		})
-		return apps.Items[0].Name, nil
+
+	hash := getPathHash(acornCue)
+	for _, app := range apps {
+		if app.Labels[labels.AcornAppCuePath] == hash {
+			return app.Name, nil
+		}
 	}
 
 	return "", nil
 }
 
-func getExistingApp(ctx context.Context, acornCue string, opts run.Options) (*v1.AppInstance, error) {
-	name := opts.Name
+func getExistingApp(ctx context.Context, opts *Options) (*apiv1.App, error) {
+	name := opts.Run.Name
 	if name == "" {
 		return nil, apierror.NewNotFound(schema.GroupResource{
-			Group:    v1.SchemeGroupVersion.Group,
-			Resource: "appinstances",
+			Group:    api.Group,
+			Resource: "apps",
 		}, name)
 	}
 
-	var existingApp v1.AppInstance
-	err := opts.Client.Get(ctx, client.ObjectKey{Name: name, Namespace: opts.Namespace}, &existingApp)
-	return &existingApp, err
+	return opts.Client.AppGet(ctx, name)
 }
 
-func stop(acornCue string, opts run.Options) error {
+func stop(opts *Options) error {
 	// Don't use a passed context, because it will be canceled already
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	existingApp, err := getExistingApp(ctx, acornCue, opts)
+	existingApp, err := getExistingApp(ctx, opts)
 	if apierror.IsNotFound(err) {
 		return nil
 	} else if err != nil {
 		return err
 	}
-	if existingApp.Spec.Stop == nil || !*existingApp.Spec.Stop {
-		existingApp.Spec.Stop = &[]bool{true}[0]
-		return opts.Client.Update(ctx, existingApp)
-	}
-	return nil
+
+	return opts.Client.AppStop(ctx, existingApp.Name)
 }
 
-func runOrUpdate(ctx context.Context, acornCue, image string, opts run.Options, apps chan<- *v1.AppInstance) (string, error) {
-	existingApp, err := getExistingApp(ctx, acornCue, opts)
+func runOrUpdate(ctx context.Context, acornCue, image string, opts *Options, apps chan<- *apiv1.App) (string, error) {
+	_, flags, err := deployargs.ToFlagsFromImage(ctx, opts.Client, image)
+	if err != nil {
+		return "", err
+	}
+
+	if len(opts.Args) > 0 {
+		deployArgs, err := flags.Parse(opts.Args)
+		if err != nil {
+			return "", err
+		}
+		opts.Run.DeployArgs = deployArgs
+	}
+
+	existingApp, err := getExistingApp(ctx, opts)
 	if apierror.IsNotFound(err) {
 		return createApp(ctx, acornCue, image, opts, apps)
 	} else if err != nil {
@@ -262,9 +261,9 @@ func runOrUpdate(ctx context.Context, acornCue, image string, opts run.Options, 
 	return existingApp.Name, updateApp(ctx, opts.Client, existingApp, image, opts)
 }
 
-func runLoop(ctx context.Context, acornCue string, opts run.Options, images <-chan string, apps chan<- *v1.AppInstance) error {
+func runLoop(ctx context.Context, acornCue string, opts *Options, images <-chan string, apps chan<- *apiv1.App) error {
 	defer func() {
-		if err := stop(acornCue, opts); err != nil {
+		if err := stop(opts); err != nil {
 			logrus.Errorf("Failed to stop app: %v", err)
 		}
 	}()
@@ -277,7 +276,7 @@ func runLoop(ctx context.Context, acornCue string, opts run.Options, images <-ch
 			if newName, err := runOrUpdate(ctx, acornCue, image, opts, apps); err != nil {
 				logrus.Errorf("Failed to run app: %v", err)
 			} else {
-				opts.Name = newName
+				opts.Run.Name = newName
 			}
 		case <-ctx.Done():
 			return ctx.Err()
@@ -285,21 +284,22 @@ func runLoop(ctx context.Context, acornCue string, opts run.Options, images <-ch
 	}
 }
 
-func doLog(ctx context.Context, app *v1.AppInstance, opts *log.Options) <-chan error {
+func doLog(ctx context.Context, app *apiv1.App, opts *Options) <-chan error {
 	result := make(chan error, 1)
 	go func() {
 		fmt.Println("Watching logs for", app.Name)
-		result <- log.Output(ctx, app, opts)
+		opts.Log.Follow = true
+		result <- log.Output(ctx, opts.Client, app.Name, &opts.Log)
 		fmt.Println("Terminating logging for", app.Name)
 	}()
 	return result
 }
 
-func logLoop(ctx context.Context, apps <-chan *v1.AppInstance, opts *log.Options) error {
+func logLoop(ctx context.Context, apps <-chan *apiv1.App, opts *Options) error {
 	var (
 		logging = false
 		logChan <-chan error
-		lastApp *v1.AppInstance
+		lastApp *apiv1.App
 		cancel  = func() {}
 		logCtx  context.Context
 	)
@@ -381,7 +381,7 @@ func resolveAcornCueAndName(ctx context.Context, acornCue string, opts *Options)
 	}
 
 	if !nameWasSet {
-		existingName, err := getAppName(ctx, acornCue, opts.Run)
+		existingName, err := getAppName(ctx, acornCue, opts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -399,7 +399,7 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 
 	trigger := make(chan struct{}, 1)
 	images := make(chan string, 1)
-	apps := make(chan *v1.AppInstance, 1)
+	apps := make(chan *apiv1.App, 1)
 	appLogs, appStatus := typed.Tee(apps)
 
 	eg, ctx := errgroup.WithContext(ctx)
@@ -408,14 +408,14 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	})
 	eg.Go(func() error {
 		defer close(images)
-		return buildLoop(ctx, acornCue, opts.Build, trigger, images)
+		return buildLoop(ctx, acornCue, &opts.Build, trigger, images)
 	})
 	eg.Go(func() error {
 		defer close(apps)
-		return runLoop(ctx, acornCue, opts.Run, images, apps)
+		return runLoop(ctx, acornCue, opts, images, apps)
 	})
 	eg.Go(func() error {
-		return logLoop(ctx, appLogs, &opts.Log)
+		return logLoop(ctx, appLogs, opts)
 	})
 	eg.Go(func() error {
 		return appStatusLoop(ctx, appStatus, opts)

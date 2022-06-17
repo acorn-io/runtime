@@ -57,6 +57,7 @@ func deleteObjects(ctx context.Context) error {
 			Version: "v1",
 			Kind:    "Service",
 		}, schema.GroupVersionKind{
+			Group:   "apps",
 			Version: "v1",
 			Kind:    "Deployment",
 		}).
@@ -94,14 +95,6 @@ func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
 						Port:     int32(system.RegistryPort),
 						TargetPort: intstr.IntOrString{
 							IntVal: int32(system.RegistryPort),
-						},
-					},
-					{
-						Name:     system.BuildKitName,
-						Protocol: corev1.ProtocolTCP,
-						Port:     int32(system.BuildkitPort),
-						TargetPort: intstr.IntOrString{
-							IntVal: int32(system.BuildkitPort),
 						},
 					},
 				},

@@ -15,7 +15,6 @@ import (
 	applabels "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/restconfig"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -71,7 +70,7 @@ type Options struct {
 	Client     client.WithWatch
 	PodClient  v12.PodsGetter
 	TailLines  *int64
-	NoFollow   bool
+	Follow     bool
 }
 
 func (o *Options) restConfig() (*rest.Config, error) {
@@ -179,7 +178,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 
 		req := options.PodClient.Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{
 			Container:  name,
-			Follow:     !options.NoFollow,
+			Follow:     options.Follow,
 			SinceTime:  since,
 			Timestamps: true,
 			TailLines:  tailLines,
@@ -213,7 +212,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 			tailLines = nil
 		}
 
-		if options.NoFollow {
+		if !options.Follow {
 			break
 		}
 	}
@@ -243,7 +242,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 		return err
 	}
 
-	if options.NoFollow {
+	if !options.Follow {
 		if !pod.DeletionTimestamp.IsZero() {
 			return nil
 		}
@@ -361,28 +360,13 @@ func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message
 	return nil
 }
 
-func Output(ctx context.Context, app *v1.AppInstance, options *Options) error {
-	output := make(chan Message)
-	defer close(output)
-	go func() {
-		for msg := range output {
-			if msg.Err == nil {
-				fmt.Printf("%s/%s: %s\n", msg.Pod.Name, msg.ContainerName, msg.Line)
-			} else {
-				logrus.Error(msg.Err)
-			}
-		}
-	}()
-	return App(ctx, app, output, options)
-}
-
 func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, options *Options) error {
 	options, err := options.Complete()
 	if err != nil {
 		return err
 	}
 
-	if options.NoFollow {
+	if !options.Follow {
 		return appNoFollow(ctx, app, output, options)
 	}
 

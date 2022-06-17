@@ -113,6 +113,23 @@ type ImagePull struct {
 	metav1.TypeMeta `json:",inline"`
 }
 
+type LogMessage struct {
+	Line          string      `json:"line,omitempty"`
+	PodName       string      `json:"podName,omitempty"`
+	ContainerName string      `json:"containerName,omitempty"`
+	Time          metav1.Time `json:"time,omitempty"`
+	Error         string      `json:"error,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type LogOptions struct {
+	metav1.TypeMeta `json:",inline"`
+
+	TailLines *int64 `json:"tailLines,omitempty"`
+	Follow    bool   `json:"follow,omitempty"`
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ImageDetails struct {
@@ -269,6 +286,7 @@ type BuilderList struct {
 	Items           []Builder `json:"items"`
 }
 
+// +k8s:conversion-gen:explicit-from=net/url.Values
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type BuilderPortOptions struct {
