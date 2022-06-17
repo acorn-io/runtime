@@ -16,13 +16,15 @@ acorn dev [flags] DIRECTORY
 ### Options
 
 ```
-  -d, --dns strings      Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
-  -f, --file string      Name of the dev file (default "DIRECTORY/acorn.cue")
-  -h, --help             help for dev
-  -l, --link strings     Link external app as a service in the current app (format app-name:service-name)
-  -n, --name string      Name of app to create
-  -s, --secret strings   Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
-  -v, --volume strings   Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
+  -d, --dns strings       Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
+  -f, --file string       Name of the dev file (default "DIRECTORY/acorn.cue")
+  -h, --help              help for dev
+  -l, --link strings      Link external app as a service in the current app (format app-name:service-name)
+  -n, --name string       Name of app to create
+  -p, --publish strings   Publish exposed port of application (format [public:]private) (ex 81:80)
+  -P, --publish-all       Publish all exposed ports of application
+  -s, --secret strings    Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
+  -v, --volume strings    Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
 ```
 
 ### Options inherited from parent commands

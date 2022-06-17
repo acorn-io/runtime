@@ -25,12 +25,7 @@ func (w *WebSocketDialer) DialContext(ctx context.Context, address string) (net.
 	return conn.ForStream(0), nil
 }
 
-func NewWebSocketDialer(cfg *rest.Config, pod *corev1.Pod, port uint32) (*WebSocketDialer, error) {
-	url, err := urlForPodAndPort(cfg, pod, port)
-	if err != nil {
-		return nil, err
-	}
-
+func NewWebSocketDialerForURL(cfg *rest.Config, url *url.URL) (*WebSocketDialer, error) {
 	dialer, err := k8schannel.NewDialer(cfg, true)
 	if err != nil {
 		return nil, err
@@ -49,7 +44,7 @@ func NewWebSocketDialer(cfg *rest.Config, pod *corev1.Pod, port uint32) (*WebSoc
 	}, nil
 }
 
-func urlForPodAndPort(cfg *rest.Config, pod *corev1.Pod, port uint32) (*url.URL, error) {
+func NewWebSocketDialer(cfg *rest.Config, pod *corev1.Pod, port uint32) (*WebSocketDialer, error) {
 	cfg.APIPath = "/api"
 	cfg.GroupVersion = &schema.GroupVersion{
 		Group:   "",
@@ -60,6 +55,11 @@ func urlForPodAndPort(cfg *rest.Config, pod *corev1.Pod, port uint32) (*url.URL,
 		return nil, err
 	}
 
+	url := URLForPortAndPod(restClient, pod, port)
+	return NewWebSocketDialerForURL(cfg, url)
+}
+
+func URLForPortAndPod(restClient rest.Interface, pod *corev1.Pod, port uint32) *url.URL {
 	url := restClient.Get().
 		Resource("pods").
 		Namespace(pod.Namespace).
@@ -69,5 +69,5 @@ func urlForPodAndPort(cfg *rest.Config, pod *corev1.Pod, port uint32) (*url.URL,
 	q := url.Query()
 	q.Set("ports", strconv.Itoa(int(port)))
 	url.RawQuery = q.Encode()
-	return url, nil
+	return url
 }

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -135,6 +136,12 @@ type Client interface {
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (<-chan ImageProgress, error)
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
+
+	BuilderCreate(ctx context.Context) (*apiv1.Builder, error)
+	BuilderGet(ctx context.Context) (*apiv1.Builder, error)
+	BuilderDelete(ctx context.Context) (*apiv1.Builder, error)
+	BuilderDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error)
+	BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error)
 
 	Info(ctx context.Context) (*apiv1.Info, error)
 }

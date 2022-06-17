@@ -112,7 +112,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		})
 	}
 
-	opts, err := remoteopts.GetRemoteOptions(ctx, i.client)
+	opts, err := remoteopts.WithServerDialer(ctx, i.client)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -127,7 +127,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		return nil, nil, err
 	}
 
-	writeOpts, err := remoteopts.GetRemoteWriteOptions(ctx, i.client)
+	writeOpts, err := remoteopts.Common(ctx)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
@@ -139,13 +141,13 @@ func allImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageI
 	return
 }
 
-func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, fullDigest bool) (string, error) {
+func createAppManifest(ctx context.Context, c client.Client, ref string, data v1.ImagesData, fullDigest bool) (string, error) {
 	d, err := name.NewDigest(ref)
 	if err != nil {
 		return "", err
 	}
 
-	opts, err := GetRemoteOptions(ctx)
+	opts, err := remoteopts.WithClientDialer(ctx, c)
 	if err != nil {
 		return "", err
 	}
@@ -187,8 +189,8 @@ func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, full
 	return h.Hex, nil
 }
 
-func createManifest(ctx context.Context, tags []string, platforms []v1.Platform) (string, error) {
-	opts, err := GetRemoteOptions(ctx)
+func createManifest(ctx context.Context, c client.Client, tags []string, platforms []v1.Platform) (string, error) {
+	opts, err := remoteopts.WithClientDialer(ctx, c)
 	if err != nil {
 		return "", err
 	}

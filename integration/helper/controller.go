@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"net"
 	"net/http/httptest"
 	"sync"
 	"testing"
@@ -9,6 +10,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/controller"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -19,6 +21,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/registry"
 	uuid2 "github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -55,6 +59,22 @@ func EnsureCRDs(t *testing.T) {
 	}
 }
 
+func BuilderClient(t *testing.T) client.Client {
+	c, err := client.New(StartAPI(t), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c
+}
+
+func ensureNamespace(t *testing.T) {
+	kclient := MustReturn(hclient.Default)
+	_ = kclient.Create(context.Background(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: system.Namespace,
+		},
+	})
+}
 func StartAPI(t *testing.T) *rest.Config {
 	apiStartLock.Lock()
 	defer apiStartLock.Unlock()
@@ -63,22 +83,27 @@ func StartAPI(t *testing.T) *rest.Config {
 		return apiRESTConfig
 	}
 
-	srv := server.New()
-	srv.Options.SecureServing.BindPort = 37443
-	srv.Options.Authentication.TolerateInClusterLookupFailure = true
-	cfg, err := srv.NewConfig("dev")
+	ensureNamespace(t)
+
+	l, err := net.Listen("tcp", "0.0.0.0:0")
 	if err != nil {
 		t.Fatal(err)
 	}
-	go func() {
-		err := srv.Run(context.Background(), cfg)
-		t.Log("failed to start api", err)
-	}()
+	srv := server.New()
+	srv.Options.SecureServing.Listener = l
+	srv.Options.Authentication.TolerateInClusterLookupFailure = true
+	cfg, err := srv.NewConfig("dev")
+	if err == nil {
+		go func() {
+			err := srv.Run(context.Background(), cfg)
+			t.Log("failed to start api", err)
+		}()
+	}
 
 	kubeconfig := clientcmdapi.Config{
 		Clusters: map[string]*clientcmdapi.Cluster{
 			"default": {
-				Server:                "https://localhost:37443",
+				Server:                "https://" + l.Addr().String(),
 				InsecureSkipTLSVerify: true,
 			},
 		},
@@ -130,6 +155,8 @@ func StartController(t *testing.T) {
 	if controllerStarted {
 		return
 	}
+
+	ensureNamespace(t)
 
 	k8s, err := hclient.DefaultInterface()
 	if err != nil {

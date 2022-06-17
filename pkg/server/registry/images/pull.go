@@ -76,7 +76,7 @@ func (i *ImagePull) ConnectMethods() []string {
 }
 
 func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) (<-chan ggcrv1.Update, error) {
-	writeOpts, err := remoteopts.GetRemoteWriteOptions(ctx, i.client)
+	writeOpts, err := remoteopts.Common(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 
 	writeOpts = append(writeOpts, remote.WithAuthFromKeychain(keyChain))
 
-	opts, err := remoteopts.GetRemoteOptions(ctx, i.client)
+	opts, err := remoteopts.WithServerDialer(ctx, i.client)
 	if err != nil {
 		return nil, err
 	}

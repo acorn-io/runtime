@@ -30,6 +30,7 @@ import (
 )
 
 type Options struct {
+	Args  []string
 	Build build.Options
 	Run   run.Options
 	Log   log.Options

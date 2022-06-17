@@ -15,6 +15,7 @@ import (
 
 func newImage2(t *testing.T, namespace string) string {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx2/acorn.cue", &build.Options{
+		Client:    helper.BuilderClient(t),
 		Cwd:       "./testdata/nginx2",
 		Namespace: namespace,
 	})
@@ -26,6 +27,7 @@ func newImage2(t *testing.T, namespace string) string {
 
 func newImage(t *testing.T, namespace string) string {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/acorn.cue", &build.Options{
+		Client:    helper.BuilderClient(t),
 		Cwd:       "./testdata/nginx",
 		Namespace: namespace,
 	})
@@ -44,6 +46,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	ns := helper.TempNamespace(t, client)
 
 	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/acorn.cue", &build.Options{
+		Client:    helper.BuilderClient(t),
 		Cwd:       "./testdata/nginx",
 		Namespace: ns.Name,
 	})
