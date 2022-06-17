@@ -35,7 +35,7 @@ func (s *Storage) NewList() runtime.Object {
 }
 
 func (s *Storage) NamespaceScoped() bool {
-	return true
+	return false
 }
 
 func (s *Storage) New() runtime.Object {
