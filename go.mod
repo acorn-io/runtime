@@ -21,7 +21,7 @@ require (
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.6
 	github.com/google/go-containerregistry v0.9.0
-	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220616035112-623023e6c244
+	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220618143108-2a21d4fae654
 	github.com/google/uuid v1.3.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.0
