@@ -1,12 +1,15 @@
 package cli
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/deployargs"
+	"github.com/acorn-io/acorn/pkg/dev"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -25,6 +28,7 @@ func NewRun() *cobra.Command {
 
 type Run struct {
 	RunArgs
+	Interactive bool `usage:"Stream logs/status in the foreground and stop on exit" short:"i"`
 }
 
 type RunArgs struct {
@@ -35,6 +39,7 @@ type RunArgs struct {
 	Link       []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
 	PublishAll bool     `usage:"Publish all exposed ports of application" short:"P"`
 	Publish    []string `usage:"Publish exposed port of application (format [public:]private) (ex 81:80)" short:"p"`
+	Profile    []string `usage:"Profile to assign default values"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -44,6 +49,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	)
 
 	opts.Name = s.Name
+	opts.Profiles = s.Profile
 
 	opts.Endpoints, err = run.ParseEndpoints(s.DNS)
 	if err != nil {
@@ -109,5 +115,15 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println(app.Name)
+
+	if s.Interactive {
+		dev.LogLoop(cmd.Context(), c, app, nil)
+		dev.AppStatusLoop(cmd.Context(), c, app)
+		<-cmd.Context().Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = c.AppStop(ctx, app.Name)
+	}
+
 	return nil
 }

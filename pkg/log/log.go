@@ -199,7 +199,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 		}
 		// pipe will close the readCloser
 		lastTS, err := pipe(readCloser, output, pod, name, since)
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			output <- Message{
 				Time:          time.Now(),
 				Pod:           pod,

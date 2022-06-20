@@ -39,8 +39,8 @@ type AppInstance struct {
 type AppInstanceSpec struct {
 	Image            string            `json:"image,omitempty"`
 	Stop             *bool             `json:"stop,omitempty"`
-	ReattachVolumes  *bool             `json:"reattachVolumes,omitempty"`
-	ReattachSecrets  *bool             `json:"reattachSecrets,omitempty"`
+	DevMode          *bool             `json:"devMode,omitempty"`
+	Profiles         []string          `json:"profiles,omitempty"`
 	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
 	Secrets          []SecretBinding   `json:"secrets,omitempty"`
 	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`
@@ -48,6 +48,10 @@ type AppInstanceSpec struct {
 	PublishProtocols []Protocol        `json:"publishProtocols,omitempty"`
 	Ports            []PortBinding     `json:"ports,omitempty"`
 	DeployArgs       GenericMap        `json:"deployArgs,omitempty"`
+}
+
+func (in AppInstanceSpec) GetDevMode() bool {
+	return in.DevMode != nil && *in.DevMode
 }
 
 type ServiceBinding struct {

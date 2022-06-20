@@ -14,9 +14,10 @@ func NewDev() *cobra.Command {
 		SilenceUsage: true,
 		Short:        "Build and run an app in development mode",
 		Long:         "Build and run an app in development mode",
-		Args:         cobra.MaximumNArgs(1),
+		Args:         cobra.MinimumNArgs(1),
 	})
 	cmd.AddCommand(NewRender())
+	cmd.Flags().SetInterspersed(false)
 	return cmd
 }
 
@@ -45,7 +46,8 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		Args:   args,
 		Client: c,
 		Build: build.Options{
-			Cwd: cwd,
+			Cwd:      cwd,
+			Profiles: opts.Profiles,
 		},
 		Run: opts,
 	})

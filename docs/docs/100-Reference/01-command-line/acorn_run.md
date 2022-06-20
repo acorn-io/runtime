@@ -14,8 +14,10 @@ acorn run [flags] IMAGE [deploy flags]
 ```
   -d, --dns strings       Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
   -h, --help              help for run
+  -i, --interactive       Stream logs/status in the foreground and stop on exit
   -l, --link strings      Link external app as a service in the current app (format app-name:service-name)
   -n, --name string       Name of app to create
+      --profile strings   Profile to assign default values
   -p, --publish strings   Publish exposed port of application (format [public:]private) (ex 81:80)
   -P, --publish-all       Publish all exposed ports of application
   -s, --secret strings    Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)

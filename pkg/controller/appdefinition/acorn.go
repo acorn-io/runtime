@@ -60,14 +60,12 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 				labels.AcornAcornName, acornName),
 		},
 		Spec: v1.AppInstanceSpec{
-			ReattachSecrets: appInstance.Spec.ReattachSecrets,
-			ReattachVolumes: appInstance.Spec.ReattachVolumes,
-			Image:           image,
-			Volumes:         acorn.Volumes,
-			Secrets:         acorn.Secrets,
-			Services:        acorn.Services,
-			DeployArgs:      acorn.DeployArgs,
-			Ports:           ports,
+			Image:      image,
+			Volumes:    acorn.Volumes,
+			Secrets:    acorn.Secrets,
+			Services:   acorn.Services,
+			DeployArgs: acorn.DeployArgs,
+			Ports:      ports,
 		},
 	}
 }

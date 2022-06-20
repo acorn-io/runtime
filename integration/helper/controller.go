@@ -180,7 +180,7 @@ func StartController(t *testing.T) {
 
 func lock(ctx context.Context, client kubernetes.Interface, cb func(ctx context.Context)) {
 	id := uuid2.New().String()
-	rl, err := resourcelock.New(resourcelock.ConfigMapsLeasesResourceLock,
+	rl, err := resourcelock.New(resourcelock.LeasesResourceLock,
 		system.Namespace,
 		"acorn-controller",
 		client.CoreV1(),

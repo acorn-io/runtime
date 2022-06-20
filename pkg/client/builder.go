@@ -78,7 +78,6 @@ func (c *client) BuilderDialer(ctx context.Context) (func(ctx context.Context) (
 	}
 
 	req := c.RESTClient.Get().
-		Namespace(builder.Namespace).
 		Resource("builders").
 		Name(builder.Name).
 		SubResource("port").
@@ -103,7 +102,6 @@ func (c *client) BuilderRegistryDialer(ctx context.Context) (func(ctx context.Co
 	}
 
 	req := c.RESTClient.Get().
-		Namespace(builder.Namespace).
 		Resource("builders").
 		Name(builder.Name).
 		SubResource("registryport").

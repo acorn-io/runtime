@@ -69,8 +69,8 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 	if err := addFile(tempDir, ".dockerignore", "Dockerfile\n.dockerignore"); err != nil {
 		return "", err
 	}
-	if len(appImage.BuildParams) > 0 {
-		if err := addFile(tempDir, "build.json", appImage.BuildParams); err != nil {
+	if len(appImage.BuildArgs) > 0 {
+		if err := addFile(tempDir, "build.json", appImage.BuildArgs); err != nil {
 			return "", err
 		}
 	}

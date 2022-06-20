@@ -27,6 +27,7 @@ type Options struct {
 	Cwd       string
 	Platforms []v1.Platform
 	Args      map[string]interface{}
+	Profiles  []string
 	Streams   *streams.Output
 	FullTag   bool
 }
@@ -104,7 +105,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	appDefinition, err = appDefinition.WithBuildArgs(opts.Args)
+	appDefinition, buildArgs, err := appDefinition.WithBuildArgs(opts.Args, opts.Profiles)
 	if err != nil {
 		return nil, err
 	}
@@ -117,9 +118,9 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 
 	imageData, err := FromSpec(ctx, opts.Client, opts.Cwd, *buildSpec, *opts.Streams)
 	appImage := &v1.AppImage{
-		Acornfile:   string(fileData),
-		ImageData:   imageData,
-		BuildParams: opts.Args,
+		Acornfile: string(fileData),
+		ImageData: imageData,
+		BuildArgs: buildArgs,
 	}
 	if err != nil {
 		return nil, err

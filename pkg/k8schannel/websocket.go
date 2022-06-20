@@ -1,11 +1,13 @@
 package k8schannel
 
 import (
+	"encoding/json"
 	"io"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/gorilla/websocket"
 	"github.com/rancher/wrangler/pkg/merr"
 )
@@ -23,6 +25,29 @@ type Connection struct {
 	streams     map[uint8]*stream
 	writeLock   sync.Mutex
 	err         error
+}
+
+func (c *Connection) ToExecIO(tty bool) *term.ExecIO {
+	exit := make(chan term.ExitCode, 1)
+	go func() {
+		exit <- term.ToExitCode(c.ForStream(3))
+	}()
+
+	return &term.ExecIO{
+		TTY:      tty,
+		Stdin:    c.ForStream(0),
+		Stdout:   c.ForStream(1),
+		Stderr:   c.ForStream(2),
+		ExitCode: exit,
+		Resize: func(size term.Size) error {
+			data, err := json.Marshal(size)
+			if err != nil {
+				return err
+			}
+			_, err = c.Write(4, data)
+			return err
+		},
+	}
 }
 
 func NewConnection(conn *websocket.Conn, needsInit bool) *Connection {

@@ -160,8 +160,10 @@ type Options struct {
 	Secrets          []v1.SecretBinding
 	Services         []v1.ServiceBinding
 	PublishProtocols []v1.Protocol
+	Profiles         []string
 	Ports            []v1.PortBinding
 	DeployArgs       map[string]interface{}
+	DevMode          *bool
 	Client           client.WithWatch
 }
 
@@ -238,6 +240,8 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Services:         opts.Services,
 			DeployArgs:       opts.DeployArgs,
 			PublishProtocols: opts.PublishProtocols,
+			Profiles:         opts.Profiles,
+			DevMode:          opts.DevMode,
 		},
 	}
 

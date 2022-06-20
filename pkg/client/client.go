@@ -71,7 +71,9 @@ type AppUpdateOptions struct {
 	Services         []v1.ServiceBinding
 	Ports            []v1.PortBinding
 	PublishProtocols []v1.Protocol
+	Profiles         []string
 	DeployArgs       map[string]interface{}
+	DevMode          *bool
 	Image            string
 }
 
@@ -87,7 +89,9 @@ type AppRunOptions struct {
 	Services         []v1.ServiceBinding
 	Ports            []v1.PortBinding
 	PublishProtocols []v1.Protocol
+	Profiles         []string
 	DeployArgs       map[string]interface{}
+	DevMode          *bool
 }
 
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {
@@ -101,6 +105,8 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		Ports:            a.Ports,
 		PublishProtocols: a.PublishProtocols,
 		DeployArgs:       a.DeployArgs,
+		DevMode:          a.DevMode,
+		Profiles:         a.Profiles,
 	}
 }
 

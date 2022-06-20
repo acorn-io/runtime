@@ -21,6 +21,7 @@ acorn dev [flags] DIRECTORY
   -h, --help              help for dev
   -l, --link strings      Link external app as a service in the current app (format app-name:service-name)
   -n, --name string       Name of app to create
+      --profile strings   Profile to assign default values
   -p, --publish strings   Publish exposed port of application (format [public:]private) (ex 81:80)
   -P, --publish-all       Publish all exposed ports of application
   -s, --secret strings    Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)

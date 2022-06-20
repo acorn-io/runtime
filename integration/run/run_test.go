@@ -272,7 +272,8 @@ func TestPublishAcornHTTP(t *testing.T) {
 	}
 
 	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
-		Namespace: ns.Name,
+		Namespace:        ns.Name,
+		PublishProtocols: []v1.Protocol{v1.ProtocolTCP, v1.ProtocolHTTP},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -355,7 +356,8 @@ func TestNested(t *testing.T) {
 	}
 
 	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
-		Namespace: ns.Name,
+		Namespace:        ns.Name,
+		PublishProtocols: []v1.Protocol{v1.ProtocolHTTP, v1.ProtocolTCP},
 	})
 	if err != nil {
 		t.Fatal(err)

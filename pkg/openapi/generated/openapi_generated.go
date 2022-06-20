@@ -606,7 +606,7 @@ func schema_pkg_apis_acornio_v1_AppImage(ref common.ReferenceCallback) common.Op
 							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/acorn.io/v1.ImagesData"),
 						},
 					},
-					"buildParams": {
+					"buildArgs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -740,16 +740,24 @@ func schema_pkg_apis_acornio_v1_AppInstanceSpec(ref common.ReferenceCallback) co
 							Format: "",
 						},
 					},
-					"reattachVolumes": {
+					"devMode": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
 						},
 					},
-					"reattachSecrets": {
+					"profiles": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 					"volumes": {

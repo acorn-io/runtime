@@ -98,6 +98,13 @@ func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptio
 		return nil, err
 	}
 
+	if children[app] == "" {
+		return nil, apierrors.NewNotFound(schema.GroupResource{
+			Group:    api.Group,
+			Resource: "containers",
+		}, name)
+	}
+
 	pod := &corev1.Pod{}
 	err = s.client.Get(ctx, client.ObjectKey{
 		Name:      podName,

@@ -102,6 +102,9 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 				panic("failed to marshal update: " + err.Error())
 			}
 			_, _ = rw.Write(append(data, '\n'))
+			if f, ok := rw.(http.Flusher); ok {
+				f.Flush()
+			}
 		}
 	}), nil
 }

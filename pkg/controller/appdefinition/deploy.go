@@ -5,14 +5,18 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	url2 "net/url"
 	"path"
 	"regexp"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pull"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -31,7 +35,22 @@ var (
 	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 )
 
+type ErrMissingSecret struct {
+	Name      string
+	Namespace string
+}
+
+func (e *ErrMissingSecret) Error() string {
+	return fmt.Sprintf("missing secret: %s/%s", e.Namespace, e.Name)
+}
+
 func DeploySpec(req router.Request, resp router.Response) (err error) {
+	defer func() {
+		if missing := (*ErrMissingSecret)(nil); errors.As(err, &missing) {
+			err = nil
+		}
+	}()
+
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
 	defer func() {
@@ -131,11 +150,40 @@ func toEnv(envs []v1.EnvVar) (result []corev1.EnvVar) {
 	return
 }
 
+func hasContextDir(container v1.Container) bool {
+	for _, dir := range container.Dirs {
+		if dir.ContextDir != "" {
+			return true
+		}
+		for _, sidecar := range container.Sidecars {
+			if hasContextDir(sidecar) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
 	)
+
+	if app.Spec.GetDevMode() && hasContextDir(container) {
+		initContainers = append(initContainers, corev1.Container{
+			Name:            "acorn-helper",
+			Image:           install.DefaultImage(),
+			Command:         []string{"acorn-helper-init"},
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      sanitizeVolumeName(AcornHelper),
+					MountPath: AcornHelperPath,
+				},
+			},
+		})
+	}
 
 	containers = append(containers, toContainer(app, tag, name, name, container))
 	for _, entry := range typed.Sorted(container.Sidecars) {
@@ -146,6 +194,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 			containers = append(containers, newContainer)
 		}
 	}
+
 	return containers, initContainers
 }
 
@@ -155,7 +204,14 @@ func pathHash(parts ...string) string {
 	return hex.EncodeToString(hash[:])[:12]
 }
 
-func toMounts(appName, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
+func sanitizeVolumeName(name string) string {
+	if strings.Contains(name, "/") {
+		return pathHash(name)
+	}
+	return name
+}
+
+func toMounts(app *v1.AppInstance, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
 		suffix := ""
 		if normalizeMode(entry.Value.Mode) != "" {
@@ -165,7 +221,7 @@ func toMounts(appName, deploymentName, containerName string, container v1.Contai
 			result = append(result, corev1.VolumeMount{
 				Name:      "files" + suffix,
 				MountPath: path.Join("/", entry.Key),
-				SubPath:   pathHash(appName, deploymentName, containerName, entry.Key),
+				SubPath:   pathHash(app.Name, deploymentName, containerName, entry.Key),
 			})
 		} else {
 			result = append(result, corev1.VolumeMount{
@@ -175,15 +231,21 @@ func toMounts(appName, deploymentName, containerName string, container v1.Contai
 			})
 		}
 	}
+	helperMounted := false
 	for _, entry := range typed.Sorted(container.Dirs) {
 		mountPath := entry.Key
 		mount := entry.Value
 		if mount.ContextDir != "" {
-			continue
-		}
-		if mount.Secret.Name == "" {
+			if !helperMounted && app.Spec.GetDevMode() {
+				result = append(result, corev1.VolumeMount{
+					Name:      sanitizeVolumeName(AcornHelper),
+					MountPath: AcornHelperPath,
+				})
+				helperMounted = true
+			}
+		} else if mount.Secret.Name == "" {
 			result = append(result, corev1.VolumeMount{
-				Name:      mount.Volume,
+				Name:      sanitizeVolumeName(mount.Volume),
 				MountPath: path.Join("/", mountPath),
 				SubPath:   mount.SubPath,
 			})
@@ -323,7 +385,7 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 		TTY:            container.Interactive,
 		Stdin:          container.Interactive,
 		Ports:          toPorts(container),
-		VolumeMounts:   toMounts(app.Name, deploymentName, containerName, container),
+		VolumeMounts:   toMounts(app, deploymentName, containerName, container),
 		LivenessProbe:  toProbe(container, v1.LivenessProbeType),
 		StartupProbe:   toProbe(container, v1.StartupProbeType),
 		ReadinessProbe: toProbe(container, v1.ReadinessProbeType),
@@ -393,7 +455,7 @@ func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 func getRevision(req router.Request, namespace, secretName string) (string, error) {
 	secret := &corev1.Secret{}
 	if err := req.Get(secret, namespace, secretName); apierror.IsNotFound(err) {
-		return "0", nil
+		return "0", &ErrMissingSecret{Namespace: namespace, Name: secretName}
 	} else if err != nil {
 		return "0", err
 	}
