@@ -1383,6 +1383,48 @@ containers: zero: scale: 0
 	assert.Equal(t, int32(0), *appSpec.Containers["zero"].Scale)
 }
 
+func TestBuildProfileParameters(t *testing.T) {
+	acornCue := `
+args: build: {
+  foo: string
+}
+profiles: one: build: foo: string | *"one"
+profiles: two: build: foo: string | *"two"
+containers: foo: build: buildArgs: one: args.build.foo
+`
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = def.WithBuildArgs(map[string]interface{}{}, []string{"one", "two", "three"})
+	assert.Equal(t, "failed to find build profile three", err.Error())
+
+	def, _, err = def.WithBuildArgs(map[string]interface{}{}, []string{"one", "two", "three?"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	buildSpec, err := def.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "one", buildSpec.Containers["foo"].Build.BuildArgs["one"])
+
+	def, _, err = def.WithBuildArgs(map[string]interface{}{}, []string{"two", "one"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	buildSpec, err = def.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.BuildArgs["one"])
+}
+
 func TestBuildParameters(t *testing.T) {
 	acornCue := `
 args: build: {
@@ -1395,9 +1437,9 @@ containers: foo: build: buildArgs: one: args.build.foo
 		t.Fatal(err)
 	}
 
-	def, err = def.WithBuildArgs(map[string]interface{}{
+	def, _, err = def.WithBuildArgs(map[string]interface{}{
 		"foo": "two",
-	})
+	}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1437,9 +1479,9 @@ acorns: foo: {
 		t.Fatal(err)
 	}
 
-	def, err = def.WithBuildArgs(map[string]interface{}{
+	def, _, err = def.WithBuildArgs(map[string]interface{}{
 		"foo": "two",
-	})
+	}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,6 +2,7 @@ package dev
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"strings"
 	"time"
@@ -23,7 +24,7 @@ func containerSyncLoop(ctx context.Context, app *apiv1.App, opts *Options) {
 	go func() {
 		for {
 			err := containerSync(ctx, app, opts)
-			if err != nil {
+			if err != nil && !errors.Is(err, context.Canceled) {
 				logrus.Errorf("failed to run container sync: %s", err)
 			}
 			select {
@@ -59,6 +60,9 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
 		Log:                logpkg.NewDefaultPrefixLogger(con.Name+" (sync) ", logpkg.GetInstance()),
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	cmd := filepath.Join(appdefinition.AcornHelperPath, strings.TrimSpace(appdefinition.AcornHelper))
 	io, err := client.ContainerReplicaExec(ctx, con.Name, []string{

@@ -48,7 +48,7 @@ func TestParams(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	def, err = def.WithBuildArgs(params)
+	def, _, err = def.WithBuildArgs(params, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

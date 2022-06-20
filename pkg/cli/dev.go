@@ -46,7 +46,8 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		Args:   args,
 		Client: c,
 		Build: build.Options{
-			Cwd: cwd,
+			Cwd:      cwd,
+			Profiles: opts.Profiles,
 		},
 		Run: opts,
 	})

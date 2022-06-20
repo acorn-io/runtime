@@ -124,6 +124,7 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 			Ports:            params.Spec.Ports,
 			DevMode:          params.Spec.DevMode,
 			PublishProtocols: params.Spec.PublishProtocols,
+			Profiles:         params.Spec.Profiles,
 		}
 	)
 

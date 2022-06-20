@@ -179,6 +179,10 @@ package v1
 		build: [string]:  _
 		deploy: [string]: _
 	}
+	profiles: [string]: {
+		build: [string]:  _
+		deploy: [string]: _
+	}
 	[=~"local[dD]ata"]: {...}
 	containers: [string]: #Container
 	jobs: [string]:       #Job

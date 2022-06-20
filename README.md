@@ -1,6 +1,6 @@
 ### WARNING: Consuming this project can expose you to chemicals, which are known to the State of California to cause cancer and birth defects or other reproductive harm.
 
-[![main-release](https://github.com/acorn-io/acorn/actions/workflows/main-release.yaml/badge.svg)](https://github.com/acorn-io/acorn/actions/workflows/main-release.yaml)
+main-release download [macOS](https://cdn.acrn.io/cli/default_darwin_amd64_v1/acorn)/[Linux](https://cdn.acrn.io/cli/default_linux_amd64_v1/acorn)/[Windows](https://cdn.acrn.io/cli/default_windows_amd64_v1/acorn.exe) 
 
 ### Quick Start 
 Please see [the Quick Start documentation](docs/docs/20-quickstart.md)

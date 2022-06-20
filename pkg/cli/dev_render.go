@@ -21,7 +21,8 @@ func NewRender() *cobra.Command {
 }
 
 type Render struct {
-	File string `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	Profile []string `usage:"Profile to assign default values"`
 }
 
 func (s *Render) Run(cmd *cobra.Command, args []string) error {
@@ -42,7 +43,7 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	appDef, err = appDef.WithDeployArgs(deployParams)
+	appDef, _, err = appDef.WithDeployArgs(deployParams, s.Profile)
 	if err != nil {
 		return err
 	}

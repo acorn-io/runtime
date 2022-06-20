@@ -4,6 +4,8 @@ import (
 	"os"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -72,6 +74,9 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 	}
 	if a.AllNamespaces {
 		return os.Setenv("NAMESPACE_ALL", "true")
+	}
+	if !term.IsTerminal(os.Stdout) || !term.IsTerminal(os.Stderr) || os.Getenv("NO_COLOR") != "" || os.Getenv("NOCOLOR") != "" {
+		pterm.DisableStyling()
 	}
 	return nil
 }

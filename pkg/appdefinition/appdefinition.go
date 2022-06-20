@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
+	"strings"
 
+	cue2 "cuelang.org/go/cue"
 	cue_mod "github.com/acorn-io/acorn/cue.mod"
 	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cue"
@@ -37,7 +39,8 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 	}
 
 	appDef = appDef.WithImageData(appImage.ImageData)
-	return appDef.WithBuildArgs(appImage.BuildParams)
+	appDef, _, err = appDef.WithBuildArgs(appImage.BuildArgs, nil)
+	return appDef, err
 }
 
 func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
@@ -84,9 +87,53 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
-func (a *AppDefinition) WithDeployArgs(args map[string]interface{}) (*AppDefinition, error) {
+func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, section string, profiles []string) (map[string]interface{}, error) {
+	val, err := a.ctx.Value()
+	if err != nil {
+		return nil, err
+	}
+	for _, profile := range profiles {
+		optional := false
+		if strings.HasSuffix(profile, "?") {
+			optional = true
+			profile = profile[:len(profile)-1]
+		}
+		path := cue2.ParsePath(fmt.Sprintf("profiles.%s.%s", profile, section))
+		pValue := val.LookupPath(path)
+		if !pValue.Exists() {
+			if !optional {
+				return nil, fmt.Errorf("failed to find %s profile %s", section, profile)
+			}
+			continue
+		}
+
+		if args == nil {
+			args = map[string]interface{}{}
+		}
+
+		inValue, err := a.ctx.Encode(args)
+		if err != nil {
+			return nil, err
+		}
+
+		newArgs := map[string]interface{}{}
+		err = pValue.Unify(*inValue).Decode(&newArgs)
+		if err != nil {
+			return nil, err
+		}
+		args = newArgs
+	}
+
+	return args, nil
+}
+
+func (a *AppDefinition) WithDeployArgs(args map[string]interface{}, profiles []string) (*AppDefinition, map[string]interface{}, error) {
+	args, err := a.getArgsForProfile(args, "deploy", profiles)
+	if err != nil {
+		return nil, nil, err
+	}
 	if len(args) == 0 {
-		return a, nil
+		return a, args, nil
 	}
 	data, err := json.Marshal(map[string]interface{}{
 		"args": map[string]interface{}{
@@ -94,17 +141,21 @@ func (a *AppDefinition) WithDeployArgs(args map[string]interface{}) (*AppDefinit
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return &AppDefinition{
 		ctx:        a.ctx.WithFile("deploy.cue", data),
 		imageDatas: a.imageDatas,
-	}, nil
+	}, args, nil
 }
 
-func (a *AppDefinition) WithBuildArgs(args map[string]interface{}) (*AppDefinition, error) {
+func (a *AppDefinition) WithBuildArgs(args map[string]interface{}, profiles []string) (*AppDefinition, map[string]interface{}, error) {
+	args, err := a.getArgsForProfile(args, "build", profiles)
+	if err != nil {
+		return nil, nil, err
+	}
 	if len(args) == 0 {
-		return a, nil
+		return a, args, nil
 	}
 	data, err := json.Marshal(map[string]interface{}{
 		"args": map[string]interface{}{
@@ -112,12 +163,12 @@ func (a *AppDefinition) WithBuildArgs(args map[string]interface{}) (*AppDefiniti
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return &AppDefinition{
 		ctx:        a.ctx.WithFile("build.cue", data),
 		imageDatas: a.imageDatas,
-	}, nil
+	}, args, nil
 }
 
 func (a *AppDefinition) JSON() (string, error) {
@@ -285,8 +336,8 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 				return nil, err
 			}
 		} else if header.Name == BuildDataFile {
-			result.BuildParams = map[string]interface{}{}
-			err := json.NewDecoder(tar).Decode(&result.BuildParams)
+			result.BuildArgs = map[string]interface{}{}
+			err := json.NewDecoder(tar).Decode(&result.BuildArgs)
 			if err != nil {
 				return nil, err
 			}

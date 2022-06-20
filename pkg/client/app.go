@@ -38,6 +38,8 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				Services:         opts.Services,
 				PublishProtocols: opts.PublishProtocols,
 				Ports:            opts.Ports,
+				Profiles:         opts.Profiles,
+				DevMode:          opts.DevMode,
 			},
 		}
 	)
@@ -69,6 +71,9 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.PublishProtocols) > 0 {
 		app.Spec.PublishProtocols = opts.PublishProtocols
+	}
+	if len(opts.Profiles) > 0 {
+		app.Spec.Profiles = opts.Profiles
 	}
 	if opts.DevMode != nil {
 		app.Spec.DevMode = opts.DevMode

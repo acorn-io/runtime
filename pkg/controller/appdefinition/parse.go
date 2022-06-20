@@ -26,7 +26,7 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 		return nil
 	}
 
-	appDef, err = appDef.WithDeployArgs(appInstance.Spec.DeployArgs)
+	appDef, _, err = appDef.WithDeployArgs(appInstance.Spec.DeployArgs, appInstance.Spec.Profiles)
 	if err != nil {
 		status.Error(err)
 		return nil

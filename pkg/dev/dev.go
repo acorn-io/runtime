@@ -145,6 +145,9 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 		started = false
 	)
 
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	for {
 		if err := watcher.Wait(ctx); err != nil {
 			return err
@@ -179,6 +182,7 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 		LogLoop(ctx, opts.Client, app, &opts.Log)
 		AppStatusLoop(ctx, opts.Client, app)
 		containerSyncLoop(ctx, app, opts)
+		appDeleteStop(ctx, opts.Client, app, cancel)
 		started = true
 	}
 }
@@ -311,19 +315,37 @@ func runOrUpdate(ctx context.Context, acornCue, image string, opts *Options) (*a
 	return existingApp, updateApp(ctx, opts.Client, existingApp, image, opts)
 }
 
+func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel func()) {
+	go func() {
+		w := objwatcher.New[*apiv1.App](c.GetClient())
+		_, _ = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+			if !app.DeletionTimestamp.IsZero() {
+				pterm.Println(pterm.FgCyan.Sprintf("app %s deleted, exiting", app.Name))
+				cancel()
+				return true, nil
+			}
+			if app.Spec.Stop != nil && *app.Spec.Stop {
+				pterm.Println(pterm.FgCyan.Sprintf("starting app %s", app.Name))
+				_ = c.AppStart(ctx, app.Name)
+			}
+			return false, nil
+		})
+	}()
+}
+
 func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) {
 	go func() {
 		w := objwatcher.New[*apiv1.App](c.GetClient())
 		_, _ = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-			msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s\n",
+			msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
 				app.Status.Columns.Endpoints,
 				app.Status.Columns.Healthy,
 				app.Status.Columns.UpToDate,
 				app.Status.Columns.Message)
-			if app.Status.Columns.Message == "OK" {
-				pterm.Print(pterm.Green(msg))
+			if app.Status.Columns.Message == "OK" && app.Status.Columns.Healthy != "0" && app.Status.Columns.Healthy != "stopped" {
+				pterm.DefaultBox.Println(pterm.LightGreen(msg))
 			} else {
-				pterm.Print(pterm.Red(msg))
+				pterm.Println(pterm.LightYellow(msg))
 			}
 
 			return false, nil
@@ -381,6 +403,13 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 	acornCue, opts, err := resolveAcornCueAndName(ctx, file, opts)
 	if err != nil {
 		return err
+	}
+
+	if len(opts.Run.Profiles) == 0 {
+		opts.Run.Profiles = []string{"dev?"}
+	}
+	if len(opts.Build.Profiles) == 0 {
+		opts.Build.Profiles = []string{"dev?"}
 	}
 
 	err = buildLoop(ctx, acornCue, opts)

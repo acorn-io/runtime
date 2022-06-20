@@ -40,6 +40,7 @@ type AppInstanceSpec struct {
 	Image            string            `json:"image,omitempty"`
 	Stop             *bool             `json:"stop,omitempty"`
 	DevMode          *bool             `json:"devMode,omitempty"`
+	Profiles         []string          `json:"profiles,omitempty"`
 	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
 	Secrets          []SecretBinding   `json:"secrets,omitempty"`
 	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`

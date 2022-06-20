@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/pterm/pterm"
@@ -11,12 +12,12 @@ import (
 
 var (
 	colors = []pterm.Color{
-		pterm.FgRed,
 		pterm.FgGreen,
 		pterm.FgYellow,
 		pterm.FgBlue,
 		pterm.FgMagenta,
 		pterm.FgCyan,
+		pterm.FgRed,
 	}
 	index = 0
 )
@@ -45,7 +46,7 @@ func Output(ctx context.Context, c client.Client, name string, opts *client.LogO
 			}
 
 			pterm.Printf("%s: %s\n", color.Sprint(key), msg.Line)
-		} else {
+		} else if !strings.Contains(msg.Error, "context canceled") {
 			logrus.Error(msg.Error)
 		}
 	}
