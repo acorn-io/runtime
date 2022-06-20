@@ -70,6 +70,9 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	if len(opts.PublishProtocols) > 0 {
 		app.Spec.PublishProtocols = opts.PublishProtocols
 	}
+	if opts.DevMode != nil {
+		app.Spec.DevMode = opts.DevMode
+	}
 
 	return app, c.Client.Update(ctx, app)
 }
@@ -101,9 +104,9 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 		lines := bufio.NewScanner(resp)
 		for lines.Scan() {
 			line := lines.Text()
-			progress := apiv1.LogMessage{}
-			if err := json.Unmarshal([]byte(line), &progress); err == nil {
-				result <- progress
+			message := apiv1.LogMessage{}
+			if err := json.Unmarshal([]byte(line), &message); err == nil {
+				result <- message
 			} else if !errors.Is(err, context.Canceled) && err.Error() != "unexpected end of JSON input" {
 				result <- apiv1.LogMessage{
 					Error: err.Error(),

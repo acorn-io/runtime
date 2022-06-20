@@ -79,6 +79,10 @@ func (o *Options) complete() *Options {
 }
 
 func DefaultImage() string {
+	img := os.Getenv("ACORN_IMAGE")
+	if img != "" {
+		return img
+	}
 	var image = fmt.Sprintf("%s:%s", InstallImage, version.Tag)
 	if version.Tag == devTag {
 		image = fmt.Sprintf("%s:%s", InstallImage, DefaultBranch)

@@ -53,7 +53,7 @@ func CollectPorts(container v1.Container) (result []v1.PortDef) {
 	return
 }
 
-func ProtosMatch(left v1.Protocol, right v1.Protocol) bool {
+func ProtosMatch(normalize bool, left v1.Protocol, right v1.Protocol) bool {
 	if left == v1.ProtocolNone || right == v1.ProtocolNone {
 		return false
 	}
@@ -63,7 +63,10 @@ func ProtosMatch(left v1.Protocol, right v1.Protocol) bool {
 	if left == v1.ProtocolAll || right == v1.ProtocolAll {
 		return true
 	}
-	return NormalizeProto(left) == NormalizeProto(right)
+	if normalize {
+		return NormalizeProto(left) == NormalizeProto(right)
+	}
+	return left == right
 }
 
 func NormalizeProto(proto v1.Protocol) v1.Protocol {
@@ -96,7 +99,7 @@ func PortsForIngress(portDefs []v1.PortDef, portBindings []v1.PortBinding, publi
 			if portBinding.TargetPort != portDef.Port {
 				continue
 			}
-			if ProtosMatch(portBinding.Protocol, portDef.Protocol) {
+			if ProtosMatch(true, portBinding.Protocol, portDef.Protocol) {
 				matched = true
 				result = append(result, portDef)
 				break
@@ -105,7 +108,7 @@ func PortsForIngress(portDefs []v1.PortDef, portBindings []v1.PortBinding, publi
 
 		if !matched {
 			for _, protocol := range publishProtocols {
-				if ProtosMatch(portDef.Protocol, protocol) {
+				if ProtosMatch(false, portDef.Protocol, protocol) {
 					result = append(result, portDef)
 				}
 			}
@@ -128,7 +131,7 @@ func RemapForBinding(publish bool, portDefs []v1.PortDef, portBindings []v1.Port
 			if portBinding.TargetPort != portDef.Port {
 				continue
 			}
-			if ProtosMatch(portBinding.Protocol, portDef.Protocol) {
+			if ProtosMatch(true, portBinding.Protocol, portDef.Protocol) {
 				matched = true
 				internalPort := portDef.InternalPort
 				if !publish {
@@ -149,7 +152,7 @@ func RemapForBinding(publish bool, portDefs []v1.PortDef, portBindings []v1.Port
 				publishProtocols = []v1.Protocol{v1.ProtocolAll}
 			}
 			for _, protocol := range publishProtocols {
-				if ProtosMatch(portDef.Protocol, protocol) {
+				if ProtosMatch(false, portDef.Protocol, protocol) {
 					internalPort := portDef.InternalPort
 					if !publish {
 						internalPort = portDef.Port

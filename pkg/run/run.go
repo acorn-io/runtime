@@ -162,6 +162,7 @@ type Options struct {
 	PublishProtocols []v1.Protocol
 	Ports            []v1.PortBinding
 	DeployArgs       map[string]interface{}
+	DevMode          *bool
 	Client           client.WithWatch
 }
 
@@ -238,6 +239,7 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			Services:         opts.Services,
 			DeployArgs:       opts.DeployArgs,
 			PublishProtocols: opts.PublishProtocols,
+			DevMode:          opts.DevMode,
 		},
 	}
 

@@ -2,12 +2,10 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/sirupsen/logrus"
 )
 
 func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerReplica, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
@@ -27,33 +25,7 @@ func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerRe
 		return nil, err
 	}
 
-	exit := make(chan term.ExitCode, 1)
-	go func() {
-		exit <- term.ToExitCode(conn.ForStream(3))
-	}()
-
-	resize := make(chan term.TermSize, 1)
-	go func() {
-		for size := range resize {
-			data, err := json.Marshal(size)
-			if err != nil {
-				logrus.Errorf("failed to marshall term size %v: %v", size, err)
-				continue
-			}
-			_, err = conn.Write(4, data)
-			if err != nil {
-				break
-			}
-		}
-	}()
-
-	return &term.ExecIO{
-		Stdin:    conn.ForStream(0),
-		Stdout:   conn.ForStream(1),
-		Stderr:   conn.ForStream(2),
-		ExitCode: exit,
-		Resize:   resize,
-	}, nil
+	return conn.ToExecIO(tty), nil
 }
 
 func (c *client) ContainerReplicaExec(ctx context.Context, containerName string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {

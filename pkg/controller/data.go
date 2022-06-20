@@ -10,13 +10,14 @@ import (
 )
 
 func (c *Controller) initData(ctx context.Context) error {
-	if err := config.Init(ctx, c.client); err != nil {
-		return err
-	}
-	return c.apply.WithSetID("acorn-controller-data").ApplyObjects(
+	err := c.apply.WithSetID("acorn-controller-data").ApplyObjects(
 		&corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: system.Namespace,
 			},
 		})
+	if err != nil {
+		return err
+	}
+	return config.Init(ctx, c.client)
 }

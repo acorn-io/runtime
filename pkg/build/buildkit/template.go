@@ -122,6 +122,7 @@ func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
 						},
 					},
 					Spec: corev1.PodSpec{
+						EnableServiceLinks: new(bool),
 						Containers: []corev1.Container{
 							{
 								Name: "registry",

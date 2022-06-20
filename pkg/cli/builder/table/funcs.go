@@ -74,13 +74,8 @@ func FormatID(obj kclient.Object) (string, error) {
 	return obj.GetName(), nil
 }
 
-func FormatCreated(data interface{}) (string, error) {
-	t, ok := data.(metav1.Time)
-	if !ok {
-		return "", nil
-	}
-
-	return duration.HumanDuration(time.Now().UTC().Sub(t.Time)) + " ago", nil
+func FormatCreated(data metav1.Time) string {
+	return duration.HumanDuration(time.Now().UTC().Sub(data.Time)) + " ago"
 }
 
 func FormatJSON(data interface{}) (string, error) {

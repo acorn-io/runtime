@@ -9,14 +9,15 @@ import (
 )
 
 type ExecIO struct {
+	TTY      bool
 	Stdin    io.WriteCloser
 	Stdout   io.ReadCloser
 	Stderr   io.ReadCloser
-	Resize   chan<- TermSize
+	Resize   func(Size) error
 	ExitCode <-chan ExitCode
 }
 
-type TermSize struct {
+type Size struct {
 	Height uint16
 	Width  uint16
 }
@@ -26,7 +27,7 @@ func IsTerminal(in io.Reader) bool {
 }
 
 func Pipe(execIO *ExecIO, streams *streams.Streams) (int, error) {
-	if term.IsTerminal(streams.In) {
+	if execIO.TTY {
 		t := &term.TTY{
 			In:  streams.In,
 			Out: streams.Out,
@@ -39,10 +40,10 @@ func Pipe(execIO *ExecIO, streams *streams.Streams) (int, error) {
 				if size == nil {
 					break
 				}
-				execIO.Resize <- TermSize{
+				_ = execIO.Resize(Size{
 					Height: size.Height,
 					Width:  size.Width,
-				}
+				})
 			}
 		}()
 		_ = t.Safe(func() error {

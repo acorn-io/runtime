@@ -202,13 +202,8 @@ func (in *AppInstanceSpec) DeepCopyInto(out *AppInstanceSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.ReattachVolumes != nil {
-		in, out := &in.ReattachVolumes, &out.ReattachVolumes
-		*out = new(bool)
-		**out = **in
-	}
-	if in.ReattachSecrets != nil {
-		in, out := &in.ReattachSecrets, &out.ReattachSecrets
+	if in.DevMode != nil {
+		in, out := &in.DevMode, &out.DevMode
 		*out = new(bool)
 		**out = **in
 	}

@@ -16,6 +16,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	AcornHelper     = " /acorn-helper"
+	AcornHelperPath = "/.acorn"
+)
+
 func addPVCs(appInstance *v1.AppInstance, resp router.Response) {
 	resp.Objects(toPVCs(appInstance)...)
 }
@@ -89,6 +94,12 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 }
 
 func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, bool) {
+	if volume == AcornHelper && appInstance.Spec.GetDevMode() {
+		return v1.VolumeRequest{
+			Class: v1.VolumeRequestTypeEphemeral,
+			Size:  10,
+		}, true
+	}
 	for name, volumeRequest := range appInstance.Status.AppSpec.Volumes {
 		if name == volume && strings.EqualFold(volumeRequest.Class, v1.VolumeRequestTypeEphemeral) {
 			return volumeRequest, true
@@ -117,13 +128,14 @@ func toVolumeName(appInstance *v1.AppInstance, volume string) (string, bool) {
 	return volume, false
 }
 
-func addVolumeReferencesForContainer(volumeReferences map[volumeReference]bool, container v1.Container) {
+func addVolumeReferencesForContainer(app *v1.AppInstance, volumeReferences map[volumeReference]bool, container v1.Container) {
 	for _, entry := range typed.Sorted(container.Dirs) {
 		volume := entry.Value
 		if volume.ContextDir != "" {
-			continue
-		}
-		if volume.Secret.Name == "" {
+			if app.Spec.GetDevMode() {
+				volumeReferences[volumeReference{name: AcornHelper}] = true
+			}
+		} else if volume.Secret.Name == "" {
 			volumeReferences[volumeReference{name: volume.Volume}] = true
 		} else {
 			volumeReferences[volumeReference{secretName: volume.Secret.Name}] = true
@@ -202,9 +214,9 @@ func addFilesFileModesForContainer(fileModes map[string]bool, container v1.Conta
 
 func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume, _ error) {
 	volumeReferences := map[volumeReference]bool{}
-	addVolumeReferencesForContainer(volumeReferences, container)
+	addVolumeReferencesForContainer(appInstance, volumeReferences, container)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		addVolumeReferencesForContainer(volumeReferences, entry.Value)
+		addVolumeReferencesForContainer(appInstance, volumeReferences, entry.Value)
 	}
 
 	for volume := range volumeReferences {
@@ -228,7 +240,7 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 		name, bind := toVolumeName(appInstance, volume.name)
 		if vr, ok := isEphemeral(appInstance, volume.name); ok && !bind {
 			result = append(result, corev1.Volume{
-				Name: volume.name,
+				Name: sanitizeVolumeName(volume.name),
 				VolumeSource: corev1.VolumeSource{
 					EmptyDir: &corev1.EmptyDirVolumeSource{
 						SizeLimit: resource.NewQuantity(vr.Size*1_000_000_000, resource.DecimalSI),
