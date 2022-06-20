@@ -65,19 +65,13 @@ jobs:
           docker manifest push ghcr.io/acorn-io/acorn:main
           docker manifest create ghcr.io/acorn-io/acorn:${VERSION} ${IMAGES}
           docker manifest push ghcr.io/acorn-io/acorn:${VERSION}
-      - name: Save Build Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: releases
-          path: |
-            releases/acorn-*-darwin-arm64.tar.gz
-            releases/acorn-*-darwin-arm64.tar.gz.sig
-            releases/acorn-*-linux-amd64.tar.gz
-            releases/acorn-*-linux-amd64.tar.gz.sig
-            releases/acorn-*-windows-amd64.zip
-            releases/acorn-*-windows-amd64.zip.sig
-            releases/artifacts.json
-            releases/checksums.txt
-            releases/checksums.txt.sig
-            releases/config.yaml
-            releases/metadata.json
+      - name: Upload to S3
+        uses: jakejarvis/s3-sync-action@v0.5.1
+        env:
+          SOURCE_DIR: releases
+          DEST_DIR: cli
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_ENDPOINT: ${{ secrets.AWS_ENDPOINT }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
