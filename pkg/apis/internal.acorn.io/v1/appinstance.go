@@ -107,7 +107,7 @@ type AppInstanceStatus struct {
 	Namespace       string                     `json:"namespace,omitempty"`
 	AppImage        AppImage                   `json:"appImage,omitempty"`
 	AppSpec         AppSpec                    `json:"appSpec,omitempty"`
-	Conditions      map[string]Condition       `json:"conditions,omitempty"`
+	Conditions      []Condition                `json:"conditions,omitempty"`
 	Endpoints       []Endpoint                 `json:"endpoints,omitempty"`
 }
 
@@ -118,6 +118,15 @@ type Endpoint struct {
 	Protocol   Protocol `json:"protocol,omitempty"`
 }
 
-func (a *AppInstance) Conditions() *map[string]Condition {
-	return &a.Status.Conditions
+func (in *AppInstanceStatus) Condition(name string) Condition {
+	for _, cond := range in.Conditions {
+		if cond.Type == name {
+			return cond
+		}
+	}
+	return Condition{}
+}
+
+func (in *AppInstance) Conditions() *[]Condition {
+	return &in.Status.Conditions
 }

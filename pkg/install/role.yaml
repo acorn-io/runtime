@@ -4,7 +4,7 @@ metadata:
   name: acorn-system
 rules:
   - verbs: ["*"]
-    apiGroups: ["api.acorn.io", "acorn.io"]
+    apiGroups: ["api.acorn.io", "internal.acorn.io"]
     resources: ["*"]
   - verbs: ["*"]
     apiGroups: [""]

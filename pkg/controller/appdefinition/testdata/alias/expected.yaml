@@ -361,7 +361,7 @@ spec:
 
 ---
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   uid: 1234567890abcdef
   name: app-name
@@ -409,5 +409,7 @@ status:
             expose: true
             protocol: udp
   conditions:
-    defined:
-      success: true
+  - type: defined
+    reason: Success
+    status: "True"
+    success: true

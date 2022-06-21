@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
@@ -63,10 +63,10 @@ func TestDev(t *testing.T) {
 		return dev.Dev(subCtx, acornCueFile, &dev.Options{
 			Client: helper.BuilderClient(t, ns.Name),
 			Build: build.Options{
-				Cwd:    tmp,
+				Cwd: tmp,
 			},
 			Run: client.AppRunOptions{
-				Name:      "test-app",
+				Name: "test-app",
 			},
 		})
 	})

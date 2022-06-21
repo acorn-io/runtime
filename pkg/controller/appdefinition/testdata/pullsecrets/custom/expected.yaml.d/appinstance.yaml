@@ -1,5 +1,5 @@
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
@@ -8,7 +8,9 @@ spec:
   image: foo.io/test
 status:
   conditions:
-    defined:
+    - type: defined
+      reason: Success
+      status: "True"
       success: true
   namespace: app-created-namespace
   appSpec:

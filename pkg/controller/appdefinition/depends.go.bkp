@@ -1,0 +1,118 @@
+package appdefinition
+
+import (
+	"strconv"
+	"time"
+
+	v1 "github.com/acorn-io/acorn/pkg/apis/system.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/meta"
+	"github.com/acorn-io/baaah/pkg/router"
+	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+)
+
+type DepResponse struct {
+	app  *v1.AppInstance
+	req  router.Request
+	resp router.Response
+	err  []error
+}
+
+func (d *DepResponse) RetryAfter(delay time.Duration) {
+	d.resp.RetryAfter(delay)
+}
+
+func (d *DepResponse) Objects(objs ...kclient.Object) {
+	for _, obj := range objs {
+		if dep, ok := obj.(*appsv1.Deployment); ok {
+
+		} else if job, ok := obj.(*batchv1.Job); ok {
+
+		} else if cronJob, ok := obj.(*batchv1.CronJob); ok {
+
+		}
+	}
+}
+
+func (d *DepResponse) isCronJobReady(jobName string) (ready bool, found bool) {
+	var jobDep batchv1.CronJob
+	err := d.req.Client.Get(&jobDep, jobName, &meta.GetOptions{
+		Namespace: d.app.Status.Namespace,
+	})
+	if apierrors.IsNotFound(err) {
+		return false, false
+	}
+	if err != nil {
+		// if err just return it as not ready
+		return false, true
+	}
+
+	if jobDep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(d.app.Generation)) ||
+		jobDep.Status.LastScheduleTime == nil {
+		return false, true
+	}
+
+	return true, true
+}
+
+func (d *DepResponse) isJobReady(jobName string) (ready bool, found bool) {
+	var jobDep batchv1.Job
+	err := d.req.Client.Get(&jobDep, jobName, &meta.GetOptions{
+		Namespace: d.app.Status.Namespace,
+	})
+	if apierrors.IsNotFound(err) {
+		return false, false
+	}
+	if err != nil {
+		// if err just return it as not ready
+		return false, true
+	}
+
+	if jobDep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(d.app.Generation)) ||
+		jobDep.Status.Succeeded != 1 {
+		return false, true
+	}
+
+	return true, true
+}
+
+func (d *DepResponse) isDepReady(depName string) (ready bool, found bool) {
+	var depDep appsv1.Deployment
+	err := d.req.Client.Get(&depDep, depName, &meta.GetOptions{
+		Namespace: d.app.Status.Namespace,
+	})
+	if apierrors.IsNotFound(err) {
+		return false, false
+	}
+	if err != nil {
+		// if err just return it as not ready
+		return false, true
+	}
+
+	if depDep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(d.app.Generation)) ||
+		depDep.Status.ObservedGeneration != depDep.Generation ||
+		depDep.Status.Replicas != depDep.Status.ReadyReplicas ||
+		depDep.Status.Replicas != depDep.Status.UpdatedReplicas {
+		return false, true
+	}
+
+	return true, true
+}
+
+type depCheck func(string) (bool, bool)
+
+func (d *DepResponse) checkDeps(deps []string) bool {
+	for _, depName := range deps {
+		for _, depCheck := range []depCheck{d.isDepReady, d.isJobReady, d.isCronJobReady} {
+			if ready, found := depCheck(depName); found && !ready {
+				return false
+			} else if found && ready {
+				continue
+			}
+		}
+	}
+
+	return true
+}

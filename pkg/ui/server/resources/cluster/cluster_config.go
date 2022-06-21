@@ -32,11 +32,12 @@ func toClusterConfig(rawConfig clientcmdapi.Config, contextName string, context 
 	cfg, err := clientcmd.NewDefaultClientConfig(rawConfig, &clientcmd.ConfigOverrides{
 		CurrentContext: contextName,
 	}).ClientConfig()
-	if err != nil {
+	if err == nil {
+		cfg.RateLimiter = ratelimit.None
+		cluster.Config = cfg
+	} else {
 		cluster.Error = err
 	}
-	cfg.RateLimiter = ratelimit.None
-	cluster.Config = cfg
 
 	return cluster
 }

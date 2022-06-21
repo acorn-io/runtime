@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/certs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -295,7 +295,7 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 	assert.Len(t, resp.Collected, 1)
 
 	app := resp.Collected[0].(*v1.AppInstance)
-	assert.Equal(t, "missing: [pass]", app.Status.Conditions["secrets"].Message)
+	assert.Equal(t, "missing: [pass]", app.Status.Condition("secrets").Message)
 }
 
 func TestTemplateToken_Gen(t *testing.T) {

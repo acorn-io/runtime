@@ -10,7 +10,7 @@ metadata:
 
 ---
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   name: acorn-name
   namespace: app-created-namespace
@@ -34,7 +34,7 @@ spec:
 
 ---
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   uid: 1234567890ab
   name: app-name
@@ -58,5 +58,7 @@ status:
             protocol: tcp
             expose: true
   conditions:
-    defined:
-      success: true
+  - type: defined
+    reason: Success
+    status: "True"
+    success: true

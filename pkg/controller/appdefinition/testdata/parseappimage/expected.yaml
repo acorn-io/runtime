@@ -1,11 +1,13 @@
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   name: default
   namespace: random
 status:
   conditions:
-    parsed:
+    - type: parsed
+      reason: Success
+      status: "True"
       success: true
   appSpec:
     images: {}

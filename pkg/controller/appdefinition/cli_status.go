@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/typed"
 )
 
 func CLIStatus(req router.Request, resp router.Response) error {
@@ -21,16 +20,15 @@ func CLIStatus(req router.Request, resp router.Response) error {
 
 func message(app *v1.AppInstance) string {
 	buf := &bytes.Buffer{}
-	for _, entry := range typed.Sorted(app.Status.Conditions) {
-		name, conn := entry.Key, entry.Value
-		if !conn.Success && (conn.Error || conn.Transitioning) && conn.Message != "" {
+	for _, cond := range app.Status.Conditions {
+		if !cond.Success && (cond.Error || cond.Transitioning) && cond.Message != "" {
 			if buf.Len() > 0 {
 				buf.WriteString(" ")
 			}
 			buf.WriteString("[")
-			buf.WriteString(name)
+			buf.WriteString(cond.Type)
 			buf.WriteString(": ")
-			buf.WriteString(conn.Message)
+			buf.WriteString(cond.Message)
 			buf.WriteString("]")
 		}
 	}

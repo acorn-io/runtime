@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 
+	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/system"
 	corev1 "k8s.io/api/core/v1"
@@ -19,5 +20,8 @@ func (c *Controller) initData(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return config.Init(ctx, c.client)
+	if err := config.Init(ctx, c.client); err != nil {
+		return err
+	}
+	return buildkit.SyncBuildkitPod(ctx, c.client)
 }

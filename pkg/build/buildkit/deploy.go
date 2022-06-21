@@ -16,7 +16,7 @@ func Delete(ctx context.Context) error {
 	return deleteObjects(ctx)
 }
 
-func Exists(ctx context.Context, c client.WithWatch) (bool, error) {
+func Exists(ctx context.Context, c client.Client) (bool, error) {
 	dep := &appsv1.Deployment{}
 	err := c.Get(ctx, client.ObjectKey{
 		Name:      system.BuildKitName,
@@ -28,6 +28,15 @@ func Exists(ctx context.Context, c client.WithWatch) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func SyncBuildkitPod(ctx context.Context, client client.Client) error {
+	if ok, err := Exists(ctx, client); err != nil {
+		return err
+	} else if ok {
+		return applyObjects(ctx)
+	}
+	return nil
 }
 
 func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.Pod, error) {
