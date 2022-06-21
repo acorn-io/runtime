@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -10,10 +11,12 @@ import (
 	wranglerschemas "github.com/rancher/wrangler/pkg/schemas"
 )
 
-func Register(schemas *types.APISchemas) {
+func Register(ctx context.Context, schemas *types.APISchemas) {
 	if _, err := schemas.Import(&uiv1.Install{}); err != nil {
 		panic(err)
 	}
+
+	go startPolling(ctx)
 
 	schemas.MustImportAndCustomize(&uiv1.Cluster{}, func(schema *types.APISchema) {
 		schema.Store = &ClusterStore{}

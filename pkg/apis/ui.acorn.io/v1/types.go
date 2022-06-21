@@ -20,11 +20,12 @@ type ClusterSpec struct {
 }
 
 type ClusterStatus struct {
-	Available bool            `json:"available"`
-	Installed bool            `json:"installed"`
-	Error     string          `json:"error,omitempty"`
-	Provider  string          `json:"provider"`
-	Info      *apiv1.InfoSpec `json:"info,omitempty"`
+	Namespaces []string        `json:"namespaces,omitempty"`
+	Available  bool            `json:"available"`
+	Installed  bool            `json:"installed"`
+	Error      string          `json:"error,omitempty"`
+	Provider   string          `json:"provider"`
+	Info       *apiv1.InfoSpec `json:"info,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

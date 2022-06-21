@@ -28,10 +28,11 @@ func New(ctx context.Context, addr string) (string, error) {
 	subscribe.Register(s.Schemas, subscribe.DefaultGetter, version.Get().String())
 
 	// Cluster Type
-	cluster.Register(s.Schemas)
+	cluster.Register(ctx, s.Schemas)
 
 	// Setup mux router to assign variables the server will look for (refer to MuxURLParser for all variable names)
 	router := mux.NewRouter()
+	router.StrictSlash(true)
 
 	apiRoot := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		s.Handle(&types.APIRequest{
@@ -44,7 +45,7 @@ func New(ctx context.Context, addr string) (string, error) {
 
 	// When a route is found construct a custom API request to serves up the API root content
 
-	steves := steve.New(router.NotFoundHandler)
+	steves := steve.New(http.NotFoundHandler())
 	router.PathPrefix("/v1/clusters/{name}/v1").Handler(steves)
 	router.PathPrefix("/v1/clusters/{name}/schemas").Handler(steves)
 	router.Handle("/", apiRoot)

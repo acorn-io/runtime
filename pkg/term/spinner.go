@@ -37,6 +37,7 @@ func (b *Builder) New(msg string) progress.Progress {
 type Spinner struct {
 	spinner *pterm.SpinnerPrinter
 	text    string
+	lastMsg string
 }
 
 func NewSpinner(text string) *Spinner {
@@ -56,7 +57,15 @@ func NewSpinner(text string) *Spinner {
 }
 
 func (s *Spinner) Infof(format string, v ...interface{}) {
-	s.spinner.UpdateText(fmt.Sprintf(s.text+": "+strings.TrimSpace(format), v...))
+	msg := strings.TrimSpace(fmt.Sprintf(s.text+": "+format, v...))
+	if width := pterm.GetTerminalWidth(); width > 6 && len(msg)+6 > width {
+		msg = msg[:width-6]
+	}
+	if s.lastMsg == msg {
+		return
+	}
+	s.lastMsg = msg
+	s.spinner.UpdateText(msg)
 }
 
 func (s *Spinner) Fail(err error) error {

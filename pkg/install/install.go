@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -29,6 +30,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/klog"
+	klogv2 "k8s.io/klog/v2"
 	v1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -91,6 +95,11 @@ func DefaultImage() string {
 }
 
 func Install(ctx context.Context, image string, opts *Options) error {
+	// I don't want these errors on the screen. Probably a better way to do this.
+	klog.SetOutput(io.Discard)
+	klogv2.SetOutput(io.Discard)
+	utilruntime.ErrorHandlers = nil
+
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
 		return printObject(image, opts)
@@ -118,7 +127,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 		s.Success()
 
-		s = opts.Progress.New("Installing APIServer and Controller")
+		s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
 		if err := applyDeployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply); err != nil {
 			return s.Fail(err)
 		}

@@ -51,7 +51,10 @@ func NewConverter(tableDef [][]string) (*Converter, error) {
 }
 
 func (c Converter) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
-	var rows []metav1.TableRow
+	var (
+		rows     []metav1.TableRow
+		listMeta metav1.ListMeta
+	)
 
 	appendRow := func(obj runtime.Object) error {
 		out := &bytes.Buffer{}
@@ -81,11 +84,17 @@ func (c Converter) ConvertToTable(ctx context.Context, object runtime.Object, ta
 		if err != nil {
 			return nil, err
 		}
+		if l, err := meta.ListAccessor(object); err == nil {
+			listMeta.ResourceVersion = l.GetResourceVersion()
+			listMeta.Continue = l.GetContinue()
+			listMeta.RemainingItemCount = l.GetRemainingItemCount()
+		}
 	} else if err := appendRow(object); err != nil {
 		return nil, err
 	}
 
 	return &metav1.Table{
+		ListMeta:          listMeta,
 		ColumnDefinitions: c.colDefs,
 		Rows:              rows,
 	}, nil

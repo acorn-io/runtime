@@ -2,14 +2,17 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
 	ui_acorn_io "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io"
 	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/labels"
 	detector "github.com/rancher/kubernetes-provider-detector"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,45 +20,76 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var (
+	clusterList     []uiv1.Cluster
+	ignoreNamespace = map[string]bool{
+		"kube-node-lease": true,
+		"kube-public":     true,
+	}
+)
+
 func GetCluster(ctx context.Context, name string) (*uiv1.Cluster, error) {
-	clusters, err := listClusters(ctx, name)
+	clusters, err := ListClusters(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if len(clusters) == 0 {
-		return nil, apierror.NewNotFound(schema.GroupResource{
-			Group:    ui_acorn_io.Group,
-			Resource: "clusters",
-		}, name)
+	for _, cluster := range clusters {
+		if cluster.Name == name {
+			return &cluster, nil
+		}
 	}
-	return &clusters[0], nil
+	return nil, apierror.NewNotFound(schema.GroupResource{
+		Group:    ui_acorn_io.Group,
+		Resource: "clusters",
+	}, name)
 }
 
 func GetConfig(name string) (*ClusterConfig, error) {
-	configs, err := clusters(os.Getenv("KUBECONFIG"), name)
+	configs, err := clusters(os.Getenv("KUBECONFIG"))
 	if err != nil {
 		return nil, err
 	}
-	if len(configs) == 0 {
-		return nil, apierror.NewNotFound(schema.GroupResource{
-			Group:    ui_acorn_io.Group,
-			Resource: "clusters",
-		}, name)
+	for _, config := range configs {
+		if config.Name == name {
+			return &config, nil
+		}
 	}
-	return &configs[0], nil
+	return nil, apierror.NewNotFound(schema.GroupResource{
+		Group:    ui_acorn_io.Group,
+		Resource: "clusters",
+	}, name)
 }
 
 func ListClusters(ctx context.Context) (result []uiv1.Cluster, _ error) {
-	return listClusters(ctx, "")
+	if len(clusterList) == 0 {
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+		return listClusters(ctx)
+	}
+	return clusterList, nil
 }
 
-func listClusters(ctx context.Context, name string) (result []uiv1.Cluster, _ error) {
+func startPolling(ctx context.Context) {
+	for {
+		clusters, err := listClusters(ctx)
+		if err == nil {
+			clusterList = clusters
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(5 * time.Second):
+		}
+	}
+}
+
+func listClusters(ctx context.Context) (result []uiv1.Cluster, _ error) {
 	var (
 		resultLock  sync.Mutex
 		contextName = os.Getenv("CONTEXT")
 	)
 
-	configs, err := clusters(os.Getenv("KUBECONFIG"), name)
+	configs, err := clusters(os.Getenv("KUBECONFIG"))
 	if err != nil {
 		return nil, err
 	}
@@ -125,11 +159,20 @@ func toCluster(ctx context.Context, config ClusterConfig) uiv1.Cluster {
 	}
 
 	if !result.Status.Available {
-		_, err := k8s.Discovery().ServerVersion()
-		if err != nil && result.Status.Error == "" {
-			result.Status.Error = err.Error()
-		} else if err == nil {
-			result.Status.Available = true
+		version := make(chan error, 1)
+		go func() {
+			_, err := k8s.Discovery().ServerVersion()
+			version <- err
+		}()
+		select {
+		case <-ctx.Done():
+			result.Status.Error = fmt.Sprint(ctx.Err())
+		case err := <-version:
+			if err != nil && result.Status.Error == "" {
+				result.Status.Error = err.Error()
+			} else if err == nil {
+				result.Status.Available = true
+			}
 		}
 	}
 
@@ -137,6 +180,19 @@ func toCluster(ctx context.Context, config ClusterConfig) uiv1.Cluster {
 		provider, err := detector.DetectProvider(ctx, k8s)
 		if err == nil {
 			result.Status.Provider = provider
+		}
+
+		nses, err := k8s.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+		if err == nil {
+			for _, ns := range nses.Items {
+				if ns.Labels[labels.AcornManaged] == "true" ||
+					strings.HasSuffix(ns.Name, "-system") ||
+					ignoreNamespace[ns.Name] {
+					continue
+				}
+				result.Status.Namespaces = append(result.Status.Namespaces, ns.Name)
+			}
+			sort.Strings(result.Status.Namespaces)
 		}
 	}
 
