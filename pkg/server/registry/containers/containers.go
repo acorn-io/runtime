@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/namespace"
 	"github.com/acorn-io/acorn/pkg/tables"

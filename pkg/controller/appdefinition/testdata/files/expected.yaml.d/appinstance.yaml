@@ -1,5 +1,5 @@
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   uid: 01234567890abcdef
   name: app-name
@@ -38,5 +38,7 @@ status:
             content: "YmFzZS1tb2Rl"
             mode: "0123"
   conditions:
-    defined:
+    - type: defined
+      reason: Success
+      status: "True"
       success: true

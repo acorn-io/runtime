@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"cuelang.org/go/cue/errors"
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/stretchr/testify/assert"
 )

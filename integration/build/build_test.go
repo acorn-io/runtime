@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/k8sclient"

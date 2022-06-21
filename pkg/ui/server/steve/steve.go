@@ -18,6 +18,7 @@ import (
 	"github.com/rancher/steve/pkg/server"
 	"github.com/rancher/steve/pkg/server/router"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	schema2 "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 )
@@ -125,6 +126,13 @@ func newSteve(ctx context.Context, name string, restConfig *rest.Config, next ht
 	}
 
 	s.SchemaFactory.AddTemplate(schema.Template{
+		Formatter: func(request *types.APIRequest, resource *types.RawResource) {
+			delete(resource.Links, "view")
+			if m, err := meta.Accessor(resource.APIObject.Object); err == nil {
+				m.SetManagedFields(nil)
+			}
+			delete(resource.Links, "view")
+		},
 		Customize: func(apiSchema *types.APISchema) {
 			gvr := attributes.GVR(apiSchema)
 			if gvr.Resource == "" || gvr.Resource == "namespaces" {
@@ -132,9 +140,6 @@ func newSteve(ctx context.Context, name string, restConfig *rest.Config, next ht
 			}
 			if gvr.Group == "api.acorn.io" {
 				subResources.Customize(apiSchema)
-				apiSchema.Formatter = func(request *types.APIRequest, resource *types.RawResource) {
-					delete(resource.Links, "view")
-				}
 			} else {
 				attributes.SetVerbs(apiSchema, nil)
 			}

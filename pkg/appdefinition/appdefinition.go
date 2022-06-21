@@ -12,7 +12,7 @@ import (
 
 	cue2 "cuelang.org/go/cue"
 	cue_mod "github.com/acorn-io/acorn/cue.mod"
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/schema"
 )

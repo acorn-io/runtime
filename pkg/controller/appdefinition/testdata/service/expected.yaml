@@ -272,7 +272,7 @@ spec:
             pathType: Prefix
 ---
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   uid: 01234567890abcdef
   name: app-name
@@ -321,5 +321,7 @@ status:
           dockerfile: "custom-dockerfile"
           context: "."
   conditions:
-    defined:
+    - type: defined
+      reason: Success
+      status: "True"
       success: true

@@ -1,14 +1,14 @@
 package condition
 
 import (
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/router"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Conditions interface {
 	kclient.Object
-	Conditions() *map[string]v1.Condition
+	Conditions() *[]v1.Condition
 }
 
 func Setter(cond Conditions, resp router.Response, name string) *Callback {
@@ -50,10 +50,12 @@ func (c *Callback) Error(err error) {
 }
 
 func (c *Callback) Set(cond v1.Condition) {
-	conditions := c.cond.Conditions()
-	if *conditions == nil {
-		*conditions = map[string]v1.Condition{}
+	for i, existing := range *c.cond.Conditions() {
+		if existing.Type == c.name {
+			(*c.cond.Conditions())[i] = existing.Set(cond, c.cond.GetGeneration())
+			return
+		}
 	}
-	(*conditions)[c.name] = cond
+	*c.cond.Conditions() = append(*c.cond.Conditions(), cond.Init(c.name, c.cond.GetGeneration()))
 	c.resp.Objects(c.cond)
 }

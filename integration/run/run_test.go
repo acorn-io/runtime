@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
-	v1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
@@ -89,7 +89,7 @@ func TestVolume(t *testing.T) {
 	})
 
 	helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
-		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 }
 
@@ -124,7 +124,7 @@ func TestImageNameAnnotation(t *testing.T) {
 	}
 
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
-		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 
 	helper.Wait(t, client.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
@@ -175,7 +175,7 @@ func TestSimple(t *testing.T) {
 	}
 
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
-		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 	assert.NotEmpty(t, appInstance.Status.Namespace)
 }
@@ -250,7 +250,7 @@ func TestDeployParam(t *testing.T) {
 	}
 
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
-		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 
 	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
@@ -364,7 +364,7 @@ func TestNested(t *testing.T) {
 	}
 
 	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
-		return obj.Status.Conditions[v1.AppInstanceConditionParsed].Success
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 
 	helper.Wait(t, client.Watch, &batchv1.JobList{}, func(job *batchv1.Job) bool {

@@ -6,7 +6,7 @@
 package v1
 
 import (
-	acorn_iov1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
+	internal_acorn_iov1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -314,21 +314,21 @@ func (in *ContainerReplicaSpec) DeepCopyInto(out *ContainerReplicaSpec) {
 	*out = *in
 	if in.Dirs != nil {
 		in, out := &in.Dirs, &out.Dirs
-		*out = make(map[string]acorn_iov1.VolumeMount, len(*in))
+		*out = make(map[string]internal_acorn_iov1.VolumeMount, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
 	}
 	if in.Files != nil {
 		in, out := &in.Files, &out.Files
-		*out = make(map[string]acorn_iov1.File, len(*in))
+		*out = make(map[string]internal_acorn_iov1.File, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
 	}
 	if in.Build != nil {
 		in, out := &in.Build, &out.Build
-		*out = new(acorn_iov1.Build)
+		*out = new(internal_acorn_iov1.Build)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Command != nil {
@@ -343,17 +343,17 @@ func (in *ContainerReplicaSpec) DeepCopyInto(out *ContainerReplicaSpec) {
 	}
 	if in.Environment != nil {
 		in, out := &in.Environment, &out.Environment
-		*out = make([]acorn_iov1.EnvVar, len(*in))
+		*out = make([]internal_acorn_iov1.EnvVar, len(*in))
 		copy(*out, *in)
 	}
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
-		*out = make([]acorn_iov1.PortDef, len(*in))
+		*out = make([]internal_acorn_iov1.PortDef, len(*in))
 		copy(*out, *in)
 	}
 	if in.Sidecars != nil {
 		in, out := &in.Sidecars, &out.Sidecars
-		*out = make(map[string]acorn_iov1.Container, len(*in))
+		*out = make(map[string]internal_acorn_iov1.Container, len(*in))
 		for key, val := range *in {
 			(*out)[key] = *val.DeepCopy()
 		}
@@ -850,7 +850,7 @@ func (in *VolumeCreateOptions) DeepCopyInto(out *VolumeCreateOptions) {
 	*out = *in
 	if in.AccessModes != nil {
 		in, out := &in.AccessModes, &out.AccessModes
-		*out = make([]acorn_iov1.AccessMode, len(*in))
+		*out = make([]internal_acorn_iov1.AccessMode, len(*in))
 		copy(*out, *in)
 	}
 }
@@ -907,7 +907,7 @@ func (in *VolumeSpec) DeepCopyInto(out *VolumeSpec) {
 	}
 	if in.AccessModes != nil {
 		in, out := &in.AccessModes, &out.AccessModes
-		*out = make([]acorn_iov1.AccessMode, len(*in))
+		*out = make([]internal_acorn_iov1.AccessMode, len(*in))
 		copy(*out, *in)
 	}
 }

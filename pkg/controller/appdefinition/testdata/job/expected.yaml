@@ -70,7 +70,7 @@ data:
   ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
 ---
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
@@ -98,5 +98,7 @@ status:
           dockerfile: "Dockerfile"
           context: "."
   conditions:
-    defined:
+    - type: defined
+      reason: Success
+      status: "True"
       success: true

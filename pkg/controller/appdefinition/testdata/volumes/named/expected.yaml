@@ -73,7 +73,7 @@ spec:
   storageClassName: "custom-class"
 ---
 kind: AppInstance
-apiVersion: acorn.io/v1
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
@@ -94,5 +94,7 @@ status:
         class: custom-class
         size: 10
   conditions:
-    defined:
+    - type: defined
+      reason: Success
+      status: "True"
       success: true

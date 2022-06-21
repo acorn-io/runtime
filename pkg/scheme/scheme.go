@@ -1,8 +1,8 @@
 package scheme
 
 import (
-	acornv1 "github.com/acorn-io/acorn/pkg/apis/acorn.io/v1"
 	acornapiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	acornv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/schemes"
 	appsv1 "k8s.io/api/apps/v1"
