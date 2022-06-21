@@ -24,10 +24,10 @@ acorn build .
 ### Options
 
 ```
-  -f, --file string         Name of the build file (default "DIRECTORY/acorn.cue")
-  -h, --help                help for build
-  -p, --platforms strings   Target platforms (form os/arch[/variant][:osversion] example linux/amd64)
-  -t, --tag strings         Apply a tag to the final build
+  -f, --file string        Name of the build file (default "DIRECTORY/acorn.cue")
+  -h, --help               help for build
+  -p, --platform strings   Target platforms (form os/arch[/variant][:osversion] example linux/amd64)
+  -t, --tag strings        Apply a tag to the final build
 ```
 
 ### Options inherited from parent commands

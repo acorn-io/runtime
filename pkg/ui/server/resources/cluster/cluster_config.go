@@ -42,16 +42,14 @@ func toClusterConfig(rawConfig clientcmdapi.Config, contextName string, context 
 	return cluster
 }
 
-func clusters(kubeconfig, name string) (result []ClusterConfig, _ error) {
+func clusters(kubeconfig string) (result []ClusterConfig, _ error) {
 	rawConfig, err := rawConfig(kubeconfig)
 	if err != nil {
 		return nil, err
 	}
 
 	for k, v := range rawConfig.Contexts {
-		if name == "" || k == name || (name == "_" && rawConfig.CurrentContext == k) {
-			result = append(result, toClusterConfig(rawConfig, k, v))
-		}
+		result = append(result, toClusterConfig(rawConfig, k, v))
 	}
 
 	return

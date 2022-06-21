@@ -135,7 +135,7 @@ func newSteve(ctx context.Context, name string, restConfig *rest.Config, next ht
 		},
 		Customize: func(apiSchema *types.APISchema) {
 			gvr := attributes.GVR(apiSchema)
-			if gvr.Resource == "" || gvr.Resource == "namespaces" {
+			if gvr.Resource == "" {
 				return
 			}
 			if gvr.Group == "api.acorn.io" {

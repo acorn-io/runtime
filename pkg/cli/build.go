@@ -27,9 +27,9 @@ acorn build .`,
 }
 
 type Build struct {
-	File      string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/acorn.cue"`
-	Tag       []string `short:"t" usage:"Apply a tag to the final build"`
-	Platforms []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
+	File     string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/acorn.cue"`
+	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
+	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
@@ -47,7 +47,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	platforms, err := build.ParsePlatforms(s.Platforms)
+	platforms, err := build.ParsePlatforms(s.Platform)
 	if err != nil {
 		return err
 	}
