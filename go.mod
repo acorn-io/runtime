@@ -38,7 +38,7 @@ require (
 	github.com/rancher/steve v0.0.0-20220503004032-53511a06ff37
 	github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.4
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
