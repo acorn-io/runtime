@@ -29,7 +29,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X 'main.Version=v{{ .Version }}'
+      - -X 'github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}'
 archives:
   - id: default
     builds:
