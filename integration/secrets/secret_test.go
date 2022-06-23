@@ -50,11 +50,13 @@ func TestText(t *testing.T) {
 		return obj.Status.Namespace != ""
 	})
 
-	secret := helper.Wait(t, client.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
-		return obj.Namespace == appInstance.Status.Namespace &&
-			obj.Name == "gen" && len(obj.Data) > 0
-	})
-	assert.Equal(t, "static", string(secret.Data["content"]))
+	for _, secretName := range []string{"gen", "gen2"} {
+		secret := helper.Wait(t, client.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
+			return obj.Namespace == appInstance.Status.Namespace &&
+				obj.Name == secretName && len(obj.Data) > 0
+		})
+		assert.Equal(t, "static", string(secret.Data["content"]))
+	}
 }
 
 func TestJSON(t *testing.T) {
@@ -94,11 +96,13 @@ func TestJSON(t *testing.T) {
 		return obj.Status.Namespace != ""
 	})
 
-	secret := helper.Wait(t, client.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
-		return obj.Namespace == appInstance.Status.Namespace &&
-			obj.Name == "gen" && len(obj.Data) > 0
-	})
-	assert.Equal(t, corev1.SecretType("other"), secret.Type)
-	assert.Equal(t, "value", string(secret.Data["key"]))
-	assert.Equal(t, "static", string(secret.Data["pass"]))
+	for _, secretName := range []string{"gen", "gen2"} {
+		secret := helper.Wait(t, client.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
+			return obj.Namespace == appInstance.Status.Namespace &&
+				obj.Name == secretName && len(obj.Data) > 0
+		})
+		assert.Equal(t, corev1.SecretType("other"), secret.Type)
+		assert.Equal(t, "value", string(secret.Data["key"]))
+		assert.Equal(t, "static", string(secret.Data["pass"]))
+	}
 }

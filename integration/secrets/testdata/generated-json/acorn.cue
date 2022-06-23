@@ -18,6 +18,7 @@ jobs: {
 			"""
 		cmd: ["sh", "/run.sh"]
 	}
+	cronpass: {schedule: "* * * * *"} & pass
 }
 
 secrets: {
@@ -32,6 +33,13 @@ secrets: {
 		params: {
 			format: "json"
 			job:    "pass"
+		}
+	}
+	gen2: {
+		type: "generated"
+		params: {
+			format: "json"
+			job:    "cronpass"
 		}
 	}
 }
