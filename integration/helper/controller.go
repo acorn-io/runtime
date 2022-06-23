@@ -59,6 +59,13 @@ func EnsureCRDs(t *testing.T) {
 	}
 }
 
+func ClientAndNamespace(t *testing.T) (client.Client, *corev1.Namespace) {
+	StartController(t)
+	kclient := MustReturn(hclient.Default)
+	ns := TempNamespace(t, kclient)
+	return BuilderClient(t, ns.Name), ns
+}
+
 func BuilderClient(t *testing.T, namespace string) client.Client {
 	c, err := client.New(StartAPI(t), namespace)
 	if err != nil {

@@ -19,6 +19,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/job-name": "oneimage"
     "acorn.io/managed": "true"
+    "acorn.io/root-prefix": "app-name"
 spec:
   schedule: "@daily"
   jobTemplate:
@@ -28,6 +29,7 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/job-name": "oneimage"
         "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
     spec:
       template:
         metadata:
@@ -36,6 +38,7 @@ spec:
             "acorn.io/app-name": "app-name"
             "acorn.io/job-name": "oneimage"
             "acorn.io/managed": "true"
+            "acorn.io/root-prefix": "app-name"
           annotations:
             acorn.io/container-spec: '{"alias":{},"image":"image-name","schedule":"daily"}'
         spec:

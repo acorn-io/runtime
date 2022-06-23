@@ -52,9 +52,11 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Name:      volume,
 				Namespace: appInstance.Status.Namespace,
 				Labels: map[string]string{
-					labels.AcornAppName:      appInstance.Name,
-					labels.AcornAppNamespace: appInstance.Namespace,
-					labels.AcornManaged:      "true",
+					labels.AcornAppName:       appInstance.Name,
+					labels.AcornAppNamespace:  appInstance.Namespace,
+					labels.AcornManaged:       "true",
+					labels.AcornRootNamespace: appInstance.Labels[labels.AcornRootNamespace],
+					labels.AcornRootPrefix:    labels.RootPrefix(appInstance.Labels, appInstance.Name),
 				},
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{

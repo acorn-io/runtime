@@ -9,13 +9,11 @@ import (
 func ListOptions(ns string, options *internalversion.ListOptions) *client.ListOptions {
 	return &client.ListOptions{
 		LabelSelector: options.LabelSelector,
-		FieldSelector: options.FieldSelector,
 		Namespace:     ns,
 		Limit:         options.Limit,
 		Continue:      options.Continue,
 		Raw: &metav1.ListOptions{
 			LabelSelector:        options.LabelSelector.String(),
-			FieldSelector:        options.FieldSelector.String(),
 			Watch:                options.Watch,
 			AllowWatchBookmarks:  options.AllowWatchBookmarks,
 			ResourceVersion:      options.ResourceVersion,

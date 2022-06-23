@@ -1599,7 +1599,7 @@ func schema_pkg_apis_apiacornio_v1_LogMessage(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
-					"podName": {
+					"appName": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

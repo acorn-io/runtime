@@ -22,11 +22,22 @@ const (
 	AcornPortNumber      = Prefix + "port-number"
 	AcornHostnames       = Prefix + "hostnames"
 	AcornAlias           = "alias." + Prefix
-	AcornChildNamespaces = Prefix + "child-namespaces"
 	AcornCredential      = Prefix + "credential"
 	AcornPullSecret      = Prefix + "pull-secret"
 	AcornSecretRevPrefix = "secret-rev." + Prefix
+	AcornRootNamespace   = Prefix + "root-namespace"
+	AcornRootPrefix      = Prefix + "root-prefix"
 )
+
+func RootPrefix(parentLabels map[string]string, name string) string {
+	prefix := parentLabels[AcornRootPrefix]
+	if prefix == "" {
+		prefix = name
+	} else {
+		prefix += "." + name
+	}
+	return prefix
+}
 
 func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
 	labels := map[string]string{

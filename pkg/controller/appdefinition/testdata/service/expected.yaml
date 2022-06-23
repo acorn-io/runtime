@@ -33,6 +33,7 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"expose":true,"internalPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"alias":{},"image":"foo","ports":[{"expose":true,"internalPort":91,"port":90,"protocol":"tcp"}]}}}'
     spec:
@@ -84,6 +85,7 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "buildimage"
         "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"expose":true,"internalPort":81,"port":80,"protocol":"http"},{"expose":true,"internalPort":91,"port":443,"protocol":"tcp"}]}'
     spec:

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -47,24 +47,19 @@ func (i *Logs) NewConnectOptions() (runtime.Object, bool, string) {
 }
 
 func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
-	obj, err := i.apps.Get(ctx, id, nil)
+	app, err := i.apps.get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
 	var (
 		opts = options.(*apiv1.LogOptions)
-		app  = obj.(*apiv1.App)
 	)
 
 	output := make(chan log.Message)
 	go func() {
 		defer close(output)
-		err := log.App(ctx, &v1.AppInstance{
-			ObjectMeta: app.ObjectMeta,
-			Spec:       app.Spec,
-			Status:     app.Status,
-		}, output, &log.Options{
+		err := log.App(ctx, app, output, &log.Options{
 			Client:    i.client,
 			PodClient: i.k8s.CoreV1(),
 			TailLines: opts.TailLines,
@@ -90,7 +85,11 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 			}
 
 			if message.Pod != nil {
-				lm.PodName = message.Pod.Name
+				lm.AppName = message.Pod.Labels[labels.AcornAppName]
+				lm.ContainerName = message.Pod.Name
+				if message.ContainerName != message.Pod.Labels[labels.AcornContainerName] {
+					lm.ContainerName += "." + message.ContainerName
+				}
 			}
 
 			if message.Err != nil {

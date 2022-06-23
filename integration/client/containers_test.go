@@ -9,7 +9,6 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/namespace"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -78,11 +77,6 @@ func TestContainerDelete(t *testing.T) {
 		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].UpToDate == 1
 	})
 
-	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
-		m, _ := namespace.Children(ns)
-		return len(m) > 0
-	})
-
 	cons, err := c.ContainerReplicaList(ctx, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -131,11 +125,6 @@ func TestContainerGet(t *testing.T) {
 		return app.Status.ContainerStatus["default"].UpToDate == 1
 	})
 
-	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
-		m, _ := namespace.Children(ns)
-		return len(m) > 0
-	})
-
 	cons, err := c.ContainerReplicaList(ctx, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -177,12 +166,7 @@ func TestContainerExec(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != ""
-	})
-
-	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
-		m, _ := namespace.Children(ns)
-		return len(m) > 0
+		return app.Status.ContainerStatus["default"].UpToDate > 0
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -237,11 +221,6 @@ func TestContainerDebugExec(t *testing.T) {
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].UpToDate > 0
-	})
-
-	helper.WaitForObject(t, kclient.Watch, &corev1.NamespaceList{}, ns, func(ns *corev1.Namespace) bool {
-		m, _ := namespace.Children(ns)
-		return len(m) > 0
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)

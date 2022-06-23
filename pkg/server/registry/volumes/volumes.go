@@ -16,10 +16,8 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -51,49 +49,21 @@ func (s *Storage) New() runtime.Object {
 	return &apiv1.Volume{}
 }
 
-func (s *Storage) namespaceRequirement(ctx context.Context, nsName string) (*klabels.Requirement, error) {
-	if nsName == "" {
-		return klabels.NewRequirement(labels.AcornAppNamespace, selection.Exists, nil)
-	}
-
-	nses, err := namespace.Descendants(ctx, s.client, nsName)
-	if err != nil {
-		return nil, err
-	}
-
-	return klabels.NewRequirement(labels.AcornAppNamespace, selection.In, nses.List())
-}
-
 func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
-	var (
-		sel       klabels.Selector
-		nsName, _ = request.NamespaceFrom(ctx)
-	)
-
-	rel, err := s.namespaceRequirement(ctx, nsName)
-	if err != nil {
-		return nil, err
-	}
-	sel = klabels.SelectorFromSet(map[string]string{
-		labels.AcornManaged: "true",
-	}).Add(*rel)
-
 	pvs := &corev1.PersistentVolumeList{}
-	err = s.client.List(ctx, pvs, &kclient.ListOptions{
-		LabelSelector: sel,
+	err := s.client.List(ctx, pvs, &kclient.ListOptions{
+		LabelSelector: namespace.Selector(ctx),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	result := &apiv1.VolumeList{
-		ListMeta: metav1.ListMeta{
-			ResourceVersion: pvs.ResourceVersion,
-		},
+		ListMeta: pvs.ListMeta,
 	}
 
 	for _, pv := range pvs.Items {
-		result.Items = append(result.Items, *pvToVolume(pv, nsName))
+		result.Items = append(result.Items, *pvToVolume(pv))
 	}
 
 	return result, nil
@@ -109,26 +79,14 @@ func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptio
 		return nil, err
 	}
 
-	if pv.Labels[labels.AcornAppNamespace] == "" {
+	if pv.Labels[labels.AcornRootNamespace] != ns {
 		return nil, apierror.NewNotFound(schema.GroupResource{
 			Group:    api.Group,
 			Resource: "volumes",
 		}, name)
 	}
 
-	parent, err := namespace.ParentMost(ctx, s.client, pv.Labels[labels.AcornAppNamespace])
-	if err != nil {
-		return nil, err
-	}
-
-	if ns != "" && ns != parent.Name {
-		return nil, apierror.NewNotFound(schema.GroupResource{
-			Group:    api.Group,
-			Resource: "volumes",
-		}, name)
-	}
-
-	return pvToVolume(*pv, parent.Name), nil
+	return pvToVolume(*pv), nil
 }
 
 func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
@@ -151,31 +109,20 @@ func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest
 }
 
 func (s *Storage) Watch(ctx context.Context, options *internalversion.ListOptions) (watch.Interface, error) {
-	ns, _ := request.NamespaceFrom(ctx)
-	w, err := s.client.Watch(ctx, &corev1.PersistentVolumeList{}, watcher.ListOptions("", options))
+	opts := watcher.ListOptions("", options)
+	opts.LabelSelector = namespace.Selector(ctx)
+	w, err := s.client.Watch(ctx, &corev1.PersistentVolumeList{}, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	return watcher.Transform(w, func(obj runtime.Object) []runtime.Object {
-		pv := obj.(*corev1.PersistentVolume)
-		appNamespace := pv.Labels[labels.AcornAppNamespace]
-		if appNamespace == "" {
-			return nil
-		}
-		parent, err := namespace.ParentMost(ctx, s.client, appNamespace)
-		if err != nil {
-			return nil
-		}
-		vol := pvToVolume(*pv, parent.Name)
-		if ns == "" || ns == vol.Name {
-			return []runtime.Object{vol}
-		}
-		return nil
+		vol := pvToVolume(*obj.(*corev1.PersistentVolume))
+		return []runtime.Object{vol}
 	}), nil
 }
 
-func pvToVolume(pv corev1.PersistentVolume, namespace string) *apiv1.Volume {
+func pvToVolume(pv corev1.PersistentVolume) *apiv1.Volume {
 	var (
 		accessModes      []v1.AccessMode
 		shortAccessModes []string
@@ -212,7 +159,7 @@ func pvToVolume(pv corev1.PersistentVolume, namespace string) *apiv1.Volume {
 			},
 		},
 	}
-	vol.Namespace = namespace
+	vol.Namespace = pv.Labels[labels.AcornRootNamespace]
 	if !pv.DeletionTimestamp.IsZero() {
 		vol.Status.Status += "/deleted"
 	}

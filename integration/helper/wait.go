@@ -22,6 +22,9 @@ type watchFunc func() (watch.Interface, error)
 
 func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) bool {
 	ctx := GetCTX(t)
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	result, err := watchFunc()
 	if err != nil {
 		t.Fatal(err)

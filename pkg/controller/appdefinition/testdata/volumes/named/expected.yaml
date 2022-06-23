@@ -36,6 +36,7 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "container-name"
         "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{},"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name"}'
     spec:
@@ -66,6 +67,8 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
+    "acorn.io/root-prefix": "app-name"
+    "acorn.io/root-namespace": ""
 spec:
   resources:
     requests:

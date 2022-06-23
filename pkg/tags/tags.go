@@ -164,6 +164,9 @@ func Write(ctx context.Context, c client.Client, namespace, digest, tag string) 
 }
 
 func Get(ctx context.Context, c client.Reader, namespace string) (map[string][]string, error) {
+	if namespace == "" {
+		return nil, nil
+	}
 	configMap, err := getConfigMap(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return nil, nil

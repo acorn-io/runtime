@@ -500,12 +500,15 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 
 func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets) (*appsv1.Deployment, error) {
 	var (
-		aliasLabels []string
-		stateful    = isStateful(appInstance, container)
+		extraLabels = []string{
+			labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
+			labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
+		}
+		stateful = isStateful(appInstance, container)
 	)
 
 	if container.Alias.Name != "" {
-		aliasLabels = []string{labels.AcornAlias + container.Alias.Name, "true"}
+		extraLabels = append(extraLabels, labels.AcornAlias+container.Alias.Name, "true")
 	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
 
@@ -533,7 +536,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: containerLabels(appInstance, name,
-						aliasLabels...,
+						extraLabels...,
 					),
 					Annotations: typed.Concat(podAnnotations(appInstance, name, container), secretAnnotations),
 				},
