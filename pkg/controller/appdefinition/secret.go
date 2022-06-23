@@ -108,7 +108,7 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data),
@@ -144,7 +144,7 @@ func generateSSH(req router.Request, appInstance *v1.AppInstance, secretName str
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, corev1.SSHAuthPrivateKey),
@@ -173,7 +173,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, "template"),
@@ -214,7 +214,7 @@ func generateTLS(secrets map[string]*corev1.Secret, req router.Request, appInsta
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, corev1.TLSCertKey, corev1.TLSPrivateKeyKey, "ca.crt", "ca.key"),
@@ -268,7 +268,7 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, "token"),
@@ -295,7 +295,7 @@ func generateOpaque(req router.Request, appInstance *v1.AppInstance, secretName 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, maps.Keys(secretRef.Data)...),
@@ -309,7 +309,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(secretName, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, corev1.BasicAuthUsernameKey, corev1.BasicAuthPasswordKey),
@@ -347,7 +347,7 @@ func generateDocker(req router.Request, appInstance *v1.AppInstance, name string
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: name + "-",
-			Namespace:    appInstance.Namespace,
+			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
 			Labels:       labelsForSecret(name, appInstance),
 		},
 		Data: seedData(existing, secretRef.Data, corev1.DockerConfigJsonKey),
@@ -363,9 +363,9 @@ func generateDocker(req router.Request, appInstance *v1.AppInstance, name string
 func labelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
 	return map[string]string{
 		labels.AcornAppName:         appInstance.Name,
-		labels.AcornAppNamespace:    appInstance.Namespace,
+		labels.AcornRootNamespace:   appInstance.Labels[labels.AcornRootNamespace],
+		labels.AcornRootPrefix:      labels.RootPrefix(appInstance.Labels, appInstance.Name),
 		labels.AcornManaged:         "true",
-		labels.AcornAppUID:          string(appInstance.UID),
 		labels.AcornSecretName:      secretName,
 		labels.AcornSecretGenerated: "true",
 	}
@@ -376,6 +376,7 @@ func getSecret(req router.Request, appInstance *v1.AppInstance, name string) (*c
 
 	var secrets corev1.SecretList
 	err := req.List(&secrets, &kclient.ListOptions{
+		Namespace:     appInstance.Labels[labels.AcornRootNamespace],
 		LabelSelector: klabels.SelectorFromSet(l),
 	})
 	if err != nil {

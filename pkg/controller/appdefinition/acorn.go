@@ -57,6 +57,8 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Name:      acornName,
 			Namespace: appInstance.Status.Namespace,
 			Labels: labels.Managed(appInstance,
+				labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
+				labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
 				labels.AcornAcornName, acornName),
 		},
 		Spec: v1.AppInstanceSpec{

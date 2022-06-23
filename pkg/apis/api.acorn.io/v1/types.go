@@ -115,7 +115,7 @@ type ImagePull struct {
 
 type LogMessage struct {
 	Line          string      `json:"line,omitempty"`
-	PodName       string      `json:"podName,omitempty"`
+	AppName       string      `json:"appName,omitempty"`
 	ContainerName string      `json:"containerName,omitempty"`
 	Time          metav1.Time `json:"time,omitempty"`
 	Error         string      `json:"error,omitempty"`

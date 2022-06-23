@@ -4,6 +4,8 @@ metadata:
   uid: "1234567890abc"
   name: app-name
   namespace: app-namespace
+  labels:
+    acorn.io/root-namespace: app-namespace
 spec:
   publishProtocols:
   - tcp

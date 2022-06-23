@@ -73,6 +73,9 @@ func TestTLSGen(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "app-name",
 			Namespace: "app-ns",
+			Labels: map[string]string{
+				labels.AcornRootNamespace: "app-ns",
+			},
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",

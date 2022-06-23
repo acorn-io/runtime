@@ -10,6 +10,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/goombaio/namegenerator"
 	corev1 "k8s.io/api/core/v1"
@@ -255,5 +256,11 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 		}
 	}
 
+	if app.Labels == nil {
+		app.Labels = map[string]string{}
+	}
+
+	app.Labels[labels.AcornRootNamespace] = app.Namespace
+	app.Labels[labels.AcornManaged] = "true"
 	return app, opts.Client.Create(ctx, app)
 }

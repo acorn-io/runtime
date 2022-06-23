@@ -19,7 +19,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/acorn-name": "acorn-name"
     "acorn.io/managed": "true"
-
+    "acorn.io/root-prefix": "app-name"
 spec:
   image: foo
   ports:

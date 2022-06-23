@@ -2,100 +2,63 @@ package namespace
 
 import (
 	"context"
-	"encoding/json"
+	"strings"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"golang.org/x/exp/maps"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/acorn-io/baaah/pkg/router"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apiserver/pkg/endpoints/request"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ParentMost(ctx context.Context, c client.Client, nsName string) (*corev1.Namespace, error) {
+func DenormalizeName(ctx context.Context, c client.Client, name string) (string, string, error) {
+	ns, _ := request.NamespaceFrom(ctx)
 	for {
-		ns := &corev1.Namespace{}
-		err := c.Get(ctx, client.ObjectKey{
-			Name: nsName,
-		}, ns)
+		prefix, suffix, ok := strings.Cut(name, ".")
+		if !ok {
+			break
+		}
+		app := &v1.AppInstance{}
+		err := c.Get(ctx, router.Key(ns, prefix), app)
 		if err != nil {
-			return nil, err
+			return ns, name, err
 		}
-		nsName = ns.Labels[labels.AcornAppNamespace]
-		if nsName == "" {
-			return ns, nil
-		}
+
+		name = suffix
+		ns = app.Status.Namespace
 	}
+
+	return ns, name, nil
 }
 
-func Selector(ctx context.Context, c client.Client, nsName string) (klabels.Selector, error) {
+func NormalizedName(obj metav1.ObjectMeta) (string, string) {
+	ns := obj.Namespace
+	name := obj.Name
+
+	rootNS := obj.Labels[labels.AcornRootNamespace]
+	if rootNS != "" {
+		ns = rootNS
+	}
+	if len(obj.Labels[labels.AcornRootPrefix]) > 0 {
+		name = obj.Labels[labels.AcornRootPrefix] + "." + obj.Name
+	}
+	return ns, name
+}
+
+func Selector(ctx context.Context) klabels.Selector {
 	sel := klabels.SelectorFromSet(map[string]string{
 		labels.AcornManaged: "true",
 	})
 
+	nsName, _ := request.NamespaceFrom(ctx)
 	if nsName == "" {
-		return sel, nil
+		return sel
 	}
 
-	children, err := Descendants(ctx, c, nsName)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := klabels.NewRequirement(labels.AcornAppNamespace, selection.In, children.List())
-	if err != nil {
-		return nil, err
-	}
-
-	return sel.Add(*req), nil
-}
-
-func Descendants(ctx context.Context, c client.Client, nsName string) (sets.String, error) {
-	if nsName == "" {
-		return nil, nil
-	}
-
-	ns := &corev1.Namespace{}
-	err := c.Get(ctx, client.ObjectKey{
-		Name: nsName,
-	}, ns)
-	if err != nil {
-		return nil, err
-	}
-
-	children, err := Children(ns)
-	if err != nil {
-		return nil, err
-	}
-
-	result := sets.NewString(nsName)
-	result.Insert(maps.Values(children)...)
-
-	return result, nil
-}
-
-func SetChildren(ns *corev1.Namespace, childrenMap map[string]string) error {
-	childData, err := json.Marshal(childrenMap)
-	if err != nil {
-		return err
-	}
-
-	if ns.Annotations == nil {
-		ns.Annotations = map[string]string{}
-	}
-	ns.Annotations[labels.AcornChildNamespaces] = string(childData)
-	return nil
-}
-
-func Children(ns *corev1.Namespace) (map[string]string, error) {
-	childData := map[string]string{}
-	children := ns.Annotations[labels.AcornChildNamespaces]
-	if len(children) > 0 {
-		if err := json.Unmarshal([]byte(children), &childData); err != nil {
-			return nil, err
-		}
-	}
-
-	return childData, nil
+	return klabels.SelectorFromSet(map[string]string{
+		labels.AcornManaged:       "true",
+		labels.AcornRootNamespace: nsName,
+	})
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/build"
 	hclient "github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -55,6 +56,10 @@ func TestFriendlyNameInContainer(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "simple-app",
 			Namespace:    ns.Name,
+			Labels: map[string]string{
+				labels.AcornRootNamespace: ns.Name,
+				labels.AcornManaged:       "true",
+			},
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,

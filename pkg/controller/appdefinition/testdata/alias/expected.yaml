@@ -34,6 +34,7 @@ spec:
         "acorn.io/container-name": "con1"
         "alias.acorn.io/svc1": "true"
         "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{"name":"svc1"},"image":"foo","ports":[{"expose":true,"internalPort":81,"port":80,"protocol":"http"}]}'
     spec:
@@ -78,6 +79,7 @@ spec:
         "acorn.io/container-name": "con2"
         "acorn.io/managed": "true"
         "alias.acorn.io/svc1": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{"name":"svc1"},"image":"foo","ports":[{"expose":true,"internalPort":81,"port":80,"protocol":"tcp"},{"expose":true,"internalPort":91,"port":90,"protocol":"tcp"}]}'
     spec:
@@ -124,6 +126,7 @@ spec:
         "acorn.io/container-name": "con3"
         "acorn.io/managed": "true"
         "alias.acorn.io/svc2": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{"name":"svc2"},"image":"foo","ports":[{"expose":true,"internalPort":101,"port":100,"protocol":"udp"}]}'
     spec:

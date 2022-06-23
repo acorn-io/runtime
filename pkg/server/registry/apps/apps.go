@@ -3,18 +3,23 @@ package apps
 import (
 	"context"
 
+	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/namespace"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/watcher"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -47,35 +52,44 @@ func (s *Storage) New() runtime.Object {
 }
 
 func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
-	ns, _ := request.NamespaceFrom(ctx)
 	apps := &v1.AppInstanceList{}
 	err := s.client.List(ctx, apps, &client.ListOptions{
-		Namespace: ns,
+		LabelSelector: namespace.Selector(ctx),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	tags, _ := tags2.Get(ctx, s.client, ns)
-
+	tagCache := map[string]map[string][]string{}
 	result := &apiv1.AppList{
-		ListMeta: metav1.ListMeta{
-			ResourceVersion: apps.ResourceVersion,
-		},
+		ListMeta: apps.ListMeta,
 	}
 
 	for _, app := range apps.Items {
-		result.Items = append(result.Items, *appToApp(app, tags))
+		result.Items = append(result.Items, *s.appToApp(ctx, app, tagCache))
 	}
 
 	return result, nil
 }
 
-func appToApp(app v1.AppInstance, tags map[string][]string) *apiv1.App {
+func (s *Storage) appToApp(ctx context.Context, app v1.AppInstance, tagCache map[string]map[string][]string) *apiv1.App {
+	rootNS := app.Labels[labels.AcornAppNamespace]
+	tags, ok := tagCache[rootNS]
+	if !ok {
+		cfg, err := tags2.Get(ctx, s.client, rootNS)
+		if err == nil {
+			tags = cfg
+			if tagCache != nil {
+				tagCache[rootNS] = cfg
+			}
+		}
+	}
 	possibleTags := tags[app.Spec.Image]
 	if len(possibleTags) > 0 {
 		app.Spec.Image = possibleTags[0]
 	}
+
+	app.Namespace, app.Name = namespace.NormalizedName(app.ObjectMeta)
 	return &apiv1.App{
 		ObjectMeta: app.ObjectMeta,
 		Spec:       app.Spec,
@@ -83,19 +97,41 @@ func appToApp(app v1.AppInstance, tags map[string][]string) *apiv1.App {
 	}
 }
 
+func notFoundApp(name string) error {
+	return apierrors.NewNotFound(schema.GroupResource{
+		Group:    api.Group,
+		Resource: "apps",
+	}, name)
+}
+
 func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	app := &v1.AppInstance{}
-	ns, _ := request.NamespaceFrom(ctx)
-	err := s.client.Get(ctx, client.ObjectKey{
-		Name:      name,
-		Namespace: ns,
-	}, app)
+	app, err := s.get(ctx, name)
 	if err != nil {
 		return nil, err
 	}
+	return s.appToApp(ctx, *app, nil), nil
+}
 
-	tags, _ := tags2.Get(ctx, s.client, ns)
-	return appToApp(*app, tags), nil
+func (s *Storage) get(ctx context.Context, name string) (*v1.AppInstance, error) {
+	ns, appName, err := namespace.DenormalizeName(ctx, s.client, name)
+	if apierrors.IsNotFound(err) {
+		return nil, notFoundApp(name)
+	} else if err != nil {
+		return nil, err
+	}
+
+	app := &v1.AppInstance{}
+	err = s.client.Get(ctx, client.ObjectKey{
+		Name:      appName,
+		Namespace: ns,
+	}, app)
+	if apierrors.IsNotFound(err) {
+		return nil, notFoundApp(name)
+	} else if err != nil {
+		return nil, err
+	}
+
+	return app, nil
 }
 
 func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
@@ -138,85 +174,91 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 		return nil, err
 	}
 
-	tags, _ := tags2.Get(ctx, s.client, app.Namespace)
-	return appToApp(*app, tags), err
+	return s.appToApp(ctx, *app, nil), err
 }
 
 func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
-	oldApp := &v1.AppInstance{}
-	ns, _ := request.NamespaceFrom(ctx)
-	err := s.client.Get(ctx, client.ObjectKey{
-		Name:      name,
-		Namespace: ns,
-	}, oldApp)
+	oldAppInstance, err := s.get(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
 
-	tags, _ := tags2.Get(ctx, s.client, ns)
+	appToUpdate := &apiv1.App{
+		ObjectMeta: oldAppInstance.ObjectMeta,
+		Spec:       oldAppInstance.Spec,
+	}
+	appToUpdate.Namespace, appToUpdate.Name = namespace.NormalizedName(appToUpdate.ObjectMeta)
 
-	oldObj := appToApp(*oldApp, tags)
-	newObj, err := objInfo.UpdatedObject(ctx, oldObj)
+	newObj, err := objInfo.UpdatedObject(ctx, appToUpdate)
 	if err != nil {
 		return nil, false, err
 	}
+	newApp := newObj.(*apiv1.App)
 
 	if updateValidation != nil {
-		err := updateValidation(ctx, newObj, oldObj)
+		err := updateValidation(ctx, newObj, appToUpdate)
 		if err != nil {
 			return nil, false, err
 		}
 	}
 
-	newApp := newObj.(*apiv1.App)
-
-	if newApp.Spec.Image != oldApp.Spec.Image {
-		image, err := s.resolveTag(ctx, ns, newApp.Spec.Image)
+	if newApp.Spec.Image != oldAppInstance.Spec.Image {
+		image, err := s.resolveTag(ctx, appToUpdate.Namespace, newApp.Spec.Image)
 		if err != nil {
 			return nil, false, err
 		}
 		newApp.Spec.Image = image
 	}
 
-	oldApp.ObjectMeta = newApp.ObjectMeta
-	oldApp.Spec = newApp.Spec
+	updatedAppInstance := &v1.AppInstance{
+		ObjectMeta: newApp.ObjectMeta,
+		Spec:       newApp.Spec,
+	}
+	updatedAppInstance.Name = oldAppInstance.Name
+	updatedAppInstance.Namespace = oldAppInstance.Namespace
 
-	if err := s.client.Update(ctx, oldApp); err != nil {
+	if err := s.client.Update(ctx, updatedAppInstance); err != nil {
 		return nil, false, err
 	}
 
-	return appToApp(*oldApp, tags), false, nil
+	return s.appToApp(ctx, *updatedAppInstance, nil), false, nil
 }
 
 func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-	obj, err := s.Get(ctx, name, nil)
+	oldApp, err := s.get(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
 	if deleteValidation != nil {
-		if err := deleteValidation(ctx, obj); err != nil {
+		if err := deleteValidation(ctx, oldApp); err != nil {
 			return nil, false, err
 		}
 	}
-	return obj, true, s.client.Delete(ctx, &v1.AppInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: obj.(*apiv1.App).Namespace,
-		},
-	})
+
+	return s.appToApp(ctx, *oldApp, nil), true, s.client.Delete(ctx, oldApp)
 }
 
 func (s *Storage) Watch(ctx context.Context, options *internalversion.ListOptions) (watch.Interface, error) {
-	ns, _ := request.NamespaceFrom(ctx)
-	w, err := s.client.Watch(ctx, &v1.AppInstanceList{}, watcher.ListOptions(ns, options))
+	opts := watcher.ListOptions("", options)
+	opts.LabelSelector = namespace.Selector(ctx)
+	w, err := s.client.Watch(ctx, &v1.AppInstanceList{}, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return watcher.Transform(w, func(obj runtime.Object) []runtime.Object {
-		tags, _ := tags2.Get(ctx, s.client, ns)
-		return []runtime.Object{
-			appToApp(*obj.(*v1.AppInstance), tags),
+	return watcher.Transform(w, func(obj runtime.Object) (result []runtime.Object) {
+		app := obj.(*v1.AppInstance)
+
+		newApp := s.appToApp(ctx, *app, nil)
+		if options.FieldSelector != nil {
+			if !options.FieldSelector.Matches(fields.Set{
+				"metadata.name":      newApp.Name,
+				"metadata.namespace": newApp.Namespace,
+			}) {
+				return nil
+			}
 		}
+		result = append(result, newApp)
+		return
 	}), nil
 }

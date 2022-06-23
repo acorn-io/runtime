@@ -22,6 +22,7 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"alias":{},"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"content-test-mode":{"content":"YmFzZS1tb2Rl","mode":"0123","secret":{}},"secret-test":{"mode":"644","secret":{"key":"key-name","name":"ref"}}},"image":"image-name","sidecars":{"sidecar":{"alias":{},"files":{"sidecar-content-test":{"content":"c2lkZWNhcg==","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0123","secret":{}}},"image":"image-name"}}}'
     spec:

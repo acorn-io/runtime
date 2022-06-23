@@ -2,7 +2,6 @@ package log
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/acorn-io/acorn/pkg/client"
@@ -38,14 +37,13 @@ func Output(ctx context.Context, c client.Client, name string, opts *client.LogO
 
 	for msg := range msgs {
 		if msg.Error == "" {
-			key := fmt.Sprintf("%s/%s", msg.PodName, msg.ContainerName)
-			color, ok := containerColors[key]
+			color, ok := containerColors[msg.ContainerName]
 			if !ok {
 				color = nextColor()
-				containerColors[key] = color
+				containerColors[msg.ContainerName] = color
 			}
 
-			pterm.Printf("%s: %s\n", color.Sprint(key), msg.Line)
+			pterm.Printf("%s: %s\n", color.Sprint(msg.ContainerName), msg.Line)
 		} else if !strings.Contains(msg.Error, "context canceled") {
 			logrus.Error(msg.Error)
 		}

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
@@ -8,6 +9,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -242,9 +244,11 @@ func TestAppUpdate(t *testing.T) {
 	}, thirdApp.Annotations)
 
 	assert.Equal(t, map[string]string{
-		"label1": "val1",
-		"label2": "val3",
-		"label3": "val3",
+		"label1":                  "val1",
+		"label2":                  "val3",
+		"label3":                  "val3",
+		labels.AcornRootNamespace: c.GetNamespace(),
+		labels.AcornManaged:       "true",
 	}, thirdApp.Labels)
 
 	assert.Equal(t, []v1.EndpointBinding{
@@ -414,8 +418,8 @@ func TestAppLog(t *testing.T) {
 
 	assert.Equal(t, "", msg1.Error)
 	assert.Equal(t, "", msg2.Error)
-	assert.Equal(t, "default", msg1.ContainerName)
-	assert.Equal(t, "default", msg2.ContainerName)
+	assert.True(t, strings.HasPrefix(msg1.ContainerName, "default-"))
+	assert.True(t, strings.HasPrefix(msg2.ContainerName, "default-"))
 	assert.NotEqual(t, "", msg1.Line)
 	assert.NotEqual(t, "", msg1.Line)
 

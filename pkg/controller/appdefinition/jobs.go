@@ -59,6 +59,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: containerLabels(appInstance, name,
+					labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
+					labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
 					labels.AcornManaged, "true",
 					labels.AcornJobName, name,
 					labels.AcornContainerName, ""),
