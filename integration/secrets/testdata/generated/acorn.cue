@@ -6,6 +6,7 @@ jobs: {
 		image: "busybox"
 		cmd: ["sh", "-c", "echo -n $PASS > /run/secrets/output"]
 	}
+	cronpass: {schedule: "* * * * * "} & pass
 }
 
 secrets: {
@@ -20,5 +21,9 @@ secrets: {
 		params: {
 			job: "pass"
 		}
+	}
+	gen2: {
+		type: "generated"
+		params: job: "cronpass"
 	}
 }
