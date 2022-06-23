@@ -54,7 +54,48 @@ var (
 	templateSecretRegexp = regexp.MustCompile(`\${secret://(.*?)/(.*?)}`)
 )
 
-func getJobOutput(req router.Request, namespace, name string) (job *batchv1.Job, data []byte, err error) {
+func getCronJobLatestJob(req router.Request, namespace, name string) (jobName string, err error) {
+	cronJob := &batchv1.CronJob{}
+	err = req.Get(cronJob, namespace, name)
+	if err != nil {
+		return "", err
+	}
+
+	l := klabels.SelectorFromSet(cronJob.Spec.JobTemplate.Labels)
+	if err != nil {
+		return "", err
+	}
+
+	var jobsFromCron batchv1.JobList
+	err = req.List(&jobsFromCron, &kclient.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: l,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, job := range jobsFromCron.Items {
+		if job.Status.CompletionTime != nil && job.Status.CompletionTime.Time == cronJob.Status.LastSuccessfulTime.Time {
+			jobName = job.Name
+			break
+		}
+	}
+	return
+}
+
+func getJobOutput(req router.Request, appInstance *v1.AppInstance, name string) (job *batchv1.Job, data []byte, err error) {
+	namespace := appInstance.Status.Namespace
+
+	if val, ok := appInstance.Status.AppSpec.Jobs[name]; ok {
+		if val.Schedule != "" {
+			name, err = getCronJobLatestJob(req, namespace, name)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+
 	job = &batchv1.Job{}
 	err = req.Get(job, namespace, name)
 	if err != nil {
@@ -100,7 +141,8 @@ func getJobOutput(req router.Request, namespace, name string) (job *batchv1.Job,
 }
 
 func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret, existing *corev1.Secret) (*corev1.Secret, error) {
-	_, output, err := getJobOutput(req, appInstance.Status.Namespace, convert.ToString(secretRef.Params["job"]))
+	_, output, err := getJobOutput(req, appInstance, convert.ToString(secretRef.Params["job"]))
+
 	if err != nil {
 		return nil, err
 	}
