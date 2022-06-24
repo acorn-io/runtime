@@ -1,3 +1,0 @@
----
-title: Authoring an Acorn
----
