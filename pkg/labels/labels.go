@@ -4,9 +4,11 @@ import v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 
 const (
 	Prefix               = "acorn.io/"
+	AcornAppGeneration   = Prefix + "app-generation"
 	AcornAppNamespace    = Prefix + "app-namespace"
 	AcornAppName         = Prefix + "app-name"
 	AcornAcornName       = Prefix + "acorn-name"
+	AcornDepNames        = Prefix + "dep-names"
 	AcornAppUID          = Prefix + "app-uid"
 	AcornVolumeName      = Prefix + "volume-name"
 	AcornSecretName      = Prefix + "secret-name"

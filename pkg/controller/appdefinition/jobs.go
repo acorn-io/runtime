@@ -83,18 +83,20 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	if container.Schedule == "" {
 		return &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: appInstance.Status.Namespace,
-				Labels:    jobSpec.Template.Labels,
+				Name:        name,
+				Namespace:   appInstance.Status.Namespace,
+				Labels:      jobSpec.Template.Labels,
+				Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
 			},
 			Spec: jobSpec,
 		}, nil
 	}
 	return &batchv1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: appInstance.Status.Namespace,
-			Labels:    jobSpec.Template.Labels,
+			Name:        name,
+			Namespace:   appInstance.Status.Namespace,
+			Labels:      jobSpec.Template.Labels,
+			Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
 		},
 		Spec: batchv1.CronJobSpec{
 			Schedule: toCronJobSchedule(container.Schedule),

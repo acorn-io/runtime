@@ -1,9 +1,10 @@
-package client
+package apps
 
 import (
 	"strings"
 	"testing"
 
+	client2 "github.com/acorn-io/acorn/integration/client"
 	"github.com/acorn-io/acorn/integration/helper"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -22,7 +23,7 @@ func TestAppStartStop(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {
@@ -69,7 +70,7 @@ func TestAppDelete(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {
@@ -105,8 +106,8 @@ func TestAppUpdate(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
-	imageID2 := newImage2(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
+	imageID2 := client2.NewImage2(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {
@@ -332,7 +333,7 @@ func TestAppGet(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {
@@ -361,7 +362,7 @@ func TestAppList(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {
@@ -392,7 +393,7 @@ func TestAppLog(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {
@@ -437,7 +438,7 @@ func TestAppRun(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	c, err := client.New(restConfig, ns.Name)
 	if err != nil {

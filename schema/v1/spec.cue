@@ -80,6 +80,11 @@ package v1
 	files: [string]: #FileSpec
 	dirs: [string]:  #VolumeMountSpec
 	probes: [...#ProbeSpec]
+	dependencies: [...#DependencySpec]
+}
+
+#DependencySpec: {
+	targetName: string
 }
 
 #VolumeMountSpec: {

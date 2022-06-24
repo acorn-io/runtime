@@ -1689,3 +1689,48 @@ containers: map: {
 	assert.Equal(t, int32(4), appSpec.Containers["spec"].Probes[0].SuccessThreshold)
 	assert.Equal(t, int32(5), appSpec.Containers["spec"].Probes[0].FailureThreshold)
 }
+
+func TestDepsSingle(t *testing.T) {
+	acornCue := `
+containers: default: {
+	probe: "tcp://localhost:1234"
+	dependsOn: "foo"
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, appSpec.Containers["default"].Dependencies, 1)
+	assert.Equal(t, "foo", appSpec.Containers["default"].Dependencies[0].TargetName)
+}
+
+func TestDepsMultiple(t *testing.T) {
+	acornCue := `
+containers: default: {
+	probe: "tcp://localhost:1234"
+	depends_on: ["foo", "bar"]
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, appSpec.Containers["default"].Dependencies, 2)
+	assert.Equal(t, "foo", appSpec.Containers["default"].Dependencies[0].TargetName)
+	assert.Equal(t, "bar", appSpec.Containers["default"].Dependencies[1].TargetName)
+}

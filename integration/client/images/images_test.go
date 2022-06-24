@@ -1,9 +1,10 @@
-package client
+package images
 
 import (
 	"strings"
 	"testing"
 
+	client2 "github.com/acorn-io/acorn/integration/client"
 	"github.com/acorn-io/acorn/integration/helper"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -25,7 +26,7 @@ func TestImageListGetDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -70,10 +71,10 @@ func TestImageTagMove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	imageID := newImage(t, ns.Name)
-	image2, err := build.Build(helper.GetCTX(t), "./testdata/nginx2/acorn.cue", &build.Options{
+	imageID := client2.NewImage(t, ns.Name)
+	image2, err := build.Build(helper.GetCTX(t), "../testdata/nginx2/acorn.cue", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata/nginx2",
+		Cwd:    "../testdata/nginx2",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -121,7 +122,7 @@ func TestImageTag(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = newImage(t, ns.Name)
+	_ = client2.NewImage(t, ns.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -177,7 +178,7 @@ func TestImagePush(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = newImage(t, ns.Name)
+	_ = client2.NewImage(t, ns.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -220,7 +221,7 @@ func TestImagePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	id := newImage(t, ns.Name)
+	id := client2.NewImage(t, ns.Name)
 	tagName := registry + "/test:ci"
 
 	err = c.ImageTag(ctx, id, tagName)
@@ -283,7 +284,7 @@ func TestImageDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	id := newImage(t, ns.Name)
+	id := client2.NewImage(t, ns.Name)
 	remoteTagName := registry + "/test:ci"
 
 	err = c.ImageTag(ctx, id, remoteTagName)
@@ -309,7 +310,7 @@ func TestImageDetails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 
 	err = c.ImageTag(ctx, imageID, "foo")
 	if err != nil {
