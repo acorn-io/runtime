@@ -7,7 +7,6 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf
-	github.com/rancher/steve => github.com/acorn-io/steve v0.0.0-20220525234928-3ccc837e8406
 	go.etcd.io/etcd/server/v3 v3.5.1 => github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1
 	k8s.io/apiserver => github.com/acorn-io/apiserver v0.24.1-ot-1
 	k8s.io/client-go => k8s.io/client-go v0.24.1
@@ -35,7 +34,7 @@ require (
 	github.com/rancher/apiserver v0.0.0-20220513144301-4808910b5d4d
 	github.com/rancher/kubernetes-provider-detector v0.1.5
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
-	github.com/rancher/steve v0.0.0-20220503004032-53511a06ff37
+	github.com/rancher/steve v0.0.0-20220624231620-3d379c3dd867
 	github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.5.0

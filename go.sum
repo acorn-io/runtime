@@ -200,8 +200,6 @@ github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1 h1:MlyJCGYCmK9g7y3qjRQChBjDRLcjuH
 github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1/go.mod h1:3f9zpU8GP1dDA34jCqy3kIvaolyrUJmIiQ6AV/LvZsM=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf h1:y2vkS4R2O+iRDUP8QLvS10i7RoVaMP4spSPGdM93jXo=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
-github.com/acorn-io/steve v0.0.0-20220525234928-3ccc837e8406 h1:UHTQsw9T7IxPWno5sN0dbEBFlzuxmRYr/Yx232lRr1o=
-github.com/acorn-io/steve v0.0.0-20220525234928-3ccc837e8406/go.mod h1:n1dJWcWsVKYElmmKlNt8w6KcpaK61M7PDiXrnAqeNSw=
 github.com/adrg/xdg v0.3.1 h1:uIyL9BYfXaFgDyVRKE8wjtm6ETQULweQqTofphEFJYY=
 github.com/adrg/xdg v0.3.1/go.mod h1:7I2hH/IT30IsupOpKZ5ue7/qNi3CoKzD6tL3HwpaRMQ=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
@@ -1388,6 +1386,8 @@ github.com/rancher/norman v0.0.0-20210423002317-8e6ffc77a819 h1:K3pICsdBbzOHoOyW
 github.com/rancher/norman v0.0.0-20210423002317-8e6ffc77a819/go.mod h1:hhnf77V2lmZD7cvUqi4vTBpIs3KpHNL/AmuN0MqEClI=
 github.com/rancher/remotedialer v0.2.6-0.20220104192242-f3837f8d649a h1:Go8MpBEeZCR0yV1ylu2/KjJBvpYomIezU58pejYCtgk=
 github.com/rancher/remotedialer v0.2.6-0.20220104192242-f3837f8d649a/go.mod h1:vq3LvyOFnLcwMiCE1KdW3foPd6g5kAjZOtOb7JqGHck=
+github.com/rancher/steve v0.0.0-20220624231620-3d379c3dd867 h1:X30nwX8PAz1xqyUexAW2WfeiooTJ0lV+WDAmTgE8cuM=
+github.com/rancher/steve v0.0.0-20220624231620-3d379c3dd867/go.mod h1:n1dJWcWsVKYElmmKlNt8w6KcpaK61M7PDiXrnAqeNSw=
 github.com/rancher/wrangler v0.6.1/go.mod h1:L4HtjPeX8iqLgsxfJgz+JjKMcX2q3qbRXSeTlC/CSd4=
 github.com/rancher/wrangler v0.6.2-0.20200714200521-c61fae623942/go.mod h1:8LdIqAQPHysxNlHqmKbUiDIx9ULt9IHUauh9aOnr67k=
 github.com/rancher/wrangler v0.6.2-0.20200820173016-2068de651106/go.mod h1:iKqQcYs4YSDjsme52OZtQU4jHPmLlIiM93aj2c8c/W8=

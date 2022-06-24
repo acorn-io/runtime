@@ -32,7 +32,7 @@ func UI(ctx context.Context, opts *Options) error {
 
 	logrus.Infof("Listening on %s", addr)
 	if opts.OpenBrowser {
-		if err := browser.OpenURL(fmt.Sprintf("http://%s/v1/clusters/_/v1", addr)); err != nil {
+		if err := browser.OpenURL(fmt.Sprintf("http://%s", addr)); err != nil {
 			logrus.Errorf("failed to open browser: %s", err)
 		}
 	}

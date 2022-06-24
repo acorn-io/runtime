@@ -13,15 +13,17 @@ import (
 )
 
 type ClusterConfig struct {
-	Name   string
-	Server string
-	Config *rest.Config
-	Error  error
+	Default bool
+	Name    string
+	Server  string
+	Config  *rest.Config
+	Error   error
 }
 
 func toClusterConfig(rawConfig clientcmdapi.Config, contextName string, context *clientcmdapi.Context) ClusterConfig {
 	cluster := ClusterConfig{
-		Name: contextName,
+		Name:    contextName,
+		Default: contextName == rawConfig.CurrentContext,
 	}
 
 	rawCluster := rawConfig.Clusters[context.Cluster]
