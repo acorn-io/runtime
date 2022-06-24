@@ -69,6 +69,13 @@ func (s *subResources) build(stores map[string]serverrest.Storage) error {
 			}
 		} else if _, ok := v.(serverrest.Getter); ok {
 			def.LinkHandlers[subResource] = s.newHandler(subResource)
+			if _, ok := v.(serverrest.Creater); ok {
+				def.ActionHandlers[subResource] = s.newHandler(subResource)
+				def.ResourceActions[subResource] = schemas.Action{
+					Input:  input.ID,
+					Output: input.ID,
+				}
+			}
 		} else {
 			def.ActionHandlers[subResource] = s.newHandler(subResource)
 			def.ResourceActions[subResource] = schemas.Action{

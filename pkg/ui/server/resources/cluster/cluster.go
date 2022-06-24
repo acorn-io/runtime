@@ -34,6 +34,9 @@ func GetCluster(ctx context.Context, name string) (*uiv1.Cluster, error) {
 		return nil, err
 	}
 	for _, cluster := range clusters {
+		if name == "_" && cluster.Spec.Default {
+			return &cluster, nil
+		}
 		if cluster.Name == name {
 			return &cluster, nil
 		}
@@ -50,6 +53,9 @@ func GetConfig(name string) (*ClusterConfig, error) {
 		return nil, err
 	}
 	for _, config := range configs {
+		if name == "_" && config.Default {
+			return &config, nil
+		}
 		if config.Name == name {
 			return &config, nil
 		}

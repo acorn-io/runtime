@@ -136,7 +136,13 @@ type ImageDetails struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	AppImage v1.AppImage `json:"appImage,omitempty"`
+	DeployArgs v1.GenericMap `json:"deployArgs,omitempty"`
+	Profiles   []string      `json:"profiles,omitempty"`
+
+	AppImage   v1.AppImage   `json:"appImage,omitempty"`
+	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
+	Params     *v1.ParamSpec `json:"params,omitempty"`
+	ParseError string        `json:"parseError,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

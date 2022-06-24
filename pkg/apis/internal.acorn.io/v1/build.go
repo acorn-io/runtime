@@ -26,7 +26,13 @@ type BuilderSpec struct {
 }
 
 type ParamSpec struct {
-	Params []Param `json:"params,omitempty"`
+	Params   []Param   `json:"params,omitempty"`
+	Profiles []Profile `json:"profiles,omitempty"`
+}
+
+type Profile struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type Param struct {

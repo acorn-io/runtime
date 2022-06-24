@@ -16,7 +16,8 @@ type Cluster struct {
 }
 
 type ClusterSpec struct {
-	Address string
+	Default bool   `json:"default,omitempty"`
+	Address string `json:"address,omitempty"`
 }
 
 type ClusterStatus struct {

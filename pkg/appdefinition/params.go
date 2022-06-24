@@ -10,11 +10,31 @@ import (
 )
 
 func (a *AppDefinition) BuildParams() (*v1.ParamSpec, error) {
-	return a.args("args.build")
+	return a.addProfiles(a.args("args.build"))
 }
 
 func (a *AppDefinition) DeployParams() (*v1.ParamSpec, error) {
-	return a.args("args.deploy")
+	return a.addProfiles(a.args("args.deploy"))
+}
+
+func (a *AppDefinition) addProfiles(paramSpec *v1.ParamSpec, err error) (*v1.ParamSpec, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	profiles, err := a.args("profiles")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, profile := range profiles.Params {
+		paramSpec.Profiles = append(paramSpec.Profiles, v1.Profile{
+			Name:        profile.Name,
+			Description: profile.Description,
+		})
+	}
+
+	return paramSpec, nil
 }
 
 func (a *AppDefinition) args(section string) (*v1.ParamSpec, error) {
