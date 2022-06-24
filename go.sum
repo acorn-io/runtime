@@ -194,6 +194,8 @@ github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697 h1:zEzrL1ewSm
 github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697/go.mod h1:sG6OmZ4yEWeQ9JmGjnp8WgQAk9D9z4hivMFsUUh9QF8=
 github.com/acorn-io/baaah v0.0.0-20220621163714-34375f25ecdb h1:AK/vua0bYfO6+E0jlVI+XhWNrgEzs+dfRBunpaoAotI=
 github.com/acorn-io/baaah v0.0.0-20220621163714-34375f25ecdb/go.mod h1:9FvNcgPq6o0x8Z8Nfq9EvG6tTvw7yVkagoNcMjvcm10=
+github.com/acorn-io/baaah v0.0.0-20220624052343-a3d0714dcd95 h1:ltqQq25iSE5//wiO6ohFKhp4fVxv6H7JyCzxIff/OcI=
+github.com/acorn-io/baaah v0.0.0-20220624052343-a3d0714dcd95/go.mod h1:CSj9RfR9Ab5LsLmdAcJlrMtyz0tD1kfqAKiLnbkXDg0=
 github.com/acorn-io/component-base v0.24.1-ot-1 h1:GRbiCcCxZdKovA1L8eLFIvI9pJp3kJFOtKTOW7LSsQI=
 github.com/acorn-io/component-base v0.24.1-ot-1/go.mod h1:GLGWZB2NbdO0JXuNHLQ4IOAYnugwAXGRNmYxnb2GeKw=
 github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1 h1:MlyJCGYCmK9g7y3qjRQChBjDRLcjuHgxDG+BBM6+IVI=

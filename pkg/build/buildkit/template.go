@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/baaah/pkg/restconfig"
-	"github.com/rancher/wrangler/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,19 +40,18 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 }
 
 func deleteObjects(ctx context.Context) error {
-	cfg, err := restconfig.Default()
+	c, err := k8sclient.Default()
 	if err != nil {
 		return err
 	}
-	apply, err := apply.NewForConfig(cfg)
+
+	apply := apply.New(c)
 	if err != nil {
 		return err
 	}
 	return apply.
-		WithContext(ctx).
-		WithDynamicLookup().
-		WithSetID("acorn-buildkitd").
-		WithGVK(schema.GroupVersionKind{
+		WithOwnerSubContext("acorn-buildkitd").
+		WithPruneGVKs(schema.GroupVersionKind{
 			Version: "v1",
 			Kind:    "Service",
 		}, schema.GroupVersionKind{
@@ -61,27 +59,26 @@ func deleteObjects(ctx context.Context) error {
 			Version: "v1",
 			Kind:    "Deployment",
 		}).
-		ApplyObjects()
+		Apply(ctx, nil)
 }
 
 func applyObjects(ctx context.Context) error {
-	cfg, err := restconfig.Default()
+	c, err := k8sclient.Default()
 	if err != nil {
 		return err
 	}
-	apply, err := apply.NewForConfig(cfg)
+
+	apply := apply.New(c)
 	if err != nil {
 		return err
 	}
 	return apply.
-		WithContext(ctx).
-		WithDynamicLookup().
-		WithSetID("acorn-buildkitd").
-		ApplyObjects(objects(system.Namespace, system.BuildkitImage, system.RegistryImage)...)
+		WithOwnerSubContext("acorn-buildkitd").
+		Apply(ctx, nil, objects(system.Namespace, system.BuildkitImage, system.RegistryImage)...)
 }
 
-func objects(namespace, buildKitImage, registryImage string) []runtime.Object {
-	return []runtime.Object{
+func objects(namespace, buildKitImage, registryImage string) []client.Object {
+	return []client.Object{
 		&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      system.RegistryName,

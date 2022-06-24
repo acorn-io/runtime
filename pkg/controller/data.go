@@ -11,7 +11,7 @@ import (
 )
 
 func (c *Controller) initData(ctx context.Context) error {
-	err := c.apply.WithSetID("acorn-controller-data").ApplyObjects(
+	err := c.apply.WithOwnerSubContext("acorn-controller-data").Apply(ctx, nil,
 		&corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: system.Namespace,
