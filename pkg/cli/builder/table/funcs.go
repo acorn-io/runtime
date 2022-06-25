@@ -79,17 +79,32 @@ func FormatCreated(data metav1.Time) string {
 }
 
 func FormatJSON(data interface{}) (string, error) {
-	bytes, err := json.MarshalIndent(data, "", "    ")
+	bytes, err := json.MarshalIndent(cleanFields(data), "", "    ")
 	return string(bytes) + "\n", err
 }
 
 func FormatJSONCompact(data interface{}) (string, error) {
-	bytes, err := json.Marshal(data)
+	bytes, err := json.Marshal(cleanFields(data))
 	return string(bytes) + "\n", err
 }
 
+func cleanFields(obj interface{}) interface{} {
+	ro, ok := obj.(kclient.Object)
+	if !ok {
+		newObj := reflect.New(reflect.TypeOf(obj))
+		newObj.Elem().Set(reflect.ValueOf(obj))
+		ro, ok = newObj.Interface().(kclient.Object)
+	}
+	if ok {
+		ro.SetManagedFields(nil)
+		return ro
+	}
+	return obj
+
+}
+
 func FormatYAML(data interface{}) (string, error) {
-	bytes, err := yaml.Marshal(data)
+	bytes, err := yaml.Marshal(cleanFields(data))
 	return string(bytes) + "\n", err
 }
 
