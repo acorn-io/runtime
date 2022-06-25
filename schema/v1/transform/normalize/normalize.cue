@@ -399,6 +399,15 @@ import (
 				}]
 			}
 		}
+
+		for x in ["depends_on", "dependsOn", "dependson"] {
+			if (IN.container[x] & string) != _|_ {
+				dependencies: [{targetName: IN.container[x]}]
+			}
+			if (IN.container[x] & [...string]) != _|_ {
+				dependencies: [ for y in IN.container[x] {targetName: y}]
+			}
+		}
 	}
 }
 

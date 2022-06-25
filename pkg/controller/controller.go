@@ -4,13 +4,13 @@ import (
 	"context"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/crds"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah"
-	"github.com/acorn-io/baaah/pkg/crds"
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/rancher/wrangler/pkg/apply"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -38,10 +38,7 @@ func New() (*Controller, error) {
 		return nil, err
 	}
 
-	apply, err := apply.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
+	apply := apply.New(client)
 
 	routes(router)
 
@@ -49,7 +46,7 @@ func New() (*Controller, error) {
 		Router: router,
 		client: client,
 		Scheme: scheme.Scheme,
-		apply:  apply.WithDynamicLookup(),
+		apply:  apply,
 	}, nil
 }
 

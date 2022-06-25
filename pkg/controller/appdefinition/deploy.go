@@ -524,9 +524,10 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: appInstance.Status.Namespace,
-			Labels:    containerLabels(appInstance, name),
+			Name:        name,
+			Namespace:   appInstance.Status.Namespace,
+			Labels:      containerLabels(appInstance, name),
+			Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,

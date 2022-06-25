@@ -55,6 +55,7 @@ package v1
 	ports:                          #Port | *[...#Port]
 	expose:                         #Port | *[...#Port]
 	[=~"probes|probe"]:             #Probes
+	[=~"depends[oO]n|depends_on"]:  string | *[...string]
 }
 
 #ShortVolumeRef: =~"^[a-z][-a-z0-9]*$"

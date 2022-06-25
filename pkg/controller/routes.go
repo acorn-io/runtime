@@ -26,13 +26,14 @@ func routes(router *router.Router) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.DeploySpec)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.CreateSecrets)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(acornrouter.AcornRouter)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.AppStatus)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.AppEndpointsStatus)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.JobStatus)
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).HandlerFunc(appdefinition.CLIStatus)
+	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).Middleware(appdefinition.IgnoreTerminatingNamespace)
+	appRouter.Middleware(appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
+	appRouter.HandlerFunc(appdefinition.CreateSecrets)
+	appRouter.HandlerFunc(acornrouter.AcornRouter)
+	appRouter.HandlerFunc(appdefinition.AppStatus)
+	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
+	appRouter.HandlerFunc(appdefinition.JobStatus)
+	appRouter.HandlerFunc(appdefinition.CLIStatus)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ReleaseVolume)
 
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)

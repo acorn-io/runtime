@@ -138,18 +138,23 @@ type Probe struct {
 	FailureThreshold    int32      `json:"failureThreshold,omitempty"`
 }
 
+type Dependency struct {
+	TargetName string `json:"targetName,omitempty"`
+}
+
 type Container struct {
-	Dirs        map[string]VolumeMount `json:"dirs,omitempty"`
-	Files       map[string]File        `json:"files,omitempty"`
-	Image       string                 `json:"image,omitempty"`
-	Build       *Build                 `json:"build,omitempty"`
-	Command     []string               `json:"command,omitempty"`
-	Interactive bool                   `json:"interactive,omitempty"`
-	Entrypoint  []string               `json:"entrypoint,omitempty"`
-	Environment []EnvVar               `json:"environment,omitempty"`
-	WorkingDir  string                 `json:"workingDir,omitempty"`
-	Ports       []PortDef              `json:"ports,omitempty"`
-	Probes      []Probe                `json:"probes,omitempty"`
+	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
+	Files        map[string]File        `json:"files,omitempty"`
+	Image        string                 `json:"image,omitempty"`
+	Build        *Build                 `json:"build,omitempty"`
+	Command      []string               `json:"command,omitempty"`
+	Interactive  bool                   `json:"interactive,omitempty"`
+	Entrypoint   []string               `json:"entrypoint,omitempty"`
+	Environment  []EnvVar               `json:"environment,omitempty"`
+	WorkingDir   string                 `json:"workingDir,omitempty"`
+	Ports        []PortDef              `json:"ports,omitempty"`
+	Probes       []Probe                `json:"probes,omitempty"`
+	Dependencies []Dependency           `json:"dependencies,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`

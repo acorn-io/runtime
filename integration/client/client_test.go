@@ -14,28 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func newImage2(t *testing.T, namespace string) string {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx2/acorn.cue", &build.Options{
-		Client: helper.BuilderClient(t, namespace),
-		Cwd:    "./testdata/nginx2",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return image.ID
-}
-
-func newImage(t *testing.T, namespace string) string {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/acorn.cue", &build.Options{
-		Client: helper.BuilderClient(t, namespace),
-		Cwd:    "./testdata/nginx",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return image.ID
-}
-
 func TestFriendlyNameInContainer(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)

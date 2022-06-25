@@ -1,8 +1,9 @@
-package client
+package volumes
 
 import (
 	"testing"
 
+	client2 "github.com/acorn-io/acorn/integration/client"
 	"github.com/acorn-io/acorn/integration/helper"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -29,7 +30,7 @@ func TestVolumeListGetDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +94,7 @@ func TestVolumeWatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	imageID := newImage(t, ns.Name)
+	imageID := client2.NewImage(t, ns.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
