@@ -1734,3 +1734,20 @@ containers: default: {
 	assert.Equal(t, "foo", appSpec.Containers["default"].Dependencies[0].TargetName)
 	assert.Equal(t, "bar", appSpec.Containers["default"].Dependencies[1].TargetName)
 }
+
+func TestDontFailIfProfileDoesntHaveBuildOrDeploy(t *testing.T) {
+	acornCue := `
+profiles: foo: build: {}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = def.WithDeployArgs(nil, []string{"foo"})
+	assert.Nil(t, err)
+
+	_, _, err = def.WithDeployArgs(nil, []string{"missing"})
+	assert.Equal(t, "failed to find deploy profile missing", err.Error())
+}

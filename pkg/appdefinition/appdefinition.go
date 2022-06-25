@@ -102,7 +102,10 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, section s
 		pValue := val.LookupPath(path)
 		if !pValue.Exists() {
 			if !optional {
-				return nil, fmt.Errorf("failed to find %s profile %s", section, profile)
+				path := cue2.ParsePath(fmt.Sprintf("profiles.%s", profile))
+				if !val.LookupPath(path).Exists() {
+					return nil, fmt.Errorf("failed to find %s profile %s", section, profile)
+				}
 			}
 			continue
 		}
