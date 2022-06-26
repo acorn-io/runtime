@@ -348,7 +348,7 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 	}
 
 	if result.Acornfile == "" {
-		return nil, fmt.Errorf("invalid image, empty acorn.cue")
+		return nil, fmt.Errorf("invalid image no acorn.cue found")
 	}
 
 	return result, nil

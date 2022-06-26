@@ -30,7 +30,13 @@ func AppImage(ctx context.Context, c client.Reader, namespace, image string) (*v
 		return nil, err
 	}
 
-	return pullIndex(tag, opts)
+	appImage, err := pullIndex(tag, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	appImage.ID = image
+	return appImage, nil
 }
 
 func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, error) {
