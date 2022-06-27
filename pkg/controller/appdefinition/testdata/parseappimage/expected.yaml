@@ -25,6 +25,7 @@ status:
         interactive: false
         files: {}
         volumes: []
+        permissions: {}
       buildimage:
         dirs: {}
         image: "sha256:build-image"
@@ -40,6 +41,7 @@ status:
           contextDirs: {}
         files: {}
         volumes: []
+        permissions: {}
   appImage:
     acornfile: |
       containers: {

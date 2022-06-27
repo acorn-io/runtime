@@ -56,6 +56,10 @@ package v1
 	expose:                         #Port | *[...#Port]
 	[=~"probes|probe"]:             #Probes
 	[=~"depends[oO]n|depends_on"]:  string | *[...string]
+	permissions: {
+		rules: [...#RuleSpec]
+		clusterRules: [...#RuleSpec]
+	}
 }
 
 #ShortVolumeRef: =~"^[a-z][-a-z0-9]*$"
@@ -173,6 +177,10 @@ package v1
 	secrets: [...string]
 	links: [...string]
 	deployArgs: [string]: _
+	permissions: {
+		rules: [...#RuleSpec]
+		clusterRules: [...#RuleSpec]
+	}
 }
 
 #App: {

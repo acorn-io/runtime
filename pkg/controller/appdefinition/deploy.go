@@ -77,6 +77,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	}
 
 	addNamespace(cfg, appInstance, resp)
+	addServiceAccount(appInstance, resp)
 	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
@@ -554,15 +555,35 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			},
 		},
 	}
+
 	if stateful {
 		dep.Spec.Replicas = &[]int32{1}[0]
 		dep.Spec.Template.Spec.Hostname = dep.Name
 		dep.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 	}
+
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		dep.Spec.Replicas = new(int32)
 	}
+
+	if needsServiceAccount(container) {
+		dep.Spec.Template.Spec.ServiceAccountName = "acorn"
+		dep.Spec.Template.Spec.AutomountServiceAccountToken = &[]bool{true}[0]
+	}
+
 	return dep, nil
+}
+
+func needsServiceAccount(container v1.Container) bool {
+	if container.Permissions.HasRules() {
+		return true
+	}
+	for _, sidecar := range container.Sidecars {
+		if sidecar.Permissions.HasRules() {
+			return true
+		}
+	}
+	return false
 }
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {

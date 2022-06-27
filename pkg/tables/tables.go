@@ -61,4 +61,10 @@ var (
 		{"Controller-Image", "ControllerImage"},
 	}
 	InfoConverter = MustConverter(Info)
+
+	RuleRequests = [][]string{
+		{"Verbs", "Verbs"},
+		{"Resource", "Resource"},
+		{"Scope", "Scope"},
+	}
 )

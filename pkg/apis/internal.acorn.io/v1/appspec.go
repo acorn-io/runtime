@@ -1,5 +1,7 @@
 package v1
 
+import rbacv1 "k8s.io/api/rbac/v1"
+
 const (
 	VolumeRequestTypeEphemeral = "ephemeral"
 
@@ -142,6 +144,25 @@ type Dependency struct {
 	TargetName string `json:"targetName,omitempty"`
 }
 
+type Permissions struct {
+	Rules        []rbacv1.PolicyRule `json:"rules,omitempty"`
+	ClusterRules []rbacv1.PolicyRule `json:"clusterRules,omitempty"`
+}
+
+func (in *Permissions) HasRules() bool {
+	if in == nil {
+		return false
+	}
+	return len(in.ClusterRules) > 0 || len(in.Rules) > 0
+}
+
+func (in *Permissions) Get() Permissions {
+	if in == nil {
+		return Permissions{}
+	}
+	return *in
+}
+
 type Container struct {
 	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
 	Files        map[string]File        `json:"files,omitempty"`
@@ -155,6 +176,7 @@ type Container struct {
 	Ports        []PortDef              `json:"ports,omitempty"`
 	Probes       []Probe                `json:"probes,omitempty"`
 	Dependencies []Dependency           `json:"dependencies,omitempty"`
+	Permissions  *Permissions           `json:"permissions,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
@@ -187,13 +209,16 @@ type AppSpec struct {
 }
 
 type Acorn struct {
-	Image      string           `json:"image,omitempty"`
-	Build      *AcornBuild      `json:"build,omitempty"`
-	DeployArgs GenericMap       `json:"deployArgs,omitempty"`
-	Ports      []PortDef        `json:"ports,omitempty"`
-	Secrets    []SecretBinding  `json:"secrets,omitempty"`
-	Volumes    []VolumeBinding  `json:"volumes,omitempty"`
-	Services   []ServiceBinding `json:"services,omitempty"`
+	Image        string              `json:"image,omitempty"`
+	Build        *AcornBuild         `json:"build,omitempty"`
+	DeployArgs   GenericMap          `json:"deployArgs,omitempty"`
+	Ports        []PortDef           `json:"ports,omitempty"`
+	Secrets      []SecretBinding     `json:"secrets,omitempty"`
+	Volumes      []VolumeBinding     `json:"volumes,omitempty"`
+	Services     []ServiceBinding    `json:"services,omitempty"`
+	Roles        []rbacv1.PolicyRule `json:"roles,omitempty"`
+	ClusterRoles []rbacv1.PolicyRule `json:"clusterRoles,omitempty"`
+	Permissions  *Permissions        `json:"permissions,omitempty"`
 }
 
 type Secret struct {

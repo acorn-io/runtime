@@ -408,6 +408,8 @@ import (
 				dependencies: [ for y in IN.container[x] {targetName: y}]
 			}
 		}
+
+		permissions: IN.container.permissions
 	}
 }
 
@@ -482,6 +484,7 @@ import (
 				}]
 			}
 		}
+		permissions: IN.permissions
 	}
 }
 

@@ -20,6 +20,7 @@ acorn dev render [flags] DIRECTORY
 ```
   -A, --all-namespaces      Namespace to work in
       --context string      Context to use in the kubeconfig file
+      --dangerous           Automatically approve all privileges requested by the application
   -d, --dns strings         Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
   -f, --file string         Name of the dev file (default "DIRECTORY/acorn.cue")
       --kubeconfig string   Location of a kubeconfig file

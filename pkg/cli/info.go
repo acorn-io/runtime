@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/version"
+	bversion "github.com/acorn-io/baaah/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +27,7 @@ type Info struct {
 
 type ClientServerVersion struct {
 	Client struct {
-		Version version.Version `json:"version,omitempty"`
+		Version bversion.Version `json:"version,omitempty"`
 	} `json:"client,omitempty"`
 	Server apiv1.InfoSpec `json:"server,omitempty"`
 }
@@ -45,7 +46,7 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Info, "", false, s.Output)
 	out.Write(ClientServerVersion{
 		Client: struct {
-			Version version.Version `json:"version,omitempty"`
+			Version bversion.Version `json:"version,omitempty"`
 		}{Version: version.Get()},
 		Server: info.Spec,
 	})

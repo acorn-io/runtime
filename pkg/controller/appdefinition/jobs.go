@@ -80,6 +80,11 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		},
 	}
 
+	if needsServiceAccount(container) {
+		jobSpec.Template.Spec.ServiceAccountName = "acorn"
+		jobSpec.Template.Spec.AutomountServiceAccountToken = &[]bool{true}[0]
+	}
+
 	if container.Schedule == "" {
 		return &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{

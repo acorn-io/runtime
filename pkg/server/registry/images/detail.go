@@ -50,15 +50,15 @@ func (s *ImageDetails) Create(ctx context.Context, obj runtime.Object, createVal
 			details.Name = ri.Name
 		}
 	}
-	return s.get(ctx, details.Name, details.Profiles, details.DeployArgs)
+	return s.GetDetails(ctx, details.Name, details.Profiles, details.DeployArgs)
 }
 
 func (s *ImageDetails) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
 	name = strings.ReplaceAll(name, "+", "/")
-	return s.get(ctx, name, nil, nil)
+	return s.GetDetails(ctx, name, nil, nil)
 }
 
-func (s *ImageDetails) get(ctx context.Context, name string, profiles []string, deployArgs map[string]interface{}) (runtime.Object, error) {
+func (s *ImageDetails) GetDetails(ctx context.Context, name string, profiles []string, deployArgs map[string]interface{}) (*apiv1.ImageDetails, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 	imageName := name
 

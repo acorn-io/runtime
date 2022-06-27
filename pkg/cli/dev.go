@@ -49,6 +49,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 			Cwd:      cwd,
 			Profiles: opts.Profiles,
 		},
-		Run: opts,
+		Run:       opts,
+		Dangerous: s.Dangerous,
 	})
 }

@@ -21,6 +21,7 @@ import (
 func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storage, error) {
 	buildersStorage := builders.NewStorage(c)
 	imagesStorage := images.NewStorage(c)
+	imagesDetails := images.NewImageDetails(c, imagesStorage)
 	containerStorage := containers.NewStorage(c)
 	tagsStorage := images.NewTagStorage(c, imagesStorage)
 	containerExec, err := containers.NewContainerExec(c, containerStorage, cfg)
@@ -37,7 +38,7 @@ func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storag
 		return nil, err
 	}
 
-	appsStorage := apps.NewStorage(c, imagesStorage)
+	appsStorage := apps.NewStorage(c, imagesStorage, imagesDetails)
 	logsStorage, err := apps.NewLogs(c, appsStorage, cfg)
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storag
 		"images/tag":             tagsStorage,
 		"images/push":            images.NewImagePush(c, imagesStorage),
 		"images/pull":            images.NewImagePull(c, imagesStorage, tagsStorage),
-		"images/details":         images.NewImageDetails(c, imagesStorage),
+		"images/details":         imagesDetails,
 		"volumes":                volumes.NewStorage(c),
 		"containerreplicas":      containerStorage,
 		"containerreplicas/exec": containerExec,
