@@ -26,9 +26,20 @@ func TestBuildFailed(t *testing.T) {
 }
 
 func TestNestedBuild(t *testing.T) {
+	simple, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
+		Cwd:    "./testdata/simple",
+		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/acorn.cue", &build.Options{
 		Cwd:    "./testdata/nested",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+		Args: map[string]interface{}{
+			"image": simple.ID,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -117,7 +117,10 @@ type ImageProgress struct {
 }
 
 type ImageDetails struct {
-	AppImage v1.AppImage `json:"appImage,omitempty"`
+	AppImage   v1.AppImage   `json:"appImage,omitempty"`
+	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
+	Params     *v1.ParamSpec `json:"params,omitempty"`
+	ParseError string        `json:"parseError,omitempty"`
 }
 
 type Client interface {

@@ -1,3 +1,5 @@
+args: build: image: string
+
 acorns: {
 	sub1: {
 		build: "./subdir"
@@ -8,6 +10,7 @@ acorns: {
 			acornfile: "./subdir2/test.cue"
 			buildArgs: {
 				filename: "buildfile"
+				image: args.build.image
 			}
 		}
 	}

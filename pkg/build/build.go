@@ -17,6 +17,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/typed"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -193,6 +194,16 @@ func buildAcorns(ctx context.Context, c client.Client, cwd string, platforms []v
 	for _, entry := range typed.Sorted(acorns) {
 		key, acornImage := entry.Key, entry.Value
 		if acornImage.Image != "" {
+			imageDetails, err := c.ImageDetails(ctx, acornImage.Image, nil)
+			if err != nil {
+				return nil, err
+			}
+
+			if tags.SHAPattern.MatchString(imageDetails.AppImage.ID) {
+				// TODO: This is a terrible hack and should be redone once we move builder logic server side
+				acornImage.Image = fmt.Sprintf("127.0.0.1:%d/acorn/%s:%s", system.RegistryPort, c.GetNamespace(), imageDetails.AppImage.ID)
+			}
+
 			tag, err := imagename.ParseReference(acornImage.Image)
 			if err != nil {
 				return nil, err
