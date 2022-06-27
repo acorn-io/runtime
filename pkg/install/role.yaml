@@ -21,6 +21,10 @@ rules:
       - serviceaccounts
       - persistentvolumes
       - persistentvolumeclaims
+  - verbs: ["get", "list", "watch"]
+    apiGroups: [""]
+    resources:
+      - nodes
   - verbs: ["*"]
     apiGroups: ["apiextensions.k8s.io"]
     resources:

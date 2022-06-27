@@ -2,9 +2,11 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/crds"
+	"github.com/acorn-io/acorn/pkg/dns"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah"
@@ -12,7 +14,12 @@ import (
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+var (
+	dnsRenewPeriodHours = 24 * time.Hour
 )
 
 type Controller struct {
@@ -57,5 +64,9 @@ func (c *Controller) Start(ctx context.Context) error {
 	if err := c.initData(ctx); err != nil {
 		return err
 	}
+
+	dnsInit := dns.NewDaemon(c.client)
+	go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriodHours)
+
 	return c.Router.Start(ctx)
 }

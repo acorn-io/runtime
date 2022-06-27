@@ -203,13 +203,13 @@ func TestTemplateToken_Gen(t *testing.T) {
 					"pass": {Type: "token",
 						Params: map[string]interface{}{
 							"characters": "abc",
-							"length":     5,
+							"length":     int64(5),
 						},
 					},
 					"pass2": {Type: "token",
 						Params: map[string]interface{}{
 							"characters": "xyz",
-							"length":     6,
+							"length":     int64(6),
 						},
 					},
 					"template": {

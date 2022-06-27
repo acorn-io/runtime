@@ -6,6 +6,7 @@ const (
 	Namespace            = "acorn-system"
 	ConfigName           = "acorn-config"
 	DefaultUserNamespace = "acorn"
+	DNSSecretName        = "acorn-dns"
 )
 
 var (

@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  config: '{"acornDNS":"enabled"}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+---
+apiVersion: v1
+data:
+  # base64 encoded. Values are "test.on-acorn.io" and "token"
+  domain: dGVzdC5vbi1hY29ybi5pbw==
+  token: dG9rZW4=
+kind: Secret
+metadata:
+  name: acorn-dns
+  namespace: acorn-system
+type: Opaque

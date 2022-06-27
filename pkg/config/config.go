@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -16,10 +17,11 @@ import (
 
 var (
 	ClusterDomainDefault         = ".local.on-acorn.io"
+	AcornDNSEndpointDefault      = "https://dns.acrn.io/v1"
 	InternalClusterDomainDefault = "svc.cluster.local"
 )
 
-func complete(c *apiv1.Config) {
+func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
 	if c.TLSEnabled == nil {
 		c.TLSEnabled = new(bool)
 	}
@@ -32,12 +34,67 @@ func complete(c *apiv1.Config) {
 	if c.PodSecurityEnforceProfile == "" && *c.SetPodSecurityEnforceProfile {
 		c.PodSecurityEnforceProfile = "baseline"
 	}
-	if len(c.ClusterDomains) == 0 {
-		c.ClusterDomains = []string{ClusterDomainDefault}
+	if c.AcornDNS == nil {
+		c.AcornDNS = &[]string{"disabled"}[0]
+	}
+	if c.AcornDNSEndpoint == nil || *c.AcornDNSEndpoint == "" {
+		c.AcornDNSEndpoint = &AcornDNSEndpointDefault
+	}
+	err := setClusterDomains(ctx, c, getter)
+	if err != nil {
+		return err
 	}
 	if c.InternalClusterDomain == "" {
 		c.InternalClusterDomain = InternalClusterDomainDefault
 	}
+
+	return nil
+}
+
+func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
+	useLocal, err := useLocalWildcardDomain(ctx, getter)
+	if err != nil {
+		return err
+	}
+
+	// Acorn DNS should be used if it is explicitly "enabled" or if it is in "auto" mode and the user hasn't set a
+	//cluster domain and the cluster doesn't qualify for using the localhost wildcard domain
+	if strings.EqualFold(*c.AcornDNS, "enabled") || (strings.EqualFold(*c.AcornDNS, "auto") && len(c.ClusterDomains) == 0 && !useLocal) {
+		dnsSecret := &corev1.Secret{}
+		err = getter.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
+		if err != nil && !apierror.IsNotFound(err) {
+			return err
+		}
+		domain := string(dnsSecret.Data["domain"])
+		if domain != "" {
+			c.ClusterDomains = append(c.ClusterDomains, domain)
+		}
+	}
+
+	// If a clusterDomain hasn't been set yet, use the localhost wildcard domain
+	if len(c.ClusterDomains) == 0 {
+		c.ClusterDomains = []string{ClusterDomainDefault}
+	}
+	return nil
+}
+
+// If the cluster is a known desktop cluster type such as minikube, Rancher Desktop, or Docker Desktop, then we don't
+// want to create real DNS records. Rather, use our wildcard domain that resolves to 127.0.0.1
+func useLocalWildcardDomain(ctx context.Context, getter kclient.Reader) (bool, error) {
+	var nodes corev1.NodeList
+	if err := getter.List(ctx, &nodes); err != nil {
+		return false, err
+	}
+
+	if len(nodes.Items) == 1 {
+		node := nodes.Items[0]
+		if strings.Contains(node.Name, "rancher-desktop") || strings.Contains(node.Status.NodeInfo.OSImage, "Rancher Desktop") ||
+			node.Name == "docker-desktop" || strings.Contains(node.Name, "minikube") {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
@@ -70,10 +127,21 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if len(newConfig.ClusterDomains) > 0 && newConfig.ClusterDomains[0] == "" {
 		mergedConfig.ClusterDomains = nil
 	} else if len(newConfig.ClusterDomains) > 0 {
+		for i, cd := range newConfig.ClusterDomains {
+			if !strings.HasPrefix(cd, ".") {
+				newConfig.ClusterDomains[i] = "." + cd
+			}
+		}
 		mergedConfig.ClusterDomains = newConfig.ClusterDomains
 	}
 	if len(newConfig.DefaultPublishMode) > 0 {
 		mergedConfig.DefaultPublishMode = newConfig.DefaultPublishMode
+	}
+	if newConfig.AcornDNS != nil {
+		mergedConfig.AcornDNS = newConfig.AcornDNS
+	}
+	if newConfig.AcornDNSEndpoint != nil {
+		mergedConfig.AcornDNSEndpoint = newConfig.AcornDNSEndpoint
 	}
 
 	return &mergedConfig
@@ -167,6 +235,6 @@ func Get(ctx context.Context, getter kclient.Reader) (*apiv1.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	complete(cfg)
-	return cfg, nil
+	err = complete(cfg, ctx, getter)
+	return cfg, err
 }
