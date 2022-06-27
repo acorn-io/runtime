@@ -9,7 +9,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-const ownerGVK = "acorn.io/v1, Kind=AppInstance"
+const ownerGVK = "internal.acorn.io/v1, Kind=AppInstance"
 
 func GCAcornRouter(req router.Request, resp router.Response) error {
 	ds := req.Object.(*appsv1.DaemonSet)

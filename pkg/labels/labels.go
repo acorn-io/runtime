@@ -29,6 +29,7 @@ const (
 	AcornSecretRevPrefix = "secret-rev." + Prefix
 	AcornRootNamespace   = Prefix + "root-namespace"
 	AcornRootPrefix      = Prefix + "root-prefix"
+	AcornPublishURL      = Prefix + "publish-url"
 )
 
 func RootPrefix(parentLabels map[string]string, name string) string {

@@ -21,7 +21,7 @@ validate-ci:
 	go mod tidy
 	go run tools/gendocs/main.go
 	if [ -n "$$(git status --porcelain)" ]; then \
-		git status --porcelain --untracked-files=no; \
+		git status --porcelain; \
 		echo "Encountered dirty repo!"; \
 		exit 1 \
 	;fi
