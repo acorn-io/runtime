@@ -1,13 +1,57 @@
 package secrets
 
 import (
+	"context"
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 )
+
+func TestSecretCrossbinding(t *testing.T) {
+	ctx := context.Background()
+	kclient := helper.MustReturn(kclient.Default)
+	c, _ := helper.ClientAndNamespace(t)
+
+	image, err := build.Build(ctx, "../testdata/secrets/acorn.cue", &build.Options{
+		Client: c,
+		Cwd:    "../testdata/secrets",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+		return app.Status.Ready
+	})
+
+	secondApp := &v1.AppInstance{}
+	err = kclient.Get(ctx, router.Key(app.Status.Namespace, "second"), secondApp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	secret := &corev1.Secret{}
+	err = kclient.Get(ctx, router.Key(secondApp.Status.Namespace, "second"), secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "true", string(secret.Data["parent"]))
+
+}
 
 func TestSecretCreate(t *testing.T) {
 	restConfig := helper.StartAPI(t)
@@ -21,7 +65,7 @@ func TestSecretCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	secret, err := c.SecretCreate(ctx, "foo", "secretType", map[string][]byte{
+	secret, err := c.SecretCreate(ctx, "foo", "opaque", map[string][]byte{
 		"key1": []byte("value1"),
 		"key2": []byte("value2"),
 	})
@@ -30,7 +74,7 @@ func TestSecretCreate(t *testing.T) {
 	}
 
 	assert.Equal(t, "foo", secret.Name)
-	assert.Equal(t, "secretType", secret.Type)
+	assert.Equal(t, "opaque", secret.Type)
 	assert.Len(t, secret.Data, 0)
 	assert.Len(t, secret.Keys, 2)
 	assert.Equal(t, "key1", secret.Keys[0])
@@ -50,12 +94,12 @@ func TestSecretList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	secret1, err := c.SecretCreate(ctx, "secret1", "type1", map[string][]byte{"key": []byte("value")})
+	secret1, err := c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key": []byte("value")})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	secret2, err := c.SecretCreate(ctx, "secret2", "type2", map[string][]byte{"key2": []byte("value2")})
+	secret2, err := c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key2": []byte("value2")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,12 +126,12 @@ func TestSecretGet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.SecretCreate(ctx, "secret1", "type1", map[string][]byte{"key": []byte("value")})
+	_, err = c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key": []byte("value")})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	secret, err := c.SecretCreate(ctx, "secret2", "type2", map[string][]byte{"key2": []byte("value2")})
+	secret, err := c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key2": []byte("value2")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,12 +157,12 @@ func TestSecretExpose(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.SecretCreate(ctx, "secret1", "type1", map[string][]byte{"key": []byte("value")})
+	_, err = c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key": []byte("value")})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	secret, err := c.SecretCreate(ctx, "secret2", "type2", map[string][]byte{"key2": []byte("value2")})
+	secret, err := c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key2": []byte("value2")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,12 +189,12 @@ func TestSecretUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.SecretCreate(ctx, "secret1", "type1", map[string][]byte{"key": []byte("value")})
+	_, err = c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key": []byte("value")})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.SecretCreate(ctx, "secret2", "type2", map[string][]byte{"key2": []byte("value2")})
+	_, err = c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key2": []byte("value2")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +210,7 @@ func TestSecretUpdate(t *testing.T) {
 	}
 
 	assert.Equal(t, "secret2", secretNewNew.Name)
-	assert.Equal(t, "type2", secretNewNew.Type)
+	assert.Equal(t, "opaque", secretNewNew.Type)
 	assert.Len(t, secretNewNew.Data, 0)
 	assert.Equal(t, []string{"key3"}, secretNewNew.Keys)
 	assert.Equal(t, secretNew, secretNewNew)
@@ -185,12 +229,12 @@ func TestSecretDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.SecretCreate(ctx, "secret1", "type1", map[string][]byte{"key": []byte("value")})
+	_, err = c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key": []byte("value")})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.SecretCreate(ctx, "secret2", "type2", map[string][]byte{"key2": []byte("value2")})
+	_, err = c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key2": []byte("value2")})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -29,8 +29,13 @@ var (
 		"pointer":     Pointer,
 		"fullID":      FormatID,
 		"trunc":       Trunc,
+		"alias":       Noop,
 	}
 )
+
+func Noop(obj interface{}) string {
+	return ""
+}
 
 func Trunc(s string) string {
 	if len(s) > 12 {
@@ -97,6 +102,24 @@ func cleanFields(obj interface{}) interface{} {
 	}
 	if ok {
 		ro.SetManagedFields(nil)
+		ro.SetUID("")
+		ro.SetGenerateName("")
+		ro.SetResourceVersion("")
+		labels := ro.GetLabels()
+		for k := range labels {
+			if strings.HasPrefix(k, "acorn.io/") {
+				delete(labels, k)
+			}
+		}
+		ro.SetLabels(labels)
+
+		annotations := ro.GetAnnotations()
+		for k := range annotations {
+			if strings.HasPrefix(k, "acorn.io/") {
+				delete(annotations, k)
+			}
+		}
+		ro.SetAnnotations(annotations)
 		return ro
 	}
 	return obj

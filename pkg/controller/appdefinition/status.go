@@ -16,10 +16,94 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func ReadyStatus(req router.Request, resp router.Response) error {
+	app := req.Object.(*v1.AppInstance)
+	app.Status.Ready = false
+	cond := condition.Setter(app, resp, v1.AppInstanceConditionReady)
+
+	for _, condition := range app.Status.Conditions {
+		if condition.Type == v1.AppInstanceConditionReady {
+			continue
+		}
+
+		if condition.Status != metav1.ConditionTrue {
+			cond.Error(fmt.Errorf("%s=%s: %s", condition.Type, condition.Status, condition.Message))
+			return nil
+		}
+	}
+
+	cond.Success()
+	app.Status.Ready = app.Spec.Image == app.Status.AppImage.ID &&
+		app.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+		app.Status.Condition(v1.AppInstanceConditionContainers).Success &&
+		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&
+		app.Status.Condition(v1.AppInstanceConditionAcorns).Success &&
+		app.Status.Condition(v1.AppInstanceConditionSecrets).Success &&
+		app.Status.Condition(v1.AppInstanceConditionPulled).Success &&
+		app.Status.Condition(v1.AppInstanceConditionDefined).Success
+	return nil
+}
+
+func AcornStatus(req router.Request, resp router.Response) error {
+	app := req.Object.(*v1.AppInstance)
+	cond := condition.Setter(app, resp, v1.AppInstanceConditionAcorns)
+	app.Status.AcornStatus = map[string]v1.AcornStatus{}
+
+	var (
+		failed         bool
+		failedName     string
+		failedMessage  string
+		waiting        bool
+		waitingName    string
+		waitingMessage string
+	)
+
+	for _, acornName := range typed.SortedKeys(app.Status.AppSpec.Acorns) {
+		appInstance := &v1.AppInstance{}
+		err := req.Get(appInstance, app.Status.Namespace, acornName)
+		if err != nil {
+			cond.Error(err)
+			return nil
+		}
+		app.Status.AcornStatus[acornName] = v1.AcornStatus{
+			ContainerStatus: appInstance.Status.ContainerStatus,
+			JobsStatus:      appInstance.Status.JobsStatus,
+			AcornStatus:     appInstance.Status.AcornStatus,
+			Stopped:         appInstance.Status.Stopped,
+			Ready:           appInstance.Status.Ready,
+		}
+
+		for _, condition := range appInstance.Status.Conditions {
+			if condition.Error {
+				failed = true
+				failedName = acornName
+				failedMessage = condition.Message
+			} else if condition.Transitioning || !condition.Success {
+				waiting = true
+				waitingName = acornName
+				waitingMessage = condition.Message
+			}
+		}
+	}
+
+	switch {
+	case failed:
+		cond.Error(fmt.Errorf("%s: failed [%s]", failedName, failedMessage))
+	case waiting:
+		cond.Unknown(fmt.Sprintf("%s: waiting [%s]", waitingName, waitingMessage))
+	default:
+		cond.Success()
+	}
+
+	resp.Objects(app)
+	return nil
+}
 
 func JobStatus(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)

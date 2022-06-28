@@ -21,6 +21,9 @@ func CLIStatus(req router.Request, resp router.Response) error {
 func message(app *v1.AppInstance) string {
 	buf := &bytes.Buffer{}
 	for _, cond := range app.Status.Conditions {
+		if cond.Type == v1.AppInstanceConditionReady {
+			continue
+		}
 		if !cond.Success && (cond.Error || cond.Transitioning) && cond.Message != "" {
 			if buf.Len() > 0 {
 				buf.WriteString(" ")
@@ -33,7 +36,11 @@ func message(app *v1.AppInstance) string {
 		}
 	}
 	if buf.Len() == 0 {
-		return "OK"
+		if app.Status.Ready {
+			return "OK"
+		} else {
+			return "pending"
+		}
 	}
 	return buf.String()
 }

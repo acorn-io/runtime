@@ -12,14 +12,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewExpose(c client.WithWatch) *Expose {
+func NewExpose(c client.WithWatch, secrets *Storage) *Expose {
 	return &Expose{
-		client: c,
+		client:  c,
+		secrets: secrets,
 	}
 }
 
 type Expose struct {
-	client client.WithWatch
+	client  client.WithWatch
+	secrets *Storage
 }
 
 func (s *Expose) NamespaceScoped() bool {
@@ -33,8 +35,13 @@ func (s *Expose) New() runtime.Object {
 func (s *Expose) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 
+	apiSecret, err := s.secrets.Get(ctx, name, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	secret := &corev1.Secret{}
-	err := s.client.Get(ctx, router.Key(ns, name), secret)
+	err = s.client.Get(ctx, router.Key(ns, apiSecret.(*apiv1.Secret).Name), secret)
 	if err != nil {
 		return nil, err
 	}

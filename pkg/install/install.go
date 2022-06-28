@@ -13,7 +13,7 @@ import (
 	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install/progress"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/podstatus"
 	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/acorn/pkg/version"
@@ -34,7 +34,7 @@ import (
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
 	v1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -111,7 +111,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	if opts.Mode.DoConfig() {
-		c, err := kclient.Default()
+		c, err := k8sclient.Default()
 		if err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 		s.Success()
 
-		kclient, err := kclient.Default()
+		kclient, err := k8sclient.Default()
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	return nil
 }
 
-func waitDeployment(ctx context.Context, s progress.Progress, client client.WithWatch, imageName, name string, scale int32) error {
+func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name string, scale int32) error {
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -193,12 +193,12 @@ func waitDeployment(ctx context.Context, s progress.Progress, client client.With
 	return eg.Wait()
 }
 
-func waitController(ctx context.Context, p progress.Builder, replicas int, image string, client client.WithWatch) error {
+func waitController(ctx context.Context, p progress.Builder, replicas int, image string, client kclient.WithWatch) error {
 	s := p.New("Waiting for controller deployment to be available")
 	return s.Fail(waitDeployment(ctx, s, client, image, "acorn-controller", int32(replicas)))
 }
 
-func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string, client client.WithWatch) error {
+func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string, client kclient.WithWatch) error {
 	s := p.New("Waiting for API server deployment to be available")
 	if err := waitDeployment(ctx, s, client, image, "acorn-api", int32(replicas)); err != nil {
 		return s.Fail(err)

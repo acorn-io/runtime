@@ -49,6 +49,7 @@ var (
 	CredentialConverter = MustConverter(Credential)
 
 	Secret = [][]string{
+		{"Alias", "{{alias .}}"},
 		{"Name", "Name"},
 		{"Type", "Type"},
 		{"Keys", "Keys"},

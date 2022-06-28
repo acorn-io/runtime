@@ -75,7 +75,7 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 }
 
 func (s *Storage) appToApp(ctx context.Context, app v1.AppInstance, tagCache map[string]map[string][]string) *apiv1.App {
-	rootNS := app.Labels[labels.AcornAppNamespace]
+	rootNS := app.Labels[labels.AcornRootNamespace]
 	tags, ok := tagCache[rootNS]
 	if !ok {
 		cfg, err := tags2.Get(ctx, s.client, rootNS)

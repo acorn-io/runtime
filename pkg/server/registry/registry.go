@@ -23,6 +23,7 @@ func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storag
 	imagesStorage := images.NewStorage(c)
 	imagesDetails := images.NewImageDetails(c, imagesStorage)
 	containerStorage := containers.NewStorage(c)
+	secretsStorage := secrets.NewStorage(c)
 	tagsStorage := images.NewTagStorage(c, imagesStorage)
 	containerExec, err := containers.NewContainerExec(c, containerStorage, cfg)
 	if err != nil {
@@ -59,8 +60,8 @@ func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storag
 		"containerreplicas":      containerStorage,
 		"containerreplicas/exec": containerExec,
 		"credentials":            credentials.NewStorage(c),
-		"secrets":                secrets.NewStorage(c),
-		"secrets/expose":         secrets.NewExpose(c),
+		"secrets":                secretsStorage,
+		"secrets/expose":         secrets.NewExpose(c, secretsStorage),
 		"infos":                  info.NewStorage(c),
 	}, nil
 }

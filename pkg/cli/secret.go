@@ -1,11 +1,17 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/tables"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -35,14 +41,19 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	apps, _ := client.AppList(cmd.Context())
+
 	out := table.NewWriter(tables.Secret, "", a.Quiet, a.Output)
+	out.AddFormatFunc("alias", func(obj apiv1.Secret) string {
+		return strings.Join(aliases(&obj, apps), ",")
+	})
 
 	if len(args) == 1 {
 		secret, err := client.SecretGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
-		out.Write(secret)
+		out.Write(*secret)
 		return out.Err()
 	}
 
@@ -62,4 +73,21 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return out.Err()
+}
+
+func aliases(secret *apiv1.Secret, apps []apiv1.App) (result []string) {
+	names := sets.NewString()
+	for _, app := range apps {
+		for _, binding := range app.Spec.Secrets {
+			if binding.Secret == secret.Name {
+				names.Insert(fmt.Sprintf("%s.%s", app.Name, binding.SecretRequest))
+			}
+		}
+	}
+
+	if secret.Labels[labels.AcornSecretGenerated] == "true" {
+		names.Insert(fmt.Sprintf("%s.%s", secret.Labels[labels.AcornRootPrefix], secret.Labels[labels.AcornSecretName]))
+	}
+
+	return names.List()
 }
