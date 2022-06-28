@@ -16,6 +16,8 @@ var (
 	AppInstanceConditionSecrets    = "secrets"
 	AppInstanceConditionContainers = "containers"
 	AppInstanceConditionJobs       = "jobs"
+	AppInstanceConditionAcorns     = "acorns"
+	AppInstanceConditionReady      = "Ready"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -104,12 +106,22 @@ type AppInstanceStatus struct {
 	Columns         AppColumns                 `json:"columns,omitempty"`
 	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
 	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
+	AcornStatus     map[string]AcornStatus     `json:"acornStatus,omitempty"`
+	Ready           bool                       `json:"ready,omitempty"`
 	Stopped         bool                       `json:"stopped,omitempty"`
 	Namespace       string                     `json:"namespace,omitempty"`
 	AppImage        AppImage                   `json:"appImage,omitempty"`
 	AppSpec         AppSpec                    `json:"appSpec,omitempty"`
 	Conditions      []Condition                `json:"conditions,omitempty"`
 	Endpoints       []Endpoint                 `json:"endpoints,omitempty"`
+}
+
+type AcornStatus struct {
+	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
+	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
+	AcornStatus     map[string]AcornStatus     `json:"acornStatus,omitempty"`
+	Stopped         bool                       `json:"stopped,omitempty"`
+	Ready           bool                       `json:"ready,omitempty"`
 }
 
 type Endpoint struct {

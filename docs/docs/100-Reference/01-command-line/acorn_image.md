@@ -19,6 +19,7 @@ acorn images
 ### Options
 
 ```
+  -a, --all             Include untagged images
   -h, --help            help for image
       --no-trunc        Don't truncate IDs
   -o, --output string   Output format (json, yaml, {{gotemplate}})

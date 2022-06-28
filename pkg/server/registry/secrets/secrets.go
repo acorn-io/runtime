@@ -3,9 +3,13 @@ package secrets
 import (
 	"context"
 	"sort"
+	"strings"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -13,22 +17,19 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var (
-	ignoreTypes = map[string]bool{
-		string(corev1.SecretTypeDockerConfigJson):    true,
-		string(corev1.SecretTypeDockercfg):           true,
-		string(corev1.SecretTypeServiceAccountToken): true,
-		apiv1.SecretTypeCredential:                   true,
-	}
-)
+func ignore(secret *corev1.Secret) bool {
+	return !strings.HasPrefix(string(secret.Type), "secrets.acorn.io/")
+}
 
 func NewStorage(c client.WithWatch) *Storage {
 	return &Storage{
@@ -64,7 +65,7 @@ func coreSecretToSecret(secret *corev1.Secret) *apiv1.Secret {
 
 	return &apiv1.Secret{
 		ObjectMeta: secret.ObjectMeta,
-		Type:       string(secret.Type),
+		Type:       strings.TrimPrefix(string(secret.Type), v1.SecretTypePrefix),
 		Keys:       keys,
 	}
 }
@@ -81,6 +82,24 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 		ObjectMeta: secret.ObjectMeta,
 		Data:       secret.Data,
 		Type:       corev1.SecretType(secret.Type),
+	}
+
+	if newSecret.Type == "" {
+		newSecret.Type = v1.SecretTypeOpaque
+	} else {
+		newSecret.Type = v1.SecretTypePrefix + newSecret.Type
+	}
+
+	if !v1.SecretTypes[newSecret.Type] {
+		return nil, apierror.NewInvalid(schema.GroupKind{
+			Group: api.Group,
+			Kind:  "Secret",
+		}, newSecret.Name, field.ErrorList{{
+			Type:     "string",
+			Field:    "type",
+			BadValue: secret.Type,
+			Detail:   "Invalid secret type",
+		}})
 	}
 
 	err := s.client.Create(ctx, newSecret)
@@ -106,7 +125,7 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 		ListMeta: secrets.ListMeta,
 	}
 	for _, secret := range secrets.Items {
-		if ignoreTypes[string(secret.Type)] {
+		if ignore(&secret) {
 			continue
 		}
 		result.Items = append(result.Items, *coreSecretToSecret(&secret))
@@ -115,16 +134,66 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 	return result, nil
 }
 
+func (s *Storage) resolveName(ctx context.Context, ns, name string) (string, error) {
+	i := strings.LastIndex(name, ".")
+	if i == -1 || i+1 > len(name) {
+		return name, nil
+	}
+
+	prefix := name[:i]
+	secretName := name[i+1:]
+
+	apps := &v1.AppInstanceList{}
+	err := s.client.List(ctx, apps, &kclient.ListOptions{
+		Namespace: ns,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, app := range apps.Items {
+		if app.Name != prefix {
+			continue
+		}
+		for _, binding := range app.Spec.Secrets {
+			if binding.SecretRequest == secretName {
+				return binding.Secret, nil
+			}
+		}
+	}
+
+	secrets := &corev1.SecretList{}
+	err = s.client.List(ctx, secrets, &kclient.ListOptions{
+		Namespace: ns,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornRootPrefix: prefix,
+			labels.AcornSecretName: secretName,
+		}),
+	})
+	if err != nil {
+		return "", err
+	}
+	if len(secrets.Items) == 1 {
+		return secrets.Items[0].Name, nil
+	}
+
+	return name, nil
+}
+
 func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
 	ns, _ := request.NamespaceFrom(ctx)
-
-	secret := &corev1.Secret{}
-	err := s.client.Get(ctx, router.Key(ns, name), secret)
+	name, err := s.resolveName(ctx, ns, name)
 	if err != nil {
 		return nil, err
 	}
 
-	if ignoreTypes[string(secret.Type)] {
+	secret := &corev1.Secret{}
+	err = s.client.Get(ctx, router.Key(ns, name), secret)
+	if err != nil {
+		return nil, err
+	}
+
+	if ignore(secret) {
 		return nil, apierror.NewNotFound(schema.GroupResource{
 			Group:    api.Group,
 			Resource: "secrets",
@@ -181,7 +250,7 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 	newCoreSecret := &corev1.Secret{
 		ObjectMeta: newV1Secret.ObjectMeta,
 		Data:       newV1Secret.Data,
-		Type:       corev1.SecretType(newV1Secret.Type),
+		Type:       corev1.SecretType(v1.SecretTypePrefix + secret.(*apiv1.Secret).Type),
 	}
 
 	err = s.client.Update(ctx, newCoreSecret)
@@ -200,7 +269,7 @@ func (s *Storage) Watch(ctx context.Context, options *internalversion.ListOption
 	}
 	return watcher.Transform(w, func(object runtime.Object) []runtime.Object {
 		secret := object.(*corev1.Secret)
-		if ignoreTypes[string(secret.Type)] {
+		if ignore(secret) {
 			return nil
 		}
 		return []runtime.Object{

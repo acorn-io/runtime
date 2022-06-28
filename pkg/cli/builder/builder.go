@@ -113,6 +113,10 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 		}
 
 		flags := c.PersistentFlags()
+		if fieldType.Tag.Get("local") == "true" {
+			flags = c.LocalFlags()
+		}
+
 		switch fieldType.Type.Kind() {
 		case reflect.Int:
 			flags.IntVarP((*int)(unsafe.Pointer(v.Addr().Pointer())), name, alias, defInt, usage)

@@ -24,6 +24,7 @@ acorn images`,
 }
 
 type Image struct {
+	All     bool   `usage:"Include untagged images" short:"a"`
 	Quiet   bool   `usage:"Output only names" short:"q"`
 	NoTrunc bool   `usage:"Don't truncate IDs"`
 	Output  string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
@@ -64,6 +65,9 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, image := range images {
+		if image.Tag == "" && image.Repository == "" && !a.All {
+			continue
+		}
 		out.Write(image)
 	}
 

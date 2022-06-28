@@ -8,10 +8,10 @@ jobs: {
 			#!/bin/sh
 			cat << EOF > /run/secrets/output
 			{
-			    "type": "other",
+			    "type": "basic",
 			    "data": {
-			        "key": "value",
-			        "pass": "$PASS"
+			        "key": "$(echo -n value | base64)",
+			        "pass": "$(echo -n $PASS | base64)"
 			    }
 			}
 			EOF
