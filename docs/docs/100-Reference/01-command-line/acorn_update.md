@@ -12,6 +12,7 @@ acorn update [flags] APP_NAME [deploy flags]
 ### Options
 
 ```
+      --dangerous         Automatically approve all privileges requested by the application
   -d, --dns strings       Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
   -h, --help              help for update
       --image string      

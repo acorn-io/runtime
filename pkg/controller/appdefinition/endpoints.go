@@ -86,7 +86,12 @@ func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName str
 			app.Namespace, app.Name)
 	}
 
-	for _, hostname := range strings.Split(ingress.Annotations[labels.AcornHostnames], ",") {
+	hostnames := ingress.Annotations[labels.AcornPublishURL]
+	if hostnames == "" {
+		hostnames = ingress.Annotations[labels.AcornHostnames]
+	}
+
+	for _, hostname := range strings.Split(hostnames, ",") {
 		hostname = strings.TrimSpace(hostname)
 		if hostname == "" {
 			continue

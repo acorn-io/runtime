@@ -1751,3 +1751,81 @@ profiles: foo: build: {}
 	_, _, err = def.WithDeployArgs(nil, []string{"missing"})
 	assert.Equal(t, "failed to find deploy profile missing", err.Error())
 }
+
+func TestPermissions(t *testing.T) {
+	acornCue := `
+localData: permissions: {
+  rules: [
+    {
+      verbs: ["verb"]
+      apiGroups: ["groups"]
+      resources: ["resources"]
+      resourceNames: ["names"]
+      nonResourceURLs: ["foo"]
+    }
+  ]
+  clusterRules: [
+    {
+      verbs: ["verb"]
+      apiGroups: ["groups"]
+      resources: ["resources"]
+      resourceNames: ["names"]
+      nonResourceURLs: ["foo"]
+    }
+  ]
+}
+
+containers: cont: {
+  permissions: localData.permissions
+  sidecars: side: permissions: localData.permissions
+}
+
+acorns: acorn: permissions: localData.permissions
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "verb", appSpec.Containers["cont"].Permissions.Rules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Containers["cont"].Permissions.Rules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Containers["cont"].Permissions.Rules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Containers["cont"].Permissions.Rules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Containers["cont"].Permissions.Rules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Containers["cont"].Permissions.ClusterRules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Containers["cont"].Permissions.ClusterRules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Containers["cont"].Permissions.ClusterRules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Containers["cont"].Permissions.ClusterRules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Containers["cont"].Permissions.ClusterRules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Acorns["acorn"].Permissions.Rules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Acorns["acorn"].Permissions.Rules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions.Rules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions.Rules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions.Rules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].NonResourceURLs[0])
+}

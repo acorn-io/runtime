@@ -81,6 +81,18 @@ package v1
 	dirs: [string]:  #VolumeMountSpec
 	probes: [...#ProbeSpec]
 	dependencies: [...#DependencySpec]
+	permissions: {
+		rules: [...#RuleSpec]
+		clusterRules: [...#RuleSpec]
+	}
+}
+
+#RuleSpec: {
+	verbs: [...string]
+	apiGroups: [...string]
+	resources: [...string]
+	resourceNames: [...string]
+	nonResourceURLs: [...string]
 }
 
 #DependencySpec: {
@@ -160,6 +172,10 @@ package v1
 	secrets: [...#SecretBinding]
 	services: [...#ServiceBinding]
 	deployArgs: [string]: _
+	permissions: {
+		rules: [...#RuleSpec]
+		clusterRules: [...#RuleSpec]
+	}
 }
 
 #AppSpec: {

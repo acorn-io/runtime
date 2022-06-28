@@ -16,6 +16,7 @@ acorn dev [flags] DIRECTORY
 ### Options
 
 ```
+      --dangerous         Automatically approve all privileges requested by the application
   -d, --dns strings       Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
   -f, --file string       Name of the dev file (default "DIRECTORY/acorn.cue")
   -h, --help              help for dev

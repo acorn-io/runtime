@@ -24,19 +24,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c client.WithWatch, images *images.Storage) *Storage {
+func NewStorage(c client.WithWatch, images *images.Storage, imageDetails *images.ImageDetails) *Storage {
 	return &Storage{
 		TableConvertor: tables.AppConverter,
 		client:         c,
 		images:         images,
+		imageDetails:   imageDetails,
 	}
 }
 
 type Storage struct {
 	rest.TableConvertor
 
-	client client.WithWatch
-	images *images.Storage
+	client       client.WithWatch
+	images       *images.Storage
+	imageDetails *images.ImageDetails
 }
 
 func (s *Storage) NewList() runtime.Object {
@@ -161,11 +163,21 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 			DevMode:          params.Spec.DevMode,
 			PublishProtocols: params.Spec.PublishProtocols,
 			Profiles:         params.Spec.Profiles,
+			Permissions:      params.Spec.Permissions,
 		}
 	)
 
 	image, err := s.resolveTag(ctx, params.Namespace, params.Spec.Image)
 	if err != nil {
+		return nil, err
+	}
+
+	perms, err := s.getPermissions(ctx, image)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.compareAndCheckPermissions(ctx, perms, runOpts.Permissions); err != nil {
 		return nil, err
 	}
 
@@ -216,6 +228,15 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 	}
 	updatedAppInstance.Name = oldAppInstance.Name
 	updatedAppInstance.Namespace = oldAppInstance.Namespace
+
+	perms, err := s.getPermissions(ctx, updatedAppInstance.Spec.Image)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if err := s.compareAndCheckPermissions(ctx, perms, updatedAppInstance.Spec.Permissions); err != nil {
+		return nil, false, err
+	}
 
 	if err := s.client.Update(ctx, updatedAppInstance); err != nil {
 		return nil, false, err

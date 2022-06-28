@@ -19,6 +19,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/deployargs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/acorn/pkg/rulerequest"
 	objwatcher "github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
@@ -28,11 +29,12 @@ import (
 )
 
 type Options struct {
-	Args   []string
-	Client client.Client
-	Build  build.Options
-	Run    client.AppRunOptions
-	Log    client.LogOptions
+	Args      []string
+	Client    client.Client
+	Build     build.Options
+	Run       client.AppRunOptions
+	Log       client.LogOptions
+	Dangerous bool
 }
 
 func (o *Options) Complete() (*Options, error) {
@@ -171,7 +173,7 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 
 		app, err := runOrUpdate(ctx, file, image.ID, opts)
 		if err != nil {
-			logrus.Errorf("Failed to run app: %v", err)
+			logrus.Errorf("Failed to run/update app: %v", err)
 			continue
 		}
 
@@ -179,6 +181,7 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 			continue
 		}
 
+		opts.Run.Name = app.Name
 		LogLoop(ctx, opts.Client, app, &opts.Log)
 		AppStatusLoop(ctx, opts.Client, app)
 		containerSyncLoop(ctx, app, opts)
@@ -201,7 +204,7 @@ func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image strin
 	}
 	update := opts.Run.ToUpdate()
 	update.Image = image
-	_, err := c.AppUpdate(ctx, app.Name, &update)
+	_, err := rulerequest.PromptUpdate(ctx, opts.Client, opts.Dangerous, app.Name, update)
 	return err
 }
 
@@ -216,7 +219,7 @@ func createApp(ctx context.Context, acornCue, image string, opts *Options) (*api
 	}
 	opts.Run.Annotations[labels.AcornAppCuePath] = acornCue
 
-	app, err := opts.Client.AppRun(ctx, image, &opts.Run)
+	app, err := rulerequest.PromptRun(ctx, opts.Client, opts.Dangerous, image, opts.Run)
 	if err != nil {
 		return nil, err
 	}

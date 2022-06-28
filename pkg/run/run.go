@@ -166,6 +166,7 @@ type Options struct {
 	DeployArgs       map[string]interface{}
 	DevMode          *bool
 	Client           client.WithWatch
+	Permissions      *v1.Permissions
 }
 
 func (o *Options) Complete() (*Options, error) {
@@ -243,6 +244,7 @@ func Run(ctx context.Context, image string, opts *Options) (*v1.AppInstance, err
 			PublishProtocols: opts.PublishProtocols,
 			Profiles:         opts.Profiles,
 			DevMode:          opts.DevMode,
+			Permissions:      opts.Permissions,
 		},
 	}
 

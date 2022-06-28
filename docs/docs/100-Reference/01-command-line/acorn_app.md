@@ -19,6 +19,7 @@ acorn app
 ### Options
 
 ```
+  -a, --all             Include stopped apps
   -h, --help            help for app
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -q, --quiet           Output only names

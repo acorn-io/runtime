@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/deployargs"
 	"github.com/acorn-io/acorn/pkg/dev"
+	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -40,6 +41,7 @@ type RunArgs struct {
 	PublishAll bool     `usage:"Publish all exposed ports of application" short:"P"`
 	Publish    []string `usage:"Publish exposed port of application (format [public:]private) (ex 81:80)" short:"p"`
 	Profile    []string `usage:"Profile to assign default values"`
+	Dangerous  bool     `usage:"Automatically approve all privileges requested by the application"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -109,7 +111,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	opts.DeployArgs = deployParams
 
-	app, err := c.AppRun(cmd.Context(), image, &opts)
+	app, err := rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, opts)
 	if err != nil {
 		return err
 	}

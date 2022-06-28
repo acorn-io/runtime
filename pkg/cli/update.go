@@ -6,6 +6,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/deployargs"
+	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -64,7 +65,7 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	opts.Image = image
 	opts.DeployArgs = deployParams
 
-	app, err := c.AppUpdate(cmd.Context(), name, &opts)
+	app, err := rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, name, opts)
 	if err != nil {
 		return err
 	}

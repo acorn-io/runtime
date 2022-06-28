@@ -21,6 +21,7 @@ acorn app`,
 }
 
 type App struct {
+	All    bool   `usage:"Include stopped apps" short:"a"`
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 }
@@ -48,6 +49,9 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, app := range apps {
+		if app.Status.Stopped && !a.All {
+			continue
+		}
 		if len(args) > 0 {
 			if slices.Contains(args, app.Name) {
 				out.Write(app)

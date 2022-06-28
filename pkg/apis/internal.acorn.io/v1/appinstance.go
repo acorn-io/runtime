@@ -48,6 +48,7 @@ type AppInstanceSpec struct {
 	PublishProtocols []Protocol        `json:"publishProtocols,omitempty"`
 	Ports            []PortBinding     `json:"ports,omitempty"`
 	DeployArgs       GenericMap        `json:"deployArgs,omitempty"`
+	Permissions      *Permissions      `json:"permissions,omitempty"`
 }
 
 func (in AppInstanceSpec) GetDevMode() bool {

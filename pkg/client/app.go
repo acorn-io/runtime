@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"sort"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -13,7 +14,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	client2 "sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
@@ -40,11 +41,12 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				Ports:            opts.Ports,
 				Profiles:         opts.Profiles,
 				DevMode:          opts.DevMode,
+				Permissions:      opts.Permissions,
 			},
 		}
 	)
 
-	return app, c.Client.Create(ctx, app)
+	return app, translatePermissions(c.Client.Create(ctx, app))
 }
 
 func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
@@ -78,8 +80,27 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	if opts.DevMode != nil {
 		app.Spec.DevMode = opts.DevMode
 	}
+	if opts.Permissions != nil {
+		app.Spec.Permissions = opts.Permissions
+	}
 
-	return app, c.Client.Update(ctx, app)
+	return app, translatePermissions(c.Client.Update(ctx, app))
+}
+
+func translatePermissions(err error) error {
+	if err == nil {
+		return err
+	}
+	if strings.HasPrefix(err.Error(), PrefixErrRulesNeeded) {
+		perms := v1.Permissions{}
+		marshalErr := json.Unmarshal([]byte(strings.TrimPrefix(err.Error(), PrefixErrRulesNeeded)), &perms)
+		if marshalErr == nil {
+			return &ErrRulesNeeded{
+				Permissions: perms,
+			}
+		}
+	}
+	return err
 }
 
 func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
@@ -236,7 +257,7 @@ func (c *client) AppDelete(ctx context.Context, name string) (*apiv1.App, error)
 
 func (c *client) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
 	app := &apiv1.App{}
-	err := c.Client.Get(ctx, client2.ObjectKey{
+	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
 		Namespace: c.Namespace,
 	}, app)
@@ -249,7 +270,7 @@ func (c *client) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
 
 func (c *client) AppList(ctx context.Context) ([]apiv1.App, error) {
 	apps := &apiv1.AppList{}
-	err := c.Client.List(ctx, apps, &client2.ListOptions{
+	err := c.Client.List(ctx, apps, &kclient.ListOptions{
 		Namespace: c.Namespace,
 	})
 	if err != nil {
@@ -268,7 +289,7 @@ func (c *client) AppList(ctx context.Context) ([]apiv1.App, error) {
 
 func (c *client) AppStart(ctx context.Context, name string) error {
 	app := &apiv1.App{}
-	err := c.Client.Get(ctx, client2.ObjectKey{
+	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
 		Namespace: c.Namespace,
 	}, app)
@@ -284,7 +305,7 @@ func (c *client) AppStart(ctx context.Context, name string) error {
 
 func (c *client) AppStop(ctx context.Context, name string) error {
 	app := &apiv1.App{}
-	err := c.Client.Get(ctx, client2.ObjectKey{
+	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
 		Namespace: c.Namespace,
 	}, app)

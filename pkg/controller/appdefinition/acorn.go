@@ -52,7 +52,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	publishPorts := ports.RemapForBinding(true, acorn.Ports, appInstance.Spec.Ports, appInstance.Spec.PublishProtocols)
 	ports := append(typed.MapSlice(acorn.Ports, toNonPublishPortBinding), typed.MapSlice(publishPorts, toPublishPortBinding)...)
 
-	return &v1.AppInstance{
+	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      acornName,
 			Namespace: appInstance.Status.Namespace,
@@ -70,4 +70,10 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Ports:      ports,
 		},
 	}
+
+	if acorn.Permissions.HasRules() {
+		acornInstance.Spec.Permissions = appInstance.Spec.Permissions
+	}
+
+	return acornInstance
 }

@@ -12,6 +12,7 @@ acorn run [flags] IMAGE [deploy flags]
 ### Options
 
 ```
+      --dangerous         Automatically approve all privileges requested by the application
   -d, --dns strings       Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
   -h, --help              help for run
   -i, --interactive       Stream logs/status in the foreground and stop on exit

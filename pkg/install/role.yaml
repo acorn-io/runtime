@@ -43,6 +43,17 @@ rules:
     resources:
       - deployments
       - daemonsets
+  - verbs: ["create"]
+    apiGroups: ["authorization.k8s.io"]
+    resources:
+      - subjectaccessreviews
+  - verbs: ["*"]
+    apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - clusterroles
+      - roles
+      - clusterrolebindings
+      - rolebindings
 
 ---
 kind: ClusterRoleBinding
