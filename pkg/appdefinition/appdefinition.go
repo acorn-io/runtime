@@ -268,6 +268,8 @@ func addAcorns(fileSet map[string]bool, builds map[string]v1.AcornBuilderSpec, c
 			return
 		}
 
+		fileSet[filepath.Join(cwd, build.Build.Acornfile)] = true
+
 		appDef, err := NewAppDefinition(data)
 		if err != nil {
 			return
