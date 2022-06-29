@@ -150,6 +150,7 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+outer:
 	for {
 		if err := watcher.Wait(ctx); err != nil {
 			return err
@@ -171,10 +172,20 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 			continue
 		}
 
-		app, err := runOrUpdate(ctx, file, image.ID, opts)
-		if err != nil {
-			logrus.Errorf("Failed to run/update app: %v", err)
-			continue
+		var (
+			app *apiv1.App
+		)
+		for {
+			app, err = runOrUpdate(ctx, file, image.ID, opts)
+			if apierror.IsConflict(err) {
+				logrus.Errorf("Failed to run/update app: %v", err)
+				time.Sleep(time.Second)
+				continue
+			} else if err != nil {
+				logrus.Errorf("Failed to run/update app: %v", err)
+				continue outer
+			}
+			break
 		}
 
 		if started {

@@ -373,7 +373,7 @@ func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appIn
 	}
 }
 
-func lookupSecret(ctx context.Context, req router.Request, namespace, secretName string) (*corev1.Secret, error) {
+func lookupSecret(ctx context.Context, req router.Request, parent *v1.AppInstance, namespace, secretName string) (*corev1.Secret, error) {
 	parts := strings.Split(secretName, ".")
 	for i := range parts {
 		if i+1 >= len(parts) {
@@ -381,8 +381,20 @@ func lookupSecret(ctx context.Context, req router.Request, namespace, secretName
 			err := req.Get(existingSecret, namespace, parts[i])
 			return existingSecret, err
 		} else {
+			appName := parts[i]
+			if parent != nil {
+				// check for links
+				for _, binding := range parent.Spec.Services {
+					if binding.Target == appName {
+						appName = binding.Service
+						namespace = parent.Namespace
+						break
+					}
+				}
+			}
+
 			app := &v1.AppInstance{}
-			err := req.Get(app, namespace, parts[i])
+			err := req.Get(app, namespace, appName)
 			if err != nil {
 				return nil, err
 			}
@@ -407,9 +419,18 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 		return sec, nil
 	}
 
+	if strings.Contains(secretName, ".") {
+		existingSecret, err := lookupSecret(req.Ctx, req, appInstance, appInstance.Status.Namespace, secretName)
+		if err != nil {
+			return nil, err
+		}
+		secrets[secretName] = existingSecret
+		return existingSecret, nil
+	}
+
 	for _, binding := range appInstance.Spec.Secrets {
 		if binding.SecretRequest == secretName {
-			existingSecret, err := lookupSecret(req.Ctx, req, appInstance.Namespace, binding.Secret)
+			existingSecret, err := lookupSecret(req.Ctx, req, nil, appInstance.Namespace, binding.Secret)
 			if err != nil {
 				return nil, err
 			}

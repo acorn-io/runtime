@@ -41,10 +41,9 @@ func (d *depCheckingResponse) Objects(objs ...kclient.Object) {
 		if deps := objAnnotations[labels.AcornDepNames]; deps != "" {
 			ready := d.checkDeps(strings.Split(deps, ","))
 			if !ready {
-				objLabels := obj.GetLabels()
-				objLabels[apply.LabelCreate] = "false"
-				objLabels[apply.LabelUpdate] = "false"
-				obj.SetLabels(objLabels)
+				objAnnotations[apply.AnnotationCreate] = "false"
+				objAnnotations[apply.AnnotationUpdate] = "false"
+				obj.SetLabels(objAnnotations)
 			}
 		}
 	}

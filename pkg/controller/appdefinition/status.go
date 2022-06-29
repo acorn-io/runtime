@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -11,11 +12,13 @@ import (
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -27,15 +30,20 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 	app.Status.Ready = false
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionReady)
 
+	var errs []error
 	for _, condition := range app.Status.Conditions {
 		if condition.Type == v1.AppInstanceConditionReady {
 			continue
 		}
 
 		if condition.Status != metav1.ConditionTrue {
-			cond.Error(fmt.Errorf("%s=%s: %s", condition.Type, condition.Status, condition.Message))
-			return nil
+			errs = append(errs, errors.New(condition.Message))
 		}
+	}
+
+	if len(errs) > 0 {
+		cond.Error(merr.NewErrors(errs...))
+		return nil
 	}
 
 	cond.Success()
@@ -67,7 +75,9 @@ func AcornStatus(req router.Request, resp router.Response) error {
 	for _, acornName := range typed.SortedKeys(app.Status.AppSpec.Acorns) {
 		appInstance := &v1.AppInstance{}
 		err := req.Get(appInstance, app.Status.Namespace, acornName)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
+			continue
+		} else if err != nil {
 			cond.Error(err)
 			return nil
 		}

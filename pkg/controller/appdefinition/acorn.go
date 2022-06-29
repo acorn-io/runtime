@@ -4,6 +4,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -44,11 +45,12 @@ func toPublishPortBinding(portDef v1.PortDef) v1.PortBinding {
 }
 
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
-	image := resolveTag(tag, acorn.Image)
+	image := resolveTagForAcorn(tag, appInstance.Namespace, acorn.Image)
 
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
 
+	tags.IsLocalReference(image)
 	publishPorts := ports.RemapForBinding(true, acorn.Ports, appInstance.Spec.Ports, appInstance.Spec.PublishProtocols)
 	ports := append(typed.MapSlice(acorn.Ports, toNonPublishPortBinding), typed.MapSlice(publishPorts, toPublishPortBinding)...)
 
@@ -68,6 +70,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Services:   acorn.Services,
 			DeployArgs: acorn.DeployArgs,
 			Ports:      ports,
+			Stop:       appInstance.Spec.Stop,
 		},
 	}
 
