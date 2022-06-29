@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -43,7 +44,7 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 
 	apps, _ := client.AppList(cmd.Context())
 
-	out := table.NewWriter(tables.Secret, "", a.Quiet, a.Output)
+	out := table.NewWriter(tables.Secret, system.UserNamespace(), a.Quiet, a.Output)
 	out.AddFormatFunc("alias", func(obj apiv1.Secret) string {
 		return strings.Join(aliases(&obj, apps), ",")
 	})

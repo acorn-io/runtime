@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/acorn-io/acorn/pkg/client"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +30,12 @@ type Rm struct {
 }
 
 func (a *Rm) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	cfg, err := restconfig.Default()
+	if err != nil {
+		return err
+	}
+
+	c, err := client.Default()
 	if err != nil {
 		return err
 	}
@@ -49,8 +56,17 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, arg := range args {
+		c := c
+		ns, name, ok := strings.Cut(arg, "/")
+		if ok {
+			c, err = client.New(cfg, ns)
+			if err != nil {
+				return err
+			}
+			arg = name
+		}
 		if a.Volumes {
-			v, err := client.VolumeDelete(cmd.Context(), arg)
+			v, err := c.VolumeDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting volume %s: %w", arg, err)
 			}
@@ -61,7 +77,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		}
 
 		if a.Images {
-			i, err := client.ImageDelete(cmd.Context(), arg)
+			i, err := c.ImageDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting image %s: %w", arg, err)
 			}
@@ -72,7 +88,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		}
 
 		if a.Containers {
-			app, err := client.AppDelete(cmd.Context(), arg)
+			app, err := c.AppDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting app %s: %w", arg, err)
 			}
@@ -81,7 +97,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			replica, err := client.ContainerReplicaDelete(cmd.Context(), arg)
+			replica, err := c.ContainerReplicaDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting container %s: %w", arg, err)
 			}
@@ -92,7 +108,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		}
 
 		if a.Secrets {
-			secret, err := client.SecretDelete(cmd.Context(), arg)
+			secret, err := c.SecretDelete(cmd.Context(), arg)
 			if err != nil {
 				return fmt.Errorf("deleting secret %s: %w", arg, err)
 			}

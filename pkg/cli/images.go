@@ -7,6 +7,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 )
@@ -36,11 +37,11 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.Image, "", false, a.Output)
+	out := table.NewWriter(tables.Image, system.UserNamespace(), false, a.Output)
 	if a.Quiet {
 		out = table.NewWriter([][]string{
-			{"NAME", "Name"},
-		}, "", true, a.Output)
+			{"Name", "{{ . | name }}"},
+		}, system.UserNamespace(), true, a.Output)
 	}
 
 	out.AddFormatFunc("trunc", func(str string) string {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -77,18 +76,15 @@ func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, ar
 		return err
 	}
 
-	appRequestedContainerPfx := strings.Join([]string{app.Name, s.Container}, ".")
-
 	var (
 		displayNames []string
 		names        = map[string]string{}
 	)
+
 	for _, container := range containers {
-		if strings.HasPrefix(container.Name, appRequestedContainerPfx) {
-			displayName := fmt.Sprintf("%s (%s %s)", container.Name, container.Status.Columns.State, table.FormatCreated(container.CreationTimestamp))
-			displayNames = append(displayNames, displayName)
-			names[displayName] = container.Name
-		}
+		displayName := fmt.Sprintf("%s (%s %s)", container.Name, container.Status.Columns.State, table.FormatCreated(container.CreationTimestamp))
+		displayNames = append(displayNames, displayName)
+		names[displayName] = container.Name
 	}
 
 	if len(containers) == 0 {

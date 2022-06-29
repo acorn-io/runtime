@@ -4,6 +4,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -32,7 +33,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.App, "", a.Quiet, a.Output)
+	out := table.NewWriter(tables.App, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		app, err := client.AppGet(cmd.Context(), args[0])

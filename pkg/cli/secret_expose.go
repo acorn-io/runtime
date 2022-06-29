@@ -2,10 +2,11 @@ package cli
 
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +46,7 @@ func (a *Expose) Run(cmd *cobra.Command, args []string) error {
 		{"TYPE", "Type"},
 		{"KEY", "Key"},
 		{"VALUE", "Value"},
-	}, "", a.Quiet, a.Output)
+	}, system.UserNamespace(), a.Quiet, a.Output)
 
 	var matchedSecrets []apiv1.Secret
 
