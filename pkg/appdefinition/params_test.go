@@ -8,7 +8,7 @@ import (
 
 func TestParamSpec(t *testing.T) {
 	acornCue := `
-args: build: {
+args: {
   // Description of a string param
   foo: string
 
@@ -29,7 +29,7 @@ args: build: {
 		t.Fatal(err)
 	}
 
-	spec, err := def.BuildParams()
+	spec, err := def.Args()
 	if err != nil {
 		t.Fatal(err)
 	}

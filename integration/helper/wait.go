@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	WatchTimeoutSeconds int64 = 120
+	WatchTimeoutSeconds int64 = 240
 )
 
 type WatchFunc func(ctx context.Context, obj client.ObjectList, opts ...client.ListOption) (watch.Interface, error)

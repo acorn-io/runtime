@@ -92,6 +92,7 @@ func (s *Storage) appToApp(ctx context.Context, app v1.AppInstance, tagCache map
 	}
 
 	app.Namespace, app.Name = namespace.NormalizedName(app.ObjectMeta)
+	app.OwnerReferences = nil
 	return &apiv1.App{
 		ObjectMeta: app.ObjectMeta,
 		Spec:       app.Spec,

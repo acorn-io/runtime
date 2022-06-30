@@ -46,8 +46,25 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		return nil
 	}
 
+	ready := true
+	for _, v := range app.Status.ContainerStatus {
+		if !v.Created || (v.Ready < v.ReadyDesired) {
+			ready = false
+		}
+	}
+	for _, v := range app.Status.JobsStatus {
+		if !v.Succeed {
+			ready = false
+		}
+	}
+	for _, v := range app.Status.AcornStatus {
+		if !v.Ready {
+			ready = false
+		}
+	}
+
 	cond.Success()
-	app.Status.Ready = app.Spec.Image == app.Status.AppImage.ID &&
+	app.Status.Ready = ready && app.Spec.Image == app.Status.AppImage.ID &&
 		app.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 		app.Status.Condition(v1.AppInstanceConditionContainers).Success &&
 		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&
@@ -62,6 +79,10 @@ func AcornStatus(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionAcorns)
 	app.Status.AcornStatus = map[string]v1.AcornStatus{}
+
+	for acornName := range app.Status.AppSpec.Acorns {
+		app.Status.AcornStatus[acornName] = v1.AcornStatus{}
+	}
 
 	var (
 		failed         bool
@@ -129,6 +150,11 @@ func JobStatus(req router.Request, resp router.Response) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	app.Status.JobsStatus = map[string]v1.JobStatus{}
+	for jobName := range app.Status.AppSpec.Jobs {
+		app.Status.JobsStatus[jobName] = v1.JobStatus{}
 	}
 
 	var (
@@ -263,11 +289,16 @@ func AppStatus(req router.Request, resp router.Response) error {
 	}
 
 	container := map[string]v1.ContainerStatus{}
+	for depName := range app.Status.AppSpec.Containers {
+		container[depName] = v1.ContainerStatus{}
+	}
+
 	for _, dep := range deps.Items {
 		status := container[dep.Labels[labels.AcornContainerName]]
 		status.Ready = dep.Status.ReadyReplicas
 		status.ReadyDesired = dep.Status.Replicas
 		status.UpToDate = dep.Status.UpdatedReplicas
+		status.Created = true
 		container[dep.Labels[labels.AcornContainerName]] = status
 
 		if status.Ready != status.ReadyDesired {

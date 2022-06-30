@@ -85,6 +85,7 @@ type ContainerStatus struct {
 	ReadyDesired int32 `json:"readyDesired,omitempty"`
 	UpToDate     int32 `json:"upToDate,omitempty"`
 	RestartCount int32 `json:"restartCount,omitempty"`
+	Created      bool  `json:"created,omitempty"`
 }
 
 type JobStatus struct {

@@ -28,10 +28,8 @@ const (
 )
 
 var Defaults = []byte(`
-args: build: dev: bool | *false
-profiles: dev: build: dev: bool | *true
-args: deploy: dev: bool | *false
-profiles: dev: deploy: dev: bool | *true
+args: dev: bool | *false
+profiles: dev: dev: bool | *true
 `)
 
 type AppDefinition struct {
@@ -46,7 +44,6 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 	}
 
 	appDef = appDef.WithImageData(appImage.ImageData)
-	appDef, _, err = appDef.WithBuildArgs(appImage.BuildArgs, nil)
 	return appDef, err
 }
 
@@ -94,7 +91,7 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
-func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, section string, profiles []string) (map[string]interface{}, error) {
+func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, profiles []string) (map[string]interface{}, error) {
 	val, err := a.ctx.Value()
 	if err != nil {
 		return nil, err
@@ -105,14 +102,11 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, section s
 			optional = true
 			profile = profile[:len(profile)-1]
 		}
-		path := cue2.ParsePath(fmt.Sprintf("profiles.%s.%s", profile, section))
+		path := cue2.ParsePath(fmt.Sprintf("profiles.%s", profile))
 		pValue := val.LookupPath(path)
 		if !pValue.Exists() {
 			if !optional {
-				path := cue2.ParsePath(fmt.Sprintf("profiles.%s", profile))
-				if !val.LookupPath(path).Exists() {
-					return nil, fmt.Errorf("failed to find %s profile %s", section, profile)
-				}
+				return nil, fmt.Errorf("failed to find profile %s", profile)
 			}
 			continue
 		}
@@ -137,8 +131,8 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, section s
 	return args, nil
 }
 
-func (a *AppDefinition) WithDeployArgs(args map[string]interface{}, profiles []string) (*AppDefinition, map[string]interface{}, error) {
-	args, err := a.getArgsForProfile(args, "deploy", profiles)
+func (a *AppDefinition) WithArgs(args map[string]interface{}, profiles []string) (*AppDefinition, map[string]interface{}, error) {
+	args, err := a.getArgsForProfile(args, profiles)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,37 +140,13 @@ func (a *AppDefinition) WithDeployArgs(args map[string]interface{}, profiles []s
 		return a, args, nil
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"args": map[string]interface{}{
-			"deploy": args,
-		},
+		"args": args,
 	})
 	if err != nil {
 		return nil, nil, err
 	}
 	return &AppDefinition{
-		ctx:        a.ctx.WithFile("deploy.cue", data),
-		imageDatas: a.imageDatas,
-	}, args, nil
-}
-
-func (a *AppDefinition) WithBuildArgs(args map[string]interface{}, profiles []string) (*AppDefinition, map[string]interface{}, error) {
-	args, err := a.getArgsForProfile(args, "build", profiles)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(args) == 0 {
-		return a, args, nil
-	}
-	data, err := json.Marshal(map[string]interface{}{
-		"args": map[string]interface{}{
-			"build": args,
-		},
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return &AppDefinition{
-		ctx:        a.ctx.WithFile("build.cue", data),
+		ctx:        a.ctx.WithFile("args.cue", data),
 		imageDatas: a.imageDatas,
 	}, args, nil
 }

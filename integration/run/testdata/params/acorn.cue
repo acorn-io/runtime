@@ -1,13 +1,11 @@
 args: {
-	deploy: {
-		someInt: int
-	}
+	someInt: int
 }
 
 containers: {
 	foo: {
 		env: {
-			arg: "\(args.deploy.someInt)"
+			arg: "\(args.someInt)"
 		}
 		image: "nginx"
 	}

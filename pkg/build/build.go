@@ -106,7 +106,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	appDefinition, buildArgs, err := appDefinition.WithBuildArgs(opts.Args, opts.Profiles)
+	appDefinition, buildArgs, err := appDefinition.WithArgs(opts.Args, opts.Profiles)
 	if err != nil {
 		return nil, err
 	}

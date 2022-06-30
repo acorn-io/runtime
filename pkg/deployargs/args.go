@@ -50,7 +50,7 @@ func toFlags(image string, appDef *appdefinition.AppDefinition) (*appdefinition.
 		return nil, nil, err
 	}
 
-	params, err := appDef.DeployParams()
+	params, err := appDef.Args()
 	if err != nil {
 		return nil, nil, err
 	}

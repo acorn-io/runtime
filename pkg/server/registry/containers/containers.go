@@ -240,6 +240,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 
 	result.Name = name
 	result.Namespace = namespace
+	result.OwnerReferences = nil
 	result.UID = uid
 	result.Spec.AppName = pod.Labels[labels.AcornRootPrefix]
 	result.Spec.JobName = jobName

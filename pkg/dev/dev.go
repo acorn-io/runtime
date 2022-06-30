@@ -157,8 +157,7 @@ outer:
 			return err
 		}
 
-		args := separateBuildArgs(opts.Args)
-		params, err := build.ParseParams(file, opts.Build.Cwd, args)
+		params, err := build.ParseParams(file, opts.Build.Cwd, opts.Args)
 		if err == pflag.ErrHelp {
 			continue
 		} else if err != nil {
@@ -281,39 +280,14 @@ func stop(opts *Options) error {
 	return opts.Client.AppStop(ctx, existingApp.Name)
 }
 
-func separateBuildArgs(args []string) (result []string) {
-	found := false
-	for _, arg := range args {
-		if arg == "--" {
-			found = true
-			continue
-		}
-		if found {
-			result = append(result, arg)
-		}
-	}
-	return
-}
-
-func separateDeployArgs(args []string) (result []string) {
-	for _, arg := range args {
-		if arg == "--" {
-			return
-		}
-		result = append(result, arg)
-	}
-	return
-}
-
 func runOrUpdate(ctx context.Context, acornCue, image string, opts *Options) (*apiv1.App, error) {
 	_, flags, err := deployargs.ToFlagsFromImage(ctx, opts.Client, image)
 	if err != nil {
 		return nil, err
 	}
 
-	args := separateDeployArgs(opts.Args)
-	if len(args) > 0 {
-		deployArgs, err := flags.Parse(args)
+	if len(opts.Args) > 0 {
+		deployArgs, err := flags.Parse(opts.Args)
 		if err != nil {
 			return nil, err
 		}
