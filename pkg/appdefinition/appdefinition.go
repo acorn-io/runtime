@@ -27,6 +27,13 @@ const (
 	AppType            = "#App"
 )
 
+var Defaults = []byte(`
+args: build: dev: bool | *false
+profiles: dev: build: dev: bool | *true
+args: deploy: dev: bool | *false
+profiles: dev: deploy: dev: bool | *true
+`)
+
 type AppDefinition struct {
 	ctx        *cue.Context
 	imageDatas []v1.ImagesData
@@ -54,7 +61,7 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	files := []cue.File{
 		{
 			Name: AcornCueFile,
-			Data: data,
+			Data: append(Defaults, data...),
 		},
 	}
 	ctx := cue.NewContext().

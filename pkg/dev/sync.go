@@ -3,6 +3,7 @@ package dev
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -45,7 +46,7 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 				if mount.ContextDir == "" {
 					continue
 				}
-				go startSyncForPath(ctx, opts.Client, con, opts.Build.Cwd, mount.ContextDir, remoteDir)
+				go startSyncForPath(ctx, opts.Client, con, opts.Build.Cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
 			}
 			syncing[con.Name] = true
 		}
@@ -54,9 +55,14 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 	return err
 }
 
-func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string) (chan struct{}, error) {
+func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, error) {
+	err := os.MkdirAll(localDir, 0755)
+	if err != nil {
+		return nil, err
+	}
 	s, err := sync.NewSync(filepath.Join(cwd, localDir), sync.Options{
-		DownstreamDisabled: true,
+		DownstreamDisabled: !bidirectional,
+		Verbose:            true,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
 		Log:                logpkg.NewDefaultPrefixLogger(con.Name+" (sync) ", logpkg.GetInstance()),
 	})
@@ -93,7 +99,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 	return done, nil
 }
 
-func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string) {
+func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) {
 	for {
 		var wait <-chan struct{}
 		con, err := client.ContainerReplicaGet(ctx, con.Name)
@@ -101,7 +107,7 @@ func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.Cont
 			return
 		}
 		if err == nil {
-			wait, err = invokeStartSyncForPath(ctx, client, con, cwd, localDir, remoteDir)
+			wait, err = invokeStartSyncForPath(ctx, client, con, cwd, localDir, remoteDir, bidirectional)
 		}
 
 		if err == nil {

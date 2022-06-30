@@ -361,6 +361,13 @@ func buildWithContext(ctx context.Context, c client.Client, cwd string, platform
 		os.Remove(dockerfile.Name())
 	}()
 
+	for _, dir := range build.ContextDirs {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return "", fmt.Errorf("creating dir %s: %w", dir, err)
+		}
+	}
+
 	_, err = dockerfile.WriteString(toContextCopyDockerFile(baseImage, build.ContextDirs))
 	if err != nil {
 		return "", err

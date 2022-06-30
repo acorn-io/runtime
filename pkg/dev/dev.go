@@ -29,12 +29,13 @@ import (
 )
 
 type Options struct {
-	Args      []string
-	Client    client.Client
-	Build     build.Options
-	Run       client.AppRunOptions
-	Log       client.LogOptions
-	Dangerous bool
+	Args              []string
+	Client            client.Client
+	Build             build.Options
+	Run               client.AppRunOptions
+	Log               client.LogOptions
+	Dangerous         bool
+	BidirectionalSync bool
 }
 
 func (o *Options) Complete() (*Options, error) {
