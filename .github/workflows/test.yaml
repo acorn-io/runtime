@@ -24,4 +24,5 @@ jobs:
       - run: make validate-ci
       - run: make validate
       - run: make build
-      - run: make test
+      - run: ./bin/acorn controller &
+      - run: TEST_ACORN_CONTROLLER=external make test

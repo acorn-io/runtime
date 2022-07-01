@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/http/httptest"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -156,6 +157,9 @@ func StartRegistry(t *testing.T) (string, func()) {
 }
 
 func StartController(t *testing.T) {
+	if os.Getenv("TEST_ACORN_CONTROLLER") == "external" {
+		return
+	}
 	controllerStartLock.Lock()
 	defer controllerStartLock.Unlock()
 
