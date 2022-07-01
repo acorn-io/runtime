@@ -6,15 +6,20 @@ import (
 	"time"
 
 	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/rancher/apiserver/pkg/store/empty"
 	"github.com/rancher/apiserver/pkg/types"
 	wranglerschemas "github.com/rancher/wrangler/pkg/schemas"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 func Register(ctx context.Context, schemas *types.APISchemas) {
-	if _, err := schemas.Import(&uiv1.Install{}); err != nil {
-		panic(err)
-	}
+	schemas.MustImportAndCustomize(&uiv1.Install{}, func(schema *types.APISchema) {
+		delete(schema.ResourceFields, "mode")
+		f := schema.ResourceFields["image"]
+		f.Default = install.DefaultImage()
+		schema.ResourceFields["image"] = f
+	})
 
 	go startPolling(ctx)
 
@@ -70,27 +75,53 @@ func (e *ClusterStore) List(apiOp *types.APIRequest, schema *types.APISchema) (r
 	return
 }
 
+func sendErr(result chan<- types.APIEvent, err error) {
+	result <- types.APIEvent{
+		Error: err,
+	}
+}
+
+func sendEvent(result chan<- types.APIEvent, eventType string, schema *types.APISchema, cluster uiv1.Cluster) {
+	result <- types.APIEvent{
+		Name:         eventType,
+		ResourceType: schema.ID,
+		ID:           cluster.Name,
+		Object: types.APIObject{
+			Type:   schema.ID,
+			ID:     cluster.Name,
+			Object: &cluster,
+		},
+	}
+}
+
 func (e *ClusterStore) Watch(apiOp *types.APIRequest, schema *types.APISchema, wr types.WatchRequest) (chan types.APIEvent, error) {
 	result := make(chan types.APIEvent)
 	go func() {
 		defer close(result)
+		oldClusters := map[string]uiv1.Cluster{}
+
 		for {
+			newClusters := map[string]uiv1.Cluster{}
 			clusters, err := ListClusters(apiOp.Context())
-			if err == nil {
+			if err != nil {
+				sendErr(result, err)
+			} else {
 				for _, cluster := range clusters {
-					cluster := cluster
-					result <- types.APIEvent{
-						Name:         cluster.Name,
-						Namespace:    "",
-						ResourceType: schema.ID,
-						ID:           cluster.Name,
-						Object: types.APIObject{
-							Type:   schema.ID,
-							ID:     cluster.Name,
-							Object: &cluster,
-						},
+					if oldCluster, ok := oldClusters[cluster.Name]; !ok && len(oldClusters) > 0 {
+						sendEvent(result, types.CreateAPIEvent, schema, cluster)
+					} else if !equality.Semantic.DeepEqual(oldCluster, cluster) {
+						sendEvent(result, types.ChangeAPIEvent, schema, cluster)
+					}
+					newClusters[cluster.Name] = cluster
+				}
+
+				for k, oldCluster := range oldClusters {
+					if _, ok := newClusters[k]; !ok {
+						sendEvent(result, types.RemoveAPIEvent, schema, oldCluster)
 					}
 				}
+
+				oldClusters = newClusters
 			}
 
 			select {
