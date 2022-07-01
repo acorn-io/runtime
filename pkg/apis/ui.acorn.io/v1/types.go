@@ -55,9 +55,9 @@ func (m InstallMode) DoResources() bool {
 type InstallMode string
 
 type Install struct {
-	Config             apiv1.Config `json:"config,omitempty"`
-	Image              string       `json:"image,omitempty"`
-	Mode               InstallMode  `wrangler:"type=enum"`
-	APIServerReplicas  *int         `json:"apiServerReplicas,omitempty"`
-	ControllerReplicas *int         `json:"controllerReplicas,omitempty"`
+	Config             apiv1.Config `json:"config,omitempty" wrangler:"nullable"`
+	Image              string       `json:"image,omitempty" wrangler:"nullable"`
+	Mode               InstallMode  `json:"mode,omitempty"`
+	APIServerReplicas  *int         `json:"apiServerReplicas,omitempty" wrangler:"default=1"`
+	ControllerReplicas *int         `json:"controllerReplicas,omitempty" wrangler:"default=1"`
 }
