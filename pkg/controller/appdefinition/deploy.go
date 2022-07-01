@@ -45,7 +45,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Labels[labels.AcornRootNamespace], appInstance.Spec.Image)
 	if err != nil {
 		return err
 	}

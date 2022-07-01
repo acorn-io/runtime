@@ -45,7 +45,7 @@ func toPublishPortBinding(portDef v1.PortDef) v1.PortBinding {
 }
 
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
-	image := resolveTagForAcorn(tag, appInstance.Namespace, acorn.Image)
+	image := resolveTagForAcorn(tag, appInstance.Labels[labels.AcornRootNamespace], acorn.Image)
 
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
