@@ -165,6 +165,17 @@ func TestSimpleTwo(t *testing.T) {
 	//assert.Equal(t, image.ImageData.Containers["two"].Image, image.ImageData.Images["itwo"].Image)
 }
 
+func TestBuildDefault(t *testing.T) {
+	image, err := build.Build(helper.GetCTX(t), "./testdata/build-default/acorn.cue", &build.Options{
+		Cwd:    "./testdata/build-default",
+		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Len(t, image.ImageData.Containers, 1)
+}
+
 func TestMultiArch(t *testing.T) {
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
