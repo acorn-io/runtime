@@ -28,6 +28,7 @@ const (
 )
 
 var Defaults = []byte(`
+
 args: dev: bool | *false
 profiles: dev: dev: bool | *true
 `)
@@ -58,7 +59,7 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	files := []cue.File{
 		{
 			Name: AcornCueFile,
-			Data: append(Defaults, data...),
+			Data: append(data, Defaults...),
 		},
 	}
 	ctx := cue.NewContext().

@@ -78,6 +78,7 @@ func (e *ClusterStore) Watch(apiOp *types.APIRequest, schema *types.APISchema, w
 			clusters, err := ListClusters(apiOp.Context())
 			if err == nil {
 				for _, cluster := range clusters {
+					cluster := cluster
 					result <- types.APIEvent{
 						Name:         cluster.Name,
 						Namespace:    "",
@@ -86,7 +87,7 @@ func (e *ClusterStore) Watch(apiOp *types.APIRequest, schema *types.APISchema, w
 						Object: types.APIObject{
 							Type:   schema.ID,
 							ID:     cluster.Name,
-							Object: cluster,
+							Object: &cluster,
 						},
 					}
 				}
