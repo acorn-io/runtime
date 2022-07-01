@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -11,11 +12,13 @@ import (
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -27,19 +30,41 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 	app.Status.Ready = false
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionReady)
 
+	var errs []error
 	for _, condition := range app.Status.Conditions {
 		if condition.Type == v1.AppInstanceConditionReady {
 			continue
 		}
 
 		if condition.Status != metav1.ConditionTrue {
-			cond.Error(fmt.Errorf("%s=%s: %s", condition.Type, condition.Status, condition.Message))
-			return nil
+			errs = append(errs, errors.New(condition.Message))
+		}
+	}
+
+	if len(errs) > 0 {
+		cond.Error(merr.NewErrors(errs...))
+		return nil
+	}
+
+	ready := true
+	for _, v := range app.Status.ContainerStatus {
+		if !v.Created || (v.Ready < v.ReadyDesired) {
+			ready = false
+		}
+	}
+	for _, v := range app.Status.JobsStatus {
+		if !v.Succeed {
+			ready = false
+		}
+	}
+	for _, v := range app.Status.AcornStatus {
+		if !v.Ready {
+			ready = false
 		}
 	}
 
 	cond.Success()
-	app.Status.Ready = app.Spec.Image == app.Status.AppImage.ID &&
+	app.Status.Ready = ready && app.Spec.Image == app.Status.AppImage.ID &&
 		app.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 		app.Status.Condition(v1.AppInstanceConditionContainers).Success &&
 		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&
@@ -55,6 +80,10 @@ func AcornStatus(req router.Request, resp router.Response) error {
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionAcorns)
 	app.Status.AcornStatus = map[string]v1.AcornStatus{}
 
+	for acornName := range app.Status.AppSpec.Acorns {
+		app.Status.AcornStatus[acornName] = v1.AcornStatus{}
+	}
+
 	var (
 		failed         bool
 		failedName     string
@@ -67,7 +96,9 @@ func AcornStatus(req router.Request, resp router.Response) error {
 	for _, acornName := range typed.SortedKeys(app.Status.AppSpec.Acorns) {
 		appInstance := &v1.AppInstance{}
 		err := req.Get(appInstance, app.Status.Namespace, acornName)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
+			continue
+		} else if err != nil {
 			cond.Error(err)
 			return nil
 		}
@@ -119,6 +150,11 @@ func JobStatus(req router.Request, resp router.Response) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	app.Status.JobsStatus = map[string]v1.JobStatus{}
+	for jobName := range app.Status.AppSpec.Jobs {
+		app.Status.JobsStatus[jobName] = v1.JobStatus{}
 	}
 
 	var (
@@ -253,11 +289,16 @@ func AppStatus(req router.Request, resp router.Response) error {
 	}
 
 	container := map[string]v1.ContainerStatus{}
+	for depName := range app.Status.AppSpec.Containers {
+		container[depName] = v1.ContainerStatus{}
+	}
+
 	for _, dep := range deps.Items {
 		status := container[dep.Labels[labels.AcornContainerName]]
 		status.Ready = dep.Status.ReadyReplicas
 		status.ReadyDesired = dep.Status.Replicas
 		status.UpToDate = dep.Status.UpdatedReplicas
+		status.Created = true
 		container[dep.Labels[labels.AcornContainerName]] = status
 
 		if status.Ready != status.ReadyDesired {

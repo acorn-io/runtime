@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/duration"
@@ -28,17 +29,34 @@ var (
 		"graph":       Graph,
 		"pointer":     Pointer,
 		"fullID":      FormatID,
+		"name":        Name,
 		"trunc":       Trunc,
 		"alias":       Noop,
 	}
 )
+
+func Name(obj interface{}) (string, error) {
+	ro, ok := toKObject(obj)
+	if ok {
+		return ro.GetName(), nil
+	}
+	return "", fmt.Errorf("invalid obj %T", obj)
+}
+
+func NamespaceName(obj interface{}) (string, error) {
+	ro, ok := toKObject(obj)
+	if ok {
+		return ro.GetNamespace() + "/" + ro.GetName(), nil
+	}
+	return "", fmt.Errorf("invalid obj %T", obj)
+}
 
 func Noop(obj interface{}) string {
 	return ""
 }
 
 func Trunc(s string) string {
-	if len(s) > 12 {
+	if tags.SHAPattern.MatchString(s) && len(s) > 12 {
 		return s[:12]
 	}
 	return s
@@ -93,13 +111,18 @@ func FormatJSONCompact(data interface{}) (string, error) {
 	return string(bytes) + "\n", err
 }
 
-func cleanFields(obj interface{}) interface{} {
+func toKObject(obj interface{}) (kclient.Object, bool) {
 	ro, ok := obj.(kclient.Object)
 	if !ok {
 		newObj := reflect.New(reflect.TypeOf(obj))
 		newObj.Elem().Set(reflect.ValueOf(obj))
 		ro, ok = newObj.Interface().(kclient.Object)
 	}
+	return ro, ok
+}
+
+func cleanFields(obj interface{}) interface{} {
+	ro, ok := toKObject(obj)
 	if ok {
 		ro.SetManagedFields(nil)
 		ro.SetUID("")
@@ -107,7 +130,7 @@ func cleanFields(obj interface{}) interface{} {
 		ro.SetResourceVersion("")
 		labels := ro.GetLabels()
 		for k := range labels {
-			if strings.HasPrefix(k, "acorn.io/") {
+			if strings.Contains(k, "acorn.io/") {
 				delete(labels, k)
 			}
 		}
@@ -115,7 +138,7 @@ func cleanFields(obj interface{}) interface{} {
 
 		annotations := ro.GetAnnotations()
 		for k := range annotations {
-			if strings.HasPrefix(k, "acorn.io/") {
+			if strings.Contains(k, "acorn.io/") {
 				delete(annotations, k)
 			}
 		}

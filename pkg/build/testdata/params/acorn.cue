@@ -1,4 +1,4 @@
-args: build: {
+args: {
 	// This is a string
 	str: string
 
@@ -20,5 +20,5 @@ args: build: {
 }
 
 containers: {
-	foo: image: "\(args.build.strDefault)\(args.build.iDefault)"
+	foo: image: "\(args.strDefault)\(args.iDefault)"
 }

@@ -25,7 +25,7 @@ func ParseParams(file, cwd string, args []string) (map[string]interface{}, error
 		return nil, err
 	}
 
-	params, err := appDefinition.BuildParams()
+	params, err := appDefinition.Args()
 	if err != nil {
 		return nil, err
 	}

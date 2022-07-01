@@ -92,7 +92,7 @@ func (s *ImageDetails) GetDetails(ctx context.Context, name string, profiles []s
 	}
 
 	if len(deployArgs) > 0 || len(profiles) > 0 {
-		appDef, deployArgs, err = appDef.WithDeployArgs(deployArgs, profiles)
+		appDef, deployArgs, err = appDef.WithArgs(deployArgs, profiles)
 		if err != nil {
 			result.ParseError = err.Error()
 			return result, nil
@@ -108,7 +108,7 @@ func (s *ImageDetails) GetDetails(ctx context.Context, name string, profiles []s
 
 	result.AppSpec = appSpec
 
-	paramSpec, err := appDef.DeployParams()
+	paramSpec, err := appDef.Args()
 	if err != nil {
 		result.ParseError = err.Error()
 		return result, nil

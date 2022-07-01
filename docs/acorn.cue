@@ -1,23 +1,15 @@
-args: build: {
-	liveReload: bool | *false
-}
-
-profiles: dev: build: {
-	liveReload: bool | *true
-}
-
 containers: default: {
 	build: {
 		context: "."
 	}
 
-	if args.build.liveReload {
+	if args.dev {
 		build: target: "dynamic"
 		expose: "3000/http"
 		dirs: "/usr/src": "./"
 	}
 
-	if !args.build.liveReload {
+	if !args.dev {
 		build: target: "static"
 		expose: "80/http"
 	}

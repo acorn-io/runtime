@@ -204,22 +204,11 @@ secrets: {
 
 // Schema of parameters to impact behavior at build or deploy time
 args: {
-	build: {
-		"some-string": string | *"default value"
-		"some-int":    int | *5
-		"some-complex": {
-			key?: {
-				key: string
-			}
-		}
-	}
-	deploy: {
-		"some-string": string | *"default value"
-		"some-int":    int | *5
-		"some-complex": {
-			key?: {
-				key: string
-			}
+	"some-string": string | *"default value"
+	"some-int":    int | *5
+	"some-complex": {
+		key?: {
+			key: string
 		}
 	}
 }

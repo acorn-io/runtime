@@ -1,10 +1,11 @@
 package cli
 
 import (
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
@@ -32,7 +33,7 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.Volume, "", a.Quiet, a.Output)
+	out := table.NewWriter(tables.Volume, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		volume, err := client.VolumeGet(cmd.Context(), args[0])

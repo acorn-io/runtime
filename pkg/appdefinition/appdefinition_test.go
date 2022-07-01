@@ -1385,22 +1385,22 @@ containers: zero: scale: 0
 
 func TestBuildProfileParameters(t *testing.T) {
 	acornCue := `
-args: build: {
+args: {
   foo: string
 }
-profiles: one: build: foo: string | *"one"
-profiles: two: build: foo: string | *"two"
-containers: foo: build: buildArgs: one: args.build.foo
+profiles: one: foo: string | *"one"
+profiles: two: foo: string | *"two"
+containers: foo: build: buildArgs: one: args.foo
 `
 	def, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, _, err = def.WithBuildArgs(map[string]interface{}{}, []string{"one", "two", "three"})
-	assert.Equal(t, "failed to find build profile three", err.Error())
+	_, _, err = def.WithArgs(map[string]interface{}{}, []string{"one", "two", "three"})
+	assert.Equal(t, "failed to find profile three", err.Error())
 
-	def, _, err = def.WithBuildArgs(map[string]interface{}{}, []string{"one", "two", "three?"})
+	def, _, err = def.WithArgs(map[string]interface{}{}, []string{"one", "two", "three?"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1412,7 +1412,7 @@ containers: foo: build: buildArgs: one: args.build.foo
 
 	assert.Equal(t, "one", buildSpec.Containers["foo"].Build.BuildArgs["one"])
 
-	def, _, err = def.WithBuildArgs(map[string]interface{}{}, []string{"two", "one"})
+	def, _, err = def.WithArgs(map[string]interface{}{}, []string{"two", "one"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1427,17 +1427,17 @@ containers: foo: build: buildArgs: one: args.build.foo
 
 func TestBuildParameters(t *testing.T) {
 	acornCue := `
-args: build: {
+args: {
   foo: string
 }
-containers: foo: build: buildArgs: one: args.build.foo
+containers: foo: build: buildArgs: one: args.foo
 `
 	def, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	def, _, err = def.WithBuildArgs(map[string]interface{}{
+	def, _, err = def.WithArgs(map[string]interface{}{
 		"foo": "two",
 	}, nil)
 	if err != nil {
@@ -1479,7 +1479,7 @@ acorns: foo: {
 		t.Fatal(err)
 	}
 
-	def, _, err = def.WithBuildArgs(map[string]interface{}{
+	def, _, err = def.WithArgs(map[string]interface{}{
 		"foo": "two",
 	}, nil)
 	if err != nil {
@@ -1737,7 +1737,7 @@ containers: default: {
 
 func TestDontFailIfProfileDoesntHaveBuildOrDeploy(t *testing.T) {
 	acornCue := `
-profiles: foo: build: {}
+profiles: foo: {}
 `
 
 	def, err := NewAppDefinition([]byte(acornCue))
@@ -1745,11 +1745,11 @@ profiles: foo: build: {}
 		t.Fatal(err)
 	}
 
-	_, _, err = def.WithDeployArgs(nil, []string{"foo"})
+	_, _, err = def.WithArgs(nil, []string{"foo"})
 	assert.Nil(t, err)
 
-	_, _, err = def.WithDeployArgs(nil, []string{"missing"})
-	assert.Equal(t, "failed to find deploy profile missing", err.Error())
+	_, _, err = def.WithArgs(nil, []string{"missing"})
+	assert.Equal(t, "failed to find profile missing", err.Error())
 }
 
 func TestPermissions(t *testing.T) {

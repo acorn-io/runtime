@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
-	"fmt"
 	url2 "net/url"
 	"path"
 	"regexp"
@@ -19,6 +17,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -35,22 +34,7 @@ var (
 	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 )
 
-type ErrMissingSecret struct {
-	Name      string
-	Namespace string
-}
-
-func (e *ErrMissingSecret) Error() string {
-	return fmt.Sprintf("missing secret: %s/%s", e.Namespace, e.Name)
-}
-
 func DeploySpec(req router.Request, resp router.Response) (err error) {
-	defer func() {
-		if missing := (*ErrMissingSecret)(nil); errors.As(err, &missing) {
-			err = nil
-		}
-	}()
-
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
 	defer func() {
@@ -61,7 +45,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Labels[labels.AcornRootNamespace], appInstance.Spec.Image)
 	if err != nil {
 		return err
 	}
@@ -275,6 +259,17 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 	return ports
 }
 
+func resolveTagForAcorn(tag name.Reference, namespace, image string) string {
+	if DigestPattern.MatchString(image) && strings.HasPrefix(tag.Context().RegistryStr(), "127.0.0.") &&
+		tag.Context().RepositoryStr() == "acorn/"+namespace {
+		_, hash, ok := strings.Cut(image, ":")
+		if ok {
+			return hash
+		}
+	}
+	return resolveTag(tag, image)
+}
+
 func resolveTag(tag name.Reference, image string) string {
 	if DigestPattern.MatchString(image) {
 		return tag.Context().Digest(image).String()
@@ -455,9 +450,7 @@ func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 
 func getRevision(req router.Request, namespace, secretName string) (string, error) {
 	secret := &corev1.Secret{}
-	if err := req.Get(secret, namespace, secretName); apierror.IsNotFound(err) {
-		return "0", &ErrMissingSecret{Namespace: namespace, Name: secretName}
-	} else if err != nil {
+	if err := req.Get(secret, namespace, secretName); err != nil {
 		return "0", err
 	}
 	return secret.ResourceVersion, nil
@@ -490,7 +483,10 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 			continue
 		}
 		rev, err := getRevision(req, appInstance.Status.Namespace, secret)
-		if err != nil {
+		if apierror.IsNotFound(err) {
+			result[apply.AnnotationUpdate] = "false"
+			result[apply.AnnotationCreate] = "false"
+		} else if err != nil {
 			return nil, err
 		}
 		result[labels.AcornSecretRevPrefix+secret] = rev

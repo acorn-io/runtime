@@ -106,7 +106,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
-	appDefinition, buildArgs, err := appDefinition.WithBuildArgs(opts.Args, opts.Profiles)
+	appDefinition, buildArgs, err := appDefinition.WithArgs(opts.Args, opts.Profiles)
 	if err != nil {
 		return nil, err
 	}
@@ -360,6 +360,13 @@ func buildWithContext(ctx context.Context, c client.Client, cwd string, platform
 		dockerfile.Close()
 		os.Remove(dockerfile.Name())
 	}()
+
+	for _, dir := range build.ContextDirs {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return "", fmt.Errorf("creating dir %s: %w", dir, err)
+		}
+	}
 
 	_, err = dockerfile.WriteString(toContextCopyDockerFile(baseImage, build.ContextDirs))
 	if err != nil {

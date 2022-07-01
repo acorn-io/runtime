@@ -32,12 +32,14 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 		name := name.SafeConcatName("acorn", appInstance.Name, appInstance.Namespace, string(appInstance.UID[:8]))
 		result = append(result, &rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
+				Name:   name,
+				Labels: labels.Managed(appInstance),
 			},
 			Rules: appInstance.Spec.Permissions.ClusterRules,
 		}, &rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
+				Name:   name,
+				Labels: labels.Managed(appInstance),
 			},
 			Subjects: []rbacv1.Subject{
 				{
@@ -59,12 +61,14 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "acorn",
 				Namespace: appInstance.Status.Namespace,
+				Labels:    labels.Managed(appInstance),
 			},
 			Rules: appInstance.Spec.Permissions.Rules,
 		}, &rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "acorn",
 				Namespace: appInstance.Status.Namespace,
+				Labels:    labels.Managed(appInstance),
 			},
 			Subjects: []rbacv1.Subject{
 				{

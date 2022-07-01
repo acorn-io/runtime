@@ -34,6 +34,10 @@ func NewWriter(values [][]string, namespace string, quiet bool, format string) W
 		funcMap: maps.Clone(FuncMap),
 	}
 
+	if namespace == "" {
+		t.funcMap["name"] = NamespaceName
+	}
+
 	t.Writer = tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
 	t.HeaderFormat, t.ValueFormat = SimpleFormat(values)

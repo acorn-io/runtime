@@ -70,7 +70,7 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 		return "", err
 	}
 	if len(appImage.BuildArgs) > 0 {
-		if err := addFile(tempDir, "build.json", appImage.BuildArgs); err != nil {
+		if err := addFile(tempDir, appdefinition.BuildDataFile, appImage.BuildArgs); err != nil {
 			return "", err
 		}
 	}

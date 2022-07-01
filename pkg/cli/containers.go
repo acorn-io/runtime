@@ -1,10 +1,11 @@
 package cli
 
 import (
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
@@ -23,6 +24,7 @@ acorn containers`,
 type Container struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	All    bool   `usage:"Include stopped containers" short:"a"`
 }
 
 func (a *Container) Run(cmd *cobra.Command, args []string) error {
@@ -31,7 +33,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.Container, "", a.Quiet, a.Output)
+	out := table.NewWriter(tables.Container, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		app, err := client.ContainerReplicaGet(cmd.Context(), args[0])
@@ -52,7 +54,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 			if slices.Contains(args, container.Name) {
 				out.Write(container)
 			}
-		} else {
+		} else if a.All || container.Status.Columns.State != "stopped" {
 			out.Write(container)
 		}
 	}

@@ -31,7 +31,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 	for _, param := range param.Params {
 		name := strings.ReplaceAll(convert.ToYAMLKey(param.Name), "_", "-")
 		paramToFlag[param.Name] = name
-		if isType(param.Schema, "int") {
+		if isType(param.Schema, "int") || isType(param.Schema, "uint") {
 			ints[param.Name] = flagSet.Int(name, 0, param.Description)
 		} else if isType(param.Schema, "string") {
 			stringValues[param.Name] = flagSet.String(name, "", param.Description)
@@ -142,5 +142,13 @@ func (f *Flags) flagChanged(name string) bool {
 
 func isType(schema, typeName string) bool {
 	schema = strings.TrimSpace(schema)
-	return schema == typeName || strings.HasSuffix(schema, "| "+typeName)
+	if schema == typeName || strings.HasSuffix(schema, "| "+typeName) {
+		return true
+	}
+	for _, w := range strings.Split(schema, " ") {
+		if w == typeName {
+			return true
+		}
+	}
+	return false
 }

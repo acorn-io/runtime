@@ -12,7 +12,7 @@ var (
 	RegistryName   = "registry"
 	RegistryImage  = "registry:2.7.1"
 	RegistryPort   = 5000
-	BuildkitImage  = "moby/buildkit:master"
+	BuildkitImage  = "moby/buildkit:v0.10.3"
 	BuildKitName   = "buildkitd"
 	ControllerName = "acorn-controller"
 	APIServerName  = "acorn-api"

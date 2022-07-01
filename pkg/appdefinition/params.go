@@ -9,12 +9,8 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 )
 
-func (a *AppDefinition) BuildParams() (*v1.ParamSpec, error) {
-	return a.addProfiles(a.args("args.build"))
-}
-
-func (a *AppDefinition) DeployParams() (*v1.ParamSpec, error) {
-	return a.addProfiles(a.args("args.deploy"))
+func (a *AppDefinition) Args() (*v1.ParamSpec, error) {
+	return a.addProfiles(a.args("args"))
 }
 
 func (a *AppDefinition) addProfiles(paramSpec *v1.ParamSpec, err error) (*v1.ParamSpec, error) {
@@ -61,6 +57,9 @@ func (a *AppDefinition) args(section string) (*v1.ParamSpec, error) {
 
 	for i, o := range s.Elts {
 		f := o.(*ast.Field)
+		if fmt.Sprint(f.Label) == "dev" {
+			continue
+		}
 		com := strings.Builder{}
 		for _, c := range ast.Comments(o) {
 			for _, d := range c.List {

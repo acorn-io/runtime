@@ -22,7 +22,8 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File string `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	File              string `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	BidirectionalSync bool   `usage:"Download changes in addition to uploading" short:"b"`
 	RunArgs
 }
 
@@ -37,6 +38,10 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if s.PublishAll == nil {
+		s.PublishAll = &[]bool{true}[0]
+	}
+
 	opts, err := s.ToOpts()
 	if err != nil {
 		return err
@@ -49,7 +54,8 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 			Cwd:      cwd,
 			Profiles: opts.Profiles,
 		},
-		Run:       opts,
-		Dangerous: s.Dangerous,
+		Run:               opts,
+		Dangerous:         s.Dangerous,
+		BidirectionalSync: s.BidirectionalSync,
 	})
 }

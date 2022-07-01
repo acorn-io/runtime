@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/watcher"
@@ -57,8 +58,9 @@ func NewContainerExec(client client.WithWatch, containers *Storage, cfg *clientg
 		client:     client,
 		containers: containers,
 		proxy: httputil.ReverseProxy{
-			Transport: transport,
-			Director:  func(request *http.Request) {},
+			FlushInterval: 200 * time.Millisecond,
+			Transport:     transport,
+			Director:      func(request *http.Request) {},
 		},
 		RESTClient: k8s.CoreV1().RESTClient(),
 	}, nil

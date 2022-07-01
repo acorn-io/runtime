@@ -22,6 +22,7 @@ type All struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	Images bool   `usage:"Include images in output" short:"i"`
+	All    bool   `usage:"Include stopped apps/containers" short:"a"`
 }
 
 func (a *All) Run(cmd *cobra.Command, args []string) error {
@@ -32,12 +33,14 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 	app := &App{
 		Quiet:  a.Quiet,
 		Output: a.Output,
+		All:    a.All,
 	}
 	appErr := app.Run(cmd, nil)
 
 	con := &Container{
 		Quiet:  a.Quiet,
 		Output: a.Output,
+		All:    a.All,
 	}
 	if !a.Quiet {
 		fmt.Println("")
@@ -71,6 +74,7 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 		img := &Image{
 			Quiet:  a.Quiet,
 			Output: a.Output,
+			All:    a.All,
 		}
 		if !a.Quiet {
 			fmt.Println("")

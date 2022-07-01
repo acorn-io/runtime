@@ -49,7 +49,18 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 	return app, translatePermissions(c.Client.Create(ctx, app))
 }
 
-func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (result *apiv1.App, err error) {
+	for i := 0; i < 5; i++ {
+		result, err = c.appUpdate(ctx, name, opts)
+		if apierrors.IsConflict(err) {
+			continue
+		}
+		return
+	}
+	return
+}
+
+func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
 	app, err := c.AppGet(ctx, name)
 	if err != nil {
 		return nil, err
@@ -287,7 +298,18 @@ func (c *client) AppList(ctx context.Context) ([]apiv1.App, error) {
 	return apps.Items, nil
 }
 
-func (c *client) AppStart(ctx context.Context, name string) error {
+func (c *client) AppStart(ctx context.Context, name string) (err error) {
+	for i := 0; i < 5; i++ {
+		err = c.appStart(ctx, name)
+		if apierrors.IsConflict(err) {
+			continue
+		}
+		return
+	}
+	return
+}
+
+func (c *client) appStart(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -303,7 +325,18 @@ func (c *client) AppStart(ctx context.Context, name string) error {
 	return nil
 }
 
-func (c *client) AppStop(ctx context.Context, name string) error {
+func (c *client) AppStop(ctx context.Context, name string) (err error) {
+	for i := 0; i < 5; i++ {
+		err = c.appStop(ctx, name)
+		if apierrors.IsConflict(err) {
+			continue
+		}
+		return
+	}
+	return
+}
+
+func (c *client) appStop(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,

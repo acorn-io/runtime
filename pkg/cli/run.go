@@ -38,7 +38,7 @@ type RunArgs struct {
 	Volume     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
 	Secret     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
 	Link       []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
-	PublishAll bool     `usage:"Publish all exposed ports of application" short:"P"`
+	PublishAll *bool    `usage:"Publish all exposed ports of application" short:"P"`
 	Publish    []string `usage:"Publish exposed port of application (format [public:]private) (ex 81:80)" short:"p"`
 	Profile    []string `usage:"Profile to assign default values"`
 	Dangerous  bool     `usage:"Automatically approve all privileges requested by the application"`
@@ -78,7 +78,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 		return opts, err
 	}
 
-	if s.PublishAll {
+	if s.PublishAll != nil && *s.PublishAll {
 		opts.PublishProtocols = append(opts.PublishProtocols, v1.ProtocolAll)
 	}
 

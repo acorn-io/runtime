@@ -19,6 +19,7 @@ acorn all
 ### Options
 
 ```
+  -a, --all             Include stopped apps/containers
   -h, --help            help for all
   -i, --images          Include images in output
   -o, --output string   Output format (json, yaml, {{gotemplate}})

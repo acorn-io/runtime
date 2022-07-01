@@ -19,6 +19,7 @@ acorn containers
 ### Options
 
 ```
+  -a, --all             Include stopped containers
   -h, --help            help for container
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -q, --quiet           Output only names

@@ -6,6 +6,7 @@ import (
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/schemes"
 	appsv1 "k8s.io/api/apps/v1"
+	authv1 "k8s.io/api/authorization/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -34,6 +35,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, storagev1.AddToScheme(scheme))
 	errs = append(errs, apiregistrationv1.AddToScheme(scheme))
 	errs = append(errs, rbacv1.AddToScheme(scheme))
+	errs = append(errs, authv1.AddToScheme(scheme))
 	return merr.NewErrors(errs...)
 }
 

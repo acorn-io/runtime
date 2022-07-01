@@ -2,8 +2,8 @@ package tables
 
 var (
 	App = [][]string{
-		{"Name", "Name"},
-		{"Image", "Spec.Image"},
+		{"Name", "{{ . | name }}"},
+		{"Image", "{{ trunc .Spec.Image }}"},
 		{"Healthy", "Status.Columns.Healthy"},
 		{"Up-To-Date", "Status.Columns.UpToDate"},
 		{"Created", "{{ago .CreationTimestamp}}"},
@@ -13,7 +13,7 @@ var (
 	AppConverter = MustConverter(App)
 
 	Volume = [][]string{
-		{"Name", "Name"},
+		{"Name", "{{ . | name }}"},
 		{"App-Name", "Status.AppName"},
 		{"Bound-Volume", "Status.VolumeName"},
 		{"Capacity", "Spec.Capacity"},
@@ -31,7 +31,7 @@ var (
 	ImageConverter = MustConverter(Image)
 
 	Container = [][]string{
-		{"Name", "Name"},
+		{"Name", "{{ . | name }}"},
 		{"App", "Status.Columns.App"},
 		{"Image", "Spec.Image"},
 		{"State", "Status.Columns.State"},
@@ -50,7 +50,7 @@ var (
 
 	Secret = [][]string{
 		{"Alias", "{{alias .}}"},
-		{"Name", "Name"},
+		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},
 		{"Keys", "Keys"},
 		{"Created", "{{ago .CreationTimestamp}}"},

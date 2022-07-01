@@ -49,7 +49,7 @@ var (
 	ProtocolTCP  = Protocol("tcp")
 	ProtocolUDP  = Protocol("udp")
 	ProtocolHTTP = Protocol("http")
-	ProtocolAll  = Protocol("*")
+	ProtocolAll  = Protocol("all")
 	ProtocolNone = Protocol("none")
 )
 
