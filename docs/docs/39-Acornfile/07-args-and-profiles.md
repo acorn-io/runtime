@@ -72,6 +72,24 @@ toplevel:
 The user of the Acorn can then pass the contents to the file like so:
 `acorn run [IMAGE] --user-config-data @config.yaml`
 
+### Built-in
+
+To prevent the author from having to create a profile, Acorn provides the `args.dev` boolean value. It is set to `true` when running in dev mode. Acorn authors can use this boolean with `if` statements to change dev vs. production runtime behaviors.
+
+```cue
+containers: {
+    web: {
+        ...
+        if args.dev {
+            expose: "1313/http"
+        }
+        if !args.dev {
+            expose: "80/http"
+        }
+    }
+}
+```
+
 ## Profiles
 
 Profiles specify default arguments for different contexts like dev, test, and prod. This makes it easier for the end user to consume the Acorn application. When developing an application, often there are non-prod ports, different Dockerfile build targets, and replica counts differ from prod. Authors can define a different set of defaults for these environments.
