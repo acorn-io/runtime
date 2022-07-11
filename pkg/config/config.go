@@ -51,7 +51,7 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.IngressClassName != nil {
 		mergedConfig.IngressClassName = newConfig.IngressClassName
 	}
-	if newConfig.TLSEnabled == nil {
+	if newConfig.TLSEnabled != nil {
 		mergedConfig.TLSEnabled = newConfig.TLSEnabled
 	}
 	if newConfig.SetPodSecurityEnforceProfile == nil {
