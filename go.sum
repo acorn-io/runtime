@@ -192,8 +192,6 @@ github.com/acorn-io/apiserver v0.24.1-ot-1 h1:HPyswxxeEMq2gywsyQo+/fknhhl50SErvq
 github.com/acorn-io/apiserver v0.24.1-ot-1/go.mod h1:J41BYwfMMj7Mm6OfFX3mup3myklBebjEE5mfL6zm/Jg=
 github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697 h1:zEzrL1ewSmEJSYdHamsxBO9JAf/z+xBC9mSq0oH6jkA=
 github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697/go.mod h1:sG6OmZ4yEWeQ9JmGjnp8WgQAk9D9z4hivMFsUUh9QF8=
-github.com/acorn-io/baaah v0.0.0-20220629165638-91ce7be33b5f h1:sa/VLPnksUkczUenW+4kVmDhM16fVSQTBRnOVmB6T7Q=
-github.com/acorn-io/baaah v0.0.0-20220629165638-91ce7be33b5f/go.mod h1:CSj9RfR9Ab5LsLmdAcJlrMtyz0tD1kfqAKiLnbkXDg0=
 github.com/acorn-io/component-base v0.24.1-ot-1 h1:GRbiCcCxZdKovA1L8eLFIvI9pJp3kJFOtKTOW7LSsQI=
 github.com/acorn-io/component-base v0.24.1-ot-1/go.mod h1:GLGWZB2NbdO0JXuNHLQ4IOAYnugwAXGRNmYxnb2GeKw=
 github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1 h1:MlyJCGYCmK9g7y3qjRQChBjDRLcjuHgxDG+BBM6+IVI=
@@ -310,6 +308,8 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/cilium/ebpf v0.0.0-20200110133405-4032b1d8aae3/go.mod h1:MA5e5Lr8slmEg9bt0VpxxWqJlO4iwu3FBdHUzV7wQVg=
 github.com/cilium/ebpf v0.0.0-20200702112145-1c8d4c9ef775/go.mod h1:7cR51M8ViRLIdUjrmSXlK9pkrsDlLHbO8jiB8X8JnOc=
+github.com/cjellick/baaah v0.0.0-20220711224405-c7437310ccd3 h1:wp8ACaUlWXr4+xqRjSTNzPv9bODzpzvmsCsZL8dQDCc=
+github.com/cjellick/baaah v0.0.0-20220711224405-c7437310ccd3/go.mod h1:CSj9RfR9Ab5LsLmdAcJlrMtyz0tD1kfqAKiLnbkXDg0=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
