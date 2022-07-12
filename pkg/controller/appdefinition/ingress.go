@@ -162,7 +162,8 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 	ingressClassName := cfg.IngressClassName
 
 	// Look for Secrets in the app namespace that contain cert manager TLS certs
-	tlsCerts, err := getCerts(appInstance.Labels[labels.AcornRootNamespace], req)
+	rootNS := appInstance.Labels[labels.AcornRootNamespace]
+	tlsCerts, err := getCerts(rootNS, req)
 	if err != nil {
 		return err
 	}
@@ -216,7 +217,7 @@ func addIngress(appInstance *v1.AppInstance, req router.Request, resp router.Res
 		tlsIngress := getCertsForPublishedHosts(rules, tlsCerts)
 		for i, ing := range tlsIngress {
 			originalSecret := &corev1.Secret{}
-			err := req.Get(originalSecret, "", ing.SecretName)
+			err := req.Get(originalSecret, rootNS, ing.SecretName)
 			if err != nil {
 				return err
 			}
