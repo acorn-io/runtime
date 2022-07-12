@@ -56,7 +56,7 @@ containers: {
   // Allocate a TTY
   interactive: false
 
-  // Ports to open to other containers in the existing app (not publically accesible)
+  // Ports to open to other containers in the existing app (no publically accesible)
   // Ports are of the format "[EXTERNAL:]INTERNAL[/PROTOCOL]". Acceptable protocols
   // are tcp, udp, http, https
   ports: [
@@ -122,53 +122,9 @@ containers: {
   // same network and PID namespace.
   sidecars: {
    "sample-sidecar": {
-     // All of the same fields of containers are supported here
-     // Specific to sidecars. Init starts before the primary container and will not be restarted. Default is false
-     init: true
+    // All of the same fields of containers are supported here
    }
   }
-
-  // Probe the application for readiness, liveness, and startup. Applications can be checked using three methods
-  // tcp, exec, and http. 
-  probes: [
-   {
-     // Specify the type of probe liveness, readiness, and startup.
-     type:                "liveness"
-     // Number of seconds before starting to check the application
-     initialDelaySeconds: 120
-     // Number of seconds to wait between probes
-     periodSeconds:       10
-     // Number of seconds the probe has to complete
-     timeoutSeconds:      1
-     // Number of successful probes before registering as healthy
-     successThreshold:    1
-     // Number of failed probes before app is considered unhealthy
-     failureThreshold:    3
-     // Exec method of checking
-     exec: command: [
-      "bash",
-      "-ec",
-      "true"
-     ]
-   },
-   // Probe using http
-   {
-     type: "readiness"
-     http:
-       // URL of the http endpoint to check
-       url: "http://localhost/healthz"
-       // A map of custom headers for the check
-       headers:
-         accept: "application/json"
-   },
-   // Probe using tcp
-   {
-     type: "readiness"
-     tcp:
-       // URL to reach
-       url: 3306
-   }
-  ]
  }
 }
 
@@ -177,8 +133,6 @@ containers: {
 jobs: {
  "sample-job": {
   // All of the same fields of containers are supported here
-  // If you would like this job to be a Cron you specify a schedule.
-  schedule: "* * 19 5 *"
  }
 }
 
@@ -201,6 +155,24 @@ secrets: {
    username: string
    // If not set a password will be generated
    password: string
+  }
+ }
+ "generated-tls": {
+  type: "tls"
+  params: {
+   algorithm:   "rsa" | *"ecdsa"
+   caSecret?:   string
+   usage:       *"server" | "client"
+   commonName?: string
+   organization: [...string]
+   sans: [...string]
+   durationDays: int | *365
+  }
+  data: {
+   "tls.crt"?: (string | bytes)
+   "tls.key"?: (string | bytes)
+   "ca.crt"?:  (string | bytes)
+   "ca.key"?:  (string | bytes)
   }
  }
  "generated-from-job": {
@@ -257,11 +229,6 @@ args: {
    }
   }
  }
-}
-
-// Profiles set different default values for the args
-profiles: dev: build {
-    "some-string": "this string"
 }
 
 // Arbitrary information that the acorn file author can embed so that if can be
