@@ -1,5 +1,5 @@
 ---
-title: Developing Apps with Acorn
+title: Develop with Acorn
 ---
 
 ## Already have an Acorn file setup
