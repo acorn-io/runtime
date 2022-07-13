@@ -4,7 +4,7 @@ title: Adding Acorn to an Existing Project
 
 If you have an existing application / codebase that you want to package as an Acorn App, you will first need to create an `acorn.cue` file.
 
-In a project with an existing Dockerfile it is easy to package as an Acorn App.
+In a project with an existing Dockerfile you will need to create an Acorn file that will build the image.
 
 ```shell
 > ls -l
@@ -22,7 +22,17 @@ drwxr-xr-x  5 user  staff   160B Jun  1 09:00 static
 ...
 ```
 
-Create an `acorn.cue` file.
+Take a quick look at this very simple Dockerfile here:
+
+```dockerfile
+FROM nginx
+ADD . .
+EXPOSE 80
+```
+
+This file describes building a container from the upstream nginx image, it adds the contents of the local directory, and exposes port 80.
+
+We can now translate that to the Acorn file by adding the contents:
 
 ```cuelang
 containers: {
@@ -35,5 +45,10 @@ containers: {
 }
 ```
 
+This Acorn file describes building the docker container, with the equivalent of `docker build .`. Docker is not needed on the system running Acorn, it will be built on the Kubernetes cluster in the Acorn provided builder.
+
 Now you can package your app as an Acorn App by building it.
 `acorn build .`
+
+At the end of this build there will be a long string, you can now deploy the app by running:
+`acorn run [IMAGE-SHA]`

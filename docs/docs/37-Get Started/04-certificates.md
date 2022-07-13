@@ -1,5 +1,5 @@
 ---
-title: Certificates
+title: TLS Certificates
 ---
 
 Services exposing HTTP endpoints can be protected by TLS certificates. In the

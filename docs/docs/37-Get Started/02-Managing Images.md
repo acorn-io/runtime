@@ -1,10 +1,10 @@
 ---
-title: Managing Images
+title: Manage Images
 ---
 
 ## Listing images
 
-To see what images are available locally in your cluster.
+To see what images are available locally in your Acorn namespace.
 
 `acorn images`
 
@@ -82,3 +82,7 @@ The `-i` option specifies the image.
 Warning: This removes ALL images on current clusters namespace. If you want to delete all images on your cluster you can use:
 
 `acorn rm -i $(acorn images -a -q)`
+
+## Additional Information
+
+* See [Credentials](/concepts/credentials) docs for details on how credentials are scoped and stored.

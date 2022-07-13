@@ -1,28 +1,28 @@
 ---
-title: Running Acorns
+title: Running Apps 
 ---
 
-## Running existing Acorn
+## Running existing Acorn apps
 
 If you would like to run an acorn from a registry the command is:
 
-`acorn run registry.example.com/myorg/iYou could unpublish the mage`
+`acorn run registry.example.com/myorg/app-image`
 
 There is no need to pull the image ahead of time if the image is not on the host. It will be pulled when acorn goes to run the image.
 
 To see what arguments are available to customize the Acorn add `--help` after the image name.
 
-`acorn run registry.example.com/myorg/image --help`
+`acorn run registry.example.com/myorg/app-image --help`
 
 To pass values:
 
-`acorn run registry.example.com/myorg/image --a-false-bool=false --replicas 2`
+`acorn run registry.example.com/myorg/app-image --a-false-bool=false --replicas 2`
 
 ### Run in interactive mode
 
 Sometimes it is useful to run an Acorn in interactive mode. Running in this mode streams the logs/status to the foreground and stops the app on exit.
 
-`acorn run -i registry.example.com/myorg/image`
+`acorn run -i registry.example.com/myorg/app-image`
 
 ## From Dockerfile
 
@@ -109,7 +109,7 @@ my:
 
 `acorn run registry.example.com/myorg/image --config @config.yaml`
 
-## Interacting with running app
+## Interacting with a running Acorn app
 
 ### Viewing all resources
 
