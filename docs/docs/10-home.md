@@ -32,5 +32,5 @@ Developing applications locally and moving to production without having to switc
 ## Next steps
 
 * [Installation](/installation/installing)
-* [Get Started](/Get%20Started/Running%20Apps)
-* [Developing](/Develop%20with%20Acorn)
+* [Get Started](/Get%20Started/Running%20an%20Acorn)
+* [Developing](/Develop%20with%20Acorn/Develop%20with%20Acorn)

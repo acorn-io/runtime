@@ -1,32 +1,12 @@
 ---
-title: Running Apps 
+title: Build and Running Acorn Apps
 ---
 
-## Running existing Acorn apps
+## Adding Acorn to your containerized app
 
-If you would like to run an acorn from a registry the command is:
+Containerized apps typically have a Dockerfile and are packaged as a container by running `docker build .`  as a part of the CI pipeline.
 
-`acorn run registry.example.com/myorg/app-image`
-
-There is no need to pull the image ahead of time if the image is not on the host. It will be pulled when acorn goes to run the image.
-
-To see what arguments are available to customize the Acorn add `--help` after the image name.
-
-`acorn run registry.example.com/myorg/app-image --help`
-
-To pass values:
-
-`acorn run registry.example.com/myorg/app-image --a-false-bool=false --replicas 2`
-
-### Run in interactive mode
-
-Sometimes it is useful to run an Acorn in interactive mode. Running in this mode streams the logs/status to the foreground and stops the app on exit.
-
-`acorn run -i registry.example.com/myorg/app-image`
-
-## From Dockerfile
-
-If the project already containerized and has an Acorn file you can build and run your image locally. If you need to add an Acorn file see the docs here...
+Acorn can build on the existing workflow by consuming the built images or it can handle the building of the image for you.
 
 First build the Acorn
 
