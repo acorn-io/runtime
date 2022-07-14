@@ -5,11 +5,10 @@ cd $(dirname $0)/..
 
 : ${NOTARIZE=""}
 
-echo "Initial -${NOTARIZE}-"
-if [[ -z "${NOTARIZE}" && "$(uname)" == "Darwin" && "${GITHUB_REF}" =~ "^refs/tags/v" ]]; then
+if [[ -z "${NOTARIZE}" && "$(uname)" == "Darwin" && "${GITHUB_REF}" =~ "refs/tags/v" ]]; then
+  echo "Enabling notarize for tag"
   NOTARIZE="1"
 fi
-echo "Final -${NOTARIZE}- -$(uname)- -${GITHUB_REF}"
 
 cp LICENSE README.md releases/mac_darwin_all/
 if [[ -n "${NOTARIZE}" ]]; then
