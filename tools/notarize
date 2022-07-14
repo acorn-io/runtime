@@ -4,9 +4,12 @@ set -e
 cd $(dirname $0)/..
 
 : ${NOTARIZE=""}
+
+echo "Initial -${NOTARIZE}-"
 if [[ -z "${NOTARIZE}" && "$(uname)" == "Darwin" && "${GITHUB_REF}" =~ "^refs/tags/v" ]]; then
   NOTARIZE="1"
 fi
+echo "Final -${NOTARIZE}- -$(uname)- -${GITHUB_REF}"
 
 cp LICENSE README.md releases/mac_darwin_all/
 if [[ -n "${NOTARIZE}" ]]; then
@@ -18,7 +21,7 @@ if [[ -n "${NOTARIZE}" ]]; then
   gon .gon.hcl
 else
   echo "Skipping notarizing"
-  zip releases/mac_darwin_all/acorn.zip releases/mac_darwin_all/*
+  zip -j releases/mac_darwin_all/acorn.zip releases/mac_darwin_all/*
 fi
 
 mv releases/mac_darwin_all/acorn releases/mac_darwin_all/acorn_bin
