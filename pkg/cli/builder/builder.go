@@ -261,6 +261,10 @@ func assignSlices(app *cobra.Command, slices map[string]reflect.Value) error {
 		if err != nil {
 			return err
 		}
+		a := app.Flags().Lookup(k)
+		if a.Changed && len(s) == 0 {
+			s = []string{""}
+		}
 		if s != nil {
 			v.Set(reflect.ValueOf(s[:]))
 		}
@@ -274,6 +278,10 @@ func assignArrays(app *cobra.Command, arrays map[string]reflect.Value) error {
 		s, err := app.Flags().GetStringArray(k)
 		if err != nil {
 			return err
+		}
+		a := app.Flags().Lookup(k)
+		if a.Changed && len(s) == 0 {
+			s = []string{""}
 		}
 		if s != nil {
 			v.Set(reflect.ValueOf(s[:]))
