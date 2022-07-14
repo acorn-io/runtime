@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  goreleaser:
+  release:
     runs-on: macOS
     steps:
       - name: Checkout

@@ -14,7 +14,7 @@ permissions:
   packages: write
 
 jobs:
-  goreleaser:
+  main-release:
     runs-on: buildjet-16vcpu-ubuntu-2004
     steps:
       - name: Checkout
