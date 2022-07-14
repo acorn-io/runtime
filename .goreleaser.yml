@@ -1,18 +1,15 @@
 dist: releases
-release:
-  github:
-    owner: acorn-io
-    name: acorn
-  extra_files:
-    - glob: ./cosign.pub
+snapshot:
+  name_template: '{{ trimprefix .Summary "v" }}'
+
 builds:
   - id: default
     env:
       - CGO_ENABLED=0
     goos:
-      - darwin
       - linux
       - windows
+      - darwin
     goarch:
       - amd64
       - arm64
@@ -24,93 +21,50 @@ builds:
         goarch: arm64
       - goos: windows
         goarch: arm
-      - goos: darwin
-        goarch: arm
     ldflags:
       - -s
       - -w
-      - -X 'github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}'
+      - -X "github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}"
+
+universal_binaries:
+  - id: mac
+    ids:
+      - default
+    replace: true
+    hooks:
+       post:
+         - cmd: ./tools/notarize
+           output: true
+           env:
+             - NOTARIZE={{ if index .Env "NOTARIZE" }}1{{ end }}
+             - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
+             - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
+             - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
+             - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
+
 archives:
   - id: default
     builds:
       - default
-    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ .Arm }}"
+      - mac
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ if eq .Os \"darwin\" }}macOS-universal.zip{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
         format: zip
-dockers:
-  - use: buildx
-    goos: linux
-    goarch: amd64
-    dockerfile: Dockerfile
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
-    build_flag_templates:
-      - "--target=goreleaser"
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
-      - "--platform=linux/amd64"
-  - use: buildx
-    goos: linux
-    goarch: arm64
-    dockerfile: Dockerfile
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
-    build_flag_templates:
-      - "--target=goreleaser"
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
-      - "--platform=linux/arm64"
-  - use: buildx
-    goos: linux
-    goarch: arm
-    goarm: "7"
-    dockerfile: Dockerfile
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
-    build_flag_templates:
-      - "--target=goreleaser"
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
-      - "--platform=linux/arm/v7"
-docker_manifests:
-  - use: docker
-    name_template: ghcr.io/acorn-io/acorn:v{{ .Version }}
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
-  - use: docker
-    name_template: ghcr.io/acorn-io/acorn:latest
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
+      - goos: darwin
+        format: binary
+
+checksum:
+  name_template: "checksums.txt"
+
 signs:
-  - cmd: cosign
+  - id: cosign
+    cmd: cosign
     stdin: "{{ .Env.COSIGN_PASSWORD }}"
     args:
       ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
     artifacts: all
-docker_signs:
-  - artifacts: all
-    stdin: "{{ .Env.COSIGN_PASSWORD }}"
-checksum:
-  name_template: "checksums.txt"
-snapshot:
-  name_template: '{{ trimprefix .Summary "v" }}'
+
 changelog:
   sort: asc
   filters:
@@ -118,3 +72,18 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^Merge pull request"
+
+release:
+  github:
+    owner: acorn-io
+    name: acorn
+  extra_files:
+    - glob: ./cosign.pub
+
+brews:
+  - description: "Acorn CLI"
+    homepage: "https://acorn.io"
+    license: "Apache 2.0"
+    tap:
+      owner: acorn-io
+      name: homebrew
