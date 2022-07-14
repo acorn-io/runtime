@@ -10,8 +10,8 @@ permissions:
   packages: write
 
 jobs:
-  goreleaser:
-    runs-on: buildjet-16vcpu-ubuntu-2004
+  binary:
+    runs-on: macos-12
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,15 +21,6 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Cosign
         uses: sigstore/cosign-installer@main
         with:
@@ -50,3 +41,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          AC_IDENTITY: ${{ secrets.AC_IDENTITY }}
+          AC_PROJECT: ${{ secrets.AC_PROJECT }}
+          AC_USERNAME: ${{ secrets.AC_USERNAME }}
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+  docker:
+    needs: binary
+    runs-on: buildjet-16vcpu-ubuntu-2004
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: "v1.4.1"
+      - name: Setup Cosign
+        run: |
+          echo "${COSIGN_KEY}" > "$GITHUB_WORKSPACE/cosign.key"
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+      - run: make download-ui
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist -f .goreleaser-docker.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          AC_IDENTITY: ${{ secrets.AC_IDENTITY }}
+          AC_PROJECT: ${{ secrets.AC_PROJECT }}
+          AC_USERNAME: ${{ secrets.AC_USERNAME }}
+          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
