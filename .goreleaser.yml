@@ -32,38 +32,38 @@ universal_binaries:
       - default
     replace: true
     hooks:
-       post:
-         - cmd: ./tools/notarize
-           output: true
-           env:
-             - NOTARIZE={{ if index .Env "NOTARIZE" }}1{{ end }}
-             - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
-             - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
-             - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
-             - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
+      post:
+        - cmd: ./tools/notarize "{{ .Path }}" "{{ .ProjectName }}-v{{ .Version }}-macOS-universal"
+          output: true
+          env:
+            - SIGN={{ if index .Env "SIGN" }}1{{ end }}
+            - NOTARIZE={{ if index .Env "NOTARIZE" }}1{{ end }}
+            - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
+            - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
+            - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
+            - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
 
 archives:
   - id: default
     builds:
       - default
       - mac
-    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ if eq .Os \"darwin\" }}macOS-universal.zip{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}"
+    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ if eq .Os \"darwin\" }}macOS-universal{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}"
     format_overrides:
       - goos: windows
         format: zip
-      - goos: darwin
-        format: binary
 
 checksum:
   name_template: "checksums.txt"
+  extra_files:
+    - glob: "./releases/*.dmg"
 
 signs:
   - id: cosign
     cmd: cosign
     stdin: "{{ .Env.COSIGN_PASSWORD }}"
-    args:
-      ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
-    artifacts: all
+    args: ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
+    artifacts: checksum
 
 changelog:
   sort: asc
@@ -79,6 +79,7 @@ release:
     name: acorn
   extra_files:
     - glob: ./cosign.pub
+    - glob: "./releases/*.dmg"
 
 brews:
   - description: "Acorn CLI"
