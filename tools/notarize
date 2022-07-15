@@ -25,14 +25,41 @@ echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG
 
 
 if [[ -n "${SIGN}" || -n "${NOTARIZE}" ]]; then
+  echo "Setting up Keychain…"
   KEYCHAIN_PASSWORD=letmein
-  KEYCHAIN_PATH=./app-signing.keychain-db
-  echo "${AC_P12}" | base64 --decode > signing.p12
-  security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH || true
-  security set-keychain-settings -lut 21600 $KEYCHAIN_PATH || true
-  security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH || true
-  security import signing.p12 -P "${AC_P12_PASSWORD}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH || true
-  security list-keychain -d user -s $KEYCHAIN_PATH || true
+  KEYCHAIN=./app-signing.keychain-db
+  DOMAIN=common
+  DEF=$(security default-keychain -d $DOMAIN | cut -f 2 -d '"')
+  LIST=$(security list-keychains -d $DOMAIN | grep -v "System.keychain" | xargs)
+
+  function cleanup {
+    echo "Cleaning up Keychain"
+    rm -f signing.p12
+    security lock-keychain $KEYCHAIN
+    if [[ -n "${DEF}" ]]; then
+      security default-keychain -d $DOMAIN -s $DEF || true
+    fi
+    #security list-keychains -d $DOMAIN -s $LIST || true
+    exit 0
+  }
+  trap cleanup EXIT
+
+  if ! security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN >/dev/null; then
+    echo "Creating Keychain"
+    security delete-keychain $KEYCHAIN || true
+    security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN
+    echo "${AC_P12}" | base64 --decode > signing.p12
+    security set-keychain-settings -lut 86400 $KEYCHAIN
+    security import signing.p12 -P "${AC_P12_PASSWORD}" -A -t cert -f pkcs12 -k $KEYCHAIN
+  fi
+
+  if ! security list-keychains | grep $KEYCHAIN >/dev/null; then
+    echo "Setting keychain list"
+    security list-keychains -d $DOMAIN -s $KEYCHAIN $LIST
+  fi
+
+  security default-keychain -d $DOMAIN -s $KEYCHAIN
+  security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN
 fi
 
 if [[ -n "${SIGN}" ]]; then
