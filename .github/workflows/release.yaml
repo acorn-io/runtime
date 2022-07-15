@@ -60,4 +60,4 @@ jobs:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
           AC_P12: ${{ secrets.AC_P12 }}
           AC_P12_PASSWORD: ${{ secrets.AC_P12_PASSWORD }}
-          KEYCHAIN: ${{ steps.keychain['keychain-name'] }}
+          KEYCHAIN: ${{ steps.keychain.outputs['keychain-name'] }}
