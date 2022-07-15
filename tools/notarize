@@ -3,25 +3,53 @@ set -e
 
 cd $(dirname $0)/..
 
+: ${SIGN=""}
 : ${NOTARIZE=""}
+: ${AC_BUNDLE="io.acorn.cli"}
+
+BINARY="$1"
+DIR="releases/mac_darwin_all"
+DMG="releases/$2.dmg"
+CHECKSUMS="releases/checksums.txt"
+
+if [[ -z "${SIGN}" && "$(uname)" == "Darwin" ]]; then
+  SIGN="1"
+fi
 
 if [[ -z "${NOTARIZE}" && "$(uname)" == "Darwin" && "${GITHUB_REF}" =~ "refs/tags/v" ]]; then
-  echo "Enabling notarize for tag"
+  echo "Enabling notarize"
   NOTARIZE="1"
 fi
 
-cp LICENSE README.md releases/mac_darwin_all/
-if [[ -n "${NOTARIZE}" ]]; then
-  echo "Notarizing"
-  cp releases/mac_darwin_all/acorn releases/mac_darwin_all/acorn_orig
+echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG=${DMG}"
 
-  which gon || (go install github.com/mitchellh/gon/cmd/gon@latest)
-
-  gon .gon.hcl
+if [[ -n "${SIGN}" ]]; then
+  echo "Signing"
+  codesign -s "${AC_IDENTITY}" -f -v --timestamp --options runtime "${BINARY}"
 else
-  echo "Skipping notarizing"
-  zip -j releases/mac_darwin_all/acorn.zip releases/mac_darwin_all/*
+  echo "Skipping signing"
+  exit 0
 fi
 
-mv releases/mac_darwin_all/acorn releases/mac_darwin_all/acorn_bin
-cp releases/mac_darwin_all/acorn.zip releases/mac_darwin_all/acorn
+if [[ -n "${NOTARIZE}" ]]; then
+  echo "Notarizing…"
+
+  cp LICENSE README.md "${DIR}/"
+  hdiutil create -volname "Acorn" -size 1g -srcfolder "${DIR}" -ov -format UDZO "${DMG}"
+  which gon || (go install github.com/mitchellh/gon/cmd/gon@latest)
+
+  cat <<EOF > "gon.hcl"
+notarize {
+  path = "${DMG}"
+  bundle_id = "${AC_BUNDLE}"
+  staple = true
+}
+EOF
+
+  gon gon.hcl
+  rm gon.hcl
+  shasum -a 256 "${DMG}" >> "${CHECKSUMS}"
+else
+  echo "Skipping notarizing"
+fi
+
