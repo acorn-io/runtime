@@ -6,6 +6,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParamTypes(t *testing.T) {
+	acornCue := `
+args: {
+	s: "string"
+	b: true
+	i: 4
+	f: 5.0
+	e: "hi" | "bye"
+	a: ["hi"]
+	o: {}
+}
+`
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	spec, err := def.Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "string", spec.Params[0].Type)
+	assert.Equal(t, "bool", spec.Params[1].Type)
+	assert.Equal(t, "int", spec.Params[2].Type)
+	assert.Equal(t, "float", spec.Params[3].Type)
+	assert.Equal(t, "enum", spec.Params[4].Type)
+	assert.Equal(t, "array", spec.Params[5].Type)
+	assert.Equal(t, "object", spec.Params[6].Type)
+}
+
 func TestParamSpec(t *testing.T) {
 	acornCue := `
 args: {

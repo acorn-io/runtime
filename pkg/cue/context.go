@@ -4,22 +4,27 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"cuelang.org/go/cue"
+	"cuelang.org/go/cue/ast"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/errors"
 	"cuelang.org/go/cue/load"
+	"github.com/acorn-io/baaah/pkg/randomtoken"
 )
 
 var loadLock sync.Mutex
 
+type ParserFunc func(name string, src interface{}) (*ast.File, error)
+
 type Context struct {
-	files []File
-	fses  []fsEntry
-	ctx   *cue.Context
+	files     []File
+	fses      []fsEntry
+	ctx       *cue.Context
+	parseFile ParserFunc
 }
 
 type fsEntry struct {
@@ -38,11 +43,18 @@ func NewContext() *Context {
 	}
 }
 
+func (c Context) WithParser(parser ParserFunc) *Context {
+	ret := c.clone()
+	ret.parseFile = parser
+	return ret
+}
+
 func (c Context) clone() *Context {
 	return &Context{
-		files: c.files,
-		fses:  c.fses,
-		ctx:   c.ctx,
+		files:     c.files,
+		fses:      c.fses,
+		ctx:       c.ctx,
+		parseFile: c.parseFile,
 	}
 }
 
@@ -81,13 +93,12 @@ func (c Context) WithFiles(file ...File) *Context {
 func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 	ctx := c.ctx
 
-	// cue needs a dir so we create a unique temporary one for each call.
-	// I wish I didn't need this.
-	dir, err := ioutil.TempDir("", "acorn-acorn.cue-")
+	// cue needs a dir so we create a unique name that doesn't exist
+	dir, err := randomtoken.Generate()
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(dir)
+	dir = filepath.Join(os.TempDir(), dir)
 
 	overrides := map[string]load.Source{}
 	if err := AddFiles(overrides, dir, files...); err != nil {
@@ -103,8 +114,9 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 	// https://github.com/cue-lang/cue/issues/1043
 	loadLock.Lock()
 	instances := load.Instances(args, &load.Config{
-		Dir:     dir,
-		Overlay: overrides,
+		Dir:       dir,
+		Overlay:   overrides,
+		ParseFile: c.parseFile,
 	})
 	loadLock.Unlock()
 	if err != nil {

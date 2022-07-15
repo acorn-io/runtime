@@ -7,6 +7,7 @@ import (
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/ast"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/aml"
 )
 
 func (a *AppDefinition) Args() (*v1.ParamSpec, error) {
@@ -74,8 +75,31 @@ func (a *AppDefinition) args(section string) (*v1.ParamSpec, error) {
 			Name:        fmt.Sprint(f.Label),
 			Description: strings.TrimSpace(com.String()),
 			Schema:      fmt.Sprint(sv.Field(i).Value),
+			Type:        getType(sv.Field(i).Value, f.Value),
 		})
 	}
 
 	return result, nil
+}
+
+func getType(v cue.Value, expr ast.Expr) string {
+	if _, err := v.String(); err == nil {
+		if aml.AllLitStrings(expr, true) {
+			return "enum"
+		}
+		return "string"
+	}
+	if _, err := v.Bool(); err == nil {
+		return "bool"
+	}
+	if _, err := v.Int(nil); err == nil {
+		return "int"
+	}
+	if _, err := v.Float64(); err == nil {
+		return "float"
+	}
+	if _, err := v.List(); err == nil {
+		return "array"
+	}
+	return "object"
 }

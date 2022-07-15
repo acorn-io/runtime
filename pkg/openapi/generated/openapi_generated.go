@@ -3870,6 +3870,12 @@ func schema_pkg_apis_internalacornio_v1_Param(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"schema": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},

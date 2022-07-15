@@ -1,6 +1,9 @@
 package appdefinition
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -1828,4 +1831,243 @@ acorns: acorn: permissions: localData.permissions
 	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].Resources[0])
 	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].ResourceNames[0])
 	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions.ClusterRules[0].NonResourceURLs[0])
+}
+
+func TestNoImport(t *testing.T) {
+	acornCue := `
+import (
+  "list"
+)
+localData: { r: list.Range(1,2,3) }
+`
+
+	_, err := NewAppDefinition([]byte(acornCue))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "import keyword is not")
+}
+
+func TestNoPackage(t *testing.T) {
+	acornCue := `
+package foo
+localData: {}
+`
+
+	_, err := NewAppDefinition([]byte(acornCue))
+	assert.NotNil(t, err)
+}
+
+func TestCustomFunc(t *testing.T) {
+	acornCue := `
+containers: foo: image: localData.data
+localData: {
+    data: echo("hi")
+	data: "hi"
+	echo: {
+		args: [_]
+		out: args[0]
+	}
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "hi", appSpec.Containers["foo"].Image)
+}
+
+func TestStdMissing(t *testing.T) {
+	data := `
+let foo = std.toyaml({})
+`
+
+	_, err := NewAppDefinition([]byte(data))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "invalid reference to std.toyaml, closest matches [toYAML fromYAML trim]")
+}
+
+func TestStd(t *testing.T) {
+	data, err := ioutil.ReadFile("std_test.cue")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	def, err := NewAppDefinition(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestArgsTopCondition(t *testing.T) {
+	data := `
+let foo = true
+if foo {
+	args: {
+		// test comment
+		test: "adsf",
+	}
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	args, err := appDef.Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "test comment", args.Params[0].Description)
+}
+
+func TestArgsRejectConditions(t *testing.T) {
+	data := `
+args: {
+	if foo {
+		test: "adsf",
+	}
+}
+`
+	_, err := NewAppDefinition([]byte(data))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
+}
+
+func getVals(t *testing.T, appDef *AppDefinition) map[string]interface{} {
+	data := map[string]interface{}{}
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := base64.StdEncoding.DecodeString(appSpec.Containers["default"].Files["a"].Content)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = json.Unmarshal(b, &data)
+	if err != nil {
+		t.Fatalf("%s: %v", string(b), err)
+	}
+
+	return data
+}
+
+func TestNoConditionInProfile(t *testing.T) {
+	data := `
+profiles: default: {
+	if true {
+		a: "b"
+	}
+}
+`
+	_, err := NewAppDefinition([]byte(data))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
+}
+
+func TestNoConditionInProfileTop(t *testing.T) {
+	data := `
+profiles: {
+	if true {
+		default: {
+			a: "b"
+		}
+	}
+}
+`
+	_, err := NewAppDefinition([]byte(data))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
+}
+
+func TestProfileDefaultValues(t *testing.T) {
+	data := `
+containers: default: files: a: std.toJSON(args)
+profiles: test: {
+	a: "b"
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defaultAppDef, args, err := appDef.WithArgs(nil, []string{"test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, map[string]interface{}{"a": "b"}, args)
+	assert.Equal(t, map[string]interface{}{"a": "b", "dev": false}, getVals(t, defaultAppDef))
+
+	appDef, args, err = appDef.WithArgs(map[string]interface{}{"a": "c", "c": "d"}, []string{"test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, map[string]interface{}{"a": "c", "c": "d"}, args)
+	assert.Equal(t, map[string]interface{}{"a": "c", "c": "d", "dev": false}, getVals(t, appDef))
+}
+
+func TestArgsDefaulting(t *testing.T) {
+	data := `
+args: {
+	s: "s"
+	i: 4
+	f: 6.0
+	b: true
+	bn: false
+	e: "x" | "y" | "z"
+	a: ["val"]
+	o: {}
+}
+containers: default: files: "a": std.toJSON(args)
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, map[string]interface{}{
+		"dev": false,
+		"s":   "s",
+		"i":   4.0,
+		"f":   6.0,
+		"b":   true,
+		"bn":  false,
+		"e":   "x",
+		"a":   []interface{}{"val"},
+		"o":   map[string]interface{}{},
+	}, getVals(t, appDef))
+
+	newValues := map[string]interface{}{
+		"dev": true,
+		"s":   "s2",
+		"i":   5.0,
+		"f":   5.1,
+		"b":   false,
+		"bn":  true,
+		"a":   []interface{}{"1", "2", "3"},
+		"o": map[string]interface{}{
+			"x": "y",
+		},
+	}
+
+	appDef, _, err = appDef.WithArgs(newValues, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newValues["e"] = "x"
+	assert.Equal(t, newValues, getVals(t, appDef))
 }
