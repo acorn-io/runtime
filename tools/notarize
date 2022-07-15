@@ -23,6 +23,18 @@ fi
 
 echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG=${DMG}"
 
+
+if [[ -n "${SIGN}" || -n "${NOTARIZE}" ]]; then
+  KEYCHAIN_PASSWORD=letmein
+  KEYCHAIN_PATH=./app-signing.keychain-db
+  echo "${AC_P12}" | base64 --decode > signing.p12
+  security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH || true
+  security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+  security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+  security import signing.p12 -P "${AC_P12_PASSWORD}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+  security list-keychain -d user -s $KEYCHAIN_PATH
+fi
+
 if [[ -n "${SIGN}" ]]; then
   echo "Signing"
   codesign -s "${AC_IDENTITY}" -f -v --timestamp --options runtime "${BINARY}"
@@ -46,20 +58,10 @@ notarize {
 }
 EOF
 
-  KEYCHAIN_PASSWORD=letmein
-  KEYCHAIN_PATH=./app-signing.keychain-db
-  echo "${AC_P12}" | base64 --decode > signing.p12
-  security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH || true
-  security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-  security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-  security import signing.p12 -P "${AC_P12_PASSWORD}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-  security list-keychain -d user -s $KEYCHAIN_PATH
-
   gon gon.hcl
   shasum -a 256 "${DMG}" >> "${CHECKSUMS}"
 
   rm gon.hcl
-  security delete-keychain $KEYCHAIN_PATH || true
 else
   echo "Skipping notarizing"
 fi
