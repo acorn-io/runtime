@@ -87,7 +87,7 @@ brews:
     license: "Apache 2.0"
     tap:
       owner: acorn-io
-      name: homebrew
+      name: homebrew-cli
       token: "{{ .Env.GH_PROJECT_TOKEN }}"
 
 dockers:
