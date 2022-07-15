@@ -43,7 +43,7 @@ jobs:
         uses: Apple-Actions/import-codesign-certs@v1
         with:
           p12-file-base64: ${{ secrets.AC_P12 }}
-          p12-password: ""
+          p12-password: ${{ secrets.AC_P12_PASSWORD }}
       - run: make download-ui
       - run: make validate-ci
       - name: Run GoReleaser
