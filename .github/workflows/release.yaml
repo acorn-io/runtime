@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: macOS
+    runs-on: [self-hosted, macOS]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,9 +24,9 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
-      - name: Fix Docker config
-        run: |
-          echo "echo '{\"credsStore\": \"\"}' > ~/.docker/config.json"
+      - name: Set up Keychain
+        id: keychain
+        uses: acorn-io/actions-setup-keychain@v1
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -60,3 +60,4 @@ jobs:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
           AC_P12: ${{ secrets.AC_P12 }}
           AC_P12_PASSWORD: ${{ secrets.AC_P12_PASSWORD }}
+          KEYCHAIN: ${{ steps.keychain['keychain-name'] }}
