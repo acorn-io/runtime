@@ -39,6 +39,11 @@ jobs:
           echo "${COSIGN_KEY}" > "$GITHUB_WORKSPACE/cosign.key"
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+      - name: Import Code-Signing Certificates
+        uses: Apple-Actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.AC_P12 }}
+          p12-password: ""
       - run: make download-ui
       - run: make validate-ci
       - name: Run GoReleaser
