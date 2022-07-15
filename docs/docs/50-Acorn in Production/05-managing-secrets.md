@@ -1,5 +1,5 @@
 ---
-title: Secrets
+title: Managing Secrets
 ---
 
 ## Overview
