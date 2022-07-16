@@ -4,7 +4,7 @@ title: Structure
 
 ## The top level keys of an Acorn file
 
-An Acorn file has predefined top level structs:
+An Acorn file has predefined top level structs, and it is recommended to define them in the following order:
 
 ```cue
 args: { // defines arguments the consumer can provide }

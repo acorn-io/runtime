@@ -8,6 +8,8 @@ To see what images are available locally in your Acorn namespace.
 
 `acorn images`
 
+This will show all images available in the acorn namespace.
+
 ## Tagging images
 
 If you want to tag a local image to push to another registry, or move from a SHA to a friendly name, you can tag the image. The command is:
@@ -85,4 +87,4 @@ Warning: This removes ALL images on current clusters namespace. If you want to d
 
 ## Additional Information
 
-* See [Credentials](/concepts/credentials) docs for details on how credentials are scoped and stored.
+* See [Credentials](/architecture/security-considerations) docs for details on how credentials are scoped and stored.

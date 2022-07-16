@@ -56,15 +56,14 @@ You can also set variables, where you can define both the type and a default if 
 
 ```cue
 localData: {
-    myVariable: string | *""
-    myInteger: int | *5
-    myBool: bool | *true
-    myStruct: {...} | *{}
-    myValue: "this is defined, and can't be changed"
+    myVariable: ""
+    myInteger: 5
+    myBool: true
+    myStruct: {}
 }
 ```
 
-Each of the above variables defines a type, and a default. The default value is marked with a `*`. When declared this way, it can be defined later in the file or by the user.
+Each of the above variables is set as a default value.
 
 Once a variable is set, it can not be changed.
 

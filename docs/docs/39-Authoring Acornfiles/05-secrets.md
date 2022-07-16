@@ -20,7 +20,7 @@ Some containers use environment variables for secret bits of data. The Mariadb c
 containers: {
     db: {
         image: "mysql"
-        ..
+        ...
         env: {
             "MYSQL_ROOT_PASSWORD": "secret://db-root-password/token"
         }
@@ -131,7 +131,7 @@ secrets: {
 }
 ```
 
-In the above example the secret renders a template that contains [data](/acornfile/localdata) defined in the Acorn file and another secret. See [advanced topics](/acornfile/advanced-topics) for other uses for the template secret type.
+In the above example the secret renders a template that contains [data](/Authoring%20Acornfiles/localdata) defined in the Acorn file and another secret. See [advanced topics](/Authoring%20Acornfiles/advanced-topics) for other uses for the template secret type.
 
 ### Token secrets
 
@@ -158,7 +158,7 @@ The `token` field in the data struct is optional and needs to be left the defaul
 
 ### Generated secrets
 
-Generated secrets allow storing sensitive data output from a [job](/acornfile/jobs).
+Generated secrets allow storing sensitive data output from a [job](/Authoring%20Acornfiles/jobs).
 
 ```cue
 containers: {

@@ -8,7 +8,7 @@ See [the Quick Start documentation](https://docs.acorn.io/quickstart)
 
 ### Docs and getting started
 
-Using Acorns [docs](https://docs.acorn.io/Running%20Acorns)
-Authoring Acorns [docs](https://docs.acorn.io/Acornfile/overview)
+* Using Acorns [docs](https://docs.acorn.io/Running%20Acorns)
+* Authoring Acorns [docs](https://docs.acorn.io/Acornfile/overview)
 
 See the reference docs for full example of the [Acorn file](https://docs.acorn.io/Reference/acorn.cue)
