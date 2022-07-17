@@ -2,7 +2,6 @@ package appdefinition
 
 import (
 	"embed"
-	"path/filepath"
 
 	"cuelang.org/go/cue/ast"
 	"cuelang.org/go/cue/parser"
@@ -35,9 +34,6 @@ func init() {
 	std.Functions = functions
 }
 
-func ParseFile(name string, src interface{}) (f *ast.File, err error) {
-	if filepath.Base(name) == AcornCueFile {
-		return aml.ParseFile(name, src, &std)
-	}
-	return parser.ParseFile(name, src, parser.ParseComments)
+func parseFile(name string, src interface{}) (f *ast.File, err error) {
+	return aml.ParseFile(name, src, &std)
 }

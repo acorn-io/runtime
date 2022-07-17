@@ -19,7 +19,7 @@ acorn dev [flags] DIRECTORY
   -b, --bidirectional-sync   Download changes in addition to uploading
       --dangerous            Automatically approve all privileges requested by the application
   -d, --dns strings          Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
-  -f, --file string          Name of the dev file (default "DIRECTORY/acorn.cue")
+  -f, --file string          Name of the dev file (default "DIRECTORY/Acornfile")
   -h, --help                 help for dev
   -l, --link strings         Link external app as a service in the current app (format app-name:service-name)
   -n, --name string          Name of app to create
@@ -42,5 +42,5 @@ acorn dev [flags] DIRECTORY
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
-* [acorn dev render](acorn_dev_render.md)	 - Evaluate and display an acorn.cue with deploy params
+* [acorn dev render](acorn_dev_render.md)	 - Evaluate and display an Acornfile with deploy params
 

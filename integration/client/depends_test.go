@@ -19,7 +19,7 @@ import (
 )
 
 func depImage(t *testing.T, c client.Client) string {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/dependson/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/dependson/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/dependson",
 	})

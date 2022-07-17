@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	cue2 "cuelang.org/go/cue"
+	"cuelang.org/go/cue/ast"
 	cue_mod "github.com/acorn-io/acorn/cue.mod"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cue"
@@ -18,7 +19,7 @@ import (
 )
 
 const (
-	AcornCueFile       = "acorn.cue"
+	AcornCueFile       = "Acornfile"
 	ImageDataFile      = "images.json"
 	BuildDataFile      = "build.json"
 	BuildTransform     = "github.com/acorn-io/acorn/schema/v1/transform/build"
@@ -58,12 +59,14 @@ func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	files := []cue.File{
 		{
-			Name: AcornCueFile,
+			Name: AcornCueFile + ".cue",
 			Data: append(data, Defaults...),
+			Parser: func(name string, src interface{}) (*ast.File, error) {
+				return parseFile(AcornCueFile, src)
+			},
 		},
 	}
 	ctx := cue.NewContext().
-		WithParser(ParseFile).
 		WithNestedFS("schema", schema.Files).
 		WithNestedFS("cue.mod", cue_mod.Files)
 	ctx = ctx.WithFiles(files...)
@@ -329,7 +332,7 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 	}
 
 	if result.Acornfile == "" {
-		return nil, fmt.Errorf("invalid image no acorn.cue found")
+		return nil, fmt.Errorf("invalid image no Acornfile found")
 	}
 
 	return result, nil

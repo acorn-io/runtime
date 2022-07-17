@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"os"
-	"path/filepath"
 	"sync"
 
 	"cuelang.org/go/cue"
@@ -13,8 +11,9 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/errors"
 	"cuelang.org/go/cue/load"
-	"github.com/acorn-io/baaah/pkg/randomtoken"
 )
+
+const dir = "/_internal_"
 
 var loadLock sync.Mutex
 
@@ -33,8 +32,9 @@ type fsEntry struct {
 }
 
 type File struct {
-	Name string
-	Data []byte
+	Name   string
+	Data   []byte
+	Parser ParserFunc
 }
 
 func NewContext() *Context {
@@ -93,13 +93,6 @@ func (c Context) WithFiles(file ...File) *Context {
 func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 	ctx := c.ctx
 
-	// cue needs a dir so we create a unique name that doesn't exist
-	dir, err := randomtoken.Generate()
-	if err != nil {
-		return nil, err
-	}
-	dir = filepath.Join(os.TempDir(), dir)
-
 	overrides := map[string]load.Source{}
 	if err := AddFiles(overrides, dir, files...); err != nil {
 		return nil, err
@@ -119,9 +112,6 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 		ParseFile: c.parseFile,
 	})
 	loadLock.Unlock()
-	if err != nil {
-		return nil, err
-	}
 
 	values, err := ctx.BuildInstances(instances)
 	if err != nil {

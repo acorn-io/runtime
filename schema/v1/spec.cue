@@ -7,7 +7,7 @@ package v1
 
 #AcornBuildSpec: {
 	context:   string | *"."
-	acornfile: string | *"acorn.cue"
+	acornfile: string | *"Acornfile"
 	buildArgs: [string]: _
 }
 

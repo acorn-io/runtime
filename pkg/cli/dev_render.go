@@ -13,7 +13,7 @@ func NewRender() *cobra.Command {
 	cmd := cli.Command(&Render{}, cobra.Command{
 		Use:          "render [flags] DIRECTORY",
 		SilenceUsage: true,
-		Short:        "Evaluate and display an acorn.cue with deploy params",
+		Short:        "Evaluate and display an Acornfile with deploy params",
 		Args:         cobra.MinimumNArgs(1),
 	})
 	cmd.Flags().SetInterspersed(false)
@@ -21,7 +21,7 @@ func NewRender() *cobra.Command {
 }
 
 type Render struct {
-	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/Acornfile"`
 	Profile []string `usage:"Profile to assign default values"`
 }
 

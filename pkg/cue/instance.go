@@ -25,7 +25,15 @@ func AddFS(target map[string]load.Source, cwd, prependPath string, files fs.FS) 
 
 func AddFiles(target map[string]load.Source, cwd string, files ...File) error {
 	for _, f := range files {
-		target[filepath.Join(cwd, f.Name)] = load.FromBytes(f.Data)
+		if f.Parser == nil {
+			target[filepath.Join(cwd, f.Name)] = load.FromBytes(f.Data)
+		} else {
+			ast, err := f.Parser(f.Name, f.Data)
+			if err != nil {
+				return err
+			}
+			target[filepath.Join(cwd, f.Name)] = load.FromFile(ast)
+		}
 	}
 
 	return nil

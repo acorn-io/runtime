@@ -39,7 +39,7 @@ The above generates a token 32 characters in length using only digits 0-9.
 
 ### Generated
 
-Generated secrets are values obtained from running a job defined in the acorn.cue file. The job must write the output to `/run/secrets/output` in order for it to be placed into the secret. The data will be available via the secrets `content` key.
+Generated secrets are values obtained from running a job defined in the Acornfile file. The job must write the output to `/run/secrets/output` in order for it to be placed into the secret. The data will be available via the secrets `content` key.
 
 ```cue
 containers: {

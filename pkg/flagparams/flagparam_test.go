@@ -94,7 +94,7 @@ func TestParse(t *testing.T) {
 		},
 	}
 
-	flags := New("acorn.cue", &params)
+	flags := New("Acornfile", &params)
 	val, err := flags.Parse([]string{
 		"--int", "1",
 		"--int-with-default", "2",

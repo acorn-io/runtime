@@ -72,7 +72,7 @@ func TestImageTagMove(t *testing.T) {
 	}
 
 	imageID := client2.NewImage(t, ns.Name)
-	image2, err := build.Build(helper.GetCTX(t), "../testdata/nginx2/acorn.cue", &build.Options{
+	image2, err := build.Build(helper.GetCTX(t), "../testdata/nginx2/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
 		Cwd:    "../testdata/nginx2",
 	})

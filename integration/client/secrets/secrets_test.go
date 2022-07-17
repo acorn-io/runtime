@@ -20,7 +20,7 @@ func TestSecretCrossbinding(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(ctx, "../testdata/secrets/acorn.cue", &build.Options{
+	image, err := build.Build(ctx, "../testdata/secrets/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "../testdata/secrets",
 	})

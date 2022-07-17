@@ -18,7 +18,7 @@ import (
 )
 
 func TestBuildFailed(t *testing.T) {
-	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/acorn.cue", &build.Options{
+	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/Acornfile", &build.Options{
 		Cwd:    "./testdata/fail",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -26,7 +26,7 @@ func TestBuildFailed(t *testing.T) {
 }
 
 func TestNestedBuild(t *testing.T) {
-	simple, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
+	simple, err := build.Build(helper.GetCTX(t), "./testdata/simple/Acornfile", &build.Options{
 		Cwd:    "./testdata/simple",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -34,7 +34,7 @@ func TestNestedBuild(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/Acornfile", &build.Options{
 		Cwd:    "./testdata/nested",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 		Args: map[string]interface{}{
@@ -48,7 +48,7 @@ func TestNestedBuild(t *testing.T) {
 }
 
 func TestSimpleBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/Acornfile", &build.Options{
 		Cwd:    "./testdata/simple",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -63,9 +63,9 @@ func TestSimpleBuild(t *testing.T) {
 }
 
 func TestSimilarBuilds(t *testing.T) {
-	// This tests a scenario where two builds only differ by a single character in the acorn.cue file and otherwise all
+	// This tests a scenario where two builds only differ by a single character in the Acornfile file and otherwise all
 	// the file names and sizes are the same. A caching bug caused the second build to result in the image from the first
-	image, err := build.Build(helper.GetCTX(t), "./testdata/similar/one/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/similar/one/Acornfile", &build.Options{
 		Cwd:    "./testdata/similar/one",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -73,7 +73,7 @@ func TestSimilarBuilds(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	image2, err := build.Build(helper.GetCTX(t), "./testdata/similar/two/acorn.cue", &build.Options{
+	image2, err := build.Build(helper.GetCTX(t), "./testdata/similar/two/Acornfile", &build.Options{
 		Cwd:    "./testdata/similar/two",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -85,7 +85,7 @@ func TestSimilarBuilds(t *testing.T) {
 }
 
 func TestJobBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/Acornfile", &build.Options{
 		Cwd:    "./testdata/jobs",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -102,7 +102,7 @@ func TestJobBuild(t *testing.T) {
 }
 
 func TestSidecarBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/Acornfile", &build.Options{
 		Cwd:    "./testdata/sidecar",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -119,7 +119,7 @@ func TestSidecarBuild(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/target/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/target/Acornfile", &build.Options{
 		Cwd:    "./testdata/target",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -133,7 +133,7 @@ func TestTarget(t *testing.T) {
 }
 
 func TestContextDir(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/Acornfile", &build.Options{
 		Cwd:    "./testdata/contextdir",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -146,7 +146,7 @@ func TestContextDir(t *testing.T) {
 }
 
 func TestSimpleTwo(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/Acornfile", &build.Options{
 		Cwd:    "./testdata/simple-two",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -166,7 +166,7 @@ func TestSimpleTwo(t *testing.T) {
 }
 
 func TestBuildDefault(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/build-default/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/build-default/Acornfile", &build.Options{
 		Cwd:    "./testdata/build-default",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
 	})
@@ -184,7 +184,7 @@ func TestMultiArch(t *testing.T) {
 		t.Fatal()
 	}
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/multiarch",
 		Platforms: []v1.Platform{

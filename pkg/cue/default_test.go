@@ -21,7 +21,7 @@ v1.#App & {
 
 func TestTransform(t *testing.T) {
 	ctx := newContext()
-	ctx = ctx.WithFile("acorn.cue", testAcornfile)
+	ctx = ctx.WithFile("test.cue", testAcornfile)
 	v, err := ctx.Transform("github.com/acorn-io/acorn/schema/v1/transform/build")
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +58,7 @@ func newContext() *Context {
 
 func TestDefaultContext(t *testing.T) {
 	ctx := newContext()
-	ctx = ctx.WithFile("acorn.cue", testAcornfile)
+	ctx = ctx.WithFile("test.cue", testAcornfile)
 	v, err := ctx.Value()
 	if err != nil {
 		t.Fatal(err)

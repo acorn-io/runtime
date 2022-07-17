@@ -298,4 +298,4 @@ The second side car above is a service that runs alongside the primary frontend 
 ## Additional Reading
 
 * [Networking Concepts in Acorn](/Architecture/security-considerations)
-* [Acorn file reference](/reference/acorn.cue)
+* [Acorn file reference](/reference/Acornfile)

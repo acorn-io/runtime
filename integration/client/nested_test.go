@@ -20,7 +20,7 @@ import (
 )
 
 func nestedImage(t *testing.T, c client.Client) string {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/nested",
 	})
