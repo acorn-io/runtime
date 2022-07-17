@@ -3,7 +3,7 @@ package v1
 #AcornBuild: {
 	buildArgs: [string]: _
 	context:   string | *"."
-	acornfile: string | *"acorn.cue"
+	acornfile: string | *"Acornfile"
 }
 
 #Build: {

@@ -66,7 +66,7 @@ acorns: {
   afull: {
     build: {
       context: "sub/dir2"	
-      acornfile: "sub/dir3/acorn.cue"
+      acornfile: "sub/dir3/Acornfile"
       buildArgs: {
         key: "value"
         key2: {
@@ -119,10 +119,10 @@ acorns: {
 	assert.Len(t, buildSpec.Acorns, 3)
 	assert.Equal(t, "", buildSpec.Acorns["afile"].Image)
 	assert.Equal(t, "sub/dir1", buildSpec.Acorns["afile"].Build.Context)
-	assert.Equal(t, "sub/dir1/acorn.cue", buildSpec.Acorns["afile"].Build.Acornfile)
+	assert.Equal(t, "sub/dir1/Acornfile", buildSpec.Acorns["afile"].Build.Acornfile)
 	assert.Equal(t, "", buildSpec.Acorns["afull"].Image)
 	assert.Equal(t, "sub/dir2", buildSpec.Acorns["afull"].Build.Context)
-	assert.Equal(t, "sub/dir3/acorn.cue", buildSpec.Acorns["afull"].Build.Acornfile)
+	assert.Equal(t, "sub/dir3/Acornfile", buildSpec.Acorns["afull"].Build.Acornfile)
 	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.BuildArgs["key"])
 	assert.Equal(t, map[string]interface{}{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs["key2"])
 	assert.Equal(t, "done", buildSpec.Acorns["anone"].Image)
@@ -2070,4 +2070,21 @@ containers: default: files: "a": std.toJSON(args)
 
 	newValues["e"] = "x"
 	assert.Equal(t, newValues, getVals(t, appDef))
+}
+
+func TestErrorFriendly(t *testing.T) {
+	data := `
+foo: int
+foo: bar
+bar: baz
+baz: "h"
+`
+	_, err := NewAppDefinition([]byte(data))
+	assert.NotNil(t, err)
+	assert.Equal(t, `foo: conflicting values int and "h" (mismatched types int and string):
+    Acornfile:2:6
+    Acornfile:3:6
+    Acornfile:4:6
+    Acornfile:5:6
+`, err.Error())
 }

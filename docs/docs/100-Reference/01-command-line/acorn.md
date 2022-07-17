@@ -27,7 +27,7 @@ acorn [flags]
 
 * [acorn all](acorn_all.md)	 - List (almost) all objects
 * [acorn app](acorn_app.md)	 - List or get apps
-* [acorn build](acorn_build.md)	 - Build an app from a acorn.cue file
+* [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
 * [acorn container](acorn_container.md)	 - List or get running containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn dashboard](acorn_dashboard.md)	 - Dashboard about acorn installation

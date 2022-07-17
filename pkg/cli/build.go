@@ -15,11 +15,11 @@ func NewBuild() *cobra.Command {
 	cmd := cli.Command(&Build{}, cobra.Command{
 		Use: "build [flags] DIRECTORY",
 		Example: `
-# Build from acorn.cue file in the local directory
+# Build from Acornfile file in the local directory
 acorn build .`,
 		SilenceUsage: true,
-		Short:        "Build an app from a acorn.cue file",
-		Long:         "Build all dependent container and app images from your acorn.cue file",
+		Short:        "Build an app from a Acornfile file",
+		Long:         "Build all dependent container and app images from your Acornfile file",
 		Args:         cobra.MinimumNArgs(1),
 	})
 	cmd.Flags().SetInterspersed(false)
@@ -27,7 +27,7 @@ acorn build .`,
 }
 
 type Build struct {
-	File     string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/acorn.cue"`
+	File     string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
 	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
 	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
 }

@@ -28,7 +28,7 @@ func TestVolume(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(ctx, "./testdata/volume/acorn.cue", &build.Options{
+	image, err := build.Build(ctx, "./testdata/volume/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/volume",
 	})
@@ -83,7 +83,7 @@ func TestImageNameAnnotation(t *testing.T) {
 	client := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/named/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/named/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/simple",
 	})
@@ -123,7 +123,7 @@ func TestSimple(t *testing.T) {
 	ctx := helper.GetCTX(t)
 	c, ns := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
 		Cwd:    "./testdata/simple",
 	})
@@ -149,7 +149,7 @@ func TestDeployParam(t *testing.T) {
 	client := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(ctx, "./testdata/params/acorn.cue", &build.Options{
+	image, err := build.Build(ctx, "./testdata/params/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
 		Cwd:    "./testdata/params",
 	})
@@ -191,7 +191,7 @@ func TestPublishAcornHTTP(t *testing.T) {
 	client := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
+	image, err := build.Build(ctx, "./testdata/nested/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
 		Cwd:    "./testdata/nested",
 	})
@@ -232,7 +232,7 @@ func TestAcornServiceExists(t *testing.T) {
 	client := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
+	image, err := build.Build(ctx, "./testdata/nested/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
 		Cwd:    "./testdata/nested",
 	})
@@ -275,7 +275,7 @@ func TestNested(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(ctx, "./testdata/nested/acorn.cue", &build.Options{
+	image, err := build.Build(ctx, "./testdata/nested/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/nested",
 	})

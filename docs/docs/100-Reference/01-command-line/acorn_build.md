@@ -3,11 +3,11 @@ title: "acorn build"
 ---
 ## acorn build
 
-Build an app from a acorn.cue file
+Build an app from a Acornfile file
 
 ### Synopsis
 
-Build all dependent container and app images from your acorn.cue file
+Build all dependent container and app images from your Acornfile file
 
 ```
 acorn build [flags] DIRECTORY
@@ -17,14 +17,14 @@ acorn build [flags] DIRECTORY
 
 ```
 
-# Build from acorn.cue file in the local directory
+# Build from Acornfile file in the local directory
 acorn build .
 ```
 
 ### Options
 
 ```
-  -f, --file string        Name of the build file (default "DIRECTORY/acorn.cue")
+  -f, --file string        Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help               help for build
   -p, --platform strings   Target platforms (form os/arch[/variant][:osversion] example linux/amd64)
   -t, --tag strings        Apply a tag to the final build

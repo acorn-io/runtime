@@ -34,7 +34,7 @@ First you need to initialize your Acorn environment by running:
 
 You will only need to do this once.
 
-Create a new `acorn.cue` in your working directory and add the following contents.
+Create a new `Acornfile` in your working directory and add the following contents.
 
 ```cue
 containers: {

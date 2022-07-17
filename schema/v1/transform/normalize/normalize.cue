@@ -276,7 +276,7 @@ import (
 	IN="in": string | v1.#AcornBuild
 	out:     v1.#AcornBuildSpec
 	out:     {
-		acornfile: path.Join([IN, "acorn.cue"])
+		acornfile: path.Join([IN, "Acornfile"])
 		context:   IN
 	} | {
 		acornfile: IN.acornfile

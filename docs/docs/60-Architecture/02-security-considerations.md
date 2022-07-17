@@ -59,7 +59,7 @@ Modern day applications are loosely coupled over networking paths.
 
 Terminology:
 
-Acorn App - An application that has been defined and packaged within the scope of a single acorn.cue file.
+Acorn App - An application that has been defined and packaged within the scope of a single Acornfile file.
 
 ### Internal Acorn communication
 

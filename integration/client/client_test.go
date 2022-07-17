@@ -22,7 +22,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	client := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, client)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, ns.Name),
 		Cwd:    "./testdata/nginx",
 	})

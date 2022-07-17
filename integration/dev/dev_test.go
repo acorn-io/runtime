@@ -44,7 +44,7 @@ func TestDev(t *testing.T) {
 		os.RemoveAll(tmp)
 	})
 
-	acornCueFile := filepath.Join(tmp, "acorn.cue")
+	acornCueFile := filepath.Join(tmp, "Acornfile")
 	err = ioutil.WriteFile(acornCueFile, []byte(acornCue), 0600)
 	if err != nil {
 		t.Fatal(err)

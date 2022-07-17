@@ -67,11 +67,11 @@ func FindAcornCue(cwd string) string {
 			return f
 		}
 	}
-	return filepath.Join(cwd, "acorn.cue")
+	return filepath.Join(cwd, "Acornfile")
 }
 
 func ResolveFile(file, cwd string) string {
-	if file == "DIRECTORY/acorn.cue" {
+	if file == "DIRECTORY/Acornfile" {
 		return FindAcornCue(cwd)
 	}
 	return file

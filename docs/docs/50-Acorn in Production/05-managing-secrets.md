@@ -4,7 +4,7 @@ title: Managing Secrets
 
 ## Overview
 
-Acorn Apps have secrets defined in the acorn.cue file under the `secrets` key. Before running an Acorn App you can see which secrets are defined by passing the `--help` flag.
+Acorn Apps have secrets defined in the Acornfile file under the `secrets` key. Before running an Acorn App you can see which secrets are defined by passing the `--help` flag.
 
 ```shell
 > acorn run [MY-APP-IMAGE] --help

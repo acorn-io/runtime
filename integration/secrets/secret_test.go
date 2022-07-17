@@ -18,7 +18,7 @@ func TestText(t *testing.T) {
 
 	c, _ := helper.ClientAndNamespace(t)
 	kclient := helper.MustReturn(k8sclient.Default)
-	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/generated",
 	})
@@ -63,7 +63,7 @@ func TestJSON(t *testing.T) {
 	c, _ := helper.ClientAndNamespace(t)
 	client := helper.MustReturn(k8sclient.Default)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/acorn.cue", &build.Options{
+	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/generated-json",
 	})

@@ -22,7 +22,7 @@ func NewDev() *cobra.Command {
 }
 
 type Dev struct {
-	File              string `short:"f" usage:"Name of the dev file" default:"DIRECTORY/acorn.cue"`
+	File              string `short:"f" usage:"Name of the dev file" default:"DIRECTORY/Acornfile"`
 	BidirectionalSync bool   `usage:"Download changes in addition to uploading" short:"b"`
 	RunArgs
 }

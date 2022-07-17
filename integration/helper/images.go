@@ -33,12 +33,12 @@ func findAcornCue() (string, error) {
 }
 
 func traverse(dir string) (string, error) {
-	acornCue := filepath.Join(dir, "acorn.cue")
+	acornCue := filepath.Join(dir, "Acornfile")
 	_, err := os.Stat(acornCue)
 	if os.IsNotExist(err) {
 		pwd := filepath.Dir(dir)
 		if dir == pwd {
-			return "", fmt.Errorf("failed to find acorn.cue")
+			return "", fmt.Errorf("failed to find Acornfile")
 		}
 		return traverse(pwd)
 	} else if err != nil {
