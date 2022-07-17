@@ -64,7 +64,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		DownstreamDisabled: !bidirectional,
 		Verbose:            true,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
-		Log:                logpkg.NewDefaultPrefixLogger(con.Name+" (sync) ", logpkg.GetInstance()),
+		Log:                logpkg.NewDefaultPrefixLogger(strings.TrimPrefix(con.Name, con.Spec.AppName+".")+": (sync): ", logpkg.GetInstance()),
 	})
 	if err != nil {
 		return nil, err
