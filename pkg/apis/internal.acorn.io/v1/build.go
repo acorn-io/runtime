@@ -38,5 +38,6 @@ type Profile struct {
 type Param struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
+	Type        string `json:"type,omitempty" wrangler:"options=string|int|float|bool|object|array"`
 	Schema      string `json:"schema,omitempty"`
 }

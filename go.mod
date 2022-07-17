@@ -16,7 +16,8 @@ replace (
 require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.5
-	github.com/acorn-io/baaah v0.0.0-20220712233854-02ada48dd82f
+	github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693
+	github.com/acorn-io/baaah v0.0.0-20220715223341-94ce9f99d55c
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.6
 	github.com/google/go-containerregistry v0.10.0
@@ -63,6 +64,7 @@ require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/adrg/xdg v0.3.1 // indirect
+	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/bmatcuk/doublestar v1.1.1 // indirect

@@ -63,6 +63,7 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 		},
 	}
 	ctx := cue.NewContext().
+		WithParser(ParseFile).
 		WithNestedFS("schema", schema.Files).
 		WithNestedFS("cue.mod", cue_mod.Files)
 	ctx = ctx.WithFiles(files...)
