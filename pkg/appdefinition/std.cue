@@ -12,6 +12,7 @@ import (
 	_std_path "path"
 	_std_strconv "strconv"
 	_std_tabwriter "text/tabwriter"
+	_std_math "math"
 )
 
 let std = {
@@ -179,8 +180,8 @@ let std = {
 	}
 
 	range: {
-		_args: [int, int, int] | [int, int] | [int]
-		out: [...int]
+		_args: [number, number, number] | [number, number] | [number]
+		out: [...number]
 		if len(_args) == 1 {
 			out: _std_list.Range(0, _args[0], 1)
 		}

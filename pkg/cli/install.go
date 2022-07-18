@@ -7,18 +7,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewInit() *cobra.Command {
-	return cli.Command(&Init{}, cobra.Command{
-		Use: "init [flags]",
+func NewInstall() *cobra.Command {
+	return cli.Command(&Install{}, cobra.Command{
+		Use: "install [flags]",
 		Example: `
-acorn init`,
+acorn install`,
+		Aliases:      []string{"init"},
 		SilenceUsage: true,
 		Short:        "Install and configure acorn in the cluster",
 		Args:         cobra.NoArgs,
 	})
 }
 
-type Init struct {
+type Install struct {
 	Image  string `usage:"Override the default image used for the deployment"`
 	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 
@@ -30,7 +31,7 @@ type Init struct {
 	Mode string `usage:"Initialize only 'config', 'resources', or 'both' (default 'both')"`
 }
 
-func (i *Init) Run(cmd *cobra.Command, args []string) error {
+func (i *Install) Run(cmd *cobra.Command, args []string) error {
 	var image = install.DefaultImage()
 	if i.Image != "" {
 		image = i.Image

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AlecAivazis/survey/v2"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/pterm/pterm"
 )
@@ -62,11 +62,5 @@ application. If you are unsure say no.`)
 	}
 
 	pterm.Println()
-
-	var shouldAllow = false
-	err := survey.AskOne(&survey.Confirm{
-		Message: "Do you want to allow this app to have these (POTENTIALLY DANGEROUS) permissions?",
-		Default: false,
-	}, &shouldAllow)
-	return shouldAllow, err
+	return prompt.Bool("Do you want to allow this app to have these (POTENTIALLY DANGEROUS) permissions?", false)
 }

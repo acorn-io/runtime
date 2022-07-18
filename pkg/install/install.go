@@ -223,33 +223,53 @@ func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string
 	return s.Fail(err)
 }
 
-func printObject(image string, opts *Options) error {
+func AllResources() (result []kclient.Object, _ error) {
+	opts := &Options{}
+	resources, err := resources(DefaultImage(), opts.complete())
+	if err != nil {
+		return nil, err
+	}
+	for _, resource := range resources {
+		result = append(result, resource.(kclient.Object))
+	}
+	return
+}
+
+func resources(image string, opts *Options) ([]runtime.Object, error) {
 	var objs []runtime.Object
 
 	roles, err := Roles()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	objs = append(objs, roles...)
 
 	namespace, err := Namespace()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	objs = append(objs, namespace...)
 
 	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	objs = append(objs, deps...)
 
 	cfgs, err := Config(opts.Config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	objs = append(objs, cfgs...)
+	return objs, nil
+}
+
+func printObject(image string, opts *Options) error {
+	objs, err := resources(image, opts)
+	if err != nil {
+		return err
+	}
 
 	if opts.OutputFormat == "json" {
 		m := map[string]interface{}{

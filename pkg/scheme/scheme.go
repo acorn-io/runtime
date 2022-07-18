@@ -12,6 +12,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -36,6 +37,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, apiregistrationv1.AddToScheme(scheme))
 	errs = append(errs, rbacv1.AddToScheme(scheme))
 	errs = append(errs, authv1.AddToScheme(scheme))
+	errs = append(errs, apiextensionv1.AddToScheme(scheme))
 	return merr.NewErrors(errs...)
 }
 
