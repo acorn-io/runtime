@@ -394,12 +394,8 @@ func Dev(ctx context.Context, file string, opts *Options) error {
 		return err
 	}
 
-	if len(opts.Run.Profiles) == 0 {
-		opts.Run.Profiles = []string{"dev?"}
-	}
-	if len(opts.Build.Profiles) == 0 {
-		opts.Build.Profiles = []string{"dev?"}
-	}
+	opts.Run.Profiles = append([]string{"dev?"}, opts.Run.Profiles...)
+	opts.Build.Profiles = append([]string{"dev?"}, opts.Build.Profiles...)
 
 	err = buildLoop(ctx, acornCue, opts)
 	if errors.Is(err, context.Canceled) {

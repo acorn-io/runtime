@@ -27,6 +27,7 @@ acorn build .
   -f, --file string        Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help               help for build
   -p, --platform strings   Target platforms (form os/arch[/variant][:osversion] example linux/amd64)
+      --profile strings    Profile to assign default values
   -t, --tag strings        Apply a tag to the final build
 ```
 

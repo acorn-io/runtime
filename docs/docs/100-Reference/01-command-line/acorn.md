@@ -31,7 +31,6 @@ acorn [flags]
 * [acorn container](acorn_container.md)	 - List or get running containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn dashboard](acorn_dashboard.md)	 - Dashboard about acorn installation
-* [acorn dev](acorn_dev.md)	 - Build and run an app in development mode
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
 * [acorn image](acorn_image.md)	 - List images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
@@ -41,8 +40,9 @@ acorn [flags]
 * [acorn logs](acorn_logs.md)	 - Log all pods from app
 * [acorn pull](acorn_pull.md)	 - Pull an image to a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry
+* [acorn render](acorn_render.md)	 - Evaluate and display an Acornfile with args
 * [acorn rm](acorn_rm.md)	 - Delete an app, container, or volume
-* [acorn run](acorn_run.md)	 - Run an app from an app image
+* [acorn run](acorn_run.md)	 - Run an app from an image or Acornfile
 * [acorn secret](acorn_secret.md)	 - Manage secrets
 * [acorn start](acorn_start.md)	 - Start an app
 * [acorn stop](acorn_stop.md)	 - Stop an app

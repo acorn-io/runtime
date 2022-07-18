@@ -16,6 +16,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/schema"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -154,6 +155,19 @@ func (a *AppDefinition) WithArgs(args map[string]interface{}, profiles []string)
 		ctx:        a.ctx.WithFile("args.cue", data),
 		imageDatas: a.imageDatas,
 	}, args, nil
+}
+
+func (a *AppDefinition) YAML() (string, error) {
+	jsonData, err := a.JSON()
+	if err != nil {
+		return "", err
+	}
+	data := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
+		return "", err
+	}
+	y, err := yaml.Marshal(data)
+	return string(y), err
 }
 
 func (a *AppDefinition) JSON() (string, error) {

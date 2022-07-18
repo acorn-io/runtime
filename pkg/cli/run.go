@@ -3,9 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/deployargs"
@@ -18,10 +20,9 @@ import (
 
 func NewRun() *cobra.Command {
 	cmd := cli.Command(&Run{}, cobra.Command{
-		Use:          "run [flags] IMAGE [deploy flags]",
+		Use:          "run [flags] IMAGE|DIRECTORY [acorn args]",
 		SilenceUsage: true,
-		Short:        "Run an app from an app image",
-		Args:         cobra.MinimumNArgs(1),
+		Short:        "Run an app from an image or Acornfile",
 	})
 	cmd.Flags().SetInterspersed(false)
 	return cmd
@@ -29,11 +30,13 @@ func NewRun() *cobra.Command {
 
 type Run struct {
 	RunArgs
-	Interactive bool `usage:"Stream logs/status in the foreground and stop on exit" short:"i"`
+	Interactive       bool `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i"`
+	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
 }
 
 type RunArgs struct {
 	Name       string   `usage:"Name of app to create" short:"n"`
+	File       string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
 	DNS        []string `usage:"Assign a friendly domain to a published container (format public:private) (ex: example.com:web)" short:"d"`
 	Volume     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
 	Secret     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
@@ -85,6 +88,35 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	return opts, nil
 }
 
+func isDirectory(cwd string) (bool, error) {
+	if s, err := os.Stat(cwd); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	} else if !s.IsDir() {
+		return false, fmt.Errorf("%s is not a directory", cwd)
+	}
+	return true, nil
+}
+
+func buildImage(ctx context.Context, file, cwd string, args, profiles []string) (string, error) {
+	params, err := build.ParseParams(file, cwd, args)
+	if err != nil {
+		return "", err
+	}
+
+	image, err := build.Build(ctx, file, &build.Options{
+		Cwd:      cwd,
+		Args:     params,
+		Profiles: profiles,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return image.ID, nil
+}
+
 func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	c, err := client.Default()
 	if err != nil {
@@ -96,7 +128,44 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	image := args[0]
+	cwd := "."
+	if len(args) > 0 {
+		cwd = args[0]
+	}
+
+	isDir, err := isDirectory(cwd)
+	if err != nil {
+		return err
+	}
+
+	if s.Interactive && isDir {
+		return dev.Dev(cmd.Context(), s.File, &dev.Options{
+			Args:   args,
+			Client: c,
+			Build: build.Options{
+				Cwd:      cwd,
+				Profiles: opts.Profiles,
+			},
+			Run:               opts,
+			Dangerous:         s.Dangerous,
+			BidirectionalSync: s.BidirectionalSync,
+		})
+	}
+
+	if s.Interactive {
+		s.Profile = append([]string{"dev?"}, s.Profile...)
+	}
+
+	image := cwd
+	if isDir {
+		image, err = buildImage(cmd.Context(), s.File, cwd, args, s.Profile)
+		if err == pflag.ErrHelp {
+			return nil
+		} else if err != nil {
+			return err
+		}
+	}
+
 	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)
 	if err != nil {
 		return err

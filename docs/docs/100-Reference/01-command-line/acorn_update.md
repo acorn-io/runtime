@@ -14,6 +14,7 @@ acorn update [flags] APP_NAME [deploy flags]
 ```
       --dangerous         Automatically approve all privileges requested by the application
   -d, --dns strings       Assign a friendly domain to a published container (format public:private) (ex: example.com:web)
+  -f, --file string       Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help              help for update
       --image string      
   -l, --link strings      Link external app as a service in the current app (format app-name:service-name)
