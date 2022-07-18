@@ -51,7 +51,7 @@ validate-docs:
 
 # Launch development server for the docs site
 serve-docs:
-	acorn dev ./docs
+	acorn run -i ./docs
 
 gen-docs:
 	go run tools/gendocs/main.go

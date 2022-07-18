@@ -30,6 +30,7 @@ type Build struct {
 	File     string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
 	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
 	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
+	Profile  []string `usage:"Profile to assign default values"`
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
@@ -56,6 +57,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		Cwd:       cwd,
 		Args:      params,
 		Platforms: platforms,
+		Profiles:  s.Profile,
 	})
 	if err != nil {
 		return err

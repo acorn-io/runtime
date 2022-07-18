@@ -45,7 +45,9 @@ func (s *Exec) appAndArgs(ctx context.Context, c hclient.Client, args []string) 
 
 	var names []string
 	for _, app := range apps {
-		names = append(names, app.Name)
+		if !app.Status.Stopped {
+			names = append(names, app.Name)
+		}
 	}
 
 	var appName string

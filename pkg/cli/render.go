@@ -11,9 +11,9 @@ import (
 
 func NewRender() *cobra.Command {
 	cmd := cli.Command(&Render{}, cobra.Command{
-		Use:          "render [flags] DIRECTORY",
+		Use:          "render [flags] DIRECTORY [acorn args]",
 		SilenceUsage: true,
-		Short:        "Evaluate and display an Acornfile with deploy params",
+		Short:        "Evaluate and display an Acornfile with args",
 		Args:         cobra.MinimumNArgs(1),
 	})
 	cmd.Flags().SetInterspersed(false)
@@ -23,6 +23,7 @@ func NewRender() *cobra.Command {
 type Render struct {
 	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/Acornfile"`
 	Profile []string `usage:"Profile to assign default values"`
+	Output  string   `usage:"Output in JSON or YAML" default:"json"`
 }
 
 func (s *Render) Run(cmd *cobra.Command, args []string) error {
@@ -48,11 +49,19 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	v, err := appDef.JSON()
+	var v string
+	switch s.Output {
+	case "yaml":
+		v, err = appDef.YAML()
+	case "json":
+		v, err = appDef.YAML()
+	default:
+		return fmt.Errorf("unsupported output format %s", s.Output)
+	}
+
 	if err != nil {
 		return err
 	}
 	fmt.Print(v)
-
 	return nil
 }
