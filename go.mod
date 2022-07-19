@@ -44,7 +44,7 @@ require (
 	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	k8s.io/api v0.24.3
-	k8s.io/apiextensions-apiserver v0.24.2
+	k8s.io/apiextensions-apiserver v0.24.3
 	k8s.io/apimachinery v0.24.3
 	k8s.io/apiserver v0.24.3
 	k8s.io/client-go v12.0.0+incompatible
