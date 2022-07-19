@@ -10,6 +10,12 @@ localData: {
 	range: std.range(0, 5)
 	range: [0, 1, 2, 3, 4]
 
+	rangef: std.range(5.0)
+	rangef: [0, 1, 2, 3, 4]
+
+	rangef2: std.range(0.1, 5.1)
+	rangef2: [0.1, 1.1, 2.1, 3.1, 4.1]
+
 	range2: std.range(0, 5, 2)
 	range2: [0, 2, 4]
 
@@ -151,4 +157,9 @@ localData: {
 	t:     merge.f.x == "y1"
 	t:     merge.f.a == "b"
 	t:     merge.f.l[2] == 3
+
+	mod1: mod(3, 2)
+	mod1: 1
+	mod1: mod(3, 2)
+	mod1: 1
 }

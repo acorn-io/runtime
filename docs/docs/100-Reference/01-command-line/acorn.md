@@ -34,7 +34,7 @@ acorn [flags]
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
 * [acorn image](acorn_image.md)	 - List images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
-* [acorn init](acorn_init.md)	 - Install and configure acorn in the cluster
+* [acorn install](acorn_install.md)	 - Install and configure acorn in the cluster
 * [acorn login](acorn_login.md)	 - Add registry credentials
 * [acorn logout](acorn_logout.md)	 - Remove registry credentials
 * [acorn logs](acorn_logs.md)	 - Log all pods from app
@@ -47,6 +47,7 @@ acorn [flags]
 * [acorn start](acorn_start.md)	 - Start an app
 * [acorn stop](acorn_stop.md)	 - Stop an app
 * [acorn tag](acorn_tag.md)	 - Tag an image
+* [acorn uninstall](acorn_uninstall.md)	 - Uninstall acorn and associated resources
 * [acorn update](acorn_update.md)	 - Update a deployed app
 * [acorn volume](acorn_volume.md)	 - List or get volumes
 
