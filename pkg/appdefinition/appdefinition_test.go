@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"cuelang.org/go/cue/errors"
@@ -181,12 +182,12 @@ images: {
 	}
 
 	assert.Equal(t, []string{
-		"root-path/Dockerfile",
-		"root-path/asdf/dockerfile",
-		"root-path/dockerfile.sidecar",
-		"root-path/sub/dir1/Dockerfile",
-		"root-path/sub/dir2/Dockerfile",
-		"root-path/sub/dir3/bockerfile",
+		filepath.Join("root-path", "Dockerfile"),
+		filepath.Join("root-path", "asdf", "dockerfile"),
+		filepath.Join("root-path", "dockerfile.sidecar"),
+		filepath.Join("root-path", "sub", "dir1", "Dockerfile"),
+		filepath.Join("root-path", "sub", "dir2", "Dockerfile"),
+		filepath.Join("root-path", "sub", "dir3", "bockerfile"),
 	}, files)
 }
 
