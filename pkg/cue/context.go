@@ -13,8 +13,6 @@ import (
 	"cuelang.org/go/cue/load"
 )
 
-const dir = "/_internal_"
-
 var loadLock sync.Mutex
 
 type ParserFunc func(name string, src interface{}) (*ast.File, error)

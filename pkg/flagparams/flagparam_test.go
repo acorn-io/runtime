@@ -1,6 +1,7 @@
 package flagparams
 
 import (
+	"runtime"
 	"testing"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -120,6 +121,11 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	cuestring := "{\n\tvalue: \"cue\"\n}\n"
+	if runtime.GOOS == "windows" {
+		cuestring = "{\r\n\tvalue: \"cue\"\r\n}\r\n"
+	}
+
 	assert.Equal(t, map[string]interface{}{
 		"int":                     float64(1),
 		"intWithDefault":          float64(2),
@@ -136,7 +142,7 @@ func TestParse(t *testing.T) {
 		"cueFile": map[string]interface{}{
 			"value": "cue",
 		},
-		"cueString":      "{\n\tvalue: \"cue\"\n}\n",
+		"cueString":      cuestring,
 		"anEmptyComplex": "",
 		"abool":          true,
 		"aDefaultBool":   true,
