@@ -30,10 +30,10 @@ spec:
         "acorn.io/job-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"internalPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"alias":{},"image":"foo","ports":[{"internalPort":91,"port":90,"protocol":"tcp"}]}}}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}]}}}'
     spec:
       imagePullSecrets:
-        - name: oneimage-pull-12345678
+        - name: oneimage-pull-1234567890ab
       restartPolicy: Never
       automountServiceAccountToken: false
       enableServiceLinks: false
@@ -62,7 +62,7 @@ spec:
 kind: Secret
 apiVersion: v1
 metadata:
-  name: oneimage-pull-12345678
+  name: oneimage-pull-1234567890ab
   namespace: app-created-namespace
   labels:
     acorn.io/managed: "true"
@@ -76,7 +76,7 @@ apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
-  uid: 12345678ab
+  uid: 1234567890abcdef
 spec:
   image: test
 status:
@@ -89,11 +89,11 @@ status:
             image: "foo"
             ports:
               - port: 90
-                internalPort: 91
+                targetPort: 91
                 protocol: tcp
         ports:
           - port: 80
-            internalPort: 81
+            targetPort: 81
             protocol: http
         image: "image-name"
         build:

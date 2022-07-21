@@ -157,9 +157,9 @@ func TestPorts(t *testing.T) {
 							"left": {
 								Ports: []v1.PortDef{
 									{
-										Port:         90,
-										InternalPort: 91,
-										Protocol:     v1.ProtocolHTTP,
+										Port:       90,
+										TargetPort: 91,
+										Protocol:   v1.ProtocolHTTP,
 									},
 								},
 							},
@@ -167,9 +167,9 @@ func TestPorts(t *testing.T) {
 						WorkingDir: "something",
 						Ports: []v1.PortDef{
 							{
-								Port:         80,
-								InternalPort: 81,
-								Protocol:     v1.ProtocolHTTP,
+								Port:       80,
+								TargetPort: 81,
+								Protocol:   v1.ProtocolHTTP,
 							},
 						},
 					},

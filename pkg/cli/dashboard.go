@@ -12,6 +12,7 @@ func NewDashboard() *cobra.Command {
 		SilenceUsage: true,
 		Short:        "Dashboard about acorn installation",
 		Args:         cobra.NoArgs,
+		Hidden:       true,
 	})
 	return cmd
 }

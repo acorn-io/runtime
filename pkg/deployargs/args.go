@@ -87,15 +87,11 @@ func Usage(app *v1.AppSpec) func() {
 		var ports []string
 		for containerName, container := range app.Containers {
 			for _, port := range container.Ports {
-				if port.Expose {
-					ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
-				}
+				ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
 			}
 			for _, sidecar := range container.Sidecars {
 				for _, port := range sidecar.Ports {
-					if port.Expose {
-						ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
-					}
+					ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
 				}
 			}
 		}

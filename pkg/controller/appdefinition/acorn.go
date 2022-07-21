@@ -4,7 +4,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
-	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -19,7 +18,7 @@ func addAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pul
 func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
 		acornName, acorn := entry.Key, entry.Value
-		if isLinked(appInstance, acornName) {
+		if ports.IsLinked(appInstance, acornName) {
 			continue
 		}
 		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
@@ -27,32 +26,11 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 	return result
 }
 
-func toNonPublishPortBinding(portDef v1.PortDef) v1.PortBinding {
-	return v1.PortBinding{
-		Port:       portDef.Port,
-		TargetPort: portDef.InternalPort,
-		Protocol:   portDef.Protocol,
-	}
-}
-
-func toPublishPortBinding(portDef v1.PortDef) v1.PortBinding {
-	return v1.PortBinding{
-		Port:       portDef.Port,
-		TargetPort: portDef.InternalPort,
-		Protocol:   portDef.Protocol,
-		Publish:    true,
-	}
-}
-
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
 	image := resolveTagForAcorn(tag, appInstance.Labels[labels.AcornRootNamespace], acorn.Image)
 
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
-
-	tags.IsLocalReference(image)
-	publishPorts := ports.RemapForBinding(true, acorn.Ports, appInstance.Spec.Ports, appInstance.Spec.PublishProtocols)
-	ports := append(typed.MapSlice(acorn.Ports, toNonPublishPortBinding), typed.MapSlice(publishPorts, toPublishPortBinding)...)
 
 	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
@@ -64,13 +42,14 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 				labels.AcornAcornName, acornName),
 		},
 		Spec: v1.AppInstanceSpec{
-			Image:      image,
-			Volumes:    acorn.Volumes,
-			Secrets:    acorn.Secrets,
-			Services:   acorn.Services,
-			DeployArgs: acorn.DeployArgs,
-			Ports:      ports,
-			Stop:       appInstance.Spec.Stop,
+			Image:       image,
+			Volumes:     acorn.Volumes,
+			Secrets:     acorn.Secrets,
+			PublishMode: v1.PublishModeNone,
+			Services:    acorn.Services,
+			DeployArgs:  acorn.DeployArgs,
+			Ports:       ports.ForAcorn(appInstance, acornName),
+			Stop:        appInstance.Spec.Stop,
 		},
 	}
 

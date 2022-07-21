@@ -64,7 +64,7 @@ func (p *PullSecrets) ForContainer(containerName string, containers []corev1.Con
 		images = append(images, container.Image)
 	}
 
-	secretName := name.SafeConcatName(containerName, "pull", string(p.app.UID[:8]))
+	secretName := name.SafeConcatName(containerName, "pull", p.app.ShortID())
 	secret, err := pullsecret.ForImages(secretName, p.app.Status.Namespace, p.keychain, images...)
 	if err != nil {
 		p.errs = append(p.errs, err)

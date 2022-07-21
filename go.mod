@@ -17,7 +17,7 @@ require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693
-	github.com/acorn-io/baaah v0.0.0-20220715223341-94ce9f99d55c
+	github.com/acorn-io/baaah v0.0.0-20220721045859-5666b93128ca
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.6
 	github.com/google/go-containerregistry v0.11.0

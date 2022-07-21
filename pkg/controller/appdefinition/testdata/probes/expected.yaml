@@ -33,15 +33,17 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
+        "port-number.acorn.io/81": "true"
+        "service-name.acorn.io/oneimage": "true"
       annotations:
-        acorn.io/container-spec: '{"alias":{},"image":"image-name","ports":[{"internalPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"alias":{},"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
+        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       imagePullSecrets:
-        - name: oneimage-pull-12345678
+        - name: oneimage-pull-1234567890ab
       containers:
         - name: oneimage
           image: "image-name"
@@ -80,6 +82,7 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
+    "acorn.io/service-name": "oneimage"
     "acorn.io/container-name": "oneimage"
 spec:
   type: ClusterIP
@@ -92,14 +95,15 @@ spec:
   selector:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "oneimage"
+    "service-name.acorn.io/oneimage": "true"
+    "port-number.acorn.io/81": "true"
     "acorn.io/managed": "true"
 
 ---
 kind: Secret
 apiVersion: v1
 metadata:
-  name: oneimage-pull-12345678
+  name: oneimage-pull-1234567890ab
   namespace: app-created-namespace
   labels:
     acorn.io/managed: "true"
@@ -113,7 +117,7 @@ apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
-  uid: 12345678ab
+  uid: 1234567890abcdef
 spec:
   image: test
 status:
@@ -138,7 +142,7 @@ status:
                   command: ["/bin/true"]
         ports:
           - port: 80
-            internalPort: 81
+            targetPort: 81
             protocol: http
         image: "image-name"
   conditions:

@@ -1,0 +1,89 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: acorn-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/acorn-name": "acorn-name"
+    "acorn.io/managed": "true"
+    "acorn.io/root-prefix": "app-name"
+spec:
+  publishMode: none
+  image: foo
+  ports:
+    - port: 81
+      targetPort: 82
+      protocol: http
+      expose: true
+    - port: 91
+      targetPort: 92
+      protocol: tcp
+      publish: true
+      expose: true
+    - port: 101
+      targetPort: 102
+      protocol: tcp
+      expose: true
+    - port: 102
+      targetPort: 103
+      protocol: tcp
+      expose: true
+    - port: 100
+      serviceName: local-service
+      targetPort: 103
+      protocol: tcp
+      publish: true
+
+---
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: http
+      expose: true
+    - port: 90
+      targetPort: 91
+      protocol: tcp
+      expose: true
+    - port: 100
+      serviceName: local-service
+      targetPort: 102
+      protocol: tcp
+      expose: true
+      publish: true
+status:
+  namespace: app-created-namespace
+  appSpec:
+    acorns:
+      acorn-name:
+        image: "foo"
+        ports:
+          - port: 81
+            targetPort: 82
+            protocol: http
+          - port: 91
+            targetPort: 92
+            protocol: tcp
+            publish: true
+          - port: 101
+            targetPort: 102
+            protocol: tcp
+            expose: true
+          - port: 102
+            targetPort: 103
+            protocol: tcp
+            expose: true
+  conditions:
+  - reason: Success
+    status: "True"
+    success: true
+    type: defined

@@ -1,0 +1,9 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: acorn-name
+  namespace: app-created-namespace
+spec:
+  clusterIP: 1.1.1.1
+  clusterIPs:
+    - 1::1

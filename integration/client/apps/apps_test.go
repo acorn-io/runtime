@@ -123,16 +123,6 @@ func TestAppUpdate(t *testing.T) {
 			"label1": "val1",
 			"label2": "val2",
 		},
-		Endpoints: []v1.EndpointBinding{
-			{
-				Target:   "ep-target1",
-				Hostname: "hostname1",
-			},
-			{
-				Target:   "ep-target2",
-				Hostname: "hostname2",
-			},
-		},
 		Volumes: []v1.VolumeBinding{
 			{
 				Volume:        "vol1",
@@ -182,16 +172,7 @@ func TestAppUpdate(t *testing.T) {
 			"label2": "val3",
 			"label3": "val3",
 		},
-		Endpoints: []v1.EndpointBinding{
-			{
-				Target:   "ep-target2",
-				Hostname: "hostname3",
-			},
-			{
-				Target:   "ep-target3",
-				Hostname: "hostname3",
-			},
-		},
+		PublishMode: v1.PublishModeNone,
 		Volumes: []v1.VolumeBinding{
 			{
 				Volume:        "vol3",
@@ -252,20 +233,7 @@ func TestAppUpdate(t *testing.T) {
 		labels.AcornManaged:       "true",
 	}, thirdApp.Labels)
 
-	assert.Equal(t, []v1.EndpointBinding{
-		{
-			Target:   "ep-target1",
-			Hostname: "hostname1",
-		},
-		{
-			Target:   "ep-target2",
-			Hostname: "hostname3",
-		},
-		{
-			Target:   "ep-target3",
-			Hostname: "hostname3",
-		},
-	}, thirdApp.Spec.Endpoints)
+	assert.Equal(t, v1.PublishModeNone, thirdApp.Spec.PublishMode)
 
 	zero, _ := resource.ParseQuantity("0")
 	assert.Equal(t, []v1.VolumeBinding{
@@ -449,12 +417,6 @@ func TestAppRun(t *testing.T) {
 		Name:        "",
 		Annotations: map[string]string{"akey": "avalue"},
 		Labels:      map[string]string{"lkey": "lvalue"},
-		Endpoints: []v1.EndpointBinding{
-			{
-				Target:   "target",
-				Hostname: "hostname",
-			},
-		},
 		Volumes: []v1.VolumeBinding{
 			{
 				Volume:        "volume",
@@ -470,6 +432,7 @@ func TestAppRun(t *testing.T) {
 		DeployArgs: map[string]interface{}{
 			"key": "value",
 		},
+		PublishMode: v1.PublishModeAll,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -477,7 +440,7 @@ func TestAppRun(t *testing.T) {
 
 	assert.Equal(t, ns.Name, app.Namespace)
 	assert.NotEqual(t, "", app.Name)
-	assert.Equal(t, "target", app.Spec.Endpoints[0].Target)
+	assert.Equal(t, v1.PublishModeAll, app.Spec.PublishMode)
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
 	assert.Equal(t, "secret", app.Spec.Secrets[0].Secret)
 	assert.Equal(t, "value", app.Spec.DeployArgs["key"])

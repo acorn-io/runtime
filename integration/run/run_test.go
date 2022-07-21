@@ -200,8 +200,8 @@ func TestPublishAcornHTTP(t *testing.T) {
 	}
 
 	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
-		Namespace:        ns.Name,
-		PublishProtocols: []v1.Protocol{v1.ProtocolTCP, v1.ProtocolHTTP},
+		Namespace:   ns.Name,
+		PublishMode: v1.PublishModeAll,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -284,7 +284,7 @@ func TestNested(t *testing.T) {
 	}
 
 	app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{
-		PublishProtocols: []v1.Protocol{v1.ProtocolHTTP, v1.ProtocolTCP},
+		PublishMode: v1.PublishModeAll,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -305,10 +305,13 @@ func TestNested(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Len(t, service.Spec.Ports, 3)
+	assert.Len(t, service.Spec.Ports, 4)
 	assert.False(t, service.Spec.Ports[0].Publish)
 	assert.False(t, service.Spec.Ports[1].Publish)
 	assert.True(t, service.Spec.Ports[2].Publish)
 	assert.Equal(t, int32(83), service.Spec.Ports[2].Port)
 	assert.Equal(t, int32(81), service.Spec.Ports[2].TargetPort)
+	assert.True(t, service.Spec.Ports[3].Publish)
+	assert.Equal(t, int32(82), service.Spec.Ports[3].Port)
+	assert.Equal(t, int32(81), service.Spec.Ports[3].TargetPort)
 }

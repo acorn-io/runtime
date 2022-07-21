@@ -3,7 +3,7 @@ apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
-  uid: 12345678ab
+  uid: 1234567890abcdef
 spec:
   image: test
 status:
@@ -16,11 +16,11 @@ status:
             image: "foo"
             ports:
               - port: 90
-                internalPort: 91
+                targetPort: 91
                 protocol: tcp
         ports:
         - port: 80
-          internalPort: 81
+          targetPort: 81
           protocol: http
         image: "image-name"
         build:

@@ -1,64 +1,120 @@
 package appdefinition
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	klabels "k8s.io/apimachinery/pkg/labels"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func serviceEndpoints(req router.Request, app *v1.AppInstance, containerName string) (endpoints []v1.Endpoint, _ error) {
-	service := &corev1.Service{}
-	err := req.Get(service, app.Status.Namespace, PublishServiceName(app, containerName))
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	} else if err != nil {
+func serviceEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
+	serviceList := &corev1.ServiceList{}
+	err := req.List(serviceList, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged:        "true",
+			labels.AcornServicePublish: "true",
+		}),
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	for _, port := range service.Spec.Ports {
-		var protocol v1.Protocol
-
-		switch port.Protocol {
-		case corev1.ProtocolTCP:
-			protocol = v1.ProtocolTCP
-		case corev1.ProtocolUDP:
-			protocol = v1.ProtocolTCP
-		default:
+	for _, service := range serviceList.Items {
+		containerName := service.Labels[labels.AcornContainerName]
+		if containerName == "" {
 			continue
 		}
 
-		for _, ingress := range service.Status.LoadBalancer.Ingress {
-			if ingress.Hostname != "" {
+		for _, port := range service.Spec.Ports {
+			var protocol v1.Protocol
+
+			switch port.Protocol {
+			case corev1.ProtocolTCP:
+				protocol = v1.ProtocolTCP
+			case corev1.ProtocolUDP:
+				protocol = v1.ProtocolTCP
+			default:
+				continue
+			}
+
+			for _, ingress := range service.Status.LoadBalancer.Ingress {
+				if ingress.Hostname != "" {
+					endpoints = append(endpoints, v1.Endpoint{
+						Target:     containerName,
+						TargetPort: port.TargetPort.IntVal,
+						Address:    fmt.Sprintf("%s:%d", ingress.Hostname, port.Port),
+						Protocol:   protocol,
+					})
+				} else if ingress.IP != "" {
+					endpoints = append(endpoints, v1.Endpoint{
+						Target:     containerName,
+						TargetPort: port.TargetPort.IntVal,
+						Address:    fmt.Sprintf("%s:%d", ingress.IP, port.Port),
+						Protocol:   protocol,
+					})
+				}
+			}
+
+			if len(service.Status.LoadBalancer.Ingress) == 0 {
 				endpoints = append(endpoints, v1.Endpoint{
 					Target:     containerName,
 					TargetPort: port.TargetPort.IntVal,
-					Address:    fmt.Sprintf("%s:%d", ingress.Hostname, port.Port),
+					Address:    fmt.Sprintf("<pending>:%d", port.Port),
 					Protocol:   protocol,
-				})
-			} else if ingress.IP != "" {
-				endpoints = append(endpoints, v1.Endpoint{
-					Target:     containerName,
-					TargetPort: port.TargetPort.IntVal,
-					Address:    fmt.Sprintf("%s:%d", ingress.IP, port.Port),
-					Protocol:   protocol,
+					Pending:    true,
 				})
 			}
 		}
+	}
 
-		if len(service.Status.LoadBalancer.Ingress) == 0 {
+	return
+}
+
+func ingressEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
+	ingressList := &networkingv1.IngressList{}
+	err := req.List(ingressList, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged: "true",
+		}),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ingress := range ingressList.Items {
+		targetStr := ingress.Annotations[labels.AcornTargets]
+		if targetStr == "" {
+			return nil, err
+		}
+
+		targets := map[string]publish.Target{}
+		if err := json.Unmarshal([]byte(targetStr), &targets); err != nil {
+			return nil, err
+		}
+
+		for _, entry := range typed.Sorted(targets) {
+			hostname, target := entry.Key, entry.Value
+			hostnameOverride := ingress.Annotations[labels.AcornPublishURL]
+			if hostnameOverride != "" {
+				hostname = hostnameOverride
+			}
+
 			endpoints = append(endpoints, v1.Endpoint{
-				Target:     containerName,
-				TargetPort: port.TargetPort.IntVal,
-				Address:    fmt.Sprintf("<pending>:%d", port.Port),
-				Protocol:   protocol,
+				Target:     target.Service,
+				TargetPort: target.Port,
+				Address:    hostname,
+				Protocol:   v1.ProtocolHTTP,
+				Pending:    len(ingress.Status.LoadBalancer.Ingress) == 0,
 			})
 		}
 	}
@@ -66,72 +122,19 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance, containerName str
 	return
 }
 
-func ingressEndpoints(req router.Request, app *v1.AppInstance, containerName string) (endpoints []v1.Endpoint, _ error) {
-	ingress := &networkingv1.Ingress{}
-	err := req.Get(ingress, app.Status.Namespace, containerName)
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	} else if err != nil {
-		return nil, err
-	}
-
-	portnum := ingress.Annotations[labels.AcornPortNumber]
-	if portnum == "" {
-		return nil, nil
-	}
-
-	port, err := strconv.Atoi(portnum)
-	if err != nil {
-		return nil, fmt.Errorf("parsing %s for container %s on %s/%s", portnum, containerName,
-			app.Namespace, app.Name)
-	}
-
-	hostnames := ingress.Annotations[labels.AcornPublishURL]
-	if hostnames == "" {
-		hostnames = ingress.Annotations[labels.AcornHostnames]
-	}
-
-	for _, hostname := range strings.Split(hostnames, ",") {
-		hostname = strings.TrimSpace(hostname)
-		if hostname == "" {
-			continue
-		}
-
-		endpoints = append(endpoints, v1.Endpoint{
-			Target:     containerName,
-			TargetPort: int32(port),
-			Address:    hostname,
-			Protocol:   v1.ProtocolHTTP,
-		})
-	}
-
-	return
-}
-
 func AppEndpointsStatus(req router.Request, _ router.Response) error {
-	var (
-		app       = req.Object.(*v1.AppInstance)
-		endpoints []v1.Endpoint
-	)
+	app := req.Object.(*v1.AppInstance)
 
-	for _, entry := range typed.Sorted(app.Status.AppSpec.Containers) {
-		containerName, _ := entry.Key, entry.Value
-
-		ingressEndpoints, err := ingressEndpoints(req, app, containerName)
-		if err != nil {
-			return err
-		}
-
-		endpoints = append(endpoints, ingressEndpoints...)
-
-		serviceEndpoints, err := serviceEndpoints(req, app, containerName)
-		if err != nil {
-			return err
-		}
-
-		endpoints = append(endpoints, serviceEndpoints...)
+	ingressEndpoints, err := ingressEndpoints(req, app)
+	if err != nil {
+		return err
 	}
 
-	app.Status.Endpoints = endpoints
+	serviceEndpoints, err := serviceEndpoints(req, app)
+	if err != nil {
+		return err
+	}
+
+	app.Status.Endpoints = append(ingressEndpoints, serviceEndpoints...)
 	return nil
 }

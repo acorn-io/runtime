@@ -15,15 +15,16 @@ import (
 )
 
 var (
-	ClusterDomainDefault = ".local.on-acorn.io"
+	ClusterDomainDefault         = ".local.on-acorn.io"
+	InternalClusterDomainDefault = "svc.cluster.local"
 )
 
 func complete(c *apiv1.Config) {
 	if c.TLSEnabled == nil {
 		c.TLSEnabled = new(bool)
 	}
-	if len(c.PublishProtocolsByDefault) == 0 {
-		c.PublishProtocolsByDefault = []string{string(v1.ProtocolHTTP)}
+	if len(c.DefaultPublishMode) == 0 {
+		c.DefaultPublishMode = v1.PublishModeDefined
 	}
 	if c.SetPodSecurityEnforceProfile == nil {
 		c.SetPodSecurityEnforceProfile = &[]bool{true}[0]
@@ -33,6 +34,9 @@ func complete(c *apiv1.Config) {
 	}
 	if len(c.ClusterDomains) == 0 {
 		c.ClusterDomains = []string{ClusterDomainDefault}
+	}
+	if c.InternalClusterDomain == "" {
+		c.InternalClusterDomain = InternalClusterDomainDefault
 	}
 }
 
@@ -60,15 +64,16 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.PodSecurityEnforceProfile != "" {
 		mergedConfig.PodSecurityEnforceProfile = newConfig.PodSecurityEnforceProfile
 	}
+	if newConfig.InternalClusterDomain != "" {
+		mergedConfig.InternalClusterDomain = newConfig.InternalClusterDomain
+	}
 	if len(newConfig.ClusterDomains) > 0 && newConfig.ClusterDomains[0] == "" {
 		mergedConfig.ClusterDomains = nil
 	} else if len(newConfig.ClusterDomains) > 0 {
 		mergedConfig.ClusterDomains = newConfig.ClusterDomains
 	}
-	if len(newConfig.PublishProtocolsByDefault) > 0 && newConfig.PublishProtocolsByDefault[0] == "" {
-		mergedConfig.PublishProtocolsByDefault = nil
-	} else if len(newConfig.PublishProtocolsByDefault) > 0 {
-		mergedConfig.PublishProtocolsByDefault = newConfig.PublishProtocolsByDefault
+	if len(newConfig.DefaultPublishMode) > 0 {
+		mergedConfig.DefaultPublishMode = newConfig.DefaultPublishMode
 	}
 
 	return &mergedConfig

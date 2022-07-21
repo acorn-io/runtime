@@ -8,31 +8,6 @@ import (
 	"strings"
 )
 
-#ToExposePort: {
-	IN="in": v1.#Port
-	out:     v1.#PortSpec
-	out:     {#ToPort & {in: IN}}.out & {
-		expose: true
-	}
-}
-
-#ToAppExposePort: {
-	IN="in": v1.#AppPort
-	out:     v1.#AppPortSpec
-	out:     {#ToAppPort & {in: IN}}.out & {
-		expose: true
-	}
-}
-
-#CombinePorts: {
-	IN="in": {
-		ports: [...v1.#PortSpec]
-		expose: [...v1.#PortSpec]
-	}
-	out: [...v1.#PortSpec]
-	out: IN.ports + IN.expose
-}
-
 #ToKVSplit: {
 	IN="in": string
 	out: {
@@ -50,54 +25,6 @@ import (
 			value: parts[1]
 		}
 
-	}
-}
-
-#ToAppPort: {
-	IN="in": v1.#AppPort
-	out:     v1.#AppPortSpec
-	_inStr:  string
-	_inInt:  int & IN
-	if _inInt != _|_ {
-		_inStr: strconv.FormatInt(IN, 10)
-	}
-	if !( _inInt != _|_ ) {
-		_inStr: IN
-	}
-	out: IN | {
-		_portProto: strings.SplitN(_inStr, "/", 2)
-		if len(_portProto) == 2 {
-			protocol: _portProto[1]
-		}
-		_portPubPrivate: strings.SplitN(_portProto[0], ":", 2)
-		port:            strconv.ParseInt(_portPubPrivate[0], 10, 32)
-		if len(_portPubPrivate) == 2 {
-			internalPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
-		}
-	}
-}
-
-#ToPort: {
-	IN="in": v1.#Port
-	out:     v1.#PortSpec
-	_inStr:  string
-	_inInt:  int & IN
-	if _inInt != _|_ {
-		_inStr: strconv.FormatInt(IN, 10)
-	}
-	if !( _inInt != _|_ ) {
-		_inStr: IN
-	}
-	out: IN | {
-		_portProto: strings.SplitN(_inStr, "/", 2)
-		if len(_portProto) == 2 {
-			protocol: _portProto[1]
-		}
-		_portPubPrivate: strings.SplitN(_portProto[0], ":", 2)
-		port:            strconv.ParseInt(_portPubPrivate[0], 10, 32)
-		if len(_portPubPrivate) == 2 {
-			internalPort: strconv.ParseInt(_portPubPrivate[1], 10, 32)
-		}
 	}
 }
 
@@ -320,9 +247,6 @@ import (
 		if IN.container["schedule"] != _|_ {
 			schedule: IN.container.schedule
 		}
-		if IN.container["alias"] != _|_ {
-			alias: {name: IN.container.alias}
-		}
 		entrypoint: IN.container.entrypoint | strings.Split(IN.container.entrypoint, " ")
 		for x in ["command", "cmd"] {
 			if IN.container[x] != _|_ {
@@ -372,33 +296,7 @@ import (
 			}
 		}
 
-		ports: {
-			if (IN.container["ports"] & int) != _|_ {
-				[{#ToPort & {in: IN.container.ports}}.out]
-			}
-			if (IN.container["ports"] & string) != _|_ {
-				[{#ToPort & {in: IN.container.ports}}.out]
-			}
-			if !((IN.container["ports"] & string) != _|_ ) &&
-				!((IN.container["ports"] & int) != _|_ ) {
-				[ for p in IN.container.ports {
-					{#ToPort & {in: p}}.out
-				}]
-			}
-		} + {
-			if (IN.container["expose"] & int) != _|_ {
-				[{#ToExposePort & {in: IN.container.expose}}.out]
-			}
-			if (IN.container["expose"] & string) != _|_ {
-				[{#ToExposePort & {in: IN.container.expose}}.out]
-			}
-			if !((IN.container["expose"] & string) != _|_ ) &&
-				!((IN.container["expose"] & int) != _|_) {
-				[ for p in IN.container.expose {
-					{#ToExposePort & {in: p}}.out
-				}]
-			}
-		}
+		ports: (#ToPorts & {in: IN.container.ports}).out
 
 		for x in ["depends_on", "dependsOn", "dependson"] {
 			if (IN.container[x] & string) != _|_ {
@@ -457,33 +355,7 @@ import (
 		volumes: [ for v in IN.volumes {{#ToVolumeBinding & {in: v}}.out}]
 		secrets: [ for v in IN.secrets {{#ToSecretBinding & {in: v}}.out}]
 		services: [ for v in IN.links {{#ToServiceBinding & {in: v}}.out}]
-		ports: {
-			if (IN["ports"] & int) != _|_ {
-				[{#ToAppPort & {in: IN.ports}}.out]
-			}
-			if (IN["ports"] & string) != _|_ {
-				[{#ToAppPort & {in: IN.ports}}.out]
-			}
-			if !((IN["ports"] & string) != _|_ ) &&
-				!((IN["ports"] & int) != _|_ ) {
-				[ for p in IN.ports {
-					{#ToAppPort & {in: p}}.out
-				}]
-			}
-		} + {
-			if (IN["expose"] & int) != _|_ {
-				[{#ToAppExposePort & {in: IN.expose}}.out]
-			}
-			if (IN["expose"] & string) != _|_ {
-				[{#ToAppExposePort & {in: IN.expose}}.out]
-			}
-			if !((IN["expose"] & string) != _|_ ) &&
-				!((IN["expose"] & int) != _|_) {
-				[ for p in IN.expose {
-					{#ToAppExposePort & {in: p}}.out
-				}]
-			}
-		}
+		ports:       {#ToPorts & {in: IN.ports}}.out
 		permissions: IN.permissions
 	}
 }

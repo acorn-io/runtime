@@ -39,14 +39,9 @@ package v1
 	failureThreshold:    uint32 | *3
 }
 
-#AliasSpec: {
-	name: string
-}
-
 #ContainerSpec: {
 	#ContainerBaseSpec
 	scale?: >=0
-	alias?: #AliasSpec
 	sidecars: [string]: #SidecarSpec
 }
 
@@ -167,7 +162,7 @@ package v1
 #AcornSpec: {
 	image?: string
 	build?: #AcornBuildSpec
-	ports: [...#AppPortSpec]
+	ports: [...#PortSpec]
 	volumes: [...#VolumeBinding]
 	secrets: [...#SecretBinding]
 	services: [...#ServiceBinding]
@@ -187,16 +182,12 @@ package v1
 	acorns: [string]:     #AcornSpec
 }
 
-#AppPortSpec: {
-	expose:       bool | *false
-	port:         int
-	internalPort: int | *port
-	protocol:     *"tcp" | "udp" | "http" | "https"
-}
-
 #PortSpec: {
-	expose:       bool | *false
-	port:         int
-	internalPort: int | *port
-	protocol:     *"tcp" | "udp" | "http" | "https"
+	publish:           bool | *false
+	expose:            bool | *false
+	port:              int | *targetPort
+	targetPort:        int
+	targetServiceName: string | *""
+	serviceName:       string | *""
+	protocol:          *"" | "tcp" | "udp" | "http"
 }

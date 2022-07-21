@@ -1,12 +1,26 @@
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
-  uid: 1234567890ab
+  uid: 1234567890abcdef
   name: app-name
   namespace: app-namespace
 spec:
-  publishAllPorts: true
   image: test
+  ports:
+  - port: 80
+    targetPort: 81
+    protocol: http
+    expose: true
+  - port: 90
+    targetPort: 91
+    protocol: tcp
+    expose: true
+  - port: 100
+    serviceName: local-service
+    targetPort: 102
+    protocol: tcp
+    expose: true
+    publish: true
 status:
   namespace: app-created-namespace
   appSpec:
@@ -14,11 +28,18 @@ status:
       acorn-name:
         image: "foo"
         ports:
-          - port: 80
-            internalPort: 81
+          - port: 81
+            targetPort: 82
             protocol: http
+          - port: 91
+            targetPort: 92
+            protocol: tcp
+            publish: true
+          - port: 101
+            targetPort: 102
+            protocol: tcp
             expose: true
-          - port: 90
-            internalPort: 91
+          - port: 102
+            targetPort: 103
             protocol: tcp
             expose: true

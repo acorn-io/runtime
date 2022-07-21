@@ -1,8 +1,8 @@
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
-  uid: 12345678-blah
+  uid: 1234567890abcdef
   name: default
   namespace: random
 status:
-  namespace: default-12345678
+  namespace: default-1234567890ab

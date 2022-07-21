@@ -23,7 +23,6 @@ package v1
 #Container: {
 	#ContainerBase
 	scale?: >=0
-	alias?: string
 	sidecars: [string]: #Sidecar
 }
 
@@ -35,6 +34,12 @@ package v1
 
 #ProbeMap: {
 	[=~"ready|readiness|liveness|startup"]: string | #ProbeSpec
+}
+
+#PortMap: {
+	internal: #PortSingle | *[...#Port]
+	expose:   #PortSingle | *[...#Port]
+	publish:  #PortSingle | *[...#Port]
 }
 
 #Probes: string | #ProbeMap | [...#ProbeSpec]
@@ -52,8 +57,7 @@ package v1
 	[=~"env|environment"]:          #EnvVars
 	[=~"work[dD]ir|working[dD]ir"]: string | *""
 	[=~"interactive|tty|stdin"]:    bool | *false
-	ports:                          #Port | *[...#Port]
-	expose:                         #Port | *[...#Port]
+	ports:                          #PortSingle | *[...#Port] | #PortMap
 	[=~"probes|probe"]:             #Probes
 	[=~"depends[oO]n|depends_on"]:  string | *[...string]
 	permissions: {
@@ -72,9 +76,9 @@ package v1
 // #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef | #SecretRef
 #Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*(.onchange=(redploy|no-action))?$"
 
-#Port: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #PortSpec
-
-#AppPort: (>0 & <65536) | =~"([0-9]+:)?[0-9]+(/(tcp|udp|http|https))?" | #AppPortSpec
+#PortSingle: (>0 & <65536) | =~PortRegexp
+#Port:       (>0 & <65536) | =~PortRegexp | #PortSpec
+PortRegexp:  #"^(?P<serviceName>[a-z][-a-z0-9]+:)?(?P<port>[0-9]+:)?(?P<targetServiceName>[a-z][-a-z0-9]+:)?(?P<targetPort>[0-9]+)(?P<proto>/(tcp|udp|http))?$"#
 
 #Image: {
 	image:  string
@@ -171,8 +175,7 @@ package v1
 #Acorn: {
 	image?: string
 	build?: string | #AcornBuild
-	ports:  #AppPort | *[...#AppPort]
-	expose: #AppPort | *[...#AppPort]
+	ports:  #PortSingle | *[...#Port] | #PortMap
 	volumes: [...string]
 	secrets: [...string]
 	links: [...string]
@@ -198,9 +201,6 @@ package v1
 	_keysMustBeUniqueAcrossTypes: {
 		for k, v in containers {
 			"\(k)": "container"
-			if v["alias"] != _|_ {
-				"\(v.alias)": "alias"
-			}
 		}
 		for k, v in jobs {
 			"\(k)": "job"

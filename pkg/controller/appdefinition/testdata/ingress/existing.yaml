@@ -6,5 +6,5 @@ kind: Secret
 metadata:
   name: test-tls
   namespace: app-namespace
-  uid: 1234567890abc
+  uid: 1234567890abcdef
 type: kubernetes.io/tls

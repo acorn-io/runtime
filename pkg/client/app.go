@@ -31,17 +31,16 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				Labels:      opts.Labels,
 			},
 			Spec: v1.AppInstanceSpec{
-				Image:            image,
-				Endpoints:        opts.Endpoints,
-				DeployArgs:       opts.DeployArgs,
-				Volumes:          opts.Volumes,
-				Secrets:          opts.Secrets,
-				Services:         opts.Services,
-				PublishProtocols: opts.PublishProtocols,
-				Ports:            opts.Ports,
-				Profiles:         opts.Profiles,
-				DevMode:          opts.DevMode,
-				Permissions:      opts.Permissions,
+				Image:       image,
+				PublishMode: opts.PublishMode,
+				DeployArgs:  opts.DeployArgs,
+				Volumes:     opts.Volumes,
+				Secrets:     opts.Secrets,
+				Services:    opts.Services,
+				Ports:       opts.Ports,
+				Profiles:    opts.Profiles,
+				DevMode:     opts.DevMode,
+				Permissions: opts.Permissions,
 			},
 		}
 	)
@@ -78,18 +77,17 @@ func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Annotations = typed.Concat(app.Annotations, opts.Annotations)
 	app.Spec.Volumes = mergeVolumes(app.Spec.Volumes, opts.Volumes)
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
-	app.Spec.Endpoints = mergeEndpoints(app.Spec.Endpoints, opts.Endpoints)
 	app.Spec.Services = mergeServices(app.Spec.Services, opts.Services)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
-	if len(opts.PublishProtocols) > 0 {
-		app.Spec.PublishProtocols = opts.PublishProtocols
-	}
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles
 	}
 	if opts.DevMode != nil {
 		app.Spec.DevMode = opts.DevMode
+	}
+	if opts.PublishMode != "" {
+		app.Spec.PublishMode = opts.PublishMode
 	}
 	if opts.Permissions != nil {
 		app.Spec.Permissions = opts.Permissions
@@ -196,24 +194,6 @@ func mergeServices(appServices, optsServices []v1.ServiceBinding) []v1.ServiceBi
 	}
 
 	return appServices
-}
-
-func mergeEndpoints(appEndpoints, optsEndpoints []v1.EndpointBinding) []v1.EndpointBinding {
-	for _, newEndpoint := range optsEndpoints {
-		found := false
-		for i, existingEndpoint := range appEndpoints {
-			if existingEndpoint.Target == newEndpoint.Target {
-				appEndpoints[i] = newEndpoint
-				found = true
-				break
-			}
-		}
-		if !found {
-			appEndpoints = append(appEndpoints, newEndpoint)
-		}
-	}
-
-	return appEndpoints
 }
 
 func mergeSecrets(appSecrets, optsSecrets []v1.SecretBinding) []v1.SecretBinding {

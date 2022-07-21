@@ -13,7 +13,7 @@ func AssignNamespace(req router.Request, resp router.Response) error {
 		return nil
 	}
 
-	appInstance.Status.Namespace = name.SafeConcatName(appInstance.Name, string(appInstance.UID)[:8])
+	appInstance.Status.Namespace = name.SafeConcatName(appInstance.Name, appInstance.ShortID())
 	resp.Objects(appInstance)
 	return nil
 }

@@ -241,7 +241,53 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		}
 	}
 
-	return spec, nil
+	return spec, nameValidation(spec)
+}
+
+func nameValidation(spec *v1.AppSpec) error {
+	names := map[string][]string{}
+	for name, container := range spec.Containers {
+		names[name] = append(names[name], "container")
+		for _, port := range container.Ports {
+			if port.ServiceName != "" && port.ServiceName != name {
+				names[port.ServiceName] = append(names[port.ServiceName], "port")
+			}
+		}
+		for _, sidecar := range container.Sidecars {
+			for _, port := range sidecar.Ports {
+				if port.ServiceName != "" && port.ServiceName != name {
+					names[port.ServiceName] = append(names[port.ServiceName], "port")
+				}
+			}
+		}
+	}
+	for name := range spec.Jobs {
+		names[name] = append(names[name], "job")
+	}
+	for name, acorn := range spec.Acorns {
+		names[name] = append(names[name], "acorn")
+		for _, port := range acorn.Ports {
+			if port.ServiceName != "" && port.ServiceName != name {
+				names[port.ServiceName] = append(names[port.ServiceName], "port")
+			}
+		}
+	}
+
+	for name, names := range names {
+		last := ""
+		for _, next := range names {
+			if last == "" {
+				last = next
+			}
+			if last != next {
+				parts := []string{last, next}
+				sort.Strings(parts)
+				return fmt.Errorf("duplicate name [%s] used as both %s and %s identifier", name, parts[0], parts[1])
+			}
+		}
+	}
+
+	return nil
 }
 
 func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerImageBuilderSpec, cwd string) {

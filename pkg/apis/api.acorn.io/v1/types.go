@@ -314,12 +314,13 @@ type Config struct {
 	// Do not set omitEmpty on the json fields.  Also make strings and bool a
 	// pointer unless the default value (false, "") is not a valid configuration
 
-	IngressClassName             *string  `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
-	ClusterDomains               []string `json:"clusterDomains" usage:"The externally addressable cluster domain (default .local.on-acorn.io)"`
-	TLSEnabled                   *bool    `json:"tlsEnabled" name:"tls-enabled" usage:"If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)"`
-	SetPodSecurityEnforceProfile *bool    `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
-	PodSecurityEnforceProfile    string   `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
-	PublishProtocolsByDefault    []string `json:"publishProtocolsByDefault" usage:"If no port binding settings exist choose the default protocols to publish (default http)"`
+	IngressClassName             *string        `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
+	ClusterDomains               []string       `json:"clusterDomains" usage:"The externally addressable cluster domain (default .local.on-acorn.io)"`
+	TLSEnabled                   *bool          `json:"tlsEnabled" name:"tls-enabled" usage:"If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)"`
+	SetPodSecurityEnforceProfile *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
+	PodSecurityEnforceProfile    string         `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
+	DefaultPublishMode           v1.PublishMode `json:"defaultPublishMode" usage:"If no publish mode is set default to this value (default user)" wrangler:"nullable,options=all|none|defined"`
+	InternalClusterDomain        string         `json:"internalClusterDomain" usage:"The Kubernetes internal cluster domain (default svc.cluster.local)" wrangler:"nullable"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
