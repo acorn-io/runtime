@@ -1,16 +1,15 @@
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
-  uid: 01234567890abcdef
+  uid: 1234567890abcdef
   name: app-name
   namespace: app-namespace
 spec:
   image: test
-  publishProtocols:
-  - "all"
-  endpoints:
-  - target: oneimage
-    hostname: localhost
+  ports:
+  - serviceName: localhost
+    publish: true
+    targetServiceName: oneimage
 status:
   namespace: app-created-namespace
   appSpec:
@@ -21,13 +20,13 @@ status:
             image: "foo"
             ports:
               - port: 90
-                internalPort: 91
+                targetPort: 91
                 protocol: tcp
-                expose: true
+                publish: true
         ports:
         - port: 80
-          internalPort: 81
-          expose: true
+          targetPort: 81
+          publish: true
           protocol: http
         image: "image-name"
         build:
@@ -36,12 +35,12 @@ status:
       buildimage:
         ports:
           - port: 80
-            internalPort: 81
-            expose: true
+            targetPort: 81
+            publish: true
             protocol: http
           - port: 443
-            internalPort: 91
-            expose: true
+            targetPort: 91
+            publish: true
             protocol: tcp
         image: "sha256:build-image"
         build:

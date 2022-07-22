@@ -30,7 +30,6 @@ acorn [flags]
 * [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
 * [acorn container](acorn_container.md)	 - List or get running containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
-* [acorn dashboard](acorn_dashboard.md)	 - Dashboard about acorn installation
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
 * [acorn image](acorn_image.md)	 - List images
 * [acorn info](acorn_info.md)	 - Info about acorn installation

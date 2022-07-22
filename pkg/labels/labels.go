@@ -1,35 +1,40 @@
 package labels
 
-import v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+import (
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"golang.org/x/exp/maps"
+)
 
 const (
-	Prefix               = "acorn.io/"
-	AcornAppGeneration   = Prefix + "app-generation"
-	AcornAppNamespace    = Prefix + "app-namespace"
-	AcornAppName         = Prefix + "app-name"
-	AcornAcornName       = Prefix + "acorn-name"
-	AcornDepNames        = Prefix + "dep-names"
-	AcornAppUID          = Prefix + "app-uid"
-	AcornVolumeName      = Prefix + "volume-name"
-	AcornSecretName      = Prefix + "secret-name"
-	AcornSecretGenerated = Prefix + "secret-generated"
-	AcornContainerName   = Prefix + "container-name"
-	AcornJobName         = Prefix + "job-name"
-	AcornAppImage        = Prefix + "app-image"
-	AcornAppCuePath      = Prefix + "app-cue-path"
-	AcornAppCuePathHash  = Prefix + "app-cue-path-hash"
-	AcornManaged         = Prefix + "managed"
-	AcornContainerSpec   = Prefix + "container-spec"
-	AcornImageMapping    = Prefix + "image-mapping"
-	AcornPortNumber      = Prefix + "port-number"
-	AcornHostnames       = Prefix + "hostnames"
-	AcornAlias           = "alias." + Prefix
-	AcornCredential      = Prefix + "credential"
-	AcornPullSecret      = Prefix + "pull-secret"
-	AcornSecretRevPrefix = "secret-rev." + Prefix
-	AcornRootNamespace   = Prefix + "root-namespace"
-	AcornRootPrefix      = Prefix + "root-prefix"
-	AcornPublishURL      = Prefix + "publish-url"
+	Prefix                 = "acorn.io/"
+	AcornAppGeneration     = Prefix + "app-generation"
+	AcornAppNamespace      = Prefix + "app-namespace"
+	AcornAppName           = Prefix + "app-name"
+	AcornAcornName         = Prefix + "acorn-name"
+	AcornServiceName       = Prefix + "service-name"
+	AcornServicePublish    = Prefix + "service-publish"
+	AcornServiceNamePrefix = "service-name." + Prefix
+	AcornDepNames          = Prefix + "dep-names"
+	AcornAppUID            = Prefix + "app-uid"
+	AcornVolumeName        = Prefix + "volume-name"
+	AcornSecretName        = Prefix + "secret-name"
+	AcornSecretGenerated   = Prefix + "secret-generated"
+	AcornContainerName     = Prefix + "container-name"
+	AcornJobName           = Prefix + "job-name"
+	AcornAppImage          = Prefix + "app-image"
+	AcornAppCuePath        = Prefix + "app-cue-path"
+	AcornAppCuePathHash    = Prefix + "app-cue-path-hash"
+	AcornManaged           = Prefix + "managed"
+	AcornContainerSpec     = Prefix + "container-spec"
+	AcornImageMapping      = Prefix + "image-mapping"
+	AcornPortNumberPrefix  = "port-number." + Prefix
+	AcornCredential        = Prefix + "credential"
+	AcornPullSecret        = Prefix + "pull-secret"
+	AcornSecretRevPrefix   = "secret-rev." + Prefix
+	AcornRootNamespace     = Prefix + "root-namespace"
+	AcornRootPrefix        = Prefix + "root-prefix"
+	AcornPublishURL        = Prefix + "publish-url"
+	AcornTargets           = Prefix + "targets"
 )
 
 func RootPrefix(parentLabels map[string]string, name string) string {
@@ -40,6 +45,15 @@ func RootPrefix(parentLabels map[string]string, name string) string {
 		prefix += "." + name
 	}
 	return prefix
+}
+
+func Merge(base, overlay map[string]string) map[string]string {
+	result := maps.Clone(base)
+	if result == nil {
+		result = map[string]string{}
+	}
+	maps.Copy(result, overlay)
+	return result
 }
 
 func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {

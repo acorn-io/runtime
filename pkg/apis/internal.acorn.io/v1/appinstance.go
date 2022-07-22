@@ -38,19 +38,34 @@ type AppInstance struct {
 	Status AppInstanceStatus `json:"status,omitempty"`
 }
 
+func (in AppInstance) ShortID() string {
+	if len(in.UID) > 11 {
+		return string(in.UID[:12])
+	}
+	return string(in.UID)
+}
+
+type PublishMode string
+
+const (
+	PublishModeAll     = PublishMode("all")
+	PublishModeNone    = PublishMode("none")
+	PublishModeDefined = PublishMode("defined")
+)
+
 type AppInstanceSpec struct {
-	Image            string            `json:"image,omitempty"`
-	Stop             *bool             `json:"stop,omitempty"`
-	DevMode          *bool             `json:"devMode,omitempty"`
-	Profiles         []string          `json:"profiles,omitempty"`
-	Volumes          []VolumeBinding   `json:"volumes,omitempty"`
-	Secrets          []SecretBinding   `json:"secrets,omitempty"`
-	Endpoints        []EndpointBinding `json:"endpoints,omitempty"`
-	Services         []ServiceBinding  `json:"services,omitempty"`
-	PublishProtocols []Protocol        `json:"publishProtocols,omitempty"`
-	Ports            []PortBinding     `json:"ports,omitempty"`
-	DeployArgs       GenericMap        `json:"deployArgs,omitempty"`
-	Permissions      *Permissions      `json:"permissions,omitempty"`
+	Image       string          `json:"image,omitempty"`
+	Stop        *bool           `json:"stop,omitempty"`
+	DevMode     *bool           `json:"devMode,omitempty"`
+	Profiles    []string        `json:"profiles,omitempty"`
+	Volumes     []VolumeBinding `json:"volumes,omitempty"`
+	Secrets     []SecretBinding `json:"secrets,omitempty"`
+	PublishMode PublishMode     `json:"publishMode,omitempty"`
+
+	Services    []ServiceBinding `json:"services,omitempty"`
+	Ports       []PortBinding    `json:"ports,omitempty"`
+	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
+	Permissions *Permissions     `json:"permissions,omitempty"`
 }
 
 func (in AppInstanceSpec) GetDevMode() bool {
@@ -60,11 +75,6 @@ func (in AppInstanceSpec) GetDevMode() bool {
 type ServiceBinding struct {
 	Target  string `json:"target,omitempty"`
 	Service string `json:"service,omitempty"`
-}
-
-type EndpointBinding struct {
-	Target   string `json:"target,omitempty"`
-	Hostname string `json:"hostname,omitempty"`
 }
 
 type SecretBinding struct {
@@ -130,6 +140,7 @@ type Endpoint struct {
 	TargetPort int32    `json:"targetPort,omitempty"`
 	Address    string   `json:"address,omitempty"`
 	Protocol   Protocol `json:"protocol,omitempty"`
+	Pending    bool     `json:"pending,omitempty"`
 }
 
 func (in *AppInstanceStatus) Condition(name string) Condition {

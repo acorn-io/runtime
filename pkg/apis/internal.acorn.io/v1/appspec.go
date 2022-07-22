@@ -1,6 +1,11 @@
 package v1
 
-import rbacv1 "k8s.io/api/rbac/v1"
+import (
+	"fmt"
+	"strings"
+
+	rbacv1 "k8s.io/api/rbac/v1"
+)
 
 const (
 	VolumeRequestTypeEphemeral = "ephemeral"
@@ -49,22 +54,87 @@ var (
 	ProtocolTCP  = Protocol("tcp")
 	ProtocolUDP  = Protocol("udp")
 	ProtocolHTTP = Protocol("http")
-	ProtocolAll  = Protocol("all")
-	ProtocolNone = Protocol("none")
 )
 
 type PortBinding struct {
-	Port       int32    `json:"port,omitempty" wrangler:"required"`
-	TargetPort int32    `json:"targetPort,omitempty" wrangler:"required"`
-	Protocol   Protocol `json:"protocol,omitempty" wrangler:"required"`
-	Publish    bool     `json:"publish,omitempty"`
+	Expose            bool     `json:"expose,omitempty"`
+	Port              int32    `json:"port,omitempty" wrangler:"required"`
+	Protocol          Protocol `json:"protocol,omitempty"`
+	Publish           bool     `json:"publish,omitempty"`
+	ServiceName       string   `json:"serviceName,omitempty"`
+	TargetPort        int32    `json:"targetPort,omitempty"`
+	TargetServiceName string   `json:"targetServiceName,omitempty"`
+}
+
+func (in PortBinding) Complete(serviceName string) PortBinding {
+	if in.ServiceName == "" {
+		in.ServiceName = serviceName
+	}
+	if in.TargetPort == 0 {
+		in.TargetPort = in.Port
+	}
+	return in
 }
 
 type PortDef struct {
-	Port         int32    `json:"port,omitempty"`
-	InternalPort int32    `json:"internalPort,omitempty"`
-	Protocol     Protocol `json:"protocol,omitempty" wrangler:"required"`
-	Expose       bool     `json:"expose,omitempty"`
+	Expose      bool     `json:"expose,omitempty"`
+	Port        int32    `json:"port,omitempty" wrangler:"required"`
+	Protocol    Protocol `json:"protocol,omitempty"`
+	Publish     bool     `json:"publish,omitempty"`
+	ServiceName string   `json:"serviceName,omitempty"`
+	TargetPort  int32    `json:"targetPort,omitempty"`
+	// TargetServiceName is only used in portDefs for acorns, not containers
+	TargetServiceName string `json:"targetServiceName,omitempty"`
+}
+
+func (in PortDef) String() string {
+	in = in.Complete(in.ServiceName)
+	buf := &strings.Builder{}
+	if in.ServiceName != "" {
+		buf.WriteString(in.ServiceName)
+	}
+	if in.Port != in.TargetPort {
+		if buf.Len() > 0 {
+			buf.WriteString(":")
+		}
+		buf.WriteString(fmt.Sprint(in.Port))
+	}
+	if in.TargetServiceName != "" {
+		if buf.Len() > 0 {
+			buf.WriteString(":")
+		}
+		buf.WriteString(in.TargetServiceName)
+	}
+	if buf.Len() > 0 {
+		buf.WriteString(":")
+	}
+	buf.WriteString(fmt.Sprint(in.TargetPort))
+	buf.WriteString("/")
+	buf.WriteString(string(in.Protocol))
+
+	if in.Expose {
+		buf.WriteString(",expose")
+	}
+	if in.Publish {
+		buf.WriteString(",publish")
+	}
+	return buf.String()
+}
+
+func (in PortDef) Complete(serviceName string) PortDef {
+	if in.ServiceName == "" && serviceName != "" {
+		in.ServiceName = serviceName
+	}
+	if in.TargetPort == 0 {
+		in.TargetPort = in.Port
+	}
+	if in.Port == 0 {
+		in.Port = in.TargetPort
+	}
+	if in.Protocol == "" {
+		in.Protocol = ProtocolTCP
+	}
+	return in
 }
 
 type FileSecret struct {
@@ -180,9 +250,6 @@ type Container struct {
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
-
-	// Alias is only available on containers, not sidecars or jobs
-	Alias Alias `json:"alias,omitempty"`
 
 	// Schedule is only available on jobs
 	Schedule string `json:"schedule,omitempty"`

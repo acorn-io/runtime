@@ -18,7 +18,6 @@ var (
 	APIServerName  = "acorn-api"
 	BuildkitPort   = 8080
 	KlipperLBImage = "rancher/klipper-lb:v0.3.4"
-	ClusterDomain  = "svc.cluster.local"
 	IndexURL       = "https://cdn.acrn.io/ui/latest/index.html"
 )
 

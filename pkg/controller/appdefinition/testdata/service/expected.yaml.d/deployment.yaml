@@ -1,0 +1,103 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+        "service-name.acorn.io/oneimage": "true"
+        "port-number.acorn.io/91": "true"
+        "port-number.acorn.io/81": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","publish":true,"targetPort":91}]}}}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+        - name: oneimage-pull-1234567890ab
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      containers:
+        - name: oneimage
+          image: "image-name"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+        - name: left
+          image: "foo"
+          readinessProbe:
+            tcpSocket:
+              port: 91
+          ports:
+            - containerPort: 91
+              protocol: "TCP"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "buildimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "buildimage"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+        "service-name.acorn.io/buildimage": "true"
+        "port-number.acorn.io/81": "true"
+        "port-number.acorn.io/91": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":443,"protocol":"tcp","publish":true,"targetPort":91}]}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+        - name: buildimage-pull-1234567890ab
+      shareProcessNamespace: true
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      containers:
+        - name: buildimage
+          image: "sha256:build-image"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+            - containerPort: 91
+              protocol: "TCP"

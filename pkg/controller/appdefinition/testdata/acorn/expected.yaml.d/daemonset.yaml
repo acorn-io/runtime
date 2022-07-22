@@ -1,0 +1,130 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: app-name-app-namespace-app-name-1234567890ab
+  namespace: acorn-system
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: app-name
+spec:
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/service-name: app-name
+      acorn.io/managed: "true"
+  template:
+    metadata:
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/service-name: app-name
+        acorn.io/managed: "true"
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      containers:
+        - name: port-81
+          image: rancher/klipper-lb:v0.3.4
+          env:
+            - name: "SRC_PORT"
+              value: "81"
+            - name: "DEST_PROTO"
+              value: "tcp"
+            - name: "DEST_PORT"
+              value: "81"
+            - name: "DEST_IPS"
+              value: "1.1.1.1 1::1"
+          ports:
+            - containerPort: 81
+              protocol: TCP
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+        - name: port-91
+          image: rancher/klipper-lb:v0.3.4
+          env:
+            - name: "SRC_PORT"
+              value: "91"
+            - name: "DEST_PROTO"
+              value: "tcp"
+            - name: "DEST_PORT"
+              value: "91"
+            - name: "DEST_IPS"
+              value: "1.1.1.1 1::1"
+          ports:
+            - containerPort: 91
+              protocol: TCP
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+        - name: port-101
+          image: rancher/klipper-lb:v0.3.4
+          env:
+            - name: "SRC_PORT"
+              value: "101"
+            - name: "DEST_PROTO"
+              value: "tcp"
+            - name: "DEST_PORT"
+              value: "101"
+            - name: "DEST_IPS"
+              value: "1.1.1.1 1::1"
+          ports:
+            - containerPort: 101
+              protocol: TCP
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: app-name-app-namespace-local-service-1234567890ab
+  namespace: acorn-system
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: local-service
+spec:
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/service-name: local-service
+      acorn.io/managed: "true"
+  template:
+    metadata:
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/service-name: local-service
+        acorn.io/managed: "true"
+    spec:
+      enableServiceLinks: false
+      automountServiceAccountToken: false
+      containers:
+        - name: port-102
+          image: rancher/klipper-lb:v0.3.4
+          env:
+            - name: "SRC_PORT"
+              value: "102"
+            - name: "DEST_PROTO"
+              value: "tcp"
+            - name: "DEST_PORT"
+              value: "102"
+            - name: "DEST_IPS"
+              value: "1.1.1.1 1::1"
+          ports:
+            - containerPort: 102
+              protocol: TCP
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN

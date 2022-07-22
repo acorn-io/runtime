@@ -16,12 +16,14 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/pull"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/data/convert"
+	"golang.org/x/exp/maps"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -68,9 +70,10 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addJobs(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
-	addServices(appInstance, resp)
-	addLinks(appInstance, resp)
-	if err := addIngress(appInstance, req, resp); err != nil {
+	if err := addPublish(req, appInstance, resp); err != nil {
+		return err
+	}
+	if err := addExpose(req, appInstance, resp); err != nil {
 		return err
 	}
 	addPVCs(appInstance, resp)
@@ -245,14 +248,28 @@ func toMounts(app *v1.AppInstance, deploymentName, containerName string, contain
 }
 
 func toPorts(container v1.Container) []corev1.ContainerPort {
-	var ports []corev1.ContainerPort
+	var (
+		ports []corev1.ContainerPort
+		seen  = map[struct {
+			port  int32
+			proto corev1.Protocol
+		}]bool{}
+	)
 	for _, port := range container.Ports {
 		protocol := corev1.ProtocolTCP
 		if port.Protocol == v1.ProtocolUDP {
 			protocol = corev1.ProtocolUDP
 		}
+		key := struct {
+			port  int32
+			proto corev1.Protocol
+		}{port.TargetPort, protocol}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
 		ports = append(ports, corev1.ContainerPort{
-			ContainerPort: port.InternalPort,
+			ContainerPort: port.TargetPort,
 			Protocol:      protocol,
 		})
 	}
@@ -350,8 +367,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 	}
 
 	if probeType == v1.ReadinessProbeType &&
-		len(container.Probes) == 0 &&
-		len(container.Ports) > 0 {
+		len(container.Probes) == 0 {
 		for _, port := range container.Ports {
 			if port.Protocol == v1.ProtocolUDP {
 				continue
@@ -359,7 +375,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 			return &corev1.Probe{
 				ProbeHandler: corev1.ProbeHandler{
 					TCPSocket: &corev1.TCPSocketAction{
-						Port: intstr.FromInt(int(port.InternalPort)),
+						Port: intstr.FromInt(int(port.TargetPort)),
 					},
 				},
 			}
@@ -504,9 +520,6 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		stateful = isStateful(appInstance, container)
 	)
 
-	if container.Alias.Name != "" {
-		extraLabels = append(extraLabels, labels.AcornAlias+container.Alias.Name, "true")
-	}
 	containers, initContainers := toContainers(appInstance, tag, name, container)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
@@ -519,23 +532,25 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
+	podLabels := containerLabels(appInstance, name, extraLabels...)
+	deploymentLabels := containerLabels(appInstance, name)
+	maps.Copy(podLabels, ports.ToPodLabels(appInstance, name))
+
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
-			Labels:      containerLabels(appInstance, name),
+			Labels:      deploymentLabels,
 			Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: containerLabels(appInstance, name),
+				MatchLabels: deploymentLabels,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: containerLabels(appInstance, name,
-						extraLabels...,
-					),
+					Labels:      podLabels,
 					Annotations: typed.Concat(podAnnotations(appInstance, name, container), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
@@ -584,7 +599,7 @@ func needsServiceAccount(container v1.Container) bool {
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		if isLinked(appInstance, entry.Key) {
+		if ports.IsLinked(appInstance, entry.Key) {
 			continue
 		}
 		dep, err := toDeployment(req, appInstance, tag, entry.Key, entry.Value, pullSecrets)
@@ -613,10 +628,6 @@ func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance, resp router.Re
 			Labels: labels,
 		},
 	})
-}
-
-func addServices(appInstance *v1.AppInstance, resp router.Response) {
-	resp.Objects(toServices(appInstance)...)
 }
 
 func addFileContent(configMap *corev1.ConfigMap, appName, deploymentName string, container v1.Container) error {

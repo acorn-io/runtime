@@ -5,44 +5,53 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
-  publishProtocols:
-  - "all"
   image: test
-  endpoints:
-  - target: oneimage
-    hostname: localhost
+  ports:
+  - targetServiceName: svc1
+    serviceName: localhost
+    publish: true
 status:
   namespace: app-created-namespace
   appSpec:
     containers:
       con1:
-        alias:
-          name: svc1
         image: "foo"
         ports:
           - port: 80
-            internalPort: 81
-            expose: true
+            targetPort: 81
+            publish: true
             protocol: http
+            serviceName: svc1
+          - port: 80
+            targetPort: 81
+            protocol: http
+          - port: 90
+            targetPort: 91
+            protocol: tcp
+            serviceName: svc1
       con2:
-        alias:
-          name: svc1
         image: "foo"
         ports:
         - port: 80
-          internalPort: 81
-          expose: true
+          targetPort: 81
+          publish: true
+          protocol: http
+          serviceName: svc1
+        - port: 80
+          targetPort: 81
           protocol: tcp
         - port: 90
-          internalPort: 91
-          expose: true
+          targetPort: 91
           protocol: tcp
+          serviceName: svc1
       con3:
-        alias:
-          name: svc2
         image: "foo"
         ports:
-          - port: 100
-            internalPort: 101
-            expose: true
-            protocol: udp
+        - port: 100
+          targetPort: 101
+          publish: true
+          protocol: udp
+          serviceName: svc2
+        - port: 100
+          targetPort: 101
+          protocol: udp

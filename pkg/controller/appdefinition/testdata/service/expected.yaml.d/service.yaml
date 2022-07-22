@@ -1,0 +1,113 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: oneimage-publish-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/service-name": "oneimage"
+    "acorn.io/service-publish": "true"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "service-name.acorn.io/oneimage": "true"
+    "port-number.acorn.io/91": "true"
+    "acorn.io/managed": "true"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/service-name": "oneimage"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "service-name.acorn.io/oneimage": "true"
+    "port-number.acorn.io/91": "true"
+    "port-number.acorn.io/81": "true"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: buildimage-publish-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/service-publish": "true"
+    "acorn.io/service-name": "buildimage"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 443
+      targetPort: 91
+      protocol: "TCP"
+      name: "443"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "service-name.acorn.io/buildimage": "true"
+    "port-number.acorn.io/91": "true"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/service-name": "buildimage"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+    - port: 443
+      targetPort: 91
+      protocol: "TCP"
+      name: "443"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "service-name.acorn.io/buildimage": "true"
+    "port-number.acorn.io/81": "true"
+    "port-number.acorn.io/91": "true"
+    "acorn.io/managed": "true"

@@ -33,15 +33,18 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
+        "service-name.acorn.io/oneimage": "true"
+        "port-number.acorn.io/81": "true"
+        "port-number.acorn.io/91": "true"
       annotations:
-        acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"internalPort":81,"port":80,"protocol":"http"}],"sidecars":{"left":{"alias":{},"image":"foo","ports":[{"internalPort":91,"port":90,"protocol":"tcp"}]}}}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       imagePullSecrets:
-        - name: oneimage-pull-12345678
+        - name: oneimage-pull-1234567890ab
       containers:
         - name: oneimage
           image: "image-name"
@@ -86,14 +89,14 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        "acorn.io/container-spec": '{"alias":{},"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
+        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
       terminationGracePeriodSeconds: 5
       automountServiceAccountToken: false
       enableServiceLinks: false
       shareProcessNamespace: true
       imagePullSecrets:
-        - name: buildimage-pull-12345678
+        - name: buildimage-pull-1234567890ab
       containers:
         - name: buildimage
           image: "sha256:build-image"
@@ -107,6 +110,7 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
+    "acorn.io/service-name": "oneimage"
     "acorn.io/container-name": "oneimage"
 spec:
   type: ClusterIP
@@ -123,15 +127,17 @@ spec:
   selector:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/container-name": "oneimage"
     "acorn.io/managed": "true"
+    "service-name.acorn.io/oneimage": "true"
+    "port-number.acorn.io/81": "true"
+    "port-number.acorn.io/91": "true"
 ---
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
-  uid: 123456789ab
+  uid: 1234567890abcdef
 spec:
   image: test
 status:
@@ -144,11 +150,11 @@ status:
             image: "foo"
             ports:
               - port: 90
-                internalPort: 91
+                targetPort: 91
                 protocol: tcp
         ports:
           - port: 80
-            internalPort: 81
+            targetPort: 81
             protocol: http
         image: "image-name"
         build:
@@ -168,7 +174,7 @@ status:
 kind: Secret
 apiVersion: v1
 metadata:
-  name: buildimage-pull-12345678
+  name: buildimage-pull-1234567890ab
   namespace: app-created-namespace
   labels:
     acorn.io/managed: "true"
@@ -180,7 +186,7 @@ data:
 kind: Secret
 apiVersion: v1
 metadata:
-  name: oneimage-pull-12345678
+  name: oneimage-pull-1234567890ab
   namespace: app-created-namespace
   labels:
     acorn.io/managed: "true"

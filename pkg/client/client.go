@@ -63,53 +63,50 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 }
 
 type AppUpdateOptions struct {
-	Annotations      map[string]string
-	Labels           map[string]string
-	Endpoints        []v1.EndpointBinding
-	Volumes          []v1.VolumeBinding
-	Secrets          []v1.SecretBinding
-	Services         []v1.ServiceBinding
-	Ports            []v1.PortBinding
-	PublishProtocols []v1.Protocol
-	Profiles         []string
-	Permissions      *v1.Permissions
-	DeployArgs       map[string]interface{}
-	DevMode          *bool
-	Image            string
+	Annotations map[string]string
+	Labels      map[string]string
+	PublishMode v1.PublishMode
+	Volumes     []v1.VolumeBinding
+	Secrets     []v1.SecretBinding
+	Services    []v1.ServiceBinding
+	Ports       []v1.PortBinding
+	Profiles    []string
+	Permissions *v1.Permissions
+	DeployArgs  map[string]interface{}
+	DevMode     *bool
+	Image       string
 }
 
 type LogOptions apiv1.LogOptions
 
 type AppRunOptions struct {
-	Name             string
-	Annotations      map[string]string
-	Labels           map[string]string
-	Endpoints        []v1.EndpointBinding
-	Volumes          []v1.VolumeBinding
-	Secrets          []v1.SecretBinding
-	Services         []v1.ServiceBinding
-	Ports            []v1.PortBinding
-	PublishProtocols []v1.Protocol
-	Profiles         []string
-	DeployArgs       map[string]interface{}
-	DevMode          *bool
-	Permissions      *v1.Permissions
+	Name        string
+	Annotations map[string]string
+	Labels      map[string]string
+	PublishMode v1.PublishMode
+	Volumes     []v1.VolumeBinding
+	Secrets     []v1.SecretBinding
+	Services    []v1.ServiceBinding
+	Ports       []v1.PortBinding
+	Profiles    []string
+	DeployArgs  map[string]interface{}
+	DevMode     *bool
+	Permissions *v1.Permissions
 }
 
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 	return AppUpdateOptions{
-		Annotations:      a.Annotations,
-		Labels:           a.Labels,
-		Endpoints:        a.Endpoints,
-		Volumes:          a.Volumes,
-		Secrets:          a.Secrets,
-		Services:         a.Services,
-		Ports:            a.Ports,
-		PublishProtocols: a.PublishProtocols,
-		DeployArgs:       a.DeployArgs,
-		DevMode:          a.DevMode,
-		Profiles:         a.Profiles,
-		Permissions:      a.Permissions,
+		Annotations: a.Annotations,
+		Labels:      a.Labels,
+		PublishMode: a.PublishMode,
+		Volumes:     a.Volumes,
+		Secrets:     a.Secrets,
+		Services:    a.Services,
+		Ports:       a.Ports,
+		DeployArgs:  a.DeployArgs,
+		DevMode:     a.DevMode,
+		Profiles:    a.Profiles,
+		Permissions: a.Permissions,
 	}
 }
 

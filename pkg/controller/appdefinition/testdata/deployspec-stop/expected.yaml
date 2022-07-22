@@ -36,14 +36,14 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"alias":{},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       imagePullSecrets:
-        - name: oneimage-pull-12345678
+        - name: oneimage-pull-1234567890ab
       containers:
         - name: oneimage
           image: "image-name"
@@ -75,14 +75,14 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        "acorn.io/container-spec": '{"alias":{},"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
+        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       shareProcessNamespace: true
       automountServiceAccountToken: false
       imagePullSecrets:
-        - name: buildimage-pull-12345678
+        - name: buildimage-pull-1234567890ab
       containers:
         - name: buildimage
           image: "sha256:build-image"
@@ -90,7 +90,7 @@ spec:
 kind: Secret
 apiVersion: v1
 metadata:
-  name: buildimage-pull-12345678
+  name: buildimage-pull-1234567890ab
   namespace: app-created-namespace
   labels:
     acorn.io/managed: "true"
@@ -102,7 +102,7 @@ data:
 kind: Secret
 apiVersion: v1
 metadata:
-  name: oneimage-pull-12345678
+  name: oneimage-pull-1234567890ab
   namespace: app-created-namespace
   labels:
     acorn.io/managed: "true"
@@ -116,7 +116,7 @@ apiVersion: internal.acorn.io/v1
 metadata:
   name: app-name
   namespace: app-namespace
-  uid: 12345678ab
+  uid: 1234567890abcdef
 spec:
   stop: true
   image: test

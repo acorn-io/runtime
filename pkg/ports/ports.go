@@ -1,14 +1,50 @@
 package ports
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func ToPodLabels(app *v1.AppInstance, containerName string) map[string]string {
+	container := app.Status.AppSpec.Containers[containerName]
+	ports := container.Ports
+	for _, sidecar := range container.Sidecars {
+		ports = append(ports, sidecar.Ports...)
+	}
+	return ToSelector(app, typed.MapSlice(ports, func(p v1.PortDef) v1.PortDef {
+		return p.Complete(containerName)
+	}))
+}
+
+func ToSelector(app *v1.AppInstance, ports []v1.PortDef) map[string]string {
+	result := labels.Managed(app)
+
+	for _, port := range ports {
+		result[labels.AcornServiceNamePrefix+port.ServiceName] = "true"
+		result[fmt.Sprintf("%s%d", labels.AcornPortNumberPrefix, port.TargetPort)] = "true"
+	}
+
+	return result
+}
+
+func ToPortDef(binding v1.PortBinding, protocol v1.Protocol) v1.PortDef {
+	result := v1.PortDef{
+		Port:       binding.Port,
+		TargetPort: binding.TargetPort,
+		Protocol:   protocol,
+	}
+	return result.Complete(binding.ServiceName)
+}
 
 func ToServicePort(port v1.PortDef) corev1.ServicePort {
 	servicePort := corev1.ServicePort{
@@ -16,7 +52,7 @@ func ToServicePort(port v1.PortDef) corev1.ServicePort {
 		Protocol: corev1.ProtocolTCP,
 		Port:     port.Port,
 		TargetPort: intstr.IntOrString{
-			IntVal: port.InternalPort,
+			IntVal: port.TargetPort,
 		},
 	}
 	switch port.Protocol {
@@ -30,45 +66,6 @@ func ToServicePort(port v1.PortDef) corev1.ServicePort {
 	return servicePort
 }
 
-func Dedup(ports []v1.PortDef) (result []v1.PortDef) {
-	existing := map[string]bool{}
-	for _, port := range ports {
-		key := strconv.Itoa(int(port.Port)) + "/" + string(NormalizeProto(port.Protocol))
-		if existing[key] {
-			continue
-		}
-		existing[key] = true
-		result = append(result, port)
-	}
-	return
-}
-
-func CollectPorts(container v1.Container) (result []v1.PortDef) {
-	result = append(result, container.Ports...)
-
-	for _, entry := range typed.Sorted(container.Sidecars) {
-		result = append(result, CollectPorts(entry.Value)...)
-	}
-
-	return
-}
-
-func ProtosMatch(normalize bool, left v1.Protocol, right v1.Protocol) bool {
-	if left == v1.ProtocolNone || right == v1.ProtocolNone {
-		return false
-	}
-	if left == "" || right == "" {
-		return true
-	}
-	if left == v1.ProtocolAll || right == v1.ProtocolAll {
-		return true
-	}
-	if normalize {
-		return NormalizeProto(left) == NormalizeProto(right)
-	}
-	return left == right
-}
-
 func NormalizeProto(proto v1.Protocol) v1.Protocol {
 	switch proto {
 	case v1.ProtocolHTTP:
@@ -77,108 +74,40 @@ func NormalizeProto(proto v1.Protocol) v1.Protocol {
 	return proto
 }
 
-func Layer4(ports []v1.PortDef) (result []v1.PortDef) {
-	for _, port := range ports {
-		if IsLayer4Port(port) {
-			result = append(result, port)
-		}
-	}
-	return
-}
-
-func PortsForIngress(portDefs []v1.PortDef, portBindings []v1.PortBinding, publishProtocols []v1.Protocol) (result []v1.PortDef) {
-	for _, portDef := range portDefs {
-		if !portDef.Expose || portDef.Protocol != v1.ProtocolHTTP {
+func ToContainerServices(app *v1.AppInstance, publish bool, namespace string, portSet *Set) (result []kclient.Object) {
+	for _, serviceName := range portSet.ServiceNames() {
+		if !portSet.IsContainerService(serviceName) {
 			continue
 		}
-		matched := false
-		for _, portBinding := range portBindings {
-			if !portBinding.Publish {
-				continue
-			}
-			if portBinding.TargetPort != portDef.Port {
-				continue
-			}
-			if ProtosMatch(true, portBinding.Protocol, portDef.Protocol) {
-				matched = true
-				result = append(result, portDef)
-				break
-			}
-		}
-
-		if !matched {
-			for _, protocol := range publishProtocols {
-				if ProtosMatch(false, portDef.Protocol, protocol) {
-					result = append(result, portDef)
-				}
-			}
-		}
-	}
-
-	return
-}
-
-func RemapForBinding(publish bool, portDefs []v1.PortDef, portBindings []v1.PortBinding, publishProtocols []v1.Protocol) (result []v1.PortDef) {
-	for _, portDef := range portDefs {
-		if publish && !portDef.Expose {
+		servicePorts := portSet.PortsForService(serviceName)
+		if len(servicePorts) == 0 {
 			continue
 		}
-		matched := false
-		for _, portBinding := range portBindings {
-			if publish && !portBinding.Publish {
-				continue
-			}
-			if portBinding.TargetPort != portDef.Port {
-				continue
-			}
-			if ProtosMatch(true, portBinding.Protocol, portDef.Protocol) {
-				matched = true
-				internalPort := portDef.InternalPort
-				if !publish {
-					internalPort = portDef.Port
-				}
-				result = append(result, v1.PortDef{
-					Port:         portBinding.Port,
-					InternalPort: internalPort,
-					Protocol:     portDef.Protocol,
-					Expose:       portDef.Expose,
-				})
-				break
-			}
+		resourceName := serviceName
+		serviceType := corev1.ServiceTypeClusterIP
+		if publish {
+			resourceName = name.SafeConcatName(resourceName, "publish", app.ShortID())
+			serviceType = corev1.ServiceTypeLoadBalancer
 		}
-
-		if !matched {
-			if !publish {
-				publishProtocols = []v1.Protocol{v1.ProtocolAll}
-			}
-			for _, protocol := range publishProtocols {
-				if ProtosMatch(false, portDef.Protocol, protocol) {
-					internalPort := portDef.InternalPort
-					if !publish {
-						internalPort = portDef.Port
-					}
-					matched = true
-					result = append(result, v1.PortDef{
-						Port:         portDef.Port,
-						InternalPort: internalPort,
-						Protocol:     portDef.Protocol,
-						Expose:       portDef.Expose,
-					})
-				}
-			}
+		extraLabels := []string{
+			labels.AcornServiceName, serviceName,
+			labels.AcornContainerName, portSet.GetContainerService(serviceName),
 		}
+		if publish {
+			extraLabels = append(extraLabels, labels.AcornServicePublish, "true")
+		}
+		result = append(result, &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      resourceName,
+				Namespace: namespace,
+				Labels:    labels.Managed(app, extraLabels...),
+			},
+			Spec: corev1.ServiceSpec{
+				Ports:    typed.MapSlice(servicePorts, ToServicePort),
+				Selector: ToSelector(app, servicePorts),
+				Type:     serviceType,
+			},
+		})
 	}
-
 	return
-}
-
-func IsLayer4Port(port v1.PortDef) bool {
-	switch port.Protocol {
-	case v1.ProtocolUDP:
-		return true
-	case v1.ProtocolTCP:
-		return true
-	default:
-		return false
-	}
 }

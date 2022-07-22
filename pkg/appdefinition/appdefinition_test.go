@@ -607,25 +607,34 @@ func TestExpose(t *testing.T) {
 containers: {
   s: {
     sidecars: left: {
-      image: "x"
-      expose: [
-        "80",
-        "80:81",
-        "80/http",
-        "80:81/http",
-	  ]
+     image: "x"
+     ports: expose: [
+      "80",
+      "80:81/tcp",
+      "80/http",
+      "80:81/http",
+	 ]
+    }
+    sidecars: left2: {
+     image: "x"
+     ports: publish: 80
+     ports: expose: "81/http"
     }
     sidecars: right: {
-      image: "x"
-      expose: "80"
+     image: "x"
+     ports: "80"
     }
     sidecars: right2: {
-      image: "x"
-      expose: 80
+     image: "x"
+     ports: 80
+    }
+    sidecars: right3: {
+     image: "x"
+     ports: [{targetPort: 12}, 80]
     }
 	cmd: "hi bye"
     image: "x"
-    expose: [
+    ports: [
       80,
       "80:81",
       "80/http",
@@ -644,53 +653,71 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, true, appSpec.Containers["s"].Ports[0].Expose)
+	assert.Equal(t, false, appSpec.Containers["s"].Ports[0].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].InternalPort)
-	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, true, appSpec.Containers["s"].Ports[1].Expose)
+	assert.Equal(t, false, appSpec.Containers["s"].Ports[1].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[1].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].InternalPort)
-	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, true, appSpec.Containers["s"].Ports[2].Expose)
+	assert.Equal(t, false, appSpec.Containers["s"].Ports[2].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].InternalPort)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[2].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, true, appSpec.Containers["s"].Ports[3].Expose)
+	assert.Equal(t, false, appSpec.Containers["s"].Ports[3].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[3].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].InternalPort)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[3].Protocol, v1.ProtocolHTTP)
 
 	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[0].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].InternalPort)
-	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.Protocol(""))
 
 	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[1].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[1].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].InternalPort)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[1].Protocol, v1.ProtocolTCP)
 
 	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[2].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].InternalPort)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[2].Protocol, v1.ProtocolHTTP)
 
 	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[3].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[3].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].InternalPort)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[3].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["right"].Ports[0].Expose)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
-	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left2"].Ports[0].Expose)
+	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["left2"].Ports[0].Publish)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left2"].Ports[0].Port)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left2"].Ports[0].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left2"].Ports[0].Protocol, v1.ProtocolHTTP)
+	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left2"].Ports[1].Publish)
+	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["left2"].Ports[1].Expose)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left2"].Ports[1].Port)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left2"].Ports[1].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left2"].Ports[1].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Expose)
+	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right"].Ports[0].Expose)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.Protocol(""))
+
+	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
-	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.Protocol(""))
+
+	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right3"].Ports[0].Expose)
+	assert.Equal(t, int32(12), appSpec.Containers["s"].Sidecars["right3"].Ports[0].Port)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right3"].Ports[0].Protocol, v1.Protocol(""))
+	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right3"].Ports[1].Expose)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right3"].Ports[1].Port)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right3"].Ports[1].Protocol, v1.Protocol(""))
 }
 
 func TestPorts(t *testing.T) {
@@ -701,7 +728,7 @@ containers: {
       image: "x"
       ports: [
         "80",
-        "80:81",
+        "80:81/tcp",
         "80/http",
         "80:81/http",
 	  ]
@@ -736,42 +763,42 @@ containers: {
 	}
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].InternalPort)
-	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.Protocol(""))
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[1].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].InternalPort)
-	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.Protocol(""))
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].InternalPort)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[2].Protocol, v1.ProtocolHTTP)
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[3].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].InternalPort)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[3].Protocol, v1.ProtocolHTTP)
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].InternalPort)
-	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].TargetPort)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.Protocol(""))
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[1].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].InternalPort)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[1].Protocol, v1.ProtocolTCP)
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].InternalPort)
+	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[2].Protocol, v1.ProtocolHTTP)
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[3].Port)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].InternalPort)
+	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[3].Protocol, v1.ProtocolHTTP)
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
-	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.Protocol(""))
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
-	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.ProtocolTCP)
+	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.Protocol(""))
 }
 
 func TestFiles(t *testing.T) {
@@ -1504,14 +1531,14 @@ acorns: foo: {
 	}), acorn.DeployArgs)
 	assert.Equal(t, []v1.PortDef{
 		{
-			Port:         80,
-			InternalPort: 80,
-			Protocol:     v1.ProtocolTCP,
+			Port:       80,
+			TargetPort: 80,
+			Protocol:   "",
 		},
 		{
-			Port:         123,
-			InternalPort: 456,
-			Protocol:     v1.ProtocolHTTP,
+			Port:       123,
+			TargetPort: 456,
+			Protocol:   v1.ProtocolHTTP,
 		},
 	}, acorn.Ports)
 	assert.Equal(t, []v1.VolumeBinding{
@@ -1559,13 +1586,18 @@ jobs: foo: {
 func TestAliasNotMatchContainer(t *testing.T) {
 	acornCue := `
 containers: foo: {
-  alias: "foo"
+  ports: "foo2:80"
   image: "image"
 }
+containers: foo2: image: "image"
 `
 
-	_, err := NewAppDefinition([]byte(acornCue))
-	assert.Contains(t, err.Error(), "conflicting values \"alias\" and \"container\"")
+	appDef, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = appDef.AppSpec()
+	assert.Contains(t, err.Error(), "duplicate name [foo2] used as both container and port identifier")
 }
 
 func TestLink(t *testing.T) {
@@ -1592,11 +1624,11 @@ acorns: one: links: ["two:three", "one"]
 func TestAlias(t *testing.T) {
 	acornCue := `
 containers: foo: {
-  alias: "foo2"
+  ports: "foo2:80"
   image: "image"
 }
 containers: foo3: {
-  alias: "foo4"
+  ports: "foo4:80"
   image: "image"
 }
 `
@@ -1611,8 +1643,8 @@ containers: foo3: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "foo2", appSpec.Containers["foo"].Alias.Name)
-	assert.Equal(t, "foo4", appSpec.Containers["foo3"].Alias.Name)
+	assert.Equal(t, "foo2", appSpec.Containers["foo"].Ports[0].ServiceName)
+	assert.Equal(t, "foo4", appSpec.Containers["foo3"].Ports[0].ServiceName)
 }
 
 func TestProbes(t *testing.T) {

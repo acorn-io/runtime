@@ -29,7 +29,7 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 	})
 
 	if len(appInstance.Spec.Permissions.ClusterRules) > 0 {
-		name := name.SafeConcatName("acorn", appInstance.Name, appInstance.Namespace, string(appInstance.UID[:8]))
+		name := name.SafeConcatName("acorn", appInstance.Name, appInstance.Namespace, appInstance.ShortID())
 		result = append(result, &rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   name,

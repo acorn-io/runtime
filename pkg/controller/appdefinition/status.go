@@ -395,7 +395,11 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 				buf.WriteString("://")
 			}
 
-			buf.WriteString(endpoint.Address)
+			if endpoint.Pending {
+				buf.WriteString("<pending>")
+			} else {
+				buf.WriteString(endpoint.Address)
+			}
 			publicStrings = append(publicStrings, buf.String())
 		}
 
