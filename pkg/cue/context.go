@@ -93,12 +93,12 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 
 	overrides := map[string]load.Source{}
 	if err := AddFiles(overrides, dir, files...); err != nil {
-		return nil, err
+		return nil, WrapErr(err)
 	}
 
 	for _, entry := range c.fses {
 		if err := AddFS(overrides, dir, entry.prepend, entry.fs); err != nil {
-			return nil, err
+			return nil, WrapErr(err)
 		}
 	}
 
@@ -113,11 +113,11 @@ func (c *Context) buildValue(args []string, files ...File) (*cue.Value, error) {
 
 	values, err := ctx.BuildInstances(instances)
 	if err != nil {
-		return nil, wrapErr(err)
+		return nil, WrapErr(err)
 	}
 
 	value := &values[0]
-	return value, wrapErr(value.Err())
+	return value, WrapErr(value.Err())
 }
 
 func (c *Context) Validate(path, typeName string) error {
@@ -134,20 +134,20 @@ func (c *Context) Validate(path, typeName string) error {
 
 	newValue := currentValue.Unify(schema)
 	if newValue.Err() != nil {
-		return wrapErr(newValue.Err())
+		return WrapErr(newValue.Err())
 	}
 
-	return wrapErr(newValue.Validate())
+	return WrapErr(newValue.Validate())
 }
 
 func (c *Context) Compile(data []byte) (*cue.Value, error) {
 	v := c.ctx.CompileBytes(data)
-	return &v, wrapErr(v.Err())
+	return &v, WrapErr(v.Err())
 }
 
 func (c *Context) Encode(obj interface{}) (*cue.Value, error) {
 	v := c.ctx.Encode(obj)
-	return &v, wrapErr(v.Err())
+	return &v, WrapErr(v.Err())
 }
 
 func (c *Context) TransformValue(currentValue *cue.Value, path string) (*cue.Value, error) {
@@ -157,16 +157,16 @@ func (c *Context) TransformValue(currentValue *cue.Value, path string) (*cue.Val
 	}
 
 	if transformer.Err() != nil {
-		return nil, wrapErr(transformer.Err())
+		return nil, WrapErr(transformer.Err())
 	}
 
 	transformed := transformer.FillPath(cue.ParsePath("in"), currentValue)
 	if transformed.Err() != nil {
-		return nil, wrapErr(transformed.Err())
+		return nil, WrapErr(transformed.Err())
 	}
 
 	out := transformed.LookupPath(cue.ParsePath("out"))
-	return &out, wrapErr(out.Err())
+	return &out, WrapErr(out.Err())
 }
 
 func (c *Context) Transform(path string) (*cue.Value, error) {
@@ -189,12 +189,12 @@ func (c *Context) Value() (*cue.Value, error) {
 func (c *Context) Decode(v *cue.Value, obj interface{}) error {
 	err := v.Decode(obj)
 	if err != nil {
-		return fmt.Errorf("value %v: %w", v, wrapErr(err))
+		return fmt.Errorf("value %v: %w", v, WrapErr(err))
 	}
 	return nil
 }
 
-func wrapErr(err error) error {
+func WrapErr(err error) error {
 	if err == nil {
 		return nil
 	}

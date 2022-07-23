@@ -129,7 +129,7 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, profiles 
 		newArgs := map[string]interface{}{}
 		err = pValue.Unify(*inValue).Decode(&newArgs)
 		if err != nil {
-			return nil, err
+			return nil, cue.WrapErr(err)
 		}
 		args = newArgs
 	}
