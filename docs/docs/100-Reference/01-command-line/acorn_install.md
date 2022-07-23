@@ -19,8 +19,10 @@ acorn install
 ### Options
 
 ```
+      --acorn-dns string                      enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)
+      --acorn-dns-endpoint string             The URL to access the Acorn DNS service
       --api-server-replicas int               acorn-api deployment replica count
-      --cluster-domains strings               The externally addressable cluster domain (default .local.on-acorn.io)
+      --cluster-domains strings               The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int               acorn-controller deployment replica count
       --default-publish-mode string           If no publish mode is set default to this value (default user)
   -h, --help                                  help for install

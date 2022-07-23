@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/acorn-io/acorn/pkg/controller"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/controller"
 	"github.com/spf13/cobra"
 )
 
