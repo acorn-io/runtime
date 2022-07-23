@@ -9,6 +9,10 @@ import (
 	"github.com/pterm/pterm"
 )
 
+const (
+	trimSpace = 13
+)
+
 func init() {
 	// Help capture text cleaner
 	pterm.SetDefaultOutput(os.Stderr)
@@ -45,7 +49,7 @@ func NewSpinner(text string) *Spinner {
 		WithRemoveWhenDone(false).
 		// Src: https://github.com/gernest/wow/blob/master/spin/spinners.go#L335
 		WithSequence(`  ⠋ `, `  ⠙ `, `  ⠹ `, `  ⠸ `, `  ⠼ `, `  ⠴ `, `  ⠦ `, `  ⠧ `, `  ⠇ `, `  ⠏ `).
-		Start(text)
+		Start(trimWidth(text))
 	if err != nil {
 		panic(err)
 	}
@@ -56,11 +60,15 @@ func NewSpinner(text string) *Spinner {
 	}
 }
 
-func (s *Spinner) Infof(format string, v ...interface{}) {
-	msg := strings.TrimSpace(fmt.Sprintf(s.text+": "+format, v...))
-	if width := pterm.GetTerminalWidth(); width > 6 && len(msg)+6 > width {
-		msg = msg[:width-6]
+func trimWidth(msg string) string {
+	if width := pterm.GetTerminalWidth(); width > trimSpace && len(msg)+trimSpace > width {
+		msg = msg[:width-trimSpace]
 	}
+	return msg
+}
+
+func (s *Spinner) Infof(format string, v ...interface{}) {
+	msg := trimWidth(strings.TrimSpace(fmt.Sprintf(s.text+": "+format, v...)))
 	if s.lastMsg == msg {
 		return
 	}

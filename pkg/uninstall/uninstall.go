@@ -246,44 +246,70 @@ func Uninstall(ctx context.Context, opts *Options) error {
 }
 
 func shouldContinue(toDelete, toKeep []kclient.Object) (bool, error) {
-	var data = [][]string{
-		{"Action", "Namespace", "Name", "Kind", "API Version"},
-	}
-	namespaces := map[string]bool{}
+	var data [][]string
+
+	deleteNamespaces := map[string]bool{}
 	for _, resource := range toDelete {
 		apiVersion, kind := resource.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
 		if kind == "Namespace" {
 			kind = pterm.Red(pterm.Bold.Sprint(kind))
-			namespaces[resource.GetName()] = true
+			deleteNamespaces[resource.GetName()] = true
 		}
 		data = append(data, []string{
-			pterm.Red("delete"),
+			"delete",
 			resource.GetNamespace(),
-			pterm.Red(resource.GetName()),
+			resource.GetName(),
 			kind,
 			apiVersion,
 		})
 	}
 	for _, resource := range toKeep {
 		apiVersion, kind := resource.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
-		if namespaces[resource.GetNamespace()] {
+		if deleteNamespaces[resource.GetNamespace()] {
 			data = append(data, []string{
-				pterm.Red("delete"),
+				"delete",
 				resource.GetNamespace(),
-				pterm.Red(resource.GetName()),
+				resource.GetName(),
 				kind,
 				apiVersion,
 			})
 			continue
 		}
 		data = append(data, []string{
-			pterm.Green("keep"),
-			pterm.Gray(resource.GetNamespace()),
-			pterm.Gray(resource.GetName()),
-			pterm.Gray(kind),
-			pterm.Gray(apiVersion),
+			"keep",
+			resource.GetNamespace(),
+			resource.GetName(),
+			kind,
+			apiVersion,
 		})
 	}
+
+	sort.Slice(data, func(i, j int) bool {
+		for col := range []int{0, 1, 2, 3, 4} {
+			if data[i][col] == data[j][col] {
+				continue
+			}
+			if col == 0 {
+				return data[i][col] > data[j][col]
+			}
+			return data[i][col] < data[j][col]
+		}
+		return false
+	})
+
+	for i, row := range data {
+		if row[0] == "delete" {
+			for col := range []int{0, 1, 2, 3, 4} {
+				row[col] = pterm.Red(row[col])
+			}
+		}
+		data[i] = row
+	}
+
+	data = append([][]string{
+		{"Action", "Namespace", "Name", "Kind", "API Version"},
+	}, data...)
+
 	if err := pterm.DefaultTable.WithHasHeader().WithData(data).Render(); err != nil {
 		return false, err
 	}
