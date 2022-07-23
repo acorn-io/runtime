@@ -1,8 +1,10 @@
 package appdefinition
 
 import (
+	"encoding/json"
 	"testing"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,4 +78,48 @@ args: {
 	assert.Equal(t, "complex", spec.Params[2].Name)
 	assert.Equal(t, "{\n\tfoo: string\n}", spec.Params[2].Schema)
 	assert.Equal(t, "Complex  value", spec.Params[2].Description)
+}
+
+func TestJSONFloatParsing(t *testing.T) {
+	data := []byte(`
+args: {
+	replicas: 1
+}
+
+profiles: {
+	prod: {
+		replicas: 2
+	}
+}
+
+containers: {
+	web: {
+		image: "nginx"
+		scale: args.replicas
+	}
+}`)
+
+	appDef, err := NewAppDefinition(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	params := v1.GenericMap{}
+	err = json.Unmarshal([]byte(`{"replicas": 3}`), &params)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appDef, args, err := appDef.WithArgs(params, []string{"prod"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, 3, args["replicas"])
+	assert.Equal(t, int32(3), *appSpec.Containers["web"].Scale)
 }

@@ -1260,7 +1260,7 @@ secrets: {
 		Type: "tls",
 		Params: map[string]interface{}{
 			"algorithm":    "ecdsa",
-			"durationDays": 365.0,
+			"durationDays": int64(365),
 			"usage":        "server",
 			"sans":         []interface{}{},
 			"organization": []interface{}{},
