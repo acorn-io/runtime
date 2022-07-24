@@ -25,6 +25,7 @@ builds:
       - -s
       - -w
       - -X "github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}"
+      - -X "github.com/acorn-io/acorn/pkg/config.AcornDNSEndpointDefault={{ .Env.ACORN_DNS_ENDPOINT }}"
 
 universal_binaries:
   - id: mac

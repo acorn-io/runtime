@@ -17,8 +17,12 @@ import (
 
 var (
 	ClusterDomainDefault         = ".local.on-acorn.io"
-	AcornDNSEndpointDefault      = "https://dns.acrn.io/v1"
 	InternalClusterDomainDefault = "svc.cluster.local"
+
+	// AcornDNSEndpointDefault will be overridden at build time for releases
+	AcornDNSEndpointDefault = "https://staging-dns.acrn.io/v1"
+	// AcornDNSStateDefault will be overridden at build time for releases
+	AcornDNSStateDefault = "disabled"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
@@ -35,7 +39,7 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 		c.PodSecurityEnforceProfile = "baseline"
 	}
 	if c.AcornDNS == nil {
-		c.AcornDNS = &[]string{"disabled"}[0]
+		c.AcornDNS = &AcornDNSStateDefault
 	}
 	if c.AcornDNSEndpoint == nil || *c.AcornDNSEndpoint == "" {
 		c.AcornDNSEndpoint = &AcornDNSEndpointDefault
