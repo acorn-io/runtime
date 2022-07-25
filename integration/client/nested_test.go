@@ -170,19 +170,19 @@ func TestNestContainer(t *testing.T) {
 	assert.True(t, strings.HasPrefix(containers[0].Name, app.Name+".level1-"))
 	assert.Equal(t, app.Namespace, containers[0].Namespace)
 
-	assert.Regexp(t, app.Name+"\\.level1-[a-f0-9]{8,10}-[a-z0-9]{5}\\.side1", containers[1].Name)
+	assert.Regexp(t, app.Name+"\\.level1-[a-f0-9]{5,10}-[a-z0-9]{5}\\.side1", containers[1].Name)
 	assert.Equal(t, app.Namespace, containers[1].Namespace)
 
 	assert.True(t, strings.HasPrefix(containers[2].Name, app.Name+".level2.level2-"))
 	assert.Equal(t, app.Namespace, containers[2].Namespace)
 
-	assert.Regexp(t, app.Name+"\\.level2\\.level2-[a-f0-9]{8,10}-[a-z0-9]{5}\\.side2", containers[3].Name)
+	assert.Regexp(t, app.Name+"\\.level2\\.level2-[a-f0-9]{5,10}-[a-z0-9]{5}\\.side2", containers[3].Name)
 	assert.Equal(t, app.Namespace, containers[3].Namespace)
 
 	assert.True(t, strings.HasPrefix(containers[4].Name, app.Name+".level2.level3.level3-"))
 	assert.Equal(t, app.Namespace, containers[4].Namespace)
 
-	assert.Regexp(t, app.Name+"\\.level2\\.level3\\.level3-[a-f0-9]{8,10}-[a-z0-9]{5}\\.side3", containers[5].Name)
+	assert.Regexp(t, app.Name+"\\.level2\\.level3\\.level3-[a-f0-9]{5,10}-[a-z0-9]{5}\\.side3", containers[5].Name)
 	assert.Equal(t, app.Namespace, containers[5].Namespace)
 
 	for _, app := range containers {
