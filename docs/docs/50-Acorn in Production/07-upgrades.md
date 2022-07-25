@@ -16,7 +16,7 @@ During an upgrade:
 
 To upgrade the image in production
 
-`acorn update -i [NEW-IMAGE] [APP-NAME]`
+`acorn update --image [NEW-IMAGE] [APP-NAME]`
 
 This will replace the Acorn, and if new container images or configurations are provided, the application containers will be restarted.
 
@@ -36,6 +36,6 @@ purple-field
 ```
 
 The app DNS can be updated by running:
-`acorn update -d my-app.example.com:web purple-field`
+`acorn update -p my-app.example.com:web purple-field`
 
 Only the argument being changed needs to be passed in.

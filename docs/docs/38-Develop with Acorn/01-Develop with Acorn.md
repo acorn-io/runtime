@@ -41,12 +41,12 @@ containers: {
 
         if args.dev {
             build: target: "dev"
-            expose: "1313/http"
+            ports: publish: "1313/http"
         }
     
         if !args.dev {
             build: target: "prod"
-            expose: "80/http"
+            ports: publish: "80/http"
         }
     }
 }
@@ -73,7 +73,7 @@ containers: {
 
         if args.dev {
             build: target: "dev"
-            expose: "1313/http"
+            ports: publish: "1313/http"
             dirs: {
                 "/src": "./"
             }
@@ -81,7 +81,7 @@ containers: {
     
         if !args.dev {
             build: target: "prod"
-            expose: "80/http"
+            ports: publish: "80/http"
         }
     }
 }
@@ -104,6 +104,6 @@ Once built, push it to a registry
 
 This Acorn can now be run via
 
-`acorn run -d my.blog.example.com:app registry.example.com/myorg/my-app:latest`
+`acorn run -p my.blog.example.com:app registry.example.com/myorg/my-app:latest`
 
 This will deploy the Acorn and expose it on `my.blog.example.com`.

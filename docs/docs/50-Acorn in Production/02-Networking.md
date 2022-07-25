@@ -28,6 +28,6 @@ There will be a line `Ports: ...` that outlines the ports. To expose the port:
 
 ### Publish HTTP Ports
 
-To publish an HTTP port, you use the `-d` option on the run subcommand.
+To publish an HTTP port, you use the `-p` option on the run subcommand.
 
-`acorn run -d my-app.example.com:frontend:frontend registry.example.com/myorg/image`
+`acorn run -p my-app.example.com:frontend registry.example.com/myorg/image`

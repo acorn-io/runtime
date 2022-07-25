@@ -54,10 +54,10 @@ You can also specify a `buildArgs` struct as part of the build section to pass a
 containers: {
     app: {
         build: {
-            ...
+            // ...
             buildArgs: {
                 param: "value"
-                ...
+                // ...
             }
         }
     }
@@ -110,7 +110,7 @@ Containers often use environment variables as a way to configure common settings
 containers: {
     db: {
         image: "mysql"
-        ...
+        // ...
         env: {
             "MYSQL_ROOT_PASSWORD": "secret://root-pass/token"
             "DATABASE_NAME": "test-app"
@@ -130,12 +130,12 @@ Files are defined in a container where the key is the location inside the contai
 containers: {
     web: {
         image: "nginx"
-        ...
+        // ...
         files: {
             "/etc/htpasswd": "secret://htpasswd-file/content"
             "/usr/share/nginx/html/index.html": "<h1>Hello!</h1>"
         }
-        ...
+        // ...
     }
 }
 ```
@@ -151,13 +151,13 @@ pull in content at build time. The block has keys that are path names inside the
 containers: {
     web: {
         image: "nginx"
-        ...
+        // ...
         dirs:{
             "/init-scripts": "./scripts"
             "/home/.ssh/": "secret://ssh-keys"
             "/data": "volume://data-vol"
         }
-        ...
+        // ...
     }
 }
 ```
@@ -190,7 +190,7 @@ The liveness probe detects that the container is up and considered running. The 
 containers: {
     web: {
         image: "nginx"
-        ...
+        // ...
         probes: [
             {
                 type: "liveness"
@@ -220,7 +220,7 @@ This example will use an exec check, but HTTP and TCP checks could also be used.
 containers: {
     db: {
         image: "mysql"
-        ...
+        // ...
         probes: [
             {
                 type: "readiness"
@@ -245,7 +245,7 @@ Startup probes exist to give slow starting applications time to load data and/or
 containers: {
     web: {
         image: "nginx"
-        ...
+        // ...
         probes: [
             {
                 type: "liveness"
@@ -276,7 +276,7 @@ Sometimes a container needs some setup before it runs, or has additional service
 containers: {
     frontend: {
         image: "nginx"
-        ...
+        // ...
         sidecars: {
             "git-clone": {
                 image: "my-org/git-cloner"

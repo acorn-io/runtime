@@ -18,7 +18,7 @@ There will be a new SHA available.
 
 If a new Acorn image is available for the application, it can be updated by running:
 
-`acorn update -i [NEW-IMAGE] [APP-NAME]`
+`acorn update --image [NEW-IMAGE] [APP-NAME]`
 
 The new image can be the SHA or tag of an updated image.
 

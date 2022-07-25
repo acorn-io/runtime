@@ -14,10 +14,10 @@ Untar or unzip the downloaded artifact
 
 ```shell
 #Linux or macOS
-tar -xzvf <release>.tar.gz
+brew install acorn-io/acorn/acorn
 
-#test binary (assume local directory)
-./acorn 
+#verify binary (assume local directory)
+acorn -v
 ```
 
 > **Note**: On macOS systems, after extracting the binary from the tar file, you'll be prevented from running the binary from the command line because macOS cannot verify it. You can get it to run by finding the binary in the Finder app, right-clicking it, opening it with Terminal, and then following the prompts to allow a security exception for it to run.
@@ -29,7 +29,7 @@ tar -xzvf <release>.tar.gz
 First you need to initialize your Acorn environment by running:
 
 ```shell
-> acorn init
+> acorn install
 ```
 
 You will only need to do this once.
@@ -40,7 +40,7 @@ Create a new `Acornfile` in your working directory and add the following content
 containers: {
  web: {
   image: "nginx"
-  expose: "80/http"
+  port: publish: "80/http"
   files: {
    // Simple index.html file
    "/usr/share/nginx/html/index.html": "<h1>My First Acorn!</h1>"

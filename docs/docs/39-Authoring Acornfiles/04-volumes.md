@@ -10,7 +10,7 @@ Volumes are used to store persistent data in your applications. Volumes can be b
 containers: {
     "my-app": {
         image: "web"
-        ...
+        // ...
         dirs: {
             "/data": "volume://my-data"
         }
@@ -51,7 +51,7 @@ containers: {
         ...
         sidecars: {
             image: "git-cloner"
-            ...
+            // ...
             dirs: {
                 "/var/www/html": "volume://web-content"
             }
@@ -79,7 +79,7 @@ A volume can be used exclusively in a side car if needed by only mounting it in 
   ```cue
 containers: {
     frontend: {
-        ...
+        // ...
         dirs: {
             "/scratch": "ephemeral://scratch-data"
         }
@@ -92,7 +92,7 @@ The above is equivalent to:
 ```cue
 containers: {
     frontend: {
-        ...
+        // ...
         dirs: {
             "/scratch": "volume://scratch-data"
         }
