@@ -8,7 +8,7 @@ The primary goal of the Acornfile is to quickly and easily describe how to build
 
 The syntax is very similar to JSON and YAML that you are already familiar with from other tools.
 
-The resulting artifact defined by the Acorn file and produced during `acorn build` is a complete package of the container images, secrets, data, nested acorns, etc. all in one OCI image that can be distributed through a registry.
+The resulting artifact defined by the Acornfile and produced during `acorn build` is a complete bundle of the container images, secrets, data, nested acorns, etc. all packaged in a single OCI image that can be distributed through a registry.
 
 ### The primary building blocks
 
@@ -30,7 +30,7 @@ containers: {
 }
 ```
 
-In the above example, there is a struct called containers, and another stuct called `my-app`. It should be noted in an Acorn file, user defined keys like `my-app` need to be placed in quotes if they contain a `-`.
+In the above example, there is a struct called containers, and another stuct called `my-app`. It should be noted in an Acornfile, user-defined keys like `my-app` need to be placed in quotes if they contain a `-`.
 
 ### Lists
 
@@ -67,7 +67,7 @@ Each of the above variables is set as a default value.
 
 Once a variable is set, it can not be changed.
 
-To reference a variable elsewhere in the file, you separate the key fields by a `.`. When using the value in a string, you need to wrap it in () with the leading parenthesis escaped with a `\` like below.
+To reference a variable elsewhere in the file, you separate the key fields by a `.`. When using the value in a string, you need to wrap it in `()` with the leading parenthesis escaped with a `\` like below.
 
 ```cue
 localData: {
@@ -84,7 +84,7 @@ containers: {
 }
 ```
 
-Assigning another variable to another value looks like:
+Assigning a variable to another value looks like:
 
 ```cue
 localData: {

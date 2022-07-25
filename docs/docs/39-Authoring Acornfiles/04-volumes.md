@@ -4,7 +4,7 @@ title: Volumes
 
 ## Volumes
 
-Volumes are used to store persistent data in your applications. Volumes can be bound to containers, sidecars, and jobs whenever persistence is needed. Defining a volume in the Acorn file is done under the `volumes` key and referenced via the `volumes://` uri path when mounting.
+Volumes are used to store persistent data in your applications. Volumes can be bound to containers, sidecars, and jobs whenever persistence is needed. Defining a volume in the Acornfile is done under the `volumes` key and referenced via the `volumes://` uri path when mounting.
 
 ```cue
 containers: {

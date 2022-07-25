@@ -2,9 +2,9 @@
 title: Structure
 ---
 
-## The top level keys of an Acorn file
+## The top level keys of an Acornfile
 
-An Acorn file has predefined top level structs, and it is recommended to define them in the following order:
+An Acornfile has predefined top level structs, and it is recommended to define them in the following order:
 
 ```cue
 args: { // defines arguments the consumer can provide }
@@ -17,7 +17,7 @@ secrets: { // defines secret bits of data that are automatically generated or pa
 localData: { // default data and configuration variables }
 ```
 
-At a minimum, the file needs to specify at least one container to run.
+At a minimum, the Acornfile needs to specify at least one container to run.
 
 ```cue
 containers: {
@@ -35,4 +35,4 @@ Second level keys defined by the user in the `containers`, `volumes`, `secrets`,
 * start with an alphanumeric character
 * end with an alphanumeric character
 
-Keys defined in `args`, `profiles`, and `localData` should use camel case.
+Keys defined in `args`, `profiles`, and `localData` should use camelCase.

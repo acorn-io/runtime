@@ -65,7 +65,7 @@ Now you will need to build your acorn from this file by typing `acorn build .`. 
 60d803258f7aa2680e4910c526485488949835728a2bc3519c09f1b6b3be1bb3
 ```
 
-Now we have a built acorn image identified by the sha (60d803258f7a...) at the end of our build command. To run our acorn app we need to run it.
+Now we have a built an acorn image identified by the sha (60d803258f7a...) at the end of our build command. With this done, we can now run our acorn app.
 
 ```shell
 > acorn run 60d803258f7a

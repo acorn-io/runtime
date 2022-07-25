@@ -17,7 +17,7 @@ This site is very much a work in progress. The current structure will change dra
 
 ### Acorn
 
-Acorn is a technology that brings the simplicity of running containers with Docker to Kubernetes. It does this by providing a familiar build, run, and deploy UX to Kubernetes. It provides a DSL to describes your application without the boilerplate of Kubernetes YAML files. With the application described in the Acorn DSL, it builds a portable artifact that contains the manifests and Docker images to run the application.
+Acorn is a technology that brings the simplicity of running containers with Docker to Kubernetes. It does this by providing a familiar build, run, and deploy UX to Kubernetes. It provides a DSL to describe your application without the boilerplate of Kubernetes YAML files. With the application described in the Acorn DSL, it builds a portable artifact that contains the manifests and Docker images to run the application.
 
 ### What can I use Acorn for?
 

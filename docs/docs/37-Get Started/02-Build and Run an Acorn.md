@@ -1,5 +1,5 @@
 ---
-title: Build and Running Acorn Apps
+title: Building and Running Acorn Apps
 ---
 
 ## Adding Acorn to your containerized app

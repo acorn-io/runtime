@@ -4,7 +4,7 @@ title: Args and Profiles
 
 ## Args
 
-Args are provided to allow users to provide input at different points in the Acorn lifecycle. Args allow Acorn file authors to let the user provide data and values to best suit their needs. Args should be dynamic bits of information. If they are static, use the localData structure to store the variables.
+Args are provided to allow users to provide input at different points in the Acorn lifecycle. Args allow Acornfile authors to let the user provide data and values to best suit their needs. Args should be dynamic bits of information. If they are static, use the localData structure to store the variables.
 
 Args are defined in the top level `args` struct.
 
@@ -110,7 +110,7 @@ In this case when an Acorn consumer deploys the Acorn in production (3) replicas
 
 In either case, consumers of the Acorn can pass `--replicas #` to customize the deployment.
 
-## Using args in the Acorn file
+## Using args in the Acornfile
 
 ### As an environment variable or input to localData
 
@@ -163,7 +163,7 @@ secrets: {
 
 ### Complex data input / merging
 
-When allowing the user to pass complex structures to the Acorn, you can merge that with data predefined in localData. If you would like the user to be able to override the default localData copy of the config, you will need to also define it with `<type> | *<default>` in the localData section of the Acorn file.
+When allowing the user to pass complex structures to the Acorn, you can merge that with data predefined in localData. If you would like the user to be able to override the default localData copy of the config, you will need to also define it with `<type> | *<default>` in the localData section of the Acornfile.
 
 Merging data is done with the `&` operator.
 

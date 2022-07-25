@@ -3,6 +3,4 @@ title: Upgrades
 ---
 
 
-To upgrade Acorn, download the newer binary.
-
-run `acorn init`
+To upgrade Acorn, download the newer binary and run `acorn init`.
