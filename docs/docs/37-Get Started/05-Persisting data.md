@@ -4,7 +4,7 @@ title: Persisting data
 
 ## Volumes
 
-With the multi-container example, you might have observed the database is wiped every time the container restarts. Which might be tolerable in development, but definitely not for production. To ensure the database survives container restarts a volume should be created and attached.
+With the multi-container example, you might have observed that the database is wiped everytime the container restarts. Which might be tolerable in development, but definitely not in production. To ensure the database survives container restarts a volume should be created and attached.
 
 ### Adding a volume to a container
 
@@ -48,4 +48,4 @@ secrets: {
 }
 ```
 
-The above example defines a volume `db-data` and mounts it into the container at `/var/lib/mysql`. This volume will persist container restarts and updates to the Acorn file.
+The above example defines a volume `db-data` and mounts it into the container at `/var/lib/mysql`. This volume will persist container restarts and updates to the Acornfile.

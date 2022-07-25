@@ -35,7 +35,7 @@ Now when Acorn builds this, it will build the `app` container from the Dockerfil
 
 ### Env vars and secrets
 
-In the last example we added the `env` struct to the `mariadb` container to set some variables needed for the container to start, a full list can be found on the images Dockerhub page. The `env` struct is a set of key value pairs that will be passed into the container.
+In the last example we added the `env` struct to the `mariadb` container to set some variables needed for the container to start, a full list can be found on the image's Dockerhub page. The `env` struct is a set of key value pairs that will be passed into the container.
 
 The example above is setting passwords as hard coded plain text strings, which isn't typically what is needed for an application. Here we can create a closed loop system of auto-generated secrets that no person needs to know ahead of time.
 

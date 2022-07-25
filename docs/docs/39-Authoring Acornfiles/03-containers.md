@@ -4,7 +4,7 @@ title: Containers
 
 ## Defining a container
 
-The container definition in the Acorn file defines everything about the individual components needed to run your app. Each container definition will define a service in your application Acorn. A basic example of a container definition that exposes a network endpoint looks like the following:
+The container section in the Acornfile defines everything about the individual components needed to run your app. Each container definition will define a service in your Acorn application. A basic example of a container definition that exposes a network endpoint looks like the following:
 
 ```cue
 containers:{
@@ -18,7 +18,7 @@ containers:{
 
 ### Standard build options
 
-Acorn provides a mechanism to build your own containers for your application. If you have an existing project that already defines an Dockerfile, you can build it from Acorn.
+Acorn provides a mechanism to build your own containers for your application. If you have an existing project that already defines an Dockerfile, you can build it using Acorn.
 
 ```cue
 containers: {
@@ -30,7 +30,7 @@ containers: {
 }
 ```
 
-Now when an `acorn build .` or `acorn dev .` is run, the `my-app` container will be built and packaged as a part of the Acorn. It will look for a Dockerfile in the `./` directory.
+Now when `acorn build .` or `acorn dev .` is run, the `my-app` container will be built and packaged as a part of the Acorn. It will look for a Dockerfile in the `./` directory.
 
 ### Customized build behavior
 
@@ -51,7 +51,7 @@ containers: {
 You can also specify a `buildArgs` struct as part of the build section to pass arguments to the build.
 
 ```cue
-containters: {
+containers: {
     app: {
         build: {
             ...
@@ -81,7 +81,7 @@ containers: {
 }
 ```
 
-The above example defines a port `5000` that exposes an HTTP service. This port will not be eligible to publish out to the world.
+The above example defines a port `5000` that exposes an HTTP service. This port will not be published out to the world.
 
 The next example shows the `expose` parameter, used to define ports that are meant to be accessed outside of the Acorn app or published outside the cluster.
 
@@ -98,7 +98,7 @@ containers: {
 }
 ```
 
-This Acorn file defines two containers, one called `my-webapp` and the other `database`. The `my-webapp` container is exposing port 8080. When launching this Acorn the port can be published outside the cluster or accessed by linked Acorns.
+This Acornfile defines two containers, one called `my-webapp` and the other `database`. The `my-webapp` container is exposing port 8080. When launching this Acorn the port can be published outside the cluster or accessed by linked Acorns.
 
 In the database container, we are using the `ports` parameter because only the my-webapp container will communicate with the database.
 
@@ -120,7 +120,7 @@ containers: {
 }
 ```
 
-The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable set by a [secret](/Authoring%20Acornfiles/secrets) in the Acorn file. The `DATABASE_NAME` is set to a static value, and the `USER_SET_VALUE` is defined by a user [arg](/Authoring%20Acornfiles/args-and-profiles). When launched the container can access these environment variables as needed.
+The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable set by a [secret](/Authoring%20Acornfiles/secrets) in the Acornfile. The `DATABASE_NAME` is set to a static value, and the `USER_SET_VALUE` is defined by a user [arg](/Authoring%20Acornfiles/args-and-profiles). When launched the container can access these environment variables as needed.
 
 ## Files
 
@@ -168,9 +168,9 @@ The `/home/.ssh/` directory will have files named after the secrets keys and con
 
 ## Probes
 
-Applications running for a long time sometimes fail in strange ways, or take time to startup before they are ready to take traffic. To ensure the container is running and ready to take traffic there are probes.
+Applications running for a long time sometimes fail in strange ways, or take time to startup before they are ready to receive traffic. To ensure the container is running and ready to receive traffic there are probes.
 
-There are three types of probes readiness, liveness, and startup. Probes are defined per container in a list. You can define one of each type per container. If the probes fail, the container is restarted.
+There are three types of probes: `readiness`, `liveness`, and `startup`. Probes are defined per container in a list. You can define one of each type per container. If the probes fail, the container is restarted.
 
 Each probe type has the following parameters that can be optionally set.
 
@@ -180,7 +180,7 @@ Each probe type has the following parameters that can be optionally set.
 * `successThreshold`: Number of consecutive successful probes before considering the container healthy. Default is 1.
 * `failureThreshold`: Number of consecutive failed probes before considering the container unhealthy. Default is 3.
 
-There are three types of probes that can be used to check the health of the container. A script can be executed inside the container, an HTTP endpoint can be checked, or a TCP endpoint can be checked. Each of the probe types can use one of any of these check types.
+There are three types of checks that can be used to check the health of the container. A script can be executed inside the container, an HTTP endpoint can be checked, or a TCP endpoint can be checked. Each of the probe types can use one of any of these check types.
 
 ### Liveness probes
 
@@ -210,11 +210,11 @@ Headers are an optional field on the HTTP health probe type.
 
 ### Readiness probes
 
-A readiness probe means the container is ready to take traffic. Sometimes when a database server starts it needs to have data loaded. During this data loading process, it should not be contacted by the application incase it has incomplete data. You can use this probe to prevent other containers from accessing this container.
+A readiness probe means the container is ready to receive traffic. Sometimes when a database server starts it needs to have data loaded. During this data loading process, it should not be contacted by the application in case it has incomplete data. You can use the readinessprobe probe to prevent other containers from accessing this container before it is ready.
 
 This example will use an exec check, but HTTP and TCP checks could also be used.
 
-*Note: Readiness probes do not wait for the liveness probe to succeed first. If you need the readiness probe to wait you should use the `initialDelaySeconds` parameter to delay. Or, the startup probe can also be used.*
+*Note: Readiness probes do not wait for the liveness probe to succeed first. If you need the readiness probe to wait you should use the `initialDelaySeconds` parameter to delay. Alternatively, the startup probe can also be used.*
 
 ```cue
 containers: {
@@ -239,7 +239,7 @@ containers: {
 
 ### Startup probes
 
-Startup probes are to allow slow starting applications time to load data and/or configuration before starting the liveness and readiness probes. The startup probe should use the same command, HTTP, or TCP check as the liveness probe with enough time to cover the worst case startup scenario. The time is calculated by `failureThreshold * periodSeconds`.
+Startup probes exist to give slow starting applications time to load data and/or configuration before starting the liveness and readiness probes. The startup probe should use the same command, HTTP, or TCP check as the liveness probe with enough time to cover the worst case startup scenario. The time is calculated by `failureThreshold * periodSeconds`.
 
 ```cue
 containers: {
@@ -291,11 +291,11 @@ containers: {
 }
 ```
 
-In the above file, we have a two sidecars defined. One is `git-clone` which is defined as an `init` container. The init container starts up before the primary container. Each init container should run a single task, and must complete successfully before additional init and application containers are started.
+In the above file, we have two sidecars defined. One is `git-clone` which is defined as an `init` container. The init container starts up before the primary container. Each init container should run a single task, and must complete successfully before additional init and application containers are started.
 
-The second side car above is a service that runs alongside the primary frontend container and in this case provides a metrics endpoint. You can define as many side car containers as you need to run and support your application.
+The second sidecar above is a service that runs alongside the primary frontend container and in this case provides a metrics endpoint. You can define as many sidecar containers as you need to run and support your application.
 
 ## Additional Reading
 
 * [Networking Concepts in Acorn](/Architecture/security-considerations)
-* [Acorn file reference](/reference/Acornfile)
+* [Acornfile reference](/reference/Acornfile)

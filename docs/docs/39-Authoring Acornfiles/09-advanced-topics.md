@@ -25,7 +25,7 @@ containers: {
 
 Applications that have stateful data or where an operator would care which order the containers will be removed in a scale down event should not use the `scale` field and should instead create unique instances of the container.
 
-To accomplish this, users can leverage `for` loops in the Acorn file. Within the `for` loop block all items unique to that instance should be defined. In most cases, this will be a container and data volumes. It can contain any of the top level structs if needed.
+To accomplish this, users can leverage `for` loops in the Acornfile. Within the `for` loop block all items unique to that instance should be defined. In most cases, this will be a container and data volumes. It can contain any of the top level structs if needed.
 
 ```cue
 import "list"
@@ -56,7 +56,7 @@ When deploying stateful applications it is a reasonable assumption to bootstrap 
 
 ## String manipulation
 
-There are multiple ways to manipulate strings in the acorn file.
+There are multiple ways to manipulate strings in the Acornfile.
 
 ### Simple string substitution
 

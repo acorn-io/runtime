@@ -1,4 +1,4 @@
-// The acorn file is a cue syntax. CUE is a superset of JSON, so all valid JSON is CUE.  In CUE you don't
+// The Acornfile is a cue syntax. CUE is a superset of JSON, so all valid JSON is CUE.  In CUE you don't
 // need to quote most keys, comments using // are supported, and trailing commas are optional.
 
 // Definitions of containers to run. The key of will be used as the container name and must be a valid
@@ -213,9 +213,9 @@ args: {
 	}
 }
 
-// Arbitrary information that the acorn file author can embed so that if can be
+// Arbitrary information that the Acornfile author can embed so that if can be
 // referenced somewhere else in the file. This is used mostly as a way to organize or better
-// format your acorn file
+// format your Acornfile
 localData: {
 	key: "value"
 	complex: {
