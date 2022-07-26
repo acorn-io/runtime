@@ -5,16 +5,6 @@
     "postUpdateOptions": ["gomodTidy"],
     "packageRules": [
         {
-            "matchManagers": [
-                "dockerfile"
-            ],
-            "matchUpdateTypes": [
-                "pin",
-                "digest"
-            ],
-            "automerge": true
-        },
-        {
             "matchPackagePatterns": [
                 "^golang.*"
             ],
