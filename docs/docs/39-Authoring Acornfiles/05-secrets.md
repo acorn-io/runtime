@@ -20,13 +20,13 @@ Some containers use environment variables for secret bits of data. The Mariadb c
 containers: {
     db: {
         image: "mysql"
-        ...
+        // ...
         env: {
             "MYSQL_ROOT_PASSWORD": "secret://db-root-password/token"
         }
     }
 }
-...
+// ...
 secrets: {
     "db-root-password": {
         type: "token"
@@ -44,13 +44,13 @@ It is possible to pass secret configuration data to a container in a pre-rendere
 containers: {
     web: {
         image: "nginx"
-        ...
+        // ...
         files: {
             "/etc/nginx/conf.d/website.conf": "secret://website-conf/template"
         }
     }
 }
-...
+// ...
 secrets: {
     "proxy-auth": {
         type: "opaque"
@@ -64,9 +64,9 @@ secrets: {
             template: """
             server {
                 listen 80;
-                ...
+                // ...
                 location / {
-                    ...
+                    // ...
                     proxy_set_header Authorization "Basic ${secret://proxy-auth/basic-auth-string}"
                 }
             }
@@ -163,11 +163,11 @@ Generated secrets allow storing sensitive data output from a [job](/Authoring%20
 ```cue
 containers: {
     "frontend-proxy": {
-        ...
+        // ...
         files: {
             "/etc/htpasswd": "secret://htpasswd-file/content"
         }
-        ...
+        // ...
     }
 }
 jobs: {

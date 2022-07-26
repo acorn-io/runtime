@@ -11,7 +11,7 @@ In the case of scaling stateless applications the `scale` field can be defined o
 ```cue
 args: {
     // Stateless web servers to run
-    scale: int | *1
+    scale: 1
 }
 containers: {
     web: {
@@ -32,13 +32,13 @@ import "list"
 
 args: {
     // Number of instances
-    replicas: int | *1
+    replicas: 1
 }
 
 for i in list.Range(0, replicas, 1) {
     containers: {
         "instance-\(i)": {
-            ....
+            // ...
             dirs: {
                 "/data": "volume://instance-data-\(i)"
             }

@@ -8,7 +8,7 @@ The primary goal of the Acornfile is to quickly and easily describe how to build
 
 The syntax is very similar to JSON and YAML that you are already familiar with from other tools.
 
-The resulting artifact defined by the Acornfile and produced during `acorn build` is a complete bundle of the container images, secrets, data, nested acorns, etc. all packaged in a single OCI image that can be distributed through a registry.
+The resulting artifact defined by the Acornfile and produced during `acorn build` is a complete package of the container images, secrets, data, nested acorns, etc. all in one OCI image that can be distributed through a registry.
 
 ### The primary building blocks
 
@@ -16,7 +16,7 @@ In the Acornfile file the primary building block is a struct. The generic syntax
 
 ```cue
 name: {
-    ...
+    // ...
 }
 ```
 
@@ -25,12 +25,12 @@ A more Acorn specific example is:
 ```cue
 containers: {
     "my-app": {
-        ...
+        // ...
     }
 }
 ```
 
-In the above example, there is a struct called containers, and another stuct called `my-app`. It should be noted in an Acornfile, user-defined keys like `my-app` need to be placed in quotes if they contain a `-`.
+In the above example, there is a struct called containers, and another struct called `my-app`. It should be noted in an Acornfile, user-defined keys like `my-app` need to be placed in quotes if they contain a `-`.
 
 ### Lists
 
@@ -39,16 +39,16 @@ The other main building block type are lists.
 ```cue
 containers: {
     myapp: {
-        ...
+        // ...
         ports: [
             "80/http",
         ]
-        ...
+        // ...
     }
 }
 ```
 
-The list is surrounded by `[]` and each item has a trailing comma.
+The list is surrounded by `[]` and each item has a trailing comma, including the last item.
 
 ### Variables
 
@@ -76,7 +76,7 @@ localData: {
 
 containers: {
     web: {
-        ...
+        // ...
         env: {
             "hi! \(localData.myVariable)"
         }
@@ -99,4 +99,12 @@ secrets: {
         }
     }
 }
+```
+
+### Comments
+
+You can add comments to document the Acornfile. Comments must start with a `//` string.
+
+```cue
+// This is a comment
 ```

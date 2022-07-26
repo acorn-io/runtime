@@ -5,12 +5,12 @@ containers: default: {
 
 	if args.dev {
 		build: target: "dynamic"
-		expose: "3000/http"
+		ports: publish: "3000/http"
 		dirs: "/usr/src": "./"
 	}
 
 	if !args.dev {
 		build: target: "static"
-		expose: "80/http"
+		ports: publish: "80/http"
 	}
 }

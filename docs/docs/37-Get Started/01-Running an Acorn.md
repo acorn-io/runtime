@@ -14,7 +14,7 @@ If you would like to run an acorn from a registry the command is:
 
 `acorn run registry.example.com/myorg/app-image`
 
-There is no need to pull the image ahead of time if the image is not on the host. It will be pulled when acorn goes to run the image.
+There is no need to pull the image ahead of time, Acorn will pull it if the image is not on the host.
 
 To see what arguments are available to customize the Acorn add `--help` after the image name.
 
@@ -26,7 +26,7 @@ To pass values:
 
 ## Starting the Acorn Dashboard
 
-In addition the CLI, we want to call out the Acorn Dashboard as another way to quickly view Acorn applications on your machine. From the dashboard, you can gain access to the containers logs, quickly find URL links to your apps, and manage volumes and secrets.
+In addition to the CLI, we want to call out the Acorn Dashboard as another way to quickly view Acorn applications on your cluster. From the dashboard, you can gain access to the containers logs, quickly find URL links to your apps, and manage volumes and secrets.
 
 To start the dashboard, run the following command:
 `acorn dashboard`

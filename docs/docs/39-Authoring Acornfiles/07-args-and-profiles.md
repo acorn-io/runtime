@@ -14,10 +14,10 @@ Arguments to the Acorn can be standard `strings`, `ints`, `bools`, and other com
 
 ```cue
 args: {
-    argName: <type> | *<default>
-    intVar: int | *1
-    stringVar: string | *"somestring"
-    boolVar: bool | *true
+    argName: "default"
+    intVar: 1
+    stringVar: "somestring"
+    boolVar: true
 }
 ```
 
@@ -34,17 +34,17 @@ When defining args add a `// Comment` above the argument. That will be shown the
 ```cue
 args: {
     // Number of instances to run.
-    replicas: int | *1
+    replicas: 1
 }
 ```
 
 When the user passes the `--help` arg to Acorn for this image they will see
 
 ```shell
-> acorn MYIMAGE --help
-...
+$ acorn MYIMAGE --help
+// ...
 --replicas Number of instances to run. 
-...
+// ...
 ```
 
 ### Complex data types
@@ -56,7 +56,7 @@ Authors define the variable like:
 ```cue
 args: {
     // User configuration data for XYZ tool
-    userConfigData:  {...} | *{}
+    userConfigData:  {}
 }
 ```
 
@@ -79,12 +79,12 @@ To prevent the author from having to create a profile, Acorn provides the `args.
 ```cue
 containers: {
     web: {
-        ...
+        // ...
         if args.dev {
-            expose: "1313/http"
+            ports: publish: "1313/http"
         }
         if !args.dev {
-            expose: "80/http"
+            ports: publish: "80/http"
         }
     }
 }
@@ -97,11 +97,11 @@ Profiles specify default arguments for different contexts like dev, test, and pr
 ```cue
 args: {
     // Number of instances to run
-    replicas: int | *3
+    replicas: 3
 }
 profiles: {
     dev: {
-        replicas: int | *1
+        replicas: 1
     }
 }
 ```
@@ -119,14 +119,14 @@ When the value is assigned to any key in the config file, you can use '.' notati
 ```cue
 args: {
     // URL to document website
-    docUrl: int | *3
+    docUrl: ""
 
     // App Config Value
-    configValue: string | *"follower"
+    configValue: "follower"
 }
 containers: {
     web: {
-        ...
+        // ...
         env: {
             "APP_DOC_URL": args.docUrl
         }
@@ -148,9 +148,9 @@ When using an arg in a string or template the '.' variable needs to be placed in
 ```cue
 args: {
     // A string arg
-    aStringArg: string | *"default"
+    aStringArg: "default"
 }
-...
+// ...
 secrets: {
     type: "template"
     data: {
@@ -171,13 +171,12 @@ Here is an example of allowing the user to override some defaults, but pass in a
 
 ```cue
 args: {
-    userConfig: {...} | *{}
+    userConfig: {}
 }
-
-...
+// ...
 localData: {
     appConfig: args.userConfig & {
-        userDefinableInt: int | *3
+        userDefinableInt: 3
         staticConfigString: "this is static"
     }
 }
