@@ -4,9 +4,6 @@ title: Upgrades
 
 ## CLI
 
-<<<<<<< HEAD
-To upgrade Acorn, download the newer binary and run `acorn init`.
-=======
 In order to upgrade Acorn on a Kubernetes cluster you must first download an updated Acorn CLI version.
 
 ### Brew
@@ -29,4 +26,3 @@ acorn init
 ```
 
 This will download the newest versions of the Acorn components for the cluster.
->>>>>>> 562ab4c (renamed files and fixed syntax.)
