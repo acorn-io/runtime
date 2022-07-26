@@ -1,5 +1,5 @@
 ---
-title: Develop with Acorn
+title: Developing with Acorn
 ---
 
 Developing applications often requires configurations different from the target production setup. Different frameworks have development servers that listen on unique ports, the scale of systems might be lower due to resource constraints, etc that require runtime setups. This section will cover how to address configuration differences between development and production.
@@ -58,7 +58,7 @@ If this is run via `acorn run -i .`, it will expose port 1313 on an endpoint tha
 
 ## Acorn live edit mode
 
-Most teams will want to develop their app, and update when source code changes. To accomplish this, Acorn can be configured to synchronize files from the local filesystem into the container. Apps that support live reloading when they detect file changes will be able to take advantage of the syncing.
+Most teams will want to develop their app, and update when source code changes. To accomplish this, Acorn can be configured to synchronize files from the local filesystem into the container. Apps that support live reloading or hot-reloading when they detect file changes will be able to take advantage of the syncing.
 
 ### File syncing
 

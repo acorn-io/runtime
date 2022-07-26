@@ -8,31 +8,31 @@ title: Acorn Cue file
 // The Acornfile is a cue syntax. CUE is a superset of JSON, so all valid JSON is CUE.  In CUE you don't
 // need to quote most keys, comments using // are supported, and trailing commas are optional.
 
-// Definitions of containers to run. The key of will be used as the container name and must be a valid
-// short DNS name.  The container(s) will be accesible through DNS by this short name. The keys have to be
+// Definitions of containers to run. The key will be used as the container name and must be a valid
+// short DNS name.  The container(s) will be accessible through DNS by this short name. The keys have to be
 // unique across containers, jobs, cronjobs, and routers.
 containers: {
- // A definition of a container to run. The scale field below will determine how many containers from this
+ // A definition of a container to run. The scale field below will determine how many containers should be run from this
  // one definition.  At runtime each container will have a unique hostname.
  sample: {
   // The Docker/OCI image to run for this container. Either image or build must be specified
   image: "some-docker/image:v1.0.0"
 
-  // Build the image to run from a Dockerfile. This can either be a path to where the Dockerfile
-  // for example:
+  // Build the image to run from a Dockerfile. This can be the directory where the Dockerfile is located
+  // or full build definition.
+  // For example:
   //
   //    build: "./image"
   //
-  // The above will is the same as {dockerfile: "./image/Dockerfile", context: "./image"}
-  // is or full build definition like below.
+  // The above is the same as {dockerfile: "./image/Dockerfile", context: "./image"}
   build: {
    // Build arguments to pass to the Docker build.
    buildArgs: {
     param1: "value"
    }
-   // The context root of the Docker build relative to the root of the acorn build
+   // The context root of the Docker build relative to the root of the Acorn build
    context: "./subdir"
-   // Location of the Dockerfile to use relative to the root of the acorn build, not the context path
+   // Location of the Dockerfile to use relative to the root of the Acorn build, not the context path
    dockerfile: "./subdir/otherdir/Dockerfile"
    // The multi-stage build target to build in the Dockerfile
    target: string | *""
@@ -56,7 +56,7 @@ containers: {
   // Allocate a TTY
   interactive: false
 
-  // Ports to open to other containers in the existing app (no publically accesible)
+  // Ports to open to other containers in the existing app (no publicly accessible)
   // Ports are of the format "[EXTERNAL:]INTERNAL[/PROTOCOL]". Acceptable protocols
   // are tcp, udp, http, https
   ports: [
@@ -73,7 +73,7 @@ containers: {
    "1234/udp",
   ]
 
-  // Expose these ports out side of the acorn (possibly public) and internally. The format is the same as "ports"
+  // Expose these ports outside of the Acorn App (possibly public) and internally. The format is the same as for "ports"
   expose: [
    22,
    "22:2222",
@@ -101,10 +101,10 @@ containers: {
    "/run/secret/password": "secret://sample-user/password"
   }
 
-  // Mount a volume, secrets, or ephemeral storage a directory or secrets.
+  // Mount a volume, secrets, ephemeral storage or a directory.
   // Secrets are referenced by the value "secret://secret-name". The secret data will become files
   // named the same as the keys.
-  // Volumes are reference by "volume://name?class=className&size=10" where size is in gigabytes.
+  // Volumes are referenced by "volume://name?class=className&size=10" where size is in gigabytes.
   dirs: {
    // Mount volume named "my-data"
    "/var/lib/data": "my-data"
@@ -231,7 +231,7 @@ args: {
  }
 }
 
-// Arbitrary information that the Acornfile author can embed so that if can be
+// Arbitrary information that the Acornfile author can embed so that it can be
 // referenced somewhere else in the file. This is used mostly as a way to organize or better
 // format your Acornfile
 localData: {

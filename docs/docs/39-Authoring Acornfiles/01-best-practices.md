@@ -32,4 +32,4 @@ Use specific versions and tags of images, at least to the minor version in SemVe
 
 When dealing with stateful applications, use a unique container per instance. Do **not** use scale for stateful applications. This ensures each instance has a unique and stable FQDN. Scaling up and down is always deterministic.
 
-Each application container should use `depends_on` for the instance before it. This will ensure that only one application container is taken down at a time.
+Each application container should use `dependsOn` for the instance before it. This will ensure that only one application container is taken down at a time.

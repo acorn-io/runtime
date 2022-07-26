@@ -4,7 +4,7 @@ title: Managing Secrets
 
 ## Overview
 
-Acorn Apps have secrets defined in the Acornfile file under the `secrets` key. Before running an Acorn App you can see which secrets are defined by passing the `--help` flag.
+Acorn Apps have secrets defined in the Acornfile under the `secrets` key. Before running an Acorn App you can see which secrets are defined by passing the `--help` flag.
 
 ```shell
 > acorn run [MY-APP-IMAGE] --help
@@ -29,7 +29,7 @@ The secrets are listed out in the `Secrets` section.
 
 ## Listing secrets
 
-If you would like to see which secrets are being used by your running Acorn Apps, you can use the acorn secret command.
+If you would like to see which secrets are being used by your running Acorn Apps, you can use the `acorn secret` command.
 
 ```shell
 > acorn secrets
@@ -57,16 +57,16 @@ db-user-credentials-dvbsq   kubernetes.io/basic-auth   username   hg4r98lh
 
 ## Using your own secret to pass data to the app
 
-If you would like to pass your own credentials or secret information into the Acorn App, you can bind a secret in at runtime.
+If you would like to pass your own credentials or secret information into the Acorn App, you can bind a secret at runtime.
 
 ```shell
 # Create the secret
 > acorn secret create --data username=user0 --data password=supersecret1 my-app-secret-creds
 my-app-secret-creds
 
-# Bind into an app
+# Bind to an app
 > acorn run -s my-app-secret-creds:db-user-credentials [MY-APP-IMAGE]
 morning-pine
 ```
 
-In the above example the values from my-app-secret-creds will be used instead of the one created by the app.
+In the above example the values from `my-app-secret-creds` will be used instead of the ones created by the app.

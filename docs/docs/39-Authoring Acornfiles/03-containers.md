@@ -10,6 +10,7 @@ The container section in the Acornfile defines everything about the individual c
 containers:{
     "my-webapp": {
         image: "nginx"
+        ports: publish: "80/http"
     }
 }
 ```
@@ -30,11 +31,11 @@ containers: {
 }
 ```
 
-Now when `acorn build .` or `acorn dev .` is run, the `my-app` container will be built and packaged as a part of the Acorn. It will look for a Dockerfile in the `./` directory.
+Now when `acorn build .` or `acorn run -i .` is run, the `my-app` container will be built and packaged as a part of the Acorn. It will look for a Dockerfile in the `./` directory.
 
 ### Customized build behavior
 
-Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](/Authoring%20Acornfiles/args-and-profiles) to see how to customize these values at build and run time.
+Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](/Authoring%20Acornfiles/args-and-profiles) to see how to customize these values at build and runtime.
 
 ```cue
 containers: {
@@ -89,7 +90,7 @@ The next example shows the `expose` parameter, used to define ports that are mea
 containers: {
     "my-webapp": {
         image: "nginx"
-        expose: "8080/http"
+        ports: publish: "8080/http"
     }
     database: {
         image: "mysql"
@@ -162,7 +163,7 @@ containers: {
 }
 ```
 
-In the above file, when building the acorn the `/init-scripts` directory will be populated with the contents of the local `./scripts` directory. Files are copied in with the same permissions.
+In the above file, when building the Acorn the `/init-scripts` directory will be populated with the contents of the local `./scripts` directory. Files are copied in with the same permissions.
 
 The `/home/.ssh/` directory will have files named after the secrets keys and content. The `/data` directory will have the volume `data-vol` mounted.
 
@@ -297,5 +298,5 @@ The second sidecar above is a service that runs alongside the primary frontend c
 
 ## Additional Reading
 
-* [Networking Concepts in Acorn](/Architecture/security-considerations)
+* [Acorn Security Considerations](/Architecture/security-considerations)
 * [Acornfile reference](/reference/Acornfile)

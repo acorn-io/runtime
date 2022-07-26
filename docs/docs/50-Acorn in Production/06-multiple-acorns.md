@@ -6,7 +6,7 @@ Acorn apps can be [linked at runtime](/Acorn%20in%20Production/multiple-acorns#l
 
 ## Linking with other Acorns at runtime
 
-Acorns can be linked with other running acorns at run time to provide supporting services. For instance if you have an Acorn running Postgresql, it can be used to provide the db service another app.
+Acorns can be linked with other running Acorns at runtime to provide supporting services. For instance if you have an Acorn running Postgresql, it can be used to provide the `db` service to another app.
 
 If you have an Acorn that defines a `web` container and a `redis` container, you can consume a separate Acorn to provide the redis service from an already running Acorn.
 

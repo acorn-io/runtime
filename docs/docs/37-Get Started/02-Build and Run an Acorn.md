@@ -38,7 +38,7 @@ This will build an image and make it available to run on the cluster.
 
 ![Build output](/img/build_output.png)
 
-## Running the acorn
+## Running the Acorn
 
 Now that the image is built, you can now run that image:
 
@@ -68,7 +68,7 @@ This will show you the status of the individual containers.
 
 ### Viewing all resources
 
-In order to view all of the resources defined in your acorn namepace, you can use:
+In order to view all of the resources defined in your Acorn namepace, you can use:
 
 `acorn all`
 

@@ -11,18 +11,18 @@ The token secret type is used to generate a random token string that can be used
 
 ```cue
 // Acorn.cue
-...
+// ...
 containers: {
     app: {
-        ...
+        // ...
         files: {
             "/config/secret_token": "secret://my-app-token/token"
         }
     }
 }
-...
+// ...
 secrets: {
-    ...
+    // ...
     "my-app-token": {
         type: "token"
         params: {
@@ -30,16 +30,16 @@ secrets: {
             chars: "1234567890"
         }
     }
-    ...
+    // ...
 }
-...
+// ...
 ```
 
 The above generates a token 32 characters in length using only digits 0-9.
 
 ### Generated
 
-Generated secrets are values obtained from running a job defined in the Acornfile file. The job must write the output to `/run/secrets/output` in order for it to be placed into the secret. The data will be available via the secrets `content` key.
+Generated secrets are values obtained from running a job defined in the Acornfile. The job must write the output to `/run/secrets/output` in order for it to be placed into the secret. The data will be available via the secrets `content` key.
 
 ```cue
 containers: {
@@ -108,7 +108,7 @@ secrets: {
 
 ### Opaque
 
-Opaque secrets are for sensitive bits of data without a specific structure. One example usecase is to pass in ssh keys from a user.
+Opaque secrets are for sensitive bits of data without a specific structure. One example usecase is to pass in SSH keys from a user.
 
 ```cue
 containers: {
@@ -124,7 +124,7 @@ secrets: {
 }
 ```
 
-Now assuming a user has a pre-created secret with keys called `my-keys` the Acorn be launched like so.
+Now assuming a user has a pre-created secret with keys called `my-keys` the Acorn can be launched like so:
 
 ```shell
 > acorn run -s my-keys:user-provided-ssh-keys [MY-APP-IMAGE]
@@ -133,7 +133,7 @@ morning-pine
 
 ### Template
 
-The template type makes it easy to provide config files and scripts with string interpolated values.
+The template type makes it easy to provide config files and scripts with string-interpolated values.
 
 ```cue
 args: deploy: setting: string| *"default"

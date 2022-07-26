@@ -8,21 +8,21 @@ To see what images are available locally in your Acorn namespace.
 
 `acorn images`
 
-This will show all images available in the acorn namespace.
+This will show all images available in the Acorn namespace.
 
 ## Tagging images
 
-If you want to tag a local image to push to another registry, or move from a SHA to a friendly name, you can tag the image. The command is:
+If you want to push a local Acorn Image to another registry, or move from a SHA to a friendly name, you can tag the image. The command is:
 
 `acorn tag <current_image> <new_image>`
 
-To tag and prepare to push to registry.example.com/myorg/image:version run:
+To tag and prepare to push to `registry.example.com/myorg/image:version` run:
 
 `acorn tag myimage registry.example.com/myorg/image:latest`
 
-## Pull from public registry
+## Pull from a public registry
 
-To pull a remote Acorn image locally you can use the `pull` subcommand.
+To pull a remote Acorn Image locally you can use the `pull` subcommand:
 
 `acorn pull registry.example.com/myorg/image:v1.0`
 
@@ -40,15 +40,15 @@ The user will be prompted for the username and password for the registry.
 
 Optionally, the user may use the `--username <USER>` flag and the `--password <PASS>` flags on the login subcommand.
 
-Also available is the `--password-stdin` flag that takes the password from stdin.
+Also available is the `--password-stdin` flag that takes the password from `stdin`.
 
-### Pull from private registry
+### Pull from a private registry
 
 Pulling from a private registry requires that you are authorized by having logged in. Otherwise it is the same as doing a regular pull.
 
 ## Push to a registry
 
-Pushing to a registry requires
+Pushing to a registry requires 2 things:
 
 1. User is logged in and authorized.
 1. Image is tagged to the remote server.
@@ -63,7 +63,7 @@ Pushing to a registry requires
 
 ### Specific image
 
-List all of the images, and remove the image based on the sha.
+List all of the images, and remove the image based on the SHA.
 
 ```shell
 > acorn images
@@ -81,7 +81,7 @@ The `-i` option specifies the image.
 
 ### All images
 
-Warning: This removes ALL images on current clusters namespace. If you want to delete all images on your cluster you can use:
+Warning: This removes ALL images on current cluster's namespace. If you want to delete all images on your cluster you can use:
 
 `acorn rm -i $(acorn images -a -q)`
 

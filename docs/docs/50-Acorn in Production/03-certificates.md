@@ -3,35 +3,36 @@ title: TLS Certificates
 ---
 
 Services exposing HTTP endpoints can be protected by TLS certificates. In the
-future, Acorn will provide built in mechanisms to automatically provide certificates
+future, Acorn will provide built-in mechanisms to automatically provide certificates
 for each endpoint. Today, adding a certificate must follow the manual approach.
 
-## Automatic (Todo)
+<!-- TODO: ## Automatic -->
 
-## Manually Add Certificates
+## Manually adding certificates
 
-Acorn will automatically look for SANS in secrets of type kubernetes.io/tls for the
+Acorn will automatically look for SANs in secrets of type `kubernetes.io/tls` for the
 exposed FQDN of the application in the Acorn namespace.
 
-Ex:
+<!-- TODO: add example -->
 
 Assume you are deploying an app and plan to host on `my-app.example.com`
 
-### Add existing certs using kubectl
+### Add existing certificates using kubectl
 
-Before launching the application precreate a secret in the `acorn` namespace containing the
+Before launching the application pre-create a secret in the `acorn` namespace containing the
 certificate like so:
 
 `kubectl create secret tls my-app-tls-secret --cert=path/to/my-app-tls.cert --key=path/to/my-app-tls.key`
 
 ### Add with Cert-Manager
 
-If you are already using Cert-Manager today, you can leverage it with Acorn today. First you must
+If you are already using Cert-Manager today, you can leverage it with Acorn right away. First you must
 create a certificate resource in the Acorn namespace:
 
 `kubectl apply -n acorn -f ./my-cert.yaml`
 
 ```yaml
+# my-cert.yaml
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -46,15 +47,15 @@ spec:
     secretName: my-app-tls-secret
 ```
 
-Cert-Manager will create a cert for my-app.example.com and store it in a secret my-app-tls-secret.
+Cert-Manager will create a certificate for `my-app.example.com` and store it in a secret `my-app-tls-secret`.
 
 ### Consume the secret
 
-Once you have manually created the tls secret from one of the methods above you can consume it in your application.
+Once you have manually created the TLS secret using one of the methods above you can consume it in your application.
 
 When you deploy the application Acorn, you can launch with the FQDN of your app.
 
-`acorn run -d my-app.example.com:web [MY_APP_IMAGE]`
+`acorn run -p my-app.example.com:web [MY_APP_IMAGE]`
 
 Acorn will automatically inspect each certificate in the Acorn namespace for one that can be used with `my-app.example.com`.
-If no tls secret is found with that FQDN, it will be exposed on HTTP only.
+If no TLS secret is found with that FQDN, it will be exposed on HTTP only.

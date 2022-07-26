@@ -12,58 +12,55 @@ Acorn allows multiple teams to deploy and manage Acorn apps on a cluster without
 
 ### Scope
 
-The unit of tenancy is the Acorn namespace, the default is `acorn`. A user who access to that namespace will be able to see all Acorn apps running in that environment. They will be able to access the logs, containers, and endpoints.
+The unit of tenancy is the Acorn namespace, the default one is `acorn`. A user with access to that namespace will be able to see all Acorn apps running in that environment. They will be able to access the logs, containers, and endpoints.
 
-All Acorn CLI commands and the UI are scoped to the users Acorn namespace.
+All Acorn CLI commands and the UI are scoped to the user's Acorn namespace.
 
 ### RBAC
 
-Uses will require access to CRUD AppInstance types from v1.acorn.io API group.
+Users will require access to CRUD `AppInstance` types from the `v1.acorn.io` API group.
 
-Optionally, they might need access to create secrets and possibly CertManager objects for TLS certs. This is if the app team running the Acorn app will be creating secrets to pass in data.
+Optionally, they might need access to create secrets and possibly CertManager objects for TLS certs. This is if the app team running the Acorn App will be creating secrets to pass in data.
 
-Users can be given access to multiple Acorn namespaces, and will be able to switch between them from the CLI.
+Users can be given access to multiple Acorn namespaces and will then be able to switch between them from the CLI.
 
 ## Credentials
 
-Credentials refer to credentials used to pull from and/or push to OCI
-registries. In the future credentials in Acorn may be used for different
-types of credential, but as it stand they are only used for OCI registries.
+Credentials refer to credentials used to pull from and/or push to OCI registries.
+In the future credentials in Acorn may be used for different types of services, but at the moment they are only used for OCI registries where Acorn Images are stored.
 
 ### Storage
 
-Credentials are store within the cluster in a namespaced secret. Acorn
-API does not give access to the secret values of the credential, namely
-the password or token. If a user has access to use the credential that
-does not mean they can see the credential value. This makes it safe
-to share credentials in a team setting.
+Credentials are stored within the cluster in a namespaced secret.
+The Acorn API does not give access to the secret values of the credential, namely the password or token.
+If a user has access to use the credential that does not mean they can see the credential value.
+This makes it safe to share credentials in a team setting.
 
 ### Scope/Access
 
-Credentials are valid for all apps and images in a namespace. Any use
-that has privileges to push or pull and image will implicitly be using
-the credentials stored in that namespace. Similarily any app that is
-deploy will use the credentials available in the namespace to pull the
-Acorn image and referenced Docker images.
+Credentials are valid for all Acorn Apps and Acorn Images in a namespace.
+Any user that has privileges to push or pull and Acorn Image will implicitly be using the credentials stored in that namespace.
+Similarly any Acorn App that is deployed will use the credentials available in the namespace to pull the Acorn Image and referenced Docker images.
 
 ### CLI
 
-Credentials are managed with the [acorn credential](../100-Reference/01-command-line/acorn_credential.md) command.
+Credentials are managed with the [`acorn credential`](../100-Reference/01-command-line/acorn_credential.md) command.
 
 ## Networking
 
 ### Acorn App Network scopes
 
-Acorn can be used to package applications that can be used stand alone, with other Acorns, and made available to non Acorn based workloads.
+Acorn can be used to package applications that can be used standalone, with other Acorns, and made available to non Acorn based workloads.
 Modern day applications are loosely coupled over networking paths.
 
 Terminology:
 
-Acorn App - An application that has been defined and packaged within the scope of a single Acornfile file.
+- Acorn Image - An application with all its resources, dependencies and configuration, defined by a single Acornfile and packaged as an OCI image
+- Acorn App - An instantiation of an Acorn Image
 
 ### Internal Acorn communication
 
-When composing an Acorn app that will only need to communicate with itself, you can define the `ports` section on the containers in the app.
+When composing an Acorn App that will only need to communicate with itself, you can define the `ports` section on the containers in the app.
 
 ```cue
 containers: {
@@ -113,7 +110,7 @@ By default, all HTTP services are automatically published via the underlying Ing
 Publishing services is a runtime level decision for the user to make. If a user wants to publish all exposed ports when launching the Acorn App the `-P` flag is used.
 
 ```shell
-> acorn run -P [APP-IMAGE]
+acorn run -P [APP-IMAGE]
 ```
 
 In our example this would expose port 80 through the Ingress controller of the underlying Kubernetes cluster.
@@ -121,10 +118,10 @@ In our example this would expose port 80 through the Ingress controller of the u
 If the user wants to expose under an explicit name, the user can do the following:
 
 ```shell
-> acorn run -d my-app.example.com:my-app [APP-IMAGE]
+acorn run -p my-app.example.com:my-app [APP-IMAGE]
 ```
 
-That will expose the application under the hostname my-app.example.com. There is no need to pass a publish flag.
+That will expose the application under the hostname `my-app.example.com`. There is no need to pass a publish flag.
 
 To see which services in your Acorn App can be published run `acorn run [APP-IMAGE] --help`
 
@@ -153,13 +150,13 @@ If you have an app that exposes a TCP endpoint instead of HTTP like:
 
 ```cue
 containers: {
-    ...
+    // ...
     mysql: {
         image: mysql
         expose: "3306:3306"
-        ...
+        // ...
     }
-    ...
+    // ...
 }
 ```
 

@@ -8,9 +8,9 @@ In this guide you will walk through:
 * Running an existing Acorn
 * Building and running an Acorn for your project
 
-## Running an Acorn app
+## Running an Acorn App
 
-If you would like to run an acorn from a registry the command is:
+If you would like to run an Acorn from a registry the command is:
 
 `acorn run registry.example.com/myorg/app-image`
 

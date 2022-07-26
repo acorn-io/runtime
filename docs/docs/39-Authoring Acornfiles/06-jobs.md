@@ -4,7 +4,7 @@ title: Jobs
 
 ## Jobs
 
-Jobs are containers that perform one off or scheduled tasks to support the application. Jobs are defined in their own top level `jobs` section of the Acornfile. A job container will continue to run until it has run a successful operation all the way through.
+Jobs are containers that perform one off or scheduled tasks to support the application. Jobs are defined in their own top-level `jobs` section of the Acornfile. A job container will continue to run until it has successfully completed all operations once.
 
 A Job has all the same fields as a container, with the exception of an optional `schedule` field.
 
@@ -41,4 +41,4 @@ jobs: {
 }
 ```
 
-The `schedule` key makes this a cron based job. The `schedule` field must be a valid crontab format entry. Meaning it can use standard "**** *" format or @[interval] crontab shorthand.
+The `schedule` key makes this a cron based job. The `schedule` field must be a valid crontab format entry. Meaning it can use standard `* * * * *` format or @[interval] crontab shorthand.
