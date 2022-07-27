@@ -14,7 +14,7 @@ It is possible to define the behavior when the secret is updated to a new value.
 
 ### Consume secret in an environment variable
 
-Some containers use environment variables for secret bits of data. The Mariadb container for instance uses an environment variable to set the root password.
+Some containers use environment variables for secret bits of data. The MariaDB container for instance uses an environment variable to set the root password.
 
 ```cue
 containers: {
@@ -34,7 +34,7 @@ secrets: {
 }
 ```
 
-The example shows the secret "db-root-password" being consumed as environment variable in the db container. The secret is of type token and will automatically be generated at run time by Acorn. The user can then use the Acorn cli to get the credential if needed.
+The example shows the secret `db-root-password` being consumed as an environment variable in the db container. The secret is of type token and will automatically be generated at runtime by Acorn. The user can then use the Acorn CLI to get the credential if needed.
 
 ### Consume secrets in configurations
 
@@ -76,29 +76,30 @@ secrets: {
 }
 ```
 
-The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitue the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at run time by binding over the secret.
+The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitue the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by binding over the secret.
 
 ## Types of secrets
 
 Acorn makes multiple types of secrets available to the Acorn author.
 
- 1. **Basic:** Used to generate and/or store username and passwords.
+ 1. **Basic:** Used to generate and/or store usernames and passwords.
  1. **Template:** Used to store configuration files that contain sensitive information.
  1. **Token:** Used to generate and/or store long secret strings.
  1. **Generated:** Used to take the output of a `job` and pass along as a secret bit of info.
- 1. **Opaque:** A generic secret that can store defaults in the Acorn, or meant to be overriden by the user to pass unknown/unstructured sensitive data.
+ 1. **Opaque:** A generic secret that can store defaults in the Acorn, or is meant to be overriden by the user to pass unknown/unstructured sensitive data.
 
 ### Basic secrets
 
 Basic secrets are defined in the secrets block with the type "basic".
 
 ```cue
+// ...
 secrets: {
     "my-creds": {
         type: "basic" // required
         data: {  
-            username: "" //optional
-            password: "" //optional
+            username: "" // optional
+            password: "" // optional
         }
     }
 }
@@ -108,10 +109,10 @@ The basic secret type is used for username / password pairs. The key names must 
 
 ### Template secrets
 
-The template secret can be used to render and store multiple secret values into a single output. It has the format:
+The template secret can be used to render and store multiple secret values into a single output. It has the following format:
 
 ```cue
-...
+// ...
 secrets: {
     "my-template": {
         type: "template" // required
@@ -147,14 +148,14 @@ secrets: {
         }
     }
     data: {
-        token: "" //optional
+        token: "" // optional
     }
 }
 ```
 
 The token secret type must be defined. The params allow customization of the generated token. By default tokens are 54 characters in length. By defining the `length` param the token can be customized to be within 0-256 characters long. The `characters` param allows the user to define the allowed character values within the token.
 
-The `token` field in the data struct is optional and needs to be left the default empty string if Acorn is going to render the token. If the `token` is defined that value will always be used.
+The `token` field in the data struct is optional and needs to be left the default empty string if Acorn should generate the token. If the `token` is defined that value will always be used.
 
 ### Generated secrets
 
@@ -189,7 +190,7 @@ secrets: {
     "htpasswd-file": {
         type: "generated" // required
         params: {
-            job: "htpasswd-create" //required
+            job: "htpasswd-create" // required
             format: "text" // optional
         }
     }
@@ -202,7 +203,7 @@ The `job` parameter is always required, and is the name of the job that will gen
 
 ### Opaque secrets
 
-Opaque secrets have no defined structure and can have arbitrary key value pairs. These types of secrets are best used for user input, where it is expected the user will bind in their own secret at run time.
+Opaque secrets have no defined structure and can have arbitrary key value pairs. These types of secrets are best used for user input, where it is expected the user will bind in their own secret at runtime.
 
 ```cue
 secrets: {

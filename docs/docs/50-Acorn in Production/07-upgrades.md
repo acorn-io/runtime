@@ -2,7 +2,7 @@
 title: Upgrades
 ---
 
-When upgrading the app, you do not need to pass in all arguments on every update. The args are persisted, between runs and only the passed in updates are changed.
+When upgrading an Acorn App, you do not need to pass in all arguments on every update. The args are persisted between runs and only the passed in updates are changed.
 
 ## What happens during an upgrade
 
@@ -12,7 +12,7 @@ During an upgrade:
 1. Secrets are deployed.
 1. Jobs are run.
 
-## Updating running image
+## Updating a running image
 
 To upgrade the image in production
 
@@ -22,7 +22,7 @@ This will replace the Acorn, and if new container images or configurations are p
 
 ## Updating parameters
 
-Deployed Acorns can have their parameters changed through the update command. Depending on the parameters being updated it is possible network connectivity maybe lost or containers restarted.
+Deployed Acorns can have their parameters changed through the update command. Depending on the parameters being updated it is possible that network connectivity may be lost or containers restarted.
 
 When updating args for the Acorn app, the behavior will be dependent on how the Acorn app was designed/written. Look for documentation from the Acorn app author to understand what is possible and how to operate the Acorn app.
 
@@ -31,7 +31,7 @@ When updating args for the Acorn app, the behavior will be dependent on how the 
 If an Acorn was deployed like:
 
 ```shell
-> acorn run -d my-app.test.example.com:web [IMAGE] --replicas 3 --cluster-mode active-active
+$ acorn run -p my-app.test.example.com:web [IMAGE] --replicas 3 --cluster-mode active-active
 purple-field
 ```
 

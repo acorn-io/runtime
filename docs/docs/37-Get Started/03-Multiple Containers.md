@@ -33,7 +33,7 @@ containers: {
 
 Now when Acorn builds this, it will build the `app` container from the Dockerfile and pull the `mariadb` image from Dockerhub. When run there will be two containers associated to this app. The containers will be able to communicate with each other through the container names `mariadb` and `app`.
 
-### Env vars and secrets
+### Environment Variables and Secrets
 
 In the last example we added the `env` struct to the `mariadb` container to set some variables needed for the container to start, a full list can be found on the image's Dockerhub page. The `env` struct is a set of key value pairs that will be passed into the container.
 

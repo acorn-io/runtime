@@ -22,7 +22,7 @@ Download latest binary version and install following the install method.
 To update the Acorn version on a Kubernetes cluster, run:
 
 ```shell
-acorn init
+acorn install
 ```
 
 This will download the newest versions of the Acorn components for the cluster.

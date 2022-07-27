@@ -10,7 +10,7 @@ Args are defined in the top level `args` struct.
 
 ### Defining default values
 
-Arguments to the Acorn can be standard `strings`, `ints`, `bools`, and other complex types. When defining an argument, a standard default value should be provided. The syntax to define the type and default value is:
+Arguments to an Acorn can be standard `strings`, `ints`, `bools`, and other complex types. When defining an argument, a standard default value should be provided. The syntax to define the type and default value is:
 
 ```cue
 args: {
@@ -21,13 +21,13 @@ args: {
 }
 ```
 
-Arg names should be in camel case, and when entered by the user the will be dash separated.
+Arg names should be in camelCase, and when entered by the user the will be dash separated.
 
 `thisVariableName` becomes `--this-variable-name` when the user passes it on the command line.
 
 ### Provide the user some guidance
 
-When defining arguments to the Acorn, it helpful to the end user to also provide some context. When the user runs `acorn [IMAGE] --help` the output shows all available arguments and if defined provides a short help string.
+When defining arguments to the Acorn, it is helpful to the end user to also provide some context. When the user runs `acorn [IMAGE] --help` the output shows all available arguments and if defined provides a short help string.
 
 When defining args add a `// Comment` above the argument. That will be shown the user when they do a `--help`
 
@@ -69,12 +69,12 @@ toplevel:
   - key2: "valueOther"
 ```
 
-The user of the Acorn can then pass the contents to the file like so:
+The config file can then be passed to the Acorn using  
 `acorn run [IMAGE] --user-config-data @config.yaml`
 
 ### Built-in
 
-To prevent the author from having to create a profile, Acorn provides the `args.dev` boolean value. It is set to `true` when running in dev mode. Acorn authors can use this boolean with `if` statements to change dev vs. production runtime behaviors.
+To prevent the author from having to create a profile, Acorn provides the `args.dev` boolean value. It is set to `true` when running in dev mode (`acorn run -i`). Acorn authors can use this boolean with `if` statements to change dev vs. production runtime behaviors.
 
 ```cue
 containers: {
@@ -92,7 +92,7 @@ containers: {
 
 ## Profiles
 
-Profiles specify default arguments for different contexts like dev, test, and prod. This makes it easier for the end user to consume the Acorn application. When developing an application, often there are non-prod ports, different Dockerfile build targets, and replica counts differ from prod. Authors can define a different set of defaults for these environments.
+Profiles specify default arguments for different contexts like dev, test, and prod. This makes it easier for the end user to consume the Acorn application. When developing an application, often there are non-prod ports, different Dockerfile build targets, and replica counts differ from prod. Authors can define a different set of defaults for each environment.
 
 ```cue
 args: {
@@ -106,7 +106,7 @@ profiles: {
 }
 ```
 
-In this case when an Acorn consumer deploys the Acorn in production (3) replicas will be deployed. When the developer working on this app runs it locally with `acorn dev .` there will only be a single replica deployed by default.
+In this case when an Acorn consumer deploys the Acorn in production, 3 replicas will be deployed. When the developer working on this app runs it locally with `acorn run --profile dev .` there will only be a single replica deployed by default.
 
 In either case, consumers of the Acorn can pass `--replicas #` to customize the deployment.
 
@@ -118,7 +118,7 @@ When the value is assigned to any key in the config file, you can use '.' notati
 
 ```cue
 args: {
-    // URL to document website
+    // URL to documentation website
     docUrl: ""
 
     // App Config Value

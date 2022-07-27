@@ -2,15 +2,13 @@
 title: Networking
 ---
 
-# Running Acorn apps in production
-
 ## Networking
 
-Applications will need to be reachable by their users. This can be users on the internet, within the organization, and other application teams. When deploying the Acorn app, there is alot of flexibilty.
+Applications will need to be reachable by their users. This can be users on the internet, within the organization, and other application teams. When deploying the Acorn app, there is a lot of flexibility.
 
 ### Default
 
-By default Acorn apps run with the Acorn authors default configurations.
+By default Acorn apps run with the Acorn author's default configuration.
 
 `acorn run registry.example.com/myorg/image`
 
@@ -22,12 +20,15 @@ To learn which ports are available to publish, look at the image help.
 
 `acorn run registry.example.com/myorg/image --help`
 
-There will be a line `Ports: ...` that outlines the ports. To expose the port:
+There will be a line `Ports: ...` that outlines the ports. To expose the port run
 
 `acorn run -p 3306:3306/tcp registry.example.com/myorg/image`
 
 ### Publish HTTP Ports
 
-To publish an HTTP port, you use the `-p` option on the run subcommand.
+To publish an HTTP port on a domain name, you use the `-p` option on the run subcommand.
 
 `acorn run -p my-app.example.com:frontend registry.example.com/myorg/image`
+
+<!-- TODO: add --publish-all -->
+<!-- TODO: what about --expose? -->

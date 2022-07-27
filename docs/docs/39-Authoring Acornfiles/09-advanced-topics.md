@@ -10,7 +10,7 @@ In the case of scaling stateless applications the `scale` field can be defined o
 
 ```cue
 args: {
-    // Stateless web servers to run
+    // Number of stateless web servers to run
     scale: 1
 }
 containers: {
@@ -50,7 +50,7 @@ for i in list.Range(0, replicas, 1) {
 }
 ```
 
-The above example makes use of the "list" package which provides the `Range` function used in the `for` loop. The variable `i` will be an integer and placed into the container and volume names. When the application is scaled up, new containers will be deployed with their own data volumes. When the application is scaled down the highest numbered replicas will be removed first. The `0` replica will always be the first replica deployed and last removed.
+The above example makes use of the `list` package which provides the `Range` function used in the `for` loop. The loop variable `i` will be an integer and placed into the container and volume names. When the application is scaled up, new containers will be deployed with their own data volumes. When the application is scaled down the highest numbered replicas will be removed first. The `0` replica will always be the first replica deployed and last removed.
 
 When deploying stateful applications it is a reasonable assumption to bootstrap from the `0` instance and for new replicas to use that as the first point of contact to register.
 
@@ -64,7 +64,7 @@ There are multiple ways to manipulate strings in the Acornfile.
 args: {
     userAdjective: string | *"cool"
 }
-...
+// ...
 localData: {
     config: {
         key: "this is something, \(args.userAdjective)"
@@ -81,16 +81,16 @@ import "encoding/yaml"
 
 args: {
     // User provided yaml
-    userConfig: {...} | *{}
+    userConfig: {//...} | *{}
 }
 
 containers: {
     frontend: {
-        ...
+        // ...
         files: {
             "/my/app/config.yaml": "secret://yaml-config/template"
         }
-        ...
+        // ...
     }
 }
 secrets: {
@@ -113,7 +113,7 @@ In the above example the frontend config file will be rendered from user and Aco
 
 ### Tab writer
 
-Another useful built in for rendering key value pairs with an optional separator is the `tabwritter` function.
+Another useful built-in for rendering key value pairs with an optional separator is the `tabwriter` function.
 
 If you need to create a file with content in this format:
 
@@ -121,14 +121,14 @@ If you need to create a file with content in this format:
 
 ```cue
 import "text/tabwriter"
-...
+// ...
 containers: {
     web: {
-        ...
+        // ...
         files: {
             "/etc/config_file": "secret://config/template"
         }
-        ...
+        // ...
     }
 }
 secrets: {

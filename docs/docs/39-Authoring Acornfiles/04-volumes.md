@@ -16,11 +16,11 @@ containers: {
         }
     }
 }
-...
+// ...
 volumes: {
     "my-data": {}
 }
-...
+// ...
 ```
 
 In the above example, there is a `my-data` volume defined and mounted into the `my-app` container at the `/data` path. The volume will create a 10G volume using the `default` storage class defined in the cluster. The default volume type will be created as a `ReadWriteOnce` volume and consumable by multiple containers on a single host.
@@ -48,7 +48,7 @@ containers: {
         dirs: {
             "/var/www/html": "volume://web-content"
         }
-        ...
+        // ...
         sidecars: {
             image: "git-cloner"
             // ...
@@ -58,7 +58,7 @@ containers: {
         }
     }
 }
-...
+// ...
 volumes: {
     "web-content": {}
 }
@@ -66,7 +66,7 @@ volumes: {
 
 In the above example both containers will have read-write access to the data in `volume://web-content`.
 
-A volume can be used exclusively in a side car if needed by only mounting it in the sidecar.
+A volume can also be exclusively mounted in a sidecar container.
 
 ## Ephemeral storage
 
