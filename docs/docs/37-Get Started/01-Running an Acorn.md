@@ -23,13 +23,3 @@ To see what arguments are available to customize the Acorn add `--help` after th
 To pass values:
 
 `acorn run registry.example.com/myorg/app-image --a-false-bool=false --replicas 2`
-
-## Starting the Acorn Dashboard
-
-In addition to the CLI, we want to call out the Acorn Dashboard as another way to quickly view Acorn applications on your cluster. From the dashboard, you can gain access to the containers logs, quickly find URL links to your apps, and manage volumes and secrets.
-
-To start the dashboard, run the following command:
-`acorn dashboard`
-If you run the command now, you will see your application running a link to access any of its published ports.
-
-![Dashboard](/img/dashboard.png)
