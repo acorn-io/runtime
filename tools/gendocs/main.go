@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -19,7 +20,18 @@ title: "%s"
 func main() {
 	cmd := acorn.New()
 	cmd.DisableAutoGenTag = true
-	err := doc.GenMarkdownTreeCustom(cmd, "docs/docs/100-Reference/01-command-line", filePrepender, linkHandler)
+
+	files, err := filepath.Glob("docs/docs/100-Reference/01-command-line/acorn_*")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = doc.GenMarkdownTreeCustom(cmd, "docs/docs/100-Reference/01-command-line", filePrepender, linkHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
