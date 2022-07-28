@@ -40,7 +40,7 @@ Create a new `Acornfile` in your working directory and add the following content
 containers: {
  web: {
   image: "nginx"
-  port: publish: "80/http"
+  ports: publish: "80/http"
   files: {
    // Simple index.html file
    "/usr/share/nginx/html/index.html": "<h1>My First Acorn!</h1>"

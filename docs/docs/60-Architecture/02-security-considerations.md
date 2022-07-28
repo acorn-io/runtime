@@ -87,12 +87,10 @@ containers: {
       build: {
         context: "."
       }
-      ports: [
-        "4444:4444", // My internal endpoint
-      ]
-      expose: [
-        "80:80", // My site
-      ]
+      ports: {
+        internal: "4444:4444", // My internal endpoint
+        expose: "80:80", // My site
+      }
    }
 }
 ```
@@ -153,7 +151,7 @@ containers: {
     // ...
     mysql: {
         image: mysql
-        expose: "3306:3306"
+        ports: expose: "3306:3306"
         // ...
     }
     // ...
