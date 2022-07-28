@@ -46,17 +46,17 @@ func TestVolumes(t *testing.T) {
 				Volumes: map[string]v1.VolumeRequest{
 					"v1": {
 						Class: "v1-class",
-						Size:  5,
+						Size:  "5G",
 					},
 					"v2": {
-						Size: 10,
+						Size: "5G",
 					},
 					"v3": {
 						Class: "ephemeral",
-						Size:  15,
+						Size:  "3G",
 					},
 					"v4": {
-						Size: 20,
+						Size: "20G",
 					},
 				},
 				Containers: map[string]v1.Container{

@@ -42,9 +42,43 @@ package v1
 	publish:  #PortSingle | *[...#Port]
 }
 
+#ProbeSpec: {
+	type: *"readiness" | "liveness" | "startup"
+	exec?: {
+		command: [...string]
+	}
+	http?: {
+		url: string
+		headers: [string]: string
+	}
+	tcp?: {
+		url: string
+	}
+	initialDelaySeconds: uint32 | *0
+	timeoutSeconds:      uint32 | *1
+	periodSeconds:       uint32 | *10
+	successThreshold:    uint32 | *1
+	failureThreshold:    uint32 | *3
+}
+
 #Probes: string | #ProbeMap | [...#ProbeSpec]
 
-#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action)|.mode=[0-7]{3,4})*$"} | bytes | #FileSpec
+#FileSecretSpec: {
+	name:     string
+	key:      string
+	onChange: *"redeploy" | "noAction"
+}
+
+#FileSpec: {
+	mode: =~"^[0-7]{3,4}$" | *"0644"
+	{
+		content: string
+	} | {
+		secret: #FileSecretSpec
+	}
+}
+
+#FileContent: {!~"^secret://"} | {=~"^secret://[a-z][-a-z0-9]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action)|.mode=[0-7]{3,4})*$"} | #FileSpec
 
 #ContainerBase: {
 	files: [string]:                  #FileContent
@@ -66,28 +100,48 @@ package v1
 	}
 }
 
-#ShortVolumeRef: =~"^[a-z][-a-z0-9]*$"
-#VolumeRef:      =~"^volume://.+$"
-#EphemeralRef:   =~"^ephemeral://.*$|^$"
-#ContextDirRef:  =~"^\\./.*$"
-#SecretRef:      =~"^secret://[a-z][-a-z0-9]*(.onchange=(redeploy|no-action))?$"
+#ShortVolumeRef: "^[a-z][-a-z0-9]*$"
+#VolumeRef:      "^volume://.+$"
+#EphemeralRef:   "^ephemeral://.*$|^$"
+#ContextDirRef:  "^\\./.*$"
+#SecretRef:      "^secret://[a-z][-a-z0-9]*(.onchange=(redeploy|no-action))?$"
 
 // The below should work but doesn't. So instead we use the log regexp. This seems like a cue bug
 // #Dir: #ShortVolumeRef | #VolumeRef | #EphemeralRef | #ContextDirRef | #SecretRef
 #Dir: =~"^[a-z][-a-z0-9]*$|^volume://.+$|^ephemeral://.*$|^$|^\\./.*$|^secret://[a-z][-a-z0-9]*(.onchange=(redploy|no-action))?$"
 
-#PortSingle: (>0 & <65536) | =~PortRegexp
-#Port:       (>0 & <65536) | =~PortRegexp | #PortSpec
-PortRegexp:  #"^(?P<serviceName>[a-z][-a-z0-9]+:)?(?P<port>[0-9]+:)?(?P<targetServiceName>[a-z][-a-z0-9]+:)?(?P<targetPort>[0-9]+)(?P<proto>/(tcp|udp|http))?$"#
+#PortSingle: (>0 & <65536) | =~#PortRegexp
+#Port:       (>0 & <65536) | =~#PortRegexp | #PortSpec
+#PortRegexp: #"^([a-z][-a-z0-9]+:)?([0-9]+:)?([a-z][-a-z0-9]+:)?([0-9]+)(/(tcp|udp|http))?$"#
+
+#PortSpec: {
+	publish:           bool | *false
+	expose:            bool | *false
+	port:              int | *targetPort
+	targetPort:        int
+	targetServiceName: string | *""
+	serviceName:       string | *""
+	protocol:          *"" | "tcp" | "udp" | "http"
+}
+
+#RuleSpec: {
+	verbs: [...string]
+	apiGroups: [...string]
+	resources: [...string]
+	resourceNames: [...string]
+	nonResourceURLs: [...string]
+}
 
 #Image: {
-	image:  string
+	image:  string | *""
 	build?: string | *#Build
 }
 
+#AccessMode: "readWriteMany" | "readWriteOnce" | "readOnlyMany"
+
 #Volume: {
 	class:       string | *""
-	size:        int | *10
+	size:        int | *10 | string
 	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 }
 
@@ -125,42 +179,6 @@ PortRegexp:  #"^(?P<serviceName>[a-z][-a-z0-9]+:)?(?P<port>[0-9]+:)?(?P<targetSe
 	}
 }
 
-#SecretDocker: {
-	type: "docker"
-	data: {
-		".dockerconfigjson"?: (string | bytes)
-	}
-}
-
-#SecretSSHAuth: {
-	type: "ssh-auth"
-	params: {
-		algorithm: "rsa" | *"ecdsa"
-	}
-	data: {
-		"ssh-privatekey"?: (string | bytes)
-	}
-}
-
-#SecretTLS: {
-	type: "tls"
-	params: {
-		algorithm:   "rsa" | *"ecdsa"
-		caSecret?:   string
-		usage:       *"server" | "client"
-		commonName?: string
-		organization: [...string]
-		sans: [...string]
-		durationDays: int | *365
-	}
-	data: {
-		"tls.crt"?: (string | bytes)
-		"tls.key"?: (string | bytes)
-		"ca.crt"?:  (string | bytes)
-		"ca.key"?:  (string | bytes)
-	}
-}
-
 #SecretGenerated: {
 	type: "generated"
 	params: {
@@ -170,43 +188,52 @@ PortRegexp:  #"^(?P<serviceName>[a-z][-a-z0-9]+:)?(?P<port>[0-9]+:)?(?P<targetSe
 	data: {}
 }
 
-#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretDocker | #SecretSSHAuth | #SecretTLS | #SecretGenerated | #SecretTemplate | #SecretToken
+#Secret: *#SecretOpaque | #SecretBasicAuth | #SecretGenerated | #SecretTemplate | #SecretToken
+
+#AcornSecretBinding: {
+	secret:        string
+	secretRequest: string
+} | string
+
+#AcornServiceBinding: {
+	target:  string
+	service: string
+} | string
+
+#AcornVolumeBinding: {
+	volume:        string
+	volumeRequest: string
+	size:          int | string | *10
+	accessModes:   [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
+} | string
 
 #Acorn: {
-	image?: string
-	build?: string | #AcornBuild
-	ports:  #PortSingle | *[...#Port] | #PortMap
-	volumes: [...string]
-	secrets: [...string]
-	links: [...string]
-	deployArgs: [string]: _
+	image?:  string
+	build?:  string | #AcornBuild
+	ports:   #PortSingle | *[...#Port] | #PortMap
+	volumes: *[...#AcornVolumeBinding] | {[=~#DNSName]:  string}
+	secrets: *[...#AcornSecretBinding] | {[=~#DNSName]:  string}
+	links:   *[...#AcornServiceBinding] | {[=~#DNSName]: string}
+	deployArgs: [string]: #Args
+	profiles: [...string]
 	permissions: {
 		rules: [...#RuleSpec]
 		clusterRules: [...#RuleSpec]
 	}
 }
 
-#App: {
-	args: [string]: _
-	profiles: [string]: [string]: _
-	[=~"local[dD]ata"]: {...}
-	containers: [string]: #Container
-	jobs: [string]:       #Job
-	images: [string]:     #Image
-	volumes: [string]:    #Volume
-	secrets: [string]:    #Secret
-	acorns: [string]:     #Acorn
+#DNSName: "[a-z][-a-z0-9]*"
 
-	_keysMustBeUniqueAcrossTypes: [string]: string
-	_keysMustBeUniqueAcrossTypes: {
-		for k, v in containers {
-			"\(k)": "container"
-		}
-		for k, v in jobs {
-			"\(k)": "job"
-		}
-		for k, v in acorns {
-			"\(k)": "acorn"
-		}
-	}
+#Args: string | int | float | bool | [...string] | {...}
+
+#App: {
+	args: [string]: #Args
+	profiles: [string]: [string]: #Args
+	[=~"local[dD]ata"]: {...}
+	containers: [=~#DNSName]: #Container
+	jobs: [=~#DNSName]:       #Job
+	images: [=~#DNSName]:     #Image
+	volumes: [=~#DNSName]:    #Volume
+	secrets: [=~#DNSName]:    #Secret
+	acorns: [=~#DNSName]:     #Acorn
 }

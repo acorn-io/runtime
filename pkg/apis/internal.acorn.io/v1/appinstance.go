@@ -3,7 +3,6 @@
 package v1
 
 import (
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -62,7 +61,7 @@ type AppInstanceSpec struct {
 	Secrets     []SecretBinding `json:"secrets,omitempty"`
 	PublishMode PublishMode     `json:"publishMode,omitempty"`
 
-	Services    []ServiceBinding `json:"services,omitempty"`
+	Links       []ServiceBinding `json:"services,omitempty"`
 	Ports       []PortBinding    `json:"ports,omitempty"`
 	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
 	Permissions *Permissions     `json:"permissions,omitempty"`
@@ -82,12 +81,14 @@ type SecretBinding struct {
 	SecretRequest string `json:"secretRequest,omitempty"`
 }
 
+type Quantity string
+
 type VolumeBinding struct {
-	Volume        string            `json:"volume,omitempty"`
-	VolumeRequest string            `json:"volumeRequest,omitempty"`
-	Capacity      resource.Quantity `json:"capacity,omitempty"`
-	AccessModes   []AccessMode      `json:"accessModes,omitempty"`
-	Class         string            `json:"class,omitempty"`
+	Volume        string      `json:"volume,omitempty"`
+	VolumeRequest string      `json:"volumeRequest,omitempty"`
+	Size          Quantity    `json:"size,omitempty"`
+	AccessModes   AccessModes `json:"accessModes,omitempty"`
+	Class         string      `json:"class,omitempty"`
 }
 
 type ContainerStatus struct {

@@ -62,7 +62,7 @@ func IsLinked(app *v1.AppInstance, name string) bool {
 		return false
 	}
 
-	for _, binding := range app.Spec.Services {
+	for _, binding := range app.Spec.Links {
 		if binding.Target == name {
 			return true
 		}

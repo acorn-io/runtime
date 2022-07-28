@@ -11,7 +11,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -63,7 +62,7 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 				AccessModes: accessModes,
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: *resource.NewQuantity(volumeRequest.Size*1_000_000_000, resource.DecimalSI),
+						corev1.ResourceStorage: *v1.MustParseResourceQuantity(volumeRequest.Size),
 					},
 				},
 			},
@@ -86,8 +85,8 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			}
 		}
 
-		if !volumeBinding.Capacity.IsZero() {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = volumeBinding.Capacity
+		if volumeBinding.Size != "" {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeBinding.Size)
 		}
 
 		result = append(result, &pvc)
@@ -99,7 +98,7 @@ func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, 
 	if volume == AcornHelper && appInstance.Spec.GetDevMode() {
 		return v1.VolumeRequest{
 			Class: v1.VolumeRequestTypeEphemeral,
-			Size:  10,
+			Size:  "10G",
 		}, true
 	}
 	for name, volumeRequest := range appInstance.Status.AppSpec.Volumes {
@@ -245,7 +244,7 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 				Name: sanitizeVolumeName(volume.name),
 				VolumeSource: corev1.VolumeSource{
 					EmptyDir: &corev1.EmptyDirVolumeSource{
-						SizeLimit: resource.NewQuantity(vr.Size*1_000_000_000, resource.DecimalSI),
+						SizeLimit: v1.MustParseResourceQuantity(vr.Size),
 					},
 				},
 			})

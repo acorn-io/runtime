@@ -158,7 +158,7 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 			DeployArgs:   params.Spec.DeployArgs,
 			Volumes:      params.Spec.Volumes,
 			Secrets:      params.Spec.Secrets,
-			Services:     params.Spec.Services,
+			Links:        params.Spec.Links,
 			Ports:        params.Spec.Ports,
 			DevMode:      params.Spec.DevMode,
 			PublishMode:  params.Spec.PublishMode,

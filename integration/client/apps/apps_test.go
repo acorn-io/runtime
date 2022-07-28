@@ -12,7 +12,6 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestAppStartStop(t *testing.T) {
@@ -143,7 +142,7 @@ func TestAppUpdate(t *testing.T) {
 				SecretRequest: "secreq2",
 			},
 		},
-		Services: []v1.ServiceBinding{
+		Links: []v1.ServiceBinding{
 			{
 				Target:  "svc-target1",
 				Service: "other-service1",
@@ -193,7 +192,7 @@ func TestAppUpdate(t *testing.T) {
 				SecretRequest: "secreq3",
 			},
 		},
-		Services: []v1.ServiceBinding{
+		Links: []v1.ServiceBinding{
 			{
 				Target:  "svc-target2",
 				Service: "other-service3",
@@ -235,22 +234,18 @@ func TestAppUpdate(t *testing.T) {
 
 	assert.Equal(t, v1.PublishModeNone, thirdApp.Spec.PublishMode)
 
-	zero, _ := resource.ParseQuantity("0")
 	assert.Equal(t, []v1.VolumeBinding{
 		{
 			Volume:        "vol1",
 			VolumeRequest: "volreq1",
-			Capacity:      zero,
 		},
 		{
 			Volume:        "vol3",
 			VolumeRequest: "volreq2",
-			Capacity:      zero,
 		},
 		{
 			Volume:        "vol3",
 			VolumeRequest: "volreq3",
-			Capacity:      zero,
 		},
 	}, thirdApp.Spec.Volumes)
 
@@ -282,7 +277,7 @@ func TestAppUpdate(t *testing.T) {
 			Target:  "svc-target3",
 			Service: "other-service3",
 		},
-	}, thirdApp.Spec.Services)
+	}, thirdApp.Spec.Links)
 
 	assert.Equal(t, v1.GenericMap{
 		"param1": "val1",

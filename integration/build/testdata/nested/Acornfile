@@ -1,4 +1,4 @@
-args: image: string
+args: image: "something"
 
 acorns: {
 	sub1: {

@@ -1,5 +1,5 @@
 args: {
-	someInt: int
+	someInt: 4
 }
 
 containers: {

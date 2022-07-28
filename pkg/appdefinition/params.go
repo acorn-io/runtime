@@ -35,7 +35,7 @@ func (a *AppDefinition) addProfiles(paramSpec *v1.ParamSpec, err error) (*v1.Par
 }
 
 func (a *AppDefinition) args(section string) (*v1.ParamSpec, error) {
-	app, err := a.ctx.Value()
+	app, err := a.ctx.ValueNoSchema()
 	if err != nil {
 		return nil, err
 	}

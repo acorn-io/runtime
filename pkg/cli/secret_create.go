@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/cue"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 
@@ -17,13 +17,13 @@ func NewSecretCreate() *cobra.Command {
 		Use: "create [flags] SECRET_NAME",
 		Example: `
 # Create secret with specific keys
-acorn secret create --data key=value --data key2=value2 my-secret,
+acorn secret create --data key-name=value --data key-name2=value2 my-secret
 
 # Read full secret from a file
 acorn secret create --file secret.yaml my-secret
 
 # Read key value from a file
-acorn secret create --data @key=secret.yaml my-secret`,
+acorn secret create --data @key-name=secret.yaml my-secret`,
 		SilenceUsage: true,
 		Short:        "Create a secret",
 		Args:         cobra.ExactArgs(1),

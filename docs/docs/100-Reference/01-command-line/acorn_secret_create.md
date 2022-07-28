@@ -14,13 +14,13 @@ acorn secret create [flags] SECRET_NAME
 ```
 
 # Create secret with specific keys
-acorn secret create --data key=value --data key2=value2 my-secret,
+acorn secret create --data key-name=value --data key-name2=value2 my-secret
 
 # Read full secret from a file
 acorn secret create --file secret.yaml my-secret
 
 # Read key value from a file
-acorn secret create --data @key=secret.yaml my-secret
+acorn secret create --data @key-name=secret.yaml my-secret
 ```
 
 ### Options

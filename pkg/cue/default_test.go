@@ -19,37 +19,6 @@ v1.#App & {
 }
 `)
 
-func TestTransform(t *testing.T) {
-	ctx := newContext()
-	ctx = ctx.WithFile("test.cue", testAcornfile)
-	v, err := ctx.Transform("github.com/acorn-io/acorn/schema/v1/transform/build")
-	if err != nil {
-		t.Fatal(err)
-	}
-	i := v.LookupPath(cue.ParsePath("containers.test.image"))
-	if i.Err() != nil {
-		t.Fatal(i.Err())
-	}
-	s, err := i.String()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, "foo", s)
-
-	f := &struct {
-		Containers map[string]struct {
-			Image string `json:"image,omitempty"`
-		} `json:"containers,omitempty"`
-	}{}
-
-	if err := v.Decode(f); err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, "foo", f.Containers["test"].Image)
-}
-
 func newContext() *Context {
 	return NewContext().
 		WithNestedFS("schema", schema.Files).

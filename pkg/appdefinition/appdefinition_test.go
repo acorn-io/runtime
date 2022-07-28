@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"cuelang.org/go/cue/errors"
@@ -213,8 +214,8 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []string{"hi", "bye"}, appSpec.Containers["s"].Entrypoint)
-	assert.Equal(t, []string{"hi2", "bye2"}, appSpec.Containers["a"].Entrypoint)
+	assert.Equal(t, v1.CommandSlice{"hi", "bye"}, appSpec.Containers["s"].Entrypoint)
+	assert.Equal(t, v1.CommandSlice{"hi2", "bye2"}, appSpec.Containers["a"].Entrypoint)
 }
 
 func TestCommand(t *testing.T) {
@@ -239,8 +240,8 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []string{"hi", "bye"}, appSpec.Containers["s"].Command)
-	assert.Equal(t, []string{"hi2", "bye2"}, appSpec.Containers["a"].Command)
+	assert.Equal(t, v1.CommandSlice{"hi", "bye"}, appSpec.Containers["s"].Command)
+	assert.Equal(t, v1.CommandSlice{"hi2", "bye2"}, appSpec.Containers["a"].Command)
 }
 
 func TestEnv(t *testing.T) {
@@ -266,8 +267,8 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []v1.EnvVar{{Name: "hi", Value: "bye"}}, appSpec.Containers["s"].Environment)
-	assert.Equal(t, []v1.EnvVar{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
+	assert.Equal(t, v1.EnvVars{{Name: "hi", Value: "bye"}}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, v1.EnvVars{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
 }
 
 func TestEnvironment(t *testing.T) {
@@ -293,8 +294,8 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []v1.EnvVar{{Name: "hi", Value: "bye"}}, appSpec.Containers["s"].Environment)
-	assert.Equal(t, []v1.EnvVar{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
+	assert.Equal(t, v1.EnvVars{{Name: "hi", Value: "bye"}}, appSpec.Containers["s"].Environment)
+	assert.Equal(t, v1.EnvVars{{Name: "hi2", Value: "bye2"}}, appSpec.Containers["a"].Environment)
 }
 
 func TestSecretDirs(t *testing.T) {
@@ -346,10 +347,10 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, map[string]v1.File{
+	assert.Equal(t, v1.Files{
 		"/var/tmp/foo": {
-			Mode: "0644",
-			Secret: v1.FileSecret{
+			Mode: "",
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				Key:      "seckey",
 				OnChange: v1.ChangeTypeRedeploy,
@@ -395,12 +396,12 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []v1.EnvVar{
+	assert.Equal(t, v1.EnvVars{
 		{
-			Secret: v1.EnvSecretVal{
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				Key:      "seckey",
-				OnChange: v1.ChangeTypeOnAction,
+				OnChange: v1.ChangeTypeNoAction,
 			},
 		},
 		{
@@ -409,7 +410,7 @@ containers: {
 		},
 		{
 			Name: "secretref",
-			Secret: v1.EnvSecretVal{
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				Key:      "seckey",
 				OnChange: v1.ChangeTypeRedeploy,
@@ -417,15 +418,15 @@ containers: {
 		},
 		{
 			Name: "secretrefembed",
-			Secret: v1.EnvSecretVal{
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				OnChange: v1.ChangeTypeRedeploy,
 			},
 		},
 	}, appSpec.Containers["s"].Environment)
-	assert.Equal(t, []v1.EnvVar{
+	assert.Equal(t, v1.EnvVars{
 		{
-			Secret: v1.EnvSecretVal{
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				Key:      "seckey",
 				OnChange: v1.ChangeTypeRedeploy,
@@ -437,7 +438,7 @@ containers: {
 		},
 		{
 			Name: "secretref",
-			Secret: v1.EnvSecretVal{
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				Key:      "seckey",
 				OnChange: v1.ChangeTypeRedeploy,
@@ -445,7 +446,7 @@ containers: {
 		},
 		{
 			Name: "secretrefembed",
-			Secret: v1.EnvSecretVal{
+			Secret: v1.SecretReference{
 				Name:     "secname",
 				OnChange: v1.ChangeTypeRedeploy,
 			},
@@ -531,8 +532,8 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []string{"hi", "bye"}, appSpec.Containers["s"].Command)
-	assert.Equal(t, []string{"hi2", "bye2"}, appSpec.Containers["a"].Command)
+	assert.Equal(t, v1.CommandSlice{"hi", "bye"}, appSpec.Containers["s"].Command)
+	assert.Equal(t, v1.CommandSlice{"hi2", "bye2"}, appSpec.Containers["a"].Command)
 }
 
 func TestInteractive(t *testing.T) {
@@ -809,17 +810,15 @@ containers: {
 	  image: "y"
 	  files: {
 	  	"/etc/something-sidecar": "bye"
-	  	"/etc/something-sidecar-b": '\x00\x01bye'
 		"/bin/secret.sh": "secret://foo/bar?mode=123"
 	  }
 	}
     image: "x"
 	files: {
 		"/etc/something": "hi"
-	  	"/etc/something-b": '\x00\x01hi'
 	  	"/exec.sh": "blah"
-	  	"/bin/exec": 'blah'
-	  	"/sbin/exec": 'blah'
+	  	"/bin/exec": "blah"
+	  	"/sbin/exec": "blah"
 		"/full": {
 			content: "blah"
 			mode: "0127"
@@ -840,16 +839,12 @@ containers: {
 
 	assert.Equal(t, "aGk=", appSpec.Containers["s"].Files["/etc/something"].Content)
 	assert.Equal(t, "0644", appSpec.Containers["s"].Files["/etc/something"].Mode)
-	assert.Equal(t, "AAFoaQ==", appSpec.Containers["s"].Files["/etc/something-b"].Content)
-	assert.Equal(t, "0644", appSpec.Containers["s"].Files["/etc/something-b"].Mode)
 	assert.Equal(t, "0755", appSpec.Containers["s"].Files["/exec.sh"].Mode)
 	assert.Equal(t, "0755", appSpec.Containers["s"].Files["/bin/exec"].Mode)
 	assert.Equal(t, "0755", appSpec.Containers["s"].Files["/sbin/exec"].Mode)
 	assert.Equal(t, "blah", appSpec.Containers["s"].Files["/full"].Content)
 	assert.Equal(t, "0127", appSpec.Containers["s"].Files["/full"].Mode)
 	assert.Equal(t, "Ynll", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar"].Content)
-	assert.Equal(t, "AAFieWU=", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar-b"].Content)
-	assert.Equal(t, "0644", appSpec.Containers["s"].Sidecars["left"].Files["/etc/something-sidecar-b"].Mode)
 	assert.Equal(t, "123", appSpec.Containers["s"].Sidecars["left"].Files["/bin/secret.sh"].Mode)
 }
 
@@ -911,18 +906,16 @@ images: {
 			},
 			"build": {
 				Build: &v1.Build{
-					BuildArgs:   map[string]string{},
-					Context:     ".",
-					Dockerfile:  "Dockerfile",
-					ContextDirs: map[string]string{},
+					BuildArgs:  map[string]string{},
+					Context:    ".",
+					Dockerfile: "Dockerfile",
 				},
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							BuildArgs:   map[string]string{},
-							Context:     ".",
-							Dockerfile:  "Dockerfile",
-							ContextDirs: map[string]string{},
+							BuildArgs:  map[string]string{},
+							Context:    ".",
+							Dockerfile: "Dockerfile",
 						},
 					},
 				},
@@ -952,7 +945,6 @@ images: {
 			"imagecontext": {
 				Image: "imagecontext-image",
 				Build: &v1.Build{
-					BuildArgs:  map[string]string{},
 					BaseImage:  "imagecontext-image",
 					Context:    ".",
 					Dockerfile: "Dockerfile",
@@ -964,7 +956,6 @@ images: {
 					"side": {
 						Image: "imagecontext-image-side",
 						Build: &v1.Build{
-							BuildArgs:  map[string]string{},
 							BaseImage:  "imagecontext-image-side",
 							Context:    ".",
 							Dockerfile: "Dockerfile",
@@ -979,10 +970,9 @@ images: {
 		Images: map[string]v1.ImageBuilderSpec{
 			"build": {
 				Build: &v1.Build{
-					BuildArgs:   map[string]string{},
-					Context:     ".",
-					Dockerfile:  "Dockerfile",
-					ContextDirs: map[string]string{},
+					BuildArgs:  map[string]string{},
+					Context:    ".",
+					Dockerfile: "Dockerfile",
 				},
 			},
 			"image": {
@@ -1095,7 +1085,7 @@ containers: {
         "/var/not-ephemeral": "ephemeral"
         "/var/uri-vol": "volume://uri"
         "/var/uri-sub-vol": "volume://uri-sub?subPath=sub"
-        "/var/uri-merge-vol": "volume://uri?class=uri-class&accessMode=readWriteMany&accessMode=readWriteOnce&size=7&size=5"
+        "/var/uri-merge-vol": "volume://uri?class=uri-class&accessMode=readWriteMany&accessMode=readWriteOnce&size=70&size=50"
         "/var/anon-ephemeral-vol": ""
         "/var/anon-ephemeral2-vol": "ephemeral://"
         "/var/named-ephemeral-vol": "ephemeral://eph"
@@ -1153,24 +1143,29 @@ volumes: {
 		t.Fatal(err)
 	}
 
+	toQuantity := func(i int64) v1.Quantity {
+		q, _ := v1.ParseQuantity(strconv.Itoa(int(i)))
+		return q
+	}
 	assert.Equal(t, "aclass", appSpec.Volumes["short"].Class)
-	assert.Equal(t, int64(5), appSpec.Volumes["short"].Size)
+	assert.Equal(t, toQuantity(5), appSpec.Volumes["short"].Size)
 	assert.Equal(t, "bclass", appSpec.Volumes["v2"].Class)
-	assert.Equal(t, int64(15), appSpec.Volumes["v2"].Size)
+	assert.Equal(t, toQuantity(15), appSpec.Volumes["v2"].Size)
 	assert.Equal(t, "cclass", appSpec.Volumes["v21"].Class)
-	assert.Equal(t, int64(21), appSpec.Volumes["v21"].Size)
+	assert.Equal(t, toQuantity(21), appSpec.Volumes["v21"].Size)
 	assert.Equal(t, "", appSpec.Volumes["short-implicit"].Class)
-	assert.Equal(t, int64(10), appSpec.Volumes["short-implicit"].Size)
-	assert.Equal(t, int64(10), appSpec.Volumes["ephemeral"].Size)
+	assert.Equal(t, toQuantity(10), appSpec.Volumes["short-implicit"].Size)
+	assert.Equal(t, toQuantity(10), appSpec.Volumes["ephemeral"].Size)
 	assert.Equal(t, "", appSpec.Volumes["defaults"].Class)
-	assert.Equal(t, int64(10), appSpec.Volumes["defaults"].Size)
-	assert.Equal(t, "uri-class", appSpec.Volumes["uri"].Class)
-	assert.Equal(t, int64(5), appSpec.Volumes["uri"].Size)
-	assert.Equal(t, []v1.AccessMode{"readWriteMany", "readWriteOnce"}, appSpec.Volumes["uri"].AccessModes)
-	assert.Equal(t, int64(10), appSpec.Volumes["uri-sub"].Size)
-	assert.Equal(t, []v1.AccessMode{"readWriteOnce"}, appSpec.Volumes["uri-sub"].AccessModes)
-	assert.Equal(t, "ephemeral", appSpec.Volumes["left/var/anon-ephemeral-vol"].Class)
-	assert.Equal(t, "ephemeral", appSpec.Volumes["left/var/anon-ephemeral2-vol"].Class)
+	assert.Equal(t, toQuantity(10), appSpec.Volumes["defaults"].Size)
+	// class not supported
+	assert.Equal(t, "", appSpec.Volumes["uri"].Class)
+	assert.Equal(t, toQuantity(70), appSpec.Volumes["uri"].Size)
+	assert.Equal(t, v1.AccessModes{"readWriteMany", "readWriteOnce"}, appSpec.Volumes["uri"].AccessModes)
+	assert.Equal(t, toQuantity(10), appSpec.Volumes["uri-sub"].Size)
+	assert.Equal(t, v1.AccessModes{"readWriteOnce"}, appSpec.Volumes["uri-sub"].AccessModes)
+	assert.Equal(t, "ephemeral", appSpec.Volumes["s/left/var/anon-ephemeral-vol"].Class)
+	assert.Equal(t, "ephemeral", appSpec.Volumes["s/left/var/anon-ephemeral2-vol"].Class)
 	assert.Equal(t, "ephemeral", appSpec.Volumes["eph"].Class)
 	assert.Len(t, typed.SortedKeys(appSpec.Volumes), 11)
 
@@ -1185,9 +1180,9 @@ volumes: {
 	assert.Equal(t, "", sidecar.Dirs["/var/uri-vol"].SubPath)
 	assert.Equal(t, "uri-sub", sidecar.Dirs["/var/uri-sub-vol"].Volume)
 	assert.Equal(t, "sub", sidecar.Dirs["/var/uri-sub-vol"].SubPath)
-	assert.Equal(t, "left/var/anon-ephemeral-vol", sidecar.Dirs["/var/anon-ephemeral-vol"].Volume)
+	assert.Equal(t, "s/left/var/anon-ephemeral-vol", sidecar.Dirs["/var/anon-ephemeral-vol"].Volume)
 	assert.Equal(t, "", sidecar.Dirs["/var/anon-ephemeral-vol"].SubPath)
-	assert.Equal(t, "left/var/anon-ephemeral2-vol", sidecar.Dirs["/var/anon-ephemeral2-vol"].Volume)
+	assert.Equal(t, "s/left/var/anon-ephemeral2-vol", sidecar.Dirs["/var/anon-ephemeral2-vol"].Volume)
 	assert.Equal(t, "", sidecar.Dirs["/var/anon-ephemeral2-vol"].SubPath)
 	assert.Equal(t, "eph", sidecar.Dirs["/var/named-ephemeral-vol"].Volume)
 	assert.Equal(t, "", sidecar.Dirs["/var/named-ephemeral-vol"].SubPath)
@@ -1215,7 +1210,7 @@ secrets: {
     }
   }
   "dirs-merge": {
-    type: "tls"
+    type: "opaque"
   }
   explicituser: {
     type: "basic"
@@ -1250,26 +1245,16 @@ secrets: {
 	}, appSpec.Secrets["explicituser"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
-		Data: map[string]string{},
 	}, appSpec.Secrets["file-implicit-opt"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
-		Data: map[string]string{},
 	}, appSpec.Secrets["file-implicit"])
 	assert.Equal(t, v1.Secret{
-		Type: "tls",
-		Params: map[string]interface{}{
-			"algorithm":    "ecdsa",
-			"durationDays": int64(365),
-			"usage":        "server",
-			"sans":         []interface{}{},
-			"organization": []interface{}{},
-		},
+		Type: "opaque",
 		Data: map[string]string{},
 	}, appSpec.Secrets["dirs-merge"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
-		Data: map[string]string{},
 	}, appSpec.Secrets["opt"])
 
 }
@@ -1338,7 +1323,7 @@ jobs: foo: image: "test"
 `
 	_, err := NewAppDefinition([]byte(acornCue))
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "_keysMustBeUniqueAcrossTypes.foo: conflicting values \"job\" and \"container\"")
+	assert.Contains(t, err.Error(), "duplicate name [foo] used by [container] and [job]")
 }
 
 func TestFriendImageNameIsSet(t *testing.T) {
@@ -1417,7 +1402,7 @@ containers: zero: scale: 0
 func TestBuildProfileParameters(t *testing.T) {
 	acornCue := `
 args: {
-  foo: string
+  foo: "three"
 }
 profiles: one: foo: string | *"one"
 profiles: two: foo: string | *"two"
@@ -1459,7 +1444,7 @@ containers: foo: build: buildArgs: one: args.foo
 func TestBuildParameters(t *testing.T) {
 	acornCue := `
 args: {
-  foo: string
+  foo: "bad"
 }
 containers: foo: build: buildArgs: one: args.foo
 `
@@ -1529,7 +1514,7 @@ acorns: foo: {
 		"x": "y",
 		"z": true,
 	}), acorn.DeployArgs)
-	assert.Equal(t, []v1.PortDef{
+	assert.Equal(t, v1.Ports{
 		{
 			Port:       80,
 			TargetPort: 80,
@@ -1592,12 +1577,9 @@ containers: foo: {
 containers: foo2: image: "image"
 `
 
-	appDef, err := NewAppDefinition([]byte(acornCue))
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = appDef.AppSpec()
-	assert.Contains(t, err.Error(), "duplicate name [foo2] used as both container and port identifier")
+	_, err := NewAppDefinition([]byte(acornCue))
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "duplicate name [foo2] used by [")
 }
 
 func TestLink(t *testing.T) {
@@ -1615,10 +1597,10 @@ acorns: one: links: ["two:three", "one"]
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "two", appSpec.Acorns["one"].Services[0].Service)
-	assert.Equal(t, "three", appSpec.Acorns["one"].Services[0].Target)
-	assert.Equal(t, "one", appSpec.Acorns["one"].Services[1].Service)
-	assert.Equal(t, "one", appSpec.Acorns["one"].Services[1].Target)
+	assert.Equal(t, "two", appSpec.Acorns["one"].Links[0].Service)
+	assert.Equal(t, "three", appSpec.Acorns["one"].Links[0].Target)
+	assert.Equal(t, "one", appSpec.Acorns["one"].Links[1].Service)
+	assert.Equal(t, "one", appSpec.Acorns["one"].Links[1].Target)
 }
 
 func TestAlias(t *testing.T) {
@@ -2120,4 +2102,41 @@ baz: "h"
     Acornfile:4:6
     Acornfile:5:6
 `, err.Error())
+}
+
+func TestEnvValFromArg(t *testing.T) {
+	data := `
+args: a: "foo"
+containers: a: env: a: args.a
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "a", appSpec.Containers["a"].Environment[0].Name)
+	assert.Equal(t, "foo", appSpec.Containers["a"].Environment[0].Value)
+}
+
+func TestEmptyEnvVal(t *testing.T) {
+	data := `
+containers: a: env: a: ""
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "a", appSpec.Containers["a"].Environment[0].Name)
+	assert.Equal(t, "", appSpec.Containers["a"].Environment[0].Value)
 }

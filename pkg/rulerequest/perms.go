@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 type RuleRequest struct {
@@ -19,14 +18,14 @@ func ToRuleRequests(perm *v1.Permissions) (result []RuleRequest) {
 	return
 }
 
-func rulesToRequests(rules []rbacv1.PolicyRule, scope string) (result []RuleRequest) {
+func rulesToRequests(rules []v1.PolicyRule, scope string) (result []RuleRequest) {
 	for _, rule := range rules {
 		result = append(result, ruleToRequests(rule, scope)...)
 	}
 	return
 }
 
-func ruleToRequests(rule rbacv1.PolicyRule, scope string) (result []RuleRequest) {
+func ruleToRequests(rule v1.PolicyRule, scope string) (result []RuleRequest) {
 	verbs := strings.Join(rule.Verbs, ",")
 
 	if len(rule.NonResourceURLs) > 0 {

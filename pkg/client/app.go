@@ -36,7 +36,7 @@ func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) 
 				DeployArgs:  opts.DeployArgs,
 				Volumes:     opts.Volumes,
 				Secrets:     opts.Secrets,
-				Services:    opts.Services,
+				Links:       opts.Links,
 				Ports:       opts.Ports,
 				Profiles:    opts.Profiles,
 				DevMode:     opts.DevMode,
@@ -77,7 +77,7 @@ func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Annotations = typed.Concat(app.Annotations, opts.Annotations)
 	app.Spec.Volumes = mergeVolumes(app.Spec.Volumes, opts.Volumes)
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
-	app.Spec.Services = mergeServices(app.Spec.Services, opts.Services)
+	app.Spec.Links = mergeServices(app.Spec.Links, opts.Links)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.Profiles) > 0 {

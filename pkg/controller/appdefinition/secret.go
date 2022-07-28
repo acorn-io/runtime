@@ -384,7 +384,7 @@ func lookupSecret(ctx context.Context, req router.Request, parent *v1.AppInstanc
 			appName := parts[i]
 			if parent != nil {
 				// check for links
-				for _, binding := range parent.Spec.Services {
+				for _, binding := range parent.Spec.Links {
 					if binding.Target == appName {
 						appName = binding.Service
 						namespace = parent.Namespace

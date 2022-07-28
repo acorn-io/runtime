@@ -13,7 +13,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/deployargs"
 	"github.com/acorn-io/acorn/pkg/dev"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
-	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -56,27 +55,27 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	opts.Name = s.Name
 	opts.Profiles = s.Profile
 
-	opts.Volumes, err = run.ParseVolumes(s.Volume)
+	opts.Volumes, err = v1.ParseVolumes(s.Volume)
 	if err != nil {
 		return opts, err
 	}
 
-	opts.Secrets, err = run.ParseSecrets(s.Secret)
+	opts.Secrets, err = v1.ParseSecrets(s.Secret)
 	if err != nil {
 		return opts, err
 	}
 
-	opts.Services, err = run.ParseLinks(s.Link)
+	opts.Links, err = v1.ParseLinks(s.Link)
 	if err != nil {
 		return opts, err
 	}
 
-	opts.Ports, err = run.ParsePorts(true, s.Publish)
+	opts.Ports, err = v1.ParsePortBindings(true, s.Publish)
 	if err != nil {
 		return opts, err
 	}
 
-	expose, err := run.ParsePorts(false, s.Expose)
+	expose, err := v1.ParsePortBindings(false, s.Expose)
 	if err != nil {
 		return opts, err
 	}

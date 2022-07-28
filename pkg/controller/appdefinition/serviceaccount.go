@@ -15,6 +15,12 @@ func addServiceAccount(appInstance *v1.AppInstance, resp router.Response) {
 	resp.Objects(toServiceAccount(appInstance)...)
 }
 
+func toRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
+	for _, rule := range rules {
+		result = append(result, (rbacv1.PolicyRule)(rule))
+	}
+	return
+}
 func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 	if !appInstance.Spec.Permissions.HasRules() {
 		return nil
@@ -35,7 +41,7 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Name:   name,
 				Labels: labels.Managed(appInstance),
 			},
-			Rules: appInstance.Spec.Permissions.ClusterRules,
+			Rules: toRules(appInstance.Spec.Permissions.ClusterRules),
 		}, &rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   name,
@@ -63,7 +69,7 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Namespace: appInstance.Status.Namespace,
 				Labels:    labels.Managed(appInstance),
 			},
-			Rules: appInstance.Spec.Permissions.Rules,
+			Rules: toRules(appInstance.Spec.Permissions.Rules),
 		}, &rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "acorn",
