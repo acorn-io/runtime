@@ -12,7 +12,7 @@ const config = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/logo.png',
+  favicon: 'img/favicon.png',
   organizationName: 'acorn-io',
   projectName: 'acorn',
 
@@ -46,20 +46,21 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Acorn Docs',
+        title: 'Docs',
+        style: 'dark',
         logo: {
           alt: 'Acorn Logo',
           src: 'img/logo.png',
         },
         items: [
           {
-            href: 'https://acorn.io',
-            label: 'Acorn Project Home',
+            to: 'https://acorn.io',
+            label: 'Acorn Home',
             position: 'right',
             target: '_self',
           },
           {
-            href: 'https://github.com/acorn-io/acorn',
+            to: 'https://github.com/acorn-io/acorn',
             label: 'GitHub',
             position: 'right',
           },
@@ -69,33 +70,24 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: 'GitHub',
-            items: [
-              {
-                label: 'GitHub',
-                to: 'https://github.com/acorn-io/acorn',
-              },
-            ],
+            label: 'GitHub',
+            to: 'https://github.com/acorn-io/acorn',
           },
           {
-            title: 'Community',
-            items: [
-              {
-                label: 'Slack Channel',
-                href: 'https://slack.com',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com',
-              },
-            ],
+            label: 'Users Slack',
+            to: 'https://slack.acorn.com',
+          },
+          {
+            label: 'Twitter',
+            to: 'https://twitter.com/acornlabs',
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Acorn Labs, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Acorn Labs, Inc`,
       },
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
+        additionalLanguages: ['cue'],
       },
     }),
 };
