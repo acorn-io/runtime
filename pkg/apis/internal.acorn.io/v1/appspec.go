@@ -19,7 +19,7 @@ type AccessMode string
 
 const (
 	ChangeTypeRedeploy = "redeploy"
-	ChangeTypeOnAction = "noAction"
+	ChangeTypeNoAction = "noAction"
 )
 
 type ChangeType string
@@ -73,18 +73,10 @@ func (in PortBinding) Complete(serviceName string) PortBinding {
 	if in.TargetPort == 0 {
 		in.TargetPort = in.Port
 	}
+	if in.Port == 0 {
+		in.Port = in.TargetPort
+	}
 	return in
-}
-
-type PortDef struct {
-	Expose      bool     `json:"expose,omitempty"`
-	Port        int32    `json:"port,omitempty" wrangler:"required"`
-	Protocol    Protocol `json:"protocol,omitempty"`
-	Publish     bool     `json:"publish,omitempty"`
-	ServiceName string   `json:"serviceName,omitempty"`
-	TargetPort  int32    `json:"targetPort,omitempty"`
-	// TargetServiceName is only used in portDefs for acorns, not containers
-	TargetServiceName string `json:"targetServiceName,omitempty"`
 }
 
 func (in PortDef) String() string {
@@ -121,6 +113,17 @@ func (in PortDef) String() string {
 	return buf.String()
 }
 
+type PortDef struct {
+	Expose      bool     `json:"expose,omitempty"`
+	Port        int32    `json:"port,omitempty" wrangler:"required"`
+	Protocol    Protocol `json:"protocol,omitempty"`
+	Publish     bool     `json:"publish,omitempty"`
+	ServiceName string   `json:"serviceName,omitempty"`
+	TargetPort  int32    `json:"targetPort,omitempty"`
+	// TargetServiceName is only used in portDefs for acorns, not containers
+	TargetServiceName string `json:"targetServiceName,omitempty"`
+}
+
 func (in PortDef) Complete(serviceName string) PortDef {
 	if in.ServiceName == "" && serviceName != "" {
 		in.ServiceName = serviceName
@@ -137,16 +140,10 @@ func (in PortDef) Complete(serviceName string) PortDef {
 	return in
 }
 
-type FileSecret struct {
-	Name     string     `json:"name,omitempty"`
-	Key      string     `json:"key,omitempty"`
-	OnChange ChangeType `json:"onChange,omitempty"`
-}
-
 type File struct {
-	Mode    string     `json:"mode,omitempty"`
-	Content string     `json:"content,omitempty"`
-	Secret  FileSecret `json:"secret,omitempty"`
+	Mode    string          `json:"mode,omitempty"`
+	Content string          `json:"content,omitempty"`
+	Secret  SecretReference `json:"secret,omitempty"`
 }
 
 type VolumeSecretMount struct {
@@ -162,12 +159,12 @@ type VolumeMount struct {
 }
 
 type EnvVar struct {
-	Name   string       `json:"name,omitempty"`
-	Value  string       `json:"value,omitempty"`
-	Secret EnvSecretVal `json:"secret,omitempty"`
+	Name   string          `json:"name,omitempty"`
+	Value  string          `json:"value,omitempty"`
+	Secret SecretReference `json:"secret,omitempty"`
 }
 
-type EnvSecretVal struct {
+type SecretReference struct {
 	Name     string     `json:"name,omitempty"`
 	Key      string     `json:"key,omitempty"`
 	OnChange ChangeType `json:"onChange,omitempty"`
@@ -214,9 +211,11 @@ type Dependency struct {
 	TargetName string `json:"targetName,omitempty"`
 }
 
+type PolicyRule rbacv1.PolicyRule
+
 type Permissions struct {
-	Rules        []rbacv1.PolicyRule `json:"rules,omitempty"`
-	ClusterRules []rbacv1.PolicyRule `json:"clusterRules,omitempty"`
+	Rules        []PolicyRule `json:"rules,omitempty"`
+	ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
 }
 
 func (in *Permissions) HasRules() bool {
@@ -233,19 +232,31 @@ func (in *Permissions) Get() Permissions {
 	return *in
 }
 
+type Files map[string]File
+
+type CommandSlice []string
+
+type EnvVars []EnvVar
+
+type Probes []Probe
+
+type Ports []PortDef
+
+type Dependencies []Dependency
+
 type Container struct {
 	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
-	Files        map[string]File        `json:"files,omitempty"`
+	Files        Files                  `json:"files,omitempty"`
 	Image        string                 `json:"image,omitempty"`
 	Build        *Build                 `json:"build,omitempty"`
-	Command      []string               `json:"command,omitempty"`
+	Command      CommandSlice           `json:"command,omitempty"`
 	Interactive  bool                   `json:"interactive,omitempty"`
-	Entrypoint   []string               `json:"entrypoint,omitempty"`
-	Environment  []EnvVar               `json:"environment,omitempty"`
+	Entrypoint   CommandSlice           `json:"entrypoint,omitempty"`
+	Environment  EnvVars                `json:"environment,omitempty"`
 	WorkingDir   string                 `json:"workingDir,omitempty"`
-	Ports        []PortDef              `json:"ports,omitempty"`
-	Probes       []Probe                `json:"probes,omitempty"`
-	Dependencies []Dependency           `json:"dependencies,omitempty"`
+	Ports        Ports                  `json:"ports,omitempty"`
+	Probes       Probes                 `json:"probes,omitempty"`
+	Dependencies Dependencies           `json:"dependencies,omitempty"`
 	Permissions  *Permissions           `json:"permissions,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
@@ -276,16 +287,15 @@ type AppSpec struct {
 }
 
 type Acorn struct {
-	Image        string              `json:"image,omitempty"`
-	Build        *AcornBuild         `json:"build,omitempty"`
-	DeployArgs   GenericMap          `json:"deployArgs,omitempty"`
-	Ports        []PortDef           `json:"ports,omitempty"`
-	Secrets      []SecretBinding     `json:"secrets,omitempty"`
-	Volumes      []VolumeBinding     `json:"volumes,omitempty"`
-	Services     []ServiceBinding    `json:"services,omitempty"`
-	Roles        []rbacv1.PolicyRule `json:"roles,omitempty"`
-	ClusterRoles []rbacv1.PolicyRule `json:"clusterRoles,omitempty"`
-	Permissions  *Permissions        `json:"permissions,omitempty"`
+	Image       string           `json:"image,omitempty"`
+	Build       *AcornBuild      `json:"build,omitempty"`
+	Profiles    []string         `json:"profiles,omitempty"`
+	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
+	Ports       Ports            `json:"ports,omitempty"`
+	Secrets     []SecretBinding  `json:"secrets,omitempty"`
+	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
+	Links       []ServiceBinding `json:"links,omitempty"`
+	Permissions *Permissions     `json:"permissions,omitempty"`
 }
 
 type Secret struct {
@@ -294,9 +304,10 @@ type Secret struct {
 	Data   map[string]string `json:"data,omitempty"`
 }
 
+type AccessModes []AccessMode
+
 type VolumeRequest struct {
-	Class       string       `json:"class,omitempty"`
-	Size        int64        `json:"size,omitempty"`
-	ContextPath string       `json:"contextPath,omitempty"`
-	AccessModes []AccessMode `json:"accessModes,omitempty"`
+	Class       string      `json:"class,omitempty"`
+	Size        Quantity    `json:"size,omitempty"`
+	AccessModes AccessModes `json:"accessModes,omitempty"`
 }

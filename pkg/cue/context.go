@@ -2,7 +2,7 @@ package cue
 
 import (
 	"bytes"
-	"fmt"
+	"encoding/json"
 	"io/fs"
 	"sync"
 
@@ -18,10 +18,12 @@ var loadLock sync.Mutex
 type ParserFunc func(name string, src interface{}) (*ast.File, error)
 
 type Context struct {
-	files     []File
-	fses      []fsEntry
-	ctx       *cue.Context
-	parseFile ParserFunc
+	files          []File
+	fses           []fsEntry
+	ctx            *cue.Context
+	parseFile      ParserFunc
+	schemaPath     string
+	schemaTypeName string
 }
 
 type fsEntry struct {
@@ -54,6 +56,12 @@ func (c Context) clone() *Context {
 		ctx:       c.ctx,
 		parseFile: c.parseFile,
 	}
+}
+
+func (c Context) WithSchema(path, typeName string) *Context {
+	c.schemaTypeName = typeName
+	c.schemaPath = path
+	return &c
 }
 
 func (c Context) WithFile(name string, data []byte) *Context {
@@ -150,34 +158,7 @@ func (c *Context) Encode(obj interface{}) (*cue.Value, error) {
 	return &v, WrapErr(v.Err())
 }
 
-func (c *Context) TransformValue(currentValue *cue.Value, path string) (*cue.Value, error) {
-	transformer, err := c.buildValue([]string{path})
-	if err != nil {
-		return nil, err
-	}
-
-	if transformer.Err() != nil {
-		return nil, WrapErr(transformer.Err())
-	}
-
-	transformed := transformer.FillPath(cue.ParsePath("in"), currentValue)
-	if transformed.Err() != nil {
-		return nil, WrapErr(transformed.Err())
-	}
-
-	out := transformed.LookupPath(cue.ParsePath("out"))
-	return &out, WrapErr(out.Err())
-}
-
-func (c *Context) Transform(path string) (*cue.Value, error) {
-	currentValue, err := c.Value()
-	if err != nil {
-		return nil, err
-	}
-	return c.TransformValue(currentValue, path)
-}
-
-func (c *Context) Value() (*cue.Value, error) {
+func (c *Context) ValueNoSchema() (*cue.Value, error) {
 	var args []string
 	for _, f := range c.files {
 		args = append(args, f.Name)
@@ -186,12 +167,40 @@ func (c *Context) Value() (*cue.Value, error) {
 	return c.buildValue(args, c.files...)
 }
 
-func (c *Context) Decode(v *cue.Value, obj interface{}) error {
-	err := v.Decode(obj)
-	if err != nil {
-		return fmt.Errorf("value %v: %w", v, WrapErr(err))
+func (c *Context) Value() (*cue.Value, error) {
+	var args []string
+	for _, f := range c.files {
+		args = append(args, f.Name)
 	}
-	return nil
+
+	currentValue, err := c.buildValue(args, c.files...)
+	if err != nil {
+		return nil, err
+	}
+	if c.schemaTypeName == "" {
+		return currentValue, nil
+	}
+
+	validation, err := c.buildValue([]string{c.schemaPath})
+	if err != nil {
+		return nil, err
+	}
+	schema := validation.LookupPath(cue.ParsePath(c.schemaTypeName))
+
+	newValue := currentValue.Unify(schema)
+	if newValue.Err() != nil {
+		return &newValue, WrapErr(newValue.Err())
+	}
+
+	return &newValue, WrapErr(newValue.Validate())
+}
+
+func (c *Context) Decode(v *cue.Value, obj interface{}) error {
+	data, err := v.MarshalJSON()
+	if err != nil {
+		return WrapErr(err)
+	}
+	return json.Unmarshal(data, obj)
 }
 
 func WrapErr(err error) error {

@@ -68,7 +68,7 @@ type AppUpdateOptions struct {
 	PublishMode v1.PublishMode
 	Volumes     []v1.VolumeBinding
 	Secrets     []v1.SecretBinding
-	Services    []v1.ServiceBinding
+	Links       []v1.ServiceBinding
 	Ports       []v1.PortBinding
 	Profiles    []string
 	Permissions *v1.Permissions
@@ -86,7 +86,7 @@ type AppRunOptions struct {
 	PublishMode v1.PublishMode
 	Volumes     []v1.VolumeBinding
 	Secrets     []v1.SecretBinding
-	Services    []v1.ServiceBinding
+	Links       []v1.ServiceBinding
 	Ports       []v1.PortBinding
 	Profiles    []string
 	DeployArgs  map[string]interface{}
@@ -101,7 +101,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		PublishMode: a.PublishMode,
 		Volumes:     a.Volumes,
 		Secrets:     a.Secrets,
-		Services:    a.Services,
+		Links:       a.Links,
 		Ports:       a.Ports,
 		DeployArgs:  a.DeployArgs,
 		DevMode:     a.DevMode,

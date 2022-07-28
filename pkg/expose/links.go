@@ -17,7 +17,7 @@ func Links(req router.Request, app *v1.AppInstance) (result []kclient.Object, _ 
 		return nil, err
 	}
 
-	for _, link := range app.Spec.Services {
+	for _, link := range app.Spec.Links {
 		result = append(result, &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      link.Target,

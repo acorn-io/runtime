@@ -1,6 +1,6 @@
 args: {
-	filename: string
-	image:    string
+	filename: ""
+	image:    ""
 }
 
 images: bar: build: {
@@ -8,4 +8,4 @@ images: bar: build: {
 	dockerfile: "./bar/\(args.filename)"
 }
 
-acorns: foo: image: string
+acorns: foo: image: args.image

@@ -450,6 +450,9 @@ func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInsta
 
 func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 	for _, dir := range container.Dirs {
+		if dir.Secret.Name != "" {
+			continue
+		}
 		for volName, vol := range appInstance.Status.AppSpec.Volumes {
 			if vol.Class == "ephemeral" {
 				continue

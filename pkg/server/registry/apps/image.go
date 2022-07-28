@@ -39,20 +39,20 @@ func (s *Storage) checkRemotePermissions(ctx context.Context, namespace, image s
 	return nil
 }
 
-func (s *Storage) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule rbacv1.PolicyRule) error {
+func (s *Storage) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
 	err := s.client.Create(ctx, sar)
 	if err != nil {
 		return err
 	}
 	if !sar.Status.Allowed {
 		return &client.ErrNotAuthorized{
-			Rule: rule,
+			Rule: (rbacv1.PolicyRule)(rule),
 		}
 	}
 	return nil
 }
 
-func (s *Storage) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule rbacv1.PolicyRule, namespace string) error {
+func (s *Storage) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
 	if len(rule.Verbs) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
@@ -73,7 +73,7 @@ func (s *Storage) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectA
 	return nil
 }
 
-func (s *Storage) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule rbacv1.PolicyRule, namespace string) error {
+func (s *Storage) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
 	if len(rule.APIGroups) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
 	}
@@ -124,7 +124,7 @@ func (s *Storage) checkResourceRole(ctx context.Context, sar *authv1.SubjectAcce
 	return nil
 }
 
-func (s *Storage) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []rbacv1.PolicyRule, namespace string) error {
+func (s *Storage) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
 	var errs []error
 	for _, rule := range rules {
 		if len(rule.NonResourceURLs) > 0 {
