@@ -28,14 +28,12 @@ Applications that have stateful data or where an operator would care which order
 To accomplish this, users can leverage `for` loops in the Acornfile. Within the `for` loop block all items unique to that instance should be defined. In most cases, this will be a container and data volumes. It can contain any of the top level structs if needed.
 
 ```cue
-import "list"
-
 args: {
     // Number of instances
     replicas: 1
 }
 
-for i in list.Range(0, replicas, 1) {
+for i in std.range(0, replicas, 1) {
     containers: {
         "instance-\(i)": {
             // ...
@@ -50,38 +48,18 @@ for i in list.Range(0, replicas, 1) {
 }
 ```
 
-The above example makes use of the `list` package which provides the `Range` function used in the `for` loop. The loop variable `i` will be an integer and placed into the container and volume names. When the application is scaled up, new containers will be deployed with their own data volumes. When the application is scaled down the highest numbered replicas will be removed first. The `0` replica will always be the first replica deployed and last removed.
+The above example makes use of the `std.range` function used in the `for` loop. The loop variable `i` will be an integer and placed into the container and volume names. When the application is scaled up, new containers will be deployed with their own data volumes. When the application is scaled down the highest numbered replicas will be removed first. The `0` replica will always be the first replica deployed and last removed.
 
 When deploying stateful applications it is a reasonable assumption to bootstrap from the `0` instance and for new replicas to use that as the first point of contact to register.
-
-## String manipulation
-
-There are multiple ways to manipulate strings in the Acornfile.
-
-### Simple string substitution
-
-```cue
-args: {
-    userAdjective: string | *"cool"
-}
-// ...
-localData: {
-    config: {
-        key: "this is something, \(args.userAdjective)"
-    }
-}
-```
 
 ### Yaml Templates
 
 If you would like to dump a section of the localData config into YAML format, you can use the YAML encoder package.
 
 ```cue
-import "encoding/yaml"
-
 args: {
     // User provided yaml
-    userConfig: {//...} | *{}
+    userConfig: {}
 }
 
 containers: {
@@ -96,22 +74,21 @@ containers: {
 secrets: {
     "yaml-config": {
         type: "template"
-        data: {template: yaml.Marshal(localData.config)}
+        data: {template: std.toYAML(localData.config)}
 }
 localData: {
-    config: args.userConfig & {
+    config: std.merge({
         this: {
             isGoing: {
                 to: "be a yaml file"
             }
-        }
-    }
+        }, args.userConfig)
 }
 ```
 
-In the above example the frontend config file will be rendered from user and Acorn data in YAML format.
+In the above example the frontend config file will be rendered from user and Acorn data in YAML format. This example is using the `std.merge()` function which takes two structs and merges them where the second overwrites the first.
 
-### Tab writer
+### Generating files from key value pairs
 
 Another useful built-in for rendering key value pairs with an optional separator is the `tabwriter` function.
 
@@ -120,7 +97,6 @@ If you need to create a file with content in this format:
 `key=value`
 
 ```cue
-import "text/tabwriter"
 // ...
 containers: {
     web: {
@@ -135,7 +111,7 @@ secrets: {
     "config": {
         type: "template"
         data: {
-            template: tabwriter.Write([for key, value in localData.configData {"\(key)=\(value)"}])
+            template: std.join([for key, value in localData.configData {"\(key)=\(value)"}], "\n")
         }
     }
 }
