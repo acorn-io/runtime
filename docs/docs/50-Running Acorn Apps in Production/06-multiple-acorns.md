@@ -2,7 +2,7 @@
 title: Multiple Acorn Apps
 ---
 
-Acorn apps can be [linked at runtime](/Acorn%20in%20Production/multiple-acorns#linking-with-other-acorns-at-runtime)
+Acorn apps can be [linked at runtime](/Running%20Acorn%20Apps%20in%20Production/multiple-acorns#linking-with-other-acorns-at-runtime)
 
 ## Linking with other Acorns at runtime
 

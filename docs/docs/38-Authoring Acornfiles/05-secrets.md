@@ -6,7 +6,7 @@ title: Secrets
 
 Secrets are used to provide data that is considered sensitive like passwords, keys, and other sensitive information. Acorn provides multiple secret types, and makes it easy to create closed loop systems where information can be kept within the defined Acorn.
 
-To learn how to use secrets while deploying an Acorn Image see [args and secrets](http://solitary-silence.local.on-acorn.io/Acorn%20in%20Production/args-and-secrets)
+To learn how to use secrets while deploying an Acorn Image see [args and secrets](/Running%20Acorn%20Apps%20in%20Production/args-and-secrets)
 
 ## Using secrets in an Acornfile
 
@@ -78,7 +78,7 @@ secrets: {
 }
 ```
 
-The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitute the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by [binding a preexisting secret](/Acorn%20in%20Production/args-and-secrets#binding-a-secret-at-runtime).
+The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitute the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by [binding a preexisting secret](/Running%20Acorn%20Apps%20in%20Production/args-and-secrets#binding-a-secret-at-runtime).
 
 ### Populating a directory with files
 
