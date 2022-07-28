@@ -58,7 +58,7 @@ var (
 
 type PortBinding struct {
 	Expose            bool     `json:"expose,omitempty"`
-	Port              int32    `json:"port,omitempty" wrangler:"required"`
+	Port              int32    `json:"port,omitempty"`
 	Protocol          Protocol `json:"protocol,omitempty"`
 	Publish           bool     `json:"publish,omitempty"`
 	ServiceName       string   `json:"serviceName,omitempty"`
@@ -78,7 +78,7 @@ func (in PortBinding) Complete(serviceName string) PortBinding {
 
 type PortDef struct {
 	Expose      bool     `json:"expose,omitempty"`
-	Port        int32    `json:"port,omitempty" wrangler:"required"`
+	Port        int32    `json:"port,omitempty"`
 	Protocol    Protocol `json:"protocol,omitempty"`
 	Publish     bool     `json:"publish,omitempty"`
 	ServiceName string   `json:"serviceName,omitempty"`
