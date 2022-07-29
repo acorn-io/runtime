@@ -61,11 +61,13 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			Spec: corev1.PersistentVolumeClaimSpec{
 				AccessModes: accessModes,
 				Resources: corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: *v1.MustParseResourceQuantity(volumeRequest.Size),
-					},
+					Requests: corev1.ResourceList{},
 				},
 			},
+		}
+
+		if volumeRequest.Size != "" {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
 		}
 
 		if bind {
