@@ -270,8 +270,8 @@ func ParseVolumes(args []string) (result []VolumeBinding, _ error) {
 			return nil, fmt.Errorf("invalid endpoint binding [%s] must not have zero length value", arg)
 		}
 		result = append(result, VolumeBinding{
-			Volume:        existing,
-			VolumeRequest: volName,
+			Volume: existing,
+			Target: volName,
 		})
 	}
 	return

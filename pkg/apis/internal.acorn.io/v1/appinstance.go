@@ -84,11 +84,11 @@ type SecretBinding struct {
 type Quantity string
 
 type VolumeBinding struct {
-	Volume        string      `json:"volume,omitempty"`
-	VolumeRequest string      `json:"volumeRequest,omitempty"`
-	Size          Quantity    `json:"size,omitempty"`
-	AccessModes   AccessModes `json:"accessModes,omitempty"`
-	Class         string      `json:"class,omitempty"`
+	Volume      string      `json:"volume,omitempty"`
+	Target      string      `json:"target,omitempty"`
+	Size        Quantity    `json:"size,omitempty"`
+	AccessModes AccessModes `json:"accessModes,omitempty"`
+	Class       string      `json:"class,omitempty"`
 }
 
 type ContainerStatus struct {

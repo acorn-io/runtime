@@ -114,7 +114,7 @@ func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, 
 
 func isBind(appInstance *v1.AppInstance, volume string) (v1.VolumeBinding, bool) {
 	for _, v := range appInstance.Spec.Volumes {
-		if v.VolumeRequest == volume {
+		if v.Target == volume {
 			return v, true
 		}
 	}

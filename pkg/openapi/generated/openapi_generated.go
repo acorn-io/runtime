@@ -4358,7 +4358,7 @@ func schema_pkg_apis_internalacornio_v1_VolumeBinding(ref common.ReferenceCallba
 							Format: "",
 						},
 					},
-					"volumeRequest": {
+					"target": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

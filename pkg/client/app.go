@@ -218,7 +218,7 @@ func mergeVolumes(appVolumes, optsVolumes []v1.VolumeBinding) []v1.VolumeBinding
 	for _, newVolume := range optsVolumes {
 		found := false
 		for i, existingVolume := range appVolumes {
-			if existingVolume.VolumeRequest == newVolume.VolumeRequest {
+			if existingVolume.Target == newVolume.Target {
 				appVolumes[i] = newVolume
 				found = true
 				break
