@@ -70,7 +70,9 @@ metadata:
     "acorn.io/root-prefix": "app-name"
     "acorn.io/root-namespace": ""
 spec:
-  resources: {}
+  resources:
+    requests:
+      storage: 10G
 ---
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
