@@ -1534,12 +1534,12 @@ acorns: foo: {
 	}, acorn.Ports)
 	assert.Equal(t, []v1.VolumeBinding{
 		{
-			Volume:        "src-vol",
-			VolumeRequest: "dest-vol",
+			Volume: "src-vol",
+			Target: "dest-vol",
 		},
 		{
-			Volume:        "src-vol2",
-			VolumeRequest: "dest-vol2",
+			Volume: "src-vol2",
+			Target: "dest-vol2",
 		},
 	}, acorn.Volumes)
 	assert.Equal(t, []v1.SecretBinding{

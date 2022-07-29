@@ -191,7 +191,7 @@ package v1
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretGenerated | #SecretTemplate | #SecretToken
 
 #AcornSecretBinding: {
-	secret:        string
+	secret: string
 	target: string
 } | string
 
@@ -201,10 +201,10 @@ package v1
 } | string
 
 #AcornVolumeBinding: {
-	volume:        string
-	volumeRequest: string
-	size:          int | string | *10
-	accessModes:   [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
+	volume:      string
+	target:      string
+	size:        int | string | *10
+	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 } | string
 
 #Acorn: {

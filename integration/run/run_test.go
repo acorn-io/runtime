@@ -55,8 +55,8 @@ func TestVolume(t *testing.T) {
 	app, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
-				Volume:        pv.Name,
-				VolumeRequest: "external",
+				Volume: pv.Name,
+				Target: "external",
 			},
 		},
 	})

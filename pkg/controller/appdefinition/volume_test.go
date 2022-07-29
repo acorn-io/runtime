@@ -32,12 +32,12 @@ func TestVolumes(t *testing.T) {
 		Spec: v1.AppInstanceSpec{
 			Volumes: []v1.VolumeBinding{
 				{
-					Volume:        "v1-random",
-					VolumeRequest: "v1",
+					Volume: "v1-random",
+					Target: "v1",
 				},
 				{
-					Volume:        "v2-random",
-					VolumeRequest: "v2",
+					Volume: "v2-random",
+					Target: "v2",
 				},
 			},
 		},
