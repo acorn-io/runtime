@@ -11,6 +11,7 @@ type AppInstanceCondition string
 var (
 	AppInstanceConditionDefined    = "defined"
 	AppInstanceConditionParsed     = "parsed"
+	AppInstanceConditionController = "controller"
 	AppInstanceConditionPulled     = "pulled"
 	AppInstanceConditionSecrets    = "secrets"
 	AppInstanceConditionContainers = "containers"
