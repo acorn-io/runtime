@@ -1,0 +1,25 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  services:
+  - service: foo
+    target: db
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        dependencies:
+        - targetName: db
+      web:
+        image: "image-name"
+        dependencies:
+        - targetName: container-name
+      db:
+        image: "image-name"

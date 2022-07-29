@@ -21,6 +21,11 @@ var (
 	testTag = name.MustParseReference("test")
 )
 
+func TestTemplate(t *testing.T) {
+	// This is the basic hello world all other tests can start from
+	tester.DefaultTest(t, scheme.Scheme, "testdata/template", DeploySpec)
+}
+
 func TestDeploySpec(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec", DeploySpec)
 }

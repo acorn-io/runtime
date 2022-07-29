@@ -3,6 +3,11 @@ apiVersion: v1
 metadata:
   name: acrn
   namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/link-name: acrn-link
+    acorn.io/managed: "true"
 spec:
   type: ExternalName
   externalName: acrn-link.app-namespace.svc.cluster.local
@@ -13,6 +18,11 @@ apiVersion: v1
 metadata:
   name: con
   namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/link-name: con-link
+    acorn.io/managed: "true"
 spec:
   type: ExternalName
   externalName: con-link.app-namespace.svc.cluster.local

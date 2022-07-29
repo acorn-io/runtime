@@ -36,6 +36,7 @@ const (
 	AcornPublishURL        = Prefix + "publish-url"
 	AcornTargets           = Prefix + "targets"
 	AcornDNSHash           = Prefix + "dns-hash"
+	AcornLinkName          = Prefix + "link-name"
 	AcornDNSState          = Prefix + "applied-dns-state"
 )
 

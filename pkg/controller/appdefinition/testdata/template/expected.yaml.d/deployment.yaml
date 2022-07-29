@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "container-name"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+      annotations:
+        acorn.io/container-spec: '{"image":"image-name"}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: container-name-pull-1234567890ab
+      containers:
+        - name: container-name
+          image: "image-name"
