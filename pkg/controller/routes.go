@@ -24,6 +24,8 @@ var (
 )
 
 func routes(router *router.Router) {
+	router.OnErrorHandler = appdefinition.OnError
+
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
@@ -38,6 +40,7 @@ func routes(router *router.Router) {
 	appRouter.HandlerFunc(appdefinition.AcornStatus)
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.CLIStatus)
+	appRouter.HandlerFunc(appdefinition.ClearError)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ReleaseVolume)
 
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
