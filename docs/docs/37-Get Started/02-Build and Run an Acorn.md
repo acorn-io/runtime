@@ -8,7 +8,7 @@ Containerized apps typically have a Dockerfile and are packaged as a container b
 
 A simple Dockerfile looks like:
 
-```dockerfile
+```docker
 FROM nginx
 ADD . .
 EXPOSE 80
