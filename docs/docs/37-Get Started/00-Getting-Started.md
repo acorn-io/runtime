@@ -219,14 +219,14 @@ secrets: {
       - `if !args.dev`: only apply, if built-in development mode is **not** active (more on the development mode later <!-- TODO: add link -->)
       - `volume://pgdata`: references a volume defined in the top-level `volumes` section in the Acornfile. Also supports other references. <!-- TODO: add link -->
     - `files`: Similar to `dirs` but only for files. Additionally, content can be created in-line and even utilizing generating functions.
-  - `localData`: Set of variables for this Acorn App
-    - `food`: Custom variable, defining a list of food which is accessed in `containers.db.volumes` to pre-fill the database.
-  - `volumes`: (persistent) data volumes to be used by any container in the Acorn App
-    - `pgdata` custom volume name, referenced in `containers.db.dirs`
-      - `accessModes`: (list of) modes to allow access to this volume
-  - `secrets`: set of secrets that can be auto-generated and used by any container in the Acorn App
-    - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
-      - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
+- `localData`: Set of variables for this Acorn App
+  - `food`: Custom variable, defining a list of food which is accessed in `containers.db.volumes` to pre-fill the database.
+- `volumes`: (persistent) data volumes to be used by any container in the Acorn App
+  - `pgdata` custom volume name, referenced in `containers.db.dirs`
+    - `accessModes`: (list of) modes to allow access to this volume
+- `secrets`: set of secrets that can be auto-generated and used by any container in the Acorn App
+  - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
+    - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
 
 ## 3. Run your Acorn App
 
