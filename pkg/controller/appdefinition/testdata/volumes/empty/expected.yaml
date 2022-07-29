@@ -1,0 +1,98 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "container-name"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+      annotations:
+        acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name"}'
+    spec:
+      imagePullSecrets:
+        - name: container-name-pull-1234567890ab
+      terminationGracePeriodSeconds: 5
+      hostname: container-name
+      enableServiceLinks: false
+      shareProcessNamespace: true
+      automountServiceAccountToken: false
+      volumes:
+        - name: foo
+          persistentVolumeClaim:
+            claimName: foo
+      containers:
+        - name: container-name
+          image: "image-name"
+          volumeMounts:
+            - mountPath: "/var/tmp"
+              name: foo
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: "foo"
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/root-prefix": "app-name"
+    "acorn.io/root-namespace": ""
+spec:
+  resources: {}
+---
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        dirs:
+          "/var/tmp":
+            volume: foo
+    volumes:
+      foo: {}
+  conditions:
+    - type: defined
+      reason: Success
+      status: "True"
+      success: true
