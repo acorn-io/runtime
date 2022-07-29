@@ -156,7 +156,7 @@ func (s *Storage) resolveName(ctx context.Context, ns, name string) (string, err
 			continue
 		}
 		for _, binding := range app.Spec.Secrets {
-			if binding.SecretRequest == secretName {
+			if binding.Target == secretName {
 				return binding.Secret, nil
 			}
 		}

@@ -200,7 +200,7 @@ func mergeSecrets(appSecrets, optsSecrets []v1.SecretBinding) []v1.SecretBinding
 	for _, newSecret := range optsSecrets {
 		found := false
 		for i, existingSecret := range appSecrets {
-			if existingSecret.SecretRequest == newSecret.SecretRequest {
+			if existingSecret.Target == newSecret.Target {
 				appSecrets[i] = newSecret
 				found = true
 				break
