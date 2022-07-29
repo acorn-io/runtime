@@ -192,7 +192,7 @@ package v1
 
 #AcornSecretBinding: {
 	secret:        string
-	secretRequest: string
+	target: string
 } | string
 
 #AcornServiceBinding: {

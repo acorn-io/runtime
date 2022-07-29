@@ -4262,7 +4262,7 @@ func schema_pkg_apis_internalacornio_v1_SecretBinding(ref common.ReferenceCallba
 							Format: "",
 						},
 					},
-					"secretRequest": {
+					"target": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

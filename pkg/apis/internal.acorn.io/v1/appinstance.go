@@ -77,8 +77,8 @@ type ServiceBinding struct {
 }
 
 type SecretBinding struct {
-	Secret        string `json:"secret,omitempty"`
-	SecretRequest string `json:"secretRequest,omitempty"`
+	Secret string `json:"secret,omitempty"`
+	Target string `json:"target,omitempty"`
 }
 
 type Quantity string

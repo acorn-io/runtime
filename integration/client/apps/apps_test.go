@@ -134,12 +134,12 @@ func TestAppUpdate(t *testing.T) {
 		},
 		Secrets: []v1.SecretBinding{
 			{
-				Secret:        "sec1",
-				SecretRequest: "secreq1",
+				Secret: "sec1",
+				Target: "secreq1",
 			},
 			{
-				Secret:        "sec2",
-				SecretRequest: "secreq2",
+				Secret: "sec2",
+				Target: "secreq2",
 			},
 		},
 		Links: []v1.ServiceBinding{
@@ -184,12 +184,12 @@ func TestAppUpdate(t *testing.T) {
 		},
 		Secrets: []v1.SecretBinding{
 			{
-				Secret:        "sec3",
-				SecretRequest: "secreq2",
+				Secret: "sec3",
+				Target: "secreq2",
 			},
 			{
-				Secret:        "sec3",
-				SecretRequest: "secreq3",
+				Secret: "sec3",
+				Target: "secreq3",
 			},
 		},
 		Links: []v1.ServiceBinding{
@@ -251,16 +251,16 @@ func TestAppUpdate(t *testing.T) {
 
 	assert.Equal(t, []v1.SecretBinding{
 		{
-			Secret:        "sec1",
-			SecretRequest: "secreq1",
+			Secret: "sec1",
+			Target: "secreq1",
 		},
 		{
-			Secret:        "sec3",
-			SecretRequest: "secreq2",
+			Secret: "sec3",
+			Target: "secreq2",
 		},
 		{
-			Secret:        "sec3",
-			SecretRequest: "secreq3",
+			Secret: "sec3",
+			Target: "secreq3",
 		},
 	}, thirdApp.Spec.Secrets)
 
@@ -420,8 +420,8 @@ func TestAppRun(t *testing.T) {
 		},
 		Secrets: []v1.SecretBinding{
 			{
-				Secret:        "secret",
-				SecretRequest: "secretRequest",
+				Secret: "secret",
+				Target: "secretRequest",
 			},
 		},
 		DeployArgs: map[string]interface{}{

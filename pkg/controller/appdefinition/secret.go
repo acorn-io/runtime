@@ -429,7 +429,7 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	}
 
 	for _, binding := range appInstance.Spec.Secrets {
-		if binding.SecretRequest == secretName {
+		if binding.Target == secretName {
 			existingSecret, err := lookupSecret(req.Ctx, req, nil, appInstance.Namespace, binding.Secret)
 			if err != nil {
 				return nil, err

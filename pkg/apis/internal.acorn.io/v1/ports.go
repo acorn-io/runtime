@@ -251,8 +251,8 @@ func ParseSecrets(args []string) (result []SecretBinding, _ error) {
 			return nil, fmt.Errorf("invalid endpoint binding [%s] must not have zero length value", arg)
 		}
 		result = append(result, SecretBinding{
-			Secret:        existing,
-			SecretRequest: secName,
+			Secret: existing,
+			Target: secName,
 		})
 	}
 	return

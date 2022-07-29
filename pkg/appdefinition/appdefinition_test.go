@@ -1544,12 +1544,12 @@ acorns: foo: {
 	}, acorn.Volumes)
 	assert.Equal(t, []v1.SecretBinding{
 		{
-			Secret:        "src-sec",
-			SecretRequest: "dest-sec",
+			Secret: "src-sec",
+			Target: "dest-sec",
 		},
 		{
-			Secret:        "src-sec2",
-			SecretRequest: "dest-sec2",
+			Secret: "src-sec2",
+			Target: "dest-sec2",
 		},
 	}, acorn.Secrets)
 }
