@@ -1373,8 +1373,8 @@ github.com/pterm/pterm v0.12.31/go.mod h1:32ZAWZVXD7ZfG0s8qqHXePte42kdz8ECtRyEej
 github.com/pterm/pterm v0.12.33/go.mod h1:x+h2uL+n7CP/rel9+bImHD5lF3nM9vJj80k9ybiiTTE=
 github.com/pterm/pterm v0.12.36/go.mod h1:NjiL09hFhT/vWjQHSj1athJpx6H8cjpHXNAK5bUw8T8=
 github.com/pterm/pterm v0.12.40/go.mod h1:ffwPLwlbXxP+rxT0GsgDTzS3y3rmpAO1NMjUkGTYf8s=
-github.com/pterm/pterm v0.12.42 h1:hDxPyaPHJalzI+uJ+Cnh7tk8GKFkTUHcRmH7FuGcWfc=
-github.com/pterm/pterm v0.12.42/go.mod h1:hJgLlBafm45w/Hr0dKXxY//POD7CgowhePaG1sdPNBg=
+github.com/pterm/pterm v0.12.45 h1:5HATKLTDjl9D74b0x7yiHzFI7OADlSXK3yHrJNhRwZE=
+github.com/pterm/pterm v0.12.45/go.mod h1:hJgLlBafm45w/Hr0dKXxY//POD7CgowhePaG1sdPNBg=
 github.com/qri-io/starlib v0.4.2-0.20200213133954-ff2e8cd5ef8d/go.mod h1:7DPO4domFU579Ga6E61sB9VFNaniPVwJP5C4bBCu3wA=
 github.com/quasilyte/go-consistent v0.0.0-20190521200055-c6f3937de18c/go.mod h1:5STLWrekHfjyYwxBRVRXNOSewLJ3PWfDJd1VyTS21fI=
 github.com/quasilyte/go-ruleguard v0.1.2-0.20200318202121-b00d7a75d3d8/go.mod h1:CGFX09Ci3pq9QZdj86B+VGIdNj4VyCo2iPOGS9esB/k=
