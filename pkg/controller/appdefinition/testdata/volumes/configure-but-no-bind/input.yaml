@@ -1,0 +1,25 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  volumes:
+    - target: foo
+      size: 20G
+      class: cli-class
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        dirs:
+          "/var/tmp":
+            volume: foo
+    volumes:
+      foo:
+        class: custom-class
+        size: 10

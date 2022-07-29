@@ -66,12 +66,6 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			},
 		}
 
-		if volumeRequest.Size == "" {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
-		} else {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
-		}
-
 		if bind {
 			pvc.Name = bindName(volume)
 			pvc.Spec.VolumeName = volumeBinding.Volume
@@ -80,13 +74,20 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 				class = &volumeRequest.Class
 			}
 			pvc.Spec.StorageClassName = class
-			if volumeBinding.Class != "" {
-				pvc.Spec.StorageClassName = &volumeBinding.Class
-			}
+		}
 
-			if len(volumeBinding.AccessModes) > 0 {
-				pvc.Spec.AccessModes = translateAccessModes(volumeBinding.AccessModes)
-			}
+		if volumeRequest.Size == "" {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
+		} else {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
+		}
+
+		if len(volumeBinding.AccessModes) > 0 {
+			pvc.Spec.AccessModes = translateAccessModes(volumeBinding.AccessModes)
+		}
+
+		if volumeBinding.Class != "" {
+			pvc.Spec.StorageClassName = &volumeBinding.Class
 		}
 
 		if volumeBinding.Size != "" {
@@ -115,7 +116,7 @@ func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, 
 func isBind(appInstance *v1.AppInstance, volume string) (v1.VolumeBinding, bool) {
 	for _, v := range appInstance.Spec.Volumes {
 		if v.Target == volume {
-			return v, true
+			return v, v.Volume != ""
 		}
 	}
 	return v1.VolumeBinding{}, false

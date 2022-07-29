@@ -60,7 +60,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	opts.Name = s.Name
 	opts.Profiles = s.Profile
 
-	opts.Volumes, err = v1.ParseVolumes(s.Volume)
+	opts.Volumes, err = v1.ParseVolumes(s.Volume, true)
 	if err != nil {
 		return opts, err
 	}
