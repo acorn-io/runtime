@@ -5,6 +5,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,6 +23,8 @@ func Links(req router.Request, app *v1.AppInstance) (result []kclient.Object, _ 
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      link.Target,
 				Namespace: app.Status.Namespace,
+				Labels: labels.Managed(app,
+					labels.AcornLinkName, link.Service),
 			},
 			Spec: corev1.ServiceSpec{
 				Type:         corev1.ServiceTypeExternalName,

@@ -43,7 +43,7 @@ func (d *depCheckingResponse) Objects(objs ...kclient.Object) {
 			if !ready {
 				objAnnotations[apply.AnnotationCreate] = "false"
 				objAnnotations[apply.AnnotationUpdate] = "false"
-				obj.SetLabels(objAnnotations)
+				obj.SetAnnotations(objAnnotations)
 			}
 		}
 	}
@@ -134,6 +134,11 @@ type depCheck func(string) (bool, bool)
 func (d *depCheckingResponse) checkDeps(deps []string) bool {
 outer:
 	for _, depName := range deps {
+		for _, link := range d.app.Spec.Links {
+			if link.Target == depName {
+				return true
+			}
+		}
 		for _, depCheck := range []depCheck{d.isDepReady, d.isJobReady, d.isCronJobReady} {
 			if ready, found := depCheck(depName); found && !ready {
 				return false
