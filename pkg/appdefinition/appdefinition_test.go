@@ -1138,6 +1138,11 @@ volumes: {
 		Images: nil,
 	})
 
+	appImage, _, err = appImage.WithArgs(map[string]interface{}{"foo": "bar"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	appSpec, err := appImage.AppSpec()
 	if err != nil {
 		t.Fatal(err)
@@ -1158,6 +1163,7 @@ volumes: {
 	assert.Equal(t, toQuantity(10), appSpec.Volumes["ephemeral"].Size)
 	assert.Equal(t, "", appSpec.Volumes["defaults"].Class)
 	assert.Equal(t, toQuantity(10), appSpec.Volumes["defaults"].Size)
+	assert.Equal(t, v1.AccessModes{v1.AccessModeReadWriteOnce}, appSpec.Volumes["defaults"].AccessModes)
 	// class not supported
 	assert.Equal(t, "", appSpec.Volumes["uri"].Class)
 	assert.Equal(t, toQuantity(70), appSpec.Volumes["uri"].Size)
