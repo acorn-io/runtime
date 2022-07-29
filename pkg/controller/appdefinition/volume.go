@@ -66,7 +66,9 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			},
 		}
 
-		if volumeRequest.Size != "" {
+		if volumeRequest.Size == "" {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
+		} else {
 			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
 		}
 
@@ -100,7 +102,6 @@ func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, 
 	if volume == AcornHelper && appInstance.Spec.GetDevMode() {
 		return v1.VolumeRequest{
 			Class: v1.VolumeRequestTypeEphemeral,
-			Size:  "10G",
 		}, true
 	}
 	for name, volumeRequest := range appInstance.Status.AppSpec.Volumes {

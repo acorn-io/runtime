@@ -15,6 +15,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+var (
+	DefaultSizeQuantity = Quantity("10G")
+	DefaultSize         = MustParseResourceQuantity(DefaultSizeQuantity)
+)
+
 func (in *Dependencies) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
 		return json.Unmarshal(data, (*[]Dependency)(in))
@@ -177,7 +182,7 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 			}
 		} else if _, ok := app.Volumes[mount.Volume]; !ok {
 			app.Volumes[mount.Volume] = VolumeRequest{
-				Size:        "10G",
+				Size:        DefaultSizeQuantity,
 				AccessModes: []AccessMode{AccessModeReadWriteOnce},
 			}
 		}
@@ -927,7 +932,7 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 			result.Volume = anonName
 		}
 	} else if result.Size == "" {
-		result.Size = "10G"
+		result.Size = DefaultSizeQuantity
 	}
 
 	for _, accessMode := range u.Query()["accessMode"] {
