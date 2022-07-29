@@ -5,7 +5,10 @@ title: Troubleshooting
 ## Viewing logs
 
 To view the logs of your running application you can run:
-`acorn logs [APP-NAME]`
+
+```shell
+acorn logs [APP-NAME]
+```
 
 If you would like the logs to continue streaming, you can add `-f` to follow the logs.
 
@@ -13,10 +16,14 @@ If you would like the logs to continue streaming, you can add `-f` to follow the
 
 To execute commands in a running Acorn container, you can do:
 
-`acorn exec [APP-NAME]`
+```shell
+acorn exec [APP-NAME]
+```
 
 You will be prompted for which container if there is more than one running.
 
 If you know the container name you can specify it with the `-c` option.
 
-`acorn exec -c web-01 [APP-NAME]`
+```shell
+acorn exec -c web-01 [APP-NAME]
+```

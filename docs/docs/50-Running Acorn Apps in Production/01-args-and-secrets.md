@@ -65,6 +65,8 @@ In the above example the values from `my-app-secret-creds` will now be available
 
 When running the Acorn you can bind in a secret with the `-s` option.
 
-`acorn run -s my-predefined-creds:user-creds registry.example.com/myorg/image`
+```shell
+acorn run -s my-predefined-creds:user-creds registry.example.com/myorg/image
+```
 
 When this Acorn runs it will use the values in the `my-predefined-creds` secret.
