@@ -17,9 +17,9 @@ brew upgrade acorn-io/acorn/acorn
 
 Download latest binary version and install following the install method.
 
-## Kubernetes Cluster
+## Upgrading Acorn on a Kubernetes cluster
 
-To update the Acorn version on a Kubernetes cluster, run:
+Once a new version of Acorn is being used the Acorn version on a Kubernetes cluster will also need to be updated. You can run the following command to do the upgrade:
 
 ```shell
 acorn install

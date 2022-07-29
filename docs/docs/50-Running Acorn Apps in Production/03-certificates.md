@@ -13,8 +13,6 @@ for each endpoint. Today, adding a certificate must follow the manual approach.
 Acorn will automatically look for SANs in secrets of type `kubernetes.io/tls` for the
 exposed FQDN of the application in the Acorn namespace.
 
-<!-- TODO: add example -->
-
 Assume you are deploying an app and plan to host on `my-app.example.com`
 
 ### Add existing certificates using kubectl
@@ -55,7 +53,9 @@ Once you have manually created the TLS secret using one of the methods above you
 
 When you deploy the application Acorn, you can launch with the FQDN of your app.
 
-`acorn run -p my-app.example.com:web [MY_APP_IMAGE]`
+```shell
+acorn run -p my-app.example.com:web [MY_APP_IMAGE]
+```
 
 Acorn will automatically inspect each certificate in the Acorn namespace for one that can be used with `my-app.example.com`.
 If no TLS secret is found with that FQDN, it will be exposed on HTTP only.
