@@ -404,7 +404,7 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 		}
 
 		endpointStrings = append(endpointStrings,
-			fmt.Sprintf("%s => %s", strings.Join(publicStrings, "|"), target))
+			fmt.Sprintf("%s => %s", strings.Join(publicStrings, " | "), target))
 	}
 
 	return strings.Join(endpointStrings, ", ")
