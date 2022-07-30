@@ -47,6 +47,7 @@ rules:
     resources:
       - deployments
       - daemonsets
+      - replicasets
   - verbs: ["create"]
     apiGroups: ["authorization.k8s.io"]
     resources:
