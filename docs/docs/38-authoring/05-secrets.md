@@ -2,11 +2,9 @@
 title: Secrets
 ---
 
-## Secrets
-
 Secrets are used to provide data that is considered sensitive like passwords, keys, and other sensitive information. Acorn provides multiple secret types, and makes it easy to create closed loop systems where information can be kept within the defined Acorn.
 
-To learn how to use secrets while deploying an Acorn Image see [args and secrets](/Running%20Acorn%20Apps%20in%20Production/args-and-secrets)
+To learn how to use secrets while deploying an Acorn Image see [args and secrets](/production/args-and-secrets)
 
 ## Using secrets in an Acornfile
 
@@ -78,7 +76,7 @@ secrets: {
 }
 ```
 
-The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitute the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by [binding a preexisting secret](/Running%20Acorn%20Apps%20in%20Production/args-and-secrets#binding-a-secret-at-runtime).
+The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitute the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by [binding a pre-existing secret](/production/args-and-secrets#binding-a-secret-at-runtime).
 
 ### Populating a directory with files
 
@@ -166,7 +164,7 @@ secrets: {
 }
 ```
 
-In the above example the secret renders a template that contains [data](/Authoring%20Acornfiles/localdata) defined in the Acornfile and another secret. See [advanced topics](/Authoring%20Acornfiles/advanced-topics) for other uses for the template secret type.
+In the above example the secret renders a template that contains [data](/authoring/localdata) defined in the Acornfile and another secret. See [advanced topics](/authoring/advanced) for other uses for the template secret type.
 
 ### Token secrets
 
@@ -193,7 +191,7 @@ The `token` field in the data struct is optional and needs to be left the defaul
 
 ### Generated secrets
 
-Generated secrets allow storing sensitive data output from a [job](/Authoring%20Acornfiles/jobs).
+Generated secrets allow storing sensitive data output from a [job](/authoring/jobs).
 
 ```cue
 containers: {

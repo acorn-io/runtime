@@ -2,8 +2,6 @@
 title: Best Practices
 ---
 
-## Authoring best practices
-
 When authoring an Acorn it is best to offer a set of defaults so the user can simply `acorn run [IMAGE]` and be able to try out the Acorn without diving into its documentation first.
 
 ### User arguments

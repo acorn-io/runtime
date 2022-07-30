@@ -2,8 +2,6 @@
 title: Updating an Acorn App Image
 ---
 
-## Updating a running Acorn
-
 Making changes to a running Acorn is all additive, and does not require all arguments to be passed on each update.
 
 ### Building a new image

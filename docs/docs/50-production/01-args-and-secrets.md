@@ -2,9 +2,7 @@
 title: Args and Secrets
 ---
 
-## Args and settings
-
-By design authors will build Acorns Images with defaults for the common usecase, but every deployment has some organization/environment specific configurations. Acorn allows consumers to customize behavior at runtime.
+By design authors will build Acorns Images with defaults for the common use-case, but every deployment has some organization- or environment-specific configurations. Acorn allows consumers to customize behavior at runtime.
 
 To learn which arguments are available for the Acorn Image you can run:
 
@@ -24,8 +22,7 @@ acorn run [IMAGE] --a-string "oneday" --int-arg 4 --bool-defaults-true --negate-
 
 To pass complex arguments is to create a file in the local directory and pass it to Acorn with the `@` syntax:
 
-```yaml
-# config.yaml
+```yaml title="config.yaml"
 my:
   map:
     config: value

@@ -5,7 +5,7 @@ slug: /
 
 :::caution
 
-This site is very much a work in progress. The current structure will change drastically over time. For now, the most useful sections are the [Quick Start](#quickstart) and the [CLI Reference](100-Reference/01-command-line/acorn.md).
+Acorn is a work in progress.  Features will evolve over time and there may be breaking changes between releases.  Please give us your feedback in [Slack](https://slack.acorn.io), [Discussions](https://github.com/acorn-io/acorn/discussions), or [Issues](https://github.com/acorn-io/acorn/issues)!
 :::
 
 ## Overview
@@ -34,7 +34,7 @@ To try out Acorn you will need admin access to a Kubernetes cluster. Docker Desk
 
 On Linux and macOS you can use `brew` to quickly install Acorn.
 
-For Windows and binary installs see the [installation docs](/Installation/installing#binary-install).
+For Windows and binary installs see the [installation docs](/installation/installing#binary-install).
 
 ```shell
 # Linux or macOS
@@ -44,7 +44,7 @@ brew install acorn-io/acorn/acorn
 acorn -v
 ```
 
-For Windows and binary installs see the [installation docs](/Installation/installing#binary-install).
+For Windows and binary installs see the [installation docs](/installation/installing#binary-install).
 
 ### Initialize Acorn on Kubernetes cluster
 
@@ -99,11 +99,11 @@ acorn apps small-butterfly
 
 In Chrome or Firefox browsers you can now open the URL listed under the endpoints column to see our app.
 
-Next you can learn more about what you can do with Acorn in the [get started](/Get%20Started/Running%20an%20Acorn) guide.
+Next you can learn more about what you can do with Acorn in the [get started](/get-started/running-an-acorn) guide.
 
 ## Next steps
 
 * [Installation](/installation/installing)
-* [Get Started](/Get%20Started/Running%20an%20Acorn)
-* [Authoring Acornfiles](/Authoring%20Acornfiles/overview)
-* [Running Acorn Apps in Production](/Running%20Acorn%20Apps%20in%20Production/args-and-secrets)
+* [Get Started](/get-started/running-an-acorn)
+* [Authoring Acornfiles](/authoring/overview)
+* [Running Acorn Apps in Production](/production/args-and-secrets)
