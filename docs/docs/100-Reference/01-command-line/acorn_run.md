@@ -13,6 +13,7 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
 
 ```
   -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
+  -e, --env strings          Environment variables to set on running containers
       --expose strings       In cluster expose ports of an application (format [public:]private) (ex 81:80)
   -f, --file string          Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                 help for run

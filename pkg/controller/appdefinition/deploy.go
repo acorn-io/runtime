@@ -111,7 +111,7 @@ func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
 	return
 }
 
-func toEnv(envs []v1.EnvVar) (result []corev1.EnvVar) {
+func toEnv(envs []v1.EnvVar, appEnv []v1.NameValue) (result []corev1.EnvVar) {
 	for _, env := range envs {
 		if env.Secret.Name == "" {
 			result = append(result, corev1.EnvVar{
@@ -134,6 +134,12 @@ func toEnv(envs []v1.EnvVar) (result []corev1.EnvVar) {
 				},
 			})
 		}
+	}
+	for _, appEnv := range appEnv {
+		result = append(result, corev1.EnvVar{
+			Name:  appEnv.Name,
+			Value: appEnv.Value,
+		})
 	}
 	return
 }
@@ -392,7 +398,7 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 		Command:        container.Entrypoint,
 		Args:           container.Command,
 		WorkingDir:     container.WorkingDir,
-		Env:            toEnv(container.Environment),
+		Env:            toEnv(container.Environment, app.Spec.Environment),
 		EnvFrom:        toEnvFrom(container.Environment),
 		TTY:            container.Interactive,
 		Stdin:          container.Interactive,
@@ -406,7 +412,8 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 
 func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	kv = append([]string{labels.AcornContainerName, name}, kv...)
-	return labels.Managed(appInstance, kv...)
+	return labels.Merge(labels.ExcludeAcornKey(appInstance.Labels),
+		labels.Managed(appInstance, kv...))
 }
 
 func containerAnnotation(container v1.Container) string {
@@ -434,7 +441,7 @@ func podAnnotations(appInstance *v1.AppInstance, containerName string, container
 	}
 
 	annotations[labels.AcornImageMapping] = string(data)
-	return annotations
+	return labels.Merge(labels.ExcludeAcornKey(appInstance.Annotations), annotations)
 }
 
 func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, containerName string, container v1.Container) {

@@ -51,6 +51,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Profiles:    opts.Profiles,
 			DevMode:     opts.DevMode,
 			Permissions: opts.Permissions,
+			Environment: opts.Env,
 		},
 	}
 }
@@ -91,6 +92,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
 	app.Spec.Links = mergeServices(app.Spec.Links, opts.Links)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
+	app.Spec.Environment = mergeEnv(app.Spec.Environment, opts.Env)
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles
@@ -178,6 +180,24 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 	}()
 
 	return result, nil
+}
+
+func mergeEnv(appEnv, optsEnv []v1.NameValue) []v1.NameValue {
+	for _, newEnv := range optsEnv {
+		found := false
+		for i, existingEnv := range appEnv {
+			if existingEnv.Name == newEnv.Name {
+				appEnv[i] = newEnv
+				found = true
+				break
+			}
+		}
+		if !found {
+			appEnv = append(appEnv, newEnv)
+		}
+	}
+
+	return appEnv
 }
 
 func mergePorts(appPorts, optsPorts []v1.PortBinding) []v1.PortBinding {

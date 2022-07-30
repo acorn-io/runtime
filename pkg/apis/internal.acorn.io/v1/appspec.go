@@ -158,6 +158,11 @@ type VolumeMount struct {
 	Secret     VolumeSecretMount `json:"secret,omitempty"`
 }
 
+type NameValue struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
 type EnvVar struct {
 	Name   string          `json:"name,omitempty"`
 	Value  string          `json:"value,omitempty"`
@@ -238,6 +243,8 @@ type CommandSlice []string
 
 type EnvVars []EnvVar
 
+type NameValues []NameValue
+
 type Probes []Probe
 
 type Ports []PortDef
@@ -292,6 +299,7 @@ type Acorn struct {
 	Profiles    []string         `json:"profiles,omitempty"`
 	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
 	Ports       Ports            `json:"ports,omitempty"`
+	Environment NameValues       `json:"environment,omitempty"`
 	Secrets     []SecretBinding  `json:"secrets,omitempty"`
 	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
 	Links       []ServiceBinding `json:"links,omitempty"`
