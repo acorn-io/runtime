@@ -1,6 +1,8 @@
 package labels
 
 import (
+	"strings"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"golang.org/x/exp/maps"
 )
@@ -56,6 +58,17 @@ func Merge(base, overlay map[string]string) map[string]string {
 		result = map[string]string{}
 	}
 	maps.Copy(result, overlay)
+	return result
+}
+
+func ExcludeAcornKey(input map[string]string) map[string]string {
+	result := map[string]string{}
+	for k, v := range input {
+		if strings.Contains(k, "acorn.io/") {
+			continue
+		}
+		result[k] = v
+	}
 	return result
 }
 

@@ -60,6 +60,7 @@ type AppInstanceSpec struct {
 	Profiles    []string        `json:"profiles,omitempty"`
 	Volumes     []VolumeBinding `json:"volumes,omitempty"`
 	Secrets     []SecretBinding `json:"secrets,omitempty"`
+	Environment []NameValue     `json:"environment,omitempty"`
 	PublishMode PublishMode     `json:"publishMode,omitempty"`
 
 	Links       []ServiceBinding `json:"services,omitempty"`

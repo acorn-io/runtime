@@ -12,6 +12,7 @@ acorn update [flags] APP_NAME [deploy flags]
 ### Options
 
 ```
+  -e, --env strings       Environment variables to set on running containers
       --expose strings    In cluster expose ports of an application (format [public:]private) (ex 81:80)
   -f, --file string       Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help              help for update

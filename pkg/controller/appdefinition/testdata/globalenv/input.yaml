@@ -1,0 +1,26 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  environment:
+  - name: from-cli-name
+    value: from-cli-value
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        environment:
+        - name: env-name
+          value: env-value
+    acorns:
+      acorn-name:
+        image: "acorn-image-name"
+        environment:
+        - name: env-name
+          value: env-value

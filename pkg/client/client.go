@@ -70,6 +70,7 @@ type AppUpdateOptions struct {
 	Secrets     []v1.SecretBinding
 	Links       []v1.ServiceBinding
 	Ports       []v1.PortBinding
+	Env         []v1.NameValue
 	Profiles    []string
 	Permissions *v1.Permissions
 	DeployArgs  map[string]interface{}
@@ -88,6 +89,7 @@ type AppRunOptions struct {
 	Secrets     []v1.SecretBinding
 	Links       []v1.ServiceBinding
 	Ports       []v1.PortBinding
+	Env         []v1.NameValue
 	Profiles    []string
 	DeployArgs  map[string]interface{}
 	DevMode     *bool
@@ -107,6 +109,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		DevMode:     a.DevMode,
 		Profiles:    a.Profiles,
 		Permissions: a.Permissions,
+		Env:         a.Env,
 	}
 }
 

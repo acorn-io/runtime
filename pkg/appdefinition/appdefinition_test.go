@@ -2146,3 +2146,32 @@ containers: a: env: a: ""
 	assert.Equal(t, "a", appSpec.Containers["a"].Environment[0].Name)
 	assert.Equal(t, "", appSpec.Containers["a"].Environment[0].Value)
 }
+
+func TestEmptyAcornEnv(t *testing.T) {
+	data := `
+acorns: slice: env: ["a=b", "c=d"]
+acorns: m: env: a: "b"
+acorns: m: env: c: "d"
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, appSpec.Acorns["slice"].Environment, 2)
+	assert.Equal(t, "a", appSpec.Acorns["slice"].Environment[0].Name)
+	assert.Equal(t, "b", appSpec.Acorns["slice"].Environment[0].Value)
+	assert.Equal(t, "c", appSpec.Acorns["slice"].Environment[1].Name)
+	assert.Equal(t, "d", appSpec.Acorns["slice"].Environment[1].Value)
+
+	assert.Len(t, appSpec.Acorns["m"].Environment, 2)
+	assert.Equal(t, "a", appSpec.Acorns["m"].Environment[0].Name)
+	assert.Equal(t, "b", appSpec.Acorns["m"].Environment[0].Value)
+	assert.Equal(t, "c", appSpec.Acorns["m"].Environment[1].Name)
+	assert.Equal(t, "d", appSpec.Acorns["m"].Environment[1].Value)
+}

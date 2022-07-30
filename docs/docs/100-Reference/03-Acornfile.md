@@ -97,6 +97,7 @@ containers: web: {
 ### ports
 ### secrets
 ### volumes
+### environment, env
 ### links
 
 ## args

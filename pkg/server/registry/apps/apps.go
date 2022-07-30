@@ -145,27 +145,10 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 	}
 
 	params := obj.(*apiv1.App)
-
-	var (
-		app     *v1.AppInstance
-		runOpts = run.Options{
-			Name:         params.Name,
-			GenerateName: params.GenerateName,
-			Namespace:    params.Namespace,
-			Annotations:  params.Annotations,
-			Labels:       params.Labels,
-			Client:       s.client,
-			DeployArgs:   params.Spec.DeployArgs,
-			Volumes:      params.Spec.Volumes,
-			Secrets:      params.Spec.Secrets,
-			Links:        params.Spec.Links,
-			Ports:        params.Spec.Ports,
-			DevMode:      params.Spec.DevMode,
-			PublishMode:  params.Spec.PublishMode,
-			Profiles:     params.Spec.Profiles,
-			Permissions:  params.Spec.Permissions,
-		}
-	)
+	app := &v1.AppInstance{
+		ObjectMeta: params.ObjectMeta,
+		Spec:       params.Spec,
+	}
 
 	image, err := s.resolveTag(ctx, params.Namespace, params.Spec.Image)
 	if err != nil {
@@ -177,11 +160,13 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 		return nil, err
 	}
 
-	if err := s.compareAndCheckPermissions(ctx, perms, runOpts.Permissions); err != nil {
+	if err := s.compareAndCheckPermissions(ctx, perms, app.Spec.Permissions); err != nil {
 		return nil, err
 	}
 
-	app, err = run.Run(ctx, image, &runOpts)
+	app.Spec.Image = image
+
+	app, err = run.Run(ctx, s.client, app)
 	if err != nil {
 		return nil, err
 	}

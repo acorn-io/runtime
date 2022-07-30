@@ -26,6 +26,10 @@ func TestTemplate(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/template", DeploySpec)
 }
 
+func TestGlobalEnv(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/globalenv", DeploySpec)
+}
+
 func TestDeploySpec(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec", DeploySpec)
 }

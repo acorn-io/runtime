@@ -208,12 +208,13 @@ package v1
 } | string
 
 #Acorn: {
-	image?:  string
-	build?:  string | #AcornBuild
-	ports:   #PortSingle | *[...#Port] | #PortMap
-	volumes: *[...#AcornVolumeBinding] | {[=~#DNSName]:  string}
-	secrets: *[...#AcornSecretBinding] | {[=~#DNSName]:  string}
-	links:   *[...#AcornServiceBinding] | {[=~#DNSName]: string}
+	image?:                string
+	build?:                string | #AcornBuild
+	ports:                 #PortSingle | *[...#Port] | #PortMap
+	volumes:               *[...#AcornVolumeBinding] | {[=~#DNSName]:  string}
+	secrets:               *[...#AcornSecretBinding] | {[=~#DNSName]:  string}
+	links:                 *[...#AcornServiceBinding] | {[=~#DNSName]: string}
+	[=~"env|environment"]: #EnvVars
 	deployArgs: [string]: #Args
 	profiles: [...string]
 	permissions: {
