@@ -76,7 +76,9 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addExpose(req, appInstance, resp); err != nil {
 		return err
 	}
-	addPVCs(appInstance, resp)
+	if err := addPVCs(req, appInstance, resp); err != nil {
+		return err
+	}
 	if err := addConfigMaps(appInstance, resp); err != nil {
 		return err
 	}
