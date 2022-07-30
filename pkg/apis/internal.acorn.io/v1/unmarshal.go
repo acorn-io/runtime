@@ -135,7 +135,7 @@ func (in *VolumeBinding) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	result, err := ParseVolumes([]string{s})
+	result, err := ParseVolumes([]string{s}, false)
 	if err != nil {
 		return err
 	}
