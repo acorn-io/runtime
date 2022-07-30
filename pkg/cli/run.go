@@ -26,6 +26,7 @@ func NewRun() *cobra.Command {
 		SilenceUsage: true,
 		Short:        "Run an app from an image or Acornfile",
 	})
+	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
 	return cmd
 }

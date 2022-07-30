@@ -18,6 +18,7 @@ func NewUpdate() *cobra.Command {
 		Short:        "Update a deployed app",
 		Args:         cobra.MinimumNArgs(1),
 	})
+	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
 	return cmd
 }
