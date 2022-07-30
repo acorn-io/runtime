@@ -41,14 +41,15 @@ func routes(router *router.Router) {
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.CLIStatus)
 	appRouter.HandlerFunc(appdefinition.ClearError)
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.ReleaseVolume)
 
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
+	router.Type(&corev1.PersistentVolume{}).Selector(managedSelector).HandlerFunc(appdefinition.ReleaseVolume)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
 	router.Type(&appsv1.DaemonSet{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Service{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
+	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(dns.RequireLBs).Handler(dns.NewDNSHandler())
 	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).Handler(dns.NewDNSConfigHandler())
 }

@@ -54,6 +54,9 @@ func (p *Set) AddPorts(target Target, ports ...v1.PortDef) {
 		}
 		s[port] = true
 		p.Ports[port] = append(p.Ports[port], target)
+		sort.Slice(p.Ports[port], func(i, j int) bool {
+			return p.Ports[port][i].ServiceName() < p.Ports[port][j].ServiceName()
+		})
 	}
 }
 
