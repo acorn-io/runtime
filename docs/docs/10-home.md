@@ -10,19 +10,12 @@ Acorn is a work in progress.  Features will evolve over time and there may be br
 
 ## Overview
 
-### Acorn
+### What is Acorn?
 
-Acorn is a technology that brings the simplicity of running containers with Docker to Kubernetes. It does this by providing a familiar build, run, and deploy UX to Kubernetes. It provides a DSL to describe your application without the boilerplate of Kubernetes YAML files. With the application described in the Acorn DSL, it builds a portable artifact that contains everything the application needs to run, including the Docker images.
+Acorn is an application packaging and deployment framework for Kubernetes. It introduces an application artifact called Acorn images. An Acorn image consists of one or more Docker images, application configuration, and deployment specification. Acorn images can be deployed on any dev, test, and production Kubernetes clusters. Acorn images enable you to develop applications locally and move to production without having to switch tools or technology stacks.
 
-### What can I use Acorn for?
+Developers create Acorn images using an application configuration language called the Acorn Markup Language (AML). AML describes your application without the boilerplate of Kubernetes YAML files. You can use the Acorn CLI to build and deploy Acorn images and manage the resulting applications running on Kubernetes.
 
-Acorn can be used to deploy containerized applications, including multi-container apps, onto any Kubernetes cluster, from developer laptops to production clusters in the cloud.
-
-Packaging applications into a single portable artifact that includes all of the dependent OCI images and manifests. By having a single artifact to describe and run your application it makes it easier to move into air-gapped environments.
-
-Running production workloads on the cluster.
-
-Developing applications locally and moving to production without having to switch technology stacks.
 
 ## Quickstart
 
