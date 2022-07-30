@@ -65,6 +65,14 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	opts.Image = image
 	opts.DeployArgs = deployParams
 
+	if s.Output != "" {
+		app, err := client.ToAppUpdate(cmd.Context(), c, name, &opts)
+		if err != nil {
+			return err
+		}
+		return outputApp(s.Output, app)
+	}
+
 	app, err := rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, name, opts)
 	if err != nil {
 		return err

@@ -2,10 +2,12 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
@@ -15,6 +17,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"sigs.k8s.io/yaml"
 )
 
 func NewRun() *cobra.Command {
@@ -44,6 +47,7 @@ type RunArgs struct {
 	Expose     []string `usage:"In cluster expose ports of an application (format [public:]private) (ex 81:80)"`
 	Profile    []string `usage:"Profile to assign default values"`
 	Dangerous  bool     `usage:"Automatically approve all privileges requested by the application"`
+	Output     string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -141,6 +145,9 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if s.Interactive && isDir {
+		// Force install prompt if needed
+		_, _ = c.Info(cmd.Context())
+
 		return dev.Dev(cmd.Context(), s.File, &dev.Options{
 			Args:   args,
 			Client: c,
@@ -182,6 +189,11 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	opts.DeployArgs = deployParams
 
+	if s.Output != "" {
+		app := client.ToApp(c.GetNamespace(), image, &opts)
+		return outputApp(s.Output, app)
+	}
+
 	app, err := rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, opts)
 	if err != nil {
 		return err
@@ -199,4 +211,34 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func outputApp(format string, app *apiv1.App) error {
+	data, err := json.Marshal(app)
+	if err != nil {
+		return err
+	}
+
+	mapData := map[string]interface{}{}
+	if err := json.Unmarshal(data, &mapData); err != nil {
+		return err
+	}
+
+	delete(mapData, "status")
+	delete(mapData["metadata"].(map[string]interface{}), "uid")
+	delete(mapData["metadata"].(map[string]interface{}), "resourceVersion")
+	delete(mapData["metadata"].(map[string]interface{}), "managedFields")
+	delete(mapData["metadata"].(map[string]interface{}), "creationTimestamp")
+
+	if format == "json" {
+		data, err = json.MarshalIndent(mapData, "", "  ")
+	} else {
+		data, err = yaml.Marshal(mapData)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = os.Stdout.Write(data)
+	return err
 }

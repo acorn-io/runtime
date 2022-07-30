@@ -10,6 +10,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -17,34 +18,45 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 	if opts == nil {
 		opts = &AppRunOptions{}
 	}
 
-	var (
-		app = &apiv1.App{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        opts.Name,
-				Namespace:   c.Namespace,
-				Annotations: opts.Annotations,
-				Labels:      opts.Labels,
-			},
-			Spec: v1.AppInstanceSpec{
-				Image:       image,
-				PublishMode: opts.PublishMode,
-				DeployArgs:  opts.DeployArgs,
-				Volumes:     opts.Volumes,
-				Secrets:     opts.Secrets,
-				Links:       opts.Links,
-				Ports:       opts.Ports,
-				Profiles:    opts.Profiles,
-				DevMode:     opts.DevMode,
-				Permissions: opts.Permissions,
-			},
-		}
-	)
+	apiVersion, kind := apiv1.SchemeGroupVersion.WithKind("App").ToAPIVersionAndKind()
+	name := opts.Name
+	if name == "" {
+		name = run.NameGenerator.Generate()
+	}
 
+	return &apiv1.App{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       kind,
+			APIVersion: apiVersion,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   namespace,
+			Annotations: opts.Annotations,
+			Labels:      opts.Labels,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image:       image,
+			PublishMode: opts.PublishMode,
+			DeployArgs:  opts.DeployArgs,
+			Volumes:     opts.Volumes,
+			Secrets:     opts.Secrets,
+			Links:       opts.Links,
+			Ports:       opts.Ports,
+			Profiles:    opts.Profiles,
+			DevMode:     opts.DevMode,
+			Permissions: opts.Permissions,
+		},
+	}
+}
+
+func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+	app := ToApp(c.Namespace, image, opts)
 	return app, translatePermissions(c.Client.Create(ctx, app))
 }
 
@@ -59,7 +71,7 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	return
 }
 
-func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
 	app, err := c.AppGet(ctx, name)
 	if err != nil {
 		return nil, err
@@ -93,6 +105,14 @@ func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 		app.Spec.Permissions = opts.Permissions
 	}
 
+	return app, nil
+}
+
+func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+	app, err := ToAppUpdate(ctx, c, name, opts)
+	if err != nil {
+		return nil, err
+	}
 	return app, translatePermissions(c.Client.Update(ctx, app))
 }
 

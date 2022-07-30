@@ -12,13 +12,13 @@ acorn update [flags] APP_NAME [deploy flags]
 ### Options
 
 ```
-      --dangerous         Automatically approve all privileges requested by the application
       --expose strings    In cluster expose ports of an application (format [public:]private) (ex 81:80)
   -f, --file string       Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help              help for update
       --image string      
   -l, --link strings      Link external app as a service in the current app (format app-name:service-name)
   -n, --name string       Name of app to create
+  -o, --output string     Output API request without creating app (json, yaml)
       --profile strings   Profile to assign default values
   -p, --publish strings   Publish port of application (format [public:]private) (ex 81:80)
   -P, --publish-all       Publish all (true) or none (false) of the defined ports of application

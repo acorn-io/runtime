@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
+	NameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
 )
 
 type Options struct {
@@ -48,7 +48,7 @@ func (o *Options) Complete() (*Options, error) {
 	}
 
 	if opts.Name == "" && opts.GenerateName == "" {
-		opts.Name = nameGenerator.Generate()
+		opts.Name = NameGenerator.Generate()
 	}
 
 	if opts.Namespace == "" {
