@@ -41,6 +41,7 @@ func routes(router *router.Router) {
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.CLIStatus)
 	appRouter.HandlerFunc(appdefinition.ClearError)
+	appRouter.HandlerFunc(appdefinition.UpdateGeneration)
 
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)

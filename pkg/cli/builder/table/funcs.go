@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,21 +18,22 @@ import (
 
 var (
 	FuncMap = map[string]interface{}{
-		"ago":         FormatCreated,
-		"json":        FormatJSON,
-		"jsoncompact": FormatJSONCompact,
-		"yaml":        FormatYAML,
-		"first":       FormatFirst,
-		"toJson":      ToJSON,
-		"boolToStar":  BoolToStar,
-		"array":       ToArray,
-		"arrayFirst":  ToArrayFirst,
-		"graph":       Graph,
-		"pointer":     Pointer,
-		"fullID":      FormatID,
-		"name":        Name,
-		"trunc":       Trunc,
-		"alias":       Noop,
+		"ago":           FormatCreated,
+		"json":          FormatJSON,
+		"jsoncompact":   FormatJSONCompact,
+		"yaml":          FormatYAML,
+		"first":         FormatFirst,
+		"toJson":        ToJSON,
+		"boolToStar":    BoolToStar,
+		"array":         ToArray,
+		"arrayFirst":    ToArrayFirst,
+		"graph":         Graph,
+		"pointer":       Pointer,
+		"fullID":        FormatID,
+		"name":          Name,
+		"trunc":         Trunc,
+		"alias":         Noop,
+		"appGeneration": AppGeneration,
 	}
 )
 
@@ -180,4 +182,11 @@ func BoolToStar(obj interface{}) (string, error) {
 		return "*", nil
 	}
 	return "", nil
+}
+
+func AppGeneration(app apiv1.App, msg string) string {
+	if app.Generation != app.Status.ObservedGeneration {
+		return "[controller: not processed] " + msg
+	}
+	return msg
 }

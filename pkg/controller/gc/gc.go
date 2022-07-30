@@ -1,6 +1,7 @@
 package gc
 
 import (
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/uncached"
@@ -16,6 +17,12 @@ func GCOrphans(req router.Request, resp router.Response) error {
 
 	pod, ok := req.Object.(*corev1.Pod)
 	if ok {
+		// Purge old debug shells
+		if pod.Labels[labels.AcornDebugShell] == "true" && pod.Status.Phase != corev1.PodRunning &&
+			pod.Status.Phase != corev1.PodPending {
+			return req.Client.Delete(req.Ctx, pod)
+		}
+
 		if len(pod.OwnerReferences) != 1 {
 			return nil
 		}

@@ -6,6 +6,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerReplica, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
@@ -29,6 +30,14 @@ func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerRe
 }
 
 func (c *client) ContainerReplicaExec(ctx context.Context, containerName string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
+	if containerName == "_" && opts != nil && opts.DebugImage != "" {
+		return c.execContainer(ctx, &apiv1.ContainerReplica{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "_",
+				Namespace: c.Namespace,
+			},
+		}, args, tty, opts)
+	}
 	con, err := c.ContainerReplicaGet(ctx, containerName)
 	if err != nil {
 		return nil, err

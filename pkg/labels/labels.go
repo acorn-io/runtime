@@ -40,6 +40,7 @@ const (
 	AcornDNSHash           = Prefix + "dns-hash"
 	AcornLinkName          = Prefix + "link-name"
 	AcornDNSState          = Prefix + "applied-dns-state"
+	AcornDebugShell        = Prefix + "debug-shell"
 )
 
 func RootPrefix(parentLabels map[string]string, name string) string {

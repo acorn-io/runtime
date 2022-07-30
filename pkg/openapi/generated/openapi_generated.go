@@ -2689,6 +2689,12 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
