@@ -27,7 +27,7 @@ containers: {
 }
 ```
 
-### User defined key requirements
+## User defined key requirements
 
 Second level keys defined by the user in the `containers`, `volumes`, `secrets`, and `jobs` blocks need to follow these rules:
 

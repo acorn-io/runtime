@@ -44,7 +44,7 @@ Similarly any Acorn App that is deployed will use the credentials available in t
 
 ### CLI
 
-Credentials are managed with the [`acorn credential`](../100-Reference/01-command-line/acorn_credential.md) command.
+Credentials are managed with the [`acorn credential`](/reference/command-line/acorn_credential) command.
 
 ## Networking
 

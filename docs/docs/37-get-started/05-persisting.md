@@ -2,8 +2,6 @@
 title: Persisting data
 ---
 
-## Volumes
-
 With the multi-container example, you might have observed that the database is wiped everytime the container restarts. Which might be tolerable in development, but definitely not in production. To ensure the database survives container restarts a volume should be created and attached.
 
 ### Adding a volume to a container

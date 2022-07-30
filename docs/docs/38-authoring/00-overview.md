@@ -2,8 +2,6 @@
 title: Overview
 ---
 
-## About the Acornfile syntax
-
 The primary goal of the Acornfile is to quickly and easily describe how to build, develop, and run containerized applications.
 
 The syntax is very similar to JSON and YAML that you are already familiar with from other tools.

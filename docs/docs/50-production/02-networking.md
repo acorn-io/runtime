@@ -2,8 +2,6 @@
 title: Networking
 ---
 
-## Networking
-
 Applications will need to be reachable by their users. This can be users on the internet, within the organization, and other application teams. When deploying the Acorn app, there is a lot of flexibility.
 
 ### Default

@@ -35,7 +35,7 @@ Now when `acorn build .` or `acorn run -i .` is run, the `my-app` container will
 
 ### Customized build behavior
 
-Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](/Authoring%20Acornfiles/args-and-profiles) to see how to customize these values at build and runtime.
+Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](/authoring/args-and-profiles) to see how to customize these values at build and runtime.
 
 ```cue
 containers: {
@@ -121,7 +121,7 @@ containers: {
 }
 ```
 
-The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable set by a [secret](/Authoring%20Acornfiles/secrets) in the Acornfile. The `DATABASE_NAME` is set to a static value, and the `USER_SET_VALUE` is defined by a user [arg](/Authoring%20Acornfiles/args-and-profiles). When launched the container can access these environment variables as needed.
+The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable set by a [secret](/authoring/secrets) in the Acornfile. The `DATABASE_NAME` is set to a static value, and the `USER_SET_VALUE` is defined by a user [arg](/authoring/args-and-profiles). When launched the container can access these environment variables as needed.
 
 ## Files
 
@@ -175,11 +175,13 @@ There are three types of probes: `readiness`, `liveness`, and `startup`. Probes 
 
 Each probe type has the following parameters that can be optionally set.
 
-* `intialDelaySeconds`: Number of seconds to wait after the container is started before probes are initiated. The default is 0 seconds.
-* `periodSeconds`: Number of seconds between probe attempts. Default is 10.
-* `timeoutSeconds`: Number of seconds before the probe times out. Default is 1.
-* `successThreshold`: Number of consecutive successful probes before considering the container healthy. Default is 1.
-* `failureThreshold`: Number of consecutive failed probes before considering the container unhealthy. Default is 3.
+| Parameter | Defalut | Description |
+| ----------|---------|-------------|
+| `intialDelaySeconds`| 0 |  Number of seconds to wait after the container is started before probes are initiated. |
+| `periodSeconds` | 10 | Number of seconds between probe attempts. |
+| `timeoutSeconds` | 1 | Number of seconds before the probe times out. |
+| `successThreshold` | 1 | Number of consecutive successful probes before considering the container healthy. |
+| `failureThreshold` | 3 | Number of consecutive failed probes before considering the container unhealthy. |
 
 There are three types of checks that can be used to check the health of the container. A script can be executed inside the container, an HTTP endpoint can be checked, or a TCP endpoint can be checked. Each of the probe types can use one of any of these check types.
 
@@ -267,7 +269,7 @@ containers: {
 }
 ```
 
-In the above example the `web` container would have 60 seconds (6s * 10) to startup before being restarted.
+In the above example the `web` container would have 60 seconds (10 tries * 6 seconds) to startup before being restarted.
 
 ## Defining sidecar containers
 
@@ -298,5 +300,5 @@ The second sidecar above is a service that runs alongside the primary frontend c
 
 ## Additional Reading
 
-* [Acorn Security Considerations](/Architecture/security-considerations)
-* [Acornfile reference](/reference/Acornfile)
+* [Acorn Security Considerations](/architecture/security-considerations)
+* [Acornfile reference](/reference/acornfile)

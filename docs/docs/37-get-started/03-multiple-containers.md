@@ -2,8 +2,6 @@
 title: Multiple Containers
 ---
 
-## Multiple containers
-
 A lot of applications are made up of multiple components which often run in different containers. A web MVC framework will likely use a database instance for example.
 
 Acorn allows multiple containers to be defined in the same Acornfile, and provides some convenient mechanisms for connecting them.
