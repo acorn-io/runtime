@@ -114,7 +114,7 @@ redis
 Now we have all the code and want to bundle it up in a Docker container.
 Create the `Dockerfile` with the following content:
 
-```dockerfile title="acorn-test-app/Dockerfile"
+```docker title="acorn-test-app/Dockerfile"
 FROM python:3-alpine
 WORKDIR /app
 ENV FLASK_APP=app.py
@@ -135,6 +135,7 @@ args: {
   // Configure your personal welcome text
   welcome: "Hello Acorn User!"
 }
+
 containers: {
   app: {
     build: "."
@@ -171,6 +172,7 @@ containers: {
     ports: "5432/tcp"
   }
 }
+
 localData: {
   food: [
     "acorns",
@@ -178,13 +180,13 @@ localData: {
     "walnuts"
   ]
 }
-volumes: {
-  if !args.dev {
-    "pgdata": {
-      accessModes: "readWriteOnce"
-    }
+
+if !args.dev {
+  volumes: {
+    "pgdata": {}
   }
 }
+
 secrets: {
   "quickstart-pg-pass": {
       type: "token"
@@ -252,7 +254,7 @@ acorn run . --welcome "Let's Get Started"
   - Q: Does this use the dev profile?
 -->
 
-## 5. Access your App
+## 4. Access your App
 
 Due to the configuration `ports: publish: "5000/http"` under `containers.app`, our web app will be exposed outside of our Kubernetes cluster using the cluster's ingress controller.
 Checkout the running apps via
@@ -260,8 +262,6 @@ Checkout the running apps via
 ```bash
 acorn apps
 ```
-
-Assuming that your Acorn App instance is called, `awesome-acorn`, this could look like this:
 
 ```bash
 $ acorn apps
@@ -273,7 +273,7 @@ You probably already noticed the link right there in the `ENDPOINTS` column. It 
 
 <!-- FIXME: do we need a note on adding a port to the ingress controller here? -->
 
-## 4. Update the Acornfile and push the changes to the running App
+## 5. Update the Acornfile and push the changes to the running App
 
 When not using the development mode, your typical deployment cycle involves at least building the image and deploying it (optionally pushing it to a registry in between).
 These steps can be consolidated into a single command:
@@ -283,7 +283,7 @@ These steps can be consolidated into a single command:
 acorn update --image $(acorn build .) awesome-acorn
 ```
 
-## 5. Build and Push your Acorn Image
+## 6. Build and Push your Acorn Image
 
 Ready to release your Acorn App into the wild?
 Let's package it up in a single Acorn Image and distribute it via an OCI registry (you could use DockerHub for that):
@@ -302,12 +302,10 @@ acorn push my.registry.com/acorn/getting-started:v0.0.1
 Now, everyone else can run your Acorn Image via
 
 ```bash
-acorn run my.registry.com/acorn/getting-started:v0.0.1
+acorn run --name awesome-acorn my.registry.com/acorn/getting-started:v0.0.1
 ```
 
 ## Play around with it
-
-> Again, assuming that your deployed Acorn App is called `awesome-acorn`
 
 ### Execute a command inside the running container
 
@@ -321,7 +319,7 @@ acorn exec awesome-acorn env
 or: get an interactive shell inside a container via
 
 ```bash
-acorn exec -i awesome-acorn sh
+acorn exec awesome-acorn
 ```
 
 ### Reveal the auto-generated database secret
