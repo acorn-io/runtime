@@ -1138,6 +1138,11 @@ volumes: {
 		Images: nil,
 	})
 
+	appImage, _, err = appImage.WithArgs(map[string]interface{}{"foo": "bar"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	appSpec, err := appImage.AppSpec()
 	if err != nil {
 		t.Fatal(err)
@@ -1158,6 +1163,7 @@ volumes: {
 	assert.Equal(t, toQuantity(10), appSpec.Volumes["ephemeral"].Size)
 	assert.Equal(t, "", appSpec.Volumes["defaults"].Class)
 	assert.Equal(t, toQuantity(10), appSpec.Volumes["defaults"].Size)
+	assert.Equal(t, v1.AccessModes{v1.AccessModeReadWriteOnce}, appSpec.Volumes["defaults"].AccessModes)
 	// class not supported
 	assert.Equal(t, "", appSpec.Volumes["uri"].Class)
 	assert.Equal(t, toQuantity(70), appSpec.Volumes["uri"].Size)
@@ -1528,22 +1534,22 @@ acorns: foo: {
 	}, acorn.Ports)
 	assert.Equal(t, []v1.VolumeBinding{
 		{
-			Volume:        "src-vol",
-			VolumeRequest: "dest-vol",
+			Volume: "src-vol",
+			Target: "dest-vol",
 		},
 		{
-			Volume:        "src-vol2",
-			VolumeRequest: "dest-vol2",
+			Volume: "src-vol2",
+			Target: "dest-vol2",
 		},
 	}, acorn.Volumes)
 	assert.Equal(t, []v1.SecretBinding{
 		{
-			Secret:        "src-sec",
-			SecretRequest: "dest-sec",
+			Secret: "src-sec",
+			Target: "dest-sec",
 		},
 		{
-			Secret:        "src-sec2",
-			SecretRequest: "dest-sec2",
+			Secret: "src-sec2",
+			Target: "dest-sec2",
 		},
 	}, acorn.Secrets)
 }
@@ -2139,4 +2145,33 @@ containers: a: env: a: ""
 
 	assert.Equal(t, "a", appSpec.Containers["a"].Environment[0].Name)
 	assert.Equal(t, "", appSpec.Containers["a"].Environment[0].Value)
+}
+
+func TestEmptyAcornEnv(t *testing.T) {
+	data := `
+acorns: slice: env: ["a=b", "c=d"]
+acorns: m: env: a: "b"
+acorns: m: env: c: "d"
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, appSpec.Acorns["slice"].Environment, 2)
+	assert.Equal(t, "a", appSpec.Acorns["slice"].Environment[0].Name)
+	assert.Equal(t, "b", appSpec.Acorns["slice"].Environment[0].Value)
+	assert.Equal(t, "c", appSpec.Acorns["slice"].Environment[1].Name)
+	assert.Equal(t, "d", appSpec.Acorns["slice"].Environment[1].Value)
+
+	assert.Len(t, appSpec.Acorns["m"].Environment, 2)
+	assert.Equal(t, "a", appSpec.Acorns["m"].Environment[0].Name)
+	assert.Equal(t, "b", appSpec.Acorns["m"].Environment[0].Value)
+	assert.Equal(t, "c", appSpec.Acorns["m"].Environment[1].Name)
+	assert.Equal(t, "d", appSpec.Acorns["m"].Environment[1].Value)
 }

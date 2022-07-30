@@ -6,7 +6,7 @@ import (
 	"net"
 
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/openapi/generated"
+	openapi2 "github.com/acorn-io/acorn/pkg/openapi"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry"
 	"github.com/acorn-io/baaah/pkg/restconfig"
@@ -38,7 +38,7 @@ func (s *Server) NewConfig(version string) (*Config, error) {
 	}
 
 	serverConfig := server.NewRecommendedConfig(scheme.Codecs)
-	serverConfig.OpenAPIConfig = server.DefaultOpenAPIConfig(generated.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(scheme.Scheme))
+	serverConfig.OpenAPIConfig = server.DefaultOpenAPIConfig(openapi2.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(scheme.Scheme))
 	serverConfig.OpenAPIConfig.Info.Title = "Acorn"
 	serverConfig.OpenAPIConfig.Info.Version = version
 	serverConfig.LongRunningFunc = filters.BasicLongRunningRequestCheck(

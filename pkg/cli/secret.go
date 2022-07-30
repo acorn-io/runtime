@@ -81,7 +81,7 @@ func aliases(secret *apiv1.Secret, apps []apiv1.App) (result []string) {
 	for _, app := range apps {
 		for _, binding := range app.Spec.Secrets {
 			if binding.Secret == secret.Name {
-				names.Insert(fmt.Sprintf("%s.%s", app.Name, binding.SecretRequest))
+				names.Insert(fmt.Sprintf("%s.%s", app.Name, binding.Target))
 			}
 		}
 	}

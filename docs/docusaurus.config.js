@@ -11,7 +11,9 @@ const config = {
   url: 'http://docs.acorn.io',
   baseUrl: '/',
   onBrokenLinks: 'throw',
+  trailingSlash: false,
   onBrokenMarkdownLinks: 'warn',
+  onDuplicateRoutes: 'warn',
   favicon: 'img/favicon.png',
   organizationName: 'acorn-io',
   projectName: 'acorn',
@@ -35,6 +37,10 @@ const config = {
             'https://github.com/acorn-io/acorn/tree/main/docs/',
         },
         blog: false,
+        gtag: {
+          trackingID: 'G-B0PL797F38',
+          anonymizeIP: true,
+        },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
@@ -50,7 +56,7 @@ const config = {
         style: 'dark',
         logo: {
           alt: 'Acorn Logo',
-          src: 'img/logo.png',
+          src: 'img/logo.svg',
         },
         items: [
           {
@@ -87,7 +93,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['cue', 'dockerfile'],
+        additionalLanguages: ['cue','docker'],
       },
     }),
 };

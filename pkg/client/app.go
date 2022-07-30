@@ -10,6 +10,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -17,34 +18,46 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 	if opts == nil {
 		opts = &AppRunOptions{}
 	}
 
-	var (
-		app = &apiv1.App{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        opts.Name,
-				Namespace:   c.Namespace,
-				Annotations: opts.Annotations,
-				Labels:      opts.Labels,
-			},
-			Spec: v1.AppInstanceSpec{
-				Image:       image,
-				PublishMode: opts.PublishMode,
-				DeployArgs:  opts.DeployArgs,
-				Volumes:     opts.Volumes,
-				Secrets:     opts.Secrets,
-				Links:       opts.Links,
-				Ports:       opts.Ports,
-				Profiles:    opts.Profiles,
-				DevMode:     opts.DevMode,
-				Permissions: opts.Permissions,
-			},
-		}
-	)
+	apiVersion, kind := apiv1.SchemeGroupVersion.WithKind("App").ToAPIVersionAndKind()
+	name := opts.Name
+	if name == "" {
+		name = run.NameGenerator.Generate()
+	}
 
+	return &apiv1.App{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       kind,
+			APIVersion: apiVersion,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   namespace,
+			Annotations: opts.Annotations,
+			Labels:      opts.Labels,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image:       image,
+			PublishMode: opts.PublishMode,
+			DeployArgs:  opts.DeployArgs,
+			Volumes:     opts.Volumes,
+			Secrets:     opts.Secrets,
+			Links:       opts.Links,
+			Ports:       opts.Ports,
+			Profiles:    opts.Profiles,
+			DevMode:     opts.DevMode,
+			Permissions: opts.Permissions,
+			Environment: opts.Env,
+		},
+	}
+}
+
+func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+	app := ToApp(c.Namespace, image, opts)
 	return app, translatePermissions(c.Client.Create(ctx, app))
 }
 
@@ -59,7 +72,7 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	return
 }
 
-func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
 	app, err := c.AppGet(ctx, name)
 	if err != nil {
 		return nil, err
@@ -79,6 +92,7 @@ func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
 	app.Spec.Links = mergeServices(app.Spec.Links, opts.Links)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
+	app.Spec.Environment = mergeEnv(app.Spec.Environment, opts.Env)
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles
@@ -93,6 +107,14 @@ func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 		app.Spec.Permissions = opts.Permissions
 	}
 
+	return app, nil
+}
+
+func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+	app, err := ToAppUpdate(ctx, c, name, opts)
+	if err != nil {
+		return nil, err
+	}
 	return app, translatePermissions(c.Client.Update(ctx, app))
 }
 
@@ -160,6 +182,24 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 	return result, nil
 }
 
+func mergeEnv(appEnv, optsEnv []v1.NameValue) []v1.NameValue {
+	for _, newEnv := range optsEnv {
+		found := false
+		for i, existingEnv := range appEnv {
+			if existingEnv.Name == newEnv.Name {
+				appEnv[i] = newEnv
+				found = true
+				break
+			}
+		}
+		if !found {
+			appEnv = append(appEnv, newEnv)
+		}
+	}
+
+	return appEnv
+}
+
 func mergePorts(appPorts, optsPorts []v1.PortBinding) []v1.PortBinding {
 	for _, newPort := range optsPorts {
 		found := false
@@ -200,7 +240,7 @@ func mergeSecrets(appSecrets, optsSecrets []v1.SecretBinding) []v1.SecretBinding
 	for _, newSecret := range optsSecrets {
 		found := false
 		for i, existingSecret := range appSecrets {
-			if existingSecret.SecretRequest == newSecret.SecretRequest {
+			if existingSecret.Target == newSecret.Target {
 				appSecrets[i] = newSecret
 				found = true
 				break
@@ -218,7 +258,7 @@ func mergeVolumes(appVolumes, optsVolumes []v1.VolumeBinding) []v1.VolumeBinding
 	for _, newVolume := range optsVolumes {
 		found := false
 		for i, existingVolume := range appVolumes {
-			if existingVolume.VolumeRequest == newVolume.VolumeRequest {
+			if existingVolume.Target == newVolume.Target {
 				appVolumes[i] = newVolume
 				found = true
 				break

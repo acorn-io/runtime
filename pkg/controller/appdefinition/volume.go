@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -9,9 +10,12 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/acorn-io/baaah/pkg/uncached"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	klabels "k8s.io/apimachinery/pkg/labels"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,8 +24,13 @@ const (
 	AcornHelperPath = "/.acorn"
 )
 
-func addPVCs(appInstance *v1.AppInstance, resp router.Response) {
-	resp.Objects(toPVCs(appInstance)...)
+func addPVCs(req router.Request, appInstance *v1.AppInstance, resp router.Response) error {
+	pvcs, err := toPVCs(req, appInstance)
+	if err != nil {
+		return err
+	}
+	resp.Objects(pvcs...)
+	return nil
 }
 
 func translateAccessModes(accessModes []v1.AccessMode) (result []corev1.PersistentVolumeAccessMode) {
@@ -32,7 +41,47 @@ func translateAccessModes(accessModes []v1.AccessMode) (result []corev1.Persiste
 	return
 }
 
-func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
+func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeName string) (string, error) {
+	var pvc corev1.PersistentVolumeClaim
+	if err := req.Get(&pvc, appInstance.Status.Namespace, volumeName); err == nil {
+		return pvc.Spec.VolumeName, nil
+	} else if !apierrors.IsNotFound(err) {
+		return "", err
+	}
+
+	if err := req.Get(uncached.Get(&pvc), appInstance.Status.Namespace, volumeName); err == nil {
+		return pvc.Spec.VolumeName, nil
+	} else if !apierrors.IsNotFound(err) {
+		return "", err
+	}
+
+	var pv corev1.PersistentVolumeList
+	err := req.List(uncached.List(&pv), &kclient.ListOptions{
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged:      "true",
+			labels.AcornAppName:      appInstance.Name,
+			labels.AcornAppNamespace: appInstance.Namespace,
+			labels.AcornVolumeName:   volumeName,
+		}),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	switch len(pv.Items) {
+	case 0:
+		return "", nil
+	case 1:
+		return pv.Items[0].Name, nil
+	default:
+		names := typed.MapSlice(pv.Items, func(pv corev1.PersistentVolume) string {
+			return pv.Name
+		})
+		return "", fmt.Errorf("can not bind existing volume, there are more that one valid volumes %v", names)
+	}
+}
+
+func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Volumes) {
 		volume, volumeRequest := entry.Key, entry.Value
 
@@ -66,10 +115,6 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 			},
 		}
 
-		if volumeRequest.Size != "" {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
-		}
-
 		if bind {
 			pvc.Name = bindName(volume)
 			pvc.Spec.VolumeName = volumeBinding.Volume
@@ -78,13 +123,26 @@ func toPVCs(appInstance *v1.AppInstance) (result []kclient.Object) {
 				class = &volumeRequest.Class
 			}
 			pvc.Spec.StorageClassName = class
-			if volumeBinding.Class != "" {
-				pvc.Spec.StorageClassName = &volumeBinding.Class
-			}
 
-			if len(volumeBinding.AccessModes) > 0 {
-				pvc.Spec.AccessModes = translateAccessModes(volumeBinding.AccessModes)
+			pvName, err := lookupExistingPV(req, appInstance, volume)
+			if err != nil {
+				return nil, err
 			}
+			pvc.Spec.VolumeName = pvName
+		}
+
+		if volumeRequest.Size == "" {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
+		} else {
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
+		}
+
+		if len(volumeBinding.AccessModes) > 0 {
+			pvc.Spec.AccessModes = translateAccessModes(volumeBinding.AccessModes)
+		}
+
+		if volumeBinding.Class != "" {
+			pvc.Spec.StorageClassName = &volumeBinding.Class
 		}
 
 		if volumeBinding.Size != "" {
@@ -100,7 +158,6 @@ func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, 
 	if volume == AcornHelper && appInstance.Spec.GetDevMode() {
 		return v1.VolumeRequest{
 			Class: v1.VolumeRequestTypeEphemeral,
-			Size:  "10G",
 		}, true
 	}
 	for name, volumeRequest := range appInstance.Status.AppSpec.Volumes {
@@ -113,8 +170,8 @@ func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, 
 
 func isBind(appInstance *v1.AppInstance, volume string) (v1.VolumeBinding, bool) {
 	for _, v := range appInstance.Spec.Volumes {
-		if v.VolumeRequest == volume {
-			return v, true
+		if v.Target == volume {
+			return v, v.Volume != ""
 		}
 	}
 	return v1.VolumeBinding{}, false

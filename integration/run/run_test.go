@@ -19,6 +19,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestVolume(t *testing.T) {
@@ -55,8 +56,8 @@ func TestVolume(t *testing.T) {
 	app, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
-				Volume:        pv.Name,
-				VolumeRequest: "external",
+				Volume: pv.Name,
+				Target: "external",
 			},
 		},
 	})
@@ -167,10 +168,16 @@ func TestDeployParam(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
-		Namespace: ns.Name,
-		DeployArgs: map[string]interface{}{
-			"someInt": 5,
+	appInstance, err := run.Run(helper.GetCTX(t), client, &v1.AppInstance{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns.Name,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image: image.ID,
+			DeployArgs: map[string]interface{}{
+				"someInt": 5,
+			},
 		},
 	})
 	if err != nil {
@@ -199,9 +206,15 @@ func TestPublishAcornHTTP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
-		Namespace:   ns.Name,
-		PublishMode: v1.PublishModeAll,
+	appInstance, err := run.Run(helper.GetCTX(t), client, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns.Name,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image:       image.ID,
+			PublishMode: v1.PublishModeAll,
+		},
+		Status: v1.AppInstanceStatus{},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -240,8 +253,13 @@ func TestAcornServiceExists(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	appInstance, err := run.Run(helper.GetCTX(t), image.ID, &run.Options{
-		Namespace: ns.Name,
+	appInstance, err := run.Run(helper.GetCTX(t), client, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns.Name,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image: image.ID,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

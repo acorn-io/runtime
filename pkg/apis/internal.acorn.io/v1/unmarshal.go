@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -14,6 +15,45 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
+
+var (
+	DefaultSizeQuantity = Quantity("10G")
+	DefaultSize         = MustParseResourceQuantity(DefaultSizeQuantity)
+)
+
+func (in *NameValue) UnmarshalJSON(data []byte) error {
+	if !isString(data) {
+		type nameValue NameValue
+		return json.Unmarshal(data, (*nameValue)(in))
+	}
+	s, err := parseString(data)
+	if err != nil {
+		return err
+	}
+	*in = ParseNameValues(false, s)[0]
+	return nil
+}
+
+func (in *NameValues) UnmarshalJSON(data []byte) error {
+	if !isObject(data) {
+		return json.Unmarshal(data, (*[]NameValue)(in))
+	}
+
+	nv := map[string]string{}
+	if err := json.Unmarshal(data, &nv); err != nil {
+		return err
+	}
+	for k, v := range nv {
+		*in = append(*in, NameValue{Name: k, Value: v})
+	}
+	sort.Slice(*in, func(i, j int) bool {
+		if (*in)[i].Name == (*in)[j].Name {
+			return (*in)[i].Value < (*in)[j].Value
+		}
+		return (*in)[i].Name < (*in)[j].Name
+	})
+	return nil
+}
 
 func (in *Dependencies) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
@@ -95,7 +135,7 @@ func (in *VolumeBinding) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	result, err := ParseVolumes([]string{s})
+	result, err := ParseVolumes([]string{s}, false)
 	if err != nil {
 		return err
 	}
@@ -177,7 +217,7 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 			}
 		} else if _, ok := app.Volumes[mount.Volume]; !ok {
 			app.Volumes[mount.Volume] = VolumeRequest{
-				Size:        "10G",
+				Size:        DefaultSizeQuantity,
 				AccessModes: []AccessMode{AccessModeReadWriteOnce},
 			}
 		}
@@ -339,6 +379,17 @@ func (in *AccessModes) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type acornAliases struct {
+	Env NameValues `json:"env,omitempty"`
+}
+
+func (a acornAliases) SetAcorn(dst Acorn) Acorn {
+	if len(a.Env) > 0 {
+		dst.Environment = append(dst.Environment, a.Env...)
+	}
+	return dst
+}
+
 type containerAliases struct {
 	Cmd                 CommandSlice           `json:"cmd,omitempty"`
 	Env                 EnvVars                `json:"env,omitempty"`
@@ -356,7 +407,7 @@ func (c containerAliases) SetContainer(dst Container) Container {
 		dst.Command = c.Cmd
 	}
 	if len(c.Env) > 0 {
-		dst.Environment = c.Env
+		dst.Environment = append(dst.Environment, c.Env...)
 	}
 	if c.WorkDir != "" {
 		dst.WorkingDir = c.WorkDir
@@ -404,6 +455,23 @@ func adjustBuildForContextDirs(c Container) *Build {
 	build.BaseImage = c.Image
 	build.ContextDirs = dirs
 	return build
+}
+
+func (in *Acorn) UnmarshalJSON(data []byte) error {
+	var a Acorn
+	type acorn Acorn
+	if err := json.Unmarshal(data, (*acorn)(&a)); err != nil {
+		return err
+	}
+
+	var alias acornAliases
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+
+	a = alias.SetAcorn(a)
+	*in = a
+	return nil
 }
 
 func (in *Container) UnmarshalJSON(data []byte) error {
@@ -927,7 +995,7 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 			result.Volume = anonName
 		}
 	} else if result.Size == "" {
-		result.Size = "10G"
+		result.Size = DefaultSizeQuantity
 	}
 
 	for _, accessMode := range u.Query()["accessMode"] {
@@ -992,4 +1060,18 @@ func ParseQuantity(s string) (Quantity, error) {
 	}
 
 	return (Quantity)(s), nil
+}
+
+func ParseNameValues(fillEnv bool, s ...string) (result []NameValue) {
+	for _, s := range s {
+		k, v, _ := strings.Cut(s, "=")
+		if v == "" && fillEnv {
+			v = os.Getenv(k)
+		}
+		result = append(result, NameValue{
+			Name:  k,
+			Value: v,
+		})
+	}
+	return result
 }

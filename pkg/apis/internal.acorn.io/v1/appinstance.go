@@ -11,6 +11,7 @@ type AppInstanceCondition string
 var (
 	AppInstanceConditionDefined    = "defined"
 	AppInstanceConditionParsed     = "parsed"
+	AppInstanceConditionController = "controller"
 	AppInstanceConditionPulled     = "pulled"
 	AppInstanceConditionSecrets    = "secrets"
 	AppInstanceConditionContainers = "containers"
@@ -59,6 +60,7 @@ type AppInstanceSpec struct {
 	Profiles    []string        `json:"profiles,omitempty"`
 	Volumes     []VolumeBinding `json:"volumes,omitempty"`
 	Secrets     []SecretBinding `json:"secrets,omitempty"`
+	Environment []NameValue     `json:"environment,omitempty"`
 	PublishMode PublishMode     `json:"publishMode,omitempty"`
 
 	Links       []ServiceBinding `json:"services,omitempty"`
@@ -77,18 +79,18 @@ type ServiceBinding struct {
 }
 
 type SecretBinding struct {
-	Secret        string `json:"secret,omitempty"`
-	SecretRequest string `json:"secretRequest,omitempty"`
+	Secret string `json:"secret,omitempty"`
+	Target string `json:"target,omitempty"`
 }
 
 type Quantity string
 
 type VolumeBinding struct {
-	Volume        string      `json:"volume,omitempty"`
-	VolumeRequest string      `json:"volumeRequest,omitempty"`
-	Size          Quantity    `json:"size,omitempty"`
-	AccessModes   AccessModes `json:"accessModes,omitempty"`
-	Class         string      `json:"class,omitempty"`
+	Volume      string      `json:"volume,omitempty"`
+	Target      string      `json:"target,omitempty"`
+	Size        Quantity    `json:"size,omitempty"`
+	AccessModes AccessModes `json:"accessModes,omitempty"`
+	Class       string      `json:"class,omitempty"`
 }
 
 type ContainerStatus struct {

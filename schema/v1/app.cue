@@ -191,8 +191,8 @@ package v1
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretGenerated | #SecretTemplate | #SecretToken
 
 #AcornSecretBinding: {
-	secret:        string
-	secretRequest: string
+	secret: string
+	target: string
 } | string
 
 #AcornServiceBinding: {
@@ -201,19 +201,20 @@ package v1
 } | string
 
 #AcornVolumeBinding: {
-	volume:        string
-	volumeRequest: string
-	size:          int | string | *10
-	accessModes:   [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
+	volume:      string
+	target:      string
+	size:        int | string | *10
+	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 } | string
 
 #Acorn: {
-	image?:  string
-	build?:  string | #AcornBuild
-	ports:   #PortSingle | *[...#Port] | #PortMap
-	volumes: *[...#AcornVolumeBinding] | {[=~#DNSName]:  string}
-	secrets: *[...#AcornSecretBinding] | {[=~#DNSName]:  string}
-	links:   *[...#AcornServiceBinding] | {[=~#DNSName]: string}
+	image?:                string
+	build?:                string | #AcornBuild
+	ports:                 #PortSingle | *[...#Port] | #PortMap
+	volumes:               *[...#AcornVolumeBinding] | {[=~#DNSName]:  string}
+	secrets:               *[...#AcornSecretBinding] | {[=~#DNSName]:  string}
+	links:                 *[...#AcornServiceBinding] | {[=~#DNSName]: string}
+	[=~"env|environment"]: #EnvVars
 	deployArgs: [string]: #Args
 	profiles: [...string]
 	permissions: {

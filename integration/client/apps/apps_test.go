@@ -124,22 +124,22 @@ func TestAppUpdate(t *testing.T) {
 		},
 		Volumes: []v1.VolumeBinding{
 			{
-				Volume:        "vol1",
-				VolumeRequest: "volreq1",
+				Volume: "vol1",
+				Target: "volreq1",
 			},
 			{
-				Volume:        "vol2",
-				VolumeRequest: "volreq2",
+				Volume: "vol2",
+				Target: "volreq2",
 			},
 		},
 		Secrets: []v1.SecretBinding{
 			{
-				Secret:        "sec1",
-				SecretRequest: "secreq1",
+				Secret: "sec1",
+				Target: "secreq1",
 			},
 			{
-				Secret:        "sec2",
-				SecretRequest: "secreq2",
+				Secret: "sec2",
+				Target: "secreq2",
 			},
 		},
 		Links: []v1.ServiceBinding{
@@ -174,22 +174,22 @@ func TestAppUpdate(t *testing.T) {
 		PublishMode: v1.PublishModeNone,
 		Volumes: []v1.VolumeBinding{
 			{
-				Volume:        "vol3",
-				VolumeRequest: "volreq2",
+				Volume: "vol3",
+				Target: "volreq2",
 			},
 			{
-				Volume:        "vol3",
-				VolumeRequest: "volreq3",
+				Volume: "vol3",
+				Target: "volreq3",
 			},
 		},
 		Secrets: []v1.SecretBinding{
 			{
-				Secret:        "sec3",
-				SecretRequest: "secreq2",
+				Secret: "sec3",
+				Target: "secreq2",
 			},
 			{
-				Secret:        "sec3",
-				SecretRequest: "secreq3",
+				Secret: "sec3",
+				Target: "secreq3",
 			},
 		},
 		Links: []v1.ServiceBinding{
@@ -236,31 +236,31 @@ func TestAppUpdate(t *testing.T) {
 
 	assert.Equal(t, []v1.VolumeBinding{
 		{
-			Volume:        "vol1",
-			VolumeRequest: "volreq1",
+			Volume: "vol1",
+			Target: "volreq1",
 		},
 		{
-			Volume:        "vol3",
-			VolumeRequest: "volreq2",
+			Volume: "vol3",
+			Target: "volreq2",
 		},
 		{
-			Volume:        "vol3",
-			VolumeRequest: "volreq3",
+			Volume: "vol3",
+			Target: "volreq3",
 		},
 	}, thirdApp.Spec.Volumes)
 
 	assert.Equal(t, []v1.SecretBinding{
 		{
-			Secret:        "sec1",
-			SecretRequest: "secreq1",
+			Secret: "sec1",
+			Target: "secreq1",
 		},
 		{
-			Secret:        "sec3",
-			SecretRequest: "secreq2",
+			Secret: "sec3",
+			Target: "secreq2",
 		},
 		{
-			Secret:        "sec3",
-			SecretRequest: "secreq3",
+			Secret: "sec3",
+			Target: "secreq3",
 		},
 	}, thirdApp.Spec.Secrets)
 
@@ -414,14 +414,14 @@ func TestAppRun(t *testing.T) {
 		Labels:      map[string]string{"lkey": "lvalue"},
 		Volumes: []v1.VolumeBinding{
 			{
-				Volume:        "volume",
-				VolumeRequest: "volumeRequest",
+				Volume: "volume",
+				Target: "target",
 			},
 		},
 		Secrets: []v1.SecretBinding{
 			{
-				Secret:        "secret",
-				SecretRequest: "secretRequest",
+				Secret: "secret",
+				Target: "secretRequest",
 			},
 		},
 		DeployArgs: map[string]interface{}{

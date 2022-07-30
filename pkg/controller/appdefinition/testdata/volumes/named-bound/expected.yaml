@@ -84,7 +84,7 @@ metadata:
 spec:
   image: test
   volumes:
-    - volumeRequest: foo
+    - target: foo
       volume: existing-foo
 
 status:

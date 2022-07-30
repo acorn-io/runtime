@@ -3,7 +3,7 @@ title: Installing
 ---
 
 
-To install Acorn, you will need the Acorn CLI and a Kubernetes cluster. Follow one of the methods below to install the Acorn CLI and then install onto the Kubernetes cluster with the following:
+To install Acorn, you will need the Acorn CLI and a Kubernetes cluster. Follow one of the methods below to install the Acorn CLI and then install onto the [Kubernetes cluster](#installing-acorn-onto-kubernetes-clusters).
 
 ```shell
 acorn install
@@ -25,7 +25,7 @@ You can also follow the binary installation below.
 
 ### Binary install
 
-You can download the Acorn CLI binary from the projects [GitHub page](https://github.com/acorn-io/acorn/releases/latest).
+You can download the Acorn CLI binary from the project's [GitHub page](https://github.com/acorn-io/acorn/releases).
 
 Download the correct binary for your platform.
 
@@ -56,3 +56,11 @@ Download the tar.gz binary for your architecture. Uncompress and move the binary
 ### Windows
 
 For Windows systems, please follow the binary install method.
+
+## Installing Acorn onto Kubernetes clusters
+
+Acorn will need to be initialized on each Kubernetes cluster you plan to use it on.
+
+```shell
+acorn install
+```

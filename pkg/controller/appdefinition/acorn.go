@@ -51,6 +51,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			DeployArgs:  acorn.DeployArgs,
 			Ports:       ports.ForAcorn(appInstance, acornName),
 			Stop:        appInstance.Spec.Stop,
+			Environment: append(acorn.Environment, appInstance.Spec.Environment...),
 		},
 	}
 

@@ -71,6 +71,7 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		app.Status.Condition(v1.AppInstanceConditionAcorns).Success &&
 		app.Status.Condition(v1.AppInstanceConditionSecrets).Success &&
 		app.Status.Condition(v1.AppInstanceConditionPulled).Success &&
+		app.Status.Condition(v1.AppInstanceConditionController).Success &&
 		app.Status.Condition(v1.AppInstanceConditionDefined).Success
 	return nil
 }
@@ -404,7 +405,7 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 		}
 
 		endpointStrings = append(endpointStrings,
-			fmt.Sprintf("%s => %s", strings.Join(publicStrings, "|"), target))
+			fmt.Sprintf("%s => %s", strings.Join(publicStrings, " | "), target))
 	}
 
 	return strings.Join(endpointStrings, ", ")

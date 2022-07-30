@@ -51,10 +51,12 @@ func (c Context) WithParser(parser ParserFunc) *Context {
 
 func (c Context) clone() *Context {
 	return &Context{
-		files:     c.files,
-		fses:      c.fses,
-		ctx:       c.ctx,
-		parseFile: c.parseFile,
+		files:          c.files,
+		fses:           c.fses,
+		ctx:            c.ctx,
+		parseFile:      c.parseFile,
+		schemaTypeName: c.schemaTypeName,
+		schemaPath:     c.schemaPath,
 	}
 }
 
