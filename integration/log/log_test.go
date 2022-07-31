@@ -6,14 +6,17 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	applabels "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,15 +31,25 @@ testlog-pod2/cont2-2 line 2-4`
 
 func TestLog(t *testing.T) {
 	helper.EnsureCRDs(t)
-	ctx, cancel := context.WithCancel(helper.GetCTX(t))
+	ctx, cancel := context.WithTimeout(helper.GetCTX(t), time.Minute)
 	defer cancel()
 
 	c := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, c)
 	app, pod1, pod2 := appPodPod(ns.Name)
 	helper.Must(c.Create(ctx, app))
-	app.Status.Namespace = app.Namespace
-	helper.Must(c.Status().Update(ctx, app))
+	for {
+		app.Status.Namespace = app.Namespace
+		err := c.Status().Update(ctx, app)
+		if apierror.IsConflict(err) {
+			err := c.Get(ctx, router.Key(app.Namespace, app.Name), app)
+			if err != nil {
+				t.Fatal(err)
+			}
+			continue
+		}
+		break
+	}
 	helper.Must(c.Create(ctx, pod1))
 	helper.Must(c.Create(ctx, pod2))
 
@@ -52,11 +65,12 @@ func TestLog(t *testing.T) {
 	var lines []string
 	for msg := range output {
 		if msg.Err != nil {
-			if len(lines) < 8 {
+			if len(lines) < 8 && !strings.Contains(msg.Err.Error(), "context canceled") {
 				t.Fatal(msg.Err)
 			}
 			continue
 		}
+		fmt.Println("LINE: ", fmt.Sprintf("%s/%s %s", msg.Pod.Name, msg.ContainerName, msg.Line))
 		lines = append(lines, fmt.Sprintf("%s/%s %s", msg.Pod.Name, msg.ContainerName, msg.Line))
 		if len(lines) >= 8 {
 			cancel()
