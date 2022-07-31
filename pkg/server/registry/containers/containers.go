@@ -224,6 +224,8 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 		name += "." + sidecarName
 		containerStatusName = sidecarName
 		uid = types.UID(string(uid) + "-" + sidecarName)
+	} else {
+		uid = types.UID(string(uid) + "-c")
 	}
 
 	result := &apiv1.ContainerReplica{

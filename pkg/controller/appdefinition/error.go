@@ -7,11 +7,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func ClearError(req router.Request, resp router.Response) error {
-	condition.Setter(req.Object.(*v1.AppInstance), resp, v1.AppInstanceConditionController).Success()
-	return nil
-}
-
 func OnError(req router.Request, resp router.Response, err error) error {
 	if apierrors.IsConflict(err) {
 		return err

@@ -2,6 +2,7 @@ package apps
 
 import (
 	"context"
+	"strings"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -19,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -93,6 +95,7 @@ func (s *Storage) appToApp(ctx context.Context, app v1.AppInstance, tagCache map
 
 	app.Namespace, app.Name = namespace.NormalizedName(app.ObjectMeta)
 	app.OwnerReferences = nil
+	app.UID = app.UID + "-a"
 	return &apiv1.App{
 		ObjectMeta: app.ObjectMeta,
 		Spec:       app.Spec,
@@ -184,6 +187,7 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 		ObjectMeta: oldAppInstance.ObjectMeta,
 		Spec:       oldAppInstance.Spec,
 	}
+	appToUpdate.UID = appToUpdate.UID + "-a"
 	appToUpdate.Namespace, appToUpdate.Name = namespace.NormalizedName(appToUpdate.ObjectMeta)
 
 	newObj, err := objInfo.UpdatedObject(ctx, appToUpdate)
@@ -213,6 +217,7 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 	}
 	updatedAppInstance.Name = oldAppInstance.Name
 	updatedAppInstance.Namespace = oldAppInstance.Namespace
+	updatedAppInstance.UID = types.UID(strings.TrimSuffix(string(updatedAppInstance.UID), "-a"))
 
 	perms, err := s.getPermissions(ctx, updatedAppInstance.Spec.Image)
 	if err != nil {

@@ -33,7 +33,7 @@ func NewRun() *cobra.Command {
 
 type Run struct {
 	RunArgs
-	Interactive       bool `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i"`
+	Interactive       bool `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i" name:"dev"`
 	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
 }
 
@@ -206,8 +206,8 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	fmt.Println(app.Name)
 
 	if s.Interactive {
-		dev.LogLoop(cmd.Context(), c, app, nil)
-		dev.AppStatusLoop(cmd.Context(), c, app)
+		go func() { _ = dev.LogLoop(cmd.Context(), c, app, nil) }()
+		go func() { _ = dev.AppStatusLoop(cmd.Context(), c, app) }()
 		<-cmd.Context().Done()
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

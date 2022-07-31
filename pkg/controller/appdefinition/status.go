@@ -166,7 +166,7 @@ func JobStatus(req router.Request, resp router.Response) error {
 	)
 
 	sort.Slice(jobs.Items, func(i, j int) bool {
-		return jobs.Items[i].Name < jobs.Items[j].Name
+		return jobs.Items[i].CreationTimestamp.Before(&jobs.Items[j].CreationTimestamp)
 	})
 	for _, job := range jobs.Items {
 		if app.Status.JobsStatus == nil {
@@ -226,6 +226,10 @@ func podsStatus(req router.Request, namespace string, sel klabels.Selector) (boo
 	if err != nil {
 		return false, nil, err
 	}
+
+	sort.Slice(pods.Items, func(i, j int) bool {
+		return pods.Items[i].CreationTimestamp.Before(&pods.Items[j].CreationTimestamp)
+	})
 
 	for _, pod := range pods.Items {
 		for _, cond := range pod.Status.Conditions {

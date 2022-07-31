@@ -173,7 +173,15 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 		if first {
 			first = false
 		} else {
-			time.Sleep(time.Second)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(time.Second):
+			}
+			pod, err := options.PodClient.Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+			if err == nil && !isContainerLoggable(pod, name) {
+				continue
+			}
 		}
 
 		req := options.PodClient.Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{
@@ -185,7 +193,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 		})
 		readCloser, err := req.Stream(ctx)
 		if err != nil {
-			_, newErr := options.PodClient.Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+			pod, newErr := options.PodClient.Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(newErr) {
 				return newErr
 			}
@@ -268,7 +276,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 	eg.Go(func() error {
 		defer cancel()
 		_, err = podWatcher.ByName(ctx, pod.Namespace, pod.Name, func(pod *corev1.Pod) (bool, error) {
-			if !pod.DeletionTimestamp.IsZero() {
+			if !pod.DeletionTimestamp.IsZero() || pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
 				return true, nil
 			}
 			for _, container := range pod.Spec.Containers {
@@ -414,6 +422,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 		return err
 	})
 	eg.Go(func() error {
+		defer cancel()
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
 			if watching.shouldWatch("Pod", pod.Namespace, pod.Name) {
 				eg.Go(func() error {

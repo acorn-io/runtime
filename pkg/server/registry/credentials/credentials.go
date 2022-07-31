@@ -16,6 +16,7 @@ import (
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -54,6 +55,7 @@ func secretToCredential(secret corev1.Secret) *apiv1.Credential {
 		Storage:       apiv1.CredentialStorageTypeCluster,
 		Username:      string(secret.Data["username"]),
 	}
+	cred.UID = cred.UID + "-s"
 	cred.Name = cred.ServerAddress
 	return cred
 }
@@ -76,6 +78,7 @@ func credToSecret(input *apiv1.Credential) *corev1.Secret {
 	if secret.Labels == nil {
 		secret.Labels = map[string]string{}
 	}
+	secret.UID = types.UID(strings.TrimSuffix(string(secret.UID), "-s"))
 	secret.Labels[labels.AcornManaged] = "true"
 	secret.Labels[labels.AcornCredential] = "true"
 	secret.Name = strings.ReplaceAll(input.ServerAddress, ":", "-")

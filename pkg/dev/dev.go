@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
@@ -24,6 +25,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
+	"golang.org/x/sync/errgroup"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -62,8 +64,13 @@ func (o *Options) Complete() (*Options, error) {
 type watcher struct {
 	file       string
 	cwd        string
+	trigger    chan struct{}
 	watching   []string
 	watchingTS []time.Time
+}
+
+func (w *watcher) Trigger() {
+	w.trigger <- struct{}{}
 }
 
 func (w *watcher) readFiles() []string {
@@ -142,10 +149,12 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 		watcher = watcher{
 			file:       file,
 			cwd:        opts.Build.Cwd,
+			trigger:    make(chan struct{}),
 			watching:   []string{file},
 			watchingTS: make([]time.Time, 1),
 		}
-		started = false
+		startLock sync.Mutex
+		started   = false
 	)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -188,16 +197,39 @@ outer:
 			break
 		}
 
+		startLock.Lock()
 		if started {
+			startLock.Unlock()
 			continue
 		}
 
 		opts.Run.Name = app.Name
-		LogLoop(ctx, opts.Client, app, &opts.Log)
-		AppStatusLoop(ctx, opts.Client, app)
-		containerSyncLoop(ctx, app, opts)
-		appDeleteStop(ctx, opts.Client, app, cancel)
+		eg, ctx := errgroup.WithContext(ctx)
+		eg.Go(func() error {
+			return LogLoop(ctx, opts.Client, app, &opts.Log)
+		})
+		eg.Go(func() error {
+			return AppStatusLoop(ctx, opts.Client, app)
+		})
+		eg.Go(func() error {
+			return containerSyncLoop(ctx, app, opts)
+		})
+		eg.Go(func() error {
+			return appDeleteStop(ctx, opts.Client, app, cancel)
+		})
+		go func() {
+			err := eg.Wait()
+			if err != nil {
+				logrus.Error(err)
+			}
+			startLock.Lock()
+			started = false
+			startLock.Unlock()
+			watcher.Trigger()
+		}()
+
 		started = true
+		startLock.Unlock()
 	}
 }
 
@@ -304,61 +336,56 @@ func runOrUpdate(ctx context.Context, acornCue, image string, opts *Options) (*a
 	return existingApp, updateApp(ctx, opts.Client, existingApp, image, opts)
 }
 
-func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel func()) {
-	go func() {
-		w := objwatcher.New[*apiv1.App](c.GetClient())
-		_, _ = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-			if !app.DeletionTimestamp.IsZero() {
-				pterm.Println(pterm.FgCyan.Sprintf("app %s deleted, exiting", app.Name))
-				cancel()
-				return true, nil
-			}
-			if app.Spec.Stop != nil && *app.Spec.Stop {
-				pterm.Println(pterm.FgCyan.Sprintf("starting app %s", app.Name))
-				_ = c.AppStart(ctx, app.Name)
-			}
-			return false, nil
-		})
-	}()
-}
-
-func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) {
-	go func() {
-		w := objwatcher.New[*apiv1.App](c.GetClient())
-		_, _ = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-			msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
-				app.Status.Columns.Endpoints,
-				app.Status.Columns.Healthy,
-				app.Status.Columns.UpToDate,
-				app.Status.Columns.Message)
-			if app.Status.Columns.Message == "OK" && app.Status.Columns.Healthy != "0" && app.Status.Columns.Healthy != "stopped" {
-				pterm.DefaultBox.Println(pterm.LightGreen(msg))
-			} else {
-				pterm.Println(pterm.LightYellow(msg))
-			}
-
-			return false, nil
-		})
-	}()
-}
-
-func LogLoop(ctx context.Context, c client.Client, app *apiv1.App, opts *client.LogOptions) {
-	go func() {
-		for {
-			if opts == nil {
-				opts = &client.LogOptions{}
-			}
-			opts.Follow = true
-			_ = log.Output(ctx, c, app.Name, opts)
-
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(2 * time.Second):
-			default:
-			}
+func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel func()) error {
+	w := objwatcher.New[*apiv1.App](c.GetClient())
+	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+		if !app.DeletionTimestamp.IsZero() {
+			pterm.Println(pterm.FgCyan.Sprintf("app %s deleted, exiting", app.Name))
+			cancel()
+			return true, nil
 		}
-	}()
+		if app.Spec.Stop != nil && *app.Spec.Stop {
+			pterm.Println(pterm.FgCyan.Sprintf("starting app %s", app.Name))
+			_ = c.AppStart(ctx, app.Name)
+		}
+		return false, nil
+	})
+	return err
+}
+
+func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
+	w := objwatcher.New[*apiv1.App](c.GetClient())
+	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+		msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
+			app.Status.Columns.Endpoints,
+			app.Status.Columns.Healthy,
+			app.Status.Columns.UpToDate,
+			app.Status.Columns.Message)
+		if app.Status.Columns.Message == "OK" && app.Status.Columns.Healthy != "0" && app.Status.Columns.Healthy != "stopped" {
+			pterm.DefaultBox.Println(pterm.LightGreen(msg))
+		} else {
+			pterm.Println(pterm.LightYellow(msg))
+		}
+
+		return false, nil
+	})
+	return err
+}
+
+func LogLoop(ctx context.Context, c client.Client, app *apiv1.App, opts *client.LogOptions) error {
+	for {
+		if opts == nil {
+			opts = &client.LogOptions{}
+		}
+		opts.Follow = true
+		_ = log.Output(ctx, c, app.Name, opts)
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(2 * time.Second):
+		}
+	}
 }
 
 func resolveAcornCueAndName(ctx context.Context, acornCue string, opts *Options) (string, *Options, error) {
