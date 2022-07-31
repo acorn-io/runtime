@@ -8,7 +8,7 @@ var (
 		{"Up-To-Date", "Status.Columns.UpToDate"},
 		{"Created", "{{ago .CreationTimestamp}}"},
 		{"Endpoints", "Status.Columns.Endpoints"},
-		{"Message", "Status.Columns.Message"},
+		{"Message", "{{ appGeneration . .Status.Columns.Message }}"},
 	}
 	AppConverter = MustConverter(App)
 

@@ -137,6 +137,10 @@ func (s *Exec) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if s.DebugImage != "" && len(args) == 0 {
+		return s.execContainer(ctx, c, "_", nil)
+	}
+
 	name, args, err := s.appAndArgs(ctx, c, args)
 	if err != nil {
 		return err

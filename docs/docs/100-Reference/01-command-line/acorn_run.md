@@ -13,11 +13,11 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
 
 ```
   -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
+  -i, --dev                  Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
   -e, --env strings          Environment variables to set on running containers
       --expose strings       In cluster expose ports of an application (format [public:]private) (ex 81:80)
   -f, --file string          Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                 help for run
-  -i, --interactive          Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
   -l, --link strings         Link external app as a service in the current app (format app-name:service-name)
   -n, --name string          Name of app to create
   -o, --output string        Output API request without creating app (json, yaml)

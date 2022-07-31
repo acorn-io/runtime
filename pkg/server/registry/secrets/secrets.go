@@ -20,6 +20,7 @@ import (
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
@@ -63,11 +64,13 @@ func coreSecretToSecret(secret *corev1.Secret) *apiv1.Secret {
 	}
 	sort.Strings(keys)
 
-	return &apiv1.Secret{
+	sec := &apiv1.Secret{
 		ObjectMeta: secret.ObjectMeta,
 		Type:       strings.TrimPrefix(string(secret.Type), v1.SecretTypePrefix),
 		Keys:       keys,
 	}
+	sec.UID = sec.UID + "-s"
+	return sec
 }
 
 func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
@@ -252,6 +255,7 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 		Data:       newV1Secret.Data,
 		Type:       corev1.SecretType(v1.SecretTypePrefix + secret.(*apiv1.Secret).Type),
 	}
+	newCoreSecret.UID = types.UID(strings.TrimSuffix(string(newCoreSecret.UID), "-s"))
 
 	err = s.client.Update(ctx, newCoreSecret)
 	if err != nil {

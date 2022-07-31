@@ -21,20 +21,18 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-func containerSyncLoop(ctx context.Context, app *apiv1.App, opts *Options) {
-	go func() {
-		for {
-			err := containerSync(ctx, app, opts)
-			if err != nil && !errors.Is(err, context.Canceled) {
-				logrus.Errorf("failed to run container sync: %s", err)
-			}
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(2 * time.Second):
-			}
+func containerSyncLoop(ctx context.Context, app *apiv1.App, opts *Options) error {
+	for {
+		err := containerSync(ctx, app, opts)
+		if err != nil && !errors.Is(err, context.Canceled) {
+			logrus.Errorf("failed to run container sync: %s", err)
 		}
-	}()
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(2 * time.Second):
+		}
+	}
 }
 
 func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {

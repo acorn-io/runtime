@@ -3,6 +3,7 @@ package watcher
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
@@ -64,6 +65,8 @@ func doWatch[T client.Object](ctx context.Context, watchFunc watchFunc, cb func(
 				if done {
 					return true, nil, nil
 				}
+			case watch.Error:
+				return false, nil, apierrors.FromObject(event.Object)
 			}
 		}
 	}
@@ -85,12 +88,11 @@ func retryWatch[T client.Object](ctx context.Context, watchFunc watchFunc, cb fu
 			return last, terminalErr
 		} else if done {
 			return last, nil
-		} else {
-			select {
-			case <-ctx.Done():
-				return last, ctx.Err()
-			default:
-			}
+		}
+		select {
+		case <-ctx.Done():
+			return last, ctx.Err()
+		case <-time.After(2 * time.Second):
 		}
 	}
 }

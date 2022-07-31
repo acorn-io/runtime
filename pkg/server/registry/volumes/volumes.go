@@ -159,6 +159,7 @@ func pvToVolume(pv corev1.PersistentVolume) *apiv1.Volume {
 			},
 		},
 	}
+	vol.UID = vol.UID + "-v"
 	vol.Namespace = pv.Labels[labels.AcornRootNamespace]
 	if !pv.DeletionTimestamp.IsZero() {
 		vol.Status.Status += "/deleted"
