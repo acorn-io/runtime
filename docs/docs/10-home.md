@@ -43,6 +43,7 @@ On Linux machine you can also download the latest amd or arm tar file.
 version=$(curl -s "https://api.github.com/repos/acorn-io/acorn/releases" | grep tag_name | grep controller | sort -r | awk -F'"' 'NR==1 {print $4}')
 curl -LO acorn-$version-linux-amd64.tar.gz
 tar -xvf acorn-$version-linux-amd64.tar.gz
+mv acorn /usr/local/bin/
 
 # verify binary (assume local directory)
 acorn -v
