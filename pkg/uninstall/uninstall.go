@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -15,11 +16,12 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/merr"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	klabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
@@ -64,7 +66,7 @@ func baseResources(ctx context.Context, c kclient.Client) (resources []kclient.O
 		resources = append(resources, &ns)
 	}
 
-	crds := &v1.CustomResourceDefinitionList{}
+	crds := &apiextensionv1.CustomResourceDefinitionList{}
 	err = c.List(ctx, crds)
 	if err != nil {
 		return nil, err
@@ -119,6 +121,25 @@ func userResources(ctx context.Context, c kclient.Client) (resources []kclient.O
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := klabels.NewRequirement(labels.AcornManaged, selection.DoesNotExist, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	userCreatedSecrets := &corev1.SecretList{}
+	err = c.List(ctx, userCreatedSecrets, &kclient.ListOptions{
+		LabelSelector: klabels.NewSelector().Add(*req),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, userCreated := range userCreatedSecrets.Items {
+		if strings.HasPrefix(string(userCreated.Type), v1.SecretTypePrefix) {
+			secrets.Items = append(secrets.Items, userCreated)
+		}
 	}
 
 	sort.Slice(secrets.Items, func(i, j int) bool {
