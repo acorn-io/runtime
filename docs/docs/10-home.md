@@ -25,17 +25,17 @@ To try out Acorn you will need admin access to a Kubernetes cluster. Docker Desk
 
 ### Install
 
-On macOS you can use `brew` to quickly install Acorn.
+On Linux and macOS you can use `brew` to quickly install Acorn.
 
 ```shell
-# macOS
+# Linux or macOS
 brew install acorn-io/acorn/acorn
 
 # verify binary (assume local directory)
 acorn -v
 ```
 
-On Linux machine you can download the latest amd or arm tar file.
+On Linux machine you can also download the latest amd or arm tar file.
 
 ```shell 
 # Linux amd64
