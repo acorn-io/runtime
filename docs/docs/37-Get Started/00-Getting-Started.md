@@ -133,7 +133,7 @@ CMD ["flask", "run"]
 ```cue title="acorn-test-app/Acornfile"
 args: {
   // Configure your personal welcome text
-  welcome: "Hello Acorn User!"
+  welcome: "Hello Acorn User!!"
 }
 
 containers: {
@@ -143,11 +143,13 @@ containers: {
       "PG_USER": "postgres"
       "PG_PASS": "secret://quickstart-pg-pass/token"
       "WELCOME": args.welcome
+      if args.dev { "FLASK_ENV": "development" }
     }
     dependsOn: [
       "db",
       "cache"
     ]
+    if args.dev { dirs: "/app": "./" }
     ports: publish: "5000/http"
   }
   cache: {
@@ -181,9 +183,11 @@ localData: {
   ]
 }
 
-if !args.dev {
-  volumes: {
-    "pgdata": {}
+volumes: {
+  if !args.dev {
+    "pgdata": {
+      accessModes: "readWriteOnce"
+    }
   }
 }
 
@@ -212,6 +216,9 @@ secrets: {
     - `env`: environment variables, statically defined, referencing a secret or referencing an Acorn argument
     - `dependsOn`: dependencies that have to be up and running before the app is started (here it is waiting for the database and the cache to be running)
     - `ports`: using the `publish` type, we expose the app inside the cluster but also outside of it using an auto-generated ingress resource (more on this later <!-- TODO: add link -->)
+    - `dirs`: Directories to mount into the container filesystem
+      - `if !args.dev`: only apply, if built-in development mode is **not** active (more on the development mode later <!-- TODO: add link -->)
+      - `dirs: "/app": "./"`: Mount the current directory to the /app dir, which is where the code resides inside the container as per the `Dockerfile`. This is to enable hot-reloading of code.
   - `cache` - Redis
     - `image`: existing OCI/Docker image to use (here: from DockerHub library)
     - `ports`: no type defined, defaults to `internal`, which makes it available to the other containers in this Acorn App
@@ -230,9 +237,7 @@ secrets: {
   - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
     - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
 
-## 3. Run your Acorn App
-
-### Normal Mode
+## 3. Run your Acorn App in normal operations mode
 
 To run your Acorn App in "normal" operations mode, just run
 
@@ -246,13 +251,7 @@ or customize the welcome text argument via
 acorn run . --welcome "Let's Get Started"
 ```
 
-### Development Mode
-
-<!-- TODO:
-- `acorn run -i .`
-  - hot-reloading
-  - Q: Does this use the dev profile?
--->
+There's also a built-in development mode. Read on.
 
 ## 4. Access your App
 
@@ -273,7 +272,57 @@ You probably already noticed the link right there in the `ENDPOINTS` column. It 
 
 <!-- FIXME: do we need a note on adding a port to the ingress controller here? -->
 
-## 5. Update the Acornfile and push the changes to the running App
+## 5. Development Mode
+
+Acorn has a built-in development mode that can be enabled when running an Acorn Image via
+
+```bash
+acorn run -i .
+```
+
+In development mode, Acorn will watch the local directory for changes and synchronize them to the running Acorn App.
+In general, changes to the Acornfile are directly synchronized, e.g. adding environment variables, etc.
+Depending on the change, the deployed containers will be recreated.
+
+The following lines additionally enable hot-reloading of code by mounting the current local directory into the app container:
+
+```cue
+containers: {
+  app: {
+    // ...
+    if args.dev { dirs: "/app": "./" }
+    //...
+  }
+  //...
+}
+```
+
+In this case, additionally `if args.dev { "FLASK_ENV": "development" }` enables Flask's development mode.
+
+Running in development mode, Acorn will keep a session open, streaming all the container logs to your terminal and notifying you of any changes that are happening.
+
+To test it, you can change something in the `app.py`.
+For example, add a line to the HTML template at the top and change it to
+
+```python
+# HTML Jinja2 Template which will be shown in the browser
+page_template = '''
+        <div style="margin: auto; text-align: center;">
+        <h1>{{ welcome_text }}</h1><br>
+        <h2>This is a change :)</h2>
+        You're visitor #{{ visitors }} to learn what squirrels love the most:<br>
+        <ul>
+            {%- for food in foods %}
+            <li>{{ food }}</li>
+            {%- endfor %}
+        </ul>
+        </div>
+        '''
+```
+
+You will see the change applied when accessing the endpoint again.
+
+## 6. Update the Acornfile and push the changes to the running App
 
 When not using the development mode, your typical deployment cycle involves at least building the image and deploying it (optionally pushing it to a registry in between).
 These steps can be consolidated into a single command:
@@ -283,7 +332,7 @@ These steps can be consolidated into a single command:
 acorn update --image $(acorn build .) awesome-acorn
 ```
 
-## 6. Build and Push your Acorn Image
+## 7. Build and Push your Acorn Image
 
 Ready to release your Acorn App into the wild?
 Let's package it up in a single Acorn Image and distribute it via an OCI registry (you could use DockerHub for that):
