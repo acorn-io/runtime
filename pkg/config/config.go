@@ -84,6 +84,10 @@ func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Read
 // If the cluster is a known desktop cluster type such as minikube, Rancher Desktop, or Docker Desktop, then we don't
 // want to create real DNS records. Rather, use our wildcard domain that resolves to 127.0.0.1
 func useLocalWildcardDomain(ctx context.Context, getter kclient.Reader) (bool, error) {
+	return IsDockerDesktop(ctx, getter)
+}
+
+func IsDockerDesktop(ctx context.Context, getter kclient.Reader) (bool, error) {
 	var nodes corev1.NodeList
 	if err := getter.List(ctx, &nodes); err != nil {
 		return false, err

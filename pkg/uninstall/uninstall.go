@@ -16,6 +16,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/merr"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,6 +85,17 @@ func baseResources(ctx context.Context, c kclient.Client) (resources []kclient.O
 		if err == nil {
 			resources[i].GetObjectKind().SetGroupVersionKind(gvk)
 		}
+	}
+
+	ingressClass := &networkingv1.IngressClass{}
+	if err := c.Get(ctx, kclient.ObjectKey{Name: "nginx"}, ingressClass); !apierror.IsNotFound(err) && err != nil {
+		return nil, err
+	} else if err == nil && ingressClass.Labels[labels.AcornManaged] == "true" {
+		nginxResources, err := install.NGINXResources()
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, nginxResources...)
 	}
 
 	return resources, nil
