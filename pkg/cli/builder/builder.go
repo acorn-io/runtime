@@ -100,6 +100,10 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 		fieldType := info.FieldType
 		v := info.FieldValue
 
+		if strings.ToUpper(fieldType.Name[0:1]) != fieldType.Name[0:1] {
+			continue
+		}
+
 		name, alias := name(fieldType.Name, fieldType.Tag.Get("name"), fieldType.Tag.Get("short"))
 		usage := fieldType.Tag.Get("usage")
 		env := strings.Split(fieldType.Tag.Get("env"), ",")

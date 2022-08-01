@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -11,8 +12,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func NewUpdate() *cobra.Command {
-	cmd := cli.Command(&Update{}, cobra.Command{
+func NewUpdate(out io.Writer) *cobra.Command {
+	cmd := cli.Command(&Update{out: out}, cobra.Command{
 		Use:          "update [flags] APP_NAME [deploy flags]",
 		SilenceUsage: true,
 		Short:        "Update a deployed app",
@@ -26,6 +27,8 @@ func NewUpdate() *cobra.Command {
 type Update struct {
 	Image string `json:"image,omitempty"`
 	RunArgs
+
+	out io.Writer
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {
@@ -71,7 +74,7 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		return outputApp(s.Output, app)
+		return outputApp(s.out, s.Output, app)
 	}
 
 	app, err := rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, name, opts)

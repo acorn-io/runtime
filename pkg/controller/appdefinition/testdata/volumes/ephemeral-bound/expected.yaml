@@ -69,7 +69,7 @@ spec:
   volumeName: "existing-foo"
   resources:
     requests:
-      storage: 10_000_000_000
+      storage: 5M
 ---
 kind: Secret
 apiVersion: v1

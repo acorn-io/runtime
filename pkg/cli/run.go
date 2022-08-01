@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -20,8 +21,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func NewRun() *cobra.Command {
-	cmd := cli.Command(&Run{}, cobra.Command{
+func NewRun(out io.Writer) *cobra.Command {
+	cmd := cli.Command(&Run{out: out}, cobra.Command{
 		Use:          "run [flags] IMAGE|DIRECTORY [acorn args]",
 		SilenceUsage: true,
 		Short:        "Run an app from an image or Acornfile",
@@ -35,12 +36,14 @@ type Run struct {
 	RunArgs
 	Interactive       bool `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i" name:"dev"`
 	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+
+	out io.Writer
 }
 
 type RunArgs struct {
 	Name       string   `usage:"Name of app to create" short:"n"`
 	File       string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
-	Volume     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v"`
+	Volume     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v" split:"false"`
 	Secret     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
 	Link       []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
 	PublishAll *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
@@ -195,7 +198,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	if s.Output != "" {
 		app := client.ToApp(c.GetNamespace(), image, &opts)
-		return outputApp(s.Output, app)
+		return outputApp(s.out, s.Output, app)
 	}
 
 	app, err := rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, opts)
@@ -217,7 +220,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func outputApp(format string, app *apiv1.App) error {
+func outputApp(out io.Writer, format string, app *apiv1.App) error {
 	data, err := json.Marshal(app)
 	if err != nil {
 		return err
@@ -243,6 +246,10 @@ func outputApp(format string, app *apiv1.App) error {
 		return err
 	}
 
-	_, err = os.Stdout.Write(data)
+	if out == nil {
+		_, err = os.Stdout.Write(data)
+	} else {
+		_, err = out.Write(data)
+	}
 	return err
 }

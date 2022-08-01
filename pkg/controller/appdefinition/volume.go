@@ -118,6 +118,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		if bind {
 			pvc.Name = bindName(volume)
 			pvc.Spec.VolumeName = volumeBinding.Volume
+			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MinSize
 		} else {
 			if volumeRequest.Class != "" {
 				class = &volumeRequest.Class
@@ -129,12 +130,12 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 				return nil, err
 			}
 			pvc.Spec.VolumeName = pvName
-		}
 
-		if volumeRequest.Size == "" {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
-		} else {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
+			if volumeRequest.Size == "" {
+				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
+			} else {
+				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
+			}
 		}
 
 		if len(volumeBinding.AccessModes) > 0 {
