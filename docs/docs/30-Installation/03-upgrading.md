@@ -15,7 +15,7 @@ brew upgrade acorn-io/acorn/acorn
 
 ### Binary
 
-Download latest binary version and install following the install method.
+Download latest binary version and install following the binary install method.
 
 ## Upgrading Acorn on a Kubernetes cluster
 
