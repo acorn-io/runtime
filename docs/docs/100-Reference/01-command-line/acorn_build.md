@@ -28,6 +28,7 @@ acorn build .
   -h, --help               help for build
   -p, --platform strings   Target platforms (form os/arch[/variant][:osversion] example linux/amd64)
       --profile strings    Profile to assign default values
+      --push               Push image after build
   -t, --tag strings        Apply a tag to the final build
 ```
 
