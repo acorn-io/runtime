@@ -18,7 +18,9 @@ import (
 
 var (
 	DefaultSizeQuantity = Quantity("10G")
+	MinSizeQuantity     = Quantity("5M")
 	DefaultSize         = MustParseResourceQuantity(DefaultSizeQuantity)
+	MinSize             = MustParseResourceQuantity(MinSizeQuantity)
 )
 
 func (in *NameValue) UnmarshalJSON(data []byte) error {

@@ -25,7 +25,7 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
   -p, --publish strings      Publish port of application (format [public:]private) (ex 81:80)
   -P, --publish-all          Publish all (true) or none (false) of the defined ports of application
   -s, --secret strings       Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
-  -v, --volume strings       Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
+  -v, --volume stringArray   Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)
 ```
 
 ### Options inherited from parent commands

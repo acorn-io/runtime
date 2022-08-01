@@ -73,7 +73,7 @@ spec:
   volumeName: "existing-foo"
   resources:
     requests:
-      storage: 10_000_000_000
+      storage: 5M
 ---
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
