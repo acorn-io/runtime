@@ -18,9 +18,29 @@ All Acorn CLI commands and the UI are scoped to the user's Acorn namespace.
 
 ### RBAC
 
-Users will require access to CRUD `AppInstance` types from the `v1.acorn.io` API group.
+Users will require CRUD access to all types from the `api.acorn.io` API group within their Acorn namespace.
 
-Optionally, they might need access to create secrets and possibly CertManager objects for TLS certs. This is if the app team running the Acorn App will be creating secrets to pass in data.
+```shell
+"apps"
+"apps/log"
+"builders"
+"builders/port"
+"builders/registryport"
+"images"
+"images/tag"
+"images/push"
+"images/pull"
+"images/details"
+"volumes"
+"containerreplicas"
+"containerreplicas/exec"
+"credentials"
+"secrets"
+"secrets/expose"
+"infos"
+```
+
+Optionally, they might need access to create secrets and possibly CertManager objects for TLS certs in the users Acorn namespace. This is if the app team running the Acorn App will be creating secrets to pass in data.
 
 Users can be given access to multiple Acorn namespaces and will then be able to switch between them from the CLI.
 
