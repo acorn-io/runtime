@@ -94,12 +94,12 @@ func TestSecretList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	secret1, err := c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key": []byte("value")})
+	secret1, err := c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key": []byte("value")})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	secret2, err := c.SecretCreate(ctx, "secret2", "opaque", map[string][]byte{"key2": []byte("value2")})
+	secret2, err := c.SecretCreate(ctx, "secret1", "opaque", map[string][]byte{"key2": []byte("value2")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,8 +109,8 @@ func TestSecretList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, secret1, &secrets[0])
-	assert.Equal(t, secret2, &secrets[1])
+	assert.Equal(t, secret1, &secrets[1])
+	assert.Equal(t, secret2, &secrets[0])
 }
 
 func TestSecretGet(t *testing.T) {
