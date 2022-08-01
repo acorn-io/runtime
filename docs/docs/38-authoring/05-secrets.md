@@ -4,7 +4,7 @@ title: Secrets
 
 Secrets are used to provide data that is considered sensitive like passwords, keys, and other sensitive information. Acorn provides multiple secret types, and makes it easy to create closed loop systems where information can be kept within the defined Acorn.
 
-To learn how to use secrets while deploying an Acorn Image see [args and secrets](/production/args-and-secrets)
+To learn how to use secrets while deploying an Acorn image see [args and secrets](/production/args-and-secrets)
 
 ## Using secrets in an Acornfile
 

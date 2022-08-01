@@ -48,7 +48,7 @@ acorn install
 
 You will only need to do this once per cluster.
 
-### Build/Run First Acorn App
+### Build/Run First Acorn app
 
 Create a new `Acornfile` in your working directory and add the following contents.
 
@@ -98,4 +98,4 @@ Next you can learn more about what you can do with Acorn in the [get started](/g
 * [Installation](/installation/installing)
 * [Get Started](/getting-started)
 * [Authoring Acornfiles](/authoring/overview)
-* [Running Acorn Apps in Production](/production/args-and-secrets)
+* [Running Acorn apps in Production](/production/args-and-secrets)

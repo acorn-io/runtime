@@ -1,10 +1,10 @@
 ---
-title: Publishing Acorn Images
+title: Publishing Acorn images
 ---
 
-Once the application is in a state where it ready to move to test and production you will need to build an Acorn Image and publish it to a registry. Acorn images are only accessible to the Acorn namespace they were built in. In order to use them in other namespaces or on other Kubernetes clusters, the images need to be tagged and published to a registry.
+Once the application is in a state where it ready to move to test and production you will need to build an Acorn image and publish it to a registry. Acorn images are only accessible to the Acorn namespace they were built in. In order to use them in other namespaces or on other Kubernetes clusters, the images need to be tagged and published to a registry.
 
-## Building and tagging an Acorn Image
+## Building and tagging an Acorn image
 
 To publish your image run the familiar build command with a `-t` option to tag the image. A tag will include the FQDN of the registry and the URI path for the image. Commonly, the URI path is a variation of `/<organization>/<app-name>:<version>`
 
@@ -20,11 +20,11 @@ This is very similar to the Docker build workflow:
 docker build -t index.docker.io/<org>/<image>:<version> .
 ```
 
-You can use the tag to reference the built Acorn Image to run, push, and update it.
+You can use the tag to reference the built Acorn image to run, push, and update it.
 
-## Tagging existing Acorn Images
+## Tagging existing Acorn images
 
-If you want to push a local Acorn Image to another registry, or move from a SHA to a friendly name, you can tag the image. The command is:
+If you want to push a local Acorn image to another registry, or move from a SHA to a friendly name, you can tag the image. The command is:
 
 ```shell
 acorn tag <current_image> <new_image>
@@ -36,7 +36,7 @@ To tag and prepare to push to Dockerhub `index.docker.io/my-org/image:version` r
 acorn tag [MY-IMAGE] /myorg/image:latest
 ```
 
-## Pushing Acorn Image to production
+## Pushing Acorn image to production
 
 Once the image is tagged, it is ready to be pushed to the remote registry.
 
@@ -68,15 +68,15 @@ Pushing to a registry requires 2 things:
 acorn push index.docker.io/myorg/image:v1.0
 ```
 
-## Pulling / Running the Acorn Image
+## Pulling / Running the Acorn image
 
-Once the image has been published to a registry, it can be run on other clusters that have access to that registry. You can run the acorn and the Acorn Image will automatically be pulled.
+Once the image has been published to a registry, it can be run on other clusters that have access to that registry. You can run the acorn and the Acorn image will automatically be pulled.
 
 ```shell
 acorn run index.docker.io/myorg/image:v1.0
 ```
 
-You can manually pull the Acorn Image:
+You can manually pull the Acorn image:
 
 ```shell
 acorn pull index.docker.io/myorg/image:v1.0

@@ -2,8 +2,8 @@
 title: Getting Started
 ---
 
-In this walk through you will build a Python web app, package it up and deploy it as an Acorn App.  
-The app will interact with Redis and Postgres, which both will be packaged along with the web app in a single Acorn Image.
+In this walk through you will build a Python web app, package it up and deploy it as an Acorn app.  
+The app will interact with Redis and Postgres, which both will be packaged along with the web app in a single Acorn image.
 
 > The guide makes use of Python, Redis and Postgres here, but you don't need to be familiar with those technologies, as the examples should be understandable without preliminary knowledge in those.
 
@@ -202,7 +202,7 @@ secrets: {
 
 ### Explaining the Acornfile
 
-- `args` section: describes a set of arguments that can be passed in by the user of this Acorn Image
+- `args` section: describes a set of arguments that can be passed in by the user of this Acorn image
   - A help text will be auto-generated using the comment just above the arg:
 
     ```bash
@@ -211,7 +211,7 @@ secrets: {
           --welcome string   Configure your personal welcome text
     ```
 
-- `containers` section: describes the set of containers your Acorn App consists of
+- `containers` section: describes the set of containers your Acorn app consists of
   - Note: `app`, `db` and `cache` are custom names of your containers
   - `app` - Our Python Flask App
     - `build`: build from Dockerfile that we created
@@ -223,25 +223,25 @@ secrets: {
       - `dirs: "/app": "./"`: Mount the current directory to the /app dir, which is where the code resides inside the container as per the `Dockerfile`. This is to enable hot-reloading of code.
   - `cache` - Redis
     - `image`: existing OCI/Docker image to use (here: from DockerHub library)
-    - `ports`: no type defined, defaults to `internal`, which makes it available to the other containers in this Acorn App
+    - `ports`: no type defined, defaults to `internal`, which makes it available to the other containers in this Acorn app
   - `db` - Postgres Database Server
     - `image`, `env`,`ports`: nothing new here
     - `dirs`: Directories to mount into the container filesystem
       - `if !args.dev`: only apply, if built-in development mode is **not** active (more on the development mode later <!-- TODO: add link -->)
       - `volume://pgdata`: references a volume defined in the top-level `volumes` section in the Acornfile. Also supports other references. <!-- TODO: add link -->
     - `files`: Similar to `dirs` but only for files. Additionally, content can be created in-line and even utilizing generating functions.
-- `localData`: Set of variables for this Acorn App
+- `localData`: Set of variables for this Acorn app
   - `food`: Custom variable, defining a list of food which is accessed in `containers.db.volumes` to pre-fill the database.
-- `volumes`: (persistent) data volumes to be used by any container in the Acorn App
+- `volumes`: (persistent) data volumes to be used by any container in the Acorn app
   - `pgdata` custom volume name, referenced in `containers.db.dirs`
     - `accessModes`: (list of) modes to allow access to this volume
-- `secrets`: set of secrets that can be auto-generated and used by any container in the Acorn App
+- `secrets`: set of secrets that can be auto-generated and used by any container in the Acorn app
   - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
     - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
 
-## Step 4. Run your Acorn App in normal operations mode
+## Step 4. Run your Acorn app in normal operations mode
 
-To run your Acorn App just run:
+To run your Acorn app just run:
 
 ```bash
 acorn run -n awesome-acorn .
@@ -283,7 +283,7 @@ acorn stop awesome-acorn
 acorn run -n awesome-acorn -i .
 ```
 
-In development mode, Acorn will watch the local directory for changes and synchronize them to the running Acorn App.
+In development mode, Acorn will watch the local directory for changes and synchronize them to the running Acorn app.
 In general, changes to the Acornfile are directly synchronized, e.g. adding environment variables, etc.
 Depending on the change, the deployed containers will be recreated.
 
@@ -325,29 +325,29 @@ page_template = '''
 
 You will see the change applied when when you reload the application's page in your browser.
 
-## Step 7. Build and Push your Acorn Image
+## Step 7. Build and Push your Acorn image
 
-Ready to release your Acorn App into the wild?
-Let's package it up in a single Acorn Image and distribute it via an OCI registry (you could use DockerHub for that):
+Ready to release your Acorn app into the wild?
+Let's package it up in a single Acorn image and distribute it via an OCI registry (you could use DockerHub for that):
 
 ```bash
 # Login into your OCI registry, if needed (interactive)
 acorn login my.registry.com
 
-# Build the Acorn Image and tag it to your liking
+# Build the Acorn image and tag it to your liking
 acorn build -t my.registry.com/acorn/getting-started:v0.0.1 .
 
-# Push the newly built Acorn Image
+# Push the newly built Acorn image
 acorn push my.registry.com/acorn/getting-started:v0.0.1
 ```
 
-Now, everyone else can run your Acorn Image via
+Now, everyone else can run your Acorn image via
 
 ```bash
 acorn run --name awesome-acorn my.registry.com/acorn/getting-started:v0.0.1
 ```
 
-## Interacting with an Acorn App
+## Interacting with an Acorn app
 
 ### Execute a command inside the running container
 
@@ -400,7 +400,7 @@ If you're done with the app, wipe it from the cluster via
 acorn rm awesome-acorn
 ```
 
-> Dangerous Pro-Tip: to remove **all** Acorn Apps at once: `acorn rm $(acorn apps -qa)`)
+> Dangerous Pro-Tip: to remove **all** Acorn apps at once: `acorn rm $(acorn apps -qa)`)
 
 ## What's next?
 
