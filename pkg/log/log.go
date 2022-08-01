@@ -214,6 +214,11 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 				ContainerName: name,
 				Err:           fmt.Errorf("failed to stream logs for container %s on pod %s/%s: %v", name, pod.Namespace, pod.Name, err),
 			}
+		} else if err == nil {
+			pod, err := options.PodClient.Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
+			if err == nil && (!pod.DeletionTimestamp.IsZero() || pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed) {
+				return nil
+			}
 		}
 		if lastTS != nil {
 			since = lastTS
@@ -276,7 +281,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 	eg.Go(func() error {
 		defer cancel()
 		_, err = podWatcher.ByName(ctx, pod.Namespace, pod.Name, func(pod *corev1.Pod) (bool, error) {
-			if !pod.DeletionTimestamp.IsZero() || pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+			if !pod.DeletionTimestamp.IsZero() {
 				return true, nil
 			}
 			for _, container := range pod.Spec.Containers {
@@ -284,7 +289,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 				if !isContainerLoggable(pod, container.Name) {
 					continue
 				}
-				if watching.shouldWatch("container", pod.Namespace, container.Name) {
+				if watching.shouldWatch("container", pod.Name, container.Name) {
 					eg.Go(func() error {
 						err := Container(ctx, pod, container.Name, output, options)
 						if err != nil {
@@ -304,7 +309,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 				if !isContainerLoggable(pod, container.Name) {
 					continue
 				}
-				if watching.shouldWatch("initcontainer", pod.Namespace, container.Name) {
+				if watching.shouldWatch("initcontainer", pod.Name, container.Name) {
 					eg.Go(func() error {
 						err := Container(ctx, pod, container.Name, output, options)
 						if err != nil {

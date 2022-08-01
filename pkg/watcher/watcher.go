@@ -132,34 +132,16 @@ func (w *Watcher[T]) ByObject(ctx context.Context, obj T, cb func(obj T) (bool, 
 }
 
 func (w *Watcher[T]) ByName(ctx context.Context, namespace, name string, cb func(obj T) (bool, error)) (def T, _ error) {
-	listObj, err := w.newListObj()
-	if err != nil {
-		return def, err
-	}
-
-	obj := typed.New[T]()
-	if err := w.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, obj); apierrors.IsNotFound(err) {
-	} else if err != nil {
-		return def, err
-	} else {
-		if done, err := cb(obj); done || err != nil {
-			return obj, err
-		}
-	}
-
-	rev := obj.GetResourceVersion()
-	return retryWatch(ctx, func() (watch.Interface, error) {
-		return w.client.Watch(ctx, listObj, &client.ListOptions{
-			Raw: &metav1.ListOptions{
-				ResourceVersion: rev,
-			},
-			FieldSelector: fields.OneTermEqualSelector("metadata.name", name),
-			Namespace:     namespace,
-		})
-	}, cb)
+	return w.bySelector(ctx, namespace, nil, fields.SelectorFromSet(map[string]string{
+		"metadata.name": name,
+	}), cb)
 }
 
 func (w *Watcher[T]) BySelector(ctx context.Context, namespace string, selector labels.Selector, cb func(obj T) (bool, error)) (def T, _ error) {
+	return w.bySelector(ctx, namespace, selector, nil, cb)
+}
+
+func (w *Watcher[T]) bySelector(ctx context.Context, namespace string, selector labels.Selector, fieldSelector fields.Selector, cb func(obj T) (bool, error)) (def T, _ error) {
 	listObj, err := w.newListObj()
 	if err != nil {
 		return def, err
@@ -168,6 +150,7 @@ func (w *Watcher[T]) BySelector(ctx context.Context, namespace string, selector 
 	err = w.client.List(ctx, listObj, &client.ListOptions{
 		Namespace:     namespace,
 		LabelSelector: selector,
+		FieldSelector: fieldSelector,
 	})
 	if err != nil {
 		return def, err
@@ -193,6 +176,7 @@ func (w *Watcher[T]) BySelector(ctx context.Context, namespace string, selector 
 	return retryWatch(ctx, func() (watch.Interface, error) {
 		return w.client.Watch(ctx, listObj, &client.ListOptions{
 			LabelSelector: selector,
+			FieldSelector: fieldSelector,
 			Namespace:     namespace,
 			Raw: &metav1.ListOptions{
 				ResourceVersion: rev,
