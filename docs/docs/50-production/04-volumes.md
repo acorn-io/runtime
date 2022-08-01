@@ -24,8 +24,10 @@ The `Volumes` line shows the volumes that will be created as part of the Acorn A
 To use a dynamically created volume from a StorageClass you can specify the `class`, `size`
 
 ```shell
-acorn run -v my-data [IMAGE]
+acorn run -v my-data,size=5G,class=fast [IMAGE]
 ```
+
+With the above command Acorn will create a volume with `5G` using the `fast` storage class in the cluster.
 
 ### Using precreated volumes
 
@@ -36,3 +38,5 @@ acorn run -v db-data:my-data [IMAGE]
 ```
 
 This Acorn App will use the volume named `db-data` as it's `my-data` volume.
+
+The volume will match the size and class of the pre-created PV `db-data`.

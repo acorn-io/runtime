@@ -68,11 +68,9 @@ A volume can also be exclusively mounted in a sidecar container.
 
 ## Ephemeral storage
 
-  \# todo - Update when we decide to keep the `ephemeral://` syntax or move to `volume: scratch: storageClass: "emptyDir"` syntax exclusively.
+There are two ways to create ephemeral scratch type of storage. This type of volume is useful when you are transforming data perhaps during a restore process.
 
-  There are two ways to create ephemeral scratch type of storage. This type of volume is useful when you are transforming data perhaps during a restore process.
-
-  A shorthand way to define the volume is:
+A shorthand way to define the volume is:
 
   ```cue
 containers: {
@@ -96,15 +94,44 @@ containers: {
         }
     }
 }
+
 volumes: {
     "scratch-data": {
-        class: "emptyDir" 
+        class: "ephemeral" 
     }
 }
 ```
+
+The `ephemeral` class is a special case that Acorn will handle behind the scenes to create an `emptyDir` volume.
 
 ## Volumes with jobs
 
 Volumes can also be mounted between app containers and job containers.
 
- \# todo
+```cue
+containers: {
+    db: {
+        // ...
+        dirs: {
+            "/var/lib/db_data": "volume://db-data"
+        }
+        // ...
+    }
+}
+
+volumes: {
+    "db-data": {}
+    "backups": {}
+}
+
+jobs: {
+    backups: {
+        // ...
+        dirs: {
+            "/backups": "volume://backups"
+            "/var/lib/db_data": "volume://db-data"
+        }
+        // ...
+    }
+}
+```

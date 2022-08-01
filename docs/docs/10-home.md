@@ -16,7 +16,6 @@ Acorn is an application packaging and deployment framework for Kubernetes. It in
 
 Developers create Acorn images using an application configuration language called the Acorn Markup Language (AML). AML describes your application without the boilerplate of Kubernetes YAML files. You can use the Acorn CLI to build and deploy Acorn images and manage the resulting applications running on Kubernetes.
 
-
 ## Quickstart
 
 ### Prerequisites
@@ -92,11 +91,11 @@ acorn apps small-butterfly
 
 In Chrome or Firefox browsers you can now open the URL listed under the endpoints column to see our app.
 
-Next you can learn more about what you can do with Acorn in the [get started](/get-started/running-an-acorn) guide.
+Next you can learn more about what you can do with Acorn in the [get started](/getting-started) guide.
 
 ## Next steps
 
 * [Installation](/installation/installing)
-* [Get Started](/get-started/running-an-acorn)
+* [Get Started](/getting-started)
 * [Authoring Acornfiles](/authoring/overview)
 * [Running Acorn Apps in Production](/production/args-and-secrets)

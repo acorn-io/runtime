@@ -2,20 +2,22 @@
 title: Getting Started
 ---
 
-In this walkthrough you will build a Python web app, package it up and deploy it as an Acorn App.  
+In this walk through you will build a Python web app, package it up and deploy it as an Acorn App.  
 The app will interact with Redis and Postgres, which both will be packaged along with the web app in a single Acorn Image.
 
 > The guide makes use of Python, Redis and Postgres here, but you don't need to be familiar with those technologies, as the examples should be understandable without preliminary knowledge in those.
+
+You can follow along or clone the [flask-redis-postgres source](https://github.com/acorn-io/docs-examples) from GitHub.
 
 ## Prerequisites
 
 To run this example, you will need to have the Acorn CLI installed and administrative access to a Kubernetes cluster.
 Here you can find some documentation on how to get there:
 
-- [Acorn CLI](/30-Installation/01-installing.md)
+- [Acorn CLI](/installation/installing)
 - Kubernetes: Acorn works well with local development instances like provided by [Rancher Desktop](https://docs.rancherdesktop.io/getting-started/installation), [K3s](https://rancher.com/docs/k3s/latest/en/quick-start/), [k3d](https://k3d.io/v5.4.4/#installation) or [Docker Desktop](https://www.docker.com/get-started/). It also works with any other Kubernetes distribution, for example a managed instance hosted in a major cloud provider or a cluster provided by your work environment.
 
-## 0. Prepare the cluster
+## Step 1. Prepare the cluster
 
 Installing the Acorn server-side components into your cluster is as easy as running
 
@@ -23,13 +25,13 @@ Installing the Acorn server-side components into your cluster is as easy as runn
 acorn install
 ```
 
-> Note: Installing Acorn into a Kubernetes cluster requires cluster-admin privileges. Please see our [architecture overview](/60-Architecture/01-ten-thousand-foot-view.md) to learn what components will be deployed.
+> Note: Installing Acorn into a Kubernetes cluster requires cluster-admin privileges. Please see our [architecture overview](/architecture/ten-thousand-foot-view) to learn what components will be deployed.
 
-## 1. Create your App
+## Step 2. Create your App
 
 Let's start by creating a few files that compose our Python web app.
 
-```bash
+```shell
 # Create a directory structure for our web app
 mkdir acorn-test-app
 
@@ -126,9 +128,9 @@ EXPOSE 5000
 CMD ["flask", "run"]
 ```
 
-## 2. Author your Acornfile
+## Step 3. Author your Acornfile
 
-> Don't get scared by the wall of configuration below. It's demonstrating a lot of features that you could totally live without for a simple app.
+Create your Acornfile with the following contents. Each item will be explained below, this file demonstrates a lot of what Acorn can do.
 
 ```cue title="acorn-test-app/Acornfile"
 args: {
@@ -237,23 +239,21 @@ secrets: {
   - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
     - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
 
-## 3. Run your Acorn App in normal operations mode
+## Step 4. Run your Acorn App in normal operations mode
 
-To run your Acorn App in "normal" operations mode, just run
+To run your Acorn App just run:
 
 ```bash
-acorn run .
+acorn run -n awesome-acorn .
 ```
 
 or customize the welcome text argument via
 
 ```bash
-acorn run . --welcome "Let's Get Started"
+acorn run -n awesome-acorn . --welcome "Let's Get Started"
 ```
 
-There's also a built-in development mode. Read on.
-
-## 4. Access your App
+## Step 5. Access your App
 
 Due to the configuration `ports: publish: "5000/http"` under `containers.app`, our web app will be exposed outside of our Kubernetes cluster using the cluster's ingress controller.
 Checkout the running apps via
@@ -272,12 +272,15 @@ You probably already noticed the link right there in the `ENDPOINTS` column. It 
 
 <!-- FIXME: do we need a note on adding a port to the ingress controller here? -->
 
-## 5. Development Mode
+## Step 6. Development Mode
 
-Acorn has a built-in development mode that can be enabled when running an Acorn Image via
+Now that we have a way to package and deploy our app, lets look at how we can configure the Acornfile to enable the development flow. In this mode, we will be able to make changes and see them updated inside the app container in real time.
+
+To enable the Acorn development mode, first stop the app and then re-run with the `-i` flag.
 
 ```bash
-acorn run -i .
+acorn stop awesome-acorn
+acorn run -n awesome-acorn -i .
 ```
 
 In development mode, Acorn will watch the local directory for changes and synchronize them to the running Acorn App.
@@ -320,19 +323,9 @@ page_template = '''
         '''
 ```
 
-You will see the change applied when accessing the endpoint again.
+You will see the change applied when when you reload the application's page in your browser.
 
-## 6. Update the Acornfile and push the changes to the running App
-
-When not using the development mode, your typical deployment cycle involves at least building the image and deploying it (optionally pushing it to a registry in between).
-These steps can be consolidated into a single command:
-
-```bash
-# Assuming that your Acorn App instance is called "awesome-acorn"
-acorn update --image $(acorn build .) awesome-acorn
-```
-
-## 7. Build and Push your Acorn Image
+## Step 7. Build and Push your Acorn Image
 
 Ready to release your Acorn App into the wild?
 Let's package it up in a single Acorn Image and distribute it via an OCI registry (you could use DockerHub for that):
@@ -354,7 +347,7 @@ Now, everyone else can run your Acorn Image via
 acorn run --name awesome-acorn my.registry.com/acorn/getting-started:v0.0.1
 ```
 
-## Play around with it
+## Interacting with an Acorn App
 
 ### Execute a command inside the running container
 
@@ -389,7 +382,7 @@ quickstart-pg-pass-sqlv9   token     token     mssl8692sk47tfklx9bqnqflw7pqrk2ld
 
 That's easy!
 
-```bash
+```shell
 acorn stop awesome-acorn
 ```
 
@@ -412,11 +405,6 @@ acorn rm awesome-acorn
 ## What's next?
 
 <!-- TODO:- Checkout some other sample Acorns -->
-- [Explore all the other awesome Acorn commands](/100-Reference/01-command-line/acorn.md)
-- [Read through the Acornfile reference](../100-Reference/03-Acornfile.md)
-- [Have a look what makes up Acorn](/60-Architecture/01-ten-thousand-foot-view.md)
-- Just continue reading on the next pages!
-    Next, try the Sample apps with Compose
-    Explore the full list of Compose commands
-    Compose configuration file reference
-    To learn more about volumes and bind mounts, see Manage data in Docker
+- [Explore all the other awesome Acorn commands](/reference/command-line/acorn)
+- [Read through the Acornfile reference](/reference/acornfile)
+- [Have a look what makes up Acorn](/architecture/ten-thousand-foot-view)
