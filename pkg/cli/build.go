@@ -6,6 +6,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -27,6 +28,7 @@ acorn build .`,
 }
 
 type Build struct {
+	Push     bool     `usage:"Push image after build"`
 	File     string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
 	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
 	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
@@ -34,6 +36,10 @@ type Build struct {
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
+	if s.Push && len(s.Tag) == 0 || s.Tag[0] == "" {
+		return fmt.Errorf("--push must be used with --tag")
+	}
+
 	c, err := client.Default()
 	if err != nil {
 		return err
@@ -71,6 +77,23 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if err := merr.NewErrors(errs...); err != nil {
+		return err
+	}
+
 	fmt.Println(image.ID)
-	return merr.NewErrors(errs...)
+
+	if s.Push {
+		for _, tag := range s.Tag {
+			prog, err := c.ImagePush(cmd.Context(), tag, nil)
+			if err != nil {
+				return err
+			}
+			if err := progressbar.Print(prog); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
