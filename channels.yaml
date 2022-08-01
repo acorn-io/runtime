@@ -1,0 +1,11 @@
+acorn:
+  channels:
+  - name: latest
+    latestRegexp: .*
+    excludeRegexp: ^[^+]+-
+  - name: testing
+    latestRegexp: .*
+  github:
+    owner: acorn-io
+    repo: acorn
+  redirectBase: https://github.com/acorn-io/acorn/releases/tag/
