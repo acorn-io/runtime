@@ -21,8 +21,7 @@ var (
 
 	// AcornDNSEndpointDefault will be overridden at build time for releases
 	AcornDNSEndpointDefault = "https://staging-dns.acrn.io/v1"
-	// AcornDNSStateDefault will be overridden at build time for releases
-	AcornDNSStateDefault = "disabled"
+	AcornDNSStateDefault    = "auto"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
