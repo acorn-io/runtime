@@ -4,7 +4,7 @@ title: Volumes
 
 ## Configuring volumes at runtime
 
-Acorn Images can define volumes to see which volumes are available for an Acorn Image you can run `--help` on the image.
+Acorn images can define volumes to see which volumes are available for an Acorn image you can run `--help` on the image.
 
 ```shell
 acorn run [IMAGE] --help
@@ -12,7 +12,7 @@ acorn run [IMAGE] --help
 #Volumes: my-data
 ```
 
-The `Volumes` line shows the volumes that will be created as part of the Acorn App deployment. Each volume will use the `default` StorageClass of the cluster and request 10GB of space. This can be customized at runtime by passing `-v` arguments.
+The `Volumes` line shows the volumes that will be created as part of the Acorn app deployment. Each volume will use the `default` StorageClass of the cluster and request 10GB of space. This can be customized at runtime by passing `-v` arguments.
 
 |Default| Value|
 |-------| -----|
@@ -37,6 +37,6 @@ You can use a precreated volumes by binding the volume at runtime.
 acorn run -v db-data:my-data [IMAGE]
 ```
 
-This Acorn App will use the volume named `db-data` as it's `my-data` volume.
+This Acorn app will use the volume named `db-data` as it's `my-data` volume.
 
 The volume will match the size and class of the pre-created PV `db-data`.

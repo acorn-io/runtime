@@ -20,14 +20,14 @@ By design, the Acorn CLI only interacts with the `api.acorn.io` API group in Kub
 
 Upon receiving requests from the CLI, the Acorn API server will take various actions. Here are a few examples of such actions:
 
-- To launch an Acorn App, the Acorn API server will create an instance of the `AppInstance.internal.acorn.io` CRD.
-- To build an Acorn Image, where the CLI is expecting to have a long-lived interactive connection to the image building service (which is Buildkit), the Acorn API server just acts as a proxy.
-- To display details about Acorn Images, it will make requests to internal and external registries.
+- To launch an Acorn app, the Acorn API server will create an instance of the `AppInstance.internal.acorn.io` CRD.
+- To build an Acorn image, where the CLI is expecting to have a long-lived interactive connection to the image building service (which is Buildkit), the Acorn API server just acts as a proxy.
+- To display details about Acorn images, it will make requests to internal and external registries.
 
 ### Controller
 
-The Acorn Controller is responsible for translating Acorn Apps into actual Kubernetes resources such as Deployments, Services, and PersistentVolumes. It handles the entire lifecycle of such applications and ensures that the Kubernetes resources remain in sync with the Acorn App definition.
+The Acorn Controller is responsible for translating Acorn apps into actual Kubernetes resources such as Deployments, Services, and PersistentVolumes. It handles the entire lifecycle of such applications and ensures that the Kubernetes resources remain in sync with the Acorn app definition.
 
 ### Buildkit and Internal Registry
 
-The image building service, Buildkit, and an internal image registry are deployed as sibling containers in a single pod. This simplifies the communication between the two components when Buildkit is building new Acorn Images.
+The image building service, Buildkit, and an internal image registry are deployed as sibling containers in a single pod. This simplifies the communication between the two components when Buildkit is building new Acorn images.

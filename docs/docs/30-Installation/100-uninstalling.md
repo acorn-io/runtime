@@ -2,7 +2,7 @@
 title: Uninstalling
 ---
 
-The following command will uninstall the Acorn components along with the Acorn Apps deployed by Acorn. When you run the command you will be shown the components that will be removed and remain.
+The following command will uninstall the Acorn components along with the Acorn apps deployed by Acorn. When you run the command you will be shown the components that will be removed and remain.
 
 ```shell
 acorn uninstall

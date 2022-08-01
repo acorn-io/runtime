@@ -2,7 +2,7 @@
 title: Upgrades
 ---
 
-When upgrading an Acorn App, you do not need to pass in all arguments on every update. The args are persisted between runs and only the passed in updates are changed.
+When upgrading an Acorn app, you do not need to pass in all arguments on every update. The args are persisted between runs and only the passed in updates are changed.
 
 ## What happens during an upgrade
 

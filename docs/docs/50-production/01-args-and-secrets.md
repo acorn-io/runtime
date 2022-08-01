@@ -4,7 +4,7 @@ title: Args and Secrets
 
 By design authors will build Acorns Images with defaults for the common use-case, but every deployment has some organization- or environment-specific configurations. Acorn allows consumers to customize behavior at runtime.
 
-To learn which arguments are available for the Acorn Image you can run:
+To learn which arguments are available for the Acorn image you can run:
 
 ```shell
 acorn run [IMAGE] --help
@@ -36,7 +36,7 @@ This is assuming that the Acorn defines a `config` arg where the contents should
 
 To securely manage sensitive information while running Acorns the best practice is to use secrets. To accomplish this, the user needs to pre-create secrets before running the app.
 
-### Discovering which secrets exist in the Acorn Image
+### Discovering which secrets exist in the Acorn image
 
 To see which secrets will be created when the Acorn is deployed pass the `--help` flag on the Acorn image.
 

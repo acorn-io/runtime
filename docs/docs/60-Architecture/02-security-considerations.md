@@ -40,14 +40,14 @@ Users will require CRUD access to all types from the `api.acorn.io` API group wi
 "infos"
 ```
 
-Optionally, they might need access to create secrets and possibly CertManager objects for TLS certs in the users Acorn namespace. This is if the app team running the Acorn App will be creating secrets to pass in data.
+Optionally, they might need access to create secrets and possibly CertManager objects for TLS certs in the users Acorn namespace. This is if the app team running the Acorn app will be creating secrets to pass in data.
 
 Users can be given access to multiple Acorn namespaces and will then be able to switch between them from the CLI.
 
 ## Credentials
 
 Credentials refer to credentials used to pull from and/or push to OCI registries.
-In the future credentials in Acorn may be used for different types of services, but at the moment they are only used for OCI registries where Acorn Images are stored.
+In the future credentials in Acorn may be used for different types of services, but at the moment they are only used for OCI registries where Acorn images are stored.
 
 ### Storage
 
@@ -58,9 +58,9 @@ This makes it safe to share credentials in a team setting.
 
 ### Scope/Access
 
-Credentials are valid for all Acorn Apps and Acorn Images in a namespace.
-Any user that has privileges to push or pull and Acorn Image will implicitly be using the credentials stored in that namespace.
-Similarly any Acorn App that is deployed will use the credentials available in the namespace to pull the Acorn Image and referenced Docker images.
+Credentials are valid for all Acorn apps and Acorn images in a namespace.
+Any user that has privileges to push or pull and Acorn image will implicitly be using the credentials stored in that namespace.
+Similarly any Acorn app that is deployed will use the credentials available in the namespace to pull the Acorn image and referenced Docker images.
 
 ### CLI
 
@@ -68,19 +68,19 @@ Credentials are managed with the [`acorn credential`](/reference/command-line/ac
 
 ## Networking
 
-### Acorn App Network scopes
+### Acorn app Network scopes
 
 Acorn can be used to package applications that can be used standalone, with other Acorns, and made available to non Acorn based workloads.
 Modern day applications are loosely coupled over networking paths.
 
 Terminology:
 
-- Acorn Image - An application with all its resources, dependencies and configuration, defined by a single Acornfile and packaged as an OCI image
-- Acorn App - An instantiation of an Acorn Image
+- Acorn image - An application with all its resources, dependencies and configuration, defined by a single Acornfile and packaged as an OCI image
+- Acorn app - An instantiation of an Acorn image
 
 ### Internal Acorn communication
 
-When composing an Acorn App that will only need to communicate with itself, you can define the `ports` section on the containers in the app.
+When composing an Acorn app that will only need to communicate with itself, you can define the `ports` section on the containers in the app.
 
 ```cue
 containers: {
@@ -95,11 +95,11 @@ containers: {
 }
 ```
 
-In the example above other containers within the Acorn App would be able to communicate with `my-app` over port `4444`.
+In the example above other containers within the Acorn app would be able to communicate with `my-app` over port `4444`.
 
-### External Acorn App communications
+### External Acorn app communications
 
-For services running outside of the Acorn App to communicate with your services, you need to expose the ports. Building on the above example.
+For services running outside of the Acorn app to communicate with your services, you need to expose the ports. Building on the above example.
 
 ```cue
 containers: {
@@ -115,17 +115,17 @@ containers: {
 }
 ```
 
-This will make it so workloads on the same cluster can communicate with your Acorn App on port 80.
+This will make it so workloads on the same cluster can communicate with your Acorn app on port 80.
 
 ### Publishing
 
-If you need to expose your Acorn App to users and workloads outside of your cluster, you will need to publish your services.
+If you need to expose your Acorn app to users and workloads outside of your cluster, you will need to publish your services.
 
 By default, all HTTP services are automatically published via the underlying Ingress controller. To publish no ports you can use `-p none`.
 
 // Note this is going to go through a major refactor and likely to change, but the concept holds.
 
-Publishing services is a runtime level decision for the user to make. If a user wants to publish all exposed ports when launching the Acorn App the `-P` flag is used.
+Publishing services is a runtime level decision for the user to make. If a user wants to publish all exposed ports when launching the Acorn app the `-P` flag is used.
 
 ```shell
 acorn run -P [APP-IMAGE]
@@ -141,7 +141,7 @@ acorn run -p my-app.example.com:my-app [APP-IMAGE]
 
 That will expose the application under the hostname `my-app.example.com`. There is no need to pass a publish flag.
 
-To see which services in your Acorn App can be published run `acorn run [APP-IMAGE] --help`
+To see which services in your Acorn app can be published run `acorn run [APP-IMAGE] --help`
 
 ```shell
 > acorn run [APP-IMAGE] --help
