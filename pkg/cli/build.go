@@ -36,7 +36,7 @@ type Build struct {
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
-	if s.Push && len(s.Tag) == 0 || s.Tag[0] == "" {
+	if s.Push && (len(s.Tag) == 0 || s.Tag[0] == "") {
 		return fmt.Errorf("--push must be used with --tag")
 	}
 
