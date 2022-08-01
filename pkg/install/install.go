@@ -14,11 +14,13 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install/progress"
 	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	labels2 "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/podstatus"
 	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/merr"
@@ -26,7 +28,9 @@ import (
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -138,6 +142,14 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			return err
 		}
 
+		if ok, err := config.IsDockerDesktop(ctx, kclient); err != nil {
+			return err
+		} else if ok {
+			if err := installNginx(ctx, opts.Progress, kclient, apply); err != nil {
+				return err
+			}
+		}
+
 		if err := waitController(ctx, opts.Progress, *opts.ControllerReplicas, image, kclient); err != nil {
 			return err
 		}
@@ -145,10 +157,75 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, kclient); err != nil {
 			return err
 		}
+
 	}
 
 	pterm.Success.Println("Installation done")
 	return nil
+}
+
+func NGINXResources() (result []kclient.Object, _ error) {
+	objs, err := nginxResources()
+	if err != nil {
+		return nil, err
+	}
+	return typed.MapSlice(objs, func(obj runtime.Object) kclient.Object {
+		return obj.(kclient.Object)
+	}), nil
+}
+
+func nginxResources() (result []runtime.Object, _ error) {
+	objs, err := objectsFromFile("nginx.yaml")
+	if err != nil {
+		return nil, err
+	}
+	for _, obj := range objs {
+		if obj.GetObjectKind().GroupVersionKind().Kind == "IngressClass" {
+			m, err := meta.Accessor(obj)
+			if err != nil {
+				return nil, err
+			}
+
+			anno := m.GetAnnotations()
+			if anno == nil {
+				anno = map[string]string{}
+			}
+			anno["ingressclass.kubernetes.io/is-default-class"] = "true"
+			m.SetAnnotations(anno)
+
+			labels := m.GetLabels()
+			if labels == nil {
+				labels = map[string]string{}
+			}
+			labels[labels2.AcornManaged] = "true"
+			m.SetLabels(labels)
+		}
+	}
+
+	return objs, nil
+}
+
+func installNginx(ctx context.Context, p progress.Builder, client kclient.WithWatch, apply apply.Apply) (err error) {
+	pb := p.New("Installing NGINX Ingress Controller")
+	defer func() {
+		_ = pb.Fail(err)
+	}()
+
+	ingressClassList := &networkingv1.IngressClassList{}
+	err = client.List(ctx, ingressClassList)
+	if err != nil {
+		return err
+	}
+	if len(ingressClassList.Items) > 0 {
+		return nil
+	}
+
+	objs, err := nginxResources()
+	if err != nil {
+		return err
+	}
+
+	return apply.WithSetID("acorn-install-nginx").ApplyObjects(objs...)
 }
 
 func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name string, scale int32) error {
