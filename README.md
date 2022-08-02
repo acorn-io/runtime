@@ -5,7 +5,7 @@
 A simple application delpoyment framework for Kubernetes.
 
 - One artifact across dev, test, and production
-- CLI molded after Docker
+- CLI modeled after Docker
 - Runs on any Kubernetes cluster
 
 | :memo: | Acorn is a work in progress. Features will evolve over time and there may be breaking changes between releases. Please give us your feedback in Slack, Discussions, or Issues! |

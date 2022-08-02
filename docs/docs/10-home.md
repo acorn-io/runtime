@@ -98,4 +98,4 @@ Next you can learn more about what you can do with Acorn in the [getting started
 * [Installation](/installation/installing)
 * [Getting Started](/getting-started)
 * [Authoring Acornfiles](/authoring/overview)
-* [Running Acorn apps in Production](/production/args-and-secrets)
+* [Running Acorn Apps](/running/args-and-secrets)
