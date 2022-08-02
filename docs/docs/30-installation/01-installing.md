@@ -18,7 +18,7 @@ The preferred method for installing on Mac and Linux is to use the brew package 
 You can install the latest Acorn CLI with the following:
 
 ```shell
-brew install acorn-io/acorn/acorn
+brew install acorn-io/cli/acorn
 ```
 
 You can also follow the binary installation below.

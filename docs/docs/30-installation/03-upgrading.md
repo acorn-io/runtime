@@ -10,7 +10,7 @@ In order to upgrade Acorn on a Kubernetes cluster you must first download an upd
 
 ```shell
 brew update
-brew upgrade acorn-io/acorn/acorn
+brew upgrade acorn-io/cli/acorn
 ```
 
 ### Binary

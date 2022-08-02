@@ -30,7 +30,7 @@ For Windows and binary installs see the [installation docs](/installation/instal
 
 ```shell
 # Linux or macOS
-brew install acorn-io/acorn/acorn
+brew install acorn-io/cli/acorn
 
 # verify binary (assume local directory)
 acorn -v
