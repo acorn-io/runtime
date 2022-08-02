@@ -2,7 +2,7 @@
 title: TLS Certificates
 ---
 
-Services exposing HTTP endpoints can be protected by TLS certificates. In the
+Applications that publish HTTP endpoints can be protected by TLS certificates. In the
 future, Acorn will provide built-in mechanisms to automatically provide certificates
 for each endpoint. Today, adding a certificate must follow the manual approach.
 
