@@ -67,9 +67,44 @@ containers: {
 
 ## Network ports
 
+### Basic definition
+
 Most containers can be interacted with over the network. In order for containers to be reached by other containers and applications, the network ports must be defined as part of the container.
 
-There are two scopes when defining ports in the container object `ports` and `expose`. The `ports` setting is for services that are meant to only be reached from other containers and jobs within the Acorn app.
+A port definition is:
+
+```shell
+[NAME]:<PORT>[/TYPE]
+```
+
+Where:
+
+* `NAME`: is an optional name for the port, like `db` or `metrics`.
+* `PORT`: is required numeric value of the port.
+* `TYPE`: is an optional value of `UDP`, `TCP`, or `HTTP`.
+
+An example of a named port:
+
+```cue
+containers: {
+    db: {
+        image: "mysql"
+        ports: expose: "mysql:3306/tcp"
+    }
+}
+```
+
+When the user runs the built Acorn image, they can reference this port by name `--expose sql:3306:mysql:3306`.
+
+### Scopes
+
+As an author, there are three scopes used to define the ports **default** access behavior `internal`, `expose`, and `publish`. These settings can be changed at runtime by the operator.
+
+| Scope | Accessibility |
+| ------| --------------|
+| `internal`| Containers within the Acorn image (default)|
+| `expose` | Containers running across the cluster |
+| `publish` | Accessible outside the cluster by consumers |
 
 ```cue
 containers: {
@@ -82,15 +117,18 @@ containers: {
 }
 ```
 
-The above example defines a port `5000` that exposes an HTTP service. This port will not be published out to the world.
+The above example defines an HTTP port `5000` accessible to other containers defined in this Acorn image.
 
-The next example shows the `expose` parameter, used to define ports that are meant to be accessed outside of the Acorn app or published outside the cluster.
+The next example shows the `expose` and `publish` settings, used to define ports that are meant to be accessed outside of the Acorn app or published outside the cluster. If an Acorn image is going to provide a network service to multiple apps, something like a database, you will likely want to expose the port so it can be linked to other Acorn apps.
 
 ```cue
 containers: {
     "my-webapp": {
         image: "nginx"
-        ports: publish: "8080/http"
+        ports: {
+            expose: "5001/http"
+            publish: "8080/http"
+        }
     }
     database: {
         image: "mysql"
@@ -99,7 +137,7 @@ containers: {
 }
 ```
 
-This Acornfile defines two containers, one called `my-webapp` and the other `database`. The `my-webapp` container is exposing port 8080. When launching this Acorn the port can be published outside the cluster or accessed by linked Acorns.
+This Acornfile defines two containers, one called `my-webapp` and the other `database`. The `my-webapp` container is exposing port 8080 outside of the cluster and port 5001 to apps running on the cluster. When launching this Acorn the port can be published outside the cluster or accessed by linked Acorns.
 
 In the database container, we are using the `ports` parameter because only the my-webapp container will communicate with the database.
 
@@ -175,9 +213,9 @@ There are three types of probes: `readiness`, `liveness`, and `startup`. Probes 
 
 Each probe type has the following parameters that can be optionally set.
 
-| Parameter | Defalut | Description |
+| Parameter | Default | Description |
 | ----------|---------|-------------|
-| `intialDelaySeconds`| 0 |  Number of seconds to wait after the container is started before probes are initiated. |
+| `initialDelaySeconds`| 0 |  Number of seconds to wait after the container is started before probes are initiated. |
 | `periodSeconds` | 10 | Number of seconds between probe attempts. |
 | `timeoutSeconds` | 1 | Number of seconds before the probe times out. |
 | `successThreshold` | 1 | Number of consecutive successful probes before considering the container healthy. |

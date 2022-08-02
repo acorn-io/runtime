@@ -4,34 +4,54 @@ title: Networking
 
 Applications will need to be reachable by their users. This can be users on the internet, within the organization, and other application teams. When deploying the Acorn app, there is a lot of flexibility.
 
-### Default
+## Defaults
 
-By default Acorn apps run with the Acorn author's default configuration.
+By default Acorn apps run with the Acornfile author's default configurations.
 
-`acorn run registry.example.com/myorg/image`
+```shell
+acorn run registry.example.com/myorg/image
+```
 
-### Selectively publish ports
+### Publish all ports
 
-When publishing specific ports, the operator will need to specify all ports to be published. Any unspecified port will default to internal and be unreachable outside of the Acorn.
+To publish all ports you can run with `-P` or the long form `--publish-all`.
 
-To learn which ports are available to publish, look at the image help.
+### Publish no ports
 
-`acorn run registry.example.com/myorg/image --help`
+To launch the Acorn app with all ports internal, you can launch with the `-P none` or `--publish-all=none`.
 
-There will be a line `Ports: ...` that outlines the ports. To expose the port run
+## Publish individual ports
 
-`acorn run -p 3306:3306/tcp registry.example.com/myorg/image`
+Publishing ports makes the services available outside of the cluster. HTTP ports will be exposed via the layer 7 ingress and TCP/UDP ports will be exposed via service load balancers.
 
-### Publish HTTP Ports
+| Flag value | Description |
+| ---------- | ----------- |
+| `-p 80` | Publish port 80/tcp in the Acorn to port 80/tcp as a service load balancer. |
+| `-p 80/http` | Publish port 80/http in the Acorn to a random hostname. |
+| `-p 81:80` | Publish 80/tcp in the Acorn to 81/tcp as a service load balancer. |
+| `-p 81:80/tcp` | Equivalent to `-p 81:80`. |
+| `-p app:80` | Publish container `app` port 80/tcp in the Acorn to 80/tcp as a service load balancer. |
+| `-p app:80/tcp` | Equivalent to `-p app:80`. |
+| `-p app.example.com:app` | Publish container `app` protocol HTTP from the Acorn to external name `app.example.com`. |
+| `-p app.example.com:app:80` | Publish container `app` port 80 from the Acorn to external name `app.example.com`. |
+| `-p app:80` | Publish container `app` port 80 from the Acorn. |
 
-To publish an HTTP port on a domain name, you use the `-p` option on the run subcommand.
+## Expose individual ports
 
-`acorn run -p my-app.example.com:frontend registry.example.com/myorg/image`
+Exposing ports makes the services available to applications and other Acorns running on the cluster.
 
-<!-- TODO: add --publish-all -->
-<!-- TODO: what about --expose? -->
+| Flag value | Description |
+| ---------- | ----------- |
+| `--expose 80` | Expose port 80/tcp in the Acorn to port 80/tcp as a cluster service. |
+| `--expose 81:80` | Expose 80/tcp in the Acorn to 81/tcp as a cluster service. |
+| `--expose 81:80/tcp` | Equivalent to `--expose 81:80`. |
+| `--expose 81:80/http` | Expose 80/http in the Acorn to 81 as a cluster service. |
+| `--expose app:80` | Expose container `app` port 80/tcp in the Acorn to 80/tcp as a cluster service. |
+| `--expose app:80/tcp` | Equivalent to `--expose app:80`. |
+| `--expose web:80:app:80` | Expose container `app` port 80/tcp as cluster service called `web` on port 80/tcp. |
 
-### DNS
+## DNS
+
 When an Acorn app has published a port, it will be accessible on a unique endpoint. This endpoint can be seen in the output of `acorn app`:
 
 ```shell
@@ -41,7 +61,8 @@ purple-water     my-org/my-acorn:v1    2         2            50s ago   http://p
 
 You have significant control over the domain name in your endpoints, as described below.
 
-#### Cluster Domain
+### Cluster Domain
+
 Your cluster domain is the domain used as the suffix for all your Acorn apps' endpoints.
 
 If you're running a local cluster, such as Docker Desktop, Rancher Desktop, or Minikube, the cluster domain will be `local.on-acorn.io` and will always resolve to `localhost`.
@@ -50,7 +71,7 @@ If you are running any other type of cluster, Acorn provides a DNS service that 
 
 :::caution
 
-The on-acorn.io DNS service is a public service ran on the Internet. Your Acorn installation must have outbound access to https://dns.acrn.io to access it.
+The on-acorn.io DNS service is a public service ran on the Internet. Your Acorn installation must have outbound access to <https://dns.acrn.io> to access it.
 
 To create and maintain public DNS entries, the DNS service expects your Acorn installation to make on-demand and periodic renewal requests to it.
 
@@ -58,27 +79,37 @@ If your Acorn installation ceases to make requests to the DNS service, your DNS 
 :::
 
 You can choose to use your own cluster domain instead of the generated domain like so:
+
 ```shell
 acorn install --cluster-domain my-company.com
 ```
+
 If you do so, you must manage your own DNS entries.
 
 You can turn off the Acorn DNS feature as part of installation (or after by rerunning the command):
+
 ```shell
 acorn install --acorn-dns disabled
 ```
+
 This will prevent Acorn from reserving a domain for your cluster. If you disable the DNS service and haven't defined a custom cluster domain, the `local.on-acorn.io` domain will be used as a fallback.
 
-#### Naming Conventions
+### Naming Conventions
+
 The endpoints generated for your Acorn apps follow this convention:
+
 ```
 <container name>.<app name>.<namespace>.<cluster domain>
 ```
+
 Here's an example:
+
 ```
 web.purple-water.my-namespace.73fh5y.on-acorn.io
 ```
+
 Let's break that FQDN down:
+
 - **web** is the name of the container from your Acorn app. If the container name is "*default*", it will be omitted from the FQDN.
 - **purple-water** is the generated name of your Acorn app. You can control this by supplying a name through the `--name` flag.
 - **my-namespace** is the namespace you deployed your Acorn app into. By default, we use the `acorn` namespace. If you are using this default, it is omitted from the FQDN.
@@ -88,4 +119,4 @@ To highlight the level of control this gives you, consider the following:
 
 If you set your cluster domain to `my-company.com`, deployed into the default `acorn` namespace, named your app `blog`, and the container name in the Acornfile was `default`, the published endpoint for your app would be: `http://blog.my-company.com`
 
-In addition to this method of controlling your endpoint, you can publish to an explicit external name using the `--publish` flag. See the ports section for more details.
+In addition to this method of controlling your endpoint, you can publish to an explicit external name using the `--publish` flag. See the [publishing ports](#publish-individual-ports) section for more details.

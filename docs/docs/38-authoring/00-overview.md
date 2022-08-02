@@ -62,8 +62,6 @@ containers: {
 }
 ```
 
-
-
 ### Lists
 
 The other main building block is a list.
@@ -198,7 +196,26 @@ localData: {
 }
 ```
 
-In the above example, `containers.app.ports` would be `3306` along with `localData.exposedServicePort`. Because of scoping, it would not be possible in the above example to set any value under localData to a value of `port`(3307) without reconfiguring the localData object.
+In the above example, `containers.app.ports` would be `3306` along with `localData.exposedServicePort`.
+
+#### Aliases
+
+Because of scoping in the previous example, it would not be possible in the above example to set any value under localData to a value of `port`(3307). One way to address this is to use the `let` operator to alias the port variable.
+
+```cue
+let topLevelPort = port
+port: 3307
+containers: app: {
+    ports: localData.port // Evaluates to 3306
+}
+data: port // Evaluates to 3307
+localData: {
+    port: 3306
+    exposedServicePort: topLevelPort // Evaluates to 3306
+}
+```
+
+In the example the top level `port` variable is aliased to `topLevelPort` and assigned to `localData.exposedServicePort`.
 
 ### String interpolation
 
@@ -274,6 +291,7 @@ All the basic math and comparison operators you'd find in a typical programming 
 | And | `&&` | `true && false` | `false` |
 
 `-` can also be used to negate a value:
+
 ```cue
 a: 42
 b: -a // -42
@@ -307,6 +325,10 @@ Strings can be concatenated, repeated, and compared:
 | Matches regular expression | `=~` | `"hi bob" =~ "^h"` | `true` |
 | Does not match regular expression | `!~` | `"hi bob" !~ "^h"` | `false` |
 
+### Regular Expressions
+
+Regular expression syntax is the one accepted by RE2 outlined here [https://github.com/google/re2/wiki/Syntax](https://github.com/google/re2/wiki/Syntax). One exception is `\C` is not accepted.
+
 ## Conditionals
 
 ### If statements
@@ -323,9 +345,9 @@ if localData > 1 {
 }
 ```
 
-`if` statments can be added at any level or nested within each other, but there is no `else` in this format.
+`if` statements can be added at any level or nested within each other, but there is no `else` in this format.
 
-### If-else espressions
+### If-else expressions
 
 Ternary or "if-else" expressions are available through a built-in function which takes 3 arguments:
 
@@ -407,32 +429,6 @@ localData: {
   """
 }
 ```
-
-## Templates
-
-Templates provide a way to add conditional fields to existing stucts.
-
-```cue
-args: dev: false
-containers: {
-    app: {}
-    db: {}
-}
-
-if !args.dev {
-    containers: [string]: {
-        probes: [
-            // ... 
-        ]
-    }
-
-    containers: [Name= =~ "db"]: {
-        ports: internal: "5000/http" // Metrics port
-    }
-}
-```
-
-In a non-development scenario, all containers would have probes assigned and only the `db` container would have
 
 ## Function Library
 
