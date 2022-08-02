@@ -182,19 +182,21 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)
-	if err != nil {
-		return err
-	}
+	if len(args) > 1 {
+		_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)
+		if err != nil {
+			return err
+		}
 
-	deployParams, err := flags.Parse(args)
-	if pflag.ErrHelp == err {
-		return nil
-	} else if err != nil {
-		return err
-	}
+		deployParams, err := flags.Parse(args)
+		if pflag.ErrHelp == err {
+			return nil
+		} else if err != nil {
+			return err
+		}
 
-	opts.DeployArgs = deployParams
+		opts.DeployArgs = deployParams
+	}
 
 	if s.Output != "" {
 		app := client.ToApp(c.GetNamespace(), image, &opts)

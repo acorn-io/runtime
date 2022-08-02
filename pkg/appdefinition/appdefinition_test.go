@@ -1670,6 +1670,7 @@ containers: map: {
 		successThreshold:    4
 		failureThreshold:    5
 	}
+	probe: ready: "/usr/bin/true"
 }
 `
 
@@ -1697,13 +1698,15 @@ containers: map: {
 
 	assert.Equal(t, v1.ProbeType("liveness"), appSpec.Containers["map"].Probes[0].Type)
 	assert.Equal(t, []string{"/usr/bin/true"}, appSpec.Containers["map"].Probes[0].Exec.Command)
-	assert.Equal(t, v1.ProbeType("startup"), appSpec.Containers["map"].Probes[1].Type)
-	assert.Equal(t, []string{"/usr/bin/false"}, appSpec.Containers["map"].Probes[1].Exec.Command)
-	assert.Equal(t, int32(1), appSpec.Containers["map"].Probes[1].InitialDelaySeconds)
-	assert.Equal(t, int32(2), appSpec.Containers["map"].Probes[1].TimeoutSeconds)
-	assert.Equal(t, int32(3), appSpec.Containers["map"].Probes[1].PeriodSeconds)
-	assert.Equal(t, int32(4), appSpec.Containers["map"].Probes[1].SuccessThreshold)
-	assert.Equal(t, int32(5), appSpec.Containers["map"].Probes[1].FailureThreshold)
+	assert.Equal(t, v1.ProbeType("readiness"), appSpec.Containers["map"].Probes[1].Type)
+	assert.Equal(t, []string{"/usr/bin/true"}, appSpec.Containers["map"].Probes[1].Exec.Command)
+	assert.Equal(t, v1.ProbeType("startup"), appSpec.Containers["map"].Probes[2].Type)
+	assert.Equal(t, []string{"/usr/bin/false"}, appSpec.Containers["map"].Probes[2].Exec.Command)
+	assert.Equal(t, int32(1), appSpec.Containers["map"].Probes[2].InitialDelaySeconds)
+	assert.Equal(t, int32(2), appSpec.Containers["map"].Probes[2].TimeoutSeconds)
+	assert.Equal(t, int32(3), appSpec.Containers["map"].Probes[2].PeriodSeconds)
+	assert.Equal(t, int32(4), appSpec.Containers["map"].Probes[2].SuccessThreshold)
+	assert.Equal(t, int32(5), appSpec.Containers["map"].Probes[2].FailureThreshold)
 
 	assert.Equal(t, v1.ProbeType("startup"), appSpec.Containers["spec"].Probes[0].Type)
 	assert.Equal(t, []string{"/usr/bin/false"}, appSpec.Containers["spec"].Probes[0].Exec.Command)
