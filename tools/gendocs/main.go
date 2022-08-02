@@ -21,7 +21,7 @@ func main() {
 	cmd := acorn.New()
 	cmd.DisableAutoGenTag = true
 
-	files, err := filepath.Glob("docs/docs/100-Reference/01-command-line/acorn_*")
+	files, err := filepath.Glob("docs/docs/100-reference/01-command-line/acorn_*")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func main() {
 		}
 	}
 
-	err = doc.GenMarkdownTreeCustom(cmd, "docs/docs/100-Reference/01-command-line", filePrepender, linkHandler)
+	err = doc.GenMarkdownTreeCustom(cmd, "docs/docs/100-reference/01-command-line", filePrepender, linkHandler)
 	if err != nil {
 		log.Fatal(err)
 	}

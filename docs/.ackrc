@@ -1,2 +1,3 @@
 --ignore-dir=.git
+--ignore-dir=.docusaurus
 --ignore-dir=build

@@ -2,12 +2,10 @@
 title: Getting Started
 ---
 
-In this walk through you will build a Python web app, package it up and deploy it as an Acorn app.  
+In this walk through you will build a Python web app, package it up and deploy it as an Acorn app.
 The app will interact with Redis and Postgres, which both will be packaged along with the web app in a single Acorn image.
 
 > The guide makes use of Python, Redis and Postgres here, but you don't need to be familiar with those technologies, as the examples should be understandable without preliminary knowledge in those.
-
-You can follow along or clone the [flask-redis-postgres source](https://github.com/acorn-io/docs-examples) from GitHub.
 
 ## Prerequisites
 
@@ -27,9 +25,10 @@ acorn install
 
 > Note: Installing Acorn into a Kubernetes cluster requires cluster-admin privileges. Please see our [architecture overview](/architecture/ten-thousand-foot-view) to learn what components will be deployed.
 
-## Step 2. Create your App
+## Step 2. Create your app
 
-Let's start by creating a few files that compose our Python web app.
+Let's start by creating a few files that compose our Python web app.  You can also find all these files in the `flask` directory of the [docs-examples](https://github.com/acorn-io/docs-examples) GitHub repo if you'd rather start from there.
+
 
 ```shell
 # Create a directory structure for our web app
@@ -219,7 +218,7 @@ secrets: {
     - `dependsOn`: dependencies that have to be up and running before the app is started (here it is waiting for the database and the cache to be running)
     - `ports`: using the `publish` type, we expose the app inside the cluster but also outside of it using an auto-generated ingress resource (more on this later <!-- TODO: add link -->)
     - `dirs`: Directories to mount into the container filesystem
-      - `if !args.dev`: only apply, if built-in development mode is **not** active (more on the development mode later <!-- TODO: add link -->)
+      - `if !args.dev`: The following block applies only if built-in development mode is **disabled**. (more on the development mode later <!-- TODO: add link -->)
       - `dirs: "/app": "./"`: Mount the current directory to the /app dir, which is where the code resides inside the container as per the `Dockerfile`. This is to enable hot-reloading of code.
   - `cache` - Redis
     - `image`: existing OCI/Docker image to use (here: from DockerHub library)
@@ -227,7 +226,7 @@ secrets: {
   - `db` - Postgres Database Server
     - `image`, `env`,`ports`: nothing new here
     - `dirs`: Directories to mount into the container filesystem
-      - `if !args.dev`: only apply, if built-in development mode is **not** active (more on the development mode later <!-- TODO: add link -->)
+      - `if !args.dev`: The following block applies only if the built-in development mode is **disabled** (more on the development mode later <!-- TODO: add link -->)
       - `volume://pgdata`: references a volume defined in the top-level `volumes` section in the Acornfile. Also supports other references. <!-- TODO: add link -->
     - `files`: Similar to `dirs` but only for files. Additionally, content can be created in-line and even utilizing generating functions.
 - `localData`: Set of variables for this Acorn app
@@ -239,21 +238,23 @@ secrets: {
   - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
     - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
 
-## Step 4. Run your Acorn app in normal operations mode
+## Step 4. Run your Acorn app
 
-To run your Acorn app just run:
+To start your Acorn app just run:
 
 ```bash
 acorn run -n awesome-acorn .
 ```
 
-or customize the welcome text argument via
+or customize the welcome text argument via:
 
 ```bash
 acorn run -n awesome-acorn . --welcome "Let's Get Started"
 ```
 
-## Step 5. Access your App
+The `-n awesome-acorn` gives this app a specific name so that the rest of the steps can refer to it.  If you omit `-n`, a random two-word name will be generated.
+
+## Step 5. Access your app
 
 Due to the configuration `ports: publish: "5000/http"` under `containers.app`, our web app will be exposed outside of our Kubernetes cluster using the cluster's ingress controller.
 Checkout the running apps via
@@ -302,7 +303,7 @@ containers: {
 
 In this case, additionally `if args.dev { "FLASK_ENV": "development" }` enables Flask's development mode.
 
-Running in development mode, Acorn will keep a session open, streaming all the container logs to your terminal and notifying you of any changes that are happening.
+Running in development mode, Acorn will keep a session open, streaming all the container logs to your terminal and notifying you of any changes that are happening.  Press `Ctrl-c` to end the session and terminate the running app.
 
 To test it, you can change something in the `app.py`.
 For example, add a line to the HTML template at the top and change it to
@@ -351,18 +352,17 @@ acorn run --name awesome-acorn my.registry.com/acorn/getting-started:v0.0.1
 
 ### Execute a command inside the running container
 
-The following will first let you choose the container you want to execute the command in and then run it.
-You can also specify the container name upfront.
+You can get an interactive shell into any running app or container with:
+```bash
+acorn exec awesome-acorn
+```
+
+If there is more than one container in an app, you will be prompted to pick one. You can also run a specific command instead of getting a shell:
 
 ```bash
 acorn exec awesome-acorn env
 ```
 
-or: get an interactive shell inside a container via
-
-```bash
-acorn exec awesome-acorn
-```
 
 ### Reveal the auto-generated database secret
 
@@ -378,7 +378,7 @@ NAME                       TYPE      KEY       VALUE
 quickstart-pg-pass-sqlv9   token     token     mssl8692sk47tfklx9bqnqflw7pqrk2ldb6cd9tckjlttpk4vsvpvl
 ```
 
-### Start and Stop your App
+### Start and Stop your app
 
 That's easy!
 
@@ -400,7 +400,7 @@ If you're done with the app, wipe it from the cluster via
 acorn rm awesome-acorn
 ```
 
-> Dangerous Pro-Tip: to remove **all** Acorn apps at once: `acorn rm $(acorn apps -qa)`)
+> Dangerous Pro-Tip: to remove **all** Acorn apps at once: `acorn rm $(acorn apps -qa)`
 
 ## What's next?
 

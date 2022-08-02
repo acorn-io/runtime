@@ -29,10 +29,10 @@ containers: {
 
 ## User defined key requirements
 
-Second level keys defined by the user in the `containers`, `volumes`, `secrets`, and `jobs` blocks need to follow these rules:
+Second-level keys defined by the user underneath the `containers`, `volumes`, `secrets`, and `jobs` blocks must:
 
-* contain only lowercase alphanumeric characters, '-' or '.'
-* start with an alphanumeric character
-* end with an alphanumeric character
+* Contain only lowercase alphanumeric characters, `-` or `.`
+* Start with an alphanumeric character
+* End with an alphanumeric character
 
 Keys defined in `args`, `profiles`, and `localData` should use camelCase.
