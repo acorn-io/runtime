@@ -64,3 +64,30 @@ Acorn will need to be initialized on each Kubernetes cluster you plan to use it 
 ```shell
 acorn install
 ```
+
+Acorn can install onto any type of Kubernetes cluster capable of running normal workloads. The following are requirements and considerations for installing Acorn.
+
+### Privileges
+You must have cluster admin privileges to install Acorn. See our [RBAC documentation](architecture/security-considerations#rbac) for more details.
+
+### Ingress
+Acorn can expose your applications as publicly accessible URLS. For this to work, your Kubernetes cluster must have an [ingress controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/).
+
+### Storage
+Acorn supports persistent storage through the use of volumes. For this to work, your Kubernetes cluster must have a [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/).
+
+### Local Development Clusters
+For local development, Acorn has been tested with Rancher Desktop, Docker Desktop, and Minikube. If you are using one of these systems, please consider the following:
+
+**Rancher Desktop** comes with a working ingress and storage class by default. No additional configuration is necessary.
+
+**Docker Desktop** comes with a storage class, but not an ingress. If you're using Rancher Desktop and don't have one installed, Acorn will install the [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/) for you.
+
+**Minikube** comes with a storage class, but requires that you [enable ingress explicitly](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/#enable-the-ingress-controller) with the following command:
+```shell
+minikube addons enable ingress
+```
+It's not obvious in the above minikube documentation, but after enabling ingress, if you want to access your applications locally, you must also run:
+```shell
+minikube tunnel
+```
