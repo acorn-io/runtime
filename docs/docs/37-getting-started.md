@@ -15,7 +15,7 @@ To run this example, you will need to have the Acorn CLI installed and administr
 Here you can find some documentation on how to get there:
 
 - [Acorn CLI](/installation/installing)
-- Kubernetes: Acorn works well with local development instances like provided by [Rancher Desktop](https://docs.rancherdesktop.io/getting-started/installation), [K3s](https://rancher.com/docs/k3s/latest/en/quick-start/), [k3d](https://k3d.io/v5.4.4/#installation) or [Docker Desktop](https://www.docker.com/get-started/). It also works with any other Kubernetes distribution, for example a managed instance hosted in a major cloud provider or a cluster provided by your work environment.
+- Access to a Kubernetes cluster through `kubectl` from your CLI. Some great options for local development are [Rancher Desktop](https://docs.rancherdesktop.io/getting-started/installation), [K3s](https://rancher.com/docs/k3s/latest/en/quick-start/), [k3d](https://k3d.io/v5.4.4/#installation), or [Docker Desktop](https://www.docker.com/get-started/). It also works with any other Kubernetes distribution, for example a managed instance hosted in a major cloud provider or a cluster provided by your work environment.
 
 ## Step 1. Prepare the cluster
 

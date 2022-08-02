@@ -49,7 +49,7 @@ containers: {
 }
 ```
 
-You can also specify a `buildArgs` struct as part of the build section to pass arguments to the build.
+You can also specify a `buildArgs` object as part of the build section to pass arguments to the build.
 
 ```cue
 containers: {
@@ -69,7 +69,7 @@ containers: {
 
 Most containers can be interacted with over the network. In order for containers to be reached by other containers and applications, the network ports must be defined as part of the container.
 
-There are two scopes when defining ports in the container struct `ports` and `expose`. The `ports` setting is for services that are meant to only be reached from other containers and jobs within the Acorn app.
+There are two scopes when defining ports in the container object `ports` and `expose`. The `ports` setting is for services that are meant to only be reached from other containers and jobs within the Acorn app.
 
 ```cue
 containers: {

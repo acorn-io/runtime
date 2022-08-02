@@ -2,7 +2,7 @@
 title: Jobs
 ---
 
-Jobs are containers that perform one off or scheduled tasks to support the application. Jobs are defined in their own top-level `jobs` section of the Acornfile. A job container will continue to run until it has successfully completed all operations once.
+Jobs are containers that perform one-off or scheduled tasks to support the application. Jobs are defined in their own top-level `jobs` section of the Acornfile. A job container will continue to run until it has successfully completed all operations once.
 
 A Job has all the same fields as a container, with the exception of an optional `schedule` field.
 

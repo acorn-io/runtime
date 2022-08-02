@@ -49,7 +49,7 @@ $ acorn MYIMAGE --help
 
 ### Complex data types
 
-Sometimes more complex data types are needed from the user. If the Acorn provides the minimum production ready configuration for an app, but some users might want to use more advanced features, authors can allow passing in `yaml` or `cue` structs from files.
+Sometimes more complex data types are needed from the user. If the Acorn provides the minimum production ready configuration for an app, but some users might want to use more advanced features, authors can allow passing in `yaml`objects from files.
 
 Authors define the variable like:
 

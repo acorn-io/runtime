@@ -12,9 +12,9 @@ Acorn is a work in progress.  Features will evolve over time and there may be br
 
 ### What is Acorn?
 
-Acorn is an application packaging and deployment framework for Kubernetes. It introduces an application artifact called Acorn images. An Acorn image consists of one or more Docker images, application configuration, and deployment specification. Acorn images can be deployed on any dev, test, and production Kubernetes clusters. Acorn images enable you to develop applications locally and move to production without having to switch tools or technology stacks.
+Acorn is an application packaging and deployment framework that simplifies running apps on Kubernetes. Acorn is able to package up all of an applications Docker images, configuration, and deployment specifications into a single Acorn image artifact. This artifact is publishable to any OCI container registry allowing it to be deployed on any dev, test, or production Kubernetes.  The portability of Acorn images enables developers to develop applications locally and move to production without having to switch tools or technology stacks.
 
-Developers create Acorn images using an application configuration language called the Acorn Markup Language (AML). AML describes your application without the boilerplate of Kubernetes YAML files. You can use the Acorn CLI to build and deploy Acorn images and manage the resulting applications running on Kubernetes.
+Developers create Acorn images by describing the application configuration in an [Acornfile](/authoring/overview). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
 
 ## Quickstart
 
