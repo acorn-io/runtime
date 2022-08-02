@@ -91,11 +91,11 @@ acorn apps small-butterfly
 
 In Chrome or Firefox browsers you can now open the URL listed under the endpoints column to see our app.
 
-Next you can learn more about what you can do with Acorn in the [get started](/getting-started) guide.
+Next you can learn more about what you can do with Acorn in the [getting started](/getting-started) guide.
 
 ## Next steps
 
 * [Installation](/installation/installing)
-* [Get Started](/getting-started)
+* [Getting Started](/getting-started)
 * [Authoring Acornfiles](/authoring/overview)
 * [Running Acorn apps in Production](/production/args-and-secrets)
