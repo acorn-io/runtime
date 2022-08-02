@@ -25,7 +25,7 @@ containers: {
 
 Applications that have stateful data or where an operator would care which order the containers will be removed in a scale down event should not use the `scale` field and should instead create unique instances of the container.
 
-To accomplish this, users can leverage `for` loops in the Acornfile. Within the `for` loop block all items unique to that instance should be defined. In most cases, this will be a container and data volumes. It can contain any of the top level structs if needed.
+To accomplish this, users can leverage `for` loops in the Acornfile. Within the `for` loop all items unique to that instance should be defined. In most cases, this will be a container and data volumes. The loop can contain any of the top level objects if needed.
 
 ```cue
 args: {
@@ -52,7 +52,7 @@ The above example makes use of the `std.range` function used in the `for` loop. 
 
 When deploying stateful applications it is a reasonable assumption to bootstrap from the `0` instance and for new replicas to use that as the first point of contact to register.
 
-### Yaml Templates
+### Yaml templates for config files
 
 If you would like to dump a section of the localData config into YAML format, you can use the YAML encoder package.
 
@@ -86,11 +86,11 @@ localData: {
 }
 ```
 
-In the above example the frontend config file will be rendered from user and Acorn data in YAML format. This example is using the `std.merge()` function which takes two structs and merges them where the second overwrites the first.
+In the above example the frontend config file will be rendered from user and Acorn data in YAML format. This example is using the `std.merge()` function which takes two objects and merges them where the second overwrites the first.
 
 ### Generating files from key value pairs
 
-Another useful built-in for rendering key value pairs with an optional separator is the `tabwriter` function.
+Another useful built-in for rendering key value pairs with an optional separator is the `std.join` function.
 
 If you need to create a file with content in this format:
 

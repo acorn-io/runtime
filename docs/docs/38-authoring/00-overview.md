@@ -10,9 +10,9 @@ The resulting artifact defined by the Acornfile and produced during `acorn build
 
 ## The primary building blocks
 
-### Structs
+### Objects
 
-In the Acornfile file the primary building block is a struct. The generic syntax for any struct is:
+In the Acornfile file the primary building block is an object. The generic syntax for any object is:
 
 ```cue
 name: {
@@ -20,7 +20,7 @@ name: {
 }
 ```
 
-A more Acorn specific example is:
+They start with a name `field` and are wrap a collection of in `{}`. A more Acorn specific example is:
 
 ```cue
 containers: {
@@ -30,11 +30,9 @@ containers: {
 }
 ```
 
-In the above example, there is a struct called containers, and another struct called `my-app`. It should be noted in an Acornfile, user-defined keys like `my-app` need to be placed in quotes if they contain a `-`.
+In the above example, there is a object named containers, and another object named `my-app`.
 
-Structs have `fields` in the above example the `containers` struct has a field named `my-app` that is a struct itself.
-
-For convenience you can collapse structs with only one field to a single `:` line until you have multiple fields for that value.
+For convenience you can collapse objects with only one field to a single `:` line until you have multiple fields for that value.
 
 ```shell
 containers: app: {
@@ -73,16 +71,29 @@ The list is surrounded by `[]` and each item has a trailing comma, including the
 
 ## Fields
 
+A `field` is a label and a value, we have seen multiple examples of `fields` in the previous examples. Here we will dive deeper.
+
+### Field names
+
+In an Acornfile fields can be strings with [a-zA-Z0-9_] without being wrapped in double quotes. You can use `-`, `/`, and `.` if you use double quotes around the field name.
+
+```cue
+// Valid field names
+aLongField: ""
+"/a/file/path": ""
+"my-application-container": ""
+```
+
 ### Assigning field values
 
-Variables allow the author to assign values to names that can be referenced elsewhere in the Acornfile. The syntax for defining a variable is shown below. Variables can have values of any of the supported types along with structs and lists.
+Authors can assign values to fields that can be referenced elsewhere in the Acornfile. The syntax for assigning a field a value is shown below. Fields can have values of any of the supported types including objects and lists.
 
 ```cue
 localData: {
     myVariable: ""
     myInteger: 5
     myBool: true
-    myStruct: {}
+    myObject: {}
     myList: []
 }
 ```
@@ -137,20 +148,23 @@ localData: {
     myVariable: ""
     myInteger: 5
     myBool: true
-    myStruct: {
+    myObject: {
         aKey: "value"
     }
+    "my-app": {
+        // ...
+    }
 }
-```
 
-They can be accessed like so:
+// Can Be accessed like
 
-```cue
-localData.myVariable
-localData.myInteger
-localData.myBool
-localData.myStruct
-localData.myStruct.aKey
+v:  localData.myVariable
+i:  localData.myInteger
+b:  localData.myBool
+s:  localData.myObject
+s0: localData.myObject.aKey 
+s1: localData.myObject["aKey"]
+a:  localData."my-app"
 ```
 
 ### Scopes
@@ -158,14 +172,18 @@ localData.myStruct.aKey
 Fields referencing other fields will look at the nearest enclosing scope and work out until it hits the top level.
 
 ```cue
+port: 3307
 containers: app: {
-    ports: localData.port
+    ports: localData.port // 3306
 }
+data: port // 3307
 localData: {
     port: "3306"
-    exposedServicePort: port
+    exposedServicePort: port // 3306
 }
 ```
+
+In the above example, `containers.app.ports` would be `3306` along with `localData.exposedServicePort`. Because of scoping, it would not be possible in the above example to set any value under localData to a value of `port`(3307) without reconfiguring the localData object.
 
 ### String substitution
 
@@ -253,6 +271,10 @@ h: true
 j: false
 ```
 
+When performing integer `+`, `-`, and `*` with the result will be an integer. If `/` is done on integers the result will be a type `float`.
+
+If an integer and float are part of any arithmetic operation, then the result will be of type `float`.
+
 ### Regular expression
 
 The `=~` and `!~` operators can be used to check against regular expressions.
@@ -261,7 +283,7 @@ The `=~` operator will matc
 
 ## Function calls
 
-The Acornfile provides built-in functions to perform common operations. All functions can be accessed from the `std` struct.
+The Acornfile provides built-in functions to perform common operations. All functions can be accessed from the `std` object.
 
 An example of a function call is:
 
@@ -302,7 +324,7 @@ containers: {
 
 ## For Loops
 
-The Acornfile syntax provides a for loop construct to iterate through structs and lists.
+The Acornfile syntax provides a for loop construct to iterate through objects and lists.
 
 ```cue
 for i in std.range(0, 10) {
@@ -314,7 +336,7 @@ for i in std.range(0, 10) {
 }
 ```
 
-### Struct field comprehensions
+### object field comprehensions
 
 ```cue
 localData:{
