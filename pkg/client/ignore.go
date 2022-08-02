@@ -25,10 +25,13 @@ func promptInstall[V any](ctx context.Context, f twoFunc[V]) (V, error) {
 	v, err := f()
 	if isNotInstalled(err) {
 		var shouldInstall = false
-		err = survey.AskOne(&survey.Confirm{
+		surveyErr := survey.AskOne(&survey.Confirm{
 			Message: "Acorn is not installed, do you want to install it now?:",
 			Default: false,
 		}, &shouldInstall)
+		if surveyErr != nil {
+			return v, surveyErr
+		}
 
 		if shouldInstall {
 			installErr := install.Install(ctx, install.DefaultImage(), nil)

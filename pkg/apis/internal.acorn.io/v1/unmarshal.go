@@ -683,7 +683,14 @@ func (in *Probe) UnmarshalJSON(data []byte) error {
 	}
 
 	type probe Probe
-	return json.Unmarshal(data, (*probe)(in))
+	err := json.Unmarshal(data, (*probe)(in))
+	if err != nil {
+		return err
+	}
+	if in.Type == "ready" {
+		in.Type = ReadinessProbeType
+	}
+	return nil
 }
 
 func (in *Probes) UnmarshalJSON(data []byte) error {
@@ -701,6 +708,9 @@ func (in *Probes) UnmarshalJSON(data []byte) error {
 		}
 		for k, v := range d {
 			v.Type = ProbeType(k)
+			if v.Type == "ready" {
+				v.Type = ReadinessProbeType
+			}
 			*in = append(*in, v)
 		}
 		sort.Slice(*in, func(i, j int) bool {
