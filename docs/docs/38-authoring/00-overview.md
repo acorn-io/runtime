@@ -292,7 +292,7 @@ f: e && b > 5 // false
 
 ### String Operators
 
-Strings can be concatenated, repated, and compared:
+Strings can be concatenated, repeated, and compared:
 
 | Operator | Symbol | Example | Result |
 |:---------|:-------|:--------|:-------|
@@ -340,6 +340,8 @@ containers: {
     }
 }
 ```
+
+See the [function libarary](/reference/functions#ifelse) for more information.
 
 ## For loops
 
