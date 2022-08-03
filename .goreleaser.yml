@@ -67,6 +67,7 @@ signs:
     artifacts: checksum
 
 changelog:
+  use: github
   sort: asc
   filters:
     exclude:
@@ -78,6 +79,8 @@ release:
   github:
     owner: acorn-io
     name: acorn
+  prerelease: auto
+  discussion_category_name: General
   extra_files:
     - glob: ./cosign.pub
     - glob: "./releases/*.dmg"
@@ -152,6 +155,7 @@ docker_manifests:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
+
 docker_signs:
   - artifacts: all
     stdin: "{{ .Env.COSIGN_PASSWORD }}"
