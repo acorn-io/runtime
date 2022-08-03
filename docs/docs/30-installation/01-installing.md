@@ -11,7 +11,7 @@ acorn install
 
 ## Acorn CLI
 
-### macOS and Linux
+### Homebrew (macOS & Linux)
 
 The preferred method for installing on Mac and Linux is to use the brew package manager.
 
@@ -23,13 +23,21 @@ brew install acorn-io/cli/acorn
 
 You can also follow the binary installation below.
 
-### Binary install
+### curl|sh install (macOS & Linux)
+
+If you don't have homebrew, you can install the CLI with this one-liner:
+
+```shell
+curl https://get.acorn.io | sh
+```
+
+### Manual install
 
 You can download the Acorn CLI binary from the project's [GitHub page](https://github.com/acorn-io/acorn/releases).
 
 Download the correct binary for your platform.
 
-#### macOS Binary install
+#### macOS
 
 Download either the universal DMG or the tar.gz file.
 
@@ -46,16 +54,16 @@ cp ~/Downloads/acorn /usr/local/bin/acorn
 
 #### Linux
 
-Download the tar.gz binary for your architecture. Uncompress and move the binary to your PATH.
+Download the tar.gz archive for your architecture. Uncompress and move the binary to your PATH.
 
 ```shell
  tar -zxvf ~/Downloads/acorn-v<version>-linux-<arch>.tar.gz
  mv ~/Downloads/acorn /usr/local/bin
 ```
 
-### Windows
+#### Windows
 
-For Windows systems, please follow the binary install method.
+Uncompress and move the binary to your PATH.
 
 ## Installing Acorn onto Kubernetes clusters
 
