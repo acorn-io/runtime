@@ -61,4 +61,4 @@ jobs:
           AC_P12: ${{ secrets.AC_P12 }}
           AC_P12_PASSWORD: ${{ secrets.AC_P12_PASSWORD }}
           KEYCHAIN: ${{ steps.keychain.outputs['keychain-name'] }}
-          ACORN_DNS_ENDPOINT: https://dns.acrn.io/v1
+          ACORN_DNS_ENDPOINT: https://alpha-dns.acrn.io/v1
