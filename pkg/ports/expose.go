@@ -167,8 +167,8 @@ func NewForIngressPublish(app *v1.AppInstance) (*Set, error) {
 		}
 
 		for _, binding := range app.Spec.Ports {
-			binding = binding.Complete(app.Name)
-			if !binding.Publish || !matches(binding, port) {
+			fullBinding := binding.Complete(app.Name)
+			if !fullBinding.Publish || !matches(fullBinding, port) {
 				continue
 			}
 
