@@ -71,7 +71,7 @@ If you are running any other type of cluster, Acorn provides a DNS service that 
 
 :::caution
 
-The on-acorn.io DNS service is a public service ran on the Internet. Your Acorn installation must have outbound access to <https://dns.acrn.io> to access it.
+The on-acorn.io DNS service is a public service ran on the Internet. Your Acorn installation must have outbound access to <https://alpha-dns.acrn.io> to access it.
 
 To create and maintain public DNS entries, the DNS service expects your Acorn installation to make on-demand and periodic renewal requests to it.
 
