@@ -25,6 +25,15 @@ func TestBuildFailed(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestBuildFailedNoImageBuild(t *testing.T) {
+	_, err := build.Build(helper.GetCTX(t), "./testdata/no-image-build/Acornfile", &build.Options{
+		Cwd:    "./testdata/no-image-build",
+		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "either image or build field must be set")
+}
+
 func TestNestedBuild(t *testing.T) {
 	simple, err := build.Build(helper.GetCTX(t), "./testdata/simple/Acornfile", &build.Options{
 		Cwd:    "./testdata/simple",
