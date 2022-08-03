@@ -16,7 +16,7 @@ A simple application delpoyment framework for Kubernetes.
 
 ## Get Started
 
-- [Downloads](https://github.com/acorn-io/acorn/releses)
+- [Downloads](https://github.com/acorn-io/acorn/releases)
 - [Documentation](https://docs.acorn.io)
 - [Community Slack](https://slack.acorn.io)
 - [Discussions Forum](https://github.com/acorn-io/acorn/discussions)
