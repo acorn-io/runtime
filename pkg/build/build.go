@@ -143,6 +143,11 @@ func buildContainers(ctx context.Context, c client.Client, cwd string, platforms
 
 	for _, entry := range typed.Sorted(containers) {
 		key, container := entry.Key, entry.Value
+
+		if container.Image == "" && container.Build == nil {
+			return nil, fmt.Errorf("either image or build field must be set")
+		}
+
 		if container.Image != "" && container.Build == nil {
 			// this is a copy, it's fine to modify it
 			container.Build = &v1.Build{
