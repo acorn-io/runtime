@@ -16,33 +16,19 @@ import (
 // ToRecordRequestsAndHash creates DNS records based on the ingress and domain supplied. It also returns a hash of those
 // records, suitable for using overtime to determine if the ingress's records need to change.
 func ToRecordRequestsAndHash(domain string, ingress *v1.Ingress) ([]RecordRequest, string) {
-	var ips, lbHosts, recordValues []string
+	var ipv4s, ipv6s, lbHosts, recordValues []string
 
 	for _, i := range ingress.Status.LoadBalancer.Ingress {
 		if i.IP != "" {
-			ips = append(ips, i.IP)
+			if strings.Contains(i.IP, ":") {
+				ipv6s = append(ipv6s, i.IP)
+			} else {
+				ipv4s = append(ipv4s, i.IP)
+			}
 		}
 		if i.Hostname != "" {
 			lbHosts = append(lbHosts, i.Hostname)
 		}
-	}
-	var recordType string
-	if len(ips) > 0 && len(lbHosts) > 0 {
-		logrus.Warnf("Cannot create DNS for ingress %v because it has both IPs and hostnames", ingress.Name)
-		return nil, ""
-	} else if len(ips) > 0 {
-		recordType = "A"
-		recordValues = ips
-	} else if len(lbHosts) > 0 {
-		if len(lbHosts) == 1 && lbHosts[0] == "localhost" {
-			recordType = "A"
-			recordValues = []string{"127.0.0.1"}
-		} else {
-			recordType = "CNAME"
-			recordValues = lbHosts
-		}
-	} else {
-		return nil, ""
 	}
 
 	var hosts []string
@@ -53,20 +39,53 @@ func ToRecordRequestsAndHash(domain string, ingress *v1.Ingress) ([]RecordReques
 	}
 
 	var requests []RecordRequest
-	for _, host := range hosts {
-		requests = append(requests, RecordRequest{
-			Name:   host,
-			Type:   RecordType(recordType),
-			Values: recordValues,
-		})
+	if len(lbHosts) > 0 {
+		var recordType string
+		if len(lbHosts) == 1 && lbHosts[0] == "localhost" {
+			recordValues = []string{"127.0.0.1"}
+			recordType = "A"
+		} else {
+			recordValues = lbHosts
+			recordType = "CNAME"
+		}
+
+		for _, host := range hosts {
+			requests = append(requests, RecordRequest{
+				Name:   host,
+				Type:   RecordType(recordType),
+				Values: recordValues,
+			})
+		}
+	} else {
+		if len(ipv4s) > 0 {
+			recordValues = append(recordValues, ipv4s...)
+			for _, host := range hosts {
+				requests = append(requests, rr(host, "A", ipv4s))
+			}
+		}
+		if len(ipv6s) > 0 {
+			recordValues = append(recordValues, ipv6s...)
+			for _, host := range hosts {
+				requests = append(requests, rr(host, "AAAA", ipv6s))
+			}
+		}
 	}
 
-	hash := generateHash(hosts, recordValues, recordType)
+	hash := generateHash(domain, hosts, recordValues)
 	return requests, hash
 }
 
-func generateHash(hosts, ips []string, recordType string) string {
-	var toHash string
+func rr(host, rType string, recordVals []string) RecordRequest {
+	return RecordRequest{
+		Name:   host,
+		Type:   RecordType(rType),
+		Values: recordVals,
+	}
+}
+
+func generateHash(domain string, hosts, ips []string) string {
+	toHash := domain
+
 	sort.Slice(hosts, func(i, j int) bool {
 		return i < j
 	})
@@ -79,7 +98,6 @@ func generateHash(hosts, ips []string, recordType string) string {
 	for _, i := range ips {
 		toHash += i + ","
 	}
-	toHash += recordType
 
 	dig := sha1.New()
 	dig.Write([]byte(toHash))

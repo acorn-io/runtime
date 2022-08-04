@@ -9,7 +9,7 @@ metadata:
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/dns-hash: "374b1e21a09c512d66276268244027d30455c081"
+    acorn.io/dns-hash: "5dedee4fb5aca80f3520412b7db02c0d6ada7bbb"
     acorn.io/container-name: con1
 spec:
   rules:
