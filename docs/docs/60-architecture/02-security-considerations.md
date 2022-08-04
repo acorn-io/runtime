@@ -82,7 +82,7 @@ Terminology:
 
 When composing an Acorn app that will only need to communicate with itself, you can define the `ports` section on the containers in the app.
 
-```cue
+```acorn
 containers: {
    "my-app": {
       build: {
@@ -101,7 +101,7 @@ In the example above other containers within the Acorn app would be able to comm
 
 For services running outside of the Acorn app to communicate with your services, you need to expose the ports. Building on the above example.
 
-```cue
+```acorn
 containers: {
    "my-app": {
       build: {
@@ -166,7 +166,7 @@ Ports that can be exposed are listed under the `Ports` setting.
 
 If you have an app that exposes a TCP endpoint instead of HTTP like:
 
-```cue
+```acorn
 containers: {
     // ...
     mysql: {

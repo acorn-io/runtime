@@ -16,7 +16,7 @@ It is possible to define the behavior when the secret is updated to a new value.
 
 Some containers use environment variables for secret bits of data. The MariaDB container for instance uses an environment variable to set the root password.
 
-```cue
+```acorn
 containers: {
     db: {
         image: "mysql"
@@ -40,7 +40,7 @@ The example shows the secret `db-root-password` being consumed as an environment
 
 Secrets in templates are wrapped in `${}`. It is possible to pass secret configuration data to a container in a pre-rendered form. This next example shows how you can add a configuration file with sensitive data.
 
-```cue
+```acorn
 containers: {
     web: {
         image: "nginx"
@@ -82,7 +82,7 @@ The above example has a container that will use the `website-conf` secret to cre
 
 You can populate a directory with sensitive data using a secret. The example below shows populating the `~/.ssh` directory with private keys from a secret.
 
-```cue
+```acorn
 containers: {
     git: {
         image: "my-git"
@@ -124,7 +124,7 @@ Acorn makes multiple types of secrets available to the Acorn author.
 
 Basic secrets are defined in the secrets block with the type "basic".
 
-```cue
+```acorn
 // ...
 secrets: {
     "my-creds": {
@@ -143,7 +143,7 @@ The basic secret type is used for username / password pairs. The key names must 
 
 The template secret can be used to render and store multiple secret values into a single output. It has the following format:
 
-```cue
+```acorn
 // ...
 secrets: {
     "my-template": {
@@ -170,7 +170,7 @@ In the above example the secret renders a template that contains [data](/authori
 
 Token secrets are useful for generating a password or secure string used for passwords when the user is already known or not required.
 
-```cue
+```acorn
 secrets: {
     "my-token": {
         type: "token" // required
@@ -193,7 +193,7 @@ The `token` field in the data object is optional and needs to be left the defaul
 
 Generated secrets allow storing sensitive data output from a [job](/authoring/jobs).
 
-```cue
+```acorn
 containers: {
     "frontend-proxy": {
         // ...
@@ -237,7 +237,7 @@ The `job` parameter is always required, and is the name of the job that will gen
 
 Opaque secrets have no defined structure and can have arbitrary key value pairs. These types of secrets are best used for allowing a user to input sensitive data at runtime. In some cases an unstructured secret can be used if the user will be passing data that will be used in user defined templates. Expected keys should be predefined with reasonable defaults to provide the user some context.
 
-```cue
+```acorn
 secrets: {
     "user-secret-data": {
         type: "opaque"

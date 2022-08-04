@@ -6,7 +6,7 @@ title: Containers
 
 The container section in the Acornfile defines everything about the individual components needed to run your app. Each container definition will define a service in your Acorn application. A basic example of a container definition that exposes a network endpoint looks like the following:
 
-```cue
+```acorn
 containers:{
     "my-webapp": {
         image: "nginx"
@@ -21,7 +21,7 @@ containers:{
 
 Acorn provides a mechanism to build your own containers for your application. If you have an existing project that already defines an Dockerfile, you can build it using Acorn.
 
-```cue
+```acorn
 containers: {
     "my-app": {
         build: {
@@ -37,7 +37,7 @@ Now when `acorn build .` or `acorn run -i .` is run, the `my-app` container will
 
 Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](/authoring/args-and-profiles) to see how to customize these values at build and runtime.
 
-```cue
+```acorn
 containers: {
     "my-app": {
         build: {
@@ -51,7 +51,7 @@ containers: {
 
 You can also specify a `buildArgs` object as part of the build section to pass arguments to the build.
 
-```cue
+```acorn
 containers: {
     app: {
         build: {
@@ -85,7 +85,7 @@ Where:
 
 An example of a named port:
 
-```cue
+```acorn
 containers: {
     db: {
         image: "mysql"
@@ -106,7 +106,7 @@ As an author, there are three scopes used to define the ports **default** access
 | `expose` | Containers running across the cluster |
 | `publish` | Accessible outside the cluster by consumers |
 
-```cue
+```acorn
 containers: {
     "my-webapp": {
         image: "nginx"
@@ -121,7 +121,7 @@ The above example defines an HTTP port `5000` accessible to other containers def
 
 The next example shows the `expose` and `publish` settings, used to define ports that are meant to be accessed outside of the Acorn app or published outside the cluster. If an Acorn image is going to provide a network service to multiple apps, something like a database, you will likely want to expose the port so it can be linked to other Acorn apps.
 
-```cue
+```acorn
 containers: {
     "my-webapp": {
         image: "nginx"
@@ -145,7 +145,7 @@ In the database container, we are using the `ports` parameter because only the m
 
 Containers often use environment variables as a way to configure common settings or pass in secrets. Acorn supports both methods in the container definition.
 
-```cue
+```acorn
 containers: {
     db: {
         image: "mysql"
@@ -165,7 +165,7 @@ The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable s
 
 Files are defined in a container where the key is the location inside the container, and the value is the contents of the file.
 
-```cue
+```acorn
 containers: {
     web: {
         image: "nginx"
@@ -186,7 +186,7 @@ In the above, the file `/etc/htpasswd` will contain the contents from a secret t
 Directories are defined in their own block and are used to mount volumes, files from a secret, or
 pull in content at build time. The block has keys that are path names inside the container and values are the source.
 
-```cue
+```acorn
 containers: {
     web: {
         image: "nginx"
@@ -227,7 +227,7 @@ There are three types of checks that can be used to check the health of the cont
 
 The liveness probe detects that the container is up and considered running. The example here defines an HTTP type of check, though TCP and exec types could also be used.
 
-```cue
+```acorn
 containers: {
     web: {
         image: "nginx"
@@ -257,7 +257,7 @@ This example will use an exec check, but HTTP and TCP checks could also be used.
 
 *Note: Readiness probes do not wait for the liveness probe to succeed first. If you need the readiness probe to wait you should use the `initialDelaySeconds` parameter to delay. Alternatively, the startup probe can also be used.*
 
-```cue
+```acorn
 containers: {
     db: {
         image: "mysql"
@@ -282,7 +282,7 @@ containers: {
 
 Startup probes exist to give slow starting applications time to load data and/or configuration before starting the liveness and readiness probes. The startup probe should use the same command, HTTP, or TCP check as the liveness probe with enough time to cover the worst case startup scenario. The time is calculated by `failureThreshold * periodSeconds`.
 
-```cue
+```acorn
 containers: {
     web: {
         image: "nginx"
@@ -313,7 +313,7 @@ In the above example the `web` container would have 60 seconds (10 tries * 6 sec
 
 Sometimes a container needs some setup before it runs, or has additional services running along side it. For these scenarios, the `sidecar` can be defined as part of the container.
 
-```cue
+```acorn
 containers: {
     frontend: {
         image: "nginx"

@@ -10,7 +10,7 @@ A Job has all the same fields as a container, with the exception of an optional 
 
 By default, jobs will run whenever the Acorn has been updated.
 
-```cue
+```acorn
 jobs: {
     "cluster-reconcile": {
         image: "registry.io/myorg/cluster-reconcile"
@@ -25,7 +25,7 @@ jobs: {
 
 Jobs that need to be run on a schedule, like a backup job, must also define the schedule field.
 
-```cue
+```acorn
 jobs: {
     "db-backup": {
         image: "registry.io/myorg/db-backup"
