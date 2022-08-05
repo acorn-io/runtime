@@ -36,7 +36,7 @@ require (
 	github.com/rancher/apiserver v0.0.0-20220513144301-4808910b5d4d
 	github.com/rancher/kubernetes-provider-detector v0.1.5
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
-	github.com/rancher/steve v0.0.0-20220628235427-dbf9ef88ce8f
+	github.com/rancher/steve v0.0.0-20220805200026-647cba2be744
 	github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
