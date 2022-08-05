@@ -35,9 +35,9 @@ In the above example, there is a object called `containers`, which contains anot
 For convenience, you can collapse objects which have only one field to a single `:` line and omit the braces.  For example these:
 
 ```cue
-containers: app: image: "nginx"
+containers: foo: image: "nginx"
 
-containers: app: build: {
+containers: bar: build: {
     context: "."
     target: "static"
 }
