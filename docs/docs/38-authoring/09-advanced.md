@@ -8,7 +8,7 @@ title: Advanced Topics
 
 In the case of scaling stateless applications the `scale` field can be defined on the container to increase the number of containers deployed. This is where consumers of the Acorn won't need persistent data or to know which instance will be deleted on scale down operation.
 
-```cue
+```acorn
 args: {
     // Number of stateless web servers to run
     scale: 1
@@ -28,7 +28,7 @@ Applications that have stateful data or where an operator would care which order
 
 To accomplish this, users can leverage `for` loops in the Acornfile. Within the `for` loop all items unique to that instance should be defined. In most cases, this will be a container and data volumes. The loop can contain any of the top level objects if needed.
 
-```cue
+```acorn
 args: {
     // Number of instances
     replicas: 1
@@ -57,7 +57,7 @@ When deploying stateful applications it is a reasonable assumption to bootstrap 
 
 If you would like to dump a section of the localData config into YAML format, you can use the YAML encoder package.
 
-```cue
+```acorn
 args: {
     // User provided yaml
     userConfig: {}
@@ -99,7 +99,7 @@ If you need to create a file with content in this format:
 
 `key=value`
 
-```cue
+```acorn
 // ...
 containers: {
     web: {
@@ -139,7 +139,7 @@ Templates provide a way to bulk add additional fields to objects.
 
 To do this, the template is declared for the top level Acorn object, and then a set of `[]` to bind to the nested objects field.
 
-```cue
+```acorn
 args: dev: false
 containers: {
     app: {}

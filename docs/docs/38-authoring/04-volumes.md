@@ -4,7 +4,7 @@ title: Volumes
 
 Volumes are used to store persistent data in your applications. Volumes can be bound to containers, sidecars, and jobs whenever persistence is needed. Defining a volume in the Acornfile is done under the `volumes` key and referenced via the `volumes://` uri path when mounting.
 
-```cue
+```acorn
 containers: {
     "my-app": {
         image: "web"
@@ -25,7 +25,7 @@ In the above example, there is a `my-data` volume defined and mounted into the `
 
 A volume has the following fields that can be customized, here is the above volume defined with all of the fields.
 
-```cue
+```acorn
 volumes: {
     "my-data": {
         size: 10G
@@ -39,7 +39,7 @@ volumes: {
 
 Sidecars can share volumes with the primary app container or have volumes for their exclusive use. In order to share data, a volume must be created and mounted in both containers.
 
-```cue
+```acorn
 containers: {
     frontend: {
         image: "nginx"
@@ -72,7 +72,7 @@ There are two ways to create ephemeral scratch type of storage. This type of vol
 
 A shorthand way to define the volume is:
 
-  ```cue
+  ```acorn
 containers: {
     frontend: {
         // ...
@@ -85,7 +85,7 @@ containers: {
 
 The above is equivalent to:
 
-```cue
+```acorn
 containers: {
     frontend: {
         // ...
@@ -108,7 +108,7 @@ The `ephemeral` class is a special case that Acorn will handle behind the scenes
 
 Volumes can also be mounted between app containers and job containers.
 
-```cue
+```acorn
 containers: {
     db: {
         // ...

@@ -52,7 +52,7 @@ You will only need to do this once per cluster.
 
 Create a new `Acornfile` in your working directory and add the following contents.
 
-```cue
+```acorn
 containers: {
  web: {
   image: "nginx"

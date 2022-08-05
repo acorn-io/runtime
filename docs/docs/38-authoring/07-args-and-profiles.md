@@ -12,7 +12,7 @@ Args are defined in the top level `args` struct.
 
 Arguments to an Acorn can be standard `strings`, `ints`, `bools`, and other complex types. When defining an argument, a standard default value should be provided. The syntax to define the type and default value is:
 
-```cue
+```acorn
 args: {
     argName: "default"
     intVar: 1
@@ -31,7 +31,7 @@ When defining arguments to the Acorn, it is helpful to the end user to also prov
 
 When defining args add a `// Comment` above the argument. That will be shown the user when they do a `--help`
 
-```cue
+```acorn
 args: {
     // Number of instances to run.
     replicas: 1
@@ -53,7 +53,7 @@ Sometimes more complex data types are needed from the user. If the Acorn provide
 
 Authors define the variable like:
 
-```cue
+```acorn
 args: {
     // User configuration data for XYZ tool
     userConfigData:  {}
@@ -76,7 +76,7 @@ The config file can then be passed to the Acorn using
 
 To prevent the author from having to create a profile, Acorn provides the `args.dev` boolean value. It is set to `true` when running in dev mode (`acorn run -i`). Acorn authors can use this boolean with `if` statements to change dev vs. production runtime behaviors.
 
-```cue
+```acorn
 containers: {
     web: {
         // ...
@@ -94,7 +94,7 @@ containers: {
 
 Profiles specify default arguments for different contexts like dev, test, and prod. This makes it easier for the end user to consume the Acorn application. When developing an application, often there are non-prod ports, different Dockerfile build targets, and replica counts differ from prod. Authors can define a different set of defaults for each environment.
 
-```cue
+```acorn
 args: {
     // Number of instances to run
     replicas: 3
@@ -116,7 +116,7 @@ In either case, consumers of the Acorn can pass `--replicas #` to customize the 
 
 When the value is assigned to any key in the config file, you can use '.' notation to reference the variable.
 
-```cue
+```acorn
 args: {
     // URL to documentation website
     docUrl: ""
@@ -145,7 +145,7 @@ localData: {
 
 When using an arg in a string or template the '.' variable needs to be placed in "\()".
 
-```cue
+```acorn
 args: {
     // A string arg
     aStringArg: "default"
@@ -169,7 +169,7 @@ Merging data is done with the `&` operator.
 
 Here is an example of allowing the user to override some defaults, but pass in additional configuration.
 
-```cue
+```acorn
 args: {
     userConfig: {}
 }

@@ -19,7 +19,7 @@ and [localData](#localData).
 not possible to have a container named `foo` and a job named `foo`, they will conflict and fail. Additional
 the keys could be using in a DNS name so the keys must only contain the characters `a-z`, `0-9` and `-`.
 
-```cue
+```acorn
 // User configurable values that can be changed at build or run time.
 args: {
 }
@@ -53,7 +53,7 @@ localData: {
 `containers` defines the templates of containers to be ran. Depending on the 
 scale parameter 1 or more containers can be created from each template (including their [sidecars](#sidecars)).
 
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 	ports: publish: "80/http"
@@ -66,7 +66,7 @@ containers: web: {
 map structure where the key is the folder name in the container and the value is the referenced volume. Refer
 to the [volumes](#volumes) section for more information on volume types.
 
-```cue
+```acorn
 containers: default: {
 	image: "nginx"
 	dirs: {
@@ -110,7 +110,7 @@ containers: default: {
 `files` parameter is a map structure with the key being the file name and the value being the text of the file
 or a reference to a secret value. The default mode for files is `0644` unless the file ends with `.sh` or contains
 `/bin/` or `/sbin/`.  In those situations the mode will be `0755`.
-```cue
+```acorn
 containers: default: {
 	image: "nginx"
 	files: {
@@ -138,14 +138,14 @@ containers: default: {
 ```
 ### image
 `image` refers to the OCI (Docker) image to run for this container.
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 }
 ```
 ### build
 `build` contains the information need to build an OCI image to run for this container
-```cue
+```acorn
 containers: build1: {
 	// Build the Docker image using the context dir "." and the "./Dockerfile".
 	build: "."
@@ -169,7 +169,7 @@ containers: build2: {
 ```
 ### command, cmd
 `command` will overwrite the `CMD` value set in the Dockerfile for the running container
-```cue
+```acorn
 containers: arg1: {
 	image: "nginx"
 	// This command will be parsed as a shell expression and turned into an array and ran
@@ -185,7 +185,7 @@ containers: arg2: {
 ```
 ### entrypoint
 `entrypoint` will overwrite the `ENTRYPOINT` value set in the Dockerfile for this running container
-```cue
+```acorn
 containers: arg1: {
 	image: "nginx"
 	// This command will be parsed as a shell expression and turned into an array and ran
@@ -201,7 +201,7 @@ containers: arg2: {
 ### env, environment
 `env` will set environment variables on the defined container.  The value of the environment variable
 may be static text or a value from a secret.
-```cue
+```acorn
 containers: env1: {
 	image: "nginx"
 	env: [
@@ -226,7 +226,7 @@ containers: env1: {
 ```
 ### workDir, workingDir
 `workDir` sets the current working directory of the running process defined in `cmd` and `entrypoint`
-```cue
+```acorn
 containers: env1: {
 	image: "nginx"
 	command: "ls"
@@ -240,7 +240,7 @@ containers: env1: {
 it's dependencies are considered ready. Ready service are considered ready as soon as
 their [ready probe](#probes-probe) passes.  If there is no ready probe it is as soon
 as the containers have started.
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 	dependsOn: ["db"]
@@ -256,7 +256,7 @@ are defined with three different access modes: internal, expose, publish. Intern
 to the containers within an Acorn. Expose(d) ports are available to services within the cluster. And
 publish ports are available publically outside the cluster. The access mode defined in the Acornfile is
 just the default behavior and can be changed at deploy time.
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 	
@@ -313,7 +313,7 @@ is available to handle requests. Ports will not be accessible until the `readine
 probes indicate if a running process is healthy. If the `liveness` probe fails, the container will be deleted
 and restarted. `startup` probe indicates that the container has started for the first time.
 
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 	
@@ -362,7 +362,7 @@ containers: web: {
 `scale` configures the number of container replicas based on this configuration that should
 be ran.
 
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 	scale: 2
@@ -372,7 +372,7 @@ containers: web: {
 ### sidecars
 `sidecars` are containers that run colocated with the parent container and share the same network
 address. Sidecars accept all the same parameters as a container and one additional parameter `init`
-```cue
+```acorn
 containers: web: {
 	image: "nginx"
 	sidecars: sidecar: {
@@ -385,7 +385,7 @@ containers: web: {
 `init` tells the container runtime that this `sidecar` must be ran first on startup and the main
 container will not run until this container is done
 
-```cue
+```acorn
 containers: web: {
     image: "nginx"
     dirs: "/run/startup/": "ephemeral://startup-info"

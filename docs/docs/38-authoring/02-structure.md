@@ -6,7 +6,7 @@ title: Structure
 
 An Acornfile has predefined top level structs, and it is recommended to define them in the following order:
 
-```cue
+```acorn
 args: { // defines arguments the consumer can provide }
 profiles: { // defines a set of default arguments for different deployment types }
 containers: { // defines the containers to run the application }
@@ -19,7 +19,7 @@ localData: { // default data and configuration variables }
 
 At a minimum, the Acornfile needs to specify at least one container to run.
 
-```cue
+```acorn
 containers: {
     nginx: {
         image: "nginx"

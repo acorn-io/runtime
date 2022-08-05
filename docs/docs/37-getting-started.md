@@ -131,7 +131,7 @@ CMD ["flask", "run"]
 
 Create your Acornfile with the following contents. Each item will be explained below, this file demonstrates a lot of what Acorn can do.
 
-```cue title="acorn-test-app/Acornfile"
+```acorn title="acorn-test-app/Acornfile"
 args: {
   // Configure your personal welcome text
   welcome: "Hello Acorn User!!"
@@ -290,7 +290,7 @@ Depending on the change, the deployed containers will be recreated.
 
 The following lines additionally enable hot-reloading of code by mounting the current local directory into the app container:
 
-```cue
+```acorn
 containers: {
   app: {
     // ...

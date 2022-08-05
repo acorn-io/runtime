@@ -14,7 +14,7 @@ The resulting artifact defined by the Acornfile and produced during `acorn build
 
 In the Acornfile file the primary building block is an object. The generic syntax for any object is:
 
-```cue
+```acorn
 key: {
     // ... fields ...
 }
@@ -22,7 +22,7 @@ key: {
 
 They start with a name `key` and are wrap a collection of fields and values in `{}`. A more Acorn specific example is:
 
-```cue
+```acorn
 containers: {
     "my-app": {
         // ...
@@ -34,7 +34,7 @@ In the above example, there is a object called `containers`, which contains anot
 
 For convenience, you can collapse objects which have only one field to a single `:` line and omit the braces.  For example these:
 
-```cue
+```acorn
 containers: foo: image: "nginx"
 
 containers: bar: build: {
@@ -45,7 +45,7 @@ containers: bar: build: {
 
 are equivalent to:
 
-```cue
+```acorn
 containers: {
     foo: {
         image: "nginx"
@@ -66,7 +66,7 @@ containers: {
 
 The other main building block is a list.
 
-```cue
+```acorn
 containers: {
     myapp: {
         // ...
@@ -88,7 +88,7 @@ A `field` is a label and a value, we have seen multiple examples of `fields` in 
 
 In an Acornfile fields can be strings with [a-zA-Z0-9_] without being wrapped in double quotes. You can use `-`, `/`, and `.` if you use double quotes around the field name.
 
-```cue
+```acorn
 // Valid field names
 aLongField: ""
 "/a/file/path": ""
@@ -99,7 +99,7 @@ aLongField: ""
 
 Variables allow you to store values and later reference them elsewhere in the Acornfile. The syntax for defining a variable is shown below. Values can be a string, number, boolean, list, object, or null.
 
-```cue
+```acorn
 localData: {
     myString: ""
     myInteger: 5
@@ -115,7 +115,7 @@ Strings can be a single line or multiline.  A single line string is surrounded b
 
 Multiline strings are enclosed in triple quotes `"""`. The opening `"""` must be followed by a newline. The closing `"""` must also be on it's own line. The whitespace directly preceding the closing quotles must match the preceding whitespace on all other lines and is not included not included in the value.  This allows you to indent the text to match current level without the indenting becoming part of the actual value.
 
-```cue
+```acorn
 singleLine: "Hi!"
 multiLine: """
     Hello 
@@ -128,7 +128,7 @@ multiLine: """
 
 Numbers are integers by default unless they contain a decimal.
 
-```cue
+```acorn
 int: 4
 float: 4.2
 ```
@@ -145,7 +145,7 @@ Null is `null`.
 
 You can add comments to document your Acornfile. Comments start with `//` and continue for the rest of the line
 
-```cue
+```acorn
 // This is a comment
 some: "value"  // This is a comment about this line
 ```
@@ -156,7 +156,7 @@ To reference a variable elsewhere in the file, you separate the key fields of th
 
 Given these variables:
 
-```cue
+```acorn
 localData: {
     myVariable: ""
     myInteger: 5
@@ -184,7 +184,7 @@ a:  localData."my-app"
 
 Fields that reference another field will look for a value starting at the nearest enclosing scope and working upwards until reaching the top-level.
 
-```cue
+```acorn
 port: 3307
 containers: app: {
     ports: localData.port // Evaluates to 3306
@@ -202,7 +202,7 @@ In the above example, `containers.app.ports` would be `3306` along with `localDa
 
 Because of scoping in the previous example, it would not be possible in the above example to set any value under localData to a value of `port`(3307). One way to address this is to use the `let` operator to alias the port variable.
 
-```cue
+```acorn
 let topLevelPort = port
 port: 3307
 containers: app: {
@@ -221,7 +221,7 @@ In the example the top level `port` variable is aliased to `topLevelPort` and as
 
 Variables can be inserted into a string by wrapping their name with `\()`.  For example:
 
-```cue
+```acorn
 args: {
     userAdjective: "cool"
 }
@@ -237,7 +237,7 @@ localData: {
 
 Interpolation can also be used for field names:
 
-```cue
+```acorn
 localData: {
     index: 3
 }
@@ -255,7 +255,7 @@ containers: {
 
 Assigning a variable to a field uses the variable accessor.
 
-```cue
+```acorn
 localData: {
     myTokenLength: 64
 }
@@ -292,14 +292,14 @@ All the basic math and comparison operators you'd find in a typical programming 
 
 `-` can also be used to negate a value:
 
-```cue
+```acorn
 a: 42
 b: -a // -42
 ```
 
 Operations can be grouped with parenthesis and combined with `&&` and `||`:
 
-```cue
+```acorn
 a: 5
 b: a/(1 + 1) // 2.5
 c: (2+2)*4/8 // 2
@@ -335,7 +335,7 @@ Regular expression syntax is the one accepted by RE2 outlined here [https://gith
 
 Support for standard `if` statements are available in an Acornfile. If conditions evaluate to a boolean, and apply their body if the condition is true.
 
-```cue
+```acorn
 localData: {
     scale: 1
 }
@@ -355,7 +355,7 @@ Ternary or "if-else" expressions are available through a built-in function which
 
 The following example will publish either port 3000 or 80 depending on `args.dev`:
 
-```cue
+```acorn
 containers: {
     app: {
         ports: publish: std.ifelse(args.dev, "3000/http", "80/http")
@@ -369,7 +369,7 @@ See the [function libarary](/reference/functions#ifelse) for more information.
 
 The Acornfile syntax provides a for loop construct to iterate through objects and lists.
 
-```cue
+```acorn
 for i in std.range(0, 10) {
     containers: {
         "my-instance-\(i)": {
@@ -381,7 +381,7 @@ for i in std.range(0, 10) {
 
 ### Object field comprehensions
 
-```cue
+```acorn
 localData:{
     dataVols: {
         dbData: "/var/lib/mysql"
@@ -407,7 +407,7 @@ for k, v in localData.config {
 
 Acornfile
 
-```cue
+```acorn
 localData: {
     list: ["one", "two", "three"]
 }
@@ -419,7 +419,7 @@ localData: {
 
 Renders to:
 
-```cue
+```acorn
 localData: {
  list: ["one", "two", "three"]
  multiLineContent: """
