@@ -401,16 +401,146 @@ containers: web: {
 ```
 
 ## jobs
+`jobs` are containers that are run once to completion. If the configuration of the job changes, the will
+be ran once again.  All fields that apply to [containers](#containers) also apply to
+jobs.
+
+```acorn
+jobs: "setup-volume": {
+	image: "my-app"
+	command: "init-data.sh"
+	dirs: "/mnt/data": "data"
+}
+```
 ### schedule
+`schedule` field will configure your job to run on a cron schedule. The format is the standard cron format.
+
+```
+ ┌───────────── minute (0 - 59)
+ │ ┌───────────── hour (0 - 23)
+ │ │ ┌───────────── day of the month (1 - 31)
+ │ │ │ ┌───────────── month (1 - 12)
+ │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday;
+ │ │ │ │ │                                   7 is also Sunday on some systems)
+ │ │ │ │ │                                   OR sun, mon, tue, wed, thu, fri, sat
+ │ │ │ │ │
+ * * * * *
+```
+The following shorthand syntaxes are supported
+
+| Entry                   | 	Description	                                            | Equivalent to |
+|-------------------------|------------------------------------------------------------|---------------|
+| @yearly (or @annually)  | Run once a year at midnight of 1 January	                | 0 0 1 1 *     |
+| @monthly	               | Run once a month at midnight of the first day of the month | 0 0 1 * *     |
+| @weekly	               | Run once a week at midnight on Sunday morning	            | 0 0 * * 0     |
+| @daily (or @midnight)   | Run once a day at midnight	                                | 0 0 * * *     |
+| @hourly	               | Run once an hour at the beginning of the hour	            | 0 * * * *     |
 
 ## volumes
+`volumes` store persistent data that can be mounted by containers
+```acorn
+container: db: {
+	image: "mariadb"
+	dirs: "/var/lib/mysql": "data"
+}
+volumes: data: {
+	size: "100G"
+	accessModes: "readWriteOnce"
+}
+```
 ### size
-### accessModes, accessMode
+`size` configures the default size of the volume to be created.  At deploy-time this value can be
+overwritten.
+
+```acorn
+volumes: data: {
+	// All numbers are assumed to be gigabytes
+	size: 100
+
+	// The following suffixes are understood
+    // 2^x  - Ki | Mi | Gi | Ti | Pi | Ei
+    // 10^x - m | k | M | G | T | P | E
+	size: "10G"
+}
+```
+### accessModes
+`accessModes` configures how a volume can be shared among containers.
+
+```acorn
+volumes: data: {
+	accessModes: [
+		// Only usable by containers on the same node
+		"readWriteOnce",
+		// Usable by containers across many nodes
+		"readWriteMany",
+		// Usable by containers across many nodes but read only
+		"readOnlyMany",
+	]
+}
+```
 
 ## secrets
+
+`secrets` store sensitive data that should be encrypted as rest.
+
+```acorn
+secrets: "my-secret": {
+    type: "opaque"
+    data: {
+        key1: ""
+        key2: ""
+    }
+}
+```
+
 ### type
+The common pattern in Acorn is for secrets to be generated if not supplied. `type`
+specifies how the secret can be generated. Refer to [the secrets documentation](../38-authoring/05-secrets.md) for
+descriptions of the different secret types and how they are used.
+
+```acorn
+secrets: "a-token": {
+	// Valid types are "opaque", "token", "basic", "generated", and "template"
+	type: "opaque"
+}
+```
+
 ### params
+`params` are used to configure the behavior of the secrets generation for different types.
+Refer to [the secrets documentation](../38-authoring/05-secrets.md) for
+descriptions of the different secret types and how their parameters.
+```acorn
+secrets: "my-token": {
+    type: "token"
+    params: {
+        length: 32
+        characters: "abcdedfhifj01234567890"
+    }
+}
+```
 ### data
+`data` defines the keys and non-senstive values that will be used by the secret.
+Refer to [the secrets documentation](../38-authoring/05-secrets.md) for
+descriptions of the different secret types and how to use data keys and values.
+
+```acorn
+secrets: {
+    "my-template": {
+        type: "template"
+        data: {
+            template: """
+            a ${secret://my-secret-data/key} value
+            """
+        }
+    }
+    "my-secret-data": {
+        type: "opaque"
+        data: {
+            key: "value"
+        }
+    }
+}
+```
 
 ## acorns
 ### image
