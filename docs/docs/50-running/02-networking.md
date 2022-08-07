@@ -81,7 +81,7 @@ If your Acorn installation ceases to make requests to the DNS service, your DNS 
 You can choose to use your own cluster domain instead of the generated domain like so:
 
 ```shell
-acorn install --cluster-domain my-company.com
+acorn install --cluster-domains my-company.com
 ```
 
 If you do so, you must manage your own DNS entries.
