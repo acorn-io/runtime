@@ -2,7 +2,7 @@
 
 ![main-release](https://github.com/acorn-io/acorn/actions/workflows/main-release.yaml/badge.svg)
 
-A simple application delpoyment framework for Kubernetes.
+A simple application deployment framework for Kubernetes.
 
 - One artifact across dev, test, and production
 - Simple CLI and powerful API
