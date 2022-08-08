@@ -16,6 +16,8 @@ RUN apk add --no-cache ca-certificates
 RUN adduser -D acorn
 RUN mkdir apiserver.local.config && chown acorn apiserver.local.config
 COPY --from=helper /usr/local/bin/acorn-helper /usr/local/bin/
+
+# NOTE: Requires buildkit: DOCKER_BUILDKIT=1
 COPY <<EOF /usr/local/bin/acorn-helper-init
 #!/bin/sh
 cp -f /usr/local/bin/acorn-helper /.acorn/acorn-helper
