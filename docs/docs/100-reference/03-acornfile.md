@@ -446,6 +446,7 @@ container: db: {
 volumes: data: {
 	size: "100G"
 	accessModes: "readWriteOnce"
+	class: "default"
 }
 ```
 ### size
@@ -461,6 +462,14 @@ volumes: data: {
     // 2^x  - Ki | Mi | Gi | Ti | Pi | Ei
     // 10^x - m | k | M | G | T | P | E
 	size: "10G"
+}
+```
+### class
+`class` refers to the `storageclass` within kubernetes. 
+```acorn
+volumes: data: {
+        // either "default" or a storageclass from `kubectl get sc`
+	class: "longhorn"
 }
 ```
 ### accessModes
