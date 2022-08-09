@@ -2,6 +2,7 @@ package registry
 
 import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
+	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
 	"github.com/acorn-io/acorn/pkg/server/registry/builders"
@@ -12,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	clientgo "k8s.io/client-go/rest"
@@ -72,7 +74,21 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 		return nil, err
 	}
 
-	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(api.Group, scheme.Scheme, scheme.ParameterCodec, scheme.Codecs)
+	newScheme := runtime.NewScheme()
+	err = scheme.AddToScheme(newScheme)
+	if err != nil {
+		return nil, err
+	}
+
+	err = v1.AddToSchemeWithGV(newScheme, schema.GroupVersion{
+		Group:   api.Group,
+		Version: runtime.APIVersionInternal,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(api.Group, newScheme, scheme.ParameterCodec, scheme.Codecs)
 	apiGroupInfo.VersionedResourcesStorageMap["v1"] = stores
 	apiGroupInfo.NegotiatedSerializer = &noProtobufSerializer{r: apiGroupInfo.NegotiatedSerializer}
 	return &apiGroupInfo, nil

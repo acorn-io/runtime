@@ -1,10 +1,13 @@
 package client
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
+	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
 	hclient "github.com/acorn-io/acorn/pkg/client"
@@ -12,7 +15,68 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
 )
+
+func TestAppsSSA(t *testing.T) {
+	helper.StartController(t)
+	cfg := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	client := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, client)
+	hclient, err := hclient.New(cfg, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dyn, err := dynamic.NewForConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/Acornfile", &build.Options{
+		Client: helper.BuilderClient(t, ns.Name),
+		Cwd:    "./testdata/nginx",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appBytes, err := json.Marshal(&apiv1.App{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "App",
+			APIVersion: api.Group + "/" + apiv1.Version,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: ns.Name,
+		},
+		Spec: v1.AppInstanceSpec{
+			Image: image.ID,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = dyn.Resource(apiv1.SchemeGroupVersion.WithResource("apps")).
+		Namespace(ns.Name).
+		Patch(ctx, "test", types.ApplyPatchType, appBytes, metav1.PatchOptions{
+			FieldManager: "unit-test",
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := hclient.AppGet(ctx, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, image.ID, app.Spec.Image)
+}
 
 func TestFriendlyNameInContainer(t *testing.T) {
 	helper.StartController(t)

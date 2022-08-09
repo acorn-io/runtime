@@ -179,16 +179,23 @@ func (s *Storage) Create(ctx context.Context, obj runtime.Object, createValidati
 
 func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
 	oldAppInstance, err := s.get(ctx, name)
-	if err != nil {
+	if apierrors.IsNotFound(err) {
+		if !forceAllowCreate {
+			return nil, false, err
+		} else {
+			oldAppInstance = nil
+		}
+	} else if err != nil {
 		return nil, false, err
 	}
 
-	appToUpdate := &apiv1.App{
-		ObjectMeta: oldAppInstance.ObjectMeta,
-		Spec:       oldAppInstance.Spec,
+	appToUpdate := &apiv1.App{}
+	if oldAppInstance != nil {
+		appToUpdate.ObjectMeta = oldAppInstance.ObjectMeta
+		appToUpdate.Spec = oldAppInstance.Spec
+		appToUpdate.UID = appToUpdate.UID + "-a"
+		appToUpdate.Namespace, appToUpdate.Name = namespace.NormalizedName(appToUpdate.ObjectMeta)
 	}
-	appToUpdate.UID = appToUpdate.UID + "-a"
-	appToUpdate.Namespace, appToUpdate.Name = namespace.NormalizedName(appToUpdate.ObjectMeta)
 
 	newObj, err := objInfo.UpdatedObject(ctx, appToUpdate)
 	if err != nil {
@@ -203,8 +210,13 @@ func (s *Storage) Update(ctx context.Context, name string, objInfo rest.UpdatedO
 		}
 	}
 
+	if forceAllowCreate && oldAppInstance == nil {
+		o, err := s.Create(ctx, newObj, nil, nil)
+		return o, true, err
+	}
+
 	if newApp.Spec.Image != oldAppInstance.Spec.Image {
-		image, err := s.resolveTag(ctx, appToUpdate.Namespace, newApp.Spec.Image)
+		image, err := s.resolveTag(ctx, newApp.Namespace, newApp.Spec.Image)
 		if err != nil {
 			return nil, false, err
 		}
