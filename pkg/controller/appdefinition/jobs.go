@@ -69,7 +69,6 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Spec: corev1.PodSpec{
 				TerminationGracePeriodSeconds: &[]int64{5}[0],
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
-				ShareProcessNamespace:         &[]bool{true}[0],
 				EnableServiceLinks:            new(bool),
 				RestartPolicy:                 corev1.RestartPolicyNever,
 				Containers:                    setTerminationPath(containers),

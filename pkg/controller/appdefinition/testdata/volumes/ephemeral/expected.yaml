@@ -42,7 +42,6 @@ spec:
       terminationGracePeriodSeconds: 5
       automountServiceAccountToken: false
       enableServiceLinks: false
-      shareProcessNamespace: true
       volumes:
         - name: foo
           emptyDir:

@@ -37,7 +37,6 @@ spec:
       restartPolicy: Never
       automountServiceAccountToken: false
       enableServiceLinks: false
-      shareProcessNamespace: true
       terminationGracePeriodSeconds: 5
       containers:
         - name: oneimage

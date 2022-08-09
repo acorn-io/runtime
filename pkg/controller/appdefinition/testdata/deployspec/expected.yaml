@@ -41,7 +41,6 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
@@ -94,7 +93,6 @@ spec:
       terminationGracePeriodSeconds: 5
       automountServiceAccountToken: false
       enableServiceLinks: false
-      shareProcessNamespace: true
       imagePullSecrets:
         - name: buildimage-pull-1234567890ab
       containers:

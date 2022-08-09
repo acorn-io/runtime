@@ -44,7 +44,6 @@ spec:
         - name: container-name-pull-1234567890ab
       terminationGracePeriodSeconds: 5
       hostname: container-name
-      shareProcessNamespace: true
       enableServiceLinks: false
       automountServiceAccountToken: false
       volumes:

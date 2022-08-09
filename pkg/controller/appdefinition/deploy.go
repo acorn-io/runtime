@@ -568,7 +568,6 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: &[]int64{5}[0],
 					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
-					ShareProcessNamespace:         &[]bool{true}[0],
 					EnableServiceLinks:            new(bool),
 					Containers:                    containers,
 					InitContainers:                initContainers,
