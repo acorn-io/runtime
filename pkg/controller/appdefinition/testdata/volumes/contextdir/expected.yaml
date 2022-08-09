@@ -42,7 +42,6 @@ spec:
         - name: container-name-pull-1234567890ab
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: container-name

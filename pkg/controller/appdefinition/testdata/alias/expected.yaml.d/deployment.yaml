@@ -34,7 +34,6 @@ spec:
         - name: con1-pull-1234567890ab
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: con1
@@ -84,7 +83,6 @@ spec:
         - name: con2-pull-1234567890ab
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: con2
@@ -133,7 +131,6 @@ spec:
       imagePullSecrets:
         - name: con3-pull-1234567890ab
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       containers:
         - name: con3

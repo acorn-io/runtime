@@ -45,7 +45,6 @@ spec:
       terminationGracePeriodSeconds: 5
       hostname: container-name
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       volumes:
         - name: foo

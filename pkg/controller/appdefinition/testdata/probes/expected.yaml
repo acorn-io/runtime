@@ -40,7 +40,6 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      shareProcessNamespace: true
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
