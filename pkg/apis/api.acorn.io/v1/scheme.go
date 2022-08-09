@@ -17,7 +17,11 @@ var SchemeGroupVersion = schema.GroupVersion{
 }
 
 func AddToScheme(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(SchemeGroupVersion,
+	return AddToSchemeWithGV(scheme, SchemeGroupVersion)
+}
+
+func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVersion) error {
+	scheme.AddKnownTypes(schemeGroupVersion,
 		&App{},
 		&AppList{},
 		&Builder{},
@@ -44,13 +48,17 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	)
 
 	// Add common types
-	scheme.AddKnownTypes(SchemeGroupVersion, &metav1.Status{})
+	scheme.AddKnownTypes(schemeGroupVersion, &metav1.Status{})
 
-	// Add the watch version that applies
-	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	if schemeGroupVersion == SchemeGroupVersion {
+		// Add the watch version that applies
+		metav1.AddToGroupVersion(scheme, schemeGroupVersion)
 
-	if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions); err != nil {
-		return err
+		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions); err != nil {
+			return err
+		}
+		return scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), Convert_url_Values_To__LogOptions)
 	}
-	return scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), Convert_url_Values_To__LogOptions)
+
+	return nil
 }
