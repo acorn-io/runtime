@@ -82,6 +82,12 @@ func (in PortBinding) Complete(serviceName string) PortBinding {
 func (in PortDef) String() string {
 	in = in.Complete(in.ServiceName)
 	buf := &strings.Builder{}
+	if in.Expose {
+		buf.WriteString("expose: ")
+	}
+	if in.Publish {
+		buf.WriteString("publish: ")
+	}
 	if in.ServiceName != "" {
 		buf.WriteString(in.ServiceName)
 	}
@@ -104,12 +110,6 @@ func (in PortDef) String() string {
 	buf.WriteString("/")
 	buf.WriteString(string(in.Protocol))
 
-	if in.Expose {
-		buf.WriteString(",expose")
-	}
-	if in.Publish {
-		buf.WriteString(",publish")
-	}
 	return buf.String()
 }
 
