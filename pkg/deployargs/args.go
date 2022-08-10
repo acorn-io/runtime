@@ -77,21 +77,21 @@ func Usage(app *v1.AppSpec) func() {
 			fmt.Println(strings.Join(maps.Keys(app.Secrets), ", "))
 		}
 
-		if len(app.Secrets) == 0 {
-			fmt.Println("Container: <none>")
+		if len(app.Containers) == 0 {
+			fmt.Println("Containers: <none>")
 		} else {
-			fmt.Print("Container: ")
+			fmt.Print("Containers: ")
 			fmt.Println(strings.Join(maps.Keys(app.Containers), ", "))
 		}
 
 		var ports []string
 		for containerName, container := range app.Containers {
 			for _, port := range container.Ports {
-				ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
+				ports = append(ports, port.Complete(containerName).String())
 			}
 			for _, sidecar := range container.Sidecars {
 				for _, port := range sidecar.Ports {
-					ports = append(ports, fmt.Sprintf("%s:%d/%s", containerName, port.Port, port.Protocol))
+					ports = append(ports, port.Complete(containerName).String())
 				}
 			}
 		}
