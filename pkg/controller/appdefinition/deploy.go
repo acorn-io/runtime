@@ -582,6 +582,8 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		dep.Spec.Replicas = &[]int32{1}[0]
 		dep.Spec.Template.Spec.Hostname = dep.Name
 		dep.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
+	} else if dep.Spec.Replicas == nil || *dep.Spec.Replicas == 1 {
+		dep.Spec.Template.Spec.Hostname = dep.Name
 	}
 
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {

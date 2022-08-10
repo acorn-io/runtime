@@ -38,6 +38,7 @@ spec:
         acorn.io/container-spec: '{"build":{"baseImage":"image-name","context":".","contextDirs":{"/var/tmp":"./foo"},"dockerfile":"Dockerfile"},"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name"}'
         acorn.io/image-mapping: '{"image-name":"image-name"}'
     spec:
+      hostname: container-name
       imagePullSecrets:
         - name: container-name-pull-1234567890ab
       terminationGracePeriodSeconds: 5
