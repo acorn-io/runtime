@@ -30,6 +30,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
+      hostname: container-name
       automountServiceAccountToken: false
       imagePullSecrets:
         - name: container-name-pull-1234567890ab
@@ -72,6 +73,7 @@ spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       automountServiceAccountToken: false
+      hostname: web
       imagePullSecrets:
         - name: web-pull-1234567890ab
       containers:

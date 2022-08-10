@@ -41,6 +41,7 @@ spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       automountServiceAccountToken: false
+      hostname: oneimage
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
       containers:

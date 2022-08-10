@@ -29,6 +29,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","publish":true,"targetPort":91}]}}}'
     spec:
+      hostname: oneimage
       terminationGracePeriodSeconds: 5
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
@@ -83,6 +84,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":443,"protocol":"tcp","publish":true,"targetPort":91}]}'
     spec:
+      hostname: buildimage
       terminationGracePeriodSeconds: 5
       imagePullSecrets:
         - name: buildimage-pull-1234567890ab
