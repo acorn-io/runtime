@@ -40,6 +40,10 @@ var (
 	apiRESTConfig       *rest.Config
 )
 
+const (
+	APIServerLocalCertPath = "apiserver.local.config"
+)
+
 func EnsureCRDs(t *testing.T) {
 	ctx := GetCTX(t)
 	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
@@ -83,6 +87,7 @@ func ensureNamespace(t *testing.T) {
 		},
 	})
 }
+
 func StartAPI(t *testing.T) *rest.Config {
 	apiStartLock.Lock()
 	defer apiStartLock.Unlock()
@@ -90,6 +95,8 @@ func StartAPI(t *testing.T) *rest.Config {
 	if apiStarted {
 		return apiRESTConfig
 	}
+
+	t.Cleanup(CleanupAPI)
 
 	ensureNamespace(t)
 
@@ -149,6 +156,17 @@ func StartAPI(t *testing.T) *rest.Config {
 
 	t.Fatal("failed to start API")
 	return nil
+}
+
+func CleanupAPI() {
+	fileInfo, err := os.Stat(APIServerLocalCertPath)
+	if err != nil {
+		return
+	}
+
+	if fileInfo.IsDir() {
+		_ = os.RemoveAll(APIServerLocalCertPath)
+	}
 }
 
 func StartRegistry(t *testing.T) (string, func()) {
