@@ -8,7 +8,7 @@ replace (
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf
 	go.etcd.io/etcd/server/v3 v3.5.1 => github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1
-	k8s.io/apiserver => github.com/acorn-io/apiserver v0.24.1-ot-1
+	k8s.io/apiserver => github.com/acorn-io/apiserver v0.24.1-rc.0
 	k8s.io/client-go => k8s.io/client-go v0.24.1
 	k8s.io/component-base => github.com/acorn-io/component-base v0.24.1-ot-1
 )
