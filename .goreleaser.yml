@@ -80,7 +80,7 @@ release:
     owner: acorn-io
     name: acorn
   prerelease: auto
-  discussion_category_name: General
+  discussion_category_name: Announcements
   extra_files:
     - glob: ./cosign.pub
     - glob: "./releases/*.dmg"
