@@ -1,5 +1,5 @@
 ---
-title: Multiple Acorn apps
+title: Linking Acorn Apps
 ---
 
 Acorns can be linked with other running Acorns at runtime to provide supporting services. For instance if you have an Acorn running Postgresql, it can be used to provide the `db` service to another app.
