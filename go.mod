@@ -10,7 +10,7 @@ replace (
 	go.etcd.io/etcd/server/v3 v3.5.1 => github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1
 	k8s.io/apiserver => github.com/acorn-io/apiserver v0.24.1-ot-1
 	k8s.io/client-go => k8s.io/client-go v0.24.1
-	k8s.io/component-base => github.com/acorn-io/component-base v0.24.1-ot-1
+	k8s.io/component-base => github.com/acorn-io/component-base v0.24.1-rc.0
 )
 
 require (
