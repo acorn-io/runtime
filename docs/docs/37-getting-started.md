@@ -27,7 +27,7 @@ acorn install
 
 ## Step 2. Create your app
 
-Let's start by creating a few files that compose our Python web app.  You can also find all these files in the `flask` directory of the [docs-examples](https://github.com/acorn-io/docs-examples) GitHub repo if you'd rather start from there.
+Let's start by creating a few files that compose our Python web app.  You can also find all these files in the `docs/flask` directory of the [examples](https://github.com/acorn-io/examples) GitHub repo if you'd rather start from there.
 
 
 ```shell
