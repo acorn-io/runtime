@@ -51,6 +51,8 @@ type RunArgs struct {
 	Expose     []string `usage:"In cluster expose ports of an application (format [public:]private) (ex 81:80)"`
 	Profile    []string `usage:"Profile to assign default values"`
 	Env        []string `usage:"Environment variables to set on running containers" short:"e"`
+	Label      []string `usage:"Add labels to the app and the resources it creates (ex: containers:container-name:key=value)" short:"L"`
+	Annotation []string `usage:"Add annotations to the app and the resources it creates (ex: containers:container-name:key=value)" short:"a"`
 	Dangerous  bool     `usage:"Automatically approve all privileges requested by the application"`
 	Output     string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
 }
@@ -80,6 +82,16 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	}
 
 	opts.Env = v1.ParseNameValues(true, s.Env...)
+
+	opts.Labels, err = v1.ParseScopedLabels(s.Label...)
+	if err != nil {
+		return opts, err
+	}
+
+	opts.Annotations, err = v1.ParseScopedLabels(s.Annotation...)
+	if err != nil {
+		return opts, err
+	}
 
 	opts.Ports, err = v1.ParsePortBindings(true, s.Publish)
 	if err != nil {

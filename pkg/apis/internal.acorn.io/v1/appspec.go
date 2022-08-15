@@ -265,6 +265,8 @@ type Container struct {
 	Probes       Probes                 `json:"probes,omitempty"`
 	Dependencies Dependencies           `json:"dependencies,omitempty"`
 	Permissions  *Permissions           `json:"permissions,omitempty"`
+	Labels       map[string]string      `json:"labels,omitempty"`
+	Annotations  map[string]string      `json:"annotations,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
@@ -285,12 +287,14 @@ type Image struct {
 }
 
 type AppSpec struct {
-	Containers map[string]Container     `json:"containers,omitempty"`
-	Jobs       map[string]Container     `json:"jobs,omitempty"`
-	Images     map[string]Image         `json:"images,omitempty"`
-	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
-	Secrets    map[string]Secret        `json:"secrets,omitempty"`
-	Acorns     map[string]Acorn         `json:"acorns,omitempty"`
+	Containers  map[string]Container     `json:"containers,omitempty"`
+	Jobs        map[string]Container     `json:"jobs,omitempty"`
+	Images      map[string]Image         `json:"images,omitempty"`
+	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
+	Secrets     map[string]Secret        `json:"secrets,omitempty"`
+	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
+	Labels      map[string]string        `json:"labels,omitempty"`
+	Annotations map[string]string        `json:"annotations,omitempty"`
 }
 
 type Acorn struct {

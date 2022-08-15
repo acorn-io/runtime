@@ -15,6 +15,10 @@ package v1
 
 #EnvVars: *[...string] | {[string]: string}
 
+#Labels: string
+
+#Annotations: string
+
 #Sidecar: {
 	#ContainerBase
 	init: bool | *false
@@ -94,6 +98,8 @@ package v1
 	ports:                          #PortSingle | *[...#Port] | #PortMap
 	[=~"probes|probe"]:             #Probes
 	[=~"depends[oO]n|depends_on"]:  string | *[...string]
+	labels:                         [string]: #Labels
+	annotations:                    [string]: #Annotations
 	permissions: {
 		rules: [...#RuleSpec]
 		clusterRules: [...#RuleSpec]
@@ -235,4 +241,6 @@ package v1
 	volumes: [=~#DNSName]:    #Volume
 	secrets: [=~#DNSName]:    #Secret
 	acorns: [=~#DNSName]:     #Acorn
+	labels: [string]: #Labels
+	annotations: [string]: #Annotations
 }

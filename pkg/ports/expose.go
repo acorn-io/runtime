@@ -147,6 +147,8 @@ func ForAcorn(app *v1.AppInstance, acornName string) (result []v1.PortBinding) {
 	return
 }
 
+// Good example of combining whats in the acorn with whats been bound from the cli
+// ps form New() is the port set from the acornfile by way of app.status.appspec.containers
 func NewForIngressPublish(app *v1.AppInstance) (*Set, error) {
 	ps, err := New(app)
 	if err != nil {

@@ -54,19 +54,20 @@ const (
 )
 
 type AppInstanceSpec struct {
-	Image       string          `json:"image,omitempty"`
-	Stop        *bool           `json:"stop,omitempty"`
-	DevMode     *bool           `json:"devMode,omitempty"`
-	Profiles    []string        `json:"profiles,omitempty"`
-	Volumes     []VolumeBinding `json:"volumes,omitempty"`
-	Secrets     []SecretBinding `json:"secrets,omitempty"`
-	Environment []NameValue     `json:"environment,omitempty"`
-	PublishMode PublishMode     `json:"publishMode,omitempty"`
-
+	Image       string           `json:"image,omitempty"`
+	Stop        *bool            `json:"stop,omitempty"`
+	DevMode     *bool            `json:"devMode,omitempty"`
+	Profiles    []string         `json:"profiles,omitempty"`
+	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
+	Secrets     []SecretBinding  `json:"secrets,omitempty"`
+	Environment []NameValue      `json:"environment,omitempty"`
+	PublishMode PublishMode      `json:"publishMode,omitempty"`
 	Links       []ServiceBinding `json:"services,omitempty"`
 	Ports       []PortBinding    `json:"ports,omitempty"`
 	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
 	Permissions *Permissions     `json:"permissions,omitempty"`
+	Labels      []ScopedLabel    `json:"labels,omitempty"`
+	Annotations []ScopedLabel    `json:"annotations,omitempty"`
 }
 
 func (in AppInstanceSpec) GetDevMode() bool {
@@ -91,6 +92,13 @@ type VolumeBinding struct {
 	Size        Quantity    `json:"size,omitempty"`
 	AccessModes AccessModes `json:"accessModes,omitempty"`
 	Class       string      `json:"class,omitempty"`
+}
+
+type ScopedLabel struct {
+	ResourceType string `json:"resourceType,omitempty"`
+	ResourceName string `json:"resourceName,omitempty"`
+	Key          string `json:"key,omitempty"`
+	Value        string `json:"value,omitempty"`
 }
 
 type ContainerStatus struct {

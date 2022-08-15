@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"golang.org/x/exp/maps"
 )
 
@@ -87,4 +88,23 @@ func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
 		}
 	}
 	return labels
+}
+
+func GatherScoped(resourceName, resourceType string, globalLabels, resourceLabels map[string]string, scoped []v1.ScopedLabel) map[string]string {
+	m := typed.Concat(globalLabels, resourceLabels)
+
+	for _, scopedLabel := range scoped {
+		if scopedLabel.ResourceType == "" {
+			if scopedLabel.ResourceName == "" {
+				m[scopedLabel.Key] = scopedLabel.Value
+			} else if scopedLabel.ResourceName == resourceName {
+				m[scopedLabel.Key] = scopedLabel.Value
+			}
+		} else if scopedLabel.ResourceType == resourceType {
+			if scopedLabel.ResourceName == "" || scopedLabel.ResourceName == resourceName {
+				m[scopedLabel.Key] = scopedLabel.Value
+			}
+		}
+	}
+	return ExcludeAcornKey(m)
 }

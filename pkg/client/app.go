@@ -37,8 +37,8 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   namespace,
-			Annotations: opts.Annotations,
-			Labels:      opts.Labels,
+			Annotations: appScoped(opts.Annotations),
+			Labels:      appScoped(opts.Labels),
 		},
 		Spec: v1.AppInstanceSpec{
 			Image:       image,
@@ -52,6 +52,8 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			DevMode:     opts.DevMode,
 			Permissions: opts.Permissions,
 			Environment: opts.Env,
+			Labels:      opts.Labels,
+			Annotations: opts.Annotations,
 		},
 	}
 }
@@ -86,13 +88,15 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 		app.Spec.Image = opts.Image
 	}
 
-	app.Labels = typed.Concat(app.Labels, opts.Labels)
-	app.Annotations = typed.Concat(app.Annotations, opts.Annotations)
+	app.Labels = typed.Concat(app.Labels, appScoped(opts.Labels))
+	app.Annotations = typed.Concat(app.Annotations, appScoped(opts.Annotations))
 	app.Spec.Volumes = mergeVolumes(app.Spec.Volumes, opts.Volumes)
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
 	app.Spec.Links = mergeServices(app.Spec.Links, opts.Links)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
 	app.Spec.Environment = mergeEnv(app.Spec.Environment, opts.Env)
+	app.Spec.Labels = mergeLabels(app.Spec.Labels, opts.Labels)
+	app.Spec.Annotations = mergeLabels(app.Spec.Annotations, opts.Annotations)
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles
@@ -270,6 +274,35 @@ func mergeVolumes(appVolumes, optsVolumes []v1.VolumeBinding) []v1.VolumeBinding
 	}
 
 	return appVolumes
+}
+
+func mergeLabels(appLabels, optsLabels []v1.ScopedLabel) []v1.ScopedLabel {
+	for _, newLabel := range optsLabels {
+		found := false
+		for i, existingLabel := range appLabels {
+			if existingLabel.ResourceType == newLabel.ResourceType && existingLabel.ResourceName == newLabel.ResourceName &&
+				existingLabel.Key == newLabel.Key {
+				appLabels[i] = newLabel
+				found = true
+				break
+			}
+		}
+		if !found {
+			appLabels = append(appLabels, newLabel)
+		}
+	}
+
+	return appLabels
+}
+
+func appScoped(scoped []v1.ScopedLabel) map[string]string {
+	labels := make(map[string]string)
+	for _, s := range scoped {
+		if s.ResourceType == "app" {
+			labels[s.Key] = s.Value
+		}
+	}
+	return labels
 }
 
 func (c *client) AppDelete(ctx context.Context, name string) (*apiv1.App, error) {

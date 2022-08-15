@@ -90,6 +90,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef":                   schema_pkg_apis_internalacornio_v1_PortDef(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe":                     schema_pkg_apis_internalacornio_v1_Probe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Profile":                   schema_pkg_apis_internalacornio_v1_Profile(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel":               schema_pkg_apis_internalacornio_v1_ScopedLabel(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret":                    schema_pkg_apis_internalacornio_v1_Secret(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding":             schema_pkg_apis_internalacornio_v1_SecretBinding(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference":           schema_pkg_apis_internalacornio_v1_SecretReference(ref),
@@ -2675,11 +2676,37 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
 						},
 					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+									},
+								},
+							},
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
 	}
 }
 
@@ -2892,6 +2919,36 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
 										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn"),
+									},
+								},
+							},
+						},
+					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
 									},
 								},
 							},
@@ -3263,6 +3320,36 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 					"permissions": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+						},
+					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 					"scale": {
@@ -4250,6 +4337,42 @@ func schema_pkg_apis_internalacornio_v1_Profile(ref common.ReferenceCallback) co
 						},
 					},
 					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_ScopedLabel(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"resourceType": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"resourceName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"key": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"value": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
