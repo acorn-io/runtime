@@ -126,6 +126,8 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 		})
 	}
 
+	labels.AddCommonLabelsAndAnnotations(app, result)
+
 	return result, nil
 }
 

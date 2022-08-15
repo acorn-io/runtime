@@ -56,6 +56,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 	}
 }
 
+// where is this called?
 func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
 	app := ToApp(c.Namespace, image, opts)
 	return app, translatePermissions(c.Client.Create(ctx, app))

@@ -24,13 +24,8 @@ const (
 	AcornHelperPath = "/.acorn"
 )
 
-func addPVCs(req router.Request, appInstance *v1.AppInstance, resp router.Response) error {
-	pvcs, err := toPVCs(req, appInstance)
-	if err != nil {
-		return err
-	}
-	resp.Objects(pvcs...)
-	return nil
+func addPVCs(req router.Request, appInstance *v1.AppInstance) ([]kclient.Object, error) {
+	return toPVCs(req, appInstance)
 }
 
 func translateAccessModes(accessModes []v1.AccessMode) (result []corev1.PersistentVolumeAccessMode) {

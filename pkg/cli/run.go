@@ -130,6 +130,7 @@ func buildImage(ctx context.Context, file, cwd string, args, profiles []string) 
 	return image.ID, nil
 }
 
+// where is this called?
 func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	c, err := client.Default()
 	if err != nil {

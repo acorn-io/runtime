@@ -62,37 +62,51 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	addNamespace(cfg, appInstance, resp)
-	addServiceAccount(appInstance, resp)
-	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
-		return err
-	}
-	if err := addJobs(req, appInstance, tag, pullSecrets, resp); err != nil {
-		return err
-	}
-	if err := addPublish(req, appInstance, resp); err != nil {
-		return err
-	}
-	if err := addExpose(req, appInstance, resp); err != nil {
-		return err
-	}
-	if err := addPVCs(req, appInstance, resp); err != nil {
-		return err
-	}
-	if err := addConfigMaps(appInstance, resp); err != nil {
-		return err
-	}
-	addAcorns(appInstance, tag, pullSecrets, resp)
+	var objects, objs []kclient.Object
+	objects = append(objects, addNamespace(cfg, appInstance))
+	objects = append(objects, toServiceAccount(appInstance)...)
 
-	resp.Objects(pullSecrets.Objects()...)
+	if objs, err = addDeployments(req, appInstance, tag, pullSecrets); err != nil {
+		return err
+	}
+	objects = append(objects, objs...)
+	if objs, err = addJobs(req, appInstance, tag, pullSecrets); err != nil {
+		return err
+	}
+	objects = append(objects, objs...)
+	if objs, err = addPublish(req, appInstance); err != nil {
+		return err
+	}
+	objects = append(objects, objs...)
+	if objs, err = addExpose(req, appInstance); err != nil {
+		return err
+	}
+	objects = append(objects, objs...)
+	if objs, err = addPVCs(req, appInstance); err != nil {
+		return err
+	}
+	objects = append(objects, objs...)
+	if objs, err = addConfigMaps(appInstance); err != nil {
+		return err
+	}
+	objects = append(objects, objs...)
+
+	objects = append(objects, addAcorns(appInstance, tag, pullSecrets)...)
+	objects = append(objects, pullSecrets.Objects()...)
+
+	labels.AddCommonLabelsAndAnnotations(appInstance, objects)
+
+	resp.Objects(objects...)
 	return pullSecrets.Err()
 }
 
-func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
+func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) ([]kclient.Object, error) {
 	deps, err := ToDeployments(req, appInstance, tag, pullSecrets)
 	if err != nil {
 		return err
 	}
+
+	labels.AddCommonLabelsAndAnnotations(appInstance, deps)
 	resp.Objects(deps...)
 	return nil
 }
@@ -624,7 +638,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 	return result, nil
 }
 
-func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance, resp router.Response) {
+func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance) kclient.Object {
 	labels := map[string]string{
 		labels.AcornAppName:      appInstance.Name,
 		labels.AcornAppNamespace: appInstance.Namespace,
@@ -635,12 +649,12 @@ func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance, resp router.Re
 		labels["pod-security.kubernetes.io/enforce"] = cfg.PodSecurityEnforceProfile
 	}
 
-	resp.Objects(&corev1.Namespace{
+	return &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   appInstance.Status.Namespace,
 			Labels: labels,
 		},
-	})
+	}
 }
 
 func addFileContent(configMap *corev1.ConfigMap, appName, deploymentName string, container v1.Container) error {
@@ -668,10 +682,8 @@ func addFileContent(configMap *corev1.ConfigMap, appName, deploymentName string,
 	return nil
 }
 
-func addConfigMaps(appInstance *v1.AppInstance, resp router.Response) error {
-	objs, err := toConfigMaps(appInstance)
-	resp.Objects(objs...)
-	return err
+func addConfigMaps(appInstance *v1.AppInstance) ([]kclient.Object, error) {
+	return toConfigMaps(appInstance)
 }
 
 func toConfigMaps(appInstance *v1.AppInstance) (result []kclient.Object, err error) {

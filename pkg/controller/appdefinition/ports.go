@@ -5,40 +5,39 @@ import (
 	"github.com/acorn-io/acorn/pkg/expose"
 	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/baaah/pkg/router"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addPublish(req router.Request, app *v1.AppInstance, resp router.Response) error {
+func addPublish(req router.Request, app *v1.AppInstance) ([]kclient.Object, error) {
 	objs, err := publish.Containers(app)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Objects(objs...)
 
-	objs, err = publish.Ingress(req, app)
+	ingresses, err := publish.Ingress(req, app)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Objects(objs...)
-	return nil
+	objs = append(objs, ingresses...)
+	return objs, nil
 }
 
-func addExpose(req router.Request, app *v1.AppInstance, resp router.Response) error {
-	links, err := expose.Links(req, app)
+func addExpose(req router.Request, app *v1.AppInstance) ([]kclient.Object, error) {
+	objs, err := expose.Links(req, app)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Objects(links...)
 
-	objs, err := expose.Containers(app)
+	containers, err := expose.Containers(app)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Objects(objs...)
+	objs = append(objs, containers...)
 
-	objs, err = expose.Acorns(req, app)
+	acorns, err := expose.Acorns(req, app)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Objects(objs...)
-	return nil
+	objs = append(objs, acorns...)
+	return objs, nil
 }

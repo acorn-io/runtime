@@ -177,6 +177,7 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 		c.PreRunE = p.Pre
 	}
 
+	// this looks like Run
 	c.RunE = obj.Run
 	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, optInt, optBool, optString, envs)
 	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, optInt, optBool, optString, envs)

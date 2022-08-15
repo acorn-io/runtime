@@ -14,13 +14,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
-	jobs, err := toJobs(req, appInstance, pullSecrets, tag)
-	if err != nil {
-		return err
-	}
-	resp.Objects(jobs...)
-	return nil
+func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) ([]kclient.Object, error) {
+	return toJobs(req, appInstance, pullSecrets, tag)
 }
 
 func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference) (result []kclient.Object, _ error) {
