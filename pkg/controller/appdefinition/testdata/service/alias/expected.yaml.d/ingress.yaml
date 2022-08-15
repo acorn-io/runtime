@@ -8,8 +8,14 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/service-name": "svc1"
     "acorn.io/managed": "true"
+    "con1key": "value"
+    "con2key": "value"
+    "both": "con2val"
   annotations:
     acorn.io/targets: '{"localhost":{"port":81,"service":"svc1"}}'
+    "con1": "value"
+    "con2": "value"
+    "both": "con2val"
 spec:
   rules:
     - host: localhost

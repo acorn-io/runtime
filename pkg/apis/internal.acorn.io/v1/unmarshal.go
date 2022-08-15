@@ -800,6 +800,7 @@ func (in *EnvVars) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
 func (in *Files) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, (*map[string]File)(in)); err != nil {
 		return err
@@ -842,6 +843,50 @@ func (in *File) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	in.Content = string(data)
+	return nil
+}
+
+// UnmarshalJSON unmarshalls into this ScopedLabels type from either:
+// - a map whose entries look like "containers:foo:key": "v"
+// - an array of objects whose entries look like {resourceTYpe: "container" ... value: "v"}
+// When unmarshalling from a map, the resulting entries are ordered so that they stay consistent across multiple unmarshallings
+func (in *ScopedLabels) UnmarshalJSON(data []byte) error {
+	if isObject(data) {
+		values := map[string]string{}
+		if err := json.Unmarshal(data, &values); err != nil {
+			return err
+		}
+		for k, v := range values {
+			l, err := parseScopedLabel(k, v)
+			if err != nil {
+				return err
+			}
+			*in = append(*in, l)
+		}
+
+		sort.Slice(*in, func(i, j int) bool {
+			if (*in)[i].ResourceType != (*in)[j].ResourceType {
+				return (*in)[i].ResourceType < (*in)[j].ResourceType
+			}
+			if (*in)[i].ResourceName != (*in)[j].ResourceName {
+				return (*in)[i].ResourceName < (*in)[j].ResourceName
+			}
+			return (*in)[i].Key < (*in)[j].Key
+		})
+	} else {
+		err := json.Unmarshal(data, (*[]ScopedLabel)(in))
+		if err != nil {
+			return err
+		}
+		for i, l := range *in {
+			nType, err := canonicalResourceType(l.ResourceType)
+			if err != nil {
+				return err
+			}
+			(*in)[i].ResourceType = nType
+		}
+	}
+
 	return nil
 }
 

@@ -11,7 +11,7 @@ func Containers(app *v1.AppInstance) ([]kclient.Object, error) {
 		return nil, nil
 	}
 
-	portSet, err := ports.NewForContainerPublish(app)
+	portSet, err := ports.NewForServiceLBPublish(app)
 	if err != nil {
 		return nil, err
 	}

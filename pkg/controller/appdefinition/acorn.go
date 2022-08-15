@@ -32,16 +32,21 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
 
+	labelMap := labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Labels, appInstance.Spec.Labels, acorn.Labels),
+		labels.Managed(appInstance, labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
+			labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
+			labels.AcornAcornName, acornName))
+
 	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      acornName,
-			Namespace: appInstance.Status.Namespace,
-			Labels: labels.Managed(appInstance,
-				labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
-				labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
-				labels.AcornAcornName, acornName),
+			Name:        acornName,
+			Namespace:   appInstance.Status.Namespace,
+			Labels:      labelMap,
+			Annotations: appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
 		},
 		Spec: v1.AppInstanceSpec{
+			Labels:      append(acorn.Labels, appInstance.Spec.Labels...),
+			Annotations: append(acorn.Annotations, appInstance.Spec.Annotations...),
 			Image:       image,
 			Volumes:     acorn.Volumes,
 			Secrets:     acorn.Secrets,
@@ -60,4 +65,16 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	}
 
 	return acornInstance
+}
+
+func appInstanceScoped(acornName string, globalLabels map[string]string, appSpecLabels []v1.ScopedLabel, acornScopedLabels v1.ScopedLabels) map[string]string {
+	labelMap := make(map[string]string)
+	for _, s := range acornScopedLabels {
+		if s.ResourceType == v1.LabelTypeMeta || (s.ResourceType == "" && s.ResourceName == "") {
+			labelMap[s.Key] = s.Value
+		}
+	}
+
+	labelMap = labels.Merge(labelMap, labels.GatherScoped(acornName, v1.LabelTypeAcorn, globalLabels, labelMap, appSpecLabels))
+	return labels.ExcludeAcornKey(labelMap)
 }

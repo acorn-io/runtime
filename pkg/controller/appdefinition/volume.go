@@ -99,13 +99,9 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      volume,
 				Namespace: appInstance.Status.Namespace,
-				Labels: map[string]string{
-					labels.AcornAppName:       appInstance.Name,
-					labels.AcornAppNamespace:  appInstance.Namespace,
-					labels.AcornManaged:       "true",
-					labels.AcornRootNamespace: appInstance.Labels[labels.AcornRootNamespace],
-					labels.AcornRootPrefix:    labels.RootPrefix(appInstance.Labels, appInstance.Name),
-				},
+				Labels:    volumeLabels(appInstance, volume, volumeRequest),
+				Annotations: labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Annotations,
+					volumeRequest.Annotations, appInstance.Spec.Annotations),
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
 				AccessModes: accessModes,
@@ -153,6 +149,18 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		result = append(result, &pvc)
 	}
 	return
+}
+
+func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.VolumeRequest) map[string]string {
+	labelMap := map[string]string{
+		labels.AcornAppName:       appInstance.Name,
+		labels.AcornAppNamespace:  appInstance.Namespace,
+		labels.AcornManaged:       "true",
+		labels.AcornRootNamespace: appInstance.Labels[labels.AcornRootNamespace],
+		labels.AcornRootPrefix:    labels.RootPrefix(appInstance.Labels, appInstance.Name),
+	}
+	return labels.Merge(labelMap, labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Labels,
+		volumeRequest.Labels, appInstance.Spec.Labels))
 }
 
 func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, bool) {

@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: acorn
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    global: value
+    global2: value
+  annotations:
+    globala: value
+    global2a: value
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: acorn
+subjects:
+- kind: ServiceAccount
+  name: acorn
+  namespace: app-created-namespace

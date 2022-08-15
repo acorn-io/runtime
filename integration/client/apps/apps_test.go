@@ -114,13 +114,25 @@ func TestAppUpdate(t *testing.T) {
 	}
 
 	app, err := c.AppRun(ctx, imageID, &client.AppRunOptions{
-		Annotations: map[string]string{
-			"anno1": "val1",
-			"anno2": "val2",
+		Annotations: []v1.ScopedLabel{
+			{
+				Key:   "anno1",
+				Value: "val1",
+			},
+			{
+				Key:   "anno2",
+				Value: "val2",
+			},
 		},
-		Labels: map[string]string{
-			"label1": "val1",
-			"label2": "val2",
+		Labels: []v1.ScopedLabel{
+			{
+				Key:   "label1",
+				Value: "val1",
+			},
+			{
+				Key:   "label2",
+				Value: "val2",
+			},
 		},
 		Volumes: []v1.VolumeBinding{
 			{
@@ -163,13 +175,25 @@ func TestAppUpdate(t *testing.T) {
 
 	newApp, err := c.AppUpdate(ctx, app.Name, &client.AppUpdateOptions{
 		Image: imageID2,
-		Annotations: map[string]string{
-			"anno2": "val3",
-			"anno3": "val3",
+		Annotations: []v1.ScopedLabel{
+			{
+				Key:   "anno2",
+				Value: "val3",
+			},
+			{
+				Key:   "anno3",
+				Value: "val3",
+			},
 		},
-		Labels: map[string]string{
-			"label2": "val3",
-			"label3": "val3",
+		Labels: []v1.ScopedLabel{
+			{
+				Key:   "label2",
+				Value: "val3",
+			},
+			{
+				Key:   "label3",
+				Value: "val3",
+			},
 		},
 		PublishMode: v1.PublishModeNone,
 		Volumes: []v1.VolumeBinding{
@@ -410,8 +434,8 @@ func TestAppRun(t *testing.T) {
 
 	app, err := c.AppRun(ctx, imageID, &client.AppRunOptions{
 		Name:        "",
-		Annotations: map[string]string{"akey": "avalue"},
-		Labels:      map[string]string{"lkey": "lvalue"},
+		Annotations: []v1.ScopedLabel{{Key: "akey", Value: "avalue"}},
+		Labels:      []v1.ScopedLabel{{Key: "lkey", Value: "lvalue"}},
 		Volumes: []v1.VolumeBinding{
 			{
 				Volume: "volume",

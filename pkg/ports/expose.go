@@ -95,6 +95,8 @@ func (p *Set) GetContainerService(name string) string {
 	return ""
 }
 
+// IsContainerService indicates the service points to a container (as opposed to an acorn) because a service
+// may not point to both.
 func (p *Set) IsContainerService(name string) bool {
 	if ports, ok := p.Services[name]; ok {
 		for port := range ports {
@@ -278,7 +280,7 @@ func matches(binding v1.PortBinding, port v1.PortDef) bool {
 	return true
 }
 
-func NewForContainerPublish(app *v1.AppInstance) (*Set, error) {
+func NewForServiceLBPublish(app *v1.AppInstance) (*Set, error) {
 	ps, err := New(app)
 	if err != nil {
 		return nil, err

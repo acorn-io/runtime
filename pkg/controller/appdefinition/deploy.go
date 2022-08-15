@@ -412,10 +412,27 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 	}
 }
 
-func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+func containerAnnotations(appInstance *v1.AppInstance, container v1.Container, name string) map[string]string {
+	return labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
+}
+
+func jobLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
+	labelMap := labels.GatherScoped(name, v1.LabelTypeJob, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
+	return mergeConLabels(labelMap, appInstance, name, kv...)
+}
+
+func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
+	labelMap := labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
+	return mergeConLabels(labelMap, appInstance, name, kv...)
+}
+
+func selectorMatchLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+	return mergeConLabels(make(map[string]string), appInstance, name, kv...)
+}
+
+func mergeConLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	kv = append([]string{labels.AcornContainerName, name}, kv...)
-	return labels.Merge(labels.ExcludeAcornKey(appInstance.Labels),
-		labels.Managed(appInstance, kv...))
+	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
 }
 
 func containerAnnotation(container v1.Container) string {
@@ -443,7 +460,7 @@ func podAnnotations(appInstance *v1.AppInstance, containerName string, container
 	}
 
 	annotations[labels.AcornImageMapping] = string(data)
-	return labels.Merge(labels.ExcludeAcornKey(appInstance.Annotations), annotations)
+	return annotations
 }
 
 func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, containerName string, container v1.Container) {
@@ -544,26 +561,29 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
-	podLabels := containerLabels(appInstance, name, extraLabels...)
-	deploymentLabels := containerLabels(appInstance, name)
+	podLabels := containerLabels(appInstance, container, name, extraLabels...)
+	deploymentLabels := containerLabels(appInstance, container, name)
+	matchLabels := selectorMatchLabels(appInstance, name)
 	maps.Copy(podLabels, ports.ToPodLabels(appInstance, name))
+
+	deploymentAnnotations := containerAnnotations(appInstance, container, name)
 
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      deploymentLabels,
-			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
+			Annotations: typed.Concat(deploymentAnnotations, getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: deploymentLabels,
+				MatchLabels: matchLabels,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      podLabels,
-					Annotations: typed.Concat(podAnnotations(appInstance, name, container), secretAnnotations),
+					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, name, container), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: &[]int64{5}[0],
@@ -625,20 +645,24 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 }
 
 func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance, resp router.Response) {
-	labels := map[string]string{
+	labelMap := map[string]string{
 		labels.AcornAppName:      appInstance.Name,
 		labels.AcornAppNamespace: appInstance.Namespace,
 		labels.AcornManaged:      "true",
 	}
 
+	labelMap = labels.Merge(labelMap, labels.GatherScoped("", "", appInstance.Status.AppSpec.Labels, nil, appInstance.Spec.Labels))
+	annotations := labels.GatherScoped("", "", appInstance.Status.AppSpec.Annotations, nil, appInstance.Spec.Annotations)
+
 	if *cfg.SetPodSecurityEnforceProfile {
-		labels["pod-security.kubernetes.io/enforce"] = cfg.PodSecurityEnforceProfile
+		labelMap["pod-security.kubernetes.io/enforce"] = cfg.PodSecurityEnforceProfile
 	}
 
 	resp.Objects(&corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   appInstance.Status.Namespace,
-			Labels: labels,
+			Name:        appInstance.Status.Namespace,
+			Labels:      labelMap,
+			Annotations: annotations,
 		},
 	})
 }

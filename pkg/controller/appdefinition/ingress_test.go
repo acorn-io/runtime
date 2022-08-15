@@ -14,3 +14,6 @@ func TestIngress(t *testing.T) {
 func TestIngressClusterDomainWithPort(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/clusterdomainport", DeploySpec)
 }
+func TestIngressLabels(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/labels", DeploySpec)
+}

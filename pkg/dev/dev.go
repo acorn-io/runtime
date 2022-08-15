@@ -13,6 +13,7 @@ import (
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -252,15 +253,19 @@ func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image strin
 }
 
 func createApp(ctx context.Context, acornCue, image string, opts *Options) (*apiv1.App, error) {
-	if opts.Run.Labels == nil {
-		opts.Run.Labels = map[string]string{}
-	}
-	opts.Run.Labels[labels.AcornAppCuePath] = getPathHash(acornCue)
+	opts.Run.Labels = append(opts.Run.Labels,
+		v1.ScopedLabel{
+			ResourceType: v1.LabelTypeMeta,
+			Key:          labels.AcornAppCuePath,
+			Value:        getPathHash(acornCue),
+		})
 
-	if opts.Run.Annotations == nil {
-		opts.Run.Annotations = map[string]string{}
-	}
-	opts.Run.Annotations[labels.AcornAppCuePath] = acornCue
+	opts.Run.Annotations = append(opts.Run.Annotations,
+		v1.ScopedLabel{
+			ResourceType: v1.LabelTypeMeta,
+			Key:          labels.AcornAppCuePath,
+			Value:        acornCue,
+		})
 
 	app, err := rulerequest.PromptRun(ctx, opts.Client, opts.Dangerous, image, opts.Run)
 	if err != nil {
