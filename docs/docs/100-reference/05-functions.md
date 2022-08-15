@@ -272,8 +272,8 @@ std.range(0, 5, 2) // [0, 2, 4]
 ### replace
 
 ```acorn
-std.repace(string, from, to): string
-std.repace(string, from, to, limit): string
+std.replace(string, from, to): string
+std.replace(string, from, to, limit): string
 ```
 
 Replaces instances of `from` in the input string with `to`, upte `limit` times (if specified).
