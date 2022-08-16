@@ -553,7 +553,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      deploymentLabels,
-			Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
+			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,
