@@ -29,7 +29,6 @@ acorn install
 
 Let's start by creating a few files that compose our Python web app.  You can also find all these files in the `docs/flask` directory of the [examples](https://github.com/acorn-io/examples) GitHub repo if you'd rather start from there.
 
-
 ```shell
 # Create a directory structure for our web app
 mkdir acorn-test-app
@@ -165,7 +164,7 @@ containers: {
     }
     dirs: {
       if !args.dev {
-        "/var/lib/postgresql/data": "volume://pgdata"
+        "/var/lib/postgresql/data": "volume://pgdata?subpath=data"
       }
     }
     files: {
@@ -216,9 +215,9 @@ secrets: {
     - `build`: build from Dockerfile that we created
     - `env`: environment variables, statically defined, referencing a secret or referencing an Acorn argument
     - `dependsOn`: dependencies that have to be up and running before the app is started (here it is waiting for the database and the cache to be running)
-    - `ports`: using the `publish` type, we expose the app inside the cluster but also outside of it using an auto-generated ingress resource (more on this later <!-- TODO: add link -->)
+    - `ports`: using the `publish` type, we expose the app inside the cluster but also outside of it using an auto-generated ingress resource ([more on this later](#step-5-access-your-app))
     - `dirs`: Directories to mount into the container filesystem
-      - `if !args.dev`: The following block applies only if built-in development mode is **disabled**. (more on the development mode later <!-- TODO: add link -->)
+      - `if !args.dev`: The following block applies only if built-in development mode is **disabled**. ([more on the development mode later](#step-6-development-mode))
       - `dirs: "/app": "./"`: Mount the current directory to the /app dir, which is where the code resides inside the container as per the `Dockerfile`. This is to enable hot-reloading of code.
   - `cache` - Redis
     - `image`: existing OCI/Docker image to use (here: from DockerHub library)
@@ -226,8 +225,8 @@ secrets: {
   - `db` - Postgres Database Server
     - `image`, `env`,`ports`: nothing new here
     - `dirs`: Directories to mount into the container filesystem
-      - `if !args.dev`: The following block applies only if the built-in development mode is **disabled** (more on the development mode later <!-- TODO: add link -->)
-      - `volume://pgdata`: references a volume defined in the top-level `volumes` section in the Acornfile. Also supports other references. <!-- TODO: add link -->
+      - `if !args.dev`: The following block applies only if the built-in development mode is **disabled** ([more on the development mode later](#step-6-development-mode))
+      - `volume://pgdata?subpath=data`: references a volume defined in the top-level `volumes` section in the Acornfile and specifies the subpath `data` as the mountpoint.
     - `files`: Similar to `dirs` but only for files. Additionally, content can be created in-line and even utilizing generating functions.
 - `localData`: Set of variables for this Acorn app
   - `food`: Custom variable, defining a list of food which is accessed in `containers.db.volumes` to pre-fill the database.
@@ -236,7 +235,7 @@ secrets: {
     - `accessModes`: (list of) modes to allow access to this volume
 - `secrets`: set of secrets that can be auto-generated and used by any container in the Acorn app
   - `quickstart-pg-pass`: custom secret name, referenced by `containers.app.env` and `containers.db.env`
-    - `type`: There are several secret types <!-- TODO: add link-->. Here, a token (random string) will be generated for you at runtime.
+    - `type`: There are several [secret types](38-authoring/05-secrets.md#types-of-secrets). Here, a token (random string) will be generated for you at runtime.
 
 ## Step 4. Run your Acorn app
 
@@ -270,8 +269,6 @@ awesome-acorn   2d73c8a0493f   3         3            121m ago   http://app.awes
 ```
 
 You probably already noticed the link right there in the `ENDPOINTS` column. It will take you to your Python Flask App.
-
-<!-- FIXME: do we need a note on adding a port to the ingress controller here? -->
 
 ## Step 6. Development Mode
 
@@ -353,6 +350,7 @@ acorn run --name awesome-acorn my.registry.com/acorn/getting-started:v0.0.1
 ### Execute a command inside the running container
 
 You can get an interactive shell into any running app or container with:
+
 ```bash
 acorn exec awesome-acorn
 ```
@@ -362,7 +360,6 @@ If there is more than one container in an app, you will be prompted to pick one.
 ```bash
 acorn exec awesome-acorn env
 ```
-
 
 ### Reveal the auto-generated database secret
 
@@ -404,7 +401,7 @@ acorn rm awesome-acorn
 
 ## What's next?
 
-<!-- TODO:- Checkout some other sample Acorns -->
 - [Explore all the other awesome Acorn commands](/reference/command-line/acorn)
 - [Read through the Acornfile reference](/reference/acornfile)
 - [Have a look what makes up Acorn](/architecture/ten-thousand-foot-view)
+- [Try some of our other example Acorns](https://github.com/acorn-io/examples)
