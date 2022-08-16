@@ -64,7 +64,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 					labels.AcornManaged, "true",
 					labels.AcornJobName, name,
 					labels.AcornContainerName, ""),
-				Annotations: typed.Concat(podAnnotations(appInstance, name, container), secretAnnotations),
+				Annotations: labels.Merge(podAnnotations(appInstance, name, container), secretAnnotations),
 			},
 			Spec: corev1.PodSpec{
 				TerminationGracePeriodSeconds: &[]int64{5}[0],
@@ -90,7 +90,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Name:        name,
 				Namespace:   appInstance.Status.Namespace,
 				Labels:      jobSpec.Template.Labels,
-				Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
+				Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
 			},
 			Spec: jobSpec,
 		}, nil
@@ -100,7 +100,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      jobSpec.Template.Labels,
-			Annotations: getDependencyAnnotations(appInstance, container.Dependencies),
+			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
 		},
 		Spec: batchv1.CronJobSpec{
 			Schedule: toCronJobSchedule(container.Schedule),

@@ -9,7 +9,9 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -89,4 +91,35 @@ func TestJSON(t *testing.T) {
 		assert.Equal(t, "value", string(secret.Data["key"]))
 		assert.Equal(t, "static", string(secret.Data["pass"]))
 	}
+}
+
+func TestIssue552(t *testing.T) {
+	c, _ := helper.ClientAndNamespace(t)
+	k8sclient := helper.MustReturn(k8sclient.Default)
+
+	image, err := build.Build(helper.GetCTX(t), "./testdata/issue-552/Acornfile", &build.Options{
+		Client: c,
+		Cwd:    "./testdata/issue-552",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(context.Background(), image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+		return app.Status.Ready &&
+			app.Status.ContainerStatus["icinga2-master"].UpToDate == 1
+	})
+
+	dep := &appsv1.Deployment{}
+	err = k8sclient.Get(context.Background(), router.Key(app.Status.Namespace, "icinga2-master"), dep)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, int64(1), dep.Generation)
 }
