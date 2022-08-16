@@ -65,6 +65,13 @@ Download the tar.gz archive for your architecture. Uncompress and move the binar
 
 Uncompress and move the binary to your PATH.
 
+#### Development Binaries (main build)
+
+The last successful build from the HEAD of the main branch is available for
+[macOS](https://cdn.acrn.io/cli/default_darwin_amd64_v1/acorn),
+[Linux](https://cdn.acrn.io/cli/default_linux_amd64_v1/acorn), and
+[Windows](https://cdn.acrn.io/cli/default_windows_amd64_v1/acorn.exe)
+
 ## Installing Acorn onto Kubernetes clusters
 
 Acorn will need to be initialized on each Kubernetes cluster you plan to use it on.
