@@ -129,7 +129,11 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 
 	if newConfig.IngressClassName != nil {
-		mergedConfig.IngressClassName = newConfig.IngressClassName
+		if *newConfig.IngressClassName == "" {
+			mergedConfig.IngressClassName = nil
+		} else {
+			mergedConfig.IngressClassName = newConfig.IngressClassName
+		}
 	}
 	if newConfig.TLSEnabled != nil {
 		mergedConfig.TLSEnabled = newConfig.TLSEnabled
