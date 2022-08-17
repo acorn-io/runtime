@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config: '{"clusterDomains":[".local.on-acorn.io:8081"]}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system

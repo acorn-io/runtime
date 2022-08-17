@@ -1,0 +1,24 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+  labels:
+    acorn.io/root-namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      oneimage:
+        ports:
+        - port: 80
+          targetPort: 81
+          publish: true
+          protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."

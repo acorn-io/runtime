@@ -97,6 +97,13 @@ func useLocalWildcardDomain(ctx context.Context, getter kclient.Reader) (bool, e
 		}
 	}
 
+	// Look for k3d
+	for _, node := range nodes.Items {
+		if strings.HasPrefix(node.Spec.ProviderID, "k3s://k3d") {
+			return true, nil
+		}
+	}
+
 	return false, nil
 }
 
