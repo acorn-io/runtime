@@ -1074,6 +1074,15 @@ func ParseQuantity(s string) (Quantity, error) {
 	return (Quantity)(s), nil
 }
 
+func ParseNameValuesToMap(s ...string) map[string]string {
+	result := make(map[string]string)
+	for _, s := range s {
+		k, v, _ := strings.Cut(s, "=")
+		result[k] = v
+	}
+	return result
+}
+
 func ParseNameValues(fillEnv bool, s ...string) (result []NameValue) {
 	for _, s := range s {
 		k, v, _ := strings.Cut(s, "=")

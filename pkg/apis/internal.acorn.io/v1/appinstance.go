@@ -54,16 +54,16 @@ const (
 )
 
 type AppInstanceSpec struct {
-	CommonLabels      map[string]string `json:"commonLabels,omitempty"`
-	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty"`
-	Image             string            `json:"image,omitempty"`
-	Stop              *bool             `json:"stop,omitempty"`
-	DevMode           *bool             `json:"devMode,omitempty"`
-	Profiles          []string          `json:"profiles,omitempty"`
-	Volumes           []VolumeBinding   `json:"volumes,omitempty"`
-	Secrets           []SecretBinding   `json:"secrets,omitempty"`
-	Environment       []NameValue       `json:"environment,omitempty"`
-	PublishMode       PublishMode       `json:"publishMode,omitempty"`
+	Image       string            `json:"image,omitempty"`
+	Stop        *bool             `json:"stop,omitempty"`
+	DevMode     *bool             `json:"devMode,omitempty"`
+	Profiles    []string          `json:"profiles,omitempty"`
+	Volumes     []VolumeBinding   `json:"volumes,omitempty"`
+	Secrets     []SecretBinding   `json:"secrets,omitempty"`
+	Environment []NameValue       `json:"environment,omitempty"`
+	PublishMode PublishMode       `json:"publishMode,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	Links       []ServiceBinding `json:"services,omitempty"`
 	Ports       []PortBinding    `json:"ports,omitempty"`

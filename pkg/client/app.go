@@ -52,6 +52,8 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			DevMode:     opts.DevMode,
 			Permissions: opts.Permissions,
 			Environment: opts.Env,
+			Labels:      opts.Labels,
+			Annotations: opts.Annotations,
 		},
 	}
 }
@@ -93,6 +95,9 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	app.Spec.Links = mergeServices(app.Spec.Links, opts.Links)
 	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
 	app.Spec.Environment = mergeEnv(app.Spec.Environment, opts.Env)
+	// TODO this is likely wrong
+	app.Spec.Labels = typed.Concat(app.Spec.Labels, opts.Labels)
+	app.Spec.Annotations = typed.Concat(app.Spec.Annotations, opts.Annotations)
 	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles

@@ -32,7 +32,8 @@ func routes(router *router.Router) {
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).Middleware(appdefinition.IgnoreTerminatingNamespace)
-	appRouter.Middleware(appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
+	//appRouter.Middleware(appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
+	appRouter.Middleware(appdefinition.CheckDependencies).Middleware(appdefinition.AddCommonLabelsAnnotations).HandlerFunc(appdefinition.DeploySpec)
 	appRouter.HandlerFunc(appdefinition.CreateSecrets)
 	appRouter.HandlerFunc(appdefinition.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)

@@ -265,6 +265,8 @@ type Container struct {
 	Probes       Probes                 `json:"probes,omitempty"`
 	Dependencies Dependencies           `json:"dependencies,omitempty"`
 	Permissions  *Permissions           `json:"permissions,omitempty"`
+	Labels       NameValues             `json:"label,omitempty"`
+	Annotations  NameValues             `json:"annotation,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
@@ -285,12 +287,14 @@ type Image struct {
 }
 
 type AppSpec struct {
-	Containers map[string]Container     `json:"containers,omitempty"`
-	Jobs       map[string]Container     `json:"jobs,omitempty"`
-	Images     map[string]Image         `json:"images,omitempty"`
-	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
-	Secrets    map[string]Secret        `json:"secrets,omitempty"`
-	Acorns     map[string]Acorn         `json:"acorns,omitempty"`
+	Containers  map[string]Container     `json:"containers,omitempty"`
+	Jobs        map[string]Container     `json:"jobs,omitempty"`
+	Images      map[string]Image         `json:"images,omitempty"`
+	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
+	Secrets     map[string]Secret        `json:"secrets,omitempty"`
+	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
+	Labels      map[string]string        `json:"labels,omitempty"`
+	Annotations map[string]string        `json:"annotations,omitempty"`
 }
 
 type Acorn struct {
@@ -300,6 +304,8 @@ type Acorn struct {
 	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
 	Ports       Ports            `json:"ports,omitempty"`
 	Environment NameValues       `json:"environment,omitempty"`
+	Labels      NameValues       `json:"label,omitempty"`
+	Annotations NameValues       `json:"annotation,omitempty"`
 	Secrets     []SecretBinding  `json:"secrets,omitempty"`
 	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
 	Links       []ServiceBinding `json:"links,omitempty"`
@@ -307,9 +313,11 @@ type Acorn struct {
 }
 
 type Secret struct {
-	Type   string            `json:"type,omitempty"`
-	Params GenericMap        `json:"params,omitempty"`
-	Data   map[string]string `json:"data,omitempty"`
+	Type        string            `json:"type,omitempty"`
+	Params      GenericMap        `json:"params,omitempty"`
+	Data        map[string]string `json:"data,omitempty"`
+	Labels      NameValues        `json:"label,omitempty"`
+	Annotations NameValues        `json:"annotation,omitempty"`
 }
 
 type AccessModes []AccessMode
@@ -318,4 +326,6 @@ type VolumeRequest struct {
 	Class       string      `json:"class,omitempty"`
 	Size        Quantity    `json:"size,omitempty"`
 	AccessModes AccessModes `json:"accessModes,omitempty"`
+	Labels      NameValues  `json:"label,omitempty"`
+	Annotations NameValues  `json:"annotation,omitempty"`
 }

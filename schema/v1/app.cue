@@ -227,6 +227,10 @@ package v1
 
 #Args: string | int | float | bool | [...string] | {...}
 
+#Labels: string
+
+#Annotations: string
+
 #App: {
 	args: [string]: #Args
 	profiles: [string]: [string]: #Args
@@ -237,4 +241,6 @@ package v1
 	volumes: [=~#DNSName]:    #Volume
 	secrets: [=~#DNSName]:    #Secret
 	acorns: [=~#DNSName]:     #Acorn
+	labels: [string]: #Labels
+	annotations: [string]: #Annotations
 }

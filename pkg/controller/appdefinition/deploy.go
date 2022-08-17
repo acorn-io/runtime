@@ -414,8 +414,8 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 
 func containerLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	kv = append([]string{labels.AcornContainerName, name}, kv...)
-	return labels.Merge(labels.ExcludeAcornKey(appInstance.Labels),
-		labels.Managed(appInstance, kv...))
+	l := labels.Merge(labels.ExcludeAcornKey(appInstance.Spec.Labels), labels.ExcludeAcornKey(appInstance.Status.AppSpec.Labels))
+	return labels.Merge(l, labels.Managed(appInstance, kv...))
 }
 
 func containerAnnotation(container v1.Container) string {
@@ -443,7 +443,8 @@ func podAnnotations(appInstance *v1.AppInstance, containerName string, container
 	}
 
 	annotations[labels.AcornImageMapping] = string(data)
-	return labels.Merge(labels.ExcludeAcornKey(appInstance.Annotations), annotations)
+	a := labels.Merge(labels.ExcludeAcornKey(appInstance.Spec.Annotations), annotations)
+	return labels.Merge(a, labels.ExcludeAcornKey(appInstance.Status.AppSpec.Annotations))
 }
 
 func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, containerName string, container v1.Container) {
@@ -544,6 +545,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
+	// TODO refact this. this is puttiong labels onto the deployment. maybe the impl of containerLabels chanes to pull from spec
 	podLabels := containerLabels(appInstance, name, extraLabels...)
 	deploymentLabels := containerLabels(appInstance, name)
 	maps.Copy(podLabels, ports.ToPodLabels(appInstance, name))
