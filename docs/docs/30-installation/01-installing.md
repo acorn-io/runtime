@@ -72,6 +72,21 @@ The last successful build from the HEAD of the main branch is available for
 [Linux](https://cdn.acrn.io/cli/default_linux_amd64_v1/acorn), and
 [Windows](https://cdn.acrn.io/cli/default_windows_amd64_v1/acorn.exe)
 
+### Shell completion
+
+For best developer experience, shell autocompletion is provided, but the acorn cli subcommand is hidden.
+To set autocompletion for the actual terminal session, use the matching shell:
+```
+source <(acorn completion bash)
+source <(acorn completion zsh)
+acorn completion fish | source
+```
+
+For permanent effect add the same line to your shell specific profile:
+- ~/.bashrc
+- ~/.zshrc
+- ~/.config/fish/config.fish
+
 ## Installing Acorn onto Kubernetes clusters
 
 Acorn will need to be initialized on each Kubernetes cluster you plan to use it on.
