@@ -3,6 +3,7 @@ package publish
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -76,8 +77,10 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				hostPrefix = toPrefix(name.SafeConcatName(serviceName, fmt.Sprint(port.Port)), app)
 			}
 			for _, domain := range cfg.ClusterDomains {
-				targets[hostPrefix+domain] = Target{Port: port.TargetPort, Service: serviceName}
-				rules = append(rules, rule(hostPrefix+domain, serviceName, port.Port))
+				hostname := hostPrefix + domain
+				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
+				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
+				rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
 			}
 		}
 

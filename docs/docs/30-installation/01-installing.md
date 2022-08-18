@@ -117,3 +117,17 @@ minikube tunnel
 ```
 
 The tunnel command also services as the service loadbalancer solution. If it is running, your TCP services will be published to `localhost`.
+
+**K3d** comes with a working ingress controller, service loadbalancer solution, and storage class by default. However, when creating your K3d cluster, you must configure it to proxy traffic from localhost to the cluster, so that endpoints resolve properly:
+```shell
+k3d cluster create --api-port 6550 -p "80:80@loadbalancer"
+```
+
+If you choose to use a port other than `80` like so:
+```shell
+k3d cluster create --api-port 6550 -p "8081:80@loadbalancer"
+```
+then you must reflect that in the `acorn install` command by specifying the port with the `--cluster-domain` flag:
+```shell
+acorn install --cluster-domain '.local.on-acorn.io:8081'
+```
