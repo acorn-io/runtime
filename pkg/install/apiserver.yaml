@@ -3,7 +3,7 @@ apiVersion: apiregistration.k8s.io/v1
 metadata:
   name: v1.api.acorn.io
 spec:
-  insecureSkipTLSVerify: true
+  insecureSkipTLSVerify: false
   version: v1
   group: api.acorn.io
   service:
