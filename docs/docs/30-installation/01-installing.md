@@ -75,7 +75,7 @@ The last successful build from the HEAD of the main branch is available for
 ### Shell completion
 
 For best developer experience, shell autocompletion is provided, but the acorn cli subcommand is hidden.
-To set autocompletion for the actual terminal session, use the matching shell:
+To set autocompletion for the current terminal session, use the command that matches your shell:
 ```
 source <(acorn completion bash)
 source <(acorn completion zsh)
