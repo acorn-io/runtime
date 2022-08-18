@@ -74,7 +74,8 @@ The last successful build from the HEAD of the main branch is available for
 
 ### Shell completion
 
-For best developer experience, shell autocompletion is provided, but the acorn cli subcommand is hidden.
+The Acorn CLI supports command autocompletion. If you installed acorn using homebrew, this is already configured for you. If you installed using the manual or curl|sh method, you must enable shell completion yourself.
+
 To set autocompletion for the current terminal session, use the command that matches your shell:
 ```
 source <(acorn completion bash)
