@@ -75,7 +75,11 @@ func (in *Quantity) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(data, &s); err != nil {
 			return err
 		}
-		*in = (Quantity)(fmt.Sprintf("%dG", s))
+		if s < 1000000 {
+			*in = (Quantity)(fmt.Sprintf("%dG", s))
+		} else {
+			*in = (Quantity)(fmt.Sprintf("%d", s))
+		}
 		return nil
 	}
 	s, err := parseString(data)

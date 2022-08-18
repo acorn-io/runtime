@@ -15,6 +15,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParse5GLiteralVolume(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+volumes: {
+  "data": {
+    size: 5G
+    accessModes: ["readWriteOnce"]
+  }
+  "data2": {
+    size: 999999
+    accessModes: ["readWriteOnce"]
+  }
+  "data3": {
+    size: 1000000
+    accessModes: ["readWriteOnce"]
+  }
+}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	spec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "5000000000", string(spec.Volumes["data"].Size))
+	assert.Equal(t, "999999G", string(spec.Volumes["data2"].Size))
+	assert.Equal(t, "1000000", string(spec.Volumes["data3"].Size))
+}
+
 func TestAppImageBuildSpec(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
 containers: {
