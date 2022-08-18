@@ -20,6 +20,8 @@ acorn install`,
 }
 
 type Install struct {
+	DisablePreflightChecks bool `usage:"Disable preflight checks"`
+
 	Image  string `usage:"Override the default image used for the deployment"`
 	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 
@@ -38,9 +40,10 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return install.Install(cmd.Context(), image, &install.Options{
-		OutputFormat:       i.Output,
-		Config:             i.Config,
-		APIServerReplicas:  i.APIServerReplicas,
-		ControllerReplicas: i.ControllerReplicas,
+		DisablePreflightChecks: i.DisablePreflightChecks,
+		OutputFormat:           i.Output,
+		Config:                 i.Config,
+		APIServerReplicas:      i.APIServerReplicas,
+		ControllerReplicas:     i.ControllerReplicas,
 	})
 }

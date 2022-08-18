@@ -1,6 +1,14 @@
 package tables
 
 var (
+	CheckResult = [][]string{
+		{"Name", "Name"},
+		{"Passed", "Passed"},
+		{"Message", "Message"},
+	}
+
+	CheckResultConverter = MustConverter(CheckResult)
+
 	App = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"Image", "{{ trunc .Spec.Image }}"},

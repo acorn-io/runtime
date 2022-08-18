@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,6 +13,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/install/check"
 	"github.com/acorn-io/acorn/pkg/install/progress"
 	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	labels2 "github.com/acorn-io/acorn/pkg/labels"
@@ -53,12 +55,13 @@ var (
 type Mode string
 
 type Options struct {
-	OutputFormat       string
-	APIServerReplicas  *int
-	ControllerReplicas *int
-	Config             apiv1.Config
-	Mode               uiv1.InstallMode
-	Progress           progress.Builder
+	DisablePreflightChecks bool
+	OutputFormat           string
+	APIServerReplicas      *int
+	ControllerReplicas     *int
+	Config                 apiv1.Config
+	Mode                   uiv1.InstallMode
+	Progress               progress.Builder
 }
 
 func (o *Options) complete() *Options {
@@ -107,6 +110,15 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
 		return printObject(image, opts)
+	}
+
+	if !opts.DisablePreflightChecks {
+		s := opts.Progress.New("Running Preflight Checks")
+		if check.IsFailed(check.PreflightChecks()) {
+			s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --disable-preflight-checks` to skip"))
+		} else {
+			s.Success()
+		}
 	}
 
 	apply, err := newApply(ctx)
