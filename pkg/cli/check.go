@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/install/check"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
@@ -27,9 +28,10 @@ type Check struct {
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
-	checkresult := check.Check(
+	checkresult := check.RunChecks(
 		check.CheckNodesReady,
 		check.CheckRBAC,
+		check.CheckDefaultStorageClass,
 	)
 
 	failures := 0
@@ -50,10 +52,12 @@ func (a *Check) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if failures > 0 {
-		return fmt.Errorf("Preflight Check FAILED: %d issues", failures)
+		err := fmt.Errorf("%d checks failed", failures)
+		pterm.Error.Println(err)
+		return err
 	}
 
-	fmt.Println("Preflight Check PASSED")
+	pterm.Success.Println("Checks PASSED")
 
 	return nil
 }
