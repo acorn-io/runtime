@@ -326,23 +326,27 @@ You will see the change applied when when you reload the application's page in y
 ## Step 7. Build and Push your Acorn image
 
 Ready to release your Acorn app into the wild?
-Let's package it up in a single Acorn image and distribute it via an OCI registry (you could use DockerHub for that):
+Let's package it up in a single Acorn image and distribute it via an OCI registry.
+
+> **Note**: This example uses GitHub's container registry `ghcr.io`.
+> You want to push to DockerHub instead? The prefix is `docker.io`.
+> Just make sure that you actually have write access to the target repository.
 
 ```bash
 # Login into your OCI registry, if needed (interactive)
-acorn login my.registry.com
+acorn login ghcr.io
 
 # Build the Acorn image and tag it to your liking
-acorn build -t my.registry.com/acorn/getting-started:v0.0.1 .
+acorn build -t ghcr.io/acorn-io/getting-started:v0.0.1 .
 
 # Push the newly built Acorn image
-acorn push my.registry.com/acorn/getting-started:v0.0.1
+acorn push ghcr.io/acorn-io/getting-started:v0.0.1
 ```
 
 Now, everyone else can run your Acorn image via
 
 ```bash
-acorn run --name awesome-acorn my.registry.com/acorn/getting-started:v0.0.1
+acorn run --name awesome-acorn ghcr.io/acorn-io/getting-started:v0.0.1
 ```
 
 ## Interacting with an Acorn app
