@@ -38,11 +38,11 @@ metadata:
 spec:
   dnsNames:
   - my-app.example.com
-    issuerRef:
-      group: cert-manager.io
-      kind: ClusterIssuer
-      name: prod-issuer
-    secretName: my-app-tls-secret
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: prod-issuer
+  secretName: my-app-tls-secret
 ```
 
 Cert-Manager will create a certificate for `my-app.example.com` and store it in a secret `my-app-tls-secret`.
