@@ -30,13 +30,13 @@ var (
 	}
 	ImageConverter = MustConverter(Image)
 
-	ImageContainers = [][]string{
+	ImageContainer = [][]string{
 		{"Repository", "{{ .Repo }}"},
 		{"Tag", "{{ .Tag }}"},
 		{"Container", "{{ .Container}}"},
-		{"Digest", "{{ .Image }}"},
+		{"Digest", "{{ .Digest }}"},
 	}
-	ImageContainerConverter = MustConverter(ImageContainers)
+	ImageContainerConverter = MustConverter(ImageContainer)
 
 	Container = [][]string{
 		{"Name", "{{ . | name }}"},

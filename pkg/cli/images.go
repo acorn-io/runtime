@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -9,9 +10,13 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func NewImage() *cobra.Command {
@@ -27,11 +32,11 @@ acorn images`,
 }
 
 type Image struct {
-	All       bool   `usage:"Include untagged images" short:"a"`
-	Quiet     bool   `usage:"Output only names" short:"q"`
-	NoTrunc   bool   `usage:"Don't truncate IDs"`
-	Output    string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	Container bool   `usage:"Show containers for images" short:"c"`
+	All        bool   `usage:"Include untagged images" short:"a"`
+	Quiet      bool   `usage:"Output only names" short:"q"`
+	NoTrunc    bool   `usage:"Don't truncate IDs"`
+	Output     string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	Containers bool   `usage:"Show containers for images" short:"c"`
 }
 
 func (a *Image) Run(cmd *cobra.Command, args []string) error {
@@ -54,7 +59,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if a.Container {
+	if a.Containers {
 		return printContainerImages(images, cmd.Context(), c, a.Output, a.Quiet)
 	}
 
@@ -86,29 +91,29 @@ type ImageContainer struct {
 	Container string
 	Repo      string
 	Tag       string
-	Image     string
+	Digest    string
 }
 
 func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, output string, quiet bool) error {
-	out := table.NewWriter(tables.ImageContainers, system.UserNamespace(), quiet, output)
+	out := table.NewWriter(tables.ImageContainer, system.UserNamespace(), quiet, output)
 
 	if quiet {
 		out = table.NewWriter([][]string{
-			{"Name", "{{.Repo}}:{{.Tag}}@{{.Image}}"},
+			{"Name", "{{.Repo}}:{{.Tag}}@{{.Digest}}"},
 		}, system.UserNamespace(), quiet, output)
 	}
 
 	for _, image := range images {
-		imgDetails, err := c.ImageDetails(ctx, image.Name, &client.ImageDetailsOptions{})
-		if err != nil {
-			return err
-		}
-
 		if image.Tag == "" && image.Repository == "" {
 			continue
 		}
 
-		for _, imgContainer := range newImageContainer(image, imgDetails.AppImage.ImageData) {
+		containerImages, err := getImageContainers(c, ctx, image)
+		if err != nil {
+			logrus.Error(err)
+			//continue
+		}
+		for _, imgContainer := range containerImages {
 			out.Write(imgContainer)
 		}
 
@@ -117,34 +122,67 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	return out.Err()
 }
 
-func newImageContainer(image apiv1.Image, imageData v1.ImagesData) []ImageContainer {
+func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image) ([]ImageContainer, error) {
 	imageContainers := []ImageContainer{}
 
-	imageContainers = append(imageContainers, parseContainerData(image.Repository, image.Tag, imageData.Containers)...)
-	imageContainers = append(imageContainers, parseContainerData(image.Repository, image.Tag, imageData.Jobs)...)
+	imgDetails, err := c.ImageDetails(ctx, image.Name, nil)
+	if err != nil {
+		return imageContainers, err
+	}
 
-	return imageContainers
+	imageData := imgDetails.AppImage.ImageData
+
+	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Containers)...)
+	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Jobs)...)
+
+	for _, acorn := range imageData.Acorns {
+		acornImg := apiv1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: strings.TrimPrefix(acorn.Image, "sha256:"),
+			},
+			Repository: image.Repository,
+			Tag:        image.Tag,
+		}
+
+		acornImageContainers, err := getImageContainers(c, ctx, acornImg)
+		if apierrors.IsNotFound(err) {
+			pullImage := fmt.Sprintf("%s:%s@sha256:%s", acornImg.Repository, acornImg.Tag, acornImg.Name)
+			progress, err := c.ImagePull(ctx, pullImage, nil)
+			if err != nil {
+				return imageContainers, err
+			}
+			err = progressbar.Print(progress)
+			if err != nil {
+				return imageContainers, err
+			}
+		} else if err != nil {
+			return imageContainers, err
+		}
+		imageContainers = append(imageContainers, acornImageContainers...)
+	}
+
+	return imageContainers, nil
 }
 
-func parseContainerData(repo, tag string, containers map[string]v1.ContainerData) []ImageContainer {
+func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []ImageContainer {
 	imageContainers := []ImageContainer{}
 
 	for k, v := range containers {
 		ImgContainer := ImageContainer{
-			Repo:      repo,
-			Tag:       tag,
+			Repo:      image.Repository,
+			Tag:       image.Tag,
 			Container: k,
-			Image:     v.Image,
+			Digest:    v.Image,
 		}
 
 		imageContainers = append(imageContainers, ImgContainer)
 
 		for sidecar, img := range v.Sidecars {
 			ic := ImageContainer{
-				Repo:      repo,
-				Tag:       tag,
+				Repo:      image.Repository,
+				Tag:       image.Tag,
 				Container: sidecar,
-				Image:     img.Image,
+				Digest:    img.Image,
 			}
 			imageContainers = append(imageContainers, ic)
 		}
