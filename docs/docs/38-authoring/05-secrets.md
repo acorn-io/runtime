@@ -87,7 +87,7 @@ containers: {
     git: {
         image: "my-git"
         dirs: {
-            "/home/user/.ssh": "secret://my-keys"
+            "/home/user/.ssh": "secret://user-provided-ssh-keys"
         }
     }
 }
