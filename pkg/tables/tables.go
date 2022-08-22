@@ -30,6 +30,14 @@ var (
 	}
 	ImageConverter = MustConverter(Image)
 
+	ImageContainers = [][]string{
+		{"Repository", "{{ .Repo }}"},
+		{"Tag", "{{ .Tag }}"},
+		{"Container", "{{ .Container}}"},
+		{"Digest", "{{ .Image }}"},
+	}
+	ImageContainerConverter = MustConverter(ImageContainers)
+
 	Container = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"App", "Status.Columns.App"},
