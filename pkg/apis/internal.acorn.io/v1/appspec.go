@@ -311,9 +311,11 @@ type Acorn struct {
 }
 
 type Secret struct {
-	Type   string            `json:"type,omitempty"`
-	Params GenericMap        `json:"params,omitempty"`
-	Data   map[string]string `json:"data,omitempty"`
+	Type        string            `json:"type,omitempty"`
+	Params      GenericMap        `json:"params,omitempty"`
+	Data        map[string]string `json:"data,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type AccessModes []AccessMode

@@ -154,7 +154,8 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
 			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
-			Labels:       labelsForSecret(secretName, appInstance),
+			Labels:       labelsForSecret(secretName, appInstance, secretRef),
+			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
 		Data: seedData(existing, secretRef.Data),
 		Type: v1.SecretTypeGenerated,
@@ -193,7 +194,8 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
 			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
-			Labels:       labelsForSecret(secretName, appInstance),
+			Labels:       labelsForSecret(secretName, appInstance, secretRef),
+			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
 		Data: seedData(existing, secretRef.Data, typed.SortedKeys(secretRef.Data)...),
 		Type: v1.SecretTypeTemplate,
@@ -251,7 +253,8 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
 			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
-			Labels:       labelsForSecret(secretName, appInstance),
+			Labels:       labelsForSecret(secretName, appInstance, secretRef),
+			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
 		Data: seedData(existing, secretRef.Data, "token"),
 		Type: v1.SecretTypeToken,
@@ -278,7 +281,8 @@ func generateOpaque(req router.Request, appInstance *v1.AppInstance, secretName 
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
 			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
-			Labels:       labelsForSecret(secretName, appInstance),
+			Labels:       labelsForSecret(secretName, appInstance, secretRef),
+			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
 		Data: seedData(existing, secretRef.Data, maps.Keys(secretRef.Data)...),
 		Type: v1.SecretTypeOpaque,
@@ -292,7 +296,8 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
 			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
-			Labels:       labelsForSecret(secretName, appInstance),
+			Labels:       labelsForSecret(secretName, appInstance, secretRef),
+			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
 		Data: seedData(existing, secretRef.Data, corev1.BasicAuthUsernameKey, corev1.BasicAuthPasswordKey),
 		Type: v1.SecretTypeBasic,
@@ -309,7 +314,6 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 			secret.Data[key] = []byte(v)
 		}
 	}
-
 	return updateOrCreate(req, existing, secret)
 }
 
@@ -317,15 +321,20 @@ func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev
 	if existing == nil {
 		return secret, req.Client.Create(req.Ctx, secret)
 	}
-	if equality.Semantic.DeepEqual(existing.Data, secret.Data) {
+	if equality.Semantic.DeepEqual(existing.Data, secret.Data) && maps.Equal(existing.Labels, secret.Labels) &&
+		maps.Equal(existing.Annotations, secret.Annotations) {
 		return existing, nil
 	}
+
 	newSecret := existing.DeepCopy()
 	newSecret.Data = secret.Data
+	newSecret.Annotations = secret.Annotations
+	newSecret.Labels = secret.Labels
+
 	return newSecret, req.Client.Update(req.Ctx, newSecret)
 }
 
-func labelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
+func acornLabelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
 	return map[string]string{
 		labels.AcornAppName:         appInstance.Name,
 		labels.AcornRootNamespace:   appInstance.Labels[labels.AcornRootNamespace],
@@ -336,8 +345,17 @@ func labelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]
 	}
 }
 
+func labelsForSecret(secretName string, appInstance *v1.AppInstance, secretRef v1.Secret) map[string]string {
+	return labels.Merge(acornLabelsForSecret(secretName, appInstance), labels.GatherScoped(secretName, "secret",
+		appInstance.Status.AppSpec.Labels, secretRef.Labels, appInstance.Spec.Labels))
+}
+
+func annotationsForSecret(secretName string, appInstance *v1.AppInstance, secretRef v1.Secret) map[string]string {
+	return labels.GatherScoped(secretName, "secret", appInstance.Status.AppSpec.Annotations, secretRef.Annotations, appInstance.Spec.Annotations)
+}
+
 func getSecret(req router.Request, appInstance *v1.AppInstance, name string) (*corev1.Secret, error) {
-	l := labelsForSecret(name, appInstance)
+	l := acornLabelsForSecret(name, appInstance)
 
 	var secrets corev1.SecretList
 	err := req.List(&secrets, &kclient.ListOptions{
@@ -374,6 +392,7 @@ func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appIn
 			Resource: "secrets",
 		}, secretName)
 	}
+
 	switch secretRef.Type {
 	case "opaque":
 		return generateOpaque(req, appInstance, secretName, secretRef, existing)
@@ -556,15 +575,24 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 			}
 			continue
 		}
+
+		labelMap := map[string]string{
+			labels.AcornAppName:      appInstance.Name,
+			labels.AcornAppNamespace: appInstance.Namespace,
+			labels.AcornManaged:      "true",
+		}
+		labelMap = labels.Merge(labelMap, labels.GatherScoped(secretName, "secret",
+			appInstance.Status.AppSpec.Labels, entry.secret.Labels, appInstance.Spec.Labels))
+
+		annotations := labels.GatherScoped(secretName, "secret", appInstance.Status.AppSpec.Annotations,
+			entry.secret.Annotations, appInstance.Spec.Annotations)
+
 		resp.Objects(&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: appInstance.Status.Namespace,
-				Labels: map[string]string{
-					labels.AcornAppName:      appInstance.Name,
-					labels.AcornAppNamespace: appInstance.Namespace,
-					labels.AcornManaged:      "true",
-				},
+				Name:        secretName,
+				Namespace:   appInstance.Status.Namespace,
+				Labels:      labelMap,
+				Annotations: annotations,
 			},
 			Data: secret.Data,
 			Type: secret.Type,

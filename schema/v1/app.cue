@@ -151,18 +151,26 @@ package v1
 	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 }
 
+#SecretBase: {
+	labels:                         [string]: #Labels
+	annotations:                    [string]: #Annotations
+}
+
 #SecretOpaque: {
+	#SecretBase
 	type: "opaque"
 	params?: [string]: _
 	data: [string]:    string
 }
 
 #SecretTemplate: {
+	#SecretBase
 	type: "template"
 	data: [string]: string
 }
 
 #SecretToken: {
+	#SecretBase
 	type: "token"
 	params: {
 		// The character set used in the generated string
@@ -176,6 +184,7 @@ package v1
 }
 
 #SecretBasicAuth: {
+	#SecretBase
 	type: "basic"
 	data: {
 		username?: string
@@ -184,6 +193,7 @@ package v1
 }
 
 #SecretGenerated: {
+	#SecretBase
 	type: "generated"
 	params: {
 		job:    string

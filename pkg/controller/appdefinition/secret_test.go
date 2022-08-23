@@ -261,3 +261,144 @@ func TestSecretRedeploy(t *testing.T) {
 func TestSecretImageReference(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/secret-image", CreateSecrets)
 }
+
+func TestSecretLabelsAnnotations(t *testing.T) {
+	h := tester.Harness{
+		Scheme: scheme.Scheme,
+	}
+	resp, err := h.InvokeFunc(t, &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "app-name",
+			Namespace: "app-ns",
+
+			// These SHOULDN'T propagate to the secret
+			Annotations: map[string]string{
+				"fromapp": "val",
+			},
+			Labels: map[string]string{
+				"fromapp": "val",
+			},
+		},
+		Spec: v1.AppInstanceSpec{
+			Labels: []v1.ScopedLabel{
+				// --label global=val - Apply to all resources
+				{ResourceType: "", ResourceName: "", Key: "global", Value: "val"},
+
+				// --label secrets:allsec=val - All secrets
+				{ResourceType: "secret", ResourceName: "", Key: "allsec", Value: "val"},
+
+				// --label secret:secret1:sec1key=val - Type and name specified. Land on secret of same name
+				{ResourceType: "secret", ResourceName: "secret1", Key: "sec1key", Value: "val"},
+
+				// --secret secret2:sec2key=val - No resourceType, but name specified. Land on secret of same name
+				{ResourceType: "", ResourceName: "secret2", Key: "sec2key", Value: "val"},
+
+				// --secret containers:con=val - For containers, shouldn't land on secret
+				{ResourceType: "container", ResourceName: "", Key: "con", Value: "val"},
+			},
+			Annotations: []v1.ScopedLabel{
+				// --label globala=val - Apply to all resources
+				{ResourceType: "", ResourceName: "", Key: "globala", Value: "val"},
+
+				// --label secrets:allseca=val - All secrets
+				{ResourceType: "secret", ResourceName: "", Key: "allseca", Value: "val"},
+
+				// --label secret:secret1:sec1keya=val - Type and name specified. Land on secret of same name
+				{ResourceType: "secret", ResourceName: "secret1", Key: "sec1keya", Value: "val"},
+
+				// --secret secret2:sec2keya=val - No resourceType, but name specified. Land on secret of same name
+				{ResourceType: "", ResourceName: "secret2", Key: "sec2keya", Value: "val"},
+
+				// --secret containers:con=val - For containers, shouldn't land on secret
+				{ResourceType: "container", ResourceName: "", Key: "con", Value: "val"},
+			},
+		},
+		Status: v1.AppInstanceStatus{
+			Namespace: "app-target-ns",
+			AppSpec: v1.AppSpec{
+				Labels: map[string]string{
+					"globalfromacornfile": "val",
+				},
+				Annotations: map[string]string{
+					"globalfromacornfilea": "val",
+				},
+				Secrets: map[string]v1.Secret{
+					"secret1": {Type: "basic",
+						Labels: map[string]string{
+							"sec1fromacornfile": "val",
+						},
+						Annotations: map[string]string{
+							"sec1fromacornfilea": "val",
+						},
+						Data: map[string]string{
+							// cue will populate empty string if not sent
+							"username": "",
+							"password": "",
+						},
+					},
+					"secret2": {
+						Labels:      nil,
+						Annotations: nil,
+						Type:        "basic",
+						Data: map[string]string{
+							"username": "",
+							"password": "",
+						},
+					},
+				},
+			},
+		},
+	}, CreateSecrets)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, resp.Client.Created, 2)
+	assert.Len(t, resp.Collected, 3)
+
+	secret := resp.Client.Created[0].(*corev1.Secret)
+	assert.Equal(t, "secret1", secret.Labels[labels.AcornSecretName])
+	assert.True(t, strings.HasPrefix(secret.Name, "secret1-"))
+	// labels
+	assert.Contains(t, secret.Labels, labels.AcornManaged) // prove we aren't stomping on the acorn.io labels
+	assert.NotContains(t, secret.Labels, "fromapp")
+	assert.Contains(t, secret.Labels, "global")
+	assert.Contains(t, secret.Labels, "allsec")
+	assert.Contains(t, secret.Labels, "sec1key")
+	assert.NotContains(t, secret.Labels, "sec2key")
+	assert.NotContains(t, secret.Labels, "con")
+	assert.Contains(t, secret.Labels, "globalfromacornfile")
+	assert.Contains(t, secret.Labels, "sec1fromacornfile")
+	// annotations
+	assert.NotContains(t, secret.Annotations, "fromapp")
+	assert.Contains(t, secret.Annotations, "globala")
+	assert.Contains(t, secret.Annotations, "allseca")
+	assert.Contains(t, secret.Annotations, "sec1keya")
+	assert.NotContains(t, secret.Annotations, "sec2keya")
+	assert.NotContains(t, secret.Annotations, "con")
+	assert.Contains(t, secret.Annotations, "globalfromacornfilea")
+	assert.Contains(t, secret.Annotations, "sec1fromacornfilea")
+
+	secret = resp.Client.Created[1].(*corev1.Secret)
+	assert.Equal(t, "secret2", secret.Labels[labels.AcornSecretName])
+	assert.True(t, strings.HasPrefix(secret.Name, "secret2-"))
+	// Labels
+	assert.Contains(t, secret.Labels, labels.AcornManaged)
+	assert.NotContains(t, secret.Labels, "fromapp")
+	assert.Contains(t, secret.Labels, "global")
+	assert.Contains(t, secret.Labels, "allsec")
+	assert.NotContains(t, secret.Labels, "sec1key")
+	assert.Contains(t, secret.Labels, "sec2key")
+	assert.NotContains(t, secret.Labels, "con")
+	assert.Contains(t, secret.Labels, "globalfromacornfile")
+	assert.NotContains(t, secret.Labels, "sec1fromacornfile")
+	// Annotations
+	assert.NotContains(t, secret.Annotations, "fromappa")
+	assert.Contains(t, secret.Annotations, "globala")
+	assert.Contains(t, secret.Annotations, "allseca")
+	assert.NotContains(t, secret.Annotations, "sec1keya")
+	assert.Contains(t, secret.Annotations, "sec2keya")
+	assert.NotContains(t, secret.Annotations, "con")
+	assert.Contains(t, secret.Annotations, "globalfromacornfilea")
+	assert.NotContains(t, secret.Annotations, "sec1fromacornfilea")
+}
