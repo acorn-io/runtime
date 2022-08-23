@@ -10,12 +10,9 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -110,13 +107,12 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 
 		containerImages, err := getImageContainers(c, ctx, image)
 		if err != nil {
-			logrus.Error(err)
-			//continue
+			return err
 		}
+
 		for _, imgContainer := range containerImages {
 			out.Write(imgContainer)
 		}
-
 	}
 
 	return out.Err()
@@ -138,24 +134,14 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 	for _, acorn := range imageData.Acorns {
 		acornImg := apiv1.Image{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: strings.TrimPrefix(acorn.Image, "sha256:"),
+				Name: fmt.Sprintf("%s:%s@%s", image.Repository, image.Tag, acorn.Image),
 			},
 			Repository: image.Repository,
 			Tag:        image.Tag,
 		}
 
 		acornImageContainers, err := getImageContainers(c, ctx, acornImg)
-		if apierrors.IsNotFound(err) {
-			pullImage := fmt.Sprintf("%s:%s@sha256:%s", acornImg.Repository, acornImg.Tag, acornImg.Name)
-			progress, err := c.ImagePull(ctx, pullImage, nil)
-			if err != nil {
-				return imageContainers, err
-			}
-			err = progressbar.Print(progress)
-			if err != nil {
-				return imageContainers, err
-			}
-		} else if err != nil {
+		if err != nil {
 			return imageContainers, err
 		}
 		imageContainers = append(imageContainers, acornImageContainers...)
