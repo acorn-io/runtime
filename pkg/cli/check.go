@@ -29,9 +29,10 @@ type Check struct {
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
 	checkresult := check.RunChecks(
-		check.CheckNodesReady,
 		check.CheckRBAC,
+		check.CheckNodesReady,
 		check.CheckDefaultStorageClass,
+		check.CheckIngressCapability,
 	)
 
 	failures := 0

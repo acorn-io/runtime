@@ -5,13 +5,18 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,7 +32,7 @@ type CheckResult struct {
 // PreflightChecks is a list of all checks that are run before the installation.
 // They are crictial and will make the installation fail.
 func PreflightChecks() []CheckResult {
-	return RunChecks(CheckNodesReady, CheckRBAC)
+	return RunChecks(CheckRBAC, CheckNodesReady)
 }
 
 // InFlightChecks is a list of all checks that are run after the installation.
@@ -35,6 +40,7 @@ func PreflightChecks() []CheckResult {
 func InFlightChecks() []CheckResult {
 	checks := []func() CheckResult{
 		CheckDefaultStorageClass,
+		CheckIngressCapability,
 	}
 
 	// Some debugging test
@@ -83,6 +89,158 @@ func newClient() (client.WithWatch, error) {
 	}
 
 	return k8sclient.New(cfg)
+}
+
+func CheckIngressCapability() CheckResult {
+	result := CheckResult{
+		Name: "IngressCapability",
+	}
+
+	silenceKlog()
+	cli, err := newClient()
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating client: %v", err)
+		return result
+	}
+
+	// Create a new Endpoint object
+	ep := &corev1.Endpoints{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "acorn-ingress-test",
+			Namespace: system.Namespace,
+		},
+		Subsets: []corev1.EndpointSubset{
+			{
+				Addresses: []corev1.EndpointAddress{
+					{
+						IP: "1.1.1.1",
+					},
+				},
+				Ports: []corev1.EndpointPort{
+					{
+						Name:     "http",
+						Port:     80,
+						Protocol: corev1.ProtocolTCP,
+					},
+				},
+			},
+		},
+	}
+
+	// Create a new Service object
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "acorn-ingress-test",
+			Namespace: system.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
+				Port: 80,
+			}},
+			Selector: map[string]string{
+				"app": "acorn-ingress-test",
+			},
+		},
+	}
+
+	// Create a new ingress object
+	pt := networkingv1.PathTypeImplementationSpecific
+	ing := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "acorn-ingress-test",
+			Namespace: system.Namespace,
+		},
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
+				{
+					Host: "inflight-check.acorn.io",
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
+								{
+									Path:     "/",
+									PathType: &pt,
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: "acorn-ingress-test",
+											Port: networkingv1.ServiceBackendPort{
+												Number: 80,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Create objects
+	if err := cli.Create(context.Background(), ep); err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating endpoint: %v", err)
+		return result
+	}
+	defer func() {
+		if err := cli.Delete(context.Background(), ep); err != nil {
+			klog.Errorf("Error deleting endpoint: %v", err)
+		}
+	}()
+
+	if err := cli.Create(context.Background(), svc); err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating service: %v", err)
+		return result
+	}
+	defer func() {
+		if err := cli.Delete(context.Background(), svc); err != nil {
+			klog.Errorf("Error deleting service: %v", err)
+		}
+	}()
+
+	if err := cli.Create(context.Background(), ing); err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating ingress: %v", err)
+		return result
+	}
+	defer func() {
+		if err := cli.Delete(context.Background(), ing); err != nil {
+			klog.Errorf("Error deleting ingress: %v", err)
+		}
+	}()
+
+	// Wait for ingress to be ready, 10s timeout
+	ingw := &networkingv1.IngressList{Items: []networkingv1.Ingress{*ing}}
+	w, err := cli.Watch(context.Background(), ingw, client.InNamespace(system.Namespace))
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error watching ingress: %v", err)
+		return result
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			result.Passed = false
+			result.Message = "Ingress not ready (test timed out)"
+			return result
+		case f := <-w.ResultChan():
+			if f.Type == watch.Modified {
+				ing := f.Object.(*networkingv1.Ingress)
+				if ing.Status.LoadBalancer.Ingress != nil {
+					result.Passed = true
+					result.Message = "Ingress is ready"
+					return result
+				}
+			}
+		}
+	}
+
 }
 
 /*
