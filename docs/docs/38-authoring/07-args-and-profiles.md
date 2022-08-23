@@ -10,14 +10,13 @@ Args are defined in the top level `args` struct.
 
 ### Defining default values
 
-Arguments to an Acorn can be standard `strings`, `ints`, `bools`, and other complex types. When defining an argument, a standard default value should be provided. The syntax to define the type and default value is:
+Arguments to an Acorn can be standard `strings`, `ints`, `bools`, and other complex types. To define an argument, specify a name and a default value. The type will be inferred from the default value. Here are some examples:
 
 ```acorn
 args: {
-    argName: "default"
-    intVar: 1
-    stringVar: "somestring"
-    boolVar: true
+    myIntVar: 1
+    myStringVar: "somestring"
+    myBoolVar: true
 }
 ```
 
