@@ -9,20 +9,10 @@ metadata:
     "acorn.io/service-name": "svc1"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"localhost":{"port":81,"service":"svc1"},"svc1.app-name.app-namespace.local.on-acorn.io":{"port":81,"service":"svc1"}}'
+    acorn.io/targets: '{"localhost":{"port":81,"service":"svc1"}}'
 spec:
   rules:
     - host: localhost
-      http:
-        paths:
-          - backend:
-              service:
-                name: svc1
-                port:
-                  number: 80
-            path: /
-            pathType: Prefix
-    - host: svc1.app-name.app-namespace.local.on-acorn.io
       http:
         paths:
           - backend:

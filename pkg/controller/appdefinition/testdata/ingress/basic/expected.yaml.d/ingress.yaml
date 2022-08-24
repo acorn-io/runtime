@@ -9,7 +9,7 @@ metadata:
     "acorn.io/service-name": "oneimage"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"oneimage"},"localhost":{"port":81,"service":"oneimage"},"oneimage.app-name.app-namespace.local.on-acorn.io":{"port":81,"service":"oneimage"}}'
+    acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"oneimage"},"localhost":{"port":81,"service":"oneimage"}}'
 spec:
   rules:
     - host: localhost
@@ -32,20 +32,10 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: oneimage.app-name.app-namespace.local.on-acorn.io
-      http:
-        paths:
-          - backend:
-              service:
-                name: oneimage
-                port:
-                  number: 80
-            path: /
-            pathType: Prefix
   tls:
-  - hosts:
-    - ci1.acorn.not
-    secretName: test-tls-1234567890ab
+    - hosts:
+        - ci1.acorn.not
+      secretName: test-tls-1234567890ab
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
@@ -72,3 +62,4 @@ spec:
             path: /
             pathType: Prefix
 ---
+
