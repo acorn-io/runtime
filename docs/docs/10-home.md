@@ -16,6 +16,17 @@ Acorn is an application packaging and deployment framework that simplifies runni
 
 Developers create Acorn images by describing the application configuration in an [Acornfile](/authoring/overview). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
 
+### Acorn Workflow
+
+The following figure illustrates the steps a user takes when using Acorn.
+
+1. The user authors an Acornfile to describe the application.
+2. The user invokes the Acorn CLI to build an Acorn image from the Acornfile.
+3. The Acorn image is pushed to an OCI registry.
+4. The user invokes the Acorn CLI to deploy the Acorn image onto an Acorn runtime, which can be installed on any Kubernetes cluster.
+
+![Acorn Workflow](/img/acorn.workflow.png)
+
 ### Acorn vs. Helm
 
 Helm is a popular package manager for Kubernetes. After working with Helm charts for many years, we built Acorn
