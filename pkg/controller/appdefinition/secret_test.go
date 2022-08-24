@@ -290,26 +290,26 @@ func TestSecretLabelsAnnotations(t *testing.T) {
 				// --label secret:secret1:sec1key=val - Type and name specified. Land on secret of same name
 				{ResourceType: "secret", ResourceName: "secret1", Key: "sec1key", Value: "val"},
 
-				// --secret secret2:sec2key=val - No resourceType, but name specified. Land on secret of same name
+				// --label secret2:sec2key=val - No resourceType, but name specified. Land on secret of same name
 				{ResourceType: "", ResourceName: "secret2", Key: "sec2key", Value: "val"},
 
-				// --secret containers:con=val - For containers, shouldn't land on secret
+				// --label containers:con=val - For containers, shouldn't land on secret
 				{ResourceType: "container", ResourceName: "", Key: "con", Value: "val"},
 			},
 			Annotations: []v1.ScopedLabel{
-				// --label globala=val - Apply to all resources
+				// --annotation globala=val - Apply to all resources
 				{ResourceType: "", ResourceName: "", Key: "globala", Value: "val"},
 
-				// --label secrets:allseca=val - All secrets
+				// --annotation secrets:allseca=val - All secrets
 				{ResourceType: "secret", ResourceName: "", Key: "allseca", Value: "val"},
 
-				// --label secret:secret1:sec1keya=val - Type and name specified. Land on secret of same name
+				// --annotation secret:secret1:sec1keya=val - Type and name specified. Land on secret of same name
 				{ResourceType: "secret", ResourceName: "secret1", Key: "sec1keya", Value: "val"},
 
-				// --secret secret2:sec2keya=val - No resourceType, but name specified. Land on secret of same name
+				// --annotation secret2:sec2keya=val - No resourceType, but name specified. Land on secret of same name
 				{ResourceType: "", ResourceName: "secret2", Key: "sec2keya", Value: "val"},
 
-				// --secret containers:con=val - For containers, shouldn't land on secret
+				// --annotation containers:con=val - For containers, shouldn't land on secret
 				{ResourceType: "container", ResourceName: "", Key: "con", Value: "val"},
 			},
 		},

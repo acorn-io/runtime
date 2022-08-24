@@ -252,6 +252,8 @@ type Ports []PortDef
 type Dependencies []Dependency
 
 type Container struct {
+	Labels       map[string]string      `json:"labels,omitempty"`
+	Annotations  map[string]string      `json:"annotations,omitempty"`
 	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
 	Files        Files                  `json:"files,omitempty"`
 	Image        string                 `json:"image,omitempty"`
@@ -265,8 +267,6 @@ type Container struct {
 	Probes       Probes                 `json:"probes,omitempty"`
 	Dependencies Dependencies           `json:"dependencies,omitempty"`
 	Permissions  *Permissions           `json:"permissions,omitempty"`
-	Labels       map[string]string      `json:"labels,omitempty"`
-	Annotations  map[string]string      `json:"annotations,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
@@ -287,14 +287,14 @@ type Image struct {
 }
 
 type AppSpec struct {
+	Labels      map[string]string        `json:"labels,omitempty"`
+	Annotations map[string]string        `json:"annotations,omitempty"`
 	Containers  map[string]Container     `json:"containers,omitempty"`
 	Jobs        map[string]Container     `json:"jobs,omitempty"`
 	Images      map[string]Image         `json:"images,omitempty"`
 	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
 	Secrets     map[string]Secret        `json:"secrets,omitempty"`
 	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
-	Labels      map[string]string        `json:"labels,omitempty"`
-	Annotations map[string]string        `json:"annotations,omitempty"`
 }
 
 type Acorn struct {
@@ -311,17 +311,19 @@ type Acorn struct {
 }
 
 type Secret struct {
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 	Type        string            `json:"type,omitempty"`
 	Params      GenericMap        `json:"params,omitempty"`
 	Data        map[string]string `json:"data,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type AccessModes []AccessMode
 
 type VolumeRequest struct {
-	Class       string      `json:"class,omitempty"`
-	Size        Quantity    `json:"size,omitempty"`
-	AccessModes AccessModes `json:"accessModes,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Class       string            `json:"class,omitempty"`
+	Size        Quantity          `json:"size,omitempty"`
+	AccessModes AccessModes       `json:"accessModes,omitempty"`
 }

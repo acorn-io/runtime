@@ -253,9 +253,9 @@ func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image strin
 }
 
 func createApp(ctx context.Context, acornCue, image string, opts *Options) (*apiv1.App, error) {
-	opts.Run.Labels = append(opts.Run.Labels, v1.ScopedLabel{ResourceType: "app", Key: labels.AcornAppCuePath, Value: getPathHash(acornCue)})
+	opts.Run.Labels = append(opts.Run.Labels, v1.ScopedLabel{ResourceType: v1.LabelTypeMeta, Key: labels.AcornAppCuePath, Value: getPathHash(acornCue)})
 
-	opts.Run.Labels = append(opts.Run.Labels, v1.ScopedLabel{ResourceType: "app", Key: labels.AcornAppCuePath, Value: acornCue})
+	opts.Run.Labels = append(opts.Run.Labels, v1.ScopedLabel{ResourceType: v1.LabelTypeMeta, Key: labels.AcornAppCuePath, Value: acornCue})
 
 	app, err := rulerequest.PromptRun(ctx, opts.Client, opts.Dangerous, image, opts.Run)
 	if err != nil {

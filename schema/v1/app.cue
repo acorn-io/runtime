@@ -146,14 +146,16 @@ package v1
 #AccessMode: "readWriteMany" | "readWriteOnce" | "readOnlyMany"
 
 #Volume: {
+	labels:      [string]: #Labels
+	annotations: [string]: #Annotations
 	class:       string | *""
 	size:        int | *10 | string
 	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 }
 
 #SecretBase: {
-	labels:                         [string]: #Labels
-	annotations:                    [string]: #Annotations
+	labels:       [string]: #Labels
+	annotations:  [string]: #Annotations
 }
 
 #SecretOpaque: {

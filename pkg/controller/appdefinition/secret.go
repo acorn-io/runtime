@@ -346,12 +346,13 @@ func acornLabelsForSecret(secretName string, appInstance *v1.AppInstance) map[st
 }
 
 func labelsForSecret(secretName string, appInstance *v1.AppInstance, secretRef v1.Secret) map[string]string {
-	return labels.Merge(acornLabelsForSecret(secretName, appInstance), labels.GatherScoped(secretName, "secret",
+	return labels.Merge(acornLabelsForSecret(secretName, appInstance), labels.GatherScoped(secretName, v1.LabelTypeSecret,
 		appInstance.Status.AppSpec.Labels, secretRef.Labels, appInstance.Spec.Labels))
 }
 
 func annotationsForSecret(secretName string, appInstance *v1.AppInstance, secretRef v1.Secret) map[string]string {
-	return labels.GatherScoped(secretName, "secret", appInstance.Status.AppSpec.Annotations, secretRef.Annotations, appInstance.Spec.Annotations)
+	return labels.GatherScoped(secretName, v1.LabelTypeSecret, appInstance.Status.AppSpec.Annotations, secretRef.Annotations,
+		appInstance.Spec.Annotations)
 }
 
 func getSecret(req router.Request, appInstance *v1.AppInstance, name string) (*corev1.Secret, error) {
@@ -581,10 +582,10 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 			labels.AcornAppNamespace: appInstance.Namespace,
 			labels.AcornManaged:      "true",
 		}
-		labelMap = labels.Merge(labelMap, labels.GatherScoped(secretName, "secret",
+		labelMap = labels.Merge(labelMap, labels.GatherScoped(secretName, v1.LabelTypeSecret,
 			appInstance.Status.AppSpec.Labels, entry.secret.Labels, appInstance.Spec.Labels))
 
-		annotations := labels.GatherScoped(secretName, "secret", appInstance.Status.AppSpec.Annotations,
+		annotations := labels.GatherScoped(secretName, v1.LabelTypeSecret, appInstance.Status.AppSpec.Annotations,
 			entry.secret.Annotations, appInstance.Spec.Annotations)
 
 		resp.Objects(&corev1.Secret{

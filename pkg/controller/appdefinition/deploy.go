@@ -413,11 +413,11 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 }
 
 func containerAnnotations(appInstance *v1.AppInstance, container v1.Container, name string) map[string]string {
-	return labels.GatherScoped(name, "container", appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
+	return labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
 }
 
 func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
-	labelMap := labels.GatherScoped(name, "container", appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
+	labelMap := labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
 	kv = append([]string{labels.AcornContainerName, name}, kv...)
 	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
 }

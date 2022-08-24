@@ -298,7 +298,7 @@ func mergeLabels(appLabels, optsLabels []v1.ScopedLabel) []v1.ScopedLabel {
 func appScoped(scoped []v1.ScopedLabel) map[string]string {
 	labels := make(map[string]string)
 	for _, s := range scoped {
-		if s.ResourceType == "app" {
+		if s.ResourceType == v1.LabelTypeMeta {
 			labels[s.Key] = s.Value
 		}
 	}

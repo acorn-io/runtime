@@ -5,19 +5,28 @@ import (
 	"strings"
 )
 
+const (
+	LabelTypeContainer = "container"
+	LabelTypeJob       = "job"
+	LabelTypeVolume    = "volume"
+	LabelTypeSecret    = "secret"
+	LabelTypeMeta      = "metadata"
+	LabelTypeAcorn     = "acorn"
+)
+
 var specialTypes = map[string]string{
-	"container":  "container",
-	"containers": "container",
-	"job":        "job",
-	"jobs":       "job",
-	"volume":     "volume",
-	"volumes":    "volume",
-	"secret":     "secret",
-	"secrets":    "secret",
-	"app":        "app",
+	"container":  LabelTypeContainer,
+	"containers": LabelTypeContainer,
+	"job":        LabelTypeJob,
+	"jobs":       LabelTypeJob,
+	"volume":     LabelTypeVolume,
+	"volumes":    LabelTypeVolume,
+	"secret":     LabelTypeSecret,
+	"secrets":    LabelTypeSecret,
+	"metadata":   LabelTypeMeta,
+	"acorn":      LabelTypeAcorn,
+	"acorns":     LabelTypeAcorn,
 	// TODO - Figure out nested support
-	"acorn":  "acorn",
-	"acorns": "acorn",
 }
 
 func ParseScopedLabels(s ...string) (result []ScopedLabel, err error) {
@@ -34,7 +43,7 @@ func ParseScopedLabels(s ...string) (result []ScopedLabel, err error) {
 			if scopePart != "" {
 				resourceType = scopePart
 			} else {
-				resourceName = scopePart
+				resourceName = scopeAndKeyParts[0]
 			}
 			key = scopeAndKeyParts[1]
 		case 3:
@@ -46,6 +55,10 @@ func ParseScopedLabels(s ...string) (result []ScopedLabel, err error) {
 			}
 
 			resourceName = scopeAndKeyParts[1]
+			if resourceName == "" {
+				return nil, fmt.Errorf("cannot parse label %v. Unrecognized scope format", k)
+			}
+
 			key = scopeAndKeyParts[2]
 		default:
 			return nil, fmt.Errorf("cannot parse label %v. Unrecognized scope format", k)
