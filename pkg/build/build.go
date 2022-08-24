@@ -175,8 +175,12 @@ func buildContainers(ctx context.Context, c client.Client, cwd string, platforms
 			sidecarKey, sidecar := entry.Key, entry.Value
 			if sidecar.Image != "" || sidecar.Build == nil {
 				// this is a copy, it's fine to modify it
-				sidecar.Build = &v1.Build{
-					BaseImage: sidecar.Image,
+				if sidecar.Build == nil {
+					sidecar.Build = &v1.Build{
+						BaseImage: sidecar.Image,
+					}
+				} else {
+					sidecar.Build.BaseImage = sidecar.Image
 				}
 			}
 
