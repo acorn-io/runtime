@@ -31,6 +31,14 @@ If you don't have homebrew, you can install the CLI with this one-liner:
 curl https://get.acorn.io | sh
 ```
 
+### Scoop (Windows)
+
+You can install the latest Acorn CLI with the following:
+
+```shell
+scoop install acorn
+```
+
 ### Manual install
 
 You can download the Acorn CLI binary from the project's [GitHub page](https://github.com/acorn-io/acorn/releases).
