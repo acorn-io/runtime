@@ -40,6 +40,9 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 	w := objwatcher.New[*apiv1.ContainerReplica](opts.Client.GetClient())
 	_, err := w.BySelector(ctx, app.Namespace, labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
 		if con.Spec.AppName == app.Name && con.Spec.JobName == "" && con.Status.Phase == corev1.PodRunning && !syncing[con.Name] {
+			if con.Spec.Init {
+				return false, nil
+			}
 			for remoteDir, mount := range con.Spec.Dirs {
 				if mount.ContextDir == "" {
 					continue
