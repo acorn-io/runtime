@@ -2262,3 +2262,27 @@ containers: test: {
 	assert.Equal(t, "", appSpec.Containers["test"].Permissions.Rules[1].APIGroups[0])
 	assert.Equal(t, []string{"get", "list", "watch"}, appSpec.Containers["test"].Permissions.Rules[1].Verbs)
 }
+
+func TestMultipleEphemeralBug(t *testing.T) {
+	data := `
+containers: test: {
+	image: "foo"
+	dirs: "/foo": "ephemeral://blah"
+	dirs: "/foo2": "ephemeral://blah"
+	dirs: "/foo3": "ephemeral://blah"
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo"].Volume)
+	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo2"].Volume)
+	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo3"].Volume)
+}
