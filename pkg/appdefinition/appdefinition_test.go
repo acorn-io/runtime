@@ -2208,3 +2208,81 @@ acorns: m: env: c: "d"
 	assert.Equal(t, "c", appSpec.Acorns["m"].Environment[1].Name)
 	assert.Equal(t, "d", appSpec.Acorns["m"].Environment[1].Value)
 }
+
+func TestTemplateSecretCustomNames(t *testing.T) {
+	data := `
+containers: test: {
+	image: "foo"
+	env: foo: "secret://template/foo"
+}
+secrets: template: {
+    type: "template"
+	data: foo: "yep"
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "yep", appSpec.Secrets["template"].Data["foo"])
+}
+
+func TestShortPermissions(t *testing.T) {
+	data := `
+containers: test: {
+	image: "foo"
+	permissions: {
+		rules: [
+			"pods.api.group",
+			"read secrets"
+		]
+	}
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "pods", appSpec.Containers["test"].Permissions.Rules[0].Resources[0])
+	assert.Equal(t, "api.group", appSpec.Containers["test"].Permissions.Rules[0].APIGroups[0])
+	assert.Equal(t, "*", appSpec.Containers["test"].Permissions.Rules[0].Verbs[0])
+	assert.Equal(t, "secrets", appSpec.Containers["test"].Permissions.Rules[1].Resources[0])
+	assert.Equal(t, "", appSpec.Containers["test"].Permissions.Rules[1].APIGroups[0])
+	assert.Equal(t, []string{"get", "list", "watch"}, appSpec.Containers["test"].Permissions.Rules[1].Verbs)
+}
+
+func TestMultipleEphemeralBug(t *testing.T) {
+	data := `
+containers: test: {
+	image: "foo"
+	dirs: "/foo": "ephemeral://blah"
+	dirs: "/foo2": "ephemeral://blah"
+	dirs: "/foo3": "ephemeral://blah"
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo"].Volume)
+	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo2"].Volume)
+	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo3"].Volume)
+}

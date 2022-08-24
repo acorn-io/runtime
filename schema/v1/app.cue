@@ -130,7 +130,7 @@ package v1
 	resources: [...string]
 	resourceNames: [...string]
 	nonResourceURLs: [...string]
-}
+} | string
 
 #Image: {
 	image:  string | *""
@@ -153,9 +153,7 @@ package v1
 
 #SecretTemplate: {
 	type: "template"
-	data: {
-		template: string
-	}
+	data: [string]: string
 }
 
 #SecretToken: {

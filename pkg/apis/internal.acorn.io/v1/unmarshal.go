@@ -189,11 +189,13 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 			if existing, ok := app.Volumes[mount.Volume]; ok {
 				existingSize, err := resource.ParseQuantity((string)(existing.Size))
 				if err != nil {
-					return nil
+					// ignore error
+					continue
 				}
 				vSize, err := resource.ParseQuantity((string)(v.Size))
 				if err != nil {
-					return nil
+					// ignore error
+					continue
 				}
 				if existingSize.Cmp(vSize) < 0 {
 					existing.Size = v.Size

@@ -1,0 +1,25 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+  publishAllPorts: true
+  endpoints:
+  - target: oneimage
+    hostname: localhost
+status:
+  namespace: app-created-namespace
+  appImage:
+    imageData:
+      images:
+        foo:
+          image: asdf
+  appSpec:
+    secrets:
+      foo:
+        type: "template"
+        data:
+          key: "a ${image://foo}"

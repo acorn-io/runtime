@@ -1,0 +1,54 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+      annotations:
+        acorn.io/container-spec: '{"image":"image-name","sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name"}}}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+        - name: oneimage-pull-1234567890ab
+      enableServiceLinks: false
+      hostname: oneimage
+      automountServiceAccountToken: false
+      containers:
+        - name: oneimage
+          image: image-name
+        - name: sidecar
+          image: image-name
+          volumeMounts:
+            - mountPath: /content-test
+              name: files
+              subPath: e602cd9088eb
+            - mountPath: /sidecar-content-test-mode
+              name: files-0755
+              subPath: 9f61e131eb0e
+      volumes:
+      - name: files
+        configMap:
+          name: files
+      - name: files-0755
+        configMap:
+          defaultMode: 0755
+          name: files-0755

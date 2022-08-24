@@ -1,0 +1,28 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: files
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/managed": "true"
+  annotations:
+    9f61e131eb0e: app-name/oneimage/sidecar/sidecar-content-test-mode
+    e602cd9088eb: app-name/oneimage/sidecar/content-test
+binaryData:
+  9f61e131eb0e: c2lkZWNhci1tb2Rl
+  e602cd9088eb: YmFzZQ==
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: files-0755
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/managed": "true"
+  annotations:
+    9f61e131eb0e: app-name/oneimage/sidecar/sidecar-content-test-mode
+    e602cd9088eb: app-name/oneimage/sidecar/content-test
+binaryData:
+  9f61e131eb0e: c2lkZWNhci1tb2Rl
+  e602cd9088eb: YmFzZQ==

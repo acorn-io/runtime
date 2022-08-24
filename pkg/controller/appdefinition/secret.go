@@ -14,6 +14,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/pull"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/data/convert"
@@ -52,6 +53,7 @@ var (
 	ErrJobNotDone        = errors.New("job not complete")
 	ErrJobNoOutput       = errors.New("job has no output")
 	templateSecretRegexp = regexp.MustCompile(`\${secret://(.*?)/(.*?)}`)
+	imageSecretRegexp    = regexp.MustCompile(`\${image://(.*?)}`)
 )
 
 func getCronJobLatestJob(req router.Request, namespace, name string) (jobName string, err error) {
@@ -197,6 +199,11 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		Type: v1.SecretTypeTemplate,
 	}
 
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Labels[labels.AcornRootNamespace], appInstance.Spec.Image)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, entry := range typed.Sorted(secret.Data) {
 		var (
 			template       = string(entry.Value)
@@ -222,6 +229,16 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		if err := merr.NewErrors(templateErrors...); err != nil {
 			return nil, err
 		}
+
+		template = imageSecretRegexp.ReplaceAllStringFunc(template, func(t string) string {
+			groups := imageSecretRegexp.FindStringSubmatch(t)
+			digest, ok := appInstance.Status.AppImage.ImageData.Images[groups[1]]
+			if !ok {
+				return t
+			}
+
+			return resolveTag(tag, digest.Image)
+		})
 
 		secret.Data[entry.Key] = []byte(template)
 	}
