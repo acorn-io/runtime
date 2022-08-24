@@ -263,11 +263,11 @@ func addFilesFileModesForContainer(fileModes map[string]bool, container v1.Conta
 		if file.Content != "" && file.Secret.Name == "" {
 			fileModes[normalizeMode(file.Mode)] = true
 		}
-		for _, sidecar := range container.Sidecars {
-			for _, file := range sidecar.Files {
-				if file.Content != "" && file.Secret.Name == "" {
-					fileModes[normalizeMode(file.Mode)] = true
-				}
+	}
+	for _, sidecar := range container.Sidecars {
+		for _, file := range sidecar.Files {
+			if file.Content != "" && file.Secret.Name == "" {
+				fileModes[normalizeMode(file.Mode)] = true
 			}
 		}
 	}

@@ -10,3 +10,7 @@ import (
 func TestFileModes(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/files", DeploySpec)
 }
+
+func TestFileModesBug(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/files-bug", DeploySpec)
+}
