@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -88,14 +88,14 @@ func baseResources(ctx context.Context, c kclient.Client) (resources []kclient.O
 	}
 
 	ingressClass := &networkingv1.IngressClass{}
-	if err := c.Get(ctx, kclient.ObjectKey{Name: "nginx"}, ingressClass); !apierror.IsNotFound(err) && err != nil {
+	if err := c.Get(ctx, kclient.ObjectKey{Name: "traefik"}, ingressClass); !apierror.IsNotFound(err) && err != nil {
 		return nil, err
 	} else if err == nil && ingressClass.Labels[labels.AcornManaged] == "true" {
-		nginxResources, err := install.NGINXResources()
+		traefikResources, err := install.TraefikResources()
 		if err != nil {
 			return nil, err
 		}
-		resources = append(resources, nginxResources...)
+		resources = append(resources, traefikResources...)
 	}
 
 	return resources, nil

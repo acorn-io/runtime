@@ -145,7 +145,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		if ok, err := config.IsDockerDesktop(ctx, kclient); err != nil {
 			return err
 		} else if ok {
-			if err := installNginx(ctx, opts.Progress, kclient, apply); err != nil {
+			if err := installTraefik(ctx, opts.Progress, kclient, apply); err != nil {
 				return err
 			}
 		}
@@ -164,8 +164,8 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	return nil
 }
 
-func NGINXResources() (result []kclient.Object, _ error) {
-	objs, err := nginxResources()
+func TraefikResources() (result []kclient.Object, _ error) {
+	objs, err := traefikResources()
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +174,8 @@ func NGINXResources() (result []kclient.Object, _ error) {
 	}), nil
 }
 
-func nginxResources() (result []runtime.Object, _ error) {
-	objs, err := objectsFromFile("nginx.yaml")
+func traefikResources() (result []runtime.Object, _ error) {
+	objs, err := objectsFromFile("traefik.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -205,8 +205,8 @@ func nginxResources() (result []runtime.Object, _ error) {
 	return objs, nil
 }
 
-func installNginx(ctx context.Context, p progress.Builder, client kclient.WithWatch, apply apply.Apply) (err error) {
-	pb := p.New("Installing NGINX Ingress Controller")
+func installTraefik(ctx context.Context, p progress.Builder, client kclient.WithWatch, apply apply.Apply) (err error) {
+	pb := p.New("Installing Traefik Ingress Controller")
 	defer func() {
 		_ = pb.Fail(err)
 	}()
@@ -220,12 +220,12 @@ func installNginx(ctx context.Context, p progress.Builder, client kclient.WithWa
 		return nil
 	}
 
-	objs, err := nginxResources()
+	objs, err := traefikResources()
 	if err != nil {
 		return err
 	}
 
-	return apply.WithSetID("acorn-install-nginx").ApplyObjects(objs...)
+	return apply.WithSetID("acorn-install-traefik").ApplyObjects(objs...)
 }
 
 func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name string, scale int32) error {
