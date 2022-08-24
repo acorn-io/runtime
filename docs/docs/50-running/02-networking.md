@@ -18,7 +18,7 @@ To publish all ports you can run with `-P` or the long form `--publish-all`.
 
 ### Publish no ports
 
-To launch the Acorn app with all ports internal, you can launch with the `-P none` or `--publish-all=none`.
+To launch the Acorn app with all ports internal, you can launch with the `-P=false` or `--publish-all=false`.
 
 ## Publish individual ports
 
