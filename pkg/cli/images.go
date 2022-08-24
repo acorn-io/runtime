@@ -84,7 +84,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	return out.Err()
 }
 
-type ImageContainer struct {
+type imageContainer struct {
 	Container string
 	Repo      string
 	Tag       string
@@ -118,8 +118,8 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	return out.Err()
 }
 
-func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image) ([]ImageContainer, error) {
-	imageContainers := []ImageContainer{}
+func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image) ([]imageContainer, error) {
+	imageContainers := []imageContainer{}
 
 	imgDetails, err := c.ImageDetails(ctx, image.Name, nil)
 	if err != nil {
@@ -150,11 +150,11 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 	return imageContainers, nil
 }
 
-func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []ImageContainer {
-	imageContainers := []ImageContainer{}
+func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []imageContainer {
+	imageContainers := []imageContainer{}
 
 	for k, v := range containers {
-		ImgContainer := ImageContainer{
+		ImgContainer := imageContainer{
 			Repo:      image.Repository,
 			Tag:       image.Tag,
 			Container: k,
@@ -164,7 +164,7 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 		imageContainers = append(imageContainers, ImgContainer)
 
 		for sidecar, img := range v.Sidecars {
-			ic := ImageContainer{
+			ic := imageContainer{
 				Repo:      image.Repository,
 				Tag:       image.Tag,
 				Container: sidecar,
