@@ -57,7 +57,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if a.Containers {
-		return printContainerImages(images, cmd.Context(), c, a.Output, a.Quiet)
+		return printContainerImages(images, cmd.Context(), c, a)
 	}
 
 	out := table.NewWriter(tables.Image, system.UserNamespace(), false, a.Output)
@@ -89,20 +89,30 @@ type imageContainer struct {
 	Repo      string
 	Tag       string
 	Digest    string
+	ImageID   string
 }
 
-func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, output string, quiet bool) error {
-	out := table.NewWriter(tables.ImageContainer, system.UserNamespace(), quiet, output)
+func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image) error {
+	out := table.NewWriter(tables.ImageContainer, system.UserNamespace(), a.Quiet, a.Output)
 
-	if quiet {
+	if a.Quiet {
 		out = table.NewWriter([][]string{
-			{"Name", "{{.Repo}}:{{.Tag}}@{{.Digest}}"},
-		}, system.UserNamespace(), quiet, output)
+			{"Name", "{{if ne .Repo \"\"}}{{.Repo}}:{{end}}{{.Tag}}@{{.Digest}}"},
+		}, system.UserNamespace(), a.Quiet, a.Output)
 	}
 
 	for _, image := range images {
 		if image.Tag == "" && image.Repository == "" {
-			continue
+			if !a.All {
+				continue
+			}
+			if !a.Quiet {
+				image.Tag = "<none>"
+				image.Repository = "<none>"
+			} else {
+				image.Tag = image.Name
+				image.Repository = "<none>"
+			}
 		}
 
 		containerImages, err := getImageContainers(c, ctx, image)
@@ -159,6 +169,7 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 			Tag:       image.Tag,
 			Container: k,
 			Digest:    v.Image,
+			ImageID:   image.Name,
 		}
 
 		imageContainers = append(imageContainers, ImgContainer)
@@ -169,6 +180,7 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 				Tag:       image.Tag,
 				Container: sidecar,
 				Digest:    img.Image,
+				ImageID:   image.Name,
 			}
 			imageContainers = append(imageContainers, ic)
 		}

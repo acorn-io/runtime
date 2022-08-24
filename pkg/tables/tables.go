@@ -33,6 +33,7 @@ var (
 	ImageContainer = [][]string{
 		{"Repository", "{{ .Repo }}"},
 		{"Tag", "{{ .Tag }}"},
+		{"Image-ID", "{{trunc .ImageID }}"},
 		{"Container", "{{ .Container}}"},
 		{"Digest", "{{ .Digest }}"},
 	}
