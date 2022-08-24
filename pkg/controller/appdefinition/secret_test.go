@@ -162,6 +162,9 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 			Name:      "app-name",
 			Namespace: "app-ns",
 		},
+		Spec: v1.AppInstanceSpec{
+			Image: "image",
+		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
 			AppSpec: v1.AppSpec{
@@ -195,6 +198,9 @@ func TestTemplateToken_Gen(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "app-name",
 			Namespace: "app-ns",
+		},
+		Spec: v1.AppInstanceSpec{
+			Image: "image",
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
@@ -250,4 +256,8 @@ func TestTemplateToken_Gen(t *testing.T) {
 
 func TestSecretRedeploy(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/secret", DeploySpec)
+}
+
+func TestSecretImageReference(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/secret-image", CreateSecrets)
 }
