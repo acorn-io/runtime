@@ -2232,3 +2232,33 @@ secrets: template: {
 
 	assert.Equal(t, "yep", appSpec.Secrets["template"].Data["foo"])
 }
+
+func TestShortPermissions(t *testing.T) {
+	data := `
+containers: test: {
+	image: "foo"
+	permissions: {
+		rules: [
+			"pods.api.group",
+			"read secrets"
+		]
+	}
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "pods", appSpec.Containers["test"].Permissions.Rules[0].Resources[0])
+	assert.Equal(t, "api.group", appSpec.Containers["test"].Permissions.Rules[0].APIGroups[0])
+	assert.Equal(t, "*", appSpec.Containers["test"].Permissions.Rules[0].Verbs[0])
+	assert.Equal(t, "secrets", appSpec.Containers["test"].Permissions.Rules[1].Resources[0])
+	assert.Equal(t, "", appSpec.Containers["test"].Permissions.Rules[1].APIGroups[0])
+	assert.Equal(t, []string{"get", "list", "watch"}, appSpec.Containers["test"].Permissions.Rules[1].Verbs)
+}
