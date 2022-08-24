@@ -153,9 +153,7 @@ package v1
 
 #SecretTemplate: {
 	type: "template"
-	data: {
-		template: string
-	}
+	data: [string]: string
 }
 
 #SecretToken: {

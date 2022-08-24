@@ -146,25 +146,21 @@ The template secret can be used to render and store multiple secret values into 
 ```acorn
 // ...
 secrets: {
-    "my-template": {
+    "password-file": {
         type: "template" // required
         data: {
-            template: """  // required
-            a long \(localData.configValue.key)
-            a ${secret://my-secret-data/key}
+            "password.txt": """
+            password=${secret://token/token}
             """
         }
     }
-    "my-secret-data": {
-        type: "opaque"
-        data: {
-            key: "value"
-        }
+    "token": {
+        type: "token"
     }
 }
 ```
 
-In the above example the secret renders a template that contains [data](/authoring/localdata) defined in the Acornfile and another secret. See [advanced topics](/authoring/advanced) for other uses for the template secret type.
+In the above example the secret renders a template secret with one key call "password.txt" the token from the secret named "token." See [advanced topics](/authoring/advanced) for other uses for the template secret type.
 
 ### Token secrets
 

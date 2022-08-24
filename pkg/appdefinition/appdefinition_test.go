@@ -2208,3 +2208,27 @@ acorns: m: env: c: "d"
 	assert.Equal(t, "c", appSpec.Acorns["m"].Environment[1].Name)
 	assert.Equal(t, "d", appSpec.Acorns["m"].Environment[1].Value)
 }
+
+func TestTemplateSecretCustomNames(t *testing.T) {
+	data := `
+containers: test: {
+	image: "foo"
+	env: foo: "secret://template/foo"
+}
+secrets: template: {
+    type: "template"
+	data: foo: "yep"
+}
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "yep", appSpec.Secrets["template"].Data["foo"])
+}
