@@ -298,16 +298,18 @@ type AppSpec struct {
 }
 
 type Acorn struct {
-	Image       string           `json:"image,omitempty"`
-	Build       *AcornBuild      `json:"build,omitempty"`
-	Profiles    []string         `json:"profiles,omitempty"`
-	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
-	Ports       Ports            `json:"ports,omitempty"`
-	Environment NameValues       `json:"environment,omitempty"`
-	Secrets     []SecretBinding  `json:"secrets,omitempty"`
-	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
-	Links       []ServiceBinding `json:"links,omitempty"`
-	Permissions *Permissions     `json:"permissions,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Image       string            `json:"image,omitempty"`
+	Build       *AcornBuild       `json:"build,omitempty"`
+	Profiles    []string          `json:"profiles,omitempty"`
+	DeployArgs  GenericMap        `json:"deployArgs,omitempty"`
+	Ports       Ports             `json:"ports,omitempty"`
+	Environment NameValues        `json:"environment,omitempty"`
+	Secrets     []SecretBinding   `json:"secrets,omitempty"`
+	Volumes     []VolumeBinding   `json:"volumes,omitempty"`
+	Links       []ServiceBinding  `json:"links,omitempty"`
+	Permissions *Permissions      `json:"permissions,omitempty"`
 }
 
 type Secret struct {

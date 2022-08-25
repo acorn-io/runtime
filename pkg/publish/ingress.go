@@ -113,15 +113,14 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 			tlsIngress[i].SecretName = secretName
 		}
 
+		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app)
 		result = append(result, &networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      serviceName,
-				Namespace: app.Status.Namespace,
-				Labels:    labels.Managed(app, labels.AcornServiceName, serviceName),
-				Annotations: map[string]string{
-					labels.AcornTargets: string(targetJSON),
-				},
+				Name:        serviceName,
+				Namespace:   app.Status.Namespace,
+				Labels:      labelMap,
+				Annotations: annotations,
 			},
 			Spec: networkingv1.IngressSpec{
 				IngressClassName: ingressClassName,
@@ -132,6 +131,40 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	}
 
 	return result, nil
+}
+
+func ingressLabelsAndAnnotations(name, targetJSON string, appInstance *v1.AppInstance) (map[string]string, map[string]string) {
+	var resourceType string
+	var resourceLabels, resourceAnnotations map[string]string
+	for k, v := range appInstance.Status.AppSpec.Containers {
+		if k == name {
+			resourceLabels = v.Labels
+			resourceAnnotations = v.Annotations
+			resourceType = v1.LabelTypeContainer
+			break
+		}
+	}
+	if resourceType == "" {
+		for k, v := range appInstance.Status.AppSpec.Acorns {
+			if k == name {
+				resourceLabels = v.Labels
+				resourceAnnotations = v.Annotations
+				resourceType = v1.LabelTypeAcorn
+				break
+			}
+		}
+	}
+
+	labelMap := labels.Managed(appInstance, labels.AcornServiceName, name)
+	labelMap = labels.Merge(labelMap, labels.GatherScoped(name, resourceType, appInstance.Status.AppSpec.Labels,
+		resourceLabels, appInstance.Spec.Labels))
+
+	annotations := map[string]string{
+		labels.AcornTargets: targetJSON,
+	}
+	annotations = labels.Merge(annotations, labels.GatherScoped(name, resourceType, appInstance.Status.AppSpec.Annotations,
+		resourceAnnotations, appInstance.Spec.Annotations))
+	return labelMap, annotations
 }
 
 func rule(host, serviceName string, port int32) networkingv1.IngressRule {
