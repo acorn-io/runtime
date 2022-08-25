@@ -416,8 +416,17 @@ func containerAnnotations(appInstance *v1.AppInstance, container v1.Container, n
 	return labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
 }
 
+func jobLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
+	labelMap := labels.GatherScoped(name, v1.LabelTypeJob, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
+	return mergeConLabels(labelMap, appInstance, name, kv...)
+}
+
 func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
 	labelMap := labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
+	return mergeConLabels(labelMap, appInstance, name, kv...)
+}
+
+func mergeConLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	kv = append([]string{labels.AcornContainerName, name}, kv...)
 	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
 }

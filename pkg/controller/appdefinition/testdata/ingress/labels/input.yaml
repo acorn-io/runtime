@@ -53,14 +53,3 @@ status:
           publish: true
           protocol: http
         image: "test"
-#      con2:
-#        labels:
-#          conl2: val
-#        annotations:
-#          cona2: val
-#        ports:
-#        - port: 80
-#          targetPort: 81
-#          publish: true
-#          protocol: http
-#        image: "test"
