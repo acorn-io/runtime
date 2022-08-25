@@ -72,15 +72,17 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 					rules = append(rules, rule(hostname, serviceName, port.Port))
 				}
 			}
-			hostPrefix := toPrefix(serviceName, app)
-			if i > 0 {
-				hostPrefix = toPrefix(name.SafeConcatName(serviceName, fmt.Sprint(port.Port)), app)
-			}
-			for _, domain := range cfg.ClusterDomains {
-				hostname := hostPrefix + domain
-				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
-				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
-				rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
+			if len(hostnames) == 0 {
+				hostPrefix := toPrefix(serviceName, app)
+				if i > 0 {
+					hostPrefix = toPrefix(name.SafeConcatName(serviceName, fmt.Sprint(port.Port)), app)
+				}
+				for _, domain := range cfg.ClusterDomains {
+					hostname := hostPrefix + domain
+					hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
+					targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
+					rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
+				}
 			}
 		}
 
