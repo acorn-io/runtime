@@ -85,6 +85,7 @@ The last successful build from the HEAD of the main branch is available for
 The Acorn CLI supports command autocompletion. If you installed acorn using homebrew, this is already configured for you. If you installed using the manual or curl|sh method, you must enable shell completion yourself.
 
 To set autocompletion for the current terminal session, use the command that matches your shell:
+
 ```
 source <(acorn completion bash)
 source <(acorn completion zsh)
@@ -92,6 +93,7 @@ acorn completion fish | source
 ```
 
 For permanent effect add the same line to your shell specific profile:
+
 - ~/.bashrc
 - ~/.zshrc
 - ~/.config/fish/config.fish
@@ -126,7 +128,7 @@ For local development, Acorn has been tested with Rancher Desktop, Docker Deskto
 
 **Rancher Desktop** comes with a working ingress controller, service loadbalancer solution, and storage class by default. No additional configuration is necessary.
 
-**Docker Desktop** comes with a storage class and service loadbalancer solution, but not an ingress. If you're using Docker Desktop and don't have one installed, Acorn will install the [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/) for you.
+**Docker Desktop** comes with a storage class and service loadbalancer solution, but not an ingress. If you're using Docker Desktop and don't have one installed, Acorn will install the [Traefik v2 Ingress Controller](https://doc.traefik.io/traefik/v2.8/providers/kubernetes-ingress/) for you.
 
 **Minikube** comes with a default storage class, but requires that you [enable ingress explicitly](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/#enable-the-ingress-controller) with the following command:
 
@@ -143,15 +145,19 @@ minikube tunnel
 The tunnel command also services as the service loadbalancer solution. If it is running, your TCP services will be published to `localhost`.
 
 **K3d** comes with a working ingress controller, service loadbalancer solution, and storage class by default. However, when creating your K3d cluster, you must configure it to proxy traffic from localhost to the cluster, so that endpoints resolve properly:
+
 ```shell
 k3d cluster create --api-port 6550 -p "80:80@loadbalancer"
 ```
 
 If you choose to use a port other than `80` like so:
+
 ```shell
 k3d cluster create --api-port 6550 -p "8081:80@loadbalancer"
 ```
+
 then you must reflect that in the `acorn install` command by specifying the port with the `--cluster-domain` flag:
+
 ```shell
 acorn install --cluster-domain '.local.on-acorn.io:8081'
 ```
