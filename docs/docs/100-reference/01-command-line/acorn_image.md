@@ -20,6 +20,7 @@ acorn images
 
 ```
   -a, --all             Include untagged images
+  -c, --containers      Show containers for images
   -h, --help            help for image
       --no-trunc        Don't truncate IDs
   -o, --output string   Output format (json, yaml, {{gotemplate}})
