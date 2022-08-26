@@ -6,6 +6,9 @@ import (
 	acorn "github.com/acorn-io/acorn/pkg/cli"
 	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/rancher/wrangler/pkg/signals"
+
+	// Include cloud auth clients
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func main() {
