@@ -54,7 +54,9 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 	case "yaml":
 		v, err = appDef.YAML()
 	case "json":
-		v, err = appDef.YAML()
+		if v, err = appDef.JSON(); err == nil {
+			v += "\n" // appDef.YAML() appends a line break
+		}
 	default:
 		return fmt.Errorf("unsupported output format %s", s.Output)
 	}
