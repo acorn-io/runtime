@@ -23,7 +23,7 @@ func NewRender() *cobra.Command {
 type Render struct {
 	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/Acornfile"`
 	Profile []string `usage:"Profile to assign default values"`
-	Output  string   `usage:"Output in JSON or YAML" default:"json"`
+	Output  string   `usage:"Output in JSON or YAML" default:"json" short:"o"`
 }
 
 func (s *Render) Run(cmd *cobra.Command, args []string) error {
