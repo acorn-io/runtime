@@ -7,16 +7,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,6 +47,7 @@ func InFlightChecks() []CheckResult {
 	checks := []func() CheckResult{
 		CheckDefaultStorageClass,
 		CheckIngressCapability,
+		CheckExec,
 	}
 
 	// Some debugging test
@@ -89,6 +96,142 @@ func newClient() (client.WithWatch, error) {
 	}
 
 	return k8sclient.New(cfg)
+}
+
+func CheckExec() CheckResult {
+	result := CheckResult{
+		Name: "Exec",
+	}
+
+	silenceKlog()
+	cli, err := newClient()
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating client: %v", err)
+		return result
+	}
+
+	// Create new pod
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "acorn-install-check-exec",
+			Namespace: system.Namespace,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:            "exec",
+					Image:           "busybox",
+					ImagePullPolicy: corev1.PullIfNotPresent,
+					Command: []string{
+						"tail",
+						"-f",
+						"/dev/null",
+					},
+				},
+			},
+		},
+	}
+
+	if err := cli.Create(context.Background(), pod); err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating pod: %v", err)
+		return result
+	}
+
+	defer func() {
+		if err := cli.Delete(context.Background(), pod); err != nil {
+			fmt.Printf("Error deleting pod: %v\n", err)
+		}
+	}()
+
+	// Wait for pod to be ready
+	var podList corev1.PodList
+	watcher, err := cli.Watch(context.Background(), &podList, client.InNamespace(system.Namespace), client.MatchingFields{"metadata.name": pod.GetName()})
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating watcher: %v", err)
+		return result
+	}
+	defer watcher.Stop()
+	for {
+		event := <-watcher.ResultChan()
+		if event.Type == watch.Error {
+			result.Passed = false
+			result.Message = fmt.Sprintf("Error watching pod: %v", event.Object)
+			return result
+		}
+		if event.Type == watch.Added || event.Type == watch.Modified {
+			pod := event.Object.(*corev1.Pod)
+			if pod.Status.Phase == corev1.PodRunning {
+				break
+			}
+		}
+	}
+
+	// Execute command in container
+	// had to reimplement this from the client pkg to avoid an import cycle
+	cfg, err := restconfig.Default()
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating client: %v", err)
+		return result
+	}
+
+	dialer, err := k8schannel.NewDialer(cfg, false)
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating dialer: %v", err)
+		return result
+	}
+
+	cfg.APIPath = "api"
+	cfg.GroupVersion = &corev1.SchemeGroupVersion
+	cfg.NegotiatedSerializer = scheme.Codecs
+
+	c, err := rest.RESTClientFor(cfg)
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error creating client: %v", err)
+		return result
+	}
+
+	req := c.Get().
+		Namespace(pod.GetNamespace()).
+		Resource("pods").
+		Name(pod.GetName()).
+		SubResource("exec").
+		VersionedParams(
+			&corev1.PodExecOptions{Container: pod.Spec.Containers[0].Name, Command: []string{"/bin/sh", "-c", "echo Hello"}, Stdout: true},
+			scheme.ParameterCodec,
+		)
+
+	conn, err := dialer.DialContext(context.Background(), req.URL().String(), nil)
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error dialing for container exec: %v", err)
+		return result
+	}
+
+	cIO := conn.ToExecIO(false)
+
+	exitCode, err := term.Pipe(cIO, streams.Current())
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error piping execIO: %v", err)
+		return result
+	}
+
+	if exitCode != 0 {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Container replica exec exited with code %d", exitCode)
+		return result
+	}
+
+	result.Passed = true
+	result.Message = "Successfully executed command in container replica"
+	return result
+
 }
 
 func CheckIngressCapability() CheckResult {
@@ -185,7 +328,7 @@ func CheckIngressCapability() CheckResult {
 		return result
 	}
 	defer func() {
-		if err := cli.Delete(context.Background(), ep); err != nil {
+		if err := cli.Delete(context.Background(), ep); err != nil && !errors.IsNotFound(err) {
 			klog.Errorf("Error deleting endpoint: %v", err)
 		}
 	}()

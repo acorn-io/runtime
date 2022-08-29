@@ -33,6 +33,7 @@ func (a *Check) Run(cmd *cobra.Command, args []string) error {
 		check.CheckNodesReady,
 		check.CheckDefaultStorageClass,
 		check.CheckIngressCapability,
+		check.CheckExec,
 	)
 
 	failures := 0
