@@ -95,8 +95,10 @@ secrets: {
     "user-provided-ssh-keys": {
         type: "opaque"
         data: {
-            id_rsa: "-----BEGIN OPENSSH PRIVATE KEY-----...."
-            id_rsa_aws: "-----BEGIN OPENSSH PRIVATE KEY-----..."
+            //Example content from bound secret.
+            //id_rsa: "-----BEGIN OPENSSH PRIVATE KEY-----...."
+            //id_rsa_aws: "-----BEGIN OPENSSH PRIVATE KEY-----..."
+            //Do not put private keys in Acornfile
         }
     }
 }

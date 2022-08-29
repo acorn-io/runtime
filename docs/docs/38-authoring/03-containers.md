@@ -261,6 +261,10 @@ This example will use an exec check, but HTTP and TCP checks could also be used.
 containers: {
     db: {
         image: "mysql"
+        env: {
+            MYSQL_ROOT_PASSWORD: "secret://db-root-pass/token"
+            // ...
+        }
         // ...
         probes: [
             {
