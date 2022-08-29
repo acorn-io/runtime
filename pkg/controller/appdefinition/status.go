@@ -401,7 +401,7 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 			}
 
 			if endpoint.Pending {
-				buf.WriteString("<pending>")
+				buf.WriteString("<Pending Ingress>")
 			} else {
 				buf.WriteString(endpoint.Address)
 			}

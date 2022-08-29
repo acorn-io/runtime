@@ -68,7 +68,7 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.E
 				endpoints = append(endpoints, v1.Endpoint{
 					Target:     containerName,
 					TargetPort: port.TargetPort.IntVal,
-					Address:    fmt.Sprintf("<pending>:%d", port.Port),
+					Address:    fmt.Sprintf("<Pending Ingress>:%d", port.Port),
 					Protocol:   protocol,
 					Pending:    true,
 				})
