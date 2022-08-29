@@ -114,7 +114,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	if !opts.DisablePreflightChecks {
 		s := opts.Progress.New("Running Preflight Checks")
-		if check.IsFailed(check.PreflightChecks()) {
+		if check.IsFailed(check.PreflightChecks(ctx)) {
 			_ = s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --disable-preflight-checks` to skip"))
 		} else {
 			s.Success()
@@ -173,7 +173,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	s := opts.Progress.New("Running In-Flight Checks")
-	checkresults := check.InFlightChecks()
+	checkresults := check.InFlightChecks(ctx)
 	if check.IsFailed(checkresults) {
 		_ = s.Fail(fmt.Errorf("failed in-flight check(s) may break some features of Acorn"))
 	}

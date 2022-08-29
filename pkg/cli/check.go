@@ -28,7 +28,7 @@ type Check struct {
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
-	checkresult := check.RunChecks(
+	checkresult := check.RunChecks(cmd.Context(),
 		check.CheckRBAC,
 		check.CheckNodesReady,
 		check.CheckDefaultStorageClass,

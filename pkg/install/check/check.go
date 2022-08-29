@@ -37,14 +37,14 @@ type CheckResult struct {
 
 // PreflightChecks is a list of all checks that are run before the installation.
 // They are crictial and will make the installation fail.
-func PreflightChecks() []CheckResult {
-	return RunChecks(CheckRBAC, CheckNodesReady)
+func PreflightChecks(ctx context.Context) []CheckResult {
+	return RunChecks(ctx, CheckRBAC, CheckNodesReady)
 }
 
 // InFlightChecks is a list of all checks that are run after the installation.
 // They are not critical and should not affect the installation process.
-func InFlightChecks() []CheckResult {
-	checks := []func() CheckResult{
+func InFlightChecks(ctx context.Context) []CheckResult {
+	checks := []func(ctx context.Context) CheckResult{
 		CheckDefaultStorageClass,
 		CheckIngressCapability,
 		CheckExec,
@@ -52,12 +52,12 @@ func InFlightChecks() []CheckResult {
 
 	// Some debugging test
 	if os.Getenv("ACORN_INSTALL_FAIL_CHECKS") == "true" {
-		checks = append(checks, func() CheckResult {
+		checks = append(checks, func(ctx context.Context) CheckResult {
 			return CheckResult{Name: "FailTest", Passed: false, Message: "This is a test failure"}
 		})
 	}
 
-	return RunChecks(checks...)
+	return RunChecks(ctx, checks...)
 }
 
 // IsFailed is a simple helper function marking a list of check results
@@ -72,10 +72,10 @@ func IsFailed(results []CheckResult) bool {
 }
 
 // RunChecks runs a list of checks and returns their results as a list.
-func RunChecks(checks ...func() CheckResult) []CheckResult {
+func RunChecks(ctx context.Context, checks ...func(ctx context.Context) CheckResult) []CheckResult {
 	var results []CheckResult
 	for _, check := range checks {
-		results = append(results, check())
+		results = append(results, check(ctx))
 	}
 	return results
 }
@@ -88,23 +88,13 @@ func silenceKlog() {
 	utilruntime.ErrorHandlers = nil
 }
 
-// newClient is a helper function to quickly create a new k8s client instance
-func newClient() (client.WithWatch, error) {
-	cfg, err := restconfig.Default()
-	if err != nil {
-		return nil, err
-	}
-
-	return k8sclient.New(cfg)
-}
-
-func CheckExec() CheckResult {
+func CheckExec(ctx context.Context) CheckResult {
 	result := CheckResult{
 		Name: "Exec",
 	}
 
 	silenceKlog()
-	cli, err := newClient()
+	cli, err := k8sclient.Default()
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating client: %v", err)
@@ -133,21 +123,21 @@ func CheckExec() CheckResult {
 		},
 	}
 
-	if err := cli.Create(context.Background(), pod); err != nil {
+	if err := cli.Create(ctx, pod); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating pod: %v", err)
 		return result
 	}
 
 	defer func() {
-		if err := cli.Delete(context.Background(), pod); err != nil {
+		if err := cli.Delete(ctx, pod); err != nil {
 			fmt.Printf("Error deleting pod: %v\n", err)
 		}
 	}()
 
 	// Wait for pod to be ready
 	var podList corev1.PodList
-	watcher, err := cli.Watch(context.Background(), &podList, client.InNamespace(system.Namespace), client.MatchingFields{"metadata.name": pod.GetName()})
+	watcher, err := cli.Watch(ctx, &podList, client.InNamespace(system.Namespace), client.MatchingFields{"metadata.name": pod.GetName()})
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating watcher: %v", err)
@@ -202,11 +192,11 @@ func CheckExec() CheckResult {
 		Name(pod.GetName()).
 		SubResource("exec").
 		VersionedParams(
-			&corev1.PodExecOptions{Container: pod.Spec.Containers[0].Name, Command: []string{"/bin/sh", "-c", "echo Hello"}, Stdout: true},
+			&corev1.PodExecOptions{Container: pod.Spec.Containers[0].Name, Command: []string{"/bin/sh", "-c", "echo Hello"}, Stderr: true},
 			scheme.ParameterCodec,
 		)
 
-	conn, err := dialer.DialContext(context.Background(), req.URL().String(), nil)
+	conn, err := dialer.DialContext(ctx, req.URL().String(), nil)
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error dialing for container exec: %v", err)
@@ -234,13 +224,13 @@ func CheckExec() CheckResult {
 
 }
 
-func CheckIngressCapability() CheckResult {
+func CheckIngressCapability(ctx context.Context) CheckResult {
 	result := CheckResult{
 		Name: "IngressCapability",
 	}
 
 	silenceKlog()
-	cli, err := newClient()
+	cli, err := k8sclient.Default()
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating client: %v", err)
@@ -322,53 +312,53 @@ func CheckIngressCapability() CheckResult {
 	}
 
 	// Create objects
-	if err := cli.Create(context.Background(), ep); err != nil {
+	if err := cli.Create(ctx, ep); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating endpoint: %v", err)
 		return result
 	}
 	defer func() {
-		if err := cli.Delete(context.Background(), ep); err != nil && !errors.IsNotFound(err) {
+		if err := cli.Delete(ctx, ep); err != nil && !errors.IsNotFound(err) {
 			klog.Errorf("Error deleting endpoint: %v", err)
 		}
 	}()
 
-	if err := cli.Create(context.Background(), svc); err != nil {
+	if err := cli.Create(ctx, svc); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating service: %v", err)
 		return result
 	}
 	defer func() {
-		if err := cli.Delete(context.Background(), svc); err != nil {
+		if err := cli.Delete(ctx, svc); err != nil {
 			klog.Errorf("Error deleting service: %v", err)
 		}
 	}()
 
-	if err := cli.Create(context.Background(), ing); err != nil {
+	if err := cli.Create(ctx, ing); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating ingress: %v", err)
 		return result
 	}
 	defer func() {
-		if err := cli.Delete(context.Background(), ing); err != nil {
+		if err := cli.Delete(ctx, ing); err != nil {
 			klog.Errorf("Error deleting ingress: %v", err)
 		}
 	}()
 
 	// Wait for ingress to be ready, 10s timeout
 	ingw := &networkingv1.IngressList{Items: []networkingv1.Ingress{*ing}}
-	w, err := cli.Watch(context.Background(), ingw, client.InNamespace(system.Namespace))
+	w, err := cli.Watch(ctx, ingw, client.InNamespace(system.Namespace))
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error watching ingress: %v", err)
 		return result
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	nctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	for {
 		select {
-		case <-ctx.Done():
+		case <-nctx.Done():
 			result.Passed = false
 			result.Message = "Ingress not ready (test timed out)"
 			return result
@@ -392,13 +382,13 @@ func CheckIngressCapability() CheckResult {
  * TODO: We only need to check if the cluster is operational.
  * -> A single malfunctiuning node should not prevent the installation.
  */
-func CheckNodesReady() CheckResult {
+func CheckNodesReady(ctx context.Context) CheckResult {
 	result := CheckResult{
 		Name: "NodesReady",
 	}
 
 	silenceKlog()
-	cli, err := newClient()
+	cli, err := k8sclient.Default()
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating client: %v", err)
@@ -408,7 +398,7 @@ func CheckNodesReady() CheckResult {
 	// Try to list cluster nodes
 	var nds corev1.NodeList
 
-	if err := cli.List(context.Background(), &nds); err != nil {
+	if err := cli.List(ctx, &nds); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error listing nodes: %v", err)
 		return result
@@ -441,14 +431,14 @@ func CheckNodesReady() CheckResult {
  * to create a namespace, which is required for the installation.
  * -> This is a critical check that must be passed for Acorn to be installed.
  */
-func CheckRBAC() CheckResult {
+func CheckRBAC(ctx context.Context) CheckResult {
 
 	result := CheckResult{
 		Name: "RBAC",
 	}
 
 	silenceKlog()
-	cli, err := newClient()
+	cli, err := k8sclient.Default()
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating client: %v", err)
@@ -465,7 +455,7 @@ func CheckRBAC() CheckResult {
 			},
 		},
 	}
-	if err := cli.Create(context.TODO(), av); err != nil {
+	if err := cli.Create(ctx, av); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating SelfSubjectAccessReview to verify AuthZ: %v", err)
 	} else {
@@ -484,13 +474,13 @@ func CheckRBAC() CheckResult {
  * CheckDefaultStorageClass checks if a default storage class is defined.
  * -> This is a non-critical check that "only" affects some features of Acorn.
  */
-func CheckDefaultStorageClass() CheckResult {
+func CheckDefaultStorageClass(ctx context.Context) CheckResult {
 	result := CheckResult{
 		Name: "DefaultStorageClass",
 	}
 
 	silenceKlog()
-	cli, err := newClient()
+	cli, err := k8sclient.Default()
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating client: %v", err)
@@ -500,7 +490,7 @@ func CheckDefaultStorageClass() CheckResult {
 	// List registered storageClasses
 	var scs storagev1.StorageClassList
 
-	if err := cli.List(context.Background(), &scs); err != nil {
+	if err := cli.List(ctx, &scs); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error listing storage classes: %v", err)
 		return result
