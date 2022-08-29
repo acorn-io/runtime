@@ -55,13 +55,13 @@ var (
 type Mode string
 
 type Options struct {
-	DisablePreflightChecks bool
-	OutputFormat           string
-	APIServerReplicas      *int
-	ControllerReplicas     *int
-	Config                 apiv1.Config
-	Mode                   uiv1.InstallMode
-	Progress               progress.Builder
+	Checks             *bool
+	OutputFormat       string
+	APIServerReplicas  *int
+	ControllerReplicas *int
+	Config             apiv1.Config
+	Mode               uiv1.InstallMode
+	Progress           progress.Builder
 }
 
 func (o *Options) complete() *Options {
@@ -112,10 +112,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return printObject(image, opts)
 	}
 
-	if !opts.DisablePreflightChecks {
+	if opts.Checks == nil || *opts.Checks {
 		s := opts.Progress.New("Running Preflight Checks")
 		if check.IsFailed(check.PreflightChecks(ctx)) {
-			_ = s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --disable-preflight-checks` to skip"))
+			_ = s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --checks=false` to skip"))
 		} else {
 			s.Success()
 		}
