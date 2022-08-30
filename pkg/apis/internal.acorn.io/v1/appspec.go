@@ -216,6 +216,13 @@ type Dependency struct {
 	TargetName string `json:"targetName,omitempty"`
 }
 
+type ScopedLabel struct {
+	ResourceType string `json:"resourceType,omitempty"`
+	ResourceName string `json:"resourceName,omitempty"`
+	Key          string `json:"key,omitempty"`
+	Value        string `json:"value,omitempty"`
+}
+
 type PolicyRule rbacv1.PolicyRule
 
 type Permissions struct {
@@ -250,6 +257,8 @@ type Probes []Probe
 type Ports []PortDef
 
 type Dependencies []Dependency
+
+type ScopedLabels []ScopedLabel
 
 type Container struct {
 	Labels       map[string]string      `json:"labels,omitempty"`
@@ -298,18 +307,18 @@ type AppSpec struct {
 }
 
 type Acorn struct {
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
-	Image       string            `json:"image,omitempty"`
-	Build       *AcornBuild       `json:"build,omitempty"`
-	Profiles    []string          `json:"profiles,omitempty"`
-	DeployArgs  GenericMap        `json:"deployArgs,omitempty"`
-	Ports       Ports             `json:"ports,omitempty"`
-	Environment NameValues        `json:"environment,omitempty"`
-	Secrets     []SecretBinding   `json:"secrets,omitempty"`
-	Volumes     []VolumeBinding   `json:"volumes,omitempty"`
-	Links       []ServiceBinding  `json:"links,omitempty"`
-	Permissions *Permissions      `json:"permissions,omitempty"`
+	Labels      ScopedLabels     `json:"labels,omitempty"`
+	Annotations ScopedLabels     `json:"annotations,omitempty"`
+	Image       string           `json:"image,omitempty"`
+	Build       *AcornBuild      `json:"build,omitempty"`
+	Profiles    []string         `json:"profiles,omitempty"`
+	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
+	Ports       Ports            `json:"ports,omitempty"`
+	Environment NameValues       `json:"environment,omitempty"`
+	Secrets     []SecretBinding  `json:"secrets,omitempty"`
+	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
+	Links       []ServiceBinding `json:"links,omitempty"`
+	Permissions *Permissions     `json:"permissions,omitempty"`
 }
 
 type Secret struct {

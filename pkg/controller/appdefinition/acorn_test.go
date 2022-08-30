@@ -8,5 +8,9 @@ import (
 )
 
 func TestAcorn(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/acorn", DeploySpec)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/acorn/ports", DeploySpec)
+}
+
+func TestAcornLabels(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/acorn/labels", DeploySpec)
 }

@@ -26,50 +26,68 @@ var specialTypes = map[string]string{
 	"metadata":   LabelTypeMeta,
 	"acorn":      LabelTypeAcorn,
 	"acorns":     LabelTypeAcorn,
-	// TODO - Figure out nested support
 }
 
 func ParseScopedLabels(s ...string) (result []ScopedLabel, err error) {
 	for _, s := range s {
 		k, v, _ := strings.Cut(s, "=")
-		scopeAndKeyParts := strings.Split(k, ":")
-		var key, resourceType, resourceName string
-
-		switch len(scopeAndKeyParts) {
-		case 1:
-			key = scopeAndKeyParts[0]
-		case 2:
-			scopePart := specialTypes[scopeAndKeyParts[0]]
-			if scopePart != "" {
-				resourceType = scopePart
-			} else {
-				resourceName = scopeAndKeyParts[0]
-			}
-			key = scopeAndKeyParts[1]
-		case 3:
-			scopeTypePart := specialTypes[scopeAndKeyParts[0]]
-			if scopeTypePart != "" {
-				resourceType = scopeTypePart
-			} else {
-				return nil, fmt.Errorf("cannot parse label %v. Unrecognized scope type [%v]", k, scopeAndKeyParts[0])
-			}
-
-			resourceName = scopeAndKeyParts[1]
-			if resourceName == "" {
-				return nil, fmt.Errorf("cannot parse label %v. Unrecognized scope format", k)
-			}
-
-			key = scopeAndKeyParts[2]
-		default:
-			return nil, fmt.Errorf("cannot parse label %v. Unrecognized scope format", k)
+		l, err := parseScopedLabel(k, v)
+		if err != nil {
+			return nil, err
 		}
-
-		result = append(result, ScopedLabel{
-			ResourceType: resourceType,
-			ResourceName: resourceName,
-			Key:          key,
-			Value:        v,
-		})
+		result = append(result, l)
 	}
 	return result, nil
+}
+
+func parseScopedLabel(k, v string) (ScopedLabel, error) {
+	scopeAndKeyParts := strings.Split(k, ":")
+	var key, resourceType, resourceName string
+
+	switch len(scopeAndKeyParts) {
+	case 1:
+		key = scopeAndKeyParts[0]
+	case 2:
+		scopePart := specialTypes[scopeAndKeyParts[0]]
+		if scopePart != "" {
+			resourceType = scopePart
+		} else {
+			resourceName = scopeAndKeyParts[0]
+		}
+		key = scopeAndKeyParts[1]
+	case 3:
+		scopeTypePart := specialTypes[scopeAndKeyParts[0]]
+		if scopeTypePart != "" {
+			resourceType = scopeTypePart
+		} else {
+			return ScopedLabel{}, fmt.Errorf("cannot parse label %v. Unrecognized scope type [%v]", k, scopeAndKeyParts[0])
+		}
+
+		resourceName = scopeAndKeyParts[1]
+		if resourceName == "" {
+			return ScopedLabel{}, fmt.Errorf("cannot parse label %v. Unrecognized scope format", k)
+		}
+
+		key = scopeAndKeyParts[2]
+	default:
+		return ScopedLabel{}, fmt.Errorf("cannot parse label %v. Unrecognized scope format", k)
+	}
+
+	return ScopedLabel{
+		ResourceType: resourceType,
+		ResourceName: resourceName,
+		Key:          key,
+		Value:        v,
+	}, nil
+}
+
+func normalizeResourceType(rType string) (string, error) {
+	if rType == "" {
+		return rType, nil
+	}
+	normalized := specialTypes[rType]
+	if normalized == "" {
+		return "", fmt.Errorf("unrecognized scope resourceType [%v]", rType)
+	}
+	return normalized, nil
 }

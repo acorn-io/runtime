@@ -32,16 +32,21 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
 
+	labelMap := labels.Merge(appInstanceScoped(appInstance.Spec.Labels, acorn.Labels, acornName), labels.Managed(appInstance,
+		labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
+		labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
+		labels.AcornAcornName, acornName))
+
 	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      acornName,
-			Namespace: appInstance.Status.Namespace,
-			Labels: labels.Managed(appInstance,
-				labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
-				labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
-				labels.AcornAcornName, acornName),
+			Name:        acornName,
+			Namespace:   appInstance.Status.Namespace,
+			Labels:      labelMap,
+			Annotations: appInstanceScoped(appInstance.Spec.Annotations, acorn.Annotations, acornName),
 		},
 		Spec: v1.AppInstanceSpec{
+			Labels:      append(acorn.Labels, appInstance.Spec.Labels...),
+			Annotations: append(acorn.Annotations, appInstance.Spec.Annotations...),
 			Image:       image,
 			Volumes:     acorn.Volumes,
 			Secrets:     acorn.Secrets,
@@ -60,4 +65,22 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	}
 
 	return acornInstance
+}
+
+func appInstanceScoped(scopedFromParent, scopedFromAcorn []v1.ScopedLabel, acornName string) map[string]string {
+	labels := make(map[string]string)
+	for _, s := range scopedFromAcorn {
+		if s.ResourceType == v1.LabelTypeMeta || (s.ResourceType == "" && s.ResourceName == "") {
+			labels[s.Key] = s.Value
+		}
+	}
+
+	for _, s := range scopedFromParent {
+		if (s.ResourceType == v1.LabelTypeAcorn && (s.ResourceName == "" || s.ResourceName == acornName)) ||
+			(s.ResourceType == "" && s.ResourceName == "") {
+			labels[s.Key] = s.Value
+		}
+	}
+
+	return labels
 }

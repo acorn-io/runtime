@@ -2094,6 +2094,32 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+									},
+								},
+							},
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+									},
+								},
+							},
+						},
+					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -2207,7 +2233,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
 	}
 }
 

@@ -120,6 +120,7 @@ package v1
 #Port:       (>0 & <65536) | =~#PortRegexp | #PortSpec
 #PortRegexp: #"^([a-z][-a-z0-9]+:)?([0-9]+:)?([a-z][-a-z0-9]+:)?([0-9]+)(/(tcp|udp|http))?$"#
 
+
 #PortSpec: {
 	publish:           bool | *false
 	expose:            bool | *false
@@ -129,6 +130,16 @@ package v1
 	serviceName:       string | *""
 	protocol:          *"" | "tcp" | "udp" | "http"
 }
+
+#ScopedLabelMapKey: =~"^([a-z][-a-z0-9]+:)?([a-z][-a-z0-9]+:)?([a-z][-a-z0-9./]+)?$"
+#ScopedLabelMap: {[#ScopedLabelMapKey]: string}
+#ScopedLabel: {
+	resourceType: =~#DNSName | *""
+	resourceName: =~#DNSName | *""
+	key:          =~"[a-z][-a-z0-9./][a-z]*"
+	value:        string | *""
+}
+
 
 #RuleSpec: {
 	verbs: [...string]
@@ -224,6 +235,8 @@ package v1
 } | string
 
 #Acorn: {
+	labels:                *[...#ScopedLabel] | #ScopedLabelMap
+	annotations:           *[...#ScopedLabel] | #ScopedLabelMap
 	image?:                string
 	build?:                string | #AcornBuild
 	ports:                 #PortSingle | *[...#Port] | #PortMap

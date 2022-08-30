@@ -1,0 +1,98 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  labels:
+  - resourceType: ""
+    resourceName: ""
+    key: "global"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacorns"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn2"
+    key: "bad1"
+    value: "value"
+  - resourceType: "container"
+    resourceName: ""
+    key: "bad2"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "inboth"
+    key: "inboth"
+    value: "outervalue"
+  - resourceType: ""
+    resourceName: ""
+    key: "override1"
+    value: "outervalue"
+  annotations:
+  - resourceType: ""
+    resourceName: ""
+    key: "globala"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacornsa"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1a"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "override2"
+    value: "outervalue"
+  image: test
+status:
+  namespace: app-created-namespace
+  appSpec:
+    acorns:
+      acorn-name:
+        labels:
+        - resourceType: ""
+          resourceName: ""
+          key: "nestedglobal"
+          value: "value"
+        - resourceType: "container"
+          resourceName: ""
+          key: "nestedallcontainers"
+          value: "value"
+        - resourceType: "container"
+          resourceName: "nestedcontainer1"
+          key: "nestedcontainer1"
+          value: "value"
+        - resourceType: "container"
+          resourceName: "inboth"
+          key: "inboth"
+          value: "innervalue"
+        - resourceType: "metadata"
+          resourceName: ""
+          key: "override1"
+          value: "innervalue"
+        annotations:
+        - resourceType: ""
+          resourceName: ""
+          key: "globala"
+          value: "value"
+        - resourceType: "acorn"
+          resourceName: ""
+          key: "allacornsa"
+          value: "value"
+        - resourceType: "acorn"
+          resourceName: "acorn1"
+          key: "acorn1a"
+          value: "value"
+        - resourceType: ""
+          resourceName: ""
+          key: "override2"
+          value: "innervalue"
+        image: foo

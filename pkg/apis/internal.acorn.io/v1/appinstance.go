@@ -94,13 +94,6 @@ type VolumeBinding struct {
 	Class       string      `json:"class,omitempty"`
 }
 
-type ScopedLabel struct {
-	ResourceType string `json:"resourceType,omitempty"`
-	ResourceName string `json:"resourceName,omitempty"`
-	Key          string `json:"key,omitempty"`
-	Value        string `json:"value,omitempty"`
-}
-
 type ContainerStatus struct {
 	Ready        int32 `json:"ready,omitempty"`
 	ReadyDesired int32 `json:"readyDesired,omitempty"`
