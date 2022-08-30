@@ -27,11 +27,6 @@ spec:
       "acorn.io/app-name": "app-name"
       "acorn.io/container-name": "con1"
       "acorn.io/managed": "true"
-      "allconsl1": "value"
-      "conl1": "value"
-      "conl3": "value"
-      "globall1": "value"
-      "globall2": "value"
   template:
     metadata:
       labels:

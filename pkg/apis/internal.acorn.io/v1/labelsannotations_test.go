@@ -28,7 +28,7 @@ func TestParseScopedLabels(t *testing.T) {
 	assert.Error(t, err)
 
 	// this should error
-	simpleTest(t, "app:n:k=v", ScopedLabel{ResourceType: "app", ResourceName: "n", Key: "k", Value: "v"})
+	simpleTest(t, "metadata:n:k=v", ScopedLabel{ResourceType: "metadata", ResourceName: "n", Key: "k", Value: "v"})
 
 }
 

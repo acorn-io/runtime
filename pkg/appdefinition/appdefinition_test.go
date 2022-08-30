@@ -1267,13 +1267,17 @@ secrets: {
 	}
 
 	assert.Equal(t, v1.Secret{
-		Type: "opaque",
+		Type:        "opaque",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
 		Data: map[string]string{
 			"username": "bardata",
 		},
 	}, appSpec.Secrets["explicit"])
 	assert.Equal(t, v1.Secret{
-		Type: "basic",
+		Type:        "basic",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
 		Data: map[string]string{
 			"username": "bardata",
 			"password": "barpass",
@@ -1286,8 +1290,10 @@ secrets: {
 		Type: "opaque",
 	}, appSpec.Secrets["file-implicit"])
 	assert.Equal(t, v1.Secret{
-		Type: "opaque",
-		Data: map[string]string{},
+		Type:        "opaque",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+		Data:        map[string]string{},
 	}, appSpec.Secrets["dirs-merge"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
