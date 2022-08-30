@@ -645,20 +645,24 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 }
 
 func addNamespace(cfg *apiv1.Config, appInstance *v1.AppInstance, resp router.Response) {
-	labels := map[string]string{
+	labelMap := map[string]string{
 		labels.AcornAppName:      appInstance.Name,
 		labels.AcornAppNamespace: appInstance.Namespace,
 		labels.AcornManaged:      "true",
 	}
 
+	labelMap = labels.Merge(labelMap, labels.GatherScoped("", "", appInstance.Status.AppSpec.Labels, nil, appInstance.Spec.Labels))
+	annotations := labels.GatherScoped("", "", appInstance.Status.AppSpec.Annotations, nil, appInstance.Spec.Annotations)
+
 	if *cfg.SetPodSecurityEnforceProfile {
-		labels["pod-security.kubernetes.io/enforce"] = cfg.PodSecurityEnforceProfile
+		labelMap["pod-security.kubernetes.io/enforce"] = cfg.PodSecurityEnforceProfile
 	}
 
 	resp.Objects(&corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   appInstance.Status.Namespace,
-			Labels: labels,
+			Name:        appInstance.Status.Namespace,
+			Labels:      labelMap,
+			Annotations: annotations,
 		},
 	})
 }
