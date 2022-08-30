@@ -8,9 +8,9 @@ import (
 )
 
 func TestService(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/service", DeploySpec)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/service/basic", DeploySpec)
 }
 
 func TestAlias(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/alias", DeploySpec)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/service/alias", DeploySpec)
 }

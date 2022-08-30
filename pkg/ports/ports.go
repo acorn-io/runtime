@@ -28,7 +28,6 @@ func ToPodLabels(app *v1.AppInstance, containerName string) map[string]string {
 
 func ToSelector(app *v1.AppInstance, ports []v1.PortDef) map[string]string {
 	result := labels.Managed(app)
-
 	for _, port := range ports {
 		result[labels.AcornServiceNamePrefix+port.ServiceName] = "true"
 		result[fmt.Sprintf("%s%d", labels.AcornPortNumberPrefix, port.TargetPort)] = "true"
@@ -96,11 +95,26 @@ func ToContainerServices(app *v1.AppInstance, publish bool, namespace string, po
 		if publish {
 			extraLabels = append(extraLabels, labels.AcornServicePublish, "true")
 		}
+
+		labelMap := labels.Managed(app, extraLabels...)
+		anns := make(map[string]string)
+		if ports, ok := portSet.Services[serviceName]; ok {
+			for port := range ports {
+				for _, t := range portSet.Ports[port] {
+					labelMap = labels.Merge(labelMap, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer, app.Status.AppSpec.Labels,
+						app.Status.AppSpec.Containers[t.ContainerName].Labels, app.Spec.Labels))
+					anns = labels.Merge(anns, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer, app.Status.AppSpec.Annotations,
+						app.Status.AppSpec.Containers[t.ContainerName].Annotations, app.Spec.Annotations))
+				}
+			}
+		}
+
 		result = append(result, &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      resourceName,
-				Namespace: namespace,
-				Labels:    labels.Managed(app, extraLabels...),
+				Name:        resourceName,
+				Namespace:   namespace,
+				Labels:      labelMap,
+				Annotations: anns,
 			},
 			Spec: corev1.ServiceSpec{
 				Ports:    typed.MapSlice(servicePorts, ToServicePort),

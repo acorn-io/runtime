@@ -9,6 +9,11 @@ metadata:
     "acorn.io/service-name": "con1"
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
+    "con1key": "value"
+    "both": "con1val"
+  annotations:
+    "con1": "value"
+    "both": "con1val"
 spec:
   type: ClusterIP
   ports:
@@ -36,6 +41,11 @@ metadata:
     "acorn.io/service-name": "con2"
     "acorn.io/container-name": "con2"
     "acorn.io/managed": "true"
+    "con2key": "value"
+    "both": "con2val"
+  annotations:
+    "con2": "value"
+    "both": "con2val"
 spec:
   type: ClusterIP
   ports:
@@ -88,6 +98,13 @@ metadata:
     "acorn.io/service-name": "svc1"
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
+    "con1key": "value"
+    "con2key": "value"
+    "both": "con2val"
+  annotations:
+    "con1": "value"
+    "con2": "value"
+    "both": "con2val"
 spec:
   type: ClusterIP
   ports:

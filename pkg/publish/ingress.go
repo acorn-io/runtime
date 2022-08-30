@@ -52,6 +52,11 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 		return nil, err
 	}
 
+	rawPS, err := ports.New(app)
+	if err != nil {
+		return nil, err
+	}
+
 	// Look for Secrets in the app namespace that contain cert manager TLS certs
 	tlsCerts, err := getCerts(req, app.Labels[labels.AcornRootNamespace])
 	if err != nil {
@@ -113,7 +118,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 			tlsIngress[i].SecretName = secretName
 		}
 
-		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app)
+		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
 		result = append(result, &networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
@@ -133,38 +138,22 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	return result, nil
 }
 
-func ingressLabelsAndAnnotations(name, targetJSON string, appInstance *v1.AppInstance) (map[string]string, map[string]string) {
-	var resourceType string
-	var resourceLabels, resourceAnnotations map[string]string
-	for k, v := range appInstance.Status.AppSpec.Containers {
-		if k == name {
-			resourceLabels = v.Labels
-			resourceAnnotations = v.Annotations
-			resourceType = v1.LabelTypeContainer
-			break
-		}
-	}
-	if resourceType == "" {
-		for k, v := range appInstance.Status.AppSpec.Acorns {
-			if k == name {
-				resourceLabels = v.Labels
-				resourceAnnotations = v.Annotations
-				resourceType = v1.LabelTypeAcorn
-				break
+func ingressLabelsAndAnnotations(name, targetJSON string, app *v1.AppInstance, portSet, rawPS *ports.Set) (map[string]string, map[string]string) {
+	labelMap := labels.Managed(app, labels.AcornServiceName, name)
+	anns := map[string]string{labels.AcornTargets: targetJSON}
+
+	if ports, ok := portSet.Services[name]; ok {
+		for port := range ports {
+			for _, t := range rawPS.Ports[port] {
+				labelMap = labels.Merge(labelMap, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer,
+					app.Status.AppSpec.Labels, app.Status.AppSpec.Containers[t.ContainerName].Labels, app.Spec.Labels))
+				anns = labels.Merge(anns, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer,
+					app.Status.AppSpec.Annotations, app.Status.AppSpec.Containers[t.ContainerName].Annotations, app.Spec.Annotations))
 			}
 		}
 	}
 
-	labelMap := labels.Managed(appInstance, labels.AcornServiceName, name)
-	labelMap = labels.Merge(labelMap, labels.GatherScoped(name, resourceType, appInstance.Status.AppSpec.Labels,
-		resourceLabels, appInstance.Spec.Labels))
-
-	annotations := map[string]string{
-		labels.AcornTargets: targetJSON,
-	}
-	annotations = labels.Merge(annotations, labels.GatherScoped(name, resourceType, appInstance.Status.AppSpec.Annotations,
-		resourceAnnotations, appInstance.Spec.Annotations))
-	return labelMap, annotations
+	return labelMap, anns
 }
 
 func rule(host, serviceName string, port int32) networkingv1.IngressRule {

@@ -5,6 +5,23 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
+  labels:
+  - resourceType: "container"
+    resourceName: "con1"
+    key: "con1key"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "con2"
+    key: "con2key"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "con1"
+    key: "both"
+    value: "con1val"
+  - resourceType: "container"
+    resourceName: "con2"
+    key: "both"
+    value: "con2val"
   image: test
   ports:
   - targetServiceName: svc1
@@ -15,6 +32,9 @@ status:
   appSpec:
     containers:
       con1:
+        annotations:
+          "con1": "value"
+          "both": "con1val"
         image: "foo"
         ports:
           - port: 80
@@ -30,6 +50,9 @@ status:
             protocol: tcp
             serviceName: svc1
       con2:
+        annotations:
+          "con2": "value"
+          "both": "con2val"
         image: "foo"
         ports:
         - port: 80
@@ -55,3 +78,8 @@ status:
         - port: 100
           targetPort: 101
           protocol: udp
+  conditions:
+  - type: defined
+    reason: Success
+    status: "True"
+    success: true

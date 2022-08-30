@@ -9,6 +9,17 @@ metadata:
     "acorn.io/service-name": "con1"
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
+    "allconsl1": "value"
+    "conl1": "value"
+    "conl3": "value"
+    "globall1": "value"
+    "globall2": "value"
+  annotations:
+    "allconsa1": "value"
+    "cona1": "value"
+    "cona3": "value"
+    "globala1": "value"
+    "globala2": "value"
 spec:
   type: ClusterIP
   ports:
@@ -23,29 +34,3 @@ spec:
     acorn.io/managed: "true"
     "service-name.acorn.io/con1": "true"
     "port-number.acorn.io/81": "true"
----
-#kind: Service
-#apiVersion: v1
-#metadata:
-#  name: buildimage
-#  namespace: app-created-namespace
-#  labels:
-#    "acorn.io/app-namespace": "app-namespace"
-#    "acorn.io/app-name": "app-name"
-#    "acorn.io/service-name": "buildimage"
-#    "acorn.io/container-name": "buildimage"
-#    "acorn.io/managed": "true"
-#spec:
-#  type: ClusterIP
-#  ports:
-#    - port: 80
-#      targetPort: 81
-#      protocol: "TCP"
-#      appProtocol: "HTTP"
-#      name: "80"
-#  selector:
-#    "acorn.io/app-namespace": "app-namespace"
-#    "acorn.io/app-name": "app-name"
-#    acorn.io/managed: "true"
-#    "service-name.acorn.io/buildimage": "true"
-#    "port-number.acorn.io/81": "true"

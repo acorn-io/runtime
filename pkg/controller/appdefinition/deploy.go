@@ -426,6 +426,10 @@ func containerLabels(appInstance *v1.AppInstance, container v1.Container, name s
 	return mergeConLabels(labelMap, appInstance, name, kv...)
 }
 
+func selectorMatchLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+	return mergeConLabels(make(map[string]string), appInstance, name, kv...)
+}
+
 func mergeConLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	kv = append([]string{labels.AcornContainerName, name}, kv...)
 	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
@@ -559,6 +563,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 
 	podLabels := containerLabels(appInstance, container, name, extraLabels...)
 	deploymentLabels := containerLabels(appInstance, container, name)
+	matchLabels := selectorMatchLabels(appInstance, name)
 	maps.Copy(podLabels, ports.ToPodLabels(appInstance, name))
 
 	deploymentAnnotations := containerAnnotations(appInstance, container, name)
@@ -573,7 +578,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: deploymentLabels,
+				MatchLabels: matchLabels,
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
