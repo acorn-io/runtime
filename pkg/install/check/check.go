@@ -205,7 +205,7 @@ func CheckExec(ctx context.Context) CheckResult {
 
 	cIO := conn.ToExecIO(false)
 
-	exitCode, err := term.Pipe(cIO, streams.Current())
+	exitCode, err := term.Pipe(cIO, &streams.Streams{Output: streams.Output{Out: io.Discard, Err: io.Discard}, In: os.Stdin})
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error piping execIO: %v", err)
