@@ -1,0 +1,53 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  labels:
+  - resourceType: ""
+    resourceName: ""
+    key: "global"
+    value: "value"
+  - resourceType: "container"
+    resourceName: ""
+    key: "bad1"
+    value: "value"
+  annotations:
+  - resourceType: ""
+    resourceName: ""
+    key: "globala"
+    value: "value"
+  - resourceType: "container"
+    resourceName: ""
+    key: "bad"
+    value: "value"
+  image: test
+  permissions:
+    clusterRules:
+    - verbs:
+      - create
+      apiGroups:
+      - "foo.io"
+      resources:
+      - "bar"
+    rules:
+    - verbs:
+      - patch
+      apiGroups:
+      - "bar.io"
+      resources:
+      - "foo"
+status:
+  namespace: app-created-namespace
+  appSpec:
+    labels:
+      global2: "value"
+    annotations:
+      global2a: "value"
+  conditions:
+  - reason: Success
+    status: "True"
+    success: true
+    type: defined

@@ -26,11 +26,16 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 		return nil
 	}
 
+	labelMap := labels.Merge(labels.Managed(appInstance), labels.GatherScoped("", "", appInstance.Status.AppSpec.Labels,
+		nil, appInstance.Spec.Labels))
+	annotations := labels.GatherScoped("", "", appInstance.Status.AppSpec.Annotations, nil, appInstance.Spec.Annotations)
+
 	result = append(result, &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn",
-			Namespace: appInstance.Status.Namespace,
-			Labels:    labels.Managed(appInstance),
+			Name:        "acorn",
+			Namespace:   appInstance.Status.Namespace,
+			Labels:      labelMap,
+			Annotations: annotations,
 		},
 	})
 
@@ -38,14 +43,16 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 		name := name.SafeConcatName("acorn", appInstance.Name, appInstance.Namespace, appInstance.ShortID())
 		result = append(result, &rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   name,
-				Labels: labels.Managed(appInstance),
+				Name:        name,
+				Labels:      labels.Merge(labels.Managed(appInstance), labelMap),
+				Annotations: annotations,
 			},
 			Rules: toRules(appInstance.Spec.Permissions.ClusterRules),
 		}, &rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   name,
-				Labels: labels.Managed(appInstance),
+				Name:        name,
+				Labels:      labels.Merge(labels.Managed(appInstance), labelMap),
+				Annotations: annotations,
 			},
 			Subjects: []rbacv1.Subject{
 				{
@@ -65,16 +72,18 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 	if len(appInstance.Spec.Permissions.Rules) > 0 {
 		result = append(result, &rbacv1.Role{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "acorn",
-				Namespace: appInstance.Status.Namespace,
-				Labels:    labels.Managed(appInstance),
+				Name:        "acorn",
+				Namespace:   appInstance.Status.Namespace,
+				Labels:      labels.Merge(labels.Managed(appInstance), labelMap),
+				Annotations: annotations,
 			},
 			Rules: toRules(appInstance.Spec.Permissions.Rules),
 		}, &rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "acorn",
-				Namespace: appInstance.Status.Namespace,
-				Labels:    labels.Managed(appInstance),
+				Name:        "acorn",
+				Namespace:   appInstance.Status.Namespace,
+				Labels:      labels.Merge(labels.Managed(appInstance), labelMap),
+				Annotations: annotations,
 			},
 			Subjects: []rbacv1.Subject{
 				{
