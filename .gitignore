@@ -12,3 +12,4 @@
 /pkg/ui/server/static/dashboard
 
 apiserver.local.config
+/.envrc
