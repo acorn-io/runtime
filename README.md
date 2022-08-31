@@ -11,9 +11,6 @@ A simple application deployment framework for Kubernetes.
 | :memo: | Acorn is a work in progress. Features will evolve over time and there may be breaking changes between releases. Please give us your feedback in Slack, Discussions, or Issues! |
 |-|:-|
 
-| :exclamation: | Caution: Consuming this project can expose you to chemicals, which are known to the State of California to cause cancer and birth defects or other reproductive harm. |
-|-|:-|
-
 ## Get Started
 
 - [Downloads](https://github.com/acorn-io/acorn/releases)
