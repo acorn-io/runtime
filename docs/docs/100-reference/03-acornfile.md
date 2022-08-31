@@ -551,16 +551,53 @@ secrets: {
 }
 ```
 
-## acorns
-### image
-### build
-### profiles
-### deployArgs
-### ports
-### secrets
-### volumes
-### environment, env
-### links
-
 ## args
+
+`args` defines arguements that can be modified at build or runtime by the user.
+Arguments to an Acorn can be standard strings, ints, bools, and other complex types. To define an argument,
+specify a name and a default value. The type will be inferred from the default value.
+
+```acorn
+args: {
+    // A description that will be show to the user in `acorn run image --help`
+    myIntVar: 1
+    // Another description that will be show to the user in `acorn run image --help`
+    myStringVar: "somestring"
+    // Another description that will be show to the user in `acorn run image --help`
+    myBoolVar: true
+}
+```
+
 ## localData
+
+`localData` is used by the Acornfile author to store values to assist in scripting in the Acornfile. These values are
+not directly interpreted by Acorn and are only for the authors use.
+
+```acorn
+containers:{
+    frontend: {
+        // ...
+        env: {
+            "MY_IMPORTANT_SETTING": localData.myApp.frontendConfig.key
+        }
+        // ...
+    }
+    database: {
+        // ...
+        env: {
+            "MY_DATABASE_NAME": localData.myApp.databaseConfig.name
+        }
+        // ...
+    }
+}
+localData: {
+    myApp:{
+        frontendConfig: {
+            key: "value"
+        }
+        databaseConfig: {
+            name: "db-prod"
+        }
+    }
+}
+```
