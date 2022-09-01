@@ -1,7 +1,7 @@
 package containers
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 
@@ -181,19 +181,19 @@ func TestContainerExec(t *testing.T) {
 		return con.Status.Phase == corev1.PodRunning
 	})
 
-	io, err := c.ContainerReplicaExec(ctx, con.Name, []string{"echo", "test"}, false, nil)
+	cio, err := c.ContainerReplicaExec(ctx, con.Name, []string{"echo", "test"}, false, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	data, err := ioutil.ReadAll(io.Stdout)
+	data, err := io.ReadAll(cio.Stdout)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Equal(t, "test", strings.TrimSpace(string(data)))
 
-	exit := <-io.ExitCode
+	exit := <-cio.ExitCode
 	assert.Equal(t, 0, exit.Code)
 }
 
@@ -235,20 +235,20 @@ func TestContainerDebugExec(t *testing.T) {
 		return con.Status.Phase == corev1.PodRunning
 	})
 
-	io, err := c.ContainerReplicaExec(ctx, con.Name, []string{"cat", "/etc/os-release"}, false, &client.ContainerReplicaExecOptions{
+	cio, err := c.ContainerReplicaExec(ctx, con.Name, []string{"cat", "/etc/os-release"}, false, &client.ContainerReplicaExecOptions{
 		DebugImage: "ubuntu",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	data, err := ioutil.ReadAll(io.Stdout)
+	data, err := io.ReadAll(cio.Stdout)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.True(t, strings.Contains(strings.ToLower(string(data)), "ubuntu"))
 
-	exit := <-io.ExitCode
+	exit := <-cio.ExitCode
 	assert.Equal(t, 0, exit.Code)
 }

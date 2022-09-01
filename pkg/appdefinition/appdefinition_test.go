@@ -3,7 +3,6 @@ package appdefinition
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -1947,7 +1946,7 @@ let foo = std.toyaml({})
 }
 
 func TestStd(t *testing.T) {
-	data, err := ioutil.ReadFile("std_test.cue")
+	data, err := os.ReadFile("std_test.cue")
 	if err != nil {
 		t.Fatal(err)
 	}

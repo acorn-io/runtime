@@ -3,7 +3,6 @@ package build
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -42,7 +41,7 @@ func FromAppImage(ctx context.Context, c client.Client, appImage *v1.AppImage, s
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
-	tempDir, err := ioutil.TempDir("", "acorn-app-image-context")
+	tempDir, err := os.MkdirTemp("", "acorn-app-image-context")
 	if err != nil {
 		return "", err
 	}
@@ -98,5 +97,5 @@ func addFile(tempDir, name string, obj interface{}) error {
 		return err
 	}
 
-	return ioutil.WriteFile(target, data, 0600)
+	return os.WriteFile(target, data, 0600)
 }

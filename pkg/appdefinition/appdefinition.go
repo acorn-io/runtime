@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -337,7 +336,7 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 		}
 
 		if header.Name == AcornCueFile {
-			data, err := ioutil.ReadAll(tar)
+			data, err := io.ReadAll(tar)
 			if err != nil {
 				return nil, err
 			}
