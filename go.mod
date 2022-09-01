@@ -9,7 +9,7 @@ replace (
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf
 	go.etcd.io/etcd/server/v3 v3.5.1 => github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1
 	k8s.io/apiserver => github.com/acorn-io/apiserver v0.24.1-ot-1
-	k8s.io/client-go => k8s.io/client-go v0.24.4
+	k8s.io/client-go => k8s.io/client-go v0.25.0
 	k8s.io/component-base => github.com/acorn-io/component-base v0.24.1-ot-1
 )
 
@@ -44,16 +44,16 @@ require (
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
-	k8s.io/api v0.24.4
-	k8s.io/apiextensions-apiserver v0.24.4
-	k8s.io/apimachinery v0.24.4
-	k8s.io/apiserver v0.24.4
+	k8s.io/api v0.25.0
+	k8s.io/apiextensions-apiserver v0.25.0
+	k8s.io/apimachinery v0.25.0
+	k8s.io/apiserver v0.25.0
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.70.1
-	k8s.io/kube-aggregator v0.24.4
+	k8s.io/kube-aggregator v0.25.0
 	k8s.io/kube-openapi v0.0.0-20220413171646-5e7f5fdc6da6
-	k8s.io/kubectl v0.24.4
+	k8s.io/kubectl v0.25.0
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.3.0
