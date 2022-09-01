@@ -16,6 +16,7 @@ import (
 	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	labels2 "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/podstatus"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/acorn-io/acorn/pkg/watcher"
@@ -225,7 +226,7 @@ func installTraefik(ctx context.Context, p progress.Builder, client kclient.With
 		return err
 	}
 
-	return apply.WithSetID("acorn-install-traefik").ApplyObjects(objs...)
+	return apply.WithSetID("acorn-install-traefik").WithDefaultNamespace(system.Namespace).ApplyObjects(objs...)
 }
 
 func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name string, scale int32) error {
