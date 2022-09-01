@@ -41,19 +41,20 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Labels:      appScoped(opts.Labels),
 		},
 		Spec: v1.AppInstanceSpec{
-			Image:       image,
-			PublishMode: opts.PublishMode,
-			DeployArgs:  opts.DeployArgs,
-			Volumes:     opts.Volumes,
-			Secrets:     opts.Secrets,
-			Links:       opts.Links,
-			Ports:       opts.Ports,
-			Profiles:    opts.Profiles,
-			DevMode:     opts.DevMode,
-			Permissions: opts.Permissions,
-			Environment: opts.Env,
-			Labels:      opts.Labels,
-			Annotations: opts.Annotations,
+			Image:           image,
+			PublishMode:     opts.PublishMode,
+			DeployArgs:      opts.DeployArgs,
+			Volumes:         opts.Volumes,
+			Secrets:         opts.Secrets,
+			Links:           opts.Links,
+			Ports:           opts.Ports,
+			Profiles:        opts.Profiles,
+			DevMode:         opts.DevMode,
+			Permissions:     opts.Permissions,
+			Environment:     opts.Env,
+			Labels:          opts.Labels,
+			Annotations:     opts.Annotations,
+			TargetNamespace: opts.TargetNamespace,
 		},
 	}
 }
@@ -109,6 +110,9 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 	if opts.Permissions != nil {
 		app.Spec.Permissions = opts.Permissions
+	}
+	if opts.TargetNamespace != "" {
+		app.Spec.TargetNamespace = opts.TargetNamespace
 	}
 
 	return app, nil

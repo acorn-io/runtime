@@ -75,20 +75,21 @@ type Run struct {
 }
 
 type RunArgs struct {
-	Name       string   `usage:"Name of app to create" short:"n"`
-	File       string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
-	Volume     []string `usage:"Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)" short:"v" split:"false"`
-	Secret     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
-	Link       []string `usage:"Link external app as a service in the current app (format app-name:container-name)"`
-	PublishAll *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
-	Publish    []string `usage:"Publish port of application (format [public:]private) (ex 81:80)" short:"p"`
-	Expose     []string `usage:"In cluster expose ports of an application (format [public:]private) (ex 81:80)"`
-	Profile    []string `usage:"Profile to assign default values"`
-	Env        []string `usage:"Environment variables to set on running containers" short:"e"`
-	Label      []string `usage:"Add labels to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)" short:"l"`
-	Annotation []string `usage:"Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)"`
-	Dangerous  bool     `usage:"Automatically approve all privileges requested by the application"`
-	Output     string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
+	Name            string   `usage:"Name of app to create" short:"n"`
+	File            string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
+	Volume          []string `usage:"Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)" short:"v" split:"false"`
+	Secret          []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Link            []string `usage:"Link external app as a service in the current app (format app-name:container-name)"`
+	PublishAll      *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
+	Publish         []string `usage:"Publish port of application (format [public:]private) (ex 81:80)" short:"p"`
+	Expose          []string `usage:"In cluster expose ports of an application (format [public:]private) (ex 81:80)"`
+	Profile         []string `usage:"Profile to assign default values"`
+	Env             []string `usage:"Environment variables to set on running containers" short:"e"`
+	Label           []string `usage:"Add labels to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)" short:"l"`
+	Annotation      []string `usage:"Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)"`
+	Dangerous       bool     `usage:"Automatically approve all privileges requested by the application"`
+	Output          string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
+	TargetNamespace string   `usage:"The name of the namespace to be created and deleted for the application resources"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -99,6 +100,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 
 	opts.Name = s.Name
 	opts.Profiles = s.Profile
+	opts.TargetNamespace = s.TargetNamespace
 
 	opts.Volumes, err = v1.ParseVolumes(s.Volume, true)
 	if err != nil {
