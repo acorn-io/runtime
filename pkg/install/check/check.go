@@ -38,26 +38,21 @@ type CheckResult struct {
 // PreflightChecks is a list of all checks that are run before the installation.
 // They are crictial and will make the installation fail.
 func PreflightChecks(ctx context.Context) []CheckResult {
-	return RunChecks(ctx, CheckRBAC, CheckNodesReady)
+	return RunChecks(ctx,
+		CheckRBAC,
+		CheckNodesReady,
+	)
 }
 
 // InFlightChecks is a list of all checks that are run after the installation.
 // They are not critical and should not affect the installation process.
 func InFlightChecks(ctx context.Context) []CheckResult {
-	checks := []func(ctx context.Context) CheckResult{
+
+	return RunChecks(ctx,
 		CheckDefaultStorageClass,
 		CheckIngressCapability,
 		CheckExec,
-	}
-
-	// Some debugging test
-	if os.Getenv("ACORN_INSTALL_FAIL_CHECKS") == "true" {
-		checks = append(checks, func(ctx context.Context) CheckResult {
-			return CheckResult{Name: "FailTest", Passed: false, Message: "This is a test failure"}
-		})
-	}
-
-	return RunChecks(ctx, checks...)
+	)
 }
 
 // IsFailed is a simple helper function marking a list of check results
