@@ -4,8 +4,10 @@ metadata:
   uid: 1234567890abcdef
   name: default
   namespace: random
+spec:
+  targetNamespace: foo
 status:
-  namespace: default-1234567890ab
+  namespace: foo
   conditions:
   - reason: Success
     status: "True"
