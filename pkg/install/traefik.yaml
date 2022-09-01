@@ -1,15 +1,14 @@
 ---
-# Source: traefik/templates/rbac/serviceaccount.yaml
 kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: traefik
+  namespace: acorn-system
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/managed-by: Acorn
     app.kubernetes.io/instance: traefik
 ---
-# Source: traefik/templates/rbac/clusterrole.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -67,6 +66,7 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: traefik
+  namespace: acorn-system
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/managed-by: Acorn
@@ -84,6 +84,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: traefik
+  namespace: acorn-system
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/managed-by: Acorn
@@ -100,7 +101,7 @@ spec:
       maxSurge: 1
       maxUnavailable: 1
   minReadySeconds: 0
-  template:
+  template: 
     metadata:
       annotations:
         prometheus.io/scrape: "true"
@@ -115,65 +116,67 @@ spec:
       terminationGracePeriodSeconds: 60
       hostNetwork: false
       containers:
-        - image: "traefik:2.8"
-          imagePullPolicy: IfNotPresent
-          name: traefik
-          readinessProbe:
-            httpGet:
-              path: /ping
-              port: 9000
-            failureThreshold: 1
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          livenessProbe:
-            httpGet:
-              path: /ping
-              port: 9000
-            failureThreshold: 3
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          ports:
-            - name: "metrics"
-              containerPort: 9100
-              protocol: "TCP"
-            - name: "traefik"
-              containerPort: 9000
-              protocol: "TCP"
-            - name: "web"
-              containerPort: 8000
-              protocol: "TCP"
-            - name: "websecure"
-              containerPort: 8443
-              protocol: "TCP"
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsGroup: 65532
-            runAsNonRoot: true
-            runAsUser: 65532
-          volumeMounts:
-            - name: data
-              mountPath: /data
-            - name: tmp
-              mountPath: /tmp
-          args:
-            - "--global.checknewversion"
-            - "--global.sendanonymoususage=false"
-            - "--entrypoints.metrics.address=:9100/tcp"
-            - "--entrypoints.traefik.address=:9000/tcp"
-            - "--entrypoints.web.address=:8000/tcp"
-            - "--entrypoints.websecure.address=:8443/tcp"
-            - "--api.dashboard=true"
-            - "--ping=true"
-            - "--metrics.prometheus=true"
-            - "--metrics.prometheus.entrypoint=metrics"
-            - "--providers.kubernetesingress"
+      - image: "traefik:2.8.0"
+        imagePullPolicy: IfNotPresent
+        name: traefik
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 9000
+          failureThreshold: 1
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 9000
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        ports:
+        - name: "metrics"
+          containerPort: 9100
+          protocol: "TCP"
+        - name: "traefik"
+          containerPort: 9000
+          protocol: "TCP"
+        - name: "web"
+          containerPort: 8000
+          protocol: "TCP"
+        - name: "websecure"
+          containerPort: 8443
+          protocol: "TCP"
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsGroup: 65532
+          runAsNonRoot: true
+          runAsUser: 65532
+        volumeMounts:
+          - name: data
+            mountPath: /data
+          - name: tmp
+            mountPath: /tmp
+        args:
+          - "--global.checknewversion"
+          - "--global.sendanonymoususage"
+          - "--entrypoints.metrics.address=:9100/tcp"
+          - "--entrypoints.traefik.address=:9000/tcp"
+          - "--entrypoints.web.address=:8000/tcp"
+          - "--entrypoints.websecure.address=:8443/tcp"
+          - "--api.dashboard=true"
+          - "--ping=true"
+          - "--metrics.prometheus=true"
+          - "--metrics.prometheus.entrypoint=metrics"
+          - "--providers.kubernetesingress"
+          - "--providers.kubernetesingress.ingressendpoint.publishedservice=acorn-system/traefik"
+          - "--entrypoints.websecure.http.tls=true"
       volumes:
         - name: data
           emptyDir: {}
@@ -208,18 +211,17 @@ items:
         app.kubernetes.io/name: traefik
         app.kubernetes.io/managed-by: Acorn
         app.kubernetes.io/instance: traefik
-      annotations:
     spec:
       type: LoadBalancer
       selector:
         app.kubernetes.io/name: traefik
         app.kubernetes.io/instance: traefik
       ports:
-        - port: 80
-          name: web
-          targetPort: "web"
-          protocol: TCP
-        - port: 443
-          name: websecure
-          targetPort: "websecure"
-          protocol: TCP
+      - port: 80
+        name: web
+        targetPort: "web"
+        protocol: TCP
+      - port: 443
+        name: websecure
+        targetPort: "websecure"
+        protocol: TCP
