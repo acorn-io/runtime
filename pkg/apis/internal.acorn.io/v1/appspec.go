@@ -216,6 +216,13 @@ type Dependency struct {
 	TargetName string `json:"targetName,omitempty"`
 }
 
+type ScopedLabel struct {
+	ResourceType string `json:"resourceType,omitempty"`
+	ResourceName string `json:"resourceName,omitempty"`
+	Key          string `json:"key,omitempty"`
+	Value        string `json:"value,omitempty"`
+}
+
 type PolicyRule rbacv1.PolicyRule
 
 type Permissions struct {
@@ -251,7 +258,11 @@ type Ports []PortDef
 
 type Dependencies []Dependency
 
+type ScopedLabels []ScopedLabel
+
 type Container struct {
+	Labels       map[string]string      `json:"labels,omitempty"`
+	Annotations  map[string]string      `json:"annotations,omitempty"`
 	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
 	Files        Files                  `json:"files,omitempty"`
 	Image        string                 `json:"image,omitempty"`
@@ -285,15 +296,19 @@ type Image struct {
 }
 
 type AppSpec struct {
-	Containers map[string]Container     `json:"containers,omitempty"`
-	Jobs       map[string]Container     `json:"jobs,omitempty"`
-	Images     map[string]Image         `json:"images,omitempty"`
-	Volumes    map[string]VolumeRequest `json:"volumes,omitempty"`
-	Secrets    map[string]Secret        `json:"secrets,omitempty"`
-	Acorns     map[string]Acorn         `json:"acorns,omitempty"`
+	Labels      map[string]string        `json:"labels,omitempty"`
+	Annotations map[string]string        `json:"annotations,omitempty"`
+	Containers  map[string]Container     `json:"containers,omitempty"`
+	Jobs        map[string]Container     `json:"jobs,omitempty"`
+	Images      map[string]Image         `json:"images,omitempty"`
+	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
+	Secrets     map[string]Secret        `json:"secrets,omitempty"`
+	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
 }
 
 type Acorn struct {
+	Labels      ScopedLabels     `json:"labels,omitempty"`
+	Annotations ScopedLabels     `json:"annotations,omitempty"`
 	Image       string           `json:"image,omitempty"`
 	Build       *AcornBuild      `json:"build,omitempty"`
 	Profiles    []string         `json:"profiles,omitempty"`
@@ -307,15 +322,19 @@ type Acorn struct {
 }
 
 type Secret struct {
-	Type   string            `json:"type,omitempty"`
-	Params GenericMap        `json:"params,omitempty"`
-	Data   map[string]string `json:"data,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Type        string            `json:"type,omitempty"`
+	Params      GenericMap        `json:"params,omitempty"`
+	Data        map[string]string `json:"data,omitempty"`
 }
 
 type AccessModes []AccessMode
 
 type VolumeRequest struct {
-	Class       string      `json:"class,omitempty"`
-	Size        Quantity    `json:"size,omitempty"`
-	AccessModes AccessModes `json:"accessModes,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Class       string            `json:"class,omitempty"`
+	Size        Quantity          `json:"size,omitempty"`
+	AccessModes AccessModes       `json:"accessModes,omitempty"`
 }

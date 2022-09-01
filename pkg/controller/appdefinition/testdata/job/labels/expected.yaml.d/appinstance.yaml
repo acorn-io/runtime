@@ -1,0 +1,89 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  labels:
+    - resourceType: ""
+      resourceName: ""
+      key: "global"
+      value: "value"
+    - resourceType: "job"
+      resourceName: ""
+      key: "alljobs"
+      value: "value"
+    - resourceType: "job"
+      resourceName: "job1"
+      key: "job1"
+      value: "value"
+    - resourceType: "job"
+      resourceName: "job2"
+      key: "bad1"
+      value: "value"
+    - resourceType: "container"
+      resourceName: ""
+      key: "bad2"
+      value: "value"
+    - resourceType: ""
+      resourceName: ""
+      key: "acorn.io/foo"
+      value: "shouldbeignored"
+    - resourceType: ""
+      resourceName: ""
+      key: "acorn.io/job-name"
+      value: "shouldbeignored"
+  annotations:
+    - resourceType: ""
+      resourceName: ""
+      key: "globala"
+      value: "value"
+    - resourceType: "job"
+      resourceName: ""
+      key: "alljobsa"
+      value: "value"
+    - resourceType: "job"
+      resourceName: "job1"
+      key: "job1a"
+      value: "value"
+    - resourceType: ""
+      resourceName: ""
+      key: "acorn.io/foo"
+      value: "shouldbeignored"
+    - resourceType: ""
+      resourceName: ""
+      key: "acorn.io/job-name"
+      value: "shouldbeignored"
+status:
+  namespace: app-created-namespace
+  appSpec:
+    labels:
+      global2: "value"
+      "acorn.io/foo": "shouldbeignored2"
+      "acorn.io/job-name": "shouldbeignored2"
+    annotations:
+      global2a: "value"
+      "acorn.io/foo": "shouldbeignored2"
+      "acorn.io/job-name": "shouldbeignored2"
+    jobs:
+      job1:
+        labels:
+          job3: value
+        annotations:
+          job3a: value
+        ports:
+          - port: 80
+            targetPort: 81
+            protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+  conditions:
+    - type: defined
+      reason: Success
+      status: "True"
+      success: true
+---

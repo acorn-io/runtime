@@ -26,6 +26,40 @@ func NewRun(out io.Writer) *cobra.Command {
 		Use:          "run [flags] IMAGE|DIRECTORY [acorn args]",
 		SilenceUsage: true,
 		Short:        "Run an app from an image or Acornfile",
+		Example: `# Publish and Expose Port Syntax
+  # Publish port 80 for any containers that define it as a port
+  acorn run -p 80 .
+
+  # Publish container "myapp" using the hostname app.example.com
+  acorn run --publish app.example.com:myapp .
+
+  # Expose port 80 to the rest of the cluster as port 8080
+  acorn run --expose 8080:80/http .
+
+# Labels and Annotations Syntax
+  # Add a label to all resources created by the app
+  acorn run --label key=value .
+
+  # Add a label to resources created for all containers
+  acorn run --label containers:key=value .
+
+  # Add a label to the resources created for the volume named "myvolume"
+  acorn run --label volumes:myvolume:key=value .
+
+# Link Syntax
+  # Link the running acorn application named "mydatabase" into the current app, replacing the container named "db"
+  acorn run --link mydatabase:db .
+
+# Secret Syntax
+  # Bind the acorn secret named "mycredentials" into the current app, replacing the secret named "creds". See "acorn secrets --help" for more info
+  acorn run --secret mycredentials:creds .
+
+# Volume Syntax
+  # Create the volume named "mydata" with a size of 5 gigabyes and using the "fast" storage class
+  acorn run --volume mydata,size=5G,class=fast .
+
+  # Bind the acorn volume named "mydata" into the current app, replacing the volume named "data", See "acorn volumes --help for more info"
+  acorn run --volume mydata:data .`,
 	})
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
@@ -43,14 +77,16 @@ type Run struct {
 type RunArgs struct {
 	Name       string   `usage:"Name of app to create" short:"n"`
 	File       string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
-	Volume     []string `usage:"Bind an existing volume (format existing:vol-name) (ex: pvc-name:app-data)" short:"v" split:"false"`
+	Volume     []string `usage:"Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)" short:"v" split:"false"`
 	Secret     []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
-	Link       []string `usage:"Link external app as a service in the current app (format app-name:service-name)" short:"l"`
+	Link       []string `usage:"Link external app as a service in the current app (format app-name:container-name)"`
 	PublishAll *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
 	Publish    []string `usage:"Publish port of application (format [public:]private) (ex 81:80)" short:"p"`
 	Expose     []string `usage:"In cluster expose ports of an application (format [public:]private) (ex 81:80)"`
 	Profile    []string `usage:"Profile to assign default values"`
 	Env        []string `usage:"Environment variables to set on running containers" short:"e"`
+	Label      []string `usage:"Add labels to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)" short:"l"`
+	Annotation []string `usage:"Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)"`
 	Dangerous  bool     `usage:"Automatically approve all privileges requested by the application"`
 	Output     string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
 }
@@ -80,6 +116,16 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	}
 
 	opts.Env = v1.ParseNameValues(true, s.Env...)
+
+	opts.Labels, err = v1.ParseScopedLabels(s.Label...)
+	if err != nil {
+		return opts, err
+	}
+
+	opts.Annotations, err = v1.ParseScopedLabels(s.Annotation...)
+	if err != nil {
+		return opts, err
+	}
 
 	opts.Ports, err = v1.ParsePortBindings(true, s.Publish)
 	if err != nil {

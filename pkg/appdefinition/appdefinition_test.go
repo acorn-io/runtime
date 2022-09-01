@@ -1267,13 +1267,17 @@ secrets: {
 	}
 
 	assert.Equal(t, v1.Secret{
-		Type: "opaque",
+		Type:        "opaque",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
 		Data: map[string]string{
 			"username": "bardata",
 		},
 	}, appSpec.Secrets["explicit"])
 	assert.Equal(t, v1.Secret{
-		Type: "basic",
+		Type:        "basic",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
 		Data: map[string]string{
 			"username": "bardata",
 			"password": "barpass",
@@ -1286,8 +1290,10 @@ secrets: {
 		Type: "opaque",
 	}, appSpec.Secrets["file-implicit"])
 	assert.Equal(t, v1.Secret{
-		Type: "opaque",
-		Data: map[string]string{},
+		Type:        "opaque",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+		Data:        map[string]string{},
 	}, appSpec.Secrets["dirs-merge"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
@@ -2285,4 +2291,106 @@ containers: test: {
 	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo"].Volume)
 	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo2"].Volume)
 	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo3"].Volume)
+}
+
+func TestNestedScopedLabels(t *testing.T) {
+	// labels and annotations on a acorn are both unmarshalled into a ScopedLabels struct, which is just a slice
+	// Similar to ports, in the Acornfile you can define them using an object syntax or short-form string syntax.
+	// We're testing that they get unmarshalled properly
+	appImage, err := NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: [
+			{
+				resourceType: "",
+				resourceName: "",
+				key: "globalkey",
+				value: "x0"
+			},
+			{
+				resourceType: "containers",
+				resourceName: "",
+				key: "conskey",
+				value: "x1"
+			},
+			{
+				resourceType: "containers",
+				resourceName: "confoo",
+				key: "fookey",
+				value: "x2"
+			},
+			{
+				resourceType: "",
+				resourceName: "objbar",
+				key: "acorn.io/barkey",
+				value: "x3"
+			}
+		]
+		annotations: {
+			globalkey: "v0"
+			"containers:conskey": "v1"
+			"containers:confoo:acorn.io/fookey": "v2"
+			"conbar:barkey": "v3"
+		}
+		image: ""
+	}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	// Asserting that labels defined using the struct/object form are properly unmarshalled
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "", Key: "globalkey", Value: "x0"}, appSpec.Acorns["s"].Labels[0])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "", Key: "conskey", Value: "x1"}, appSpec.Acorns["s"].Labels[1])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "confoo", Key: "fookey", Value: "x2"}, appSpec.Acorns["s"].Labels[2])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "objbar", Key: "acorn.io/barkey", Value: "x3"}, appSpec.Acorns["s"].Labels[3])
+
+	// Asserting that annotations defined using the shorthand string form are properly unmarshalled
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "", Key: "globalkey", Value: "v0"}, appSpec.Acorns["s"].Annotations[0])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "conbar", Key: "barkey", Value: "v3"}, appSpec.Acorns["s"].Annotations[1])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "", Key: "conskey", Value: "v1"}, appSpec.Acorns["s"].Annotations[2])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "confoo", Key: "acorn.io/fookey", Value: "v2"}, appSpec.Acorns["s"].Annotations[3])
+
+	// Expect error because resourceType isn't one of the whitelisted types
+	_, err = NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: [
+			{
+				resourceType: "asdf",
+				resourceName: "",
+				key: "key",
+				value: "x0"
+			},
+		]
+		image: ""
+	}}`))
+	assert.Error(t, err)
+
+	// Expect error because label key's resourceName section isn't a simple dnsName
+	_, err = NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: {
+			"containers:acorn.io/foo:key": "val"
+		}
+		image: ""
+	}}`))
+	assert.Error(t, err)
+
+	// Expect error because resourceType isn't a simple dns name
+	_, err = NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: [
+			{
+				resourceType: "acorn.io"
+				key: "asdf"
+				value: "asdf"
+			}
+		]
+		image: ""
+	}}`))
+	assert.Error(t, err)
 }

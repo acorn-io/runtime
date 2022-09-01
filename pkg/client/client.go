@@ -63,8 +63,8 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 }
 
 type AppUpdateOptions struct {
-	Annotations map[string]string
-	Labels      map[string]string
+	Annotations []v1.ScopedLabel
+	Labels      []v1.ScopedLabel
 	PublishMode v1.PublishMode
 	Volumes     []v1.VolumeBinding
 	Secrets     []v1.SecretBinding
@@ -82,8 +82,8 @@ type LogOptions apiv1.LogOptions
 
 type AppRunOptions struct {
 	Name        string
-	Annotations map[string]string
-	Labels      map[string]string
+	Annotations []v1.ScopedLabel
+	Labels      []v1.ScopedLabel
 	PublishMode v1.PublishMode
 	Volumes     []v1.VolumeBinding
 	Secrets     []v1.SecretBinding

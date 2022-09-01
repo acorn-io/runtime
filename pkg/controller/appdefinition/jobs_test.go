@@ -8,7 +8,11 @@ import (
 )
 
 func TestJobs(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/job", DeploySpec)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/job/basic", DeploySpec)
+}
+
+func TestJobsLabels(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/job/labels", DeploySpec)
 }
 
 func TestCronJobs(t *testing.T) {

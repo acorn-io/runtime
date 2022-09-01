@@ -54,15 +54,16 @@ const (
 )
 
 type AppInstanceSpec struct {
-	Image       string          `json:"image,omitempty"`
-	Stop        *bool           `json:"stop,omitempty"`
-	DevMode     *bool           `json:"devMode,omitempty"`
-	Profiles    []string        `json:"profiles,omitempty"`
-	Volumes     []VolumeBinding `json:"volumes,omitempty"`
-	Secrets     []SecretBinding `json:"secrets,omitempty"`
-	Environment []NameValue     `json:"environment,omitempty"`
-	PublishMode PublishMode     `json:"publishMode,omitempty"`
-
+	Labels      []ScopedLabel    `json:"labels,omitempty"`
+	Annotations []ScopedLabel    `json:"annotations,omitempty"`
+	Image       string           `json:"image,omitempty"`
+	Stop        *bool            `json:"stop,omitempty"`
+	DevMode     *bool            `json:"devMode,omitempty"`
+	Profiles    []string         `json:"profiles,omitempty"`
+	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
+	Secrets     []SecretBinding  `json:"secrets,omitempty"`
+	Environment []NameValue      `json:"environment,omitempty"`
+	PublishMode PublishMode      `json:"publishMode,omitempty"`
 	Links       []ServiceBinding `json:"services,omitempty"`
 	Ports       []PortBinding    `json:"ports,omitempty"`
 	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`

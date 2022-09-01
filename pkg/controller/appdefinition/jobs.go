@@ -50,6 +50,9 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, err
 	}
 
+	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
+		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
+
 	volumes, err := toVolumes(appInstance, container)
 	if err != nil {
 		return nil, err
@@ -58,13 +61,13 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: containerLabels(appInstance, name,
+				Labels: jobLabels(appInstance, container, name,
 					labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
 					labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
 					labels.AcornManaged, "true",
 					labels.AcornJobName, name,
 					labels.AcornContainerName, ""),
-				Annotations: labels.Merge(podAnnotations(appInstance, name, container), secretAnnotations),
+				Annotations: labels.Merge(podAnnotations(appInstance, name, container), baseAnnotations),
 			},
 			Spec: corev1.PodSpec{
 				TerminationGracePeriodSeconds: &[]int64{5}[0],
@@ -90,7 +93,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Name:        name,
 				Namespace:   appInstance.Status.Namespace,
 				Labels:      jobSpec.Template.Labels,
-				Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
+				Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), baseAnnotations),
 			},
 			Spec: jobSpec,
 		}, nil
@@ -100,7 +103,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      jobSpec.Template.Labels,
-			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
+			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), baseAnnotations),
 		},
 		Spec: batchv1.CronJobSpec{
 			Schedule: toCronJobSchedule(container.Schedule),

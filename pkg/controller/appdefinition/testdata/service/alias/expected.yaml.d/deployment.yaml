@@ -8,6 +8,11 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
+    "con1key": "value"
+    "both": "con1val"
+  annotations:
+    "con1": "value"
+    "both": "con1val"
 spec:
   selector:
     matchLabels:
@@ -27,8 +32,12 @@ spec:
         "port-number.acorn.io/91": "true"
         "service-name.acorn.io/con1": "true"
         "service-name.acorn.io/svc1": "true"
+        "con1key": "value"
+        "both": "con1val"
       annotations:
-        acorn.io/container-spec: '{"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}]}'
+        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}]}'
+        "con1": "value"
+        "both": "con1val"
     spec:
       imagePullSecrets:
         - name: con1-pull-1234567890ab
@@ -58,6 +67,11 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "con2"
     "acorn.io/managed": "true"
+    "con2key": "value"
+    "both": "con2val"
+  annotations:
+    "con2": "value"
+    "both": "con2val"
 spec:
   selector:
     matchLabels:
@@ -77,8 +91,12 @@ spec:
         "port-number.acorn.io/91": "true"
         "service-name.acorn.io/con2": "true"
         "service-name.acorn.io/svc1": "true"
+        "con2key": "value"
+        "both": "con2val"
       annotations:
-        acorn.io/container-spec: '{"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}]}'
+        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}]}'
+        "con2": "value"
+        "both": "con2val"
     spec:
       hostname: con2
       imagePullSecrets:

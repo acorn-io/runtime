@@ -1,0 +1,14 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    pod-security.kubernetes.io/enforce: baseline
+    "globall1": "value"
+    "globall2": "value"
+  annotations:
+    "globala1": "value"
+    "globala2": "value"
