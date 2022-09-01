@@ -77,14 +77,9 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Containers:                    setTerminationPath(containers),
 				InitContainers:                setTerminationPath(initContainers),
 				Volumes:                       volumes,
-				AutomountServiceAccountToken:  new(bool),
+				ServiceAccountName:            "acorn",
 			},
 		},
-	}
-
-	if needsServiceAccount(container) {
-		jobSpec.Template.Spec.ServiceAccountName = "acorn"
-		jobSpec.Template.Spec.AutomountServiceAccountToken = &[]bool{true}[0]
 	}
 
 	if container.Schedule == "" {

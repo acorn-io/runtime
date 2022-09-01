@@ -22,10 +22,6 @@ func toRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
 	return
 }
 func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
-	if !appInstance.Spec.Permissions.HasRules() {
-		return nil
-	}
-
 	labelMap := labels.Merge(labels.Managed(appInstance), labels.GatherScoped("", "", appInstance.Status.AppSpec.Labels,
 		nil, appInstance.Spec.Labels))
 	annotations := labels.GatherScoped("", "", appInstance.Status.AppSpec.Annotations, nil, appInstance.Spec.Annotations)
@@ -38,6 +34,10 @@ func toServiceAccount(appInstance *v1.AppInstance) (result []kclient.Object) {
 			Annotations: annotations,
 		},
 	})
+
+	if !appInstance.Spec.Permissions.HasRules() {
+		return result
+	}
 
 	if len(appInstance.Spec.Permissions.ClusterRules) > 0 {
 		name := name.SafeConcatName("acorn", appInstance.Name, appInstance.Namespace, appInstance.ShortID())

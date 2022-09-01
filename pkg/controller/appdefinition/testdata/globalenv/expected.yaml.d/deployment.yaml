@@ -28,7 +28,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       hostname: container-name
       imagePullSecrets:
         - name: container-name-pull-1234567890ab

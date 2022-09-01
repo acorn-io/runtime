@@ -592,7 +592,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					Containers:                    containers,
 					InitContainers:                initContainers,
 					Volumes:                       volumes,
-					AutomountServiceAccountToken:  new(bool),
+					ServiceAccountName:            "acorn",
 				},
 			},
 		},
@@ -610,24 +610,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		dep.Spec.Replicas = new(int32)
 	}
 
-	if needsServiceAccount(container) {
-		dep.Spec.Template.Spec.ServiceAccountName = "acorn"
-		dep.Spec.Template.Spec.AutomountServiceAccountToken = &[]bool{true}[0]
-	}
-
 	return dep, nil
-}
-
-func needsServiceAccount(container v1.Container) bool {
-	if container.Permissions.HasRules() {
-		return true
-	}
-	for _, sidecar := range container.Sidecars {
-		if sidecar.Permissions.HasRules() {
-			return true
-		}
-	}
-	return false
 }
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {
