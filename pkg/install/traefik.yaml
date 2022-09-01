@@ -211,7 +211,6 @@ items:
         app.kubernetes.io/name: traefik
         app.kubernetes.io/managed-by: Acorn
         app.kubernetes.io/instance: traefik
-      annotations:
     spec:
       type: LoadBalancer
       selector:
