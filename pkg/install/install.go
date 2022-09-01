@@ -13,7 +13,6 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/install/check"
 	"github.com/acorn-io/acorn/pkg/install/progress"
 	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	labels2 "github.com/acorn-io/acorn/pkg/labels"
@@ -112,9 +111,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return printObject(image, opts)
 	}
 
+	checkOpts := CheckOptions{RuntimeImage: image}
 	if opts.Checks == nil || *opts.Checks {
 		s := opts.Progress.New("Running Preflight Checks")
-		if check.IsFailed(check.PreflightChecks(ctx)) {
+		if IsFailed(PreflightChecks(ctx, checkOpts)) {
 			_ = s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --checks=false` to skip"))
 		} else {
 			s.Success()
@@ -173,8 +173,8 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	s := opts.Progress.New("Running In-Flight Checks")
-	checkresults := check.InFlightChecks(ctx)
-	if check.IsFailed(checkresults) {
+	checkresults := InFlightChecks(ctx, checkOpts)
+	if IsFailed(checkresults) {
 		_ = s.Fail(fmt.Errorf("failed in-flight check(s) may break some features of Acorn"))
 	}
 

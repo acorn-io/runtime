@@ -5,7 +5,7 @@ import (
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/install/check"
+	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/pterm/pterm"
@@ -25,15 +25,19 @@ acorn check`,
 type Check struct {
 	Quiet  bool   `usage:"No Results. Success or Failure only." short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+
+	Image string `usage:"Override the image used for test deployments." short:"i"`
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
-	checkresult := check.RunChecks(cmd.Context(),
-		check.CheckRBAC,
-		check.CheckNodesReady,
-		check.CheckDefaultStorageClass,
-		check.CheckIngressCapability,
-		check.CheckExec,
+
+	checkOpts := install.CheckOptions{RuntimeImage: a.Image}
+	checkresult := install.RunChecks(cmd.Context(), checkOpts,
+		install.CheckRBAC,
+		install.CheckNodesReady,
+		install.CheckDefaultStorageClass,
+		install.CheckIngressCapability,
+		install.CheckExec,
 	)
 
 	failures := 0

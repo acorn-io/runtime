@@ -1,4 +1,4 @@
-package check
+package install
 
 import (
 	"context"
@@ -35,10 +35,16 @@ type CheckResult struct {
 	Name    string `json:"name"`
 }
 
+// CheckOptions defines some extra settings for the tests
+type CheckOptions struct {
+	// RuntimeImage is required for tests that spin up a pod and that we want to work in airgap environments
+	RuntimeImage string `json:"runtimeImage"`
+}
+
 // PreflightChecks is a list of all checks that are run before the installation.
 // They are crictial and will make the installation fail.
-func PreflightChecks(ctx context.Context) []CheckResult {
-	return RunChecks(ctx,
+func PreflightChecks(ctx context.Context, opts CheckOptions) []CheckResult {
+	return RunChecks(ctx, opts,
 		CheckRBAC,
 		CheckNodesReady,
 	)
@@ -46,9 +52,9 @@ func PreflightChecks(ctx context.Context) []CheckResult {
 
 // InFlightChecks is a list of all checks that are run after the installation.
 // They are not critical and should not affect the installation process.
-func InFlightChecks(ctx context.Context) []CheckResult {
+func InFlightChecks(ctx context.Context, opts CheckOptions) []CheckResult {
 
-	return RunChecks(ctx,
+	return RunChecks(ctx, opts,
 		CheckDefaultStorageClass,
 		CheckIngressCapability,
 		CheckExec,
@@ -67,10 +73,10 @@ func IsFailed(results []CheckResult) bool {
 }
 
 // RunChecks runs a list of checks and returns their results as a list.
-func RunChecks(ctx context.Context, checks ...func(ctx context.Context) CheckResult) []CheckResult {
+func RunChecks(ctx context.Context, opts CheckOptions, checks ...func(ctx context.Context, opts CheckOptions) CheckResult) []CheckResult {
 	var results []CheckResult
 	for _, check := range checks {
-		results = append(results, check(ctx))
+		results = append(results, check(ctx, opts))
 	}
 	return results
 }
@@ -83,7 +89,7 @@ func silenceKlog() {
 	utilruntime.ErrorHandlers = nil
 }
 
-func CheckExec(ctx context.Context) CheckResult {
+func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 	result := CheckResult{
 		Name: "Exec",
 	}
@@ -96,6 +102,11 @@ func CheckExec(ctx context.Context) CheckResult {
 		return result
 	}
 
+	image := DefaultImage()
+	if opts.RuntimeImage != "" {
+		image = opts.RuntimeImage
+	}
+
 	// Create new pod
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -106,7 +117,7 @@ func CheckExec(ctx context.Context) CheckResult {
 			Containers: []corev1.Container{
 				{
 					Name:            "exec",
-					Image:           "busybox",
+					Image:           image,
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					Command: []string{
 						"tail",
@@ -219,7 +230,7 @@ func CheckExec(ctx context.Context) CheckResult {
 
 }
 
-func CheckIngressCapability(ctx context.Context) CheckResult {
+func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult {
 	result := CheckResult{
 		Name: "IngressCapability",
 	}
@@ -377,7 +388,7 @@ func CheckIngressCapability(ctx context.Context) CheckResult {
  * TODO: We only need to check if the cluster is operational.
  * -> A single malfunctiuning node should not prevent the installation.
  */
-func CheckNodesReady(ctx context.Context) CheckResult {
+func CheckNodesReady(ctx context.Context, opts CheckOptions) CheckResult {
 	result := CheckResult{
 		Name: "NodesReady",
 	}
@@ -426,7 +437,7 @@ func CheckNodesReady(ctx context.Context) CheckResult {
  * to create a namespace, which is required for the installation.
  * -> This is a critical check that must be passed for Acorn to be installed.
  */
-func CheckRBAC(ctx context.Context) CheckResult {
+func CheckRBAC(ctx context.Context, opts CheckOptions) CheckResult {
 
 	result := CheckResult{
 		Name: "RBAC",
@@ -469,7 +480,7 @@ func CheckRBAC(ctx context.Context) CheckResult {
  * CheckDefaultStorageClass checks if a default storage class is defined.
  * -> This is a non-critical check that "only" affects some features of Acorn.
  */
-func CheckDefaultStorageClass(ctx context.Context) CheckResult {
+func CheckDefaultStorageClass(ctx context.Context, opts CheckOptions) CheckResult {
 	result := CheckResult{
 		Name: "DefaultStorageClass",
 	}
