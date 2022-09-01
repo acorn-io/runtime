@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -63,7 +63,7 @@ func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
 		}
 		if strings.HasPrefix(key, "@") {
 			key = key[1:]
-			content, err := ioutil.ReadFile(value)
+			content, err := os.ReadFile(value)
 			if err != nil {
 				return nil, fmt.Errorf("reading %s: %w", value, err)
 			}

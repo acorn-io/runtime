@@ -3,7 +3,6 @@ package build
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -361,7 +360,7 @@ func buildWithContext(ctx context.Context, c client.Client, cwd string, platform
 		}
 		baseImage = strings.Replace(newImage, digest.RegistryStr(), fmt.Sprintf("127.0.0.1:%d", system.RegistryPort), 1)
 	}
-	dockerfile, err := ioutil.TempFile("", "acorn-dockerfile-")
+	dockerfile, err := os.CreateTemp("", "acorn-dockerfile-")
 	if err != nil {
 		return "", err
 	}

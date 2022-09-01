@@ -2,7 +2,6 @@ package dev
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,7 +35,7 @@ func TestDev(t *testing.T) {
 	defer cancel()
 	c := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, c)
-	tmp, err := ioutil.TempDir("", "acorn-test-dev")
+	tmp, err := os.MkdirTemp("", "acorn-test-dev")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,13 +44,13 @@ func TestDev(t *testing.T) {
 	})
 
 	acornCueFile := filepath.Join(tmp, "Acornfile")
-	err = ioutil.WriteFile(acornCueFile, []byte(acornCue), 0600)
+	err = os.WriteFile(acornCueFile, []byte(acornCue), 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	dockerFile := filepath.Join(tmp, "Dockerfile")
-	err = ioutil.WriteFile(dockerFile, []byte(dockerfile1), 0600)
+	err = os.WriteFile(dockerFile, []byte(dockerfile1), 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +78,7 @@ func TestDev(t *testing.T) {
 	}
 
 	oldImage := app.Spec.Image
-	err = ioutil.WriteFile(dockerFile, []byte(dockerfile2), 0600)
+	err = os.WriteFile(dockerFile, []byte(dockerfile2), 0600)
 	if err != nil {
 		t.Fatal(err)
 	}

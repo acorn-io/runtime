@@ -1,7 +1,7 @@
 package flagparams
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -101,7 +101,7 @@ func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
 			result[name] = value
 		} else if strings.HasPrefix(value, "@") {
 			fName := value[1:]
-			data, err := ioutil.ReadFile(fName)
+			data, err := os.ReadFile(fName)
 			if err != nil {
 				return nil, err
 			}

@@ -1,7 +1,7 @@
 package appdefinition
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestVolumeController(t *testing.T) {
-	dirs, err := ioutil.ReadDir("testdata/volumes")
+	dirs, err := os.ReadDir("testdata/volumes")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -42,7 +42,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if a.PasswordStdin {
-		contents, err := ioutil.ReadAll(os.Stdin)
+		contents, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}

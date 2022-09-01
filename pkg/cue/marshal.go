@@ -3,7 +3,7 @@ package cue
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"cuelang.org/go/cue/cuecontext"
@@ -11,7 +11,7 @@ import (
 )
 
 func ReadCUE(file string) ([]byte, error) {
-	fileData, err := ioutil.ReadFile(file)
+	fileData, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
