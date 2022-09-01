@@ -58,9 +58,7 @@ func (a *Check) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if failures > 0 {
-		err := fmt.Errorf("%d checks failed", failures)
-		pterm.Error.Println(err)
-		return err
+		return fmt.Errorf("%d checks failed", failures)
 	}
 
 	pterm.Success.Println("Checks PASSED")

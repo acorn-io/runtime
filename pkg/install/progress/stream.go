@@ -55,6 +55,10 @@ func (s *streamProgress) Fail(err error) error {
 	return err
 }
 
+func (s *streamProgress) SuccessWithWarning(fmtStr string, args ...interface{}) {
+	s.write(false, true, fmt.Sprintf(fmtStr, args...))
+}
+
 func (s *streamProgress) Success() {
 	s.write(false, true, "")
 }

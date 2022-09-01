@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -114,9 +113,17 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	checkOpts := CheckOptions{RuntimeImage: image}
 	if opts.Checks == nil || *opts.Checks {
-		s := opts.Progress.New("Running Preflight Checks")
-		if IsFailed(PreflightChecks(ctx, checkOpts)) {
-			_ = s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --checks=false` to skip"))
+		s := opts.Progress.New("Running Pre-install Checks")
+		checkResults := PreInstallChecks(ctx, checkOpts)
+		if IsFailed(checkResults) {
+			msg := "Pre-install checks failed. Use `acorn check` to debug or `acorn install --checks=false` to skip"
+			for _, result := range checkResults {
+				if !result.Passed {
+					msg += fmt.Sprintf("\n%s: %s", result.Name, result.Message)
+				}
+			}
+			s.SuccessWithWarning(msg)
+
 		} else {
 			s.Success()
 		}
@@ -173,16 +180,16 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	}
 
-	s := opts.Progress.New("Running In-Flight Checks")
-	checkresults := InFlightChecks(ctx, checkOpts)
-	if IsFailed(checkresults) {
-		_ = s.Fail(fmt.Errorf("failed in-flight check(s) may break some features of Acorn"))
-	}
-
-	for _, result := range checkresults {
-		if !result.Passed {
-			pterm.Warning.Printf("%s: %s\n", result.Name, result.Message)
+	s := opts.Progress.New("Running Post-install Checks")
+	checkResults := PostInstallChecks(ctx, checkOpts)
+	if IsFailed(checkResults) {
+		msg := "Post-install checks failed. Use `acorn check` to debug or `acorn install --checks=false` to skip"
+		for _, result := range checkResults {
+			if !result.Passed {
+				msg += fmt.Sprintf("\n%s: %s", result.Name, result.Message)
+			}
 		}
+		s.SuccessWithWarning(msg)
 	}
 
 	pterm.Success.Println("Installation done")
