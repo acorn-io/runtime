@@ -20,6 +20,7 @@ acorn check
 
 ```
   -h, --help            help for check
+  -i, --image string    Override the image used for test deployments.
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -q, --quiet           No Results. Success or Failure only.
 ```
