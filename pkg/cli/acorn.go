@@ -21,6 +21,7 @@ func New() *cobra.Command {
 		NewApiServer(),
 		NewApp(),
 		NewBuild(),
+		NewCheck(),
 		NewContainer(),
 		NewController(),
 		NewCredential(),

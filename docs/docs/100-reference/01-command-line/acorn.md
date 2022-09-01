@@ -28,6 +28,7 @@ acorn [flags]
 * [acorn all](acorn_all.md)	 - List (almost) all objects
 * [acorn app](acorn_app.md)	 - List or get apps
 * [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
+* [acorn check](acorn_check.md)	 - Check if the cluster is ready for Acorn
 * [acorn container](acorn_container.md)	 - List or get running containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn exec](acorn_exec.md)	 - Run a command in a container

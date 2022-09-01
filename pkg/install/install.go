@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -54,6 +55,7 @@ var (
 type Mode string
 
 type Options struct {
+	Checks             *bool
 	OutputFormat       string
 	APIServerReplicas  *int
 	ControllerReplicas *int
@@ -110,6 +112,16 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return printObject(image, opts)
 	}
 
+	checkOpts := CheckOptions{RuntimeImage: image}
+	if opts.Checks == nil || *opts.Checks {
+		s := opts.Progress.New("Running Preflight Checks")
+		if IsFailed(PreflightChecks(ctx, checkOpts)) {
+			_ = s.Fail(errors.New("preflight checks failed, use `acorn check` to debug or `acorn install --checks=false` to skip"))
+		} else {
+			s.Success()
+		}
+	}
+
 	apply, err := newApply(ctx)
 	if err != nil {
 		return err
@@ -159,6 +171,18 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			return err
 		}
 
+	}
+
+	s := opts.Progress.New("Running In-Flight Checks")
+	checkresults := InFlightChecks(ctx, checkOpts)
+	if IsFailed(checkresults) {
+		_ = s.Fail(fmt.Errorf("failed in-flight check(s) may break some features of Acorn"))
+	}
+
+	for _, result := range checkresults {
+		if !result.Passed {
+			pterm.Warning.Printf("%s: %s\n", result.Name, result.Message)
+		}
 	}
 
 	pterm.Success.Println("Installation done")
