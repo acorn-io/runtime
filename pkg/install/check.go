@@ -41,18 +41,18 @@ type CheckOptions struct {
 	RuntimeImage string `json:"runtimeImage"`
 }
 
-// PreflightChecks is a list of all checks that are run before the installation.
+// PreInstallChecks is a list of all checks that are run before the installation.
 // They are crictial and will make the installation fail.
-func PreflightChecks(ctx context.Context, opts CheckOptions) []CheckResult {
+func PreInstallChecks(ctx context.Context, opts CheckOptions) []CheckResult {
 	return RunChecks(ctx, opts,
 		CheckRBAC,
 		CheckNodesReady,
 	)
 }
 
-// InFlightChecks is a list of all checks that are run after the installation.
+// PostInstallChecks is a list of all checks that are run after the installation.
 // They are not critical and should not affect the installation process.
-func InFlightChecks(ctx context.Context, opts CheckOptions) []CheckResult {
+func PostInstallChecks(ctx context.Context, opts CheckOptions) []CheckResult {
 
 	return RunChecks(ctx, opts,
 		CheckDefaultStorageClass,

@@ -23,8 +23,12 @@ func init() {
 		Style: pterm.NewStyle(pterm.FgLightGreen),
 	}
 	pterm.Error.Prefix = pterm.Prefix{
-		Text:  "    ERROR:",
-		Style: pterm.NewStyle(pterm.BgLightRed, pterm.FgBlack),
+		Text:  " ✗  ERROR:",
+		Style: pterm.NewStyle(pterm.FgLightRed),
+	}
+	pterm.Warning.Prefix = pterm.Prefix{
+		Text:  " •  WARNING:",
+		Style: pterm.NewStyle(pterm.FgLightYellow),
 	}
 	pterm.Info.Prefix = pterm.Prefix{
 		Text: " •",
@@ -83,6 +87,11 @@ func (s *Spinner) Fail(err error) error {
 	}
 	s.spinner.Fail(err)
 	return err
+}
+
+func (s *Spinner) SuccessWithWarning(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+	s.spinner.Warning(msg)
 }
 
 func (s *Spinner) Success() {
