@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -13,7 +12,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func NewImage() *cobra.Command {
@@ -140,22 +138,6 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 
 	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Containers)...)
 	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Jobs)...)
-
-	for _, acorn := range imageData.Acorns {
-		acornImg := apiv1.Image{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: fmt.Sprintf("%s:%s@%s", image.Repository, image.Tag, acorn.Image),
-			},
-			Repository: image.Repository,
-			Tag:        image.Tag,
-		}
-
-		acornImageContainers, err := getImageContainers(c, ctx, acornImg)
-		if err != nil {
-			return imageContainers, err
-		}
-		imageContainers = append(imageContainers, acornImageContainers...)
-	}
 
 	return imageContainers, nil
 }
