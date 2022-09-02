@@ -78,7 +78,7 @@ func TestLog(t *testing.T) {
 	}
 
 	sort.Strings(lines)
-	assert.Equal(t, sampleLog, strings.Join(lines, "\n"))
+	assert.Equal(t, sampleLog, strings.TrimSpace(strings.Join(lines, "\n")))
 }
 
 func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
