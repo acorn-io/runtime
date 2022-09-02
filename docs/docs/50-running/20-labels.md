@@ -21,12 +21,12 @@ acorn run --label containers:key=value
 acorn run --annotation containers:mycontainer:key=value
 ```
 
-Valid scopes are:
-- _none_ 
+Valid resource types are:
+- global _(achieved by omitting resource type completely)_
 - metadata
 - containers
 - jobs
 - volumes
 - secrets
 
-For all scopes except metadata, you can add a name to only apply the label/annotation to the resource matching that name and scope.
+For all resource types except metadata, you can add a name to only apply the label/annotation to the resource matching that name and scope.
