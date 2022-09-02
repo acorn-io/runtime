@@ -29,7 +29,7 @@ spec:
       hostname: oneimage
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
       containers:
@@ -70,7 +70,7 @@ spec:
       hostname: buildimage
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       imagePullSecrets:
         - name: buildimage-pull-1234567890ab
       containers:

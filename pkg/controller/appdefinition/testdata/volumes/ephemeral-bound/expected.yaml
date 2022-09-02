@@ -42,7 +42,7 @@ spec:
         - name: container-name-pull-1234567890ab
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       volumes:
         - name: foo
           persistentVolumeClaim:

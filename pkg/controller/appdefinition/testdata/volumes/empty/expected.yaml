@@ -45,7 +45,7 @@ spec:
       terminationGracePeriodSeconds: 5
       hostname: container-name
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       volumes:
         - name: foo
           persistentVolumeClaim:

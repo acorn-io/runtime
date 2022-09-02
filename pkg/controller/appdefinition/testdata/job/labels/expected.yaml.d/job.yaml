@@ -45,7 +45,7 @@ spec:
       imagePullSecrets:
         - name: job1-pull-1234567890ab
       restartPolicy: Never
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       enableServiceLinks: false
       terminationGracePeriodSeconds: 5
       containers:

@@ -44,7 +44,7 @@ spec:
       hostname: con1
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       containers:
         - name: con1
           image: "foo"
@@ -103,7 +103,7 @@ spec:
         - name: con2-pull-1234567890ab
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       containers:
         - name: con2
           image: "foo"
@@ -152,7 +152,7 @@ spec:
       imagePullSecrets:
         - name: con3-pull-1234567890ab
       enableServiceLinks: false
-      automountServiceAccountToken: false
+      serviceAccountName: acorn
       containers:
         - name: con3
           image: "foo"
