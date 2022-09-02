@@ -62,7 +62,7 @@ func (c Converter) ConvertToTable(ctx context.Context, object runtime.Object, ta
 			return err
 		}
 		var (
-			cells []interface{}
+			cells []any
 		)
 
 		for _, cell := range strings.Split(out.String(), "\t") {

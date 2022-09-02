@@ -15,7 +15,7 @@ import (
 
 var loadLock sync.Mutex
 
-type ParserFunc func(name string, src interface{}) (*ast.File, error)
+type ParserFunc func(name string, src any) (*ast.File, error)
 
 type Context struct {
 	files          []File
@@ -155,7 +155,7 @@ func (c *Context) Compile(data []byte) (*cue.Value, error) {
 	return &v, WrapErr(v.Err())
 }
 
-func (c *Context) Encode(obj interface{}) (*cue.Value, error) {
+func (c *Context) Encode(obj any) (*cue.Value, error) {
 	v := c.ctx.Encode(obj)
 	return &v, WrapErr(v.Err())
 }
@@ -197,7 +197,7 @@ func (c *Context) Value() (*cue.Value, error) {
 	return &newValue, WrapErr(newValue.Validate())
 }
 
-func (c *Context) Decode(v *cue.Value, obj interface{}) error {
+func (c *Context) Decode(v *cue.Value, obj any) error {
 	data, err := v.MarshalJSON()
 	if err != nil {
 		return WrapErr(err)

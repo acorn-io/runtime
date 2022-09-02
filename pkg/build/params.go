@@ -19,7 +19,7 @@ func ParsePlatforms(platforms []string) (result []v1.Platform, _ error) {
 	return
 }
 
-func ParseParams(file, cwd string, args []string) (map[string]interface{}, error) {
+func ParseParams(file, cwd string, args []string) (map[string]any, error) {
 	appDefinition, err := ResolveAndParse(file, cwd)
 	if err != nil {
 		return nil, err

@@ -26,7 +26,7 @@ type Options struct {
 	Client    client.Client
 	Cwd       string
 	Platforms []v1.Platform
-	Args      map[string]interface{}
+	Args      map[string]any
 	Profiles  []string
 	Streams   *streams.Output
 	FullTag   bool

@@ -58,7 +58,7 @@ func (s *ImageDetails) Get(ctx context.Context, name string, options *metav1.Get
 	return s.GetDetails(ctx, name, nil, nil)
 }
 
-func (s *ImageDetails) GetDetails(ctx context.Context, name string, profiles []string, deployArgs map[string]interface{}) (*apiv1.ImageDetails, error) {
+func (s *ImageDetails) GetDetails(ctx context.Context, name string, profiles []string, deployArgs map[string]any) (*apiv1.ImageDetails, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 	imageName := name
 

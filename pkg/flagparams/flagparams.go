@@ -52,8 +52,8 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 	}
 }
 
-func (f *Flags) Parse(args []string) (map[string]interface{}, error) {
-	result := map[string]interface{}{}
+func (f *Flags) Parse(args []string) (map[string]any, error) {
+	result := map[string]any{}
 
 	if f.Usage != nil {
 		f.FlagSet.Usage = func() {

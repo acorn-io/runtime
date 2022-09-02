@@ -175,7 +175,7 @@ func TestDeployParam(t *testing.T) {
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,
-			DeployArgs: map[string]interface{}{
+			DeployArgs: map[string]any{
 				"someInt": 5,
 			},
 		},

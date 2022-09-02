@@ -31,7 +31,7 @@ func FromCredentialData(data map[string][]byte) (*corev1.Secret, error) {
 }
 
 func ToData(server, username, password string) (map[string][]byte, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"auths": map[string]entry{
 			server: toEntry(username, password),
 		},

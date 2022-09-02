@@ -155,7 +155,7 @@ acorns: {
 	assert.Equal(t, "sub/dir2", buildSpec.Acorns["afull"].Build.Context)
 	assert.Equal(t, "sub/dir3/Acornfile", buildSpec.Acorns["afull"].Build.Acornfile)
 	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.BuildArgs["key"])
-	assert.Equal(t, map[string]interface{}{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs["key2"])
+	assert.Equal(t, map[string]any{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs["key2"])
 	assert.Equal(t, "done", buildSpec.Acorns["anone"].Image)
 }
 
@@ -1167,7 +1167,7 @@ volumes: {
 		Images: nil,
 	})
 
-	appImage, _, err = appImage.WithArgs(map[string]interface{}{"foo": "bar"}, nil)
+	appImage, _, err = appImage.WithArgs(map[string]any{"foo": "bar"}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1454,10 +1454,10 @@ containers: foo: build: buildArgs: one: args.foo
 		t.Fatal(err)
 	}
 
-	_, _, err = def.WithArgs(map[string]interface{}{}, []string{"one", "two", "three"})
+	_, _, err = def.WithArgs(map[string]any{}, []string{"one", "two", "three"})
 	assert.Equal(t, "failed to find profile three", err.Error())
 
-	def, _, err = def.WithArgs(map[string]interface{}{}, []string{"one", "two", "three?"})
+	def, _, err = def.WithArgs(map[string]any{}, []string{"one", "two", "three?"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1469,7 +1469,7 @@ containers: foo: build: buildArgs: one: args.foo
 
 	assert.Equal(t, "one", buildSpec.Containers["foo"].Build.BuildArgs["one"])
 
-	def, _, err = def.WithArgs(map[string]interface{}{}, []string{"two", "one"})
+	def, _, err = def.WithArgs(map[string]any{}, []string{"two", "one"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1494,7 +1494,7 @@ containers: foo: build: buildArgs: one: args.foo
 		t.Fatal(err)
 	}
 
-	def, _, err = def.WithArgs(map[string]interface{}{
+	def, _, err = def.WithArgs(map[string]any{
 		"foo": "two",
 	}, nil)
 	if err != nil {
@@ -1536,7 +1536,7 @@ acorns: foo: {
 		t.Fatal(err)
 	}
 
-	def, _, err = def.WithArgs(map[string]interface{}{
+	def, _, err = def.WithArgs(map[string]any{
 		"foo": "two",
 	}, nil)
 	if err != nil {
@@ -1551,7 +1551,7 @@ acorns: foo: {
 	acorn := appSpec.Acorns["foo"]
 
 	assert.Equal(t, "foo", acorn.Image)
-	assert.Equal(t, v1.GenericMap(map[string]interface{}{
+	assert.Equal(t, v1.GenericMap(map[string]any{
 		"x": "y",
 		"z": true,
 	}), acorn.DeployArgs)
@@ -2003,8 +2003,8 @@ args: {
 	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
 }
 
-func getVals(t *testing.T, appDef *AppDefinition) map[string]interface{} {
-	data := map[string]interface{}{}
+func getVals(t *testing.T, appDef *AppDefinition) map[string]any {
+	data := map[string]any{}
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
 		t.Fatal(err)
@@ -2067,15 +2067,15 @@ profiles: test: {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, map[string]interface{}{"a": "b"}, args)
-	assert.Equal(t, map[string]interface{}{"a": "b", "dev": false}, getVals(t, defaultAppDef))
+	assert.Equal(t, map[string]any{"a": "b"}, args)
+	assert.Equal(t, map[string]any{"a": "b", "dev": false}, getVals(t, defaultAppDef))
 
-	appDef, args, err = appDef.WithArgs(map[string]interface{}{"a": "c", "c": "d"}, []string{"test"})
+	appDef, args, err = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"test"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, map[string]interface{}{"a": "c", "c": "d"}, args)
-	assert.Equal(t, map[string]interface{}{"a": "c", "c": "d", "dev": false}, getVals(t, appDef))
+	assert.Equal(t, map[string]any{"a": "c", "c": "d"}, args)
+	assert.Equal(t, map[string]any{"a": "c", "c": "d", "dev": false}, getVals(t, appDef))
 }
 
 func TestArgsDefaulting(t *testing.T) {
@@ -2097,7 +2097,7 @@ containers: default: files: "a": std.toJSON(args)
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"dev": false,
 		"s":   "s",
 		"i":   4.0,
@@ -2105,19 +2105,19 @@ containers: default: files: "a": std.toJSON(args)
 		"b":   true,
 		"bn":  false,
 		"e":   "x",
-		"a":   []interface{}{"val"},
-		"o":   map[string]interface{}{},
+		"a":   []any{"val"},
+		"o":   map[string]any{},
 	}, getVals(t, appDef))
 
-	newValues := map[string]interface{}{
+	newValues := map[string]any{
 		"dev": true,
 		"s":   "s2",
 		"i":   5.0,
 		"f":   5.1,
 		"b":   false,
 		"bn":  true,
-		"a":   []interface{}{"1", "2", "3"},
-		"o": map[string]interface{}{
+		"a":   []any{"1", "2", "3"},
+		"o": map[string]any{
 			"x": "y",
 		},
 	}

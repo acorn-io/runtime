@@ -61,7 +61,7 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 		{
 			Name: AcornCueFile + ".cue",
 			Data: append(data, Defaults...),
-			Parser: func(name string, src interface{}) (*ast.File, error) {
+			Parser: func(name string, src any) (*ast.File, error) {
 				return parseFile(AcornCueFile, src)
 			},
 		},
@@ -105,7 +105,7 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
-func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, profiles []string) (map[string]interface{}, error) {
+func (a *AppDefinition) getArgsForProfile(args map[string]any, profiles []string) (map[string]any, error) {
 	val, err := a.ctx.Value()
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, profiles 
 		}
 
 		if args == nil {
-			args = map[string]interface{}{}
+			args = map[string]any{}
 		}
 
 		inValue, err := a.ctx.Encode(args)
@@ -134,7 +134,7 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, profiles 
 			return nil, err
 		}
 
-		newArgs := map[string]interface{}{}
+		newArgs := map[string]any{}
 		err = pValue.Unify(*inValue).Decode(&newArgs)
 		if err != nil {
 			return nil, cue.WrapErr(err)
@@ -145,7 +145,7 @@ func (a *AppDefinition) getArgsForProfile(args map[string]interface{}, profiles 
 	return args, nil
 }
 
-func (a *AppDefinition) WithArgs(args map[string]interface{}, profiles []string) (*AppDefinition, map[string]interface{}, error) {
+func (a *AppDefinition) WithArgs(args map[string]any, profiles []string) (*AppDefinition, map[string]any, error) {
 	args, err := a.getArgsForProfile(args, profiles)
 	if err != nil {
 		return nil, nil, err
@@ -153,7 +153,7 @@ func (a *AppDefinition) WithArgs(args map[string]interface{}, profiles []string)
 	if len(args) == 0 {
 		return a, args, nil
 	}
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"args": args,
 	})
 	if err != nil {
@@ -170,7 +170,7 @@ func (a *AppDefinition) YAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
 		return "", err
 	}
@@ -193,7 +193,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		return nil, err
 	}
 
-	objs := map[string]interface{}{}
+	objs := map[string]any{}
 	for _, key := range []string{"containers", "jobs", "acorns", "secrets", "volumes", "images", "labels", "annotations"} {
 		v := app.LookupPath(cue2.ParsePath(key))
 		if v.Exists() {
@@ -347,7 +347,7 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 				return nil, err
 			}
 		} else if header.Name == BuildDataFile {
-			result.BuildArgs = map[string]interface{}{}
+			result.BuildArgs = map[string]any{}
 			err := json.NewDecoder(tar).Decode(&result.BuildArgs)
 			if err != nil {
 				return nil, err

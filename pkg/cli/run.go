@@ -276,16 +276,16 @@ func outputApp(out io.Writer, format string, app *apiv1.App) error {
 		return err
 	}
 
-	mapData := map[string]interface{}{}
+	mapData := map[string]any{}
 	if err := json.Unmarshal(data, &mapData); err != nil {
 		return err
 	}
 
 	delete(mapData, "status")
-	delete(mapData["metadata"].(map[string]interface{}), "uid")
-	delete(mapData["metadata"].(map[string]interface{}), "resourceVersion")
-	delete(mapData["metadata"].(map[string]interface{}), "managedFields")
-	delete(mapData["metadata"].(map[string]interface{}), "creationTimestamp")
+	delete(mapData["metadata"].(map[string]any), "uid")
+	delete(mapData["metadata"].(map[string]any), "resourceVersion")
+	delete(mapData["metadata"].(map[string]any), "managedFields")
+	delete(mapData["metadata"].(map[string]any), "creationTimestamp")
 
 	if format == "json" {
 		data, err = json.MarshalIndent(mapData, "", "  ")

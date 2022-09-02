@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	FuncMap = map[string]interface{}{
+	FuncMap = map[string]any{
 		"ago":           FormatCreated,
 		"json":          FormatJSON,
 		"jsoncompact":   FormatJSONCompact,
@@ -37,7 +37,7 @@ var (
 	}
 )
 
-func Name(obj interface{}) (string, error) {
+func Name(obj any) (string, error) {
 	ro, ok := toKObject(obj)
 	if ok {
 		return ro.GetName(), nil
@@ -45,7 +45,7 @@ func Name(obj interface{}) (string, error) {
 	return "", fmt.Errorf("invalid obj %T", obj)
 }
 
-func NamespaceName(obj interface{}) (string, error) {
+func NamespaceName(obj any) (string, error) {
 	ro, ok := toKObject(obj)
 	if ok {
 		return ro.GetNamespace() + "/" + ro.GetName(), nil
@@ -53,7 +53,7 @@ func NamespaceName(obj interface{}) (string, error) {
 	return "", fmt.Errorf("invalid obj %T", obj)
 }
 
-func Noop(obj interface{}) string {
+func Noop(obj any) string {
 	return ""
 }
 
@@ -88,7 +88,7 @@ func Graph(value int) (string, error) {
 	return builder.String(), nil
 }
 
-func Pointer(data interface{}) string {
+func Pointer(data any) string {
 	if reflect.ValueOf(data).IsNil() {
 		return ""
 	}
@@ -103,17 +103,17 @@ func FormatCreated(data metav1.Time) string {
 	return duration.HumanDuration(time.Now().UTC().Sub(data.Time)) + " ago"
 }
 
-func FormatJSON(data interface{}) (string, error) {
+func FormatJSON(data any) (string, error) {
 	bytes, err := json.MarshalIndent(cleanFields(data), "", "    ")
 	return string(bytes) + "\n", err
 }
 
-func FormatJSONCompact(data interface{}) (string, error) {
+func FormatJSONCompact(data any) (string, error) {
 	bytes, err := json.Marshal(cleanFields(data))
 	return string(bytes) + "\n", err
 }
 
-func toKObject(obj interface{}) (kclient.Object, bool) {
+func toKObject(obj any) (kclient.Object, bool) {
 	ro, ok := obj.(kclient.Object)
 	if !ok {
 		newObj := reflect.New(reflect.TypeOf(obj))
@@ -123,7 +123,7 @@ func toKObject(obj interface{}) (kclient.Object, bool) {
 	return ro, ok
 }
 
-func cleanFields(obj interface{}) interface{} {
+func cleanFields(obj any) any {
 	ro, ok := toKObject(obj)
 	if ok {
 		ro.SetManagedFields(nil)
@@ -151,12 +151,12 @@ func cleanFields(obj interface{}) interface{} {
 
 }
 
-func FormatYAML(data interface{}) (string, error) {
+func FormatYAML(data any) (string, error) {
 	bytes, err := yaml.Marshal(cleanFields(data))
 	return string(bytes) + "\n", err
 }
 
-func FormatFirst(data, data2 interface{}) (string, error) {
+func FormatFirst(data, data2 any) (string, error) {
 	str := convert.ToString(data)
 	if str != "" {
 		return str, nil
@@ -170,11 +170,11 @@ func FormatFirst(data, data2 interface{}) (string, error) {
 	return "", nil
 }
 
-func ToJSON(data interface{}) (map[string]interface{}, error) {
+func ToJSON(data any) (map[string]any, error) {
 	return convert.EncodeToMap(data)
 }
 
-func BoolToStar(obj interface{}) (string, error) {
+func BoolToStar(obj any) (string, error) {
 	if b, ok := obj.(bool); ok && b {
 		return "*", nil
 	}

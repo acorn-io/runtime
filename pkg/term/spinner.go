@@ -71,7 +71,7 @@ func trimWidth(msg string) string {
 	return msg
 }
 
-func (s *Spinner) Infof(format string, v ...interface{}) {
+func (s *Spinner) Infof(format string, v ...any) {
 	msg := trimWidth(strings.TrimSpace(fmt.Sprintf(s.text+": "+format, v...)))
 	if s.lastMsg == msg {
 		return
@@ -89,7 +89,7 @@ func (s *Spinner) Fail(err error) error {
 	return err
 }
 
-func (s *Spinner) SuccessWithWarning(format string, v ...interface{}) {
+func (s *Spinner) SuccessWithWarning(format string, v ...any) {
 	msg := fmt.Sprintf(format, v...)
 	s.spinner.Warning(msg)
 }

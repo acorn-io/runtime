@@ -164,7 +164,7 @@ func TestAppUpdate(t *testing.T) {
 				Service: "other-service2",
 			},
 		},
-		DeployArgs: map[string]interface{}{
+		DeployArgs: map[string]any{
 			"param1": "val1",
 			"param2": "val2",
 		},
@@ -226,7 +226,7 @@ func TestAppUpdate(t *testing.T) {
 				Service: "other-service3",
 			},
 		},
-		DeployArgs: map[string]interface{}{
+		DeployArgs: map[string]any{
 			"param2": "val3",
 			"param3": "val3",
 		},
@@ -448,7 +448,7 @@ func TestAppRun(t *testing.T) {
 				Target: "secretRequest",
 			},
 		},
-		DeployArgs: map[string]interface{}{
+		DeployArgs: map[string]any{
 			"key": "value",
 		},
 		PublishMode: v1.PublishModeAll,
