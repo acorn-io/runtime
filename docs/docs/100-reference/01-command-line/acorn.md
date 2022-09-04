@@ -38,7 +38,7 @@ acorn [flags]
 * [acorn login](acorn_login.md)	 - Add registry credentials
 * [acorn logout](acorn_logout.md)	 - Remove registry credentials
 * [acorn logs](acorn_logs.md)	 - Log all pods from app
-* [acorn pull](acorn_pull.md)	 - Pull an image to a remote registry
+* [acorn pull](acorn_pull.md)	 - Pull an image from a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry
 * [acorn render](acorn_render.md)	 - Evaluate and display an Acornfile with args
 * [acorn rm](acorn_rm.md)	 - Delete an app, container, or volume
