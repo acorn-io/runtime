@@ -14,7 +14,7 @@ image:
 	docker build .
 
 validate:
-	golangci-lint --timeout 5m run
+	golangci-lint run
 
 validate-ci:
 	go generate
