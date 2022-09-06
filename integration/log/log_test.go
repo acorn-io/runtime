@@ -31,12 +31,12 @@ testlog-pod2/cont2-2 line 2-3
 testlog-pod2/cont2-2 line 2-4`
 
 func TestLog(t *testing.T) {
-	logrus.SetLevel(logrus.DebugLevel)
 	ti := time.Now()
 	helper.EnsureCRDs(t)
 	ctx, cancel := context.WithTimeout(helper.GetCTX(t), time.Minute)
 	defer cancel()
 
+	logrus.SetLevel(logrus.DebugLevel)
 	c := helper.MustReturn(hclient.Default)
 	ns := helper.TempNamespace(t, c)
 	app, pod1, pod2 := appPodPod(ns.Name)
@@ -55,9 +55,9 @@ func TestLog(t *testing.T) {
 		break
 	}
 	helper.Must(c.Create(ctx, pod1))
-	fmt.Printf("After pod1 create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
+	fmt.Printf("Pod1 created %v %#v %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", pod1, pod1.Labels, pod1.Annotations)
 	helper.Must(c.Create(ctx, pod2))
-	fmt.Printf("After pod2 create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
+	fmt.Printf("Pod2 created %v %#v %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", pod2, pod2.Labels, pod2.Annotations)
 
 	output := make(chan log.Message)
 	go func() {
@@ -66,7 +66,6 @@ func TestLog(t *testing.T) {
 			Follow: true,
 		})
 		fmt.Printf("GOT E: %v @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n", e)
-		fmt.Printf("After got-e create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 		close(output)
 	}()
 
