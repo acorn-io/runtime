@@ -1,0 +1,20 @@
+run:
+  timeout: 5m
+
+output:
+  format: github-actions
+
+skip-files:
+  - "*generated*.go$"
+
+linters:
+  disable-all: true
+  enable:
+  - errcheck
+  - gosimple
+  - govet
+  - ineffassign
+  - staticcheck
+  - typecheck
+  - unused
+  fast: false
