@@ -30,6 +30,7 @@ testlog-pod2/cont2-2 line 2-3
 testlog-pod2/cont2-2 line 2-4`
 
 func TestLog(t *testing.T) {
+	ti := time.Now()
 	helper.EnsureCRDs(t)
 	ctx, cancel := context.WithTimeout(helper.GetCTX(t), time.Minute)
 	defer cancel()
@@ -38,6 +39,7 @@ func TestLog(t *testing.T) {
 	ns := helper.TempNamespace(t, c)
 	app, pod1, pod2 := appPodPod(ns.Name)
 	helper.Must(c.Create(ctx, app))
+	fmt.Printf("After app create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 	for {
 		app.Status.Namespace = app.Namespace
 		err := c.Status().Update(ctx, app)
@@ -51,20 +53,26 @@ func TestLog(t *testing.T) {
 		break
 	}
 	helper.Must(c.Create(ctx, pod1))
+	fmt.Printf("After pod1 create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 	helper.Must(c.Create(ctx, pod2))
+	fmt.Printf("After pod2 create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 
 	output := make(chan log.Message)
 	go func() {
-		_ = log.App(ctx, app, output, &log.Options{
+		e := log.App(ctx, app, output, &log.Options{
 			Client: c,
 			Follow: true,
 		})
+		fmt.Printf("GOT E: %v @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n", e)
+		fmt.Printf("After got-e create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 		close(output)
 	}()
 
 	var lines []string
 	for msg := range output {
 		if msg.Err != nil {
+			fmt.Printf("GOT msg.err: %v @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n", msg.Err)
+			fmt.Printf("After msg.err create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 			if len(lines) < 8 && !strings.Contains(msg.Err.Error(), "context canceled") {
 				t.Fatal(msg.Err)
 			}
