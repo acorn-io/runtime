@@ -38,7 +38,8 @@ func doWatch[T client.Object](ctx context.Context, watchFunc watchFunc, cb func(
 	for {
 		select {
 		case <-ctx.Done():
-			return false, nil, fmt.Errorf("terminating watch: %w", ctx.Err())
+			o := typed.New[T]()
+			return false, nil, fmt.Errorf("terminating watch on type %T: %w", o, ctx.Err())
 		case event, open := <-result.ResultChan():
 			if !open {
 				return false, nil, nil
