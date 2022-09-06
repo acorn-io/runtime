@@ -14,6 +14,7 @@ import (
 	applabels "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -30,6 +31,7 @@ testlog-pod2/cont2-2 line 2-3
 testlog-pod2/cont2-2 line 2-4`
 
 func TestLog(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
 	ti := time.Now()
 	helper.EnsureCRDs(t)
 	ctx, cancel := context.WithTimeout(helper.GetCTX(t), time.Minute)
