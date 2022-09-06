@@ -11,7 +11,7 @@ func NewPull() *cobra.Command {
 	return cli.Command(&Pull{}, cobra.Command{
 		Use:          "pull [flags] IMAGE",
 		SilenceUsage: true,
-		Short:        "Pull an image to a remote registry",
+		Short:        "Pull an image from a remote registry",
 		Args:         cobra.RangeArgs(1, 1),
 	})
 }

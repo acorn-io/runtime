@@ -3,7 +3,7 @@ title: "acorn pull"
 ---
 ## acorn pull
 
-Pull an image to a remote registry
+Pull an image from a remote registry
 
 ```
 acorn pull [flags] IMAGE
