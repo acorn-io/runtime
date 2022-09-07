@@ -1,5 +1,0 @@
-containers: {
-	fail: {
-		build: {}
-	}
-}
