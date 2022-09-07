@@ -41,6 +41,7 @@ func doWatch[T client.Object](ctx context.Context, watchFunc watchFunc, cb func(
 			o := typed.New[T]()
 			return false, nil, fmt.Errorf("terminating watch on type %T: %w", o, ctx.Err())
 		case event, open := <-result.ResultChan():
+
 			if !open {
 				return false, nil, nil
 			}
@@ -163,6 +164,7 @@ func (w *Watcher[T]) bySelector(ctx context.Context, namespace string, selector 
 		doneSet bool
 	)
 	err = meta2.EachListItem(listObj, func(object runtime.Object) error {
+		logrus.Debugf("CHECKING DONE ..................... %#v", object)
 		done, err := cb(object.(T))
 		if done {
 			doneObj = object.(T)

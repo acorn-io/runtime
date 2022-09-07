@@ -15,6 +15,7 @@ import (
 	applabels "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -390,6 +391,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	)
 
 	app, err = appWatcher.ByName(ctx, app.Namespace, app.Name, func(app *v1.AppInstance) (bool, error) {
+		logrus.Debugf("OK.................. %#v", app)
 		return app.Status.Namespace != "", nil
 	})
 	if err != nil {
