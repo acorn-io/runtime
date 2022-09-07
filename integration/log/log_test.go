@@ -42,7 +42,7 @@ func TestLog(t *testing.T) {
 	ns := helper.TempNamespace(t, c)
 	app, pod1, pod2 := appPodPod(ns.Name)
 	helper.Must(c.Create(ctx, app))
-	logrus.Debugf("After app create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
+	logrus.Debugf("After app create %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", app)
 	for {
 		app.Status.Namespace = app.Namespace
 		err := c.Status().Update(ctx, app)
