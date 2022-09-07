@@ -88,6 +88,7 @@ func TestLog(t *testing.T) {
 
 	sort.Strings(lines)
 	assert.Equal(t, sampleLog, strings.Join(lines, "\n"))
+	assert.True(t, false)
 }
 
 func appPodPod(ns string) (*v1.AppInstance, *corev1.Pod, *corev1.Pod) {
