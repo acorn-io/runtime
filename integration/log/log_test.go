@@ -88,7 +88,7 @@ func TestLog(t *testing.T) {
 	}
 
 	var p1 corev1.Pod
-	err := c.Get(context.Background(), router.Key(app.Namespace, pod1.Name), &p1)
+	err := c.Get(context.Background(), router.Key(pod1.Namespace, pod1.Name), &p1)
 	if err != nil {
 		t.Fatal(err)
 	}
