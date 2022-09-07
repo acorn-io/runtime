@@ -149,6 +149,7 @@ func (w *Watcher[T]) bySelector(ctx context.Context, namespace string, selector 
 		return def, err
 	}
 
+	logrus.Debugf("&&&&&&&&&!!!!!!!!!!!!!!!!!!!!!!!!!!! Selecting %v %v %v", namespace, selector, fieldSelector)
 	err = w.client.List(ctx, listObj, &client.ListOptions{
 		Namespace:     namespace,
 		LabelSelector: selector,
@@ -158,6 +159,8 @@ func (w *Watcher[T]) bySelector(ctx context.Context, namespace string, selector 
 		return def, err
 	}
 	rev := listObj.GetResourceVersion()
+
+	logrus.Debugf("&!&!&!&&!&!&!&!&&!&!&!&&!&!&!&!&&!&!& count %v", listObj.GetRemainingItemCount())
 
 	var (
 		doneObj T

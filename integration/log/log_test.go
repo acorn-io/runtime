@@ -87,6 +87,13 @@ func TestLog(t *testing.T) {
 		}
 	}
 
+	var p1 *corev1.Pod
+	err := c.Get(ctx, router.Key(app.Namespace, pod1.Name), p1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logrus.Debugf("Pod at the end %#v", p1)
+
 	sort.Strings(lines)
 	assert.Equal(t, sampleLog, strings.Join(lines, "\n"))
 }
