@@ -153,6 +153,7 @@ func pipe(input io.ReadCloser, output chan<- Message, pod *corev1.Pod, name stri
 }
 
 func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- Message, options *Options) (err error) {
+	logrus.Debugf("NOW WERE IN CONTAINER %v", pod)
 	options, err = options.Complete()
 	if err != nil {
 		return err
@@ -251,6 +252,7 @@ func isContainerLoggable(pod *corev1.Pod, containerName string) bool {
 }
 
 func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *Options) error {
+	logrus.Debugf("NOW WERE ARE IN POD")
 	options, err := options.Complete()
 	if err != nil {
 		return err
@@ -412,8 +414,10 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 			return nil
 		}
 		_, err := appWatcher.BySelector(ctx, app.Status.Namespace, labels.Everything(), func(app *v1.AppInstance) (bool, error) {
+			logrus.Debugf("got pod eeeeeeeeeeeeveeeeeeeeeent %#v", app)
 			if watching.shouldWatch("AppInstance", app.Namespace, app.Name) {
 				eg.Go(func() error {
+					logrus.Debugf("GOING RECURSIVE BC I HATE CRAIG.............. %#v", app)
 					err := App(ctx, app, output, options)
 					if err != nil {
 						output <- Message{
@@ -423,6 +427,8 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 					}
 					return nil
 				})
+			} else {
+				logrus.Debugf("app nnnnnnooooooooooooooppppppppeeeeee %#v", app)
 			}
 			return false, nil
 		})
@@ -431,6 +437,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	eg.Go(func() error {
 		defer cancel()
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
+			logrus.Debugf("got pod eeeeeeeeeeeeveeeeeeeeeent %#v", pod)
 			if watching.shouldWatch("Pod", pod.Namespace, pod.Name) {
 				eg.Go(func() error {
 					err := Pod(ctx, pod, output, options)
@@ -443,6 +450,8 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 					}
 					return nil
 				})
+			} else {
+				logrus.Debugf("nnnnnnooooooooooooooppppppppeeeeee %#v", pod)
 			}
 			return false, nil
 		})
