@@ -32,7 +32,7 @@ require (
 	github.com/moby/locker v1.0.1
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pterm/pterm v0.12.45
+	github.com/pterm/pterm v0.12.46
 	github.com/rancher/apiserver v0.0.0-20220513144301-4808910b5d4d
 	github.com/rancher/kubernetes-provider-detector v0.1.5
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
