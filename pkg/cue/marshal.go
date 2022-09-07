@@ -18,7 +18,7 @@ func ReadCUE(file string) ([]byte, error) {
 
 	ext := filepath.Ext(file)
 	if ext == ".yaml" || ext == ".json" {
-		data := map[string]interface{}{}
+		data := map[string]any{}
 		err := yaml.Unmarshal(fileData, &data)
 		if err != nil {
 			return nil, fmt.Errorf("parsing %s: %w", file, err)
@@ -32,7 +32,7 @@ func ReadCUE(file string) ([]byte, error) {
 	return fileData, nil
 }
 
-func UnmarshalFile(file string, obj interface{}) error {
+func UnmarshalFile(file string, obj any) error {
 	fileData, err := ReadCUE(file)
 	if err != nil {
 		return err

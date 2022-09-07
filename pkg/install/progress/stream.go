@@ -42,7 +42,7 @@ func (s *streamProgress) write(isError, isDone bool, msg string) {
 	})
 }
 
-func (s *streamProgress) Infof(fmtStr string, args ...interface{}) {
+func (s *streamProgress) Infof(fmtStr string, args ...any) {
 	s.write(false, false, fmt.Sprintf(fmtStr, args...))
 }
 
@@ -55,7 +55,7 @@ func (s *streamProgress) Fail(err error) error {
 	return err
 }
 
-func (s *streamProgress) SuccessWithWarning(fmtStr string, args ...interface{}) {
+func (s *streamProgress) SuccessWithWarning(fmtStr string, args ...any) {
 	s.write(false, true, fmt.Sprintf(fmtStr, args...))
 }
 

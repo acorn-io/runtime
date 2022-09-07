@@ -116,7 +116,7 @@ func TestParse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	normalizedVars := map[string]interface{}{}
+	normalizedVars := map[string]any{}
 	if err := convert.ToObj(val, &normalizedVars); err != nil {
 		t.Fatal(err)
 	}
@@ -126,20 +126,20 @@ func TestParse(t *testing.T) {
 		cuestring = "{\r\n\tvalue: \"cue\"\r\n}\r\n"
 	}
 
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"int":                     float64(1),
 		"intWithDefault":          float64(2),
 		"intWithDefaultAllowZero": float64(0),
 		"str":                     "a string",
 		"strWithDefault":          "b string",
 		"strWithEmptyValue":       "",
-		"jsonFile": map[string]interface{}{
+		"jsonFile": map[string]any{
 			"value": "json",
 		},
-		"yamlFile": map[string]interface{}{
+		"yamlFile": map[string]any{
 			"value": "yaml",
 		},
-		"cueFile": map[string]interface{}{
+		"cueFile": map[string]any{
 			"value": "cue",
 		},
 		"cueString":      cuestring,

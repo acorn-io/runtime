@@ -46,7 +46,7 @@ func TestNestedBuild(t *testing.T) {
 	image, err := build.Build(helper.GetCTX(t), "./testdata/nested/Acornfile", &build.Options{
 		Cwd:    "./testdata/nested",
 		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
-		Args: map[string]interface{}{
+		Args: map[string]any{
 			"image": simple.ID,
 		},
 	})

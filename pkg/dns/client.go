@@ -166,7 +166,7 @@ func (c *client) request(method string, url string, body io.Reader, token string
 	return req, nil
 }
 
-func (c *client) do(req *http.Request, responseBody interface{}, rateLimit *rl) error {
+func (c *client) do(req *http.Request, responseBody any, rateLimit *rl) error {
 	logrus.Debugf("Making DNS request %v %v", req.Method, req.URL)
 	if rateLimit != nil {
 		if err := checkRateLimit(rateLimit); err != nil {
@@ -226,7 +226,7 @@ func (c *client) do(req *http.Request, responseBody interface{}, rateLimit *rl) 
 	return nil
 }
 
-func jsonBody(payload interface{}) (io.Reader, error) {
+func jsonBody(payload any) (io.Reader, error) {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(payload)
 	if err != nil {

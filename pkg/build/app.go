@@ -76,7 +76,7 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 	return tempDir, nil
 }
 
-func addFile(tempDir, name string, obj interface{}) error {
+func addFile(tempDir, name string, obj any) error {
 	var (
 		data []byte
 		err  error

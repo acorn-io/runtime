@@ -381,7 +381,7 @@ func printObject(image string, opts *Options) error {
 	}
 
 	if opts.OutputFormat == "json" {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"items": objs,
 		}
 		enc := json.NewEncoder(os.Stdout)
@@ -487,9 +487,9 @@ func replaceImage(image string, objs []runtime.Object) ([]runtime.Object, error)
 		if ustr.GetKind() == "Deployment" {
 			containers, _, _ := unstructured.NestedSlice(ustr.Object, "spec", "template", "spec", "containers")
 			for _, container := range containers {
-				container.(map[string]interface{})["image"] = image
+				container.(map[string]any)["image"] = image
 				if !strings.Contains(image, ":v") {
-					container.(map[string]interface{})["imagePullPolicy"] = "Always"
+					container.(map[string]any)["imagePullPolicy"] = "Always"
 				}
 			}
 			if err := unstructured.SetNestedSlice(ustr.Object, containers, "spec", "template", "spec", "containers"); err != nil {

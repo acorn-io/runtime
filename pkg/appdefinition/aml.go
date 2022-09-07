@@ -34,6 +34,6 @@ func init() {
 	std.Functions = functions
 }
 
-func parseFile(name string, src interface{}) (f *ast.File, err error) {
+func parseFile(name string, src any) (f *ast.File, err error) {
 	return aml.ParseFile(name, src, &std)
 }

@@ -5,8 +5,8 @@ type Builder interface {
 }
 
 type Progress interface {
-	Infof(fmt string, args ...interface{})
+	Infof(fmt string, args ...any)
 	Fail(err error) error
-	SuccessWithWarning(fmt string, args ...interface{})
+	SuccessWithWarning(fmt string, args ...any)
 	Success()
 }

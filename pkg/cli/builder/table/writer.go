@@ -11,7 +11,7 @@ import (
 )
 
 type Writer interface {
-	Write(obj interface{})
+	Write(obj any)
 	Close() error
 	Err() error
 	AddFormatFunc(name string, f FormatFunc)
@@ -24,10 +24,10 @@ type writer struct {
 	err           error
 	headerPrinted bool
 	Writer        io.Writer
-	funcMap       map[string]interface{}
+	funcMap       map[string]any
 }
 
-type FormatFunc interface{}
+type FormatFunc any
 
 func NewWriter(values [][]string, namespace string, quiet bool, format string) Writer {
 	t := &writer{
@@ -92,7 +92,7 @@ func (t *writer) writeHeader() {
 	}
 }
 
-func (t *writer) Write(obj interface{}) {
+func (t *writer) Write(obj any) {
 	if t.err != nil {
 		return
 	}
@@ -159,7 +159,7 @@ func (t *writer) Close() error {
 	return nil
 }
 
-func (t *writer) printTemplate(out io.Writer, templateContent string, obj interface{}) error {
+func (t *writer) printTemplate(out io.Writer, templateContent string, obj any) error {
 	tmpl, err := template.New("").Funcs(t.funcMap).Parse(templateContent)
 	if err != nil {
 		return err

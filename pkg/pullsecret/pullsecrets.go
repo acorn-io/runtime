@@ -54,7 +54,7 @@ func Keychain(ctx context.Context, c client.Reader, namespace string) (authn.Key
 }
 
 func ForImages(secretName, secretNamespace string, keychain authn.Keychain, images ...string) (*corev1.Secret, error) {
-	dockerConfig := map[string]interface{}{}
+	dockerConfig := map[string]any{}
 
 	for _, image := range images {
 		ref, err := name.ParseReference(image)
@@ -77,7 +77,7 @@ func ForImages(secretName, secretNamespace string, keychain authn.Keychain, imag
 		dockerConfig[registry] = config
 	}
 
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"auths": dockerConfig,
 	})
 	if err != nil {
