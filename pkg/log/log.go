@@ -414,7 +414,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 			return nil
 		}
 		_, err := appWatcher.BySelector(ctx, app.Status.Namespace, labels.Everything(), func(app *v1.AppInstance) (bool, error) {
-			logrus.Debugf("got pod eeeeeeeeeeeeveeeeeeeeeent %#v", app)
+			logrus.Debugf("got nested app eeeeeeeeeeeeveeeeeeeeeent %#v", app)
 			if watching.shouldWatch("AppInstance", app.Namespace, app.Name) {
 				eg.Go(func() error {
 					logrus.Debugf("GOING RECURSIVE BC I HATE CRAIG.............. %#v", app)
@@ -436,6 +436,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	})
 	eg.Go(func() error {
 		defer cancel()
+		logrus.Debugf("+++++++++++++Starting pod go routine")
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
 			logrus.Debugf("got pod eeeeeeeeeeeeveeeeeeeeeent %#v", pod)
 			if watching.shouldWatch("Pod", pod.Namespace, pod.Name) {
@@ -455,10 +456,12 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 			}
 			return false, nil
 		})
+		logrus.Debugf("+++++++++++__________+++++++++Got pod errror %v", err)
 		return err
 	})
 	eg.Go(func() error {
 		defer cancel()
+		logrus.Debugf("~~~~~~~~~~~~apo go routine %#v", app)
 		_, err := appWatcher.ByObject(ctx, app, func(app *v1.AppInstance) (bool, error) {
 			return !app.DeletionTimestamp.IsZero(), nil
 		})

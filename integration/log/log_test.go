@@ -34,6 +34,7 @@ func TestLog(t *testing.T) {
 	ti := time.Now()
 	helper.EnsureCRDs(t)
 	ctx, cancel := context.WithTimeout(helper.GetCTX(t), time.Minute)
+	logrus.Infof("Start the clock!")
 	defer cancel()
 
 	logrus.SetLevel(logrus.DebugLevel)
@@ -41,7 +42,7 @@ func TestLog(t *testing.T) {
 	ns := helper.TempNamespace(t, c)
 	app, pod1, pod2 := appPodPod(ns.Name)
 	helper.Must(c.Create(ctx, app))
-	fmt.Printf("After app create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
+	logrus.Debugf("After app create %v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", time.Since(ti))
 	for {
 		app.Status.Namespace = app.Namespace
 		err := c.Status().Update(ctx, app)
@@ -55,9 +56,9 @@ func TestLog(t *testing.T) {
 		break
 	}
 	helper.Must(c.Create(ctx, pod1))
-	fmt.Printf("Pod1 created %v %#v %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", pod1, pod1.Labels, pod1.Annotations)
+	logrus.Debugf("Pod1 created %v %#v %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", pod1, pod1.Labels, pod1.Annotations)
 	helper.Must(c.Create(ctx, pod2))
-	fmt.Printf("Pod2 created %v %#v %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", pod2, pod2.Labels, pod2.Annotations)
+	logrus.Debugf("Pod2 created %v %#v %#v !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", pod2, pod2.Labels, pod2.Annotations)
 
 	output := make(chan log.Message)
 	go func() {
