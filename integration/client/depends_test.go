@@ -19,6 +19,8 @@ import (
 )
 
 func depImage(t *testing.T, c client.Client) string {
+	t.Helper()
+
 	image, err := build.Build(helper.GetCTX(t), "./testdata/dependson/Acornfile", &build.Options{
 		Client: c,
 		Cwd:    "./testdata/dependson",
@@ -30,6 +32,8 @@ func depImage(t *testing.T, c client.Client) string {
 }
 
 func toRevision(t *testing.T, obj kclient.Object) int {
+	t.Helper()
+
 	i, err := strconv.Atoi(obj.GetResourceVersion())
 	if err != nil {
 		t.Fatalf("Invalid resource version %s on %s/%s", obj.GetResourceVersion(), obj.GetNamespace(), obj.GetName())

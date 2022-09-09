@@ -16,5 +16,6 @@ linters:
   - ineffassign
   - staticcheck
   - typecheck
+  - thelper
   - unused
   fast: false

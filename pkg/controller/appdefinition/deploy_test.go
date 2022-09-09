@@ -43,6 +43,8 @@ func TestProbe(t *testing.T) {
 }
 
 func ToDeploymentsTest(t *testing.T, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
+	t.Helper()
+
 	req := tester.NewRequest(t, scheme.Scheme, appInstance)
 	deps, err := ToDeployments(req, appInstance, tag, pullSecrets)
 	if err != nil {

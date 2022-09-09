@@ -45,6 +45,8 @@ const (
 )
 
 func EnsureCRDs(t *testing.T) {
+	t.Helper()
+
 	ctx := GetCTX(t)
 	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
 		t.Fatal(err)
@@ -65,6 +67,8 @@ func EnsureCRDs(t *testing.T) {
 }
 
 func ClientAndNamespace(t *testing.T) (client.Client, *corev1.Namespace) {
+	t.Helper()
+
 	StartController(t)
 	kclient := MustReturn(hclient.Default)
 	ns := TempNamespace(t, kclient)
@@ -72,6 +76,8 @@ func ClientAndNamespace(t *testing.T) (client.Client, *corev1.Namespace) {
 }
 
 func BuilderClient(t *testing.T, namespace string) client.Client {
+	t.Helper()
+
 	c, err := client.New(StartAPI(t), namespace)
 	if err != nil {
 		t.Fatal(err)
@@ -80,6 +86,8 @@ func BuilderClient(t *testing.T, namespace string) client.Client {
 }
 
 func ensureNamespace(t *testing.T) {
+	t.Helper()
+
 	kclient := MustReturn(hclient.Default)
 	_ = kclient.Create(context.Background(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -89,6 +97,8 @@ func ensureNamespace(t *testing.T) {
 }
 
 func StartAPI(t *testing.T) *rest.Config {
+	t.Helper()
+
 	apiStartLock.Lock()
 	defer apiStartLock.Unlock()
 
@@ -170,11 +180,15 @@ func CleanupAPI() {
 }
 
 func StartRegistry(t *testing.T) (string, func()) {
+	t.Helper()
+
 	srv := httptest.NewServer(registry.New())
 	return srv.Listener.Addr().String(), srv.Close
 }
 
 func StartController(t *testing.T) {
+	t.Helper()
+
 	if os.Getenv("TEST_ACORN_CONTROLLER") == "external" {
 		return
 	}

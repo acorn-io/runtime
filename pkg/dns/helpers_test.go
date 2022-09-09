@@ -33,6 +33,8 @@ func TestToRecordRequests(t *testing.T) {
 }
 
 func assrt(t *testing.T, domain string, specRulesHosts, statusIPv4s, statusIPv6s, statusHosts []string, expectedRRs []RecordRequest) {
+	t.Helper()
+
 	ingress := ing(specRulesHosts, statusIPv4s, statusIPv6s, statusHosts)
 	recordReqs, _ := ToRecordRequestsAndHash(domain, ingress)
 	assert.Equal(t, expectedRRs, recordReqs)

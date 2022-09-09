@@ -21,6 +21,8 @@ type WatchFunc func(ctx context.Context, obj client.ObjectList, opts ...client.L
 type watchFunc func() (watch.Interface, error)
 
 func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) bool {
+	t.Helper()
+
 	ctx := GetCTX(t)
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
@@ -62,6 +64,8 @@ func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) 
 }
 
 func retryWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) {
+	t.Helper()
+
 	for {
 		if done := doWatch(t, watchFunc, cb); done {
 			return
@@ -70,6 +74,8 @@ func retryWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj 
 }
 
 func Wait[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, cb func(obj T) bool) T {
+	t.Helper()
+
 	var last T
 	retryWatch(t, func() (watch.Interface, error) {
 		ctx := GetCTX(t)
@@ -82,6 +88,8 @@ func Wait[T client.Object](t *testing.T, watchFunc WatchFunc, list client.Object
 }
 
 func WaitForObject[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, obj T, cb func(obj T) bool) T {
+	t.Helper()
+
 	if done := cb(obj); done {
 		return obj
 	}

@@ -7,6 +7,8 @@ import (
 )
 
 func GetCTX(t *testing.T) context.Context {
+	t.Helper()
+
 	ctx := context.Background()
 	deadline, ok := t.Deadline()
 	if !ok {
