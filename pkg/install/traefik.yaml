@@ -188,8 +188,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  annotations:
-    ingressclass.kubernetes.io/is-default-class: "true"
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/managed-by: Acorn
@@ -199,30 +197,25 @@ spec:
   controller: traefik.io/ingress-controller
 ---
 apiVersion: v1
-kind: List
+kind: Service
 metadata:
   name: traefik
-items:
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      name: traefik
-      namespace: acorn-system
-      labels:
-        app.kubernetes.io/name: traefik
-        app.kubernetes.io/managed-by: Acorn
-        app.kubernetes.io/instance: traefik
-    spec:
-      type: LoadBalancer
-      selector:
-        app.kubernetes.io/name: traefik
-        app.kubernetes.io/instance: traefik
-      ports:
-      - port: 80
-        name: web
-        targetPort: "web"
-        protocol: TCP
-      - port: 443
-        name: websecure
-        targetPort: "websecure"
-        protocol: TCP
+  namespace: acorn-system
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/managed-by: Acorn
+    app.kubernetes.io/instance: traefik
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+  ports:
+  - port: 80
+    name: web
+    targetPort: "web"
+    protocol: TCP
+  - port: 443
+    name: websecure
+    targetPort: "websecure"
+    protocol: TCP
