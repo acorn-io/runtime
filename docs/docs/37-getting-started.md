@@ -230,7 +230,7 @@ secrets: {
       - `volume://pgdata?subpath=data`: references a volume defined in the top-level `volumes` section in the Acornfile and specifies the subpath `data` as the mountpoint.
     - `files`: Similar to `dirs` but only for files. Additionally, content can be created in-line and even utilizing generating functions.
 - `localData`: Set of variables for this Acorn app
-  - `food`: Custom variable, defining a list of food which is accessed in `containers.db.volumes` to pre-fill the database.
+  - `food`: Custom variable, defining a list of food which is accessed in `containers.db.files` to pre-fill the database.
 - `volumes`: (persistent) data volumes to be used by any container in the Acorn app
   - `pgdata` custom volume name, referenced in `containers.db.dirs`
     - `accessModes`: (list of) modes to allow access to this volume
