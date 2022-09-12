@@ -37,6 +37,7 @@ acorn secret
 
 * [acorn](acorn.md)	 - 
 * [acorn secret create](acorn_secret_create.md)	 - Create a secret
+* [acorn secret encrypt](acorn_secret_encrypt.md)	 - Encrypt string information with clusters public key
 * [acorn secret expose](acorn_secret_expose.md)	 - Manage secrets
 * [acorn secret rm](acorn_secret_rm.md)	 - Delete a secret
 
