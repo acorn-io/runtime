@@ -13,6 +13,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pull"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -31,11 +32,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func seedData(exising *corev1.Secret, from map[string]string, keys ...string) map[string][]byte {
+func seedData(existing *corev1.Secret, from map[string]string, keys ...string) map[string][]byte {
 	to := map[string][]byte{}
-	if exising != nil {
+	if existing != nil {
 		for _, key := range keys {
-			to[key] = exising.Data[key]
+			to[key] = existing.Data[key]
 		}
 	}
 	for _, key := range keys {
@@ -317,7 +318,36 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	return updateOrCreate(req, existing, secret)
 }
 
+func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte) (map[string][]byte, error) {
+	clusterKey, err := nacl.GetOrCreateClusterKey(ctx, c)
+	if err != nil {
+		return data, err
+	}
+	to := map[string][]byte{}
+	for k, v := range data {
+		if strings.HasPrefix(string(v), "ACORNENC:") {
+			decryptedData, err := clusterKey.Decrypt(v)
+			if err != nil {
+				return data, err
+			}
+			to[k] = decryptedData
+
+			continue
+		}
+		to[k] = v
+	}
+
+	return to, nil
+}
+
 func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev1.Secret, error) {
+	var err error
+
+	secret.Data, err = decryptData(req.Ctx, req.Client, secret.Data)
+	if err != nil {
+		return secret, err
+	}
+
 	if existing == nil {
 		return secret, req.Client.Create(req.Ctx, secret)
 	}
@@ -468,6 +498,11 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	for _, binding := range appInstance.Spec.Secrets {
 		if binding.Target == secretName {
 			existingSecret, err := lookupSecret(req.Ctx, req, nil, appInstance.Namespace, binding.Secret)
+			if err != nil {
+				return nil, err
+			}
+			// Check fields to see if they need to be decrypted
+			existingSecret.Data, err = decryptData(req.Ctx, req.Client, existingSecret.Data)
 			if err != nil {
 				return nil, err
 			}

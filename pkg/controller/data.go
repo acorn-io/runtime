@@ -5,6 +5,7 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/system"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,6 +22,9 @@ func (c *Controller) initData(ctx context.Context) error {
 		return err
 	}
 	if err := config.Init(ctx, c.client); err != nil {
+		return err
+	}
+	if _, err := nacl.GetOrCreateClusterKey(ctx, c.client); err != nil {
 		return err
 	}
 	return buildkit.SyncBuildkitPod(ctx, c.client)

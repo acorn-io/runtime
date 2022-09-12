@@ -5,6 +5,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -34,8 +35,14 @@ func Get(ctx context.Context, reader kclient.Reader) (*apiv1.Info, error) {
 		return nil, err
 	}
 
+	pubKey, err := nacl.GetPublicKey(ctx, reader)
+	if err != nil {
+		return nil, err
+	}
+
 	return &apiv1.Info{
 		Spec: apiv1.InfoSpec{
+			PublicKey:       pubKey,
 			Version:         v.String(),
 			Tag:             v.Tag,
 			GitCommit:       v.Commit,
