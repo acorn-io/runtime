@@ -13,7 +13,9 @@ import (
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/rancher/wrangler/pkg/name"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -107,10 +109,19 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 		image = opts.RuntimeImage
 	}
 
+	unique, err := randomtoken.Generate()
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error generating random token: %v", err)
+		return result
+	}
+
+	objectName := name.SafeConcatName("acorn-check-exec", unique[:8])
+
 	// Create new pod
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-install-check-exec",
+			Name:      objectName,
 			Namespace: system.Namespace,
 		},
 		Spec: corev1.PodSpec{
@@ -243,10 +254,19 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		return result
 	}
 
+	unique, err := randomtoken.Generate()
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error generating random token: %v", err)
+		return result
+	}
+
+	objectName := name.SafeConcatName("acorn-check-ingress", unique[:8])
+
 	// Create a new Endpoint object
 	ep := &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-ingress-test",
+			Name:      objectName,
 			Namespace: system.Namespace,
 		},
 		Subsets: []corev1.EndpointSubset{
@@ -270,7 +290,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	// Create a new Service object
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-ingress-test",
+			Name:      objectName,
 			Namespace: system.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
@@ -278,7 +298,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 				Port: 80,
 			}},
 			Selector: map[string]string{
-				"app": "acorn-ingress-test",
+				"app": objectName,
 			},
 		},
 	}
@@ -287,7 +307,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	pt := networkingv1.PathTypeImplementationSpecific
 	ing := &networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-ingress-test",
+			Name:      objectName,
 			Namespace: system.Namespace,
 		},
 		Spec: networkingv1.IngressSpec{
@@ -302,7 +322,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 									PathType: &pt,
 									Backend: networkingv1.IngressBackend{
 										Service: &networkingv1.IngressServiceBackend{
-											Name: "acorn-ingress-test",
+											Name: objectName,
 											Port: networkingv1.ServiceBackendPort{
 												Number: 80,
 											},
