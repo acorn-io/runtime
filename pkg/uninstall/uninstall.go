@@ -233,7 +233,7 @@ func Uninstall(ctx context.Context, opts *Options) error {
 		apiVersion, kind := resource.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
 		pterm.Info.Printf("Deleting %s %s %s\n", key(resource), kind, apiVersion)
 		if err := c.Delete(ctx, resource); err != nil && !apierror.IsNotFound(err) {
-			errs = append(errs, err)
+			errs = append(errs, fmt.Errorf("failed to delete %s %s: %w", kind, key(resource), err))
 		}
 	}
 
