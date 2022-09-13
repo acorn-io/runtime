@@ -319,13 +319,13 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 }
 
 func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte) (map[string][]byte, error) {
-	clusterKey, err := nacl.GetOrCreateClusterKey(ctx, c)
-	if err != nil {
-		return data, err
-	}
 	to := map[string][]byte{}
 	for k, v := range data {
 		if strings.HasPrefix(string(v), "ACORNENC:") {
+			clusterKey, err := nacl.GetOrCreateClusterKey(ctx, c)
+			if err != nil {
+				return data, err
+			}
 			decryptedData, err := clusterKey.Decrypt(v)
 			if err != nil {
 				return data, err
