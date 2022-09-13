@@ -71,7 +71,7 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 	}
 
 	cond.Success()
-	app.Status.Ready = ready && app.Spec.Image == app.Status.AppImage.ID &&
+	app.Status.Ready = ready && app.Status.AppImage.ID != "" &&
 		app.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 		app.Status.Condition(v1.AppInstanceConditionContainers).Success &&
 		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&

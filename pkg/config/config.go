@@ -24,8 +24,11 @@ var (
 	AcornDNSEndpointDefault = "https://staging-dns.acrn.io/v1"
 	AcornDNSStateDefault    = "auto"
 
-	// Let's Encrypt
+	// LetsEncryptOptionDefault is the default state for the Let's Encrypt integration
 	LetsEncryptOptionDefault = "disabled"
+
+	// DefaultImageCheckIntervalDefault is the default value for the DefaultImageCheckInterval field
+	DefaultImageCheckIntervalDefault = "5m"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
@@ -64,6 +67,10 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 		if !*c.LetsEncryptTOSAgree {
 			return fmt.Errorf("letsencrypt TOS must be agreed to when Let's Encrypt is enabled")
 		}
+	}
+
+	if c.AutoUpgradeInterval == nil || *c.AutoUpgradeInterval == "" {
+		c.AutoUpgradeInterval = &DefaultImageCheckIntervalDefault
 	}
 
 	return nil
@@ -193,6 +200,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.LetsEncryptEmail != "" {
 		mergedConfig.LetsEncryptEmail = newConfig.LetsEncryptEmail
+	}
+	if newConfig.AutoUpgradeInterval != nil {
+		mergedConfig.AutoUpgradeInterval = newConfig.AutoUpgradeInterval
 	}
 
 	return &mergedConfig

@@ -11,6 +11,8 @@ spec:
     target: db
 status:
   namespace: app-created-namespace
+  appImage:
+    id: "image-name"
   appSpec:
     containers:
       container-name:

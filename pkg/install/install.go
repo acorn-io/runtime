@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade/validate"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install/progress"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
@@ -109,6 +110,12 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	klog.SetOutput(io.Discard)
 	klogv2.SetOutput(io.Discard)
 	utilruntime.ErrorHandlers = nil
+
+	if opts.Config.AutoUpgradeInterval != nil {
+		if _, err := validate.AutoUpgradeInterval(*opts.Config.AutoUpgradeInterval); err != nil {
+			return err
+		}
+	}
 
 	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {

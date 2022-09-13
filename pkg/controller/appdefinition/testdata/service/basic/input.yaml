@@ -12,6 +12,8 @@ spec:
     targetServiceName: oneimage
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     containers:
       oneimage:

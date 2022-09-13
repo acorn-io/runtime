@@ -5,6 +5,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/db"
@@ -55,19 +56,33 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 		result = append(result, field.Invalid(field.NewPath("namespace"), params.Namespace, err.Error()))
 	}
 
-	image, err := s.resolveTag(ctx, params.Namespace, params.Spec.Image)
-	if err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
-		return
+	if _, isPattern := autoupgrade.AutoUpgradePattern(params.Spec.Image); !isPattern {
+		image, local, err := s.resolveLocalImage(ctx, params.Namespace, params.Spec.Image)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			return
+		}
+
+		if !local {
+			if err := s.checkRemoteAccess(ctx, params.Namespace, image); err != nil {
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+				return
+			}
+		}
+
+		permsFromImage, err := s.getPermissions(ctx, params.Namespace, image)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+			return
+		}
+
+		if err := s.checkRequestedPermsSatisfyImagePerms(permsFromImage, params.Spec.Permissions); err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+			return
+		}
 	}
 
-	perms, err := s.getPermissions(ctx, params.Namespace, image)
-	if err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
-		return
-	}
-
-	if err := s.compareAndCheckPermissions(ctx, perms, params.Spec.Permissions); err != nil {
+	if err := s.checkPermissionsForPrivilegeEscalation(ctx, params.Spec.Permissions); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
 	}
 
@@ -80,19 +95,6 @@ func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) 
 		return nil
 	}
 	return s.Validate(ctx, newParams)
-}
-
-func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
-	params := obj.(*apiv1.App)
-
-	image, err := s.resolveTag(ctx, params.Namespace, params.Spec.Image)
-	if err != nil {
-		// Validate() is supposed to catch this
-		panic(err)
-	}
-
-	params.Spec.Image = image
-
 }
 
 func (s *Strategy) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {

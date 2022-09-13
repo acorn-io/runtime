@@ -27,6 +27,7 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&Builder{},
 		&BuilderPortOptions{},
 		&BuilderList{},
+		&ConfirmUpgrade{},
 		&Image{},
 		&ImageList{},
 		&ImageDetails{},

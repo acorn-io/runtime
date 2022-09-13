@@ -22,6 +22,7 @@ acorn install
       --acorn-dns string                      enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)
       --acorn-dns-endpoint string             The URL to access the Acorn DNS service
       --api-server-replicas int               acorn-api deployment replica count
+      --auto-upgrade-interval string          For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
       --checks                                Disable preflight checks with --checks=false
       --cluster-domain strings                The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int               acorn-controller deployment replica count

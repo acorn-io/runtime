@@ -85,7 +85,7 @@ func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
 
 // GatherScoped takes in labels (or annotations) from the various places they can appear in an acorn app and sifts through
 // them to build a map of the ones that apply to the resource specified by the supplied resourceName and resourceType.
-// `globalLabels` would be labels defined at top of an Acornfile, as sibling to containers. These apply to all resoruces, thus "global."
+// `globalLabels` would be labels defined at top of an Acornfile, as sibling to containers. These apply to all resources, thus "global."
 // `resourceLabels` come from the specific resource in the Acornfile. We know all of these apply to the resource, by definition.
 // `scoped` generally live on appInstance.Status.AppSpec and ultimately come from the user launching the acorn in the form of command line flags.
 func GatherScoped(resourceName, resourceType string, globalLabels, resourceLabels map[string]string, scoped []v1.ScopedLabel) map[string]string {

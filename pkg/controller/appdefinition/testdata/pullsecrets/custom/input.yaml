@@ -8,6 +8,8 @@ spec:
     image: foo.io/test
 status:
   namespace: app-created-namespace
+  appImage:
+    id: foo.io/test
   appSpec:
     containers:
       oneimage:

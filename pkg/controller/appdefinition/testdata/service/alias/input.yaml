@@ -29,6 +29,8 @@ spec:
     publish: true
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     containers:
       con1:

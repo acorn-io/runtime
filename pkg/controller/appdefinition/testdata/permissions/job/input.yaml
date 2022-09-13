@@ -24,6 +24,8 @@ spec:
       - "foo"
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     jobs:
       oneimage:

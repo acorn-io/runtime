@@ -9,6 +9,8 @@ spec:
   permissions:
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     jobs:
       oneimage:

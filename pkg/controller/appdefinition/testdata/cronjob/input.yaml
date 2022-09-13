@@ -8,6 +8,8 @@ spec:
   image: test
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     jobs:
       oneimage:

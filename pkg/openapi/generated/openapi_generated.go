@@ -23,6 +23,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.BuilderPortOptions":             schema_pkg_apis_apiacornio_v1_BuilderPortOptions(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.BuilderStatus":                  schema_pkg_apis_apiacornio_v1_BuilderStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config":                         schema_pkg_apis_apiacornio_v1_Config(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ConfirmUpgrade":                 schema_pkg_apis_apiacornio_v1_ConfirmUpgrade(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplica":               schema_pkg_apis_apiacornio_v1_ContainerReplica(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns":        schema_pkg_apis_apiacornio_v1_ContainerReplicaColumns(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaExecOptions":    schema_pkg_apis_apiacornio_v1_ContainerReplicaExecOptions(ref),
@@ -698,10 +699,50 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
+					"autoUpgradeInterval": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "internalClusterDomain", "acornDNS", "acornDNSEndpoint"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval"},
 			},
 		},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_ConfirmUpgrade(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2259,6 +2300,18 @@ func schema_pkg_apis_internalacornio_v1_AppImage(ref common.ReferenceCallback) c
 							Format: "",
 						},
 					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"digest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"acornfile": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -2567,6 +2620,24 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
+					"autoUpgrade": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"notifyUpgrade": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"autoUpgradeInterval": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -2643,6 +2714,18 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
 							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage"),
+						},
+					},
+					"availableAppImage": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"confirmUpgradeAppImage": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"appSpec": {

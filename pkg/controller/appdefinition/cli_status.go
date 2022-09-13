@@ -35,7 +35,12 @@ func message(app *v1.AppInstance) string {
 			buf.WriteString("]")
 		}
 	}
+
 	if buf.Len() == 0 {
+		if app.Status.ConfirmUpgradeAppImage != "" {
+			return "Upgrade available: " + app.Status.ConfirmUpgradeAppImage
+		}
+
 		if app.Status.Ready {
 			return "OK"
 		} else {

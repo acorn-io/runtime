@@ -21,6 +21,9 @@ func TestSecretDirsToMounts(t *testing.T) {
 			Name: "app",
 		},
 		Status: v1.AppInstanceStatus{
+			AppImage: v1.AppImage{
+				ID: "test",
+			},
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
 					"test": {
@@ -74,6 +77,9 @@ func TestOpaque_Gen(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
+			AppImage: v1.AppImage{
+				ID: "test",
+			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
 					"pass": {
@@ -113,6 +119,9 @@ func TestBasic_Gen(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
+			AppImage: v1.AppImage{
+				ID: "test",
+			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
 					"pass": {Type: "basic",
@@ -167,6 +176,9 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
+			AppImage: v1.AppImage{
+				ID: "image",
+			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
 					"template": {
@@ -204,6 +216,9 @@ func TestTemplateToken_Gen(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
+			AppImage: v1.AppImage{
+				ID: "image",
+			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
 					"pass": {Type: "token",
@@ -315,6 +330,9 @@ func TestSecretLabelsAnnotations(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
+			AppImage: v1.AppImage{
+				ID: "test",
+			},
 			AppSpec: v1.AppSpec{
 				Labels: map[string]string{
 					"globalfromacornfile": "val",

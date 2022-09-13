@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	url2 "net/url"
 	"path"
-	"regexp"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -32,13 +31,10 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var (
-	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
-)
-
 func DeploySpec(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
+
 	defer func() {
 		if err == nil {
 			status.Success()
@@ -47,7 +43,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
 	if err != nil {
 		return err
 	}
@@ -285,13 +281,6 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 	return ports
 }
 
-func resolveTag(tag name.Reference, image string) string {
-	if DigestPattern.MatchString(image) {
-		return tag.Context().Digest(image).String()
-	}
-	return image
-}
-
 func parseURLForProbe(probeURL string) (scheme corev1.URIScheme, host string, port intstr.IntOrString, path string, ok bool) {
 	u, err := url2.Parse(probeURL)
 	if err != nil {
@@ -386,7 +375,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
 	return corev1.Container{
 		Name:           containerName,
-		Image:          resolveTag(tag, container.Image),
+		Image:          pull.ResolveTag(tag, container.Image),
 		Command:        container.Entrypoint,
 		Args:           container.Command,
 		WorkingDir:     container.WorkingDir,
