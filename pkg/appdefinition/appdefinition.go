@@ -306,6 +306,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	}
 
 	addContainerFiles(fileSet, spec.Containers, cwd)
+	addContainerFiles(fileSet, spec.Jobs, cwd)
 	addFiles(fileSet, spec.Images, cwd)
 	addAcorns(fileSet, spec.Acorns, cwd)
 
