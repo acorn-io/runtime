@@ -30,7 +30,7 @@ spec:
         "acorn.io/job-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}]}}}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
     spec:
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab

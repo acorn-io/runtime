@@ -35,7 +35,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"build":{"baseImage":"image-name","context":".","contextDirs":{"/var/tmp":"./foo"},"dockerfile":"Dockerfile"},"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name"}'
+        acorn.io/container-spec: '{"build":{"baseImage":"image-name","context":".","contextDirs":{"/var/tmp":"./foo"},"dockerfile":"Dockerfile"},"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name","probes":null}'
         acorn.io/image-mapping: '{"image-name":"image-name"}'
     spec:
       hostname: container-name

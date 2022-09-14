@@ -24,7 +24,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"environment":[{"name":"env-name","secret":{},"value":"env-value"}],"image":"image-name"}'
+        acorn.io/container-spec: '{"environment":[{"name":"env-name","secret":{},"value":"env-value"}],"image":"image-name","probes":null}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false

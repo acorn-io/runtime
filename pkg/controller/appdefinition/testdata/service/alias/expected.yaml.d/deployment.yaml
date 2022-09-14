@@ -35,7 +35,7 @@ spec:
         "con1key": "value"
         "both": "con1val"
       annotations:
-        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}]}'
+        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}],"probes":null}'
         "con1": "value"
         "both": "con1val"
     spec:
@@ -94,7 +94,7 @@ spec:
         "con2key": "value"
         "both": "con2val"
       annotations:
-        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}]}'
+        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}],"probes":null}'
         "con2": "value"
         "both": "con2val"
     spec:
@@ -145,7 +145,7 @@ spec:
         "service-name.acorn.io/con3": "true"
         "service-name.acorn.io/svc2": "true"
       annotations:
-        acorn.io/container-spec: '{"image":"foo","ports":[{"port":100,"protocol":"udp","publish":true,"serviceName":"svc2","targetPort":101},{"port":100,"protocol":"udp","targetPort":101}]}'
+        acorn.io/container-spec: '{"image":"foo","ports":[{"port":100,"protocol":"udp","publish":true,"serviceName":"svc2","targetPort":101},{"port":100,"protocol":"udp","targetPort":101}],"probes":null}'
     spec:
       hostname: con3
       terminationGracePeriodSeconds: 5

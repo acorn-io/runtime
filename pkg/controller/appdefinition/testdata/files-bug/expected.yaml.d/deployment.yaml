@@ -24,7 +24,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name"}}}'
+        acorn.io/container-spec: '{"image":"image-name","probes":null,"sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name","probes":null}}}'
     spec:
       terminationGracePeriodSeconds: 5
       imagePullSecrets:

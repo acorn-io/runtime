@@ -375,7 +375,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 	}
 
 	if probeType == v1.ReadinessProbeType &&
-		len(container.Probes) == 0 {
+		container.Probes == nil {
 		for _, port := range container.Ports {
 			if port.Protocol == v1.ProtocolUDP {
 				continue

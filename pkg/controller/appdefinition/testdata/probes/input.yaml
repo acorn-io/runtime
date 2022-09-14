@@ -10,6 +10,13 @@ status:
   namespace: app-created-namespace
   appSpec:
     containers:
+      nodefault:
+        probes: []
+        ports:
+          - port: 80
+            targetPort: 81
+            protocol: http
+        image: "image-name"
       oneimage:
         sidecars:
           left:

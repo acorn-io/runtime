@@ -3368,7 +3368,8 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 					},
 					"dependencies": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "Don't omitempty so that nil vs empty is recorded",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -3421,6 +3422,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 						},
 					},
 				},
+				Required: []string{"probes"},
 			},
 		},
 		Dependencies: []string{

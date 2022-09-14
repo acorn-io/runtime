@@ -700,6 +700,9 @@ func (in *Probe) UnmarshalJSON(data []byte) error {
 }
 
 func (in *Probes) UnmarshalJSON(data []byte) error {
+	// ensure not nil if set
+	*in = Probes{}
+
 	if isString(data) {
 		p := Probe{}
 		if err := json.Unmarshal(data, &p); err != nil {
