@@ -82,6 +82,8 @@ func (d *Daemon) internal(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
+	// TODO: renew certificate
+
 	var ingresses netv1.IngressList
 	err = d.client.List(ctx, &ingresses, &kclient.ListOptions{
 		LabelSelector: klabels.SelectorFromSet(map[string]string{

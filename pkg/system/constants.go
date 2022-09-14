@@ -5,6 +5,8 @@ import "os"
 const (
 	Namespace            = "acorn-system"
 	ConfigName           = "acorn-config"
+	TLSSecretName        = "acorn-tls"
+	LESecretName         = "acorn-le"
 	DefaultUserNamespace = "acorn"
 	DNSSecretName        = "acorn-dns"
 )

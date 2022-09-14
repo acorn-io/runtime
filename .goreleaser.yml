@@ -26,6 +26,7 @@ builds:
       - -w
       - -X "github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}"
       - -X "github.com/acorn-io/acorn/pkg/config.AcornDNSEndpointDefault={{ .Env.ACORN_DNS_ENDPOINT }}"
+      - -X "github.com/acorn-io/pkg/controller/letsencrypt.LEEndpoint={{ .Env.LE_ENDPOINT }}"
 
 universal_binaries:
   - id: mac
