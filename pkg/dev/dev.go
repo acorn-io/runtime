@@ -65,6 +65,7 @@ func (o *Options) Complete() (*Options, error) {
 type watcher struct {
 	file       string
 	cwd        string
+	args       []string
 	trigger    chan struct{}
 	watching   []string
 	watchingTS []time.Time
@@ -84,6 +85,15 @@ func (w *watcher) readFiles() []string {
 	if err != nil {
 		logrus.Errorf("failed to parse %s: %v", w.file, err)
 		return []string{w.file}
+	}
+	params, err := build.ParseParams(w.file, w.cwd, w.args)
+	if err != nil {
+		logrus.Errorf("failed to parse args %v: %v", w.args, err)
+		return []string{w.file}
+	}
+	app, _, err = app.WithArgs(params, []string{"dev?"})
+	if err != nil {
+		logrus.Errorf("failed to assign args %v: %v", w.args, err)
 	}
 	files, err := app.WatchFiles(w.cwd)
 	if err != nil {
@@ -153,6 +163,7 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 			trigger:    make(chan struct{}),
 			watching:   []string{file},
 			watchingTS: make([]time.Time, 1),
+			args:       opts.Args,
 		}
 		startLock sync.Mutex
 		started   = false
