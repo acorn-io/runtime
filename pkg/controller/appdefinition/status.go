@@ -18,6 +18,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
@@ -312,7 +313,10 @@ func AppStatus(req router.Request, resp router.Response) error {
 		}
 	}
 	app.Status.ContainerStatus = container
-	app.Status.Columns.Endpoints = endpoints(cfg, app)
+	app.Status.Columns.Endpoints, err = endpoints(req, cfg, app)
+	if err != nil {
+		return err
+	}
 
 	if isTransition {
 		sort.Strings(message)
@@ -369,11 +373,34 @@ func podName(pod *corev1.Pod) string {
 	return pod.Labels[labels.AcornContainerName]
 }
 
-func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
+func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (string, error) {
 	endpointTarget := map[string][]v1.Endpoint{}
 	for _, endpoint := range app.Status.Endpoints {
 		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPort)
 		endpointTarget[target] = append(endpointTarget[target], endpoint)
+	}
+
+	ingresses := &networkingv1.IngressList{}
+	err := req.List(ingresses, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged: "true",
+			labels.AcornAppName: app.Name,
+		}),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	ingressTLSHosts := map[string]interface{}{}
+	for _, ingress := range ingresses.Items {
+		if ingress.Spec.TLS != nil {
+			for _, tls := range ingress.Spec.TLS {
+				for _, host := range tls.Hosts {
+					ingressTLSHosts[host] = nil
+				}
+			}
+		}
 	}
 
 	var endpointStrings []string
@@ -389,7 +416,14 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 			switch endpoint.Protocol {
 			case v1.ProtocolHTTP:
 				if !strings.HasPrefix(endpoint.Address, "http") {
-					if *cfg.TLSEnabled {
+					var host string
+					a, b, ok := strings.Cut(endpoint.Address, "://")
+					if ok {
+						host, _, _ = strings.Cut(b, ":")
+					} else {
+						host, _, _ = strings.Cut(a, ":")
+					}
+					if _, ok := ingressTLSHosts[host]; ok {
 						buf.WriteString("https://")
 					} else {
 						buf.WriteString("http://")
@@ -412,5 +446,5 @@ func endpoints(cfg *apiv1.Config, app *v1.AppInstance) string {
 			fmt.Sprintf("%s => %s", strings.Join(publicStrings, " | "), target))
 	}
 
-	return strings.Join(endpointStrings, ", ")
+	return strings.Join(endpointStrings, ", "), nil
 }

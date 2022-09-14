@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/mail"
 	"os"
 	"strings"
 
@@ -100,11 +101,50 @@ func DefaultImage() string {
 	return image
 }
 
+func validMailAddress(address string) (string, bool) {
+	addr, err := mail.ParseAddress(address)
+	if err != nil {
+		return "", false
+	}
+	return addr.Address, true
+}
+
 func Install(ctx context.Context, image string, opts *Options) error {
 	// I don't want these errors on the screen. Probably a better way to do this.
 	klog.SetOutput(io.Discard)
 	klogv2.SetOutput(io.Discard)
 	utilruntime.ErrorHandlers = nil
+
+	// Require E-Mail address when using Let's Encrypt production
+	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {
+		if opts.Config.LetsEncryptTOSAgree == nil || !*opts.Config.LetsEncryptTOSAgree {
+			ok, err := pterm.DefaultInteractiveConfirm.Show("You are choosing to enable Let's Encrypt for TLS certificates. To do so, you must agree to their Terms of Service: https://community.letsencrypt.org/tos\nTip: use --lets-encrypt-tos-agree to skip this prompt\nDo you agree to Let's Encrypt TOS?")
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return fmt.Errorf("you must agree to Let's Encrypt TOS when enabling Let's Encrypt")
+			}
+			opts.Config.LetsEncryptTOSAgree = &ok
+		}
+		if opts.Config.LetsEncryptEmail == "" {
+			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt")
+			if err != nil {
+				return err
+			}
+			opts.Config.LetsEncryptEmail = result
+		}
+		pterm.Info.Println("You've enabled automatic TLS certificate provisioning with Let's Encrypt. This can take a few minutes to configure.")
+	}
+
+	// Validate E-Mail address provided for Let's Encrypt registration
+	if opts.Config.LetsEncryptEmail != "" || (opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled") {
+		mail, ok := validMailAddress(opts.Config.LetsEncryptEmail)
+		if !ok {
+			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
+		}
+		opts.Config.LetsEncryptEmail = mail
+	}
 
 	opts = opts.complete()
 	if opts.OutputFormat != "" {

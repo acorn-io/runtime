@@ -9,7 +9,7 @@ metadata:
     "acorn.io/service-name": "oneimage"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"},"oneimage.app-name.app-namespace.local.on-acorn.io":{"port":81,"service":"oneimage"}}'
+    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"},"oneimage-app-name-1234567890abcdef.local.on-acorn.io":{"port":81,"service":"oneimage"}}'
 spec:
   rules:
     - host: localhost
@@ -22,7 +22,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: oneimage.app-name.app-namespace.local.on-acorn.io
+    - host: oneimage-app-name-1234567890abcdef.local.on-acorn.io
       http:
         paths:
           - backend:

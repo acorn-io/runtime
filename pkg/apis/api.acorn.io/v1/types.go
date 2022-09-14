@@ -300,15 +300,16 @@ type BuilderPortOptions struct {
 }
 
 type InfoSpec struct {
-	Version         string          `json:"version"`
-	Tag             string          `json:"tag"`
-	GitCommit       string          `json:"gitCommit"`
-	Dirty           bool            `json:"dirty"`
-	ControllerImage string          `json:"controllerImage"`
-	APIServerImage  string          `json:"apiServerImage,omitempty"`
-	PublicKeys      []EncryptionKey `json:"publicKeys,omitempty"`
-	Config          Config          `json:"config"`
-	UserConfig      Config          `json:"userConfig"`
+	Version                string          `json:"version"`
+	Tag                    string          `json:"tag"`
+	GitCommit              string          `json:"gitCommit"`
+	Dirty                  bool            `json:"dirty"`
+	ControllerImage        string          `json:"controllerImage"`
+	APIServerImage         string          `json:"apiServerImage,omitempty"`
+	PublicKeys             []EncryptionKey `json:"publicKeys,omitempty"`
+	Config                 Config          `json:"config"`
+	UserConfig             Config          `json:"userConfig"`
+	LetsEncryptCertificate string          `json:"letsEncryptCertificate,omitempty"`
 }
 
 type Config struct {
@@ -317,7 +318,9 @@ type Config struct {
 
 	IngressClassName             *string        `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
 	ClusterDomains               []string       `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
-	TLSEnabled                   *bool          `json:"tlsEnabled" name:"tls-enabled" usage:"If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)"`
+	LetsEncrypt                  *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)"`
+	LetsEncryptEmail             string         `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')"`
+	LetsEncryptTOSAgree          *bool          `json:"letsEncryptTOSAgree" name:"lets-encrypt-tos-agree" usage:"Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)"`
 	SetPodSecurityEnforceProfile *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
 	PodSecurityEnforceProfile    string         `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
 	DefaultPublishMode           v1.PublishMode `json:"defaultPublishMode" usage:"If no publish mode is set default to this value (default user)" wrangler:"nullable,options=all|none|defined"`

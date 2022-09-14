@@ -92,7 +92,26 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 
 	sec.Annotations[labels.AcornDNSState] = state
 	sec.Data = map[string][]byte{"domain": []byte(domain), "token": []byte(token)}
-	return req.Client.Update(req.Ctx, sec)
+	if err := req.Client.Update(req.Ctx, sec); err != nil {
+		return err
+	}
+
+	// Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
+	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
+		// Ensure that we have a Let's Encrypt account ready
+		leUser, err := ensureLEUser(req.Ctx, cfg, req.Client, domain)
+		if err != nil {
+			return err
+		}
+
+		// Generate wildcard certificate for domain
+		_, err = leUser.ensureWildcardCertificateSecret(req.Ctx, req.Client, *cfg.AcornDNSEndpoint, domain, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // purgeRecordsIfDisabling checks if we are transitioning AcorDNS from an enabled state to a disabled state and if so calls the
