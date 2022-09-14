@@ -45,6 +45,7 @@ func New() *cobra.Command {
 		NewStop(),
 		NewTag(),
 		NewVolume(),
+		NewWait(),
 	)
 	root.InitDefaultHelpCmd()
 	return root

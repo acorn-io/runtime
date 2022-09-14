@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/deployargs"
 	"github.com/acorn-io/acorn/pkg/dev"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
+	"github.com/acorn-io/acorn/pkg/wait"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/yaml"
@@ -68,8 +69,10 @@ func NewRun(out io.Writer) *cobra.Command {
 
 type Run struct {
 	RunArgs
-	Interactive       bool `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i" name:"dev"`
-	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Interactive       bool  `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i" name:"dev"`
+	BidirectionalSync bool  `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Wait              *bool `usage:"Wait for app to become ready before command exiting (default true)"`
+	Quiet             bool  `usage:"Do not print status" short:"q"`
 
 	out io.Writer
 }
@@ -265,6 +268,8 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = c.AppStop(ctx, app.Name)
+	} else if s.Wait == nil || *s.Wait {
+		return wait.App(cmd.Context(), c, app.Name, s.Quiet)
 	}
 
 	return nil

@@ -369,20 +369,23 @@ func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel 
 	return err
 }
 
+func PrintAppStatus(app *apiv1.App) {
+	msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
+		app.Status.Columns.Endpoints,
+		app.Status.Columns.Healthy,
+		app.Status.Columns.UpToDate,
+		app.Status.Columns.Message)
+	if app.Status.Columns.Message == "OK" && app.Status.Columns.Healthy != "0" && app.Status.Columns.Healthy != "stopped" {
+		pterm.DefaultBox.Println(pterm.LightGreen(msg))
+	} else {
+		pterm.Println(pterm.LightYellow(msg))
+	}
+}
+
 func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
 	w := objwatcher.New[*apiv1.App](c.GetClient())
 	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-		msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
-			app.Status.Columns.Endpoints,
-			app.Status.Columns.Healthy,
-			app.Status.Columns.UpToDate,
-			app.Status.Columns.Message)
-		if app.Status.Columns.Message == "OK" && app.Status.Columns.Healthy != "0" && app.Status.Columns.Healthy != "stopped" {
-			pterm.DefaultBox.Println(pterm.LightGreen(msg))
-		} else {
-			pterm.Println(pterm.LightYellow(msg))
-		}
-
+		PrintAppStatus(app)
 		return false, nil
 	})
 	return err
