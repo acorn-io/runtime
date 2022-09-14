@@ -57,6 +57,9 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 }
 
 func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, error) {
+	if s, err := os.Stat(localDir); err == nil && !s.IsDir() {
+		return nil, nil
+	}
 	err := os.MkdirAll(localDir, 0755)
 	if err != nil {
 		return nil, err

@@ -370,9 +370,12 @@ func buildWithContext(ctx context.Context, c client.Client, cwd string, platform
 	}()
 
 	for _, dir := range build.ContextDirs {
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			return "", fmt.Errorf("creating dir %s: %w", dir, err)
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			// don't blindly mkdirall because this could actually be a file
+			err := os.MkdirAll(dir, 0755)
+			if err != nil {
+				return "", fmt.Errorf("creating dir %s: %w", dir, err)
+			}
 		}
 	}
 
