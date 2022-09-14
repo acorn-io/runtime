@@ -2238,6 +2238,25 @@ secrets: template: {
 	assert.Equal(t, "yep", appSpec.Secrets["template"].Data["foo"])
 }
 
+func TestDefaultContextDir(t *testing.T) {
+	data := `
+containers: test: build: "./foo"
+containers: test2: build: context: "./foo"
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "foo/Dockerfile", appSpec.Containers["test"].Build.Dockerfile)
+	assert.Equal(t, "foo/Dockerfile", appSpec.Containers["test2"].Build.Dockerfile)
+}
+
 func TestShortPermissions(t *testing.T) {
 	data := `
 containers: test: {
