@@ -13,6 +13,7 @@ on:
     - "v*"
 jobs:
   publish:
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - uses: acorn-io/actions-setup@v1
@@ -31,6 +32,8 @@ jobs:
 ```
 
 The action is automatically provided with a `GITHUB_TOKEN` that already has permission to push to the registry for its own repo, so no special secrets configuration is needed.
+
+You can choose any other Linux or macOS runner for the `runs-on`, see [GitHub Docs](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#choosing-github-hosted-runners) for available choices or specify your own self-hosted runner.
 
 ## Setup Action
 
