@@ -67,6 +67,9 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
+	if err := addRouters(appInstance, resp); err != nil {
+		return err
+	}
 	if err := addJobs(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
@@ -416,6 +419,10 @@ func containerAnnotations(appInstance *v1.AppInstance, container v1.Container, n
 	return labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations)
 }
 
+func routerAnnotations(appInstance *v1.AppInstance, router v1.Router, name string) map[string]string {
+	return labels.GatherScoped(name, v1.LabelTypeRouter, appInstance.Status.AppSpec.Annotations, router.Annotations, appInstance.Spec.Annotations)
+}
+
 func jobLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
 	labelMap := labels.GatherScoped(name, v1.LabelTypeJob, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
 	return mergeConLabels(labelMap, appInstance, name, kv...)
@@ -426,8 +433,22 @@ func containerLabels(appInstance *v1.AppInstance, container v1.Container, name s
 	return mergeConLabels(labelMap, appInstance, name, kv...)
 }
 
+func routerLabels(appInstance *v1.AppInstance, router v1.Router, name string, kv ...string) map[string]string {
+	labelMap := labels.GatherScoped(name, v1.LabelTypeRouter, appInstance.Status.AppSpec.Labels, router.Labels, appInstance.Spec.Labels)
+	return mergeRouterLabels(labelMap, appInstance, name, kv...)
+}
+
+func routerSelectorMatchLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+	return mergeRouterLabels(make(map[string]string), appInstance, name, kv...)
+}
+
 func selectorMatchLabels(appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
 	return mergeConLabels(make(map[string]string), appInstance, name, kv...)
+}
+
+func mergeRouterLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {
+	kv = append([]string{labels.AcornRouterName, name}, kv...)
+	return labels.Merge(labelMap, labels.Managed(appInstance, kv...))
 }
 
 func mergeConLabels(labelMap map[string]string, appInstance *v1.AppInstance, name string, kv ...string) map[string]string {

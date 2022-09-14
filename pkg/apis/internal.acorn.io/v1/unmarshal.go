@@ -23,6 +23,69 @@ var (
 	MinSize             = MustParseResourceQuantity(MinSizeQuantity)
 )
 
+type routeTarget struct {
+	PathType          PathType `json:"pathType,omitempty"`
+	TargetPort        int      `json:"targetPort,omitempty"`
+	TargetServiceName string   `json:"targetServiceName,omitempty"`
+}
+
+func (in *routeTarget) UnmarshalJSON(data []byte) error {
+	if !isString(data) {
+		type routeTargetType routeTarget
+		return json.Unmarshal(data, (*routeTargetType)(in))
+	}
+
+	s, err := parseString(data)
+	if err != nil {
+		return err
+	}
+	parts := strings.Split(s, ":")
+	if len(parts) == 2 {
+		n, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return fmt.Errorf("failed to parse port %s in %s: %w", parts[1], s, err)
+		}
+		in.TargetPort = n
+		in.TargetServiceName = parts[0]
+	} else {
+		in.TargetServiceName = s
+	}
+	in.PathType = PathTypePrefix
+	return nil
+}
+
+func (in *Routes) UnmarshalJSON(data []byte) error {
+	if !isObject(data) {
+		type routesType Routes
+		return json.Unmarshal(data, (*routesType)(in))
+	}
+
+	routeMap := map[string]routeTarget{}
+	if err := json.Unmarshal(data, &routeMap); err != nil {
+		return err
+	}
+	var routes []Route
+	for k, v := range routeMap {
+		routes = append(routes, Route{
+			Path:              k,
+			TargetServiceName: v.TargetServiceName,
+			TargetPort:        v.TargetPort,
+			PathType:          v.PathType,
+		})
+	}
+	sort.Slice(routes, func(i, j int) bool {
+		if len(routes[i].Path) > len(routes[j].Path) {
+			return true
+		}
+		if len(routes[i].Path) < len(routes[j].Path) {
+			return false
+		}
+		return routes[i].Path < routes[j].Path
+	})
+	*in = routes
+	return nil
+}
+
 func (in *NameValue) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
 		type nameValue NameValue
@@ -258,6 +321,11 @@ func checkForDuplicateNames(in *AppSpec) error {
 	}
 	for name := range in.Jobs {
 		if err := addName(names, name, "job"); err != nil {
+			return err
+		}
+	}
+	for name := range in.Routers {
+		if err := addName(names, name, "router"); err != nil {
 			return err
 		}
 	}

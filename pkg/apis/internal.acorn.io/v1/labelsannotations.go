@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	LabelTypeRouter    = "router"
 	LabelTypeContainer = "container"
 	LabelTypeJob       = "job"
 	LabelTypeVolume    = "volume"
@@ -15,6 +16,8 @@ const (
 )
 
 var canonicalTypes = map[string]string{
+	"router":     LabelTypeRouter,
+	"routers":    LabelTypeRouter,
 	"container":  LabelTypeContainer,
 	"containers": LabelTypeContainer,
 	"job":        LabelTypeJob,

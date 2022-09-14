@@ -14,13 +14,17 @@ import (
 type Target struct {
 	ContainerName string
 	AcornName     string
+	RouterName    string
 }
 
 func (t Target) ServiceName() string {
-	if t.ContainerName == "" {
-		return t.AcornName
+	if t.ContainerName != "" {
+		return t.ContainerName
 	}
-	return t.ContainerName
+	if t.RouterName != "" {
+		return t.RouterName
+	}
+	return t.AcornName
 }
 
 type Set struct {
@@ -95,12 +99,23 @@ func (p *Set) GetContainerService(name string) string {
 	return ""
 }
 
-// IsContainerService indicates the service points to a container (as opposed to an acorn) because a service
+// IsContainerService indicates the service points to a container (as opposed to an acorn/router) because a service
 // may not point to both.
 func (p *Set) IsContainerService(name string) bool {
 	if ports, ok := p.Services[name]; ok {
 		for port := range ports {
 			return p.Ports[port][0].ContainerName != ""
+		}
+	}
+	return false
+}
+
+// IsRouterService indicates the service points to a container (as opposed to an acorn/container) because a service
+// may not point to both.
+func (p *Set) IsRouterService(name string) bool {
+	if ports, ok := p.Services[name]; ok {
+		for port := range ports {
+			return p.Ports[port][0].RouterName != ""
 		}
 	}
 	return false
@@ -147,6 +162,59 @@ func ForAcorn(app *v1.AppInstance, acornName string) (result []v1.PortBinding) {
 	}
 
 	return
+}
+
+func NewForRouterPublish(app *v1.AppInstance) (*Set, error) {
+	ps, err := New(app)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &Set{
+		Services:  map[string]map[v1.PortDef]bool{},
+		Ports:     map[v1.PortDef][]Target{},
+		Hostnames: map[v1.PortDef][]string{},
+	}
+
+	bound := map[v1.PortDef]bool{}
+
+	for port := range ps.Ports {
+		if port.Protocol != v1.ProtocolHTTP || !ps.IsRouterService(port.ServiceName) {
+			continue
+		}
+
+		for _, binding := range app.Spec.Ports {
+			fullBinding := binding.Complete(app.Name)
+			if !fullBinding.Publish || !matches(fullBinding, port) {
+				continue
+			}
+
+			bound[port] = true
+
+			if binding.ServiceName != "" {
+				result.Hostnames[port] = append(result.Hostnames[port], binding.ServiceName)
+			}
+			result.AddPorts(Target{RouterName: port.ServiceName}, port)
+		}
+	}
+
+	if app.Spec.PublishMode != v1.PublishModeNone {
+		for port := range ps.Ports {
+			if bound[port] {
+				continue
+			}
+
+			if port.Protocol != v1.ProtocolHTTP || !ps.IsRouterService(port.ServiceName) {
+				continue
+			}
+
+			if port.Publish || app.Spec.PublishMode == v1.PublishModeAll {
+				result.AddPorts(Target{RouterName: port.ServiceName}, port)
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func NewForIngressPublish(app *v1.AppInstance) (*Set, error) {
@@ -356,6 +424,13 @@ func New(app *v1.AppInstance) (*Set, error) {
 			continue
 		}
 		result.AddPorts(Target{AcornName: acornName}, acorn.Ports...)
+	}
+
+	for _, routerName := range typed.SortedKeys(app.Status.AppSpec.Routers) {
+		if IsLinked(app, routerName) {
+			continue
+		}
+		result.AddPorts(Target{RouterName: routerName}, RouterPortDef)
 	}
 
 	return result, validate(result)

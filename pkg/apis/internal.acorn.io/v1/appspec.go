@@ -22,6 +22,13 @@ const (
 	ChangeTypeNoAction = "noAction"
 )
 
+type PathType string
+
+const (
+	PathTypeExact  PathType = "exact"
+	PathTypePrefix PathType = "prefix"
+)
+
 type ChangeType string
 
 type AcornBuild struct {
@@ -304,6 +311,22 @@ type AppSpec struct {
 	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
 	Secrets     map[string]Secret        `json:"secrets,omitempty"`
 	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
+	Routers     map[string]Router        `json:"routers,omitempty"`
+}
+
+type Route struct {
+	Path              string   `json:"path,omitempty"`
+	TargetServiceName string   `json:"targetServiceName,omitempty"`
+	TargetPort        int      `json:"targetPort,omitempty"`
+	PathType          PathType `json:"pathType,omitempty"`
+}
+
+type Routes []Route
+
+type Router struct {
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Routes      Routes            `json:"routes,omitempty"`
 }
 
 type Acorn struct {

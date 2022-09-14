@@ -23,6 +23,7 @@ const (
 	AcornSecretName        = Prefix + "secret-name"
 	AcornSecretGenerated   = Prefix + "secret-generated"
 	AcornContainerName     = Prefix + "container-name"
+	AcornRouterName        = Prefix + "router-name"
 	AcornJobName           = Prefix + "job-name"
 	AcornAppImage          = Prefix + "app-image"
 	AcornAppCuePath        = Prefix + "app-cue-path"

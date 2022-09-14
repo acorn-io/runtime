@@ -136,6 +136,27 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	return result, nil
 }
 
+func routerIngressLabelsAndAnnotations(name, targetJSON string, app *v1.AppInstance, portSet, rawPS *ports.Set) (map[string]string, map[string]string) {
+	labelMap := labels.Managed(app, labels.AcornServiceName, name)
+	anns := map[string]string{labels.AcornTargets: targetJSON}
+
+	// This is complicated, but we need to do this because an ingress can be for multiple containers, if both containers
+	//have a port with the same serviceName. So, this logic finds all the containers an ingress is for and
+	// gathers the labels/annotations from them.
+	if ports, ok := portSet.Services[name]; ok {
+		for port := range ports {
+			for _, t := range rawPS.Ports[port] {
+				labelMap = labels.Merge(labelMap, labels.GatherScoped(t.RouterName, v1.LabelTypeRouter,
+					app.Status.AppSpec.Labels, app.Status.AppSpec.Routers[t.RouterName].Labels, app.Spec.Labels))
+				anns = labels.Merge(anns, labels.GatherScoped(t.RouterName, v1.LabelTypeRouter,
+					app.Status.AppSpec.Annotations, app.Status.AppSpec.Routers[t.RouterName].Annotations, app.Spec.Annotations))
+			}
+		}
+	}
+
+	return labelMap, anns
+}
+
 func ingressLabelsAndAnnotations(name, targetJSON string, app *v1.AppInstance, portSet, rawPS *ports.Set) (map[string]string, map[string]string) {
 	labelMap := labels.Managed(app, labels.AcornServiceName, name)
 	anns := map[string]string{labels.AcornTargets: targetJSON}

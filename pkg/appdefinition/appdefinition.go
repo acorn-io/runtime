@@ -194,7 +194,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	}
 
 	objs := map[string]any{}
-	for _, key := range []string{"containers", "jobs", "acorns", "secrets", "volumes", "images", "labels", "annotations"} {
+	for _, key := range []string{"containers", "jobs", "acorns", "secrets", "volumes", "images", "routers", "labels", "annotations"} {
 		v := app.LookupPath(cue2.ParsePath(key))
 		if v.Exists() {
 			objs[key] = v

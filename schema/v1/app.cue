@@ -232,6 +232,27 @@ package v1
 	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
 } | string
 
+#Router: {
+	labels: [string]:      string
+	annotations: [string]: string
+	routes: [...#Route] | #RouteMap
+}
+
+#Route: {
+	#RouteTarget
+	path: =~#PathName
+}
+
+#RouteTarget: {
+	pathType:          "exact" | *"prefix"
+	targetServiceName: =~#DNSName
+	targetPort?:       int
+}
+
+#RouteMap: [=~#PathName]: {
+	=~#RouteTargetName | #RouteTarget
+}
+
 #Acorn: {
 	labels:                *[...#ScopedLabel] | #ScopedLabelMap
 	annotations:           *[...#ScopedLabel] | #ScopedLabelMap
@@ -250,6 +271,10 @@ package v1
 	}
 }
 
+#RouteTargetName: "[a-z][-a-z0-9]*(:[0-9]+)?"
+
+#PathName: "/.*"
+
 #DNSName: "[a-z][-a-z0-9]*"
 
 #Args: string | int | float | bool | [...string] | {...}
@@ -264,6 +289,7 @@ package v1
 	volumes: [=~#DNSName]:    #Volume
 	secrets: [=~#DNSName]:    #Secret
 	acorns: [=~#DNSName]:     #Acorn
+	routers: [=~#DNSName]:    #Router
 	labels: [string]:         string
 	annotations: [string]:    string
 }

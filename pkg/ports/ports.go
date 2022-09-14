@@ -15,6 +15,16 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var (
+	RouterPortDef = v1.PortDef{
+		Expose:     true,
+		Publish:    true,
+		Port:       80,
+		Protocol:   v1.ProtocolHTTP,
+		TargetPort: 8080,
+	}
+)
+
 func ToPodLabels(app *v1.AppInstance, containerName string) map[string]string {
 	container := app.Status.AppSpec.Containers[containerName]
 	ports := container.Ports
@@ -24,6 +34,12 @@ func ToPodLabels(app *v1.AppInstance, containerName string) map[string]string {
 	return ToSelector(app, typed.MapSlice(ports, func(p v1.PortDef) v1.PortDef {
 		return p.Complete(containerName)
 	}))
+}
+
+func ToRouterLabels(app *v1.AppInstance, routerName string) map[string]string {
+	return ToSelector(app, []v1.PortDef{
+		RouterPortDef.Complete(routerName),
+	})
 }
 
 func ToSelector(app *v1.AppInstance, ports []v1.PortDef) map[string]string {
@@ -108,6 +124,55 @@ func ToContainerServices(app *v1.AppInstance, publish bool, namespace string, po
 						app.Status.AppSpec.Containers[t.ContainerName].Labels, app.Spec.Labels))
 					anns = labels.Merge(anns, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer, app.Status.AppSpec.Annotations,
 						app.Status.AppSpec.Containers[t.ContainerName].Annotations, app.Spec.Annotations))
+				}
+			}
+		}
+
+		result = append(result, &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        resourceName,
+				Namespace:   namespace,
+				Labels:      labelMap,
+				Annotations: anns,
+			},
+			Spec: corev1.ServiceSpec{
+				Ports:    typed.MapSlice(servicePorts, ToServicePort),
+				Selector: ToSelector(app, servicePorts),
+				Type:     serviceType,
+			},
+		})
+	}
+	return
+}
+
+func ToRouterServices(app *v1.AppInstance, namespace string, portSet *Set) (result []kclient.Object) {
+	for _, serviceName := range portSet.ServiceNames() {
+		if !portSet.IsRouterService(serviceName) {
+			continue
+		}
+		servicePorts := portSet.PortsForService(serviceName)
+		if len(servicePorts) == 0 {
+			continue
+		}
+		resourceName := serviceName
+		serviceType := corev1.ServiceTypeClusterIP
+		extraLabels := []string{
+			labels.AcornServiceName, serviceName,
+			labels.AcornRouterName, portSet.GetContainerService(serviceName),
+		}
+
+		labelMap := labels.Managed(app, extraLabels...)
+		anns := make(map[string]string)
+		// This is complicated, but we need to do this because a service can be selecting multiple routers, if both
+		// routers have a port with the same serviceName. So, this logic finds all the routers a service is selecting and
+		// gathers the labels/annotations from them.
+		if ports, ok := portSet.Services[serviceName]; ok {
+			for port := range ports {
+				for _, t := range portSet.Ports[port] {
+					labelMap = labels.Merge(labelMap, labels.GatherScoped(t.RouterName, v1.LabelTypeRouter, app.Status.AppSpec.Labels,
+						app.Status.AppSpec.Routers[t.RouterName].Labels, app.Spec.Labels))
+					anns = labels.Merge(anns, labels.GatherScoped(t.RouterName, v1.LabelTypeRouter, app.Status.AppSpec.Annotations,
+						app.Status.AppSpec.Routers[t.RouterName].Annotations, app.Spec.Annotations))
 				}
 			}
 		}
