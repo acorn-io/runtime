@@ -1645,6 +1645,13 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 							Format: "",
 						},
 					},
+					"publicKey": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
 					"config": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
@@ -1658,7 +1665,7 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 						},
 					},
 				},
-				Required: []string{"version", "tag", "gitCommit", "dirty", "controllerImage", "config", "userConfig"},
+				Required: []string{"version", "tag", "gitCommit", "dirty", "controllerImage", "publicKey", "config", "userConfig"},
 			},
 		},
 		Dependencies: []string{
