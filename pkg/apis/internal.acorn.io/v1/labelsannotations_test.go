@@ -10,7 +10,7 @@ func TestParseScopedLabels(t *testing.T) {
 	simpleTest(t, "k=v", ScopedLabel{Key: "k", Value: "v"})
 
 	// all the supported resource types, singular and plural
-	for _, rt := range []string{"container", "job", "volume", "secret", "acorn", "metadata"} {
+	for _, rt := range []string{"container", "job", "volume", "secret", "acorn", "metadata", "router"} {
 		// with the resourceType specified. Example: --label container:k=v
 		simpleTest(t, rt+":k=v", ScopedLabel{ResourceType: rt, Key: "k", Value: "v"})
 		simpleTest(t, rt+"s:k=v", ScopedLabel{ResourceType: rt, Key: "k", Value: "v"})

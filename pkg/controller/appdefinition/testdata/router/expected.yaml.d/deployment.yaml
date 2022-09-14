@@ -1,0 +1,52 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: router-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/router-name": "router-name"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/router-name": "router-name"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/router-name": "router-name"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+        port-number.acorn.io/8080: "true"
+        service-name.acorn.io/router-name: "true"
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: acorn
+      containers:
+        - name: nginx
+          image: nginx:1.23.1-alpine
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+          resources: {}
+          volumeMounts:
+          - mountPath: /etc/nginx/conf.d/nginx.conf
+            name: conf
+            readOnly: true
+            subPath: config
+      volumes:
+      - configMap:
+          name: router-name-5f5b2f6b
+        name: conf

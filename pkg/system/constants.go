@@ -12,6 +12,7 @@ const (
 var (
 	RegistryName   = "registry"
 	RegistryImage  = "registry:2.7.1"
+	NginxImage     = "nginx:1.23.1-alpine"
 	RegistryPort   = 5000
 	BuildkitImage  = "moby/buildkit:v0.10.3"
 	BuildKitName   = "buildkitd"

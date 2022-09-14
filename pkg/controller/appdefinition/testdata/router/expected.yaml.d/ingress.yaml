@@ -1,0 +1,31 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: router-name
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: router-name
+  annotations:
+    acorn.io/targets: '{"router-name.app-name.app-namespace.local.on-acorn.io":{"port":8080,"service":"router-name"}}'
+spec:
+  rules:
+    - host: router-name.app-name.app-namespace.local.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: foo-target
+                port:
+                  number: 80
+            path: /foo
+            pathType: Exact
+          - backend:
+              service:
+                name: zzz-target
+                port:
+                  number: 80
+            path: /zzzz
+            pathType: Prefix

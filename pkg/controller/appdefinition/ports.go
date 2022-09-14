@@ -19,6 +19,12 @@ func addPublish(req router.Request, app *v1.AppInstance, resp router.Response) e
 		return err
 	}
 	resp.Objects(objs...)
+
+	objs, err = publish.Router(req, app)
+	if err != nil {
+		return err
+	}
+	resp.Objects(objs...)
 	return nil
 }
 
@@ -30,6 +36,12 @@ func addExpose(req router.Request, app *v1.AppInstance, resp router.Response) er
 	resp.Objects(links...)
 
 	objs, err := expose.Containers(app)
+	if err != nil {
+		return err
+	}
+	resp.Objects(objs...)
+
+	objs, err = expose.Routers(app)
 	if err != nil {
 		return err
 	}

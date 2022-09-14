@@ -14,6 +14,97 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParseRouters(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+routers: {
+	slice: {
+		routes: [
+			{
+				path: "/short"
+				pathType: "exact"
+				targetServiceName: "shorttarget"
+				targetPort: 123
+			},
+			{
+				path: "/longer"
+				targetServiceName: "longertarget"
+				targetPort: 1234
+			},
+		]
+	}
+	foo: {
+		routes: {
+			"/bar": "bartarget"
+			"/aar": "aartarget"
+			"/bar/exact": {
+				pathType: "exact"
+				targetServiceName: "barexacttarget"
+				targetPort: 443
+			}
+			"/baazy": "foo:444"
+		}
+	}
+}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	spec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v1.Router{
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+		Routes: []v1.Route{
+			{
+				Path:              "/short",
+				TargetServiceName: "shorttarget",
+				TargetPort:        123,
+				PathType:          v1.PathTypeExact,
+			},
+			{
+				Path:              "/longer",
+				TargetServiceName: "longertarget",
+				TargetPort:        1234,
+				PathType:          v1.PathTypePrefix,
+			},
+		},
+	}, spec.Routers["slice"])
+
+	assert.Equal(t, v1.Router{
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+		Routes: []v1.Route{
+			{
+				Path:              "/bar/exact",
+				TargetServiceName: "barexacttarget",
+				TargetPort:        443,
+				PathType:          v1.PathTypeExact,
+			},
+			{
+				Path:              "/baazy",
+				TargetServiceName: "foo",
+				TargetPort:        444,
+				PathType:          v1.PathTypePrefix,
+			},
+			{
+				Path:              "/aar",
+				TargetServiceName: "aartarget",
+				TargetPort:        0,
+				PathType:          v1.PathTypePrefix,
+			},
+			{
+				Path:              "/bar",
+				TargetServiceName: "bartarget",
+				TargetPort:        0,
+				PathType:          v1.PathTypePrefix,
+			},
+		},
+	}, spec.Routers["foo"])
+}
+
 func TestParse5GLiteralVolume(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
 volumes: {
