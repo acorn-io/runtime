@@ -207,6 +207,7 @@ items:
     kind: Service
     metadata:
       name: traefik
+      namespace: acorn-system
       labels:
         app.kubernetes.io/name: traefik
         app.kubernetes.io/managed-by: Acorn
