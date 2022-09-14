@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+CONTAINERD_CONFIG_DIR="/etc/containerd/config.toml"
+
+# check if config_path is defined for containerd registry plugin
+CONTAINERD_REGISTRY_CONFIG_PATH_DEFINED=$(sed -n '/^.*\[plugins\.\"io\.containerd\..*\"\.registry\]/,/^.*\[plugins\..*\]/p' "${CONTAINERD_CONFIG_DIR}" | grep -oE "^.*config_path += +[\"/A-Za-z\.]*" | grep -v "^\ *#")
+
+if [ "${CONTAINERD_REGISTRY_CONFIG_PATH_DEFINED}" ]; then
+	CONTAINERD_REGISTRY_CONFIG_PATH=$(echo ${CONTAINERD_REGISTRY_CONFIG_PATH_DEFINED} | tr -d '\"\|\ ' | awk -F "=" '{print $2}')
+	echo "Info: containerd registry plugin config_path: ${CONTAINERD_REGISTRY_CONFIG_PATH}"
+
+	# check REGISTRY_SERVICE_NODEPORT env variable is not empty
+	if [ ${REGISTRY_SERVICE_NODEPORT} ]; then
+		echo "Info: buildkitd registry service nodeport: ${REGISTRY_SERVICE_NODEPORT}"
+		mkdir -p "${CONTAINERD_REGISTRY_CONFIG_PATH}/127.0.0.1:${REGISTRY_SERVICE_NODEPORT}"
+	
+		cat << EOF > "${CONTAINERD_REGISTRY_CONFIG_PATH}/127.0.0.1:${REGISTRY_SERVICE_NODEPORT}/hosts.toml"
+server = "http://127.0.0.1:${REGISTRY_SERVICE_NODEPORT}"
+
+[host."http://127.0.0.1:${REGISTRY_SERVICE_NODEPORT}"]
+  capabilities = ["pull", "resolve", "push"]
+  plain_http = true
+EOF
+	else
+		echo "Error: REGISTRY_SERVICE_NODEPORT env variable is not set ..."
+	fi
+else
+	echo "Info: containerd registry config_path not found ..."
+	echo "Info: no modification is required."
+fi
+
+if [ ! -e /pause ]; then
+    mkfifo /pause
+fi
+</pause

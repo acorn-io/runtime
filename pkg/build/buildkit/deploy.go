@@ -27,6 +27,23 @@ func Exists(ctx context.Context, c client.Client) (bool, error) {
 	} else if err != nil {
 		return false, err
 	}
+
+	// check if the controller is running outside of a deployment
+	err = checkControllerDeployment(ctx, c)
+	if !apierror.IsNotFound(err) {
+		ds := &appsv1.DaemonSet{}
+		err1 := c.Get(ctx, client.ObjectKey{
+			Name:      system.ContainerdConfigPathName,
+			Namespace: system.Namespace,
+		}, ds)
+
+		if apierror.IsNotFound(err1) {
+			return false, nil
+		} else if err1 != nil {
+			return false, err1
+		}
+	}
+
 	return true, nil
 }
 
@@ -34,7 +51,11 @@ func SyncBuildkitPod(ctx context.Context, client client.Client) error {
 	if ok, err := Exists(ctx, client); err != nil {
 		return err
 	} else if ok {
-		return applyObjects(ctx)
+
+		err := applyObjects(ctx)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -49,7 +70,9 @@ func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.
 		if err != nil {
 			return 0, nil, err
 		}
+
 		port, err = getRegistryPort(ctx, client)
+
 	}
 	if err != nil {
 		return 0, nil, err
