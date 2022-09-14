@@ -933,7 +933,17 @@ func (in *Build) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	type build Build
-	return json.Unmarshal(data, (*build)(in))
+	err := json.Unmarshal(data, (*build)(in))
+	if err != nil {
+		return err
+	}
+	if in.Context == "" {
+		in.Context = "."
+	}
+	if in.Dockerfile == "" {
+		in.Dockerfile = filepath.Join(in.Context, "Dockerfile")
+	}
+	return nil
 }
 
 func isObject(data []byte) bool {

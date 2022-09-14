@@ -9,7 +9,7 @@ package v1
 #Build: {
 	buildArgs: [string]: string
 	context:    string | *"."
-	dockerfile: string | *"Dockerfile"
+	dockerfile: string | *""
 	target:     string | *""
 }
 
