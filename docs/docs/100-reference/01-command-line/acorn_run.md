@@ -65,9 +65,11 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
       --profile strings           Profile to assign default values
   -p, --publish strings           Publish port of application (format [public:]private) (ex 81:80)
   -P, --publish-all               Publish all (true) or none (false) of the defined ports of application
+  -q, --quiet                     Do not print status
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
       --target-namespace string   The name of the namespace to be created and deleted for the application resources
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
+      --wait                      Wait for app to become ready before command exiting (default true)
 ```
 
 ### Options inherited from parent commands

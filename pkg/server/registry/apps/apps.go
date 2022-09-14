@@ -70,6 +70,14 @@ func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions
 	}
 
 	for _, app := range apps.Items {
+		if options.FieldSelector != nil {
+			if !options.FieldSelector.Matches(fields.Set{
+				"metadata.name":      app.Name,
+				"metadata.namespace": app.Namespace,
+			}) {
+				continue
+			}
+		}
 		result.Items = append(result.Items, *s.appToApp(ctx, app, tagCache))
 	}
 
