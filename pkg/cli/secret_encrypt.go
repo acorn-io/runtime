@@ -23,11 +23,6 @@ type Encrypt struct {
 	PublicKey []string `usage:"Pass one or more cluster publicKey values"`
 }
 
-type encryptedDataCollection struct {
-	Data           map[string]string
-	SerializedData string
-}
-
 func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter([][]string{
 		{"Name", "{{.}}"},
