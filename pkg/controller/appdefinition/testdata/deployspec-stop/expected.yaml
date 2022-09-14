@@ -36,7 +36,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name"}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","probes":null}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -75,7 +75,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image"}'
+        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","probes":null}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false

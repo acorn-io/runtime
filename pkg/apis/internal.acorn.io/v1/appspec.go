@@ -273,7 +273,7 @@ type Container struct {
 	Environment  EnvVars                `json:"environment,omitempty"`
 	WorkingDir   string                 `json:"workingDir,omitempty"`
 	Ports        Ports                  `json:"ports,omitempty"`
-	Probes       Probes                 `json:"probes,omitempty"`
+	Probes       Probes                 `json:"probes"` // Don't omitempty so that nil vs empty is recorded
 	Dependencies Dependencies           `json:"dependencies,omitempty"`
 	Permissions  *Permissions           `json:"permissions,omitempty"`
 

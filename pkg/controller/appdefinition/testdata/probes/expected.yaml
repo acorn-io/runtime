@@ -36,7 +36,7 @@ spec:
         "port-number.acorn.io/81": "true"
         "service-name.acorn.io/oneimage": "true"
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
+        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -112,6 +112,18 @@ type: "kubernetes.io/dockerconfigjson"
 data:
   ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
 ---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: nodefault-pull-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+---
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
@@ -124,6 +136,13 @@ status:
   namespace: app-created-namespace
   appSpec:
     containers:
+      nodefault:
+        probes: []
+        ports:
+          - port: 80
+            targetPort: 81
+            protocol: http
+        image: "image-name"
       oneimage:
         sidecars:
           left:
@@ -150,3 +169,74 @@ status:
       reason: Success
       status: "True"
       success: true
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nodefault
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "nodefault"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "nodefault"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "nodefault"
+        "acorn.io/managed": "true"
+        "acorn.io/root-prefix": "app-name"
+        "port-number.acorn.io/81": "true"
+        "service-name.acorn.io/nodefault": "true"
+      annotations:
+        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":[]}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: acorn
+      hostname: nodefault
+      imagePullSecrets:
+        - name: nodefault-pull-1234567890ab
+      containers:
+        - name: nodefault
+          image: "image-name"
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nodefault
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/service-name": "nodefault"
+    "acorn.io/container-name": "nodefault"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "service-name.acorn.io/nodefault": "true"
+    "port-number.acorn.io/81": "true"
+    "acorn.io/managed": "true"

@@ -35,7 +35,7 @@ spec:
         "global": "value"
         "global2": "value"
       annotations:
-        acorn.io/container-spec: '{"annotations":{"job3a":"value"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"job3":"value"},"ports":[{"port":80,"protocol":"http","targetPort":81}]}'
+        acorn.io/container-spec: '{"annotations":{"job3a":"value"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"job3":"value"},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         "alljobsa": "value"
         "job1a": "value"
         "job3a": "value"

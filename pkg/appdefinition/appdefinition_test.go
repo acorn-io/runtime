@@ -2292,6 +2292,26 @@ containers: test: {
 	assert.Equal(t, "blah", appSpec.Containers["test"].Dirs["/foo3"].Volume)
 }
 
+func TestDisableProbes(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+containers: map: probes: {}
+containers: array: probes: []
+containers: default: image: "foo"
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	spec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v1.Probes{}, spec.Containers["array"].Probes)
+	assert.Equal(t, v1.Probes{}, spec.Containers["map"].Probes)
+	assert.Equal(t, v1.Probes(nil), spec.Containers["default"].Probes)
+}
+
 func TestNestedScopedLabels(t *testing.T) {
 	// labels and annotations on a acorn are both unmarshalled into a ScopedLabels struct, which is just a slice
 	// Similar to ports, in the Acornfile you can define them using an object syntax or short-form string syntax.

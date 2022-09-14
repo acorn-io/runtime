@@ -40,7 +40,7 @@ spec:
             "acorn.io/managed": "true"
             "acorn.io/root-prefix": "app-name"
           annotations:
-            acorn.io/container-spec: '{"image":"image-name","schedule":"daily"}'
+            acorn.io/container-spec: '{"image":"image-name","probes":null,"schedule":"daily"}'
         spec:
           imagePullSecrets:
             - name: oneimage-pull-1234567890ab

@@ -26,7 +26,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"dependencies":[{"targetName":"db"}],"image":"image-name"}'
+        acorn.io/container-spec: '{"dependencies":[{"targetName":"db"}],"image":"image-name","probes":null}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
@@ -68,7 +68,7 @@ spec:
         "acorn.io/managed": "true"
         "acorn.io/root-prefix": "app-name"
       annotations:
-        acorn.io/container-spec: '{"dependencies":[{"targetName":"container-name"}],"image":"image-name"}'
+        acorn.io/container-spec: '{"dependencies":[{"targetName":"container-name"}],"image":"image-name","probes":null}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
