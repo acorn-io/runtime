@@ -216,6 +216,8 @@ github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1 h1:MlyJCGYCmK9g7y3qjRQChBjDRLcjuH
 github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1/go.mod h1:3f9zpU8GP1dDA34jCqy3kIvaolyrUJmIiQ6AV/LvZsM=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf h1:y2vkS4R2O+iRDUP8QLvS10i7RoVaMP4spSPGdM93jXo=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
+github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
+github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
 github.com/adrg/xdg v0.3.1 h1:uIyL9BYfXaFgDyVRKE8wjtm6ETQULweQqTofphEFJYY=
 github.com/adrg/xdg v0.3.1/go.mod h1:7I2hH/IT30IsupOpKZ5ue7/qNi3CoKzD6tL3HwpaRMQ=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
@@ -844,8 +846,6 @@ github.com/gookit/color v1.2.4/go.mod h1:AhIE+pS6D4Ql0SQWbBeXPHw7gY0/sjHoA4s/n1K
 github.com/gookit/color v1.4.2/go.mod h1:fqRyamkC1W8uxl+lxCQxOT09l/vYfZ+QeiX3rKQHCoQ=
 github.com/gookit/color v1.5.0 h1:1Opow3+BWDwqor78DcJkJCIwnkviFi+rrOANki9BUFw=
 github.com/gookit/color v1.5.0/go.mod h1:43aQb+Zerm/BWh2GnrgOQm7ffz7tvQXEKV6BFMl7wAo=
-github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e h1:XmA6L9IPRdUr28a+SK/oMchGgQy159wvzXA5tJ7l+40=
-github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e/go.mod h1:AFIo+02s+12CEg8Gzz9kzhCbmbq6JcKNrhHffCGA9z4=
 github.com/gophercloud/gophercloud v0.1.0/go.mod h1:vxM41WHh5uqHVBMZHzuwNOHh8XEoIEcSTewFxm1c5g8=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf/go.mod h1:cuNKsD1zp2v6XfE/orVX2QE1LC+i254ceGcVeDT3pTU=

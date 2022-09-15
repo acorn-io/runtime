@@ -18,13 +18,13 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.5
 	github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693
 	github.com/acorn-io/baaah v0.0.0-20220731052009-5a4a3228e9bc
+	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.8
 	github.com/google/go-containerregistry v0.11.0
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220624195650-ae256b584f83
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
-	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/loft-sh/devspace v1.1.1-0.20220513082635-025444ad7c56
