@@ -11,10 +11,12 @@ import (
 	"encoding/pem"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
@@ -223,23 +225,63 @@ func EnsureLEUser(ctx context.Context, client kclient.Client, domain string) (*L
 }
 
 func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kclient.Client, dnsendpoint, domain, token string) (*corev1.Secret, error) {
+
+	sec := &corev1.Secret{}
+	err := client.Get(ctx, router.Key(system.Namespace, system.TLSSecretName), sec)
+	if err != nil && !apierrors.IsNotFound(err) {
+		// error fetching the existing secret, but it could exist
+		return nil, err
+	}
+
+	if err == nil {
+		if sec.Labels[labels.AcornDomain] != domain {
+			logrus.Infof("domain changed, renewing wildcard certificate")
+		} else {
+			// check if certificate is still valid
+			x509crt, err := certcrypto.ParsePEMCertificate([]byte(sec.Data[corev1.TLSCertKey]))
+			if err != nil {
+				logrus.Errorf("problem parsing existing TLS secret: %v", err)
+				// continues to generate new cert
+			} else {
+				if x509crt.NotAfter.After(time.Now().UTC()) {
+					// cert is still valid, return it
+					logrus.Infof("existing TLS secret %s is still valid until %s", x509crt.Subject.CommonName, x509crt.NotAfter)
+					return sec, nil
+				} else {
+					logrus.Infof("existing TLS secret %s is expired since %s", x509crt.Subject.CommonName, x509crt.NotAfter)
+				}
+			}
+		}
+		// Delete existing secret
+		if err := client.Delete(ctx, sec); err != nil {
+			return nil, fmt.Errorf("problem deleting existing invalid TLS secret: %w", err)
+		}
+	}
+
 	cert, err := u.GenerateWildcardCert(dnsendpoint, domain, token)
 	if err != nil {
 		return nil, fmt.Errorf("problem generating wildcard certificate: %w", err)
 	}
 
-	sec := &corev1.Secret{
+	x509crt, err := certcrypto.ParsePEMCertificate([]byte(cert.Certificate))
+
+	sec = &corev1.Secret{
 		Type: corev1.SecretTypeTLS,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      system.TLSSecretName,
 			Namespace: system.Namespace,
+			Annotations: map[string]string{
+				labels.AcornDomain:             domain,
+				labels.AcornCertNotValidBefore: x509crt.NotBefore.Format(time.RFC3339),
+				labels.AcornCertNotValidAfter:  x509crt.NotAfter.Format(time.RFC3339),
+			},
 			Labels: map[string]string{
 				labels.AcornManaged: "true",
 			},
 		},
 		Data: map[string][]byte{
-			"tls.crt": cert.Certificate,
-			"tls.key": cert.PrivateKey,
+			corev1.TLSCertKey:       cert.Certificate,
+			corev1.TLSPrivateKeyKey: cert.PrivateKey,
 		},
 	}
 

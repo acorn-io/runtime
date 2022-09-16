@@ -26,8 +26,8 @@ type Client interface {
 	// "out of sync" records, which are records that AcornDNS either doesn't know about or has different values for
 	Renew(endpoint, domain, token string, renew RenewRequest) (RenewResponse, error)
 
-	// DeleteRecord calls AcornDNS to delete the record(s) associated with the supplied fqdn
-	DeleteRecord(endpoint, domain, fqdn, token string) error
+	// DeleteRecord calls AcornDNS to delete the record(s) associated with the supplied prefix
+	DeleteRecord(endpoint, domain, recordPrefix, token string) error
 
 	// PurgeRecords calls AcornDNS to purge all records for the given domain, but doesn't delete the domain itself
 	PurgeRecords(endpoint, domain, token string) error

@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"strings"
 	"time"
 
 	"github.com/acorn-io/acorn/pkg/dns"
@@ -63,19 +64,23 @@ func NewDNSClient(endpoint, domain, token string) DNSClient {
 }
 
 func (d *DNSClient) SetTXTRecord(domain, text string) error {
+
+	prefix := strings.TrimSuffix(strings.TrimSuffix(domain, "."), d.domain)
+
 	var requests []dns.RecordRequest
 	requests = append(requests, dns.RecordRequest{
-		Name:   domain,
+		Name:   prefix,
 		Type:   dns.RecordTypeTxt,
 		Values: []string{text},
 	})
 
-	logrus.Infof("Setting TXT record %s - %s for domain %s", domain, text, d.domain)
+	logrus.Debugf("Setting TXT record %s - %s for domain %s", prefix, text, d.domain)
 
 	return d.dns.CreateRecords(d.endpoint, d.domain, d.token, requests)
 }
 
 func (d *DNSClient) DeleteDNSRecord(domain string) error {
-	d.dns.DeleteRecord(d.endpoint, d.domain, domain, d.token)
+	prefix := strings.TrimSuffix(strings.TrimSuffix(domain, "."), d.domain)
+	d.dns.DeleteRecord(d.endpoint, d.domain, prefix, d.token)
 	return nil
 }
