@@ -8,6 +8,8 @@ import (
 )
 
 func NewImage2(t *testing.T, namespace string) string {
+	t.Helper()
+
 	image, err := build.Build(helper.GetCTX(t), "../testdata/nginx2/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, namespace),
 		Cwd:    "../testdata/nginx2",
@@ -19,6 +21,8 @@ func NewImage2(t *testing.T, namespace string) string {
 }
 
 func NewImage(t *testing.T, namespace string) string {
+	t.Helper()
+
 	image, err := build.Build(helper.GetCTX(t), "../testdata/nginx/Acornfile", &build.Options{
 		Client: helper.BuilderClient(t, namespace),
 		Cwd:    "../testdata/nginx",

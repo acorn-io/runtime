@@ -28,6 +28,8 @@ func TestParseScopedLabels(t *testing.T) {
 }
 
 func simpleTest(t *testing.T, input string, expected ScopedLabel) {
+	t.Helper()
+
 	actual, err := ParseScopedLabels(input)
 	assert.NoError(t, err)
 	assert.Len(t, actual, 1)

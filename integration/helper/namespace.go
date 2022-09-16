@@ -9,6 +9,8 @@ import (
 )
 
 func TempNamespace(t *testing.T, client client.Client) *corev1.Namespace {
+	t.Helper()
+
 	ns := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "acorn-test-",

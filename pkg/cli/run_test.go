@@ -11,6 +11,8 @@ import (
 )
 
 func ArgsToApp(t *testing.T, args ...string) *apiv1.App {
+	t.Helper()
+
 	buf := &bytes.Buffer{}
 	cmd := NewRun(buf)
 	cmd.SetArgs(append([]string{"-o", "json"}, args...))

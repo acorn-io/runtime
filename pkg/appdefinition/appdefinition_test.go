@@ -2095,6 +2095,8 @@ args: {
 }
 
 func getVals(t *testing.T, appDef *AppDefinition) map[string]any {
+	t.Helper()
+
 	data := map[string]any{}
 	appSpec, err := appDef.AppSpec()
 	if err != nil {

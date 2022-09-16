@@ -22,6 +22,8 @@ var (
 )
 
 func Registry(t *testing.T) name.Registry {
+	t.Helper()
+
 	reg := reg.New()
 	srv := httptest.NewServer(reg)
 
