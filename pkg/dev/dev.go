@@ -369,23 +369,31 @@ func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel 
 	return err
 }
 
-func PrintAppStatus(app *apiv1.App) {
-	msg := fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
+func appStatusMessage(app *apiv1.App) (string, bool) {
+	return fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
 		app.Status.Columns.Endpoints,
 		app.Status.Columns.Healthy,
 		app.Status.Columns.UpToDate,
-		app.Status.Columns.Message)
-	if app.Status.Columns.Message == "OK" && app.Status.Columns.Healthy != "0" && app.Status.Columns.Healthy != "stopped" {
+		app.Status.Columns.Message), app.Status.Ready
+}
+
+func PrintAppStatus(app *apiv1.App) {
+	msg, ready := appStatusMessage(app)
+	if ready {
 		pterm.DefaultBox.Println(pterm.LightGreen(msg))
-	} else {
-		pterm.Println(pterm.LightYellow(msg))
 	}
+	pterm.Println(pterm.LightYellow(msg))
 }
 
 func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
 	w := objwatcher.New[*apiv1.App](c.GetClient())
+	msg, ready := "", false
 	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-		PrintAppStatus(app)
+		newMsg, newReady := appStatusMessage(app)
+		if newMsg != msg || newReady != ready {
+			PrintAppStatus(app)
+		}
+		msg, ready = newMsg, newReady
 		return false, nil
 	})
 	return err
