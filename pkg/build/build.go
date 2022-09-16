@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -137,7 +138,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
@@ -154,7 +155,7 @@ func buildContainers(ctx context.Context, c client.Client, cwd string, platforms
 			}
 		}
 
-		id, err := FromBuild(ctx, c, cwd, platforms, *container.Build, streams.Streams())
+		id, err := fromBuild(ctx, c, buildCache, cwd, platforms, *container.Build, streams.Streams())
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +184,7 @@ func buildContainers(ctx context.Context, c client.Client, cwd string, platforms
 				}
 			}
 
-			id, err := FromBuild(ctx, c, cwd, platforms, *sidecar.Build, streams.Streams())
+			id, err := fromBuild(ctx, c, buildCache, cwd, platforms, *sidecar.Build, streams.Streams())
 			if err != nil {
 				return nil, err
 			}
@@ -196,7 +197,7 @@ func buildContainers(ctx context.Context, c client.Client, cwd string, platforms
 	return result, nil
 }
 
-func buildAcorns(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, streams streams.Output, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
+func buildAcorns(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(acorns) {
@@ -255,7 +256,7 @@ func buildAcorns(ctx context.Context, c client.Client, cwd string, platforms []v
 
 	return result, nil
 }
-func buildImages(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
+func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(images) {
@@ -266,7 +267,7 @@ func buildImages(ctx context.Context, c client.Client, cwd string, platforms []v
 			}
 		}
 
-		id, err := FromBuild(ctx, c, cwd, platforms, *image.Build, streams.Streams())
+		id, err := fromBuild(ctx, c, buildCache, cwd, platforms, *image.Build, streams.Streams())
 		if err != nil {
 			return nil, err
 		}
@@ -287,22 +288,24 @@ func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderS
 		}
 	)
 
-	data.Containers, err = buildContainers(ctx, c, cwd, spec.Platforms, streams, spec.Containers)
+	buildCache := &buildCache{}
+
+	data.Containers, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Containers)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, c, cwd, spec.Platforms, streams, spec.Jobs)
+	data.Jobs, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Jobs)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, c, cwd, spec.Platforms, streams, spec.Images)
+	data.Images, err = buildImages(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Images)
 	if err != nil {
 		return data, err
 	}
 
-	data.Acorns, err = buildAcorns(ctx, c, cwd, spec.Platforms, streams, spec.Acorns)
+	data.Acorns, err = buildAcorns(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Acorns)
 	if err != nil {
 		return data, err
 	}
@@ -310,7 +313,18 @@ func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderS
 	return data, nil
 }
 
-func FromBuild(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+func fromBuild(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (id string, err error) {
+	id, err = buildCache.Get(cwd, build, platforms)
+	if err != nil || id != "" {
+		return id, err
+	}
+
+	defer func() {
+		if err == nil && id != "" {
+			buildCache.Store(cwd, build, platforms, id)
+		}
+	}()
+
 	if build.Dockerfile == "" {
 		build.Dockerfile = "Dockerfile"
 	}
@@ -408,4 +422,38 @@ func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) st
 		buf.WriteString("\"\n")
 	}
 	return buf.String()
+}
+
+type buildCache struct {
+	cache map[string]string
+}
+
+func (b *buildCache) toKey(cwd string, platforms []v1.Platform, build v1.Build) (string, error) {
+	data, err := json.Marshal(map[string]interface{}{
+		"cwd":       cwd,
+		"platforms": platforms,
+		"build":     build,
+	})
+	return string(data), err
+}
+
+func (b *buildCache) Get(cwd string, build v1.Build, platforms []v1.Platform) (string, error) {
+	key, err := b.toKey(cwd, platforms, build)
+	if err != nil {
+		// ignore error and return as cache miss
+		return "", nil
+	}
+	return b.cache[key], nil
+}
+
+func (b *buildCache) Store(cwd string, build v1.Build, platforms []v1.Platform, id string) {
+	key, err := b.toKey(cwd, platforms, build)
+	if err != nil {
+		// ignore error and return as cache miss
+		return
+	}
+	if b.cache == nil {
+		b.cache = map[string]string{}
+	}
+	b.cache[key] = id
 }
