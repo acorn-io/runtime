@@ -38,7 +38,7 @@ universal_binaries:
           output: true
           env:
             - SIGN={{ if index .Env "SIGN" }}1{{ end }}
-            - NOTARIZE={{ if index .Env "NOTARIZE" }}1{{ end }}
+            - NOTARIZE={{ if index .Env "NOTARIZE" }}{{ .Env.NOTARIZE }}{{ end }}
             - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
             - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
             - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
