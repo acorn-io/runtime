@@ -24,7 +24,7 @@ fi
 
 echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG=${DMG}"
 
-if [[ -n "${SIGN}" ]]; then
+if [[ "${SIGN}" == 1 ]]; then
   echo "Signing"
 
   echo "${AC_P12}" | base64 --decode > signing.p12
@@ -36,7 +36,7 @@ else
   exit 0
 fi
 
-if [[ -n "${SIGN}" && -n "${NOTARIZE}" ]]; then
+if [[ "${SIGN}" == 1 && "${NOTARIZE}" == 1 ]]; then
   echo "Notarizing…"
 
   cp LICENSE README.md "${DIR}/"
