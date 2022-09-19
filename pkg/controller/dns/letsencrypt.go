@@ -227,34 +227,35 @@ func EnsureLEUser(ctx context.Context, client kclient.Client, domain string) (*L
 func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kclient.Client, dnsendpoint, domain, token string) (*corev1.Secret, error) {
 
 	sec := &corev1.Secret{}
-	err := client.Get(ctx, router.Key(system.Namespace, system.TLSSecretName), sec)
-	if err != nil && !apierrors.IsNotFound(err) {
+	secErr := client.Get(ctx, router.Key(system.Namespace, system.TLSSecretName), sec)
+	if secErr != nil && !apierrors.IsNotFound(secErr) {
 		// error fetching the existing secret, but it could exist
-		return nil, err
+		return nil, secErr
 	}
 
-	if err == nil {
-		if sec.Labels[labels.AcornDomain] != domain {
-			logrus.Infof("domain changed, renewing wildcard certificate")
+	// Existing LE Cert Secret found, let's check if it's still valid
+	if secErr == nil {
+
+		// (a) domain changed -> renew
+		if sec.Annotations[labels.AcornDomain] != domain {
+			logrus.Infof("domain changed, renewing wildcard certificate (old: %s - new: %s", sec.Labels[labels.AcornDomain], domain)
 		} else {
-			// check if certificate is still valid
+
 			x509crt, err := certcrypto.ParsePEMCertificate([]byte(sec.Data[corev1.TLSCertKey]))
 			if err != nil {
+				// (b) unreadable certificate -> renew
 				logrus.Errorf("problem parsing existing TLS secret: %v", err)
-				// continues to generate new cert
 			} else {
-				if x509crt.NotAfter.After(time.Now().UTC()) {
-					// cert is still valid, return it
-					logrus.Infof("existing TLS secret %s is still valid until %s", x509crt.Subject.CommonName, x509crt.NotAfter)
+				timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
+				if timeToExpire > 7*24*time.Hour {
+					// (c) cert is still valid for more than 7 days -> return it
+					logrus.Infof("existing TLS secret %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
 					return sec, nil
 				} else {
-					logrus.Infof("existing TLS secret %s is expired since %s", x509crt.Subject.CommonName, x509crt.NotAfter)
+					// (d) cert is expired -> renew
+					logrus.Infof("existing TLS secret %s is expiring after %s (%d hours), renewing it...", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
 				}
 			}
-		}
-		// Delete existing secret
-		if err := client.Delete(ctx, sec); err != nil {
-			return nil, fmt.Errorf("problem deleting existing invalid TLS secret: %w", err)
 		}
 	}
 
@@ -285,11 +286,17 @@ func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kcl
 		},
 	}
 
-	if err := client.Create(ctx, sec); err != nil {
-		return sec, fmt.Errorf("problem creating wildcard certificate secret: %w", err)
+	if apierrors.IsNotFound(secErr) {
+		if err := client.Create(ctx, sec); err != nil {
+			return sec, fmt.Errorf("problem creating wildcard certificate secret: %w", err)
+		}
+	} else {
+		if err := client.Update(ctx, sec); err != nil {
+			return sec, fmt.Errorf("problem updating wildcard certificate secret: %w", err)
+		}
 	}
 
-	logrus.Infof("Created wildcard certificate secret for domain %s", domain)
+	logrus.Infof("Created new wildcard certificate secret for domain %s", domain)
 
 	return sec, nil
 }
