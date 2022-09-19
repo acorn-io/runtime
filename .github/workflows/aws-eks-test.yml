@@ -1,0 +1,61 @@
+name: test acorn on EKS
+on:
+  schedule:
+    - cron: '00 7 * * *'   # time in UTC
+jobs:
+  acorn-test-eks:
+    runs-on: ["self-hosted", "gha-eks"]
+    permissions:
+      id-token: write
+    steps:
+      - name: install curl
+        run: |
+           sudo apt update
+           sudo apt install -y curl build-essential make 
+           curl -LO https://dl.k8s.io/release/v1.25.0/bin/linux/amd64/kubectl
+           sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+           unzip awscliv2.zip
+           sudo ./aws/install
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - run: make setup-ci-env
+      - run: make validate-ci
+      - run: make validate
+      - run: make build
+      - run: sudo install -o root -g root -m 0755 ./bin/acorn /usr/local/bin/acorn
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.GHA_SVC_ACC_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.GHA_SVC_ACC_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.GHA_SVC_ACC_AWS_REGION }}
+
+      - name: update kubeconfig 
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.GHA_SVC_ACC_AWS_REGION }} --name ${{ secrets.GHA_SVC_ACC_EKS_CLUSTER_NAME }}
+
+      - name: install acorn
+        run: |
+          acorn install --image ghcr.io/acorn-io/acorn:main
+        env:
+          KUBECONFIG: "/home/runner/.kube/config"
+
+      - name: run acorn integration tests
+        run: |
+          make test
+        env:
+          KUBECONFIG: "/home/runner/.kube/config"
+
+      - name: uninstall acorn
+        if: always()
+        run: |
+          acorn uninstall -af
+        env:
+          KUBECONFIG: "/home/runner/.kube/config"
