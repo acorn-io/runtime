@@ -1,0 +1,72 @@
+name: test acorn on AKS
+on:
+  schedule:
+    - cron: '00 7 * * *'   # time in UTC
+
+jobs:
+  acorn-test-aks:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read 
+
+    steps:
+      - name: install curl
+        run: |
+          sudo apt update
+          sudo apt install -y curl 
+      - name: install helm
+        run: |
+          mkdir -p /tmp/helm
+          curl --silent --location https://get.helm.sh/helm-v3.10.0-linux-amd64.tar.gz | tar xz -C /tmp/helm linux-amd64/helm
+          sudo mv /tmp/helm/linux-amd64/helm /usr/local/bin/helm
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - run: make setup-ci-env
+      - run: make validate-ci
+      - run: make validate
+      - run: make build
+      - run: sudo install -o root -g root -m 0755 ./bin/acorn /usr/local/bin/acorn
+
+      - uses: Azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+      - name: 'Run az commands'
+        run: |
+          az aks create -g "${RESOURCE_GROUP}" -n "${AKS_CLUSTER_NAME}" --node-count 1  --enable-node-public-ip --kubernetes-version 1.24.3 --no-ssh-key
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          AKS_CLUSTER_NAME: acorn-aks-test-gh-actions-${{ github.run_id }}
+          AKS_K8S_VERSION:  1.24.3
+
+      - run: az aks get-credentials --resource-group "${RESOURCE_GROUP}" --name "${AKS_CLUSTER_NAME}"
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          AKS_CLUSTER_NAME: acorn-aks-test-gh-actions-${{ github.run_id }}
+
+      - name: install nginx ingress controller
+        run: |
+          helm repo add nginx-stable https://helm.nginx.com/stable
+          helm repo update
+          helm install --set 'controller.setAsDefaultIngress=true' --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz nginx-ingress nginx-stable/nginx-ingress  --namespace nginx-ingress --create-namespace
+
+      - name: install and test acorn
+        run: |
+          acorn install --image ghcr.io/acorn-io/acorn:main
+
+      - run: make test
+
+      - name: delete cluster
+        if: always()
+        run: |
+          az aks delete --name "${AKS_CLUSTER_NAME}" --resource-group ${RESOURCE_GROUP} --yes
+        env:
+          RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          AKS_CLUSTER_NAME: acorn-aks-test-gh-actions-${{ github.run_id }}
+
