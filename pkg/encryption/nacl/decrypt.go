@@ -1,25 +1,32 @@
 package nacl
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"strings"
 
 	"golang.org/x/crypto/nacl/box"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type UnableToDecrypt struct{}
-type DecryptionKeyNotAvailable struct{}
+func DecryptNamespacedData(ctx context.Context, c kclient.Client, data []byte, namespace string) ([]byte, error) {
+	keys, err := GetAllNaclKey(ctx, c, namespace)
+	if err != nil {
+		return nil, err
+	}
 
-func (utd *UnableToDecrypt) Error() string {
-	return "Unable to decrypt values"
+	for _, key := range keys {
+		data, err := key.Decrypt(data)
+		if err == nil {
+			return data, nil
+		}
+	}
+
+	return nil, &ErrUnableToDecrypt{}
 }
 
-func (d *DecryptionKeyNotAvailable) Error() string {
-	return "Decryption Key Not Available on this Cluster"
-}
-
-func (k *ClusterKey) Decrypt(encData []byte) ([]byte, error) {
+func (k *NaclKey) Decrypt(encData []byte) ([]byte, error) {
 	pubkey, err := keyToBytes(k.PublicKey)
 	if err != nil {
 		return nil, err
@@ -37,12 +44,12 @@ func (k *ClusterKey) Decrypt(encData []byte) ([]byte, error) {
 
 	encryptedData, ok := preppedData[k.PublicKey]
 	if !ok {
-		return nil, &DecryptionKeyNotAvailable{}
+		return nil, &ErrDecryptionKeyNotAvailable{}
 	}
 
 	decryptedBytes, ok := box.OpenAnonymous(nil, encryptedData, pubkey, privkey)
 	if !ok {
-		return nil, &UnableToDecrypt{}
+		return nil, &ErrUnableToDecrypt{}
 	}
 
 	return decryptedBytes, nil

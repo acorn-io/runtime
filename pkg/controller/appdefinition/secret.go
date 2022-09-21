@@ -318,15 +318,11 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	return updateOrCreate(req, existing, secret)
 }
 
-func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte) (map[string][]byte, error) {
+func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte, ownerNamespace string) (map[string][]byte, error) {
 	to := map[string][]byte{}
 	for k, v := range data {
 		if strings.HasPrefix(string(v), "ACORNENC:") {
-			clusterKey, err := nacl.GetOrCreateClusterKey(ctx, c)
-			if err != nil {
-				return data, err
-			}
-			decryptedData, err := clusterKey.Decrypt(v)
+			decryptedData, err := nacl.DecryptNamespacedData(ctx, c, v, ownerNamespace)
 			if err != nil {
 				return data, err
 			}
@@ -343,9 +339,11 @@ func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte) 
 func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev1.Secret, error) {
 	var err error
 
-	secret.Data, err = decryptData(req.Ctx, req.Client, secret.Data)
-	if err != nil {
-		return secret, err
+	if ownerNamespace, ok := secret.Labels[labels.AcornRootNamespace]; ok {
+		secret.Data, err = decryptData(req.Ctx, req.Client, secret.Data, ownerNamespace)
+		if err != nil {
+			return secret, err
+		}
 	}
 
 	if existing == nil {
@@ -502,7 +500,7 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 				return nil, err
 			}
 			// Check fields to see if they need to be decrypted
-			existingSecret.Data, err = decryptData(req.Ctx, req.Client, existingSecret.Data)
+			existingSecret.Data, err = decryptData(req.Ctx, req.Client, existingSecret.Data, appInstance.Namespace)
 			if err != nil {
 				return nil, err
 			}

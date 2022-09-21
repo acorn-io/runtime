@@ -34,15 +34,15 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args[0]) > 4096 {
-		logrus.Fatal("Length of string data is to long to encrypt. Must be less than 4096 characters.")
+		logrus.Fatal("Length of string data is too long to encrypt. Must be less than 4096 bytes.")
 	}
 
 	if len(e.PublicKey) == 0 {
-		pubKey, err := nacl.GetPublicKey(cmd.Context(), c.GetClient())
+		info, err := c.Info(cmd.Context())
 		if err != nil {
 			return err
 		}
-		e.PublicKey = append(e.PublicKey, pubKey)
+		e.PublicKey = append(e.PublicKey, info.Spec.PublicKey)
 	}
 
 	encData, err := nacl.MultipleKeyEncrypt(args[0], e.PublicKey)

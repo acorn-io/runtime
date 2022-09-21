@@ -306,7 +306,7 @@ type InfoSpec struct {
 	Dirty           bool   `json:"dirty"`
 	ControllerImage string `json:"controllerImage"`
 	APIServerImage  string `json:"apiServerImage,omitempty"`
-	PublicKey       string `json:"publicKey"`
+	PublicKey       string `json:"publicKey,omitempty"`
 	Config          Config `json:"config"`
 	UserConfig      Config `json:"userConfig"`
 }

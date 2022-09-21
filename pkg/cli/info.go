@@ -29,7 +29,10 @@ type ClientServerVersion struct {
 	Client struct {
 		Version bversion.Version `json:"version,omitempty"`
 	} `json:"client,omitempty"`
-	Server apiv1.InfoSpec `json:"server,omitempty"`
+	Server    apiv1.InfoSpec `json:"server,omitempty"`
+	Namespace struct {
+		PublicKey string `json:"publicKey,omitempty"`
+	} `json:"namespace,omitempty"`
 }
 
 func (s *Info) Run(cmd *cobra.Command, args []string) error {
@@ -43,12 +46,20 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//Formatting...
+	ns := struct {
+		PublicKey string `json:"publicKey,omitempty"`
+	}{PublicKey: info.Spec.PublicKey}
+
+	info.Spec.PublicKey = ""
+
 	out := table.NewWriter(tables.Info, "", false, s.Output)
 	out.Write(ClientServerVersion{
 		Client: struct {
 			Version bversion.Version `json:"version,omitempty"`
 		}{Version: version.Get()},
-		Server: info.Spec,
+		Server:    info.Spec,
+		Namespace: ns,
 	})
 	return out.Err()
 }
