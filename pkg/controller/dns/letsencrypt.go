@@ -6,7 +6,9 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -173,9 +175,52 @@ func (u *LEUser) GenerateWildcardCert(dnsendpoint, domain, token string) (*certi
 	return client.Certificate.Obtain(request)
 }
 
+func matchLeURLToEnv(url string) string {
+	if url == LetsEncryptURLStaging {
+		return "staging"
+	} else if url == LetsEncryptURLProduction {
+		return "production"
+	} else {
+		return "disabled"
+	}
+}
+
+func (u *LEUser) toHash() string {
+	toHash := []byte(fmt.Sprintf("%s-%s-%s", u.Name, matchLeURLToEnv(u.URL), u.Email))
+	dig := sha1.New()
+	dig.Write([]byte(toHash))
+	return hex.EncodeToString(dig.Sum(nil))
+}
+
 func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client, domain string) (*LEUser, error) {
 
-	targetUsername := strings.TrimPrefix(domain, ".") // leading dot is an issue especially for email addresses
+	/*
+	 * Construct new LE User
+	 */
+	targetUsername := strings.TrimPrefix(domain, ".") // leading dot can be an issue
+	email := fmt.Sprintf("%s@on-acorn.io", targetUsername)
+	url := LetsEncryptURLStaging
+	if strings.EqualFold(*cfg.LetsEncrypt, "production") {
+		url = LetsEncryptURLProduction
+		if cfg.LetsEncryptEmail == "" {
+			return nil, fmt.Errorf("let's encrypt email is required for production")
+		}
+	}
+	if cfg.LetsEncryptEmail != "" {
+		email = cfg.LetsEncryptEmail
+	}
+
+	newLEUser := &LEUser{
+		Name:  targetUsername,
+		Email: email,
+		URL:   url,
+	}
+
+	newLEUserHash := newLEUser.toHash()
+
+	/*
+	 * Check for existing LE User in secret
+	 */
 
 	leAccountSecret := &corev1.Secret{}
 	err := client.Get(ctx, router.Key(system.Namespace, system.LESecretName), leAccountSecret)
@@ -185,45 +230,30 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 
 	// Existing LE User Secret found
 	if err == nil {
-		leUser, err := FromSecret(leAccountSecret)
+		currentLEUser, err := FromSecret(leAccountSecret)
 		if err != nil {
 			return nil, err
 		}
 
-		// Domain changed, recreate the secret
-		if !strings.Contains(leUser.Name, targetUsername) {
-			logrus.Infof("deleting LE secret for domain %s", domain)
-			if err := client.Delete(ctx, leAccountSecret); err != nil {
+		currentLEUserHash := currentLEUser.toHash()
+
+		// Domain, LE environment or LE email changed -> delete secret for re-creation
+		if currentLEUserHash != newLEUserHash {
+			logrus.Infof("deleting let's encrypt secret due to config change: %v -> %v", currentLEUser, newLEUser)
+			err = client.Delete(ctx, leAccountSecret)
+			if err != nil {
 				return nil, err
 			}
 		} else {
-			return leUser, nil
+			return currentLEUser, nil
 		}
 	}
 
-	email := fmt.Sprintf("%s@on-acorn.io", targetUsername)
-	url := LetsEncryptURLStaging
-	if strings.EqualFold(*cfg.LetsEncrypt, "production") {
-		url = LetsEncryptURLProduction
-		if cfg.LetsEncryptEmail == "" {
-			return nil, fmt.Errorf("missing LetsEncryptEmail in config")
-		}
-	}
-	if cfg.LetsEncryptEmail != "" {
-		email = cfg.LetsEncryptEmail
-	}
-
-	// Create and Register Let's Encrypt User
-	leUser := &LEUser{
-		Name:  targetUsername,
-		Email: email,
-		URL:   url,
-	}
-	if err := leUser.Register(); err != nil {
+	if err := newLEUser.Register(); err != nil {
 		return nil, fmt.Errorf("problem registering Let's Encrypt User: %w", err)
 	}
 
-	sec, err := leUser.ToSecret()
+	sec, err := newLEUser.ToSecret()
 	if err != nil {
 		return nil, fmt.Errorf("problem creating Let's Encrypt User secret: %w", err)
 	}
@@ -232,9 +262,9 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 		return nil, fmt.Errorf("problem creating Let's Encrypt User secret: %w", err)
 	}
 
-	logrus.Infof("Registered Let's Encrypt User: %s", leUser.Name)
+	logrus.Infof("Registered Let's Encrypt User: %s", newLEUser.Name)
 
-	return leUser, nil
+	return newLEUser, nil
 
 }
 
@@ -247,12 +277,14 @@ func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kcl
 		return nil, secErr
 	}
 
+	leSettingsHash := u.toHash()
+
 	// Existing LE Cert Secret found, let's check if it's still valid
 	if secErr == nil {
 
-		// (a) domain changed -> renew
-		if sec.Annotations[labels.AcornDomain] != domain {
-			logrus.Infof("domain changed, renewing wildcard certificate (old: %s - new: %s", sec.Labels[labels.AcornDomain], domain)
+		// (a) domain or let's encrypt user settings changed -> renew
+		if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != leSettingsHash {
+			logrus.Info("domain or let's encrypt settings changed, renewing wildcard certificate")
 		} else {
 
 			x509crt, err := certcrypto.ParsePEMCertificate([]byte(sec.Data[corev1.TLSCertKey]))
@@ -286,9 +318,10 @@ func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kcl
 			Name:      system.TLSSecretName,
 			Namespace: system.Namespace,
 			Annotations: map[string]string{
-				labels.AcornDomain:             domain,
-				labels.AcornCertNotValidBefore: x509crt.NotBefore.Format(time.RFC3339),
-				labels.AcornCertNotValidAfter:  x509crt.NotAfter.Format(time.RFC3339),
+				labels.AcornDomain:                  domain,
+				labels.AcornLetsEncryptSettingsHash: leSettingsHash,
+				labels.AcornCertNotValidBefore:      x509crt.NotBefore.Format(time.RFC3339),
+				labels.AcornCertNotValidAfter:       x509crt.NotAfter.Format(time.RFC3339),
 			},
 			Labels: map[string]string{
 				labels.AcornManaged: "true",
