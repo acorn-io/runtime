@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -28,7 +29,8 @@ import (
 )
 
 const (
-	LEEndpoint = "https://acme-staging-v02.api.letsencrypt.org/directory"
+	LetsEncryptURLStaging    = "https://acme-staging-v02.api.letsencrypt.org/directory"
+	LetsEncryptURLProduction = "https://acme-v02.api.letsencrypt.org/directory"
 )
 
 type LEUser struct {
@@ -77,7 +79,7 @@ func (u *LEUser) Register() error {
 	}
 
 	if u.URL == "" {
-		u.URL = LEEndpoint
+		return fmt.Errorf("not registering LE User: missing URL")
 	}
 
 	if u.Key == nil {
@@ -171,7 +173,7 @@ func (u *LEUser) GenerateWildcardCert(dnsendpoint, domain, token string) (*certi
 	return client.Certificate.Obtain(request)
 }
 
-func EnsureLEUser(ctx context.Context, client kclient.Client, domain string) (*LEUser, error) {
+func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client, domain string) (*LEUser, error) {
 
 	targetUsername := strings.TrimPrefix(domain, ".") // leading dot is an issue especially for email addresses
 
@@ -199,11 +201,23 @@ func EnsureLEUser(ctx context.Context, client kclient.Client, domain string) (*L
 		}
 	}
 
+	email := fmt.Sprintf("%s@on-acorn.io", targetUsername)
+	url := LetsEncryptURLStaging
+	if strings.EqualFold(*cfg.LetsEncrypt, "production") {
+		url = LetsEncryptURLProduction
+		if cfg.LetsEncryptEmail == "" {
+			return nil, fmt.Errorf("missing LetsEncryptEmail in config")
+		}
+	}
+	if cfg.LetsEncryptEmail != "" {
+		email = cfg.LetsEncryptEmail
+	}
+
 	// Create and Register Let's Encrypt User
 	leUser := &LEUser{
 		Name:  targetUsername,
-		Email: fmt.Sprintf("%s@on-acorn.io", targetUsername),
-		URL:   LEEndpoint,
+		Email: email,
+		URL:   url,
 	}
 	if err := leUser.Register(); err != nil {
 		return nil, fmt.Errorf("problem registering Let's Encrypt User: %w", err)

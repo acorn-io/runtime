@@ -21,6 +21,7 @@ require (
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.8
+	github.com/go-acme/lego/v4 v4.8.0
 	github.com/google/go-containerregistry v0.11.0
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20220624195650-ae256b584f83
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -99,7 +100,6 @@ require (
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-acme/lego/v4 v4.8.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect

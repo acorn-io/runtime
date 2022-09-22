@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/mail"
 	"os"
 	"strings"
 
@@ -100,11 +101,35 @@ func DefaultImage() string {
 	return image
 }
 
+func validMailAddress(address string) (string, bool) {
+	addr, err := mail.ParseAddress(address)
+	if err != nil {
+		return "", false
+	}
+	return addr.Address, true
+}
+
 func Install(ctx context.Context, image string, opts *Options) error {
 	// I don't want these errors on the screen. Probably a better way to do this.
 	klog.SetOutput(io.Discard)
 	klogv2.SetOutput(io.Discard)
 	utilruntime.ErrorHandlers = nil
+
+	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "production" {
+		if opts.Config.LetsEncryptEmail == "" {
+			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt (required for production)")
+			if err != nil {
+				return err
+			}
+			opts.Config.LetsEncryptEmail = result
+		}
+
+		mail, ok := validMailAddress(opts.Config.LetsEncryptEmail)
+		if !ok {
+			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
+		}
+		opts.Config.LetsEncryptEmail = mail
+	}
 
 	opts = opts.complete()
 	if opts.OutputFormat != "" {

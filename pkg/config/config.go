@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -22,6 +23,9 @@ var (
 	// AcornDNSEndpointDefault will be overridden at build time for releases
 	AcornDNSEndpointDefault = "https://staging-dns.acrn.io/v1"
 	AcornDNSStateDefault    = "auto"
+
+	// Let's Encrypt
+	LetsEncryptOptionDefault = "staging"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
@@ -49,6 +53,12 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 	}
 	if c.InternalClusterDomain == "" {
 		c.InternalClusterDomain = InternalClusterDomainDefault
+	}
+	if c.LetsEncrypt == nil {
+		c.LetsEncrypt = &LetsEncryptOptionDefault
+	}
+	if *c.LetsEncrypt == "production" && c.LetsEncryptEmail == "" {
+		return fmt.Errorf("letsencrypt email is required when using production")
 	}
 
 	return nil
@@ -172,6 +182,12 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.AcornDNSEndpoint != nil {
 		mergedConfig.AcornDNSEndpoint = newConfig.AcornDNSEndpoint
+	}
+	if newConfig.LetsEncrypt != nil {
+		mergedConfig.LetsEncrypt = newConfig.LetsEncrypt
+	}
+	if newConfig.LetsEncryptEmail != "" {
+		mergedConfig.LetsEncryptEmail = newConfig.LetsEncryptEmail
 	}
 
 	return &mergedConfig

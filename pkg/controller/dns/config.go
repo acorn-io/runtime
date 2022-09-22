@@ -63,16 +63,18 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 		logrus.Infof("Obtained AcornDNS domain: %v", domain)
 	}
 
-	// Ensure that we have a Let's Encrypt account ready
-	leUser, err := EnsureLEUser(req.Ctx, req.Client, domain)
-	if err != nil {
-		return err
-	}
+	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
+		// Ensure that we have a Let's Encrypt account ready
+		leUser, err := EnsureLEUser(req.Ctx, cfg, req.Client, domain)
+		if err != nil {
+			return err
+		}
 
-	// Generate wildcard certificate for domain
-	_, err = leUser.EnsureWildcardCertificateSecret(req.Ctx, req.Client, *cfg.AcornDNSEndpoint, domain, token)
-	if err != nil {
-		return err
+		// Generate wildcard certificate for domain
+		_, err = leUser.EnsureWildcardCertificateSecret(req.Ctx, req.Client, *cfg.AcornDNSEndpoint, domain, token)
+		if err != nil {
+			return err
+		}
 	}
 
 	if dnsSecret.Name == "" {
