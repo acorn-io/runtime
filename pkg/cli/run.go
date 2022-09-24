@@ -265,7 +265,13 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 			RunArgs: s.RunArgs,
 			out:     s.out,
 		}
-		return u.Run(cmd, append([]string{s.Name}, args...))
+		err := u.Run(cmd, append([]string{s.Name}, args...))
+		if err != nil {
+			return err
+		}
+		if s.Wait == nil || *s.Wait {
+			return wait.App(cmd.Context(), c, s.Name, s.Quiet)
+		}
 	}
 
 	if len(args) > 1 {
