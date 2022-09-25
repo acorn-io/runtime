@@ -187,6 +187,9 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Force install prompt if needed
+	_, _ = c.Info(cmd.Context())
+
 	opts, err := s.ToOpts()
 	if err != nil {
 		return err
@@ -203,8 +206,6 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if s.Interactive && isDir {
-		// Force install prompt if needed
-		_, _ = c.Info(cmd.Context())
 
 		return dev.Dev(cmd.Context(), s.File, &dev.Options{
 			Args:   args,

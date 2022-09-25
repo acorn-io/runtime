@@ -242,5 +242,7 @@ func (c IgnoreUninstalled) SecretDelete(ctx context.Context, name string) (*apiv
 }
 
 func (c IgnoreUninstalled) Info(ctx context.Context) (*apiv1.Info, error) {
-	return c.client.Info(ctx)
+	return promptInstall(ctx, func() (*apiv1.Info, error) {
+		return c.client.Info(ctx)
+	})
 }
