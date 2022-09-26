@@ -16,6 +16,7 @@ type Flags struct {
 	ints          map[string]*int
 	strings       map[string]*string
 	bools         map[string]*bool
+	lists         map[string]*[]string
 	complexValues map[string]*string
 	Usage         func()
 }
@@ -27,16 +28,19 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 	stringValues := map[string]*string{}
 	bools := map[string]*bool{}
 	complexValues := map[string]*string{}
+	lists := map[string]*[]string{}
 
 	for _, param := range param.Params {
 		name := strings.ReplaceAll(convert.ToYAMLKey(param.Name), "_", "-")
 		paramToFlag[param.Name] = name
-		if isType(param.Schema, "int") || isType(param.Schema, "uint") {
+		if isType(param.Type, "int") || isType(param.Type, "uint") {
 			ints[param.Name] = flagSet.Int(name, 0, param.Description)
-		} else if isType(param.Schema, "string") {
+		} else if isType(param.Type, "string") {
 			stringValues[param.Name] = flagSet.String(name, "", param.Description)
-		} else if isType(param.Schema, "bool") {
+		} else if isType(param.Type, "bool") {
 			bools[param.Name] = flagSet.Bool(name, false, param.Description)
+		} else if isType(param.Type, "array") {
+			lists[param.Name] = flagSet.StringArray(name, nil, param.Description)
 		} else {
 			complexValues[param.Name] = flagSet.String(name, "", param.Description)
 		}
@@ -46,6 +50,7 @@ func New(filename string, param *v1.ParamSpec) *Flags {
 		ints:          ints,
 		strings:       stringValues,
 		bools:         bools,
+		lists:         lists,
 		complexValues: complexValues,
 		paramToFlag:   paramToFlag,
 		FlagSet:       flagSet,
@@ -118,6 +123,16 @@ func (f *Flags) Parse(args []string) (map[string]any, error) {
 	for name, pValue := range f.bools {
 		value := *pValue
 		if !value {
+			if !f.flagChanged(name) {
+				continue
+			}
+		}
+		result[name] = value
+	}
+
+	for name, pValue := range f.lists {
+		value := *pValue
+		if len(value) == 0 {
 			if !f.flagChanged(name) {
 				continue
 			}

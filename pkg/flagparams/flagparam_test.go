@@ -16,81 +16,102 @@ func TestParse(t *testing.T) {
 				Name:        "intWithDefault",
 				Description: "",
 				Schema:      "*4 | int",
+				Type:        "int",
 			},
 			{
 				Name:        "intWithDefaultAllowZero",
 				Description: "",
 				Schema:      "*4 | int",
+				Type:        "int",
 			},
 			{
 				Name:        "intShouldNotBeInParamMap",
 				Description: "",
 				Schema:      "*4 | int",
+				Type:        "int",
 			},
 			{
 				Name:        "int",
 				Description: "",
 				Schema:      "int",
+				Type:        "int",
 			},
 			{
 				Name:        "strWithDefault",
 				Description: "",
 				Schema:      "*s | string",
+				Type:        "string",
 			},
 			{
 				Name:        "str",
 				Description: "",
 				Schema:      "string",
+				Type:        "string",
 			},
 			{
 				Name:        "strShouldNotBeInParamMap",
 				Description: "",
 				Schema:      "*\"\" | string",
+				Type:        "string",
 			},
 			{
 				Name:        "strWithEmptyValue",
 				Description: "",
 				Schema:      "*s | string",
+				Type:        "string",
 			},
 			{
 				Name:        "jsonFile",
 				Description: "",
 				Schema:      "complex",
+				Type:        "complex",
 			},
 			{
 				Name:        "yamlFile",
 				Description: "",
 				Schema:      "complex",
+				Type:        "complex",
 			},
 			{
 				Name:        "cueFile",
 				Description: "",
 				Schema:      "complex",
+				Type:        "complex",
 			},
 			{
 				Name:        "anEmptyComplex",
 				Description: "",
 				Schema:      "complex",
+				Type:        "complex",
 			},
 			{
 				Name:        "cueString",
 				Description: "",
 				Schema:      "string",
+				Type:        "string",
 			},
 			{
 				Name:        "abool",
 				Description: "",
 				Schema:      "bool",
+				Type:        "bool",
 			},
 			{
 				Name:        "aDefaultBool",
 				Description: "",
 				Schema:      "*false | bool",
+				Type:        "bool",
 			},
 			{
 				Name:        "passAFalseBool",
 				Description: "",
 				Schema:      "*true| bool",
+				Type:        "bool",
+			},
+			{
+				Name:        "stringArray",
+				Description: "",
+				Type:        "array",
 			},
 		},
 	}
@@ -111,6 +132,8 @@ func TestParse(t *testing.T) {
 		"--abool",
 		"--a-default-bool",
 		"--pass-a-false-bool=false",
+		"--string-array", "foo",
+		"--string-array", "bar",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -147,5 +170,6 @@ func TestParse(t *testing.T) {
 		"abool":          true,
 		"aDefaultBool":   true,
 		"passAFalseBool": false,
+		"stringArray":    []interface{}{"foo", "bar"},
 	}, normalizedVars)
 }
