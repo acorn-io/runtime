@@ -86,7 +86,7 @@ The Acorn CLI supports command autocompletion. If you installed acorn using home
 
 To set autocompletion for the current terminal session, use the command that matches your shell:
 
-```
+```shell
 source <(acorn completion bash)
 source <(acorn completion zsh)
 acorn completion fish | source
@@ -161,3 +161,8 @@ then you must reflect that in the `acorn install` command by specifying the port
 ```shell
 acorn install --cluster-domain '.local.on-acorn.io:8081'
 ```
+
+**Kind** comes with a working storage class by default, but you need to take some extra steps to get ingress and service loadbalancer capabilities:
+
+- For ingress, you need to configure the `kind` cluster with a host port mapping and then deploy an ingress controller. You can find more details in the [official documentation](https://kind.sigs.k8s.io/docs/user/ingress/).
+- For service loadbalancer capabilities, the [`kind` docs](https://kind.sigs.k8s.io/docs/user/loadbalancer/) recommend to deploy [MetalLB](https://metallb.universe.tf/).
