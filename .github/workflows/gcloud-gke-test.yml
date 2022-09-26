@@ -1,0 +1,70 @@
+name: test acorn on GKE
+on:
+  schedule:
+    - cron: '00 7 * * *'   # time in UTC
+
+jobs:
+  acorn-test-gke:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read 
+
+    steps:
+      - name: install curl
+        run: |
+          sudo apt update
+          sudo apt install -y curl 
+      - name: install helm
+        run: |
+          mkdir -p /tmp/helm
+          curl --silent --location https://get.helm.sh/helm-v3.10.0-linux-amd64.tar.gz | tar xz -C /tmp/helm linux-amd64/helm
+          sudo mv /tmp/helm/linux-amd64/helm /usr/local/bin/helm
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - run: make setup-ci-env
+      - run: make validate-ci
+      - run: make validate
+      - run: make build
+      - run: sudo install -o root -g root -m 0755 ./bin/acorn /usr/local/bin/acorn
+
+      - name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCLOUD_CREDENTIALS }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+           
+      - name: 'Create GKE cluster'
+        run: |
+          gcloud container clusters create --zone "${REGION}" --cluster-version "${GKE_K8S_VERSION}"  "${GKE_CLUSTER_NAME}"  --num-nodes=1  --issue-client-certificate  --enable-legacy-authorization
+        env:
+          REGION: ${{ secrets.GCLOUD_REGION }}
+          GKE_CLUSTER_NAME: acorn-gke-test-gh-actions-${{ github.run_id }}
+          GKE_K8S_VERSION: 1.24.3-gke.900
+
+      - run: gcloud components install gke-gcloud-auth-plugin
+
+      - run: gcloud container clusters get-credentials --zone "${REGION}" "${GKE_CLUSTER_NAME}"
+        env:
+          REGION: ${{ secrets.GCLOUD_REGION }}
+          GKE_CLUSTER_NAME: acorn-gke-test-gh-actions-${{ github.run_id }}
+          
+      - name: install and test acorn
+        run: |
+           acorn install --image ghcr.io/acorn-io/acorn:main
+
+      - run: make test
+
+      - name: delete cluster
+        if: always()
+        run: gcloud container clusters delete --zone "${REGION}" "${GKE_CLUSTER_NAME}" --quiet
+        env:
+          REGION: ${{ secrets.GCLOUD_REGION }}
+          GKE_CLUSTER_NAME: acorn-gke-test-gh-actions-${{ github.run_id }}
