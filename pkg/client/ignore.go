@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -39,6 +40,8 @@ func promptInstall[V any](ctx context.Context, f twoFunc[V]) (V, error) {
 				return v, installErr
 			}
 			v, err = f()
+		} else {
+			return v, fmt.Errorf("action aborted because Acorn is not installed")
 		}
 	}
 	return v, err
@@ -242,5 +245,7 @@ func (c IgnoreUninstalled) SecretDelete(ctx context.Context, name string) (*apiv
 }
 
 func (c IgnoreUninstalled) Info(ctx context.Context) (*apiv1.Info, error) {
-	return c.client.Info(ctx)
+	return promptInstall(ctx, func() (*apiv1.Info, error) {
+		return c.client.Info(ctx)
+	})
 }
