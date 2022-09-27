@@ -188,7 +188,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Force install prompt if needed
-	_, _ = c.Info(cmd.Context())
+	_, err = c.Info(cmd.Context())
+	if err != nil {
+		return err
+	}
 
 	opts, err := s.ToOpts()
 	if err != nil {
