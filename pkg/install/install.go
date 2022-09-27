@@ -191,6 +191,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 		s.SuccessWithWarning(msg)
 	}
+	s.Success()
 
 	pterm.Success.Println("Installation done")
 	return nil
