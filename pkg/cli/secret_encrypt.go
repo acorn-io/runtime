@@ -42,7 +42,9 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		e.PublicKey = append(e.PublicKey, info.Spec.PublicKey)
+		for _, key := range info.Spec.PublicKeys {
+			e.PublicKey = append(e.PublicKey, key.KeyID)
+		}
 	}
 
 	encData, err := nacl.MultipleKeyEncrypt(args[0], e.PublicKey)

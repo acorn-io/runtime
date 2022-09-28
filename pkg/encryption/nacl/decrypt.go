@@ -11,7 +11,7 @@ import (
 )
 
 func DecryptNamespacedData(ctx context.Context, c kclient.Client, data []byte, namespace string) ([]byte, error) {
-	keys, err := GetAllNaclKey(ctx, c, namespace)
+	keys, err := GetAllNaclKeys(ctx, c, namespace)
 	if err != nil {
 		return nil, err
 	}

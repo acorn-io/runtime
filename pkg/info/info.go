@@ -5,17 +5,15 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func Get(ctx context.Context, c kclient.Client) (*apiv1.Info, error) {
+func Get(ctx context.Context, c kclient.Reader) (*apiv1.Info, error) {
 	var controllerImage string
 	var apiServerImage string
 
@@ -44,16 +42,9 @@ func Get(ctx context.Context, c kclient.Client) (*apiv1.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	ns, _ := request.NamespaceFrom(ctx)
-
-	pubKey, err := nacl.GetPublicKey(ctx, c, ns)
-	if err != nil {
-		return nil, err
-	}
 
 	return &apiv1.Info{
 		Spec: apiv1.InfoSpec{
-			PublicKey:       pubKey,
 			Version:         v.String(),
 			Tag:             v.Tag,
 			GitCommit:       v.Commit,

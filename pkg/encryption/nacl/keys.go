@@ -18,20 +18,28 @@ import (
 )
 
 const (
-	naclStoreKey = "enc-keys"
+	naclStoreKey = "nacl-keys"
 	naclNSUID    = "ns-uid"
 )
 
-type naclKeyStore []map[string][]byte
-
+type NaclKeys map[string]*NaclKey
 type NaclKey struct {
+	AcornNamespace    string
+	Primary           *bool
 	PublicKey         string
-	acornNamespace    string
 	acornNamespaceUID string
 	privateKey        string
 }
 
-func GetOrCreateNaclKey(ctx context.Context, c kclient.Client, namespace string) (*NaclKey, error) {
+type naclKeyStore map[string]naclStoredKey
+type naclStoredKey struct {
+	AcornNamespace    string `json:"acornNamespace,omitempty"`
+	Primary           *bool  `json:"primary,omitempty"`
+	AcornNamespaceUID string `json:"acornNamespaceUID,omitempty"`
+	PrivateKey        string `json:"privateKey,omitempty"`
+}
+
+func GetOrCreatePrimaryNaclKey(ctx context.Context, c kclient.Client, namespace string) (*NaclKey, error) {
 	existing, err := getExistingSecret(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return generateNewKeys(ctx, c, namespace, nil)
@@ -44,10 +52,10 @@ func GetOrCreateNaclKey(ctx context.Context, c kclient.Client, namespace string)
 		return nil, err
 	}
 
-	return keys[0], nil
+	return keys["primary"], nil
 }
 
-func GetNaclKey(ctx context.Context, c kclient.Client, publicKey, namespace string) (*NaclKey, error) {
+func GetPrimaryNaclKey(ctx context.Context, c kclient.Reader, publicKey, namespace string) (*NaclKey, error) {
 	existing, err := getExistingSecret(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return nil, &ErrKeyNotFound{}
@@ -61,17 +69,16 @@ func GetNaclKey(ctx context.Context, c kclient.Client, publicKey, namespace stri
 	}
 
 	if publicKey != "" {
-		for _, key := range keys {
-			if key.PublicKey == publicKey {
-				return key, nil
-			}
+		if key, ok := keys[publicKey]; ok {
+			return key, nil
 		}
+		return nil, &ErrKeyNotFound{}
 	}
 
-	return keys[0], nil
+	return keys["primary"], nil
 }
 
-func GetAllNaclKey(ctx context.Context, c kclient.Client, namespace string) ([]*NaclKey, error) {
+func GetAllNaclKeys(ctx context.Context, c kclient.Reader, namespace string) (NaclKeys, error) {
 	existing, err := getExistingSecret(ctx, c, namespace)
 	if apierrors.IsNotFound(err) {
 		return nil, &ErrKeyNotFound{}
@@ -83,8 +90,8 @@ func GetAllNaclKey(ctx context.Context, c kclient.Client, namespace string) ([]*
 	return secretToNaclKeys(existing, namespace)
 }
 
-func GetPublicKey(ctx context.Context, c kclient.Client, namespace string) (string, error) {
-	key, err := GetOrCreateNaclKey(ctx, c, namespace)
+func GetPublicKey(ctx context.Context, c kclient.Reader, namespace string) (string, error) {
+	key, err := GetPrimaryNaclKey(ctx, c, "", namespace)
 	if key != nil {
 		return key.PublicKey, err
 	}
@@ -93,7 +100,7 @@ func GetPublicKey(ctx context.Context, c kclient.Client, namespace string) (stri
 
 func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, existing *corev1.Secret) (*NaclKey, error) {
 	naclKey := &NaclKey{
-		acornNamespace: namespace,
+		AcornNamespace: namespace,
 	}
 	publicKey, privateKey, err := box.GenerateKey(crypto_rand.Reader)
 	if err != nil {
@@ -113,11 +120,14 @@ func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, ex
 	}
 
 	naclKey.acornNamespaceUID = string(ns.UID)
+	if existing == nil {
+		naclKey.Primary = &[]bool{true}[0]
+	}
 
 	return naclKey, createOrUpdateNaclKeySecret(ctx, c, naclKey, existing)
 }
 
-func getExistingSecret(ctx context.Context, c kclient.Client, namespace string) (*corev1.Secret, error) {
+func getExistingSecret(ctx context.Context, c kclient.Reader, namespace string) (*corev1.Secret, error) {
 	nsString, err := naclSecretName(ctx, c, namespace)
 	if err != nil {
 		return nil, err
@@ -138,7 +148,7 @@ func createOrUpdateNaclKeySecret(ctx context.Context, c kclient.Client, key *Nac
 		return c.Create(ctx, &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: system.Namespace,
-				Name:      secretNameGen(key.acornNamespace, key.acornNamespaceUID),
+				Name:      secretNameGen(key.AcornNamespace, key.acornNamespaceUID),
 				Labels: map[string]string{
 					labels.AcornSecretGenerated: "true",
 					labels.AcornManaged:         "true",
@@ -170,8 +180,8 @@ func keyToBytes(key string) (*[32]byte, error) {
 	return returnBytes, nil
 }
 
-func secretToNaclKeys(secret *corev1.Secret, namespace string) ([]*NaclKey, error) {
-	to := []*NaclKey{}
+func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error) {
+	to := NaclKeys{}
 
 	keystore, ok := secret.Data[naclStoreKey]
 	if !ok {
@@ -193,14 +203,16 @@ func secretToNaclKeys(secret *corev1.Secret, namespace string) ([]*NaclKey, erro
 		return nil, NewErrKeyNotFound(false)
 	}
 
-	for _, keyInfo := range store {
-		for pub, priv := range keyInfo {
-			to = append(to, &NaclKey{
-				acornNamespace:    namespace,
-				PublicKey:         pub,
-				privateKey:        string(priv),
-				acornNamespaceUID: string(uid),
-			})
+	for pubKey, keyInfo := range store {
+		to[pubKey] = &NaclKey{
+			AcornNamespace:    keyInfo.AcornNamespace,
+			Primary:           keyInfo.Primary,
+			PublicKey:         pubKey,
+			privateKey:        keyInfo.PrivateKey,
+			acornNamespaceUID: string(uid),
+		}
+		if *keyInfo.Primary {
+			to["primary"] = to[pubKey]
 		}
 	}
 
@@ -214,20 +226,21 @@ func (k *NaclKey) toSecretData(existingData map[string][]byte) (map[string][]byt
 	store := naclKeyStore{}
 	var err error
 
-	if existingData == nil {
-		store = append(store, map[string][]byte{k.PublicKey: []byte(k.privateKey)})
-		to[naclStoreKey], err = json.Marshal(store)
-		return to, err
-	}
-
-	if keydata, ok := existingData[naclStoreKey]; ok {
-		err = json.Unmarshal(keydata, &store)
-		if err != nil {
-			return nil, err
+	if existingData != nil {
+		if keydata, ok := existingData[naclStoreKey]; ok {
+			err = json.Unmarshal(keydata, &store)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
+	store[k.PublicKey] = naclStoredKey{
+		AcornNamespace:    k.AcornNamespace,
+		Primary:           k.Primary,
+		AcornNamespaceUID: k.acornNamespaceUID,
+		PrivateKey:        k.privateKey,
+	}
 
-	store = append(store, map[string][]byte{k.PublicKey: []byte(k.privateKey)})
 	to[naclStoreKey], err = json.Marshal(store)
 	return to, err
 }
@@ -239,7 +252,7 @@ func naclk8sKey(namespace, name string) kclient.ObjectKey {
 	}
 }
 
-func naclSecretName(ctx context.Context, c kclient.Client, namespace string) (string, error) {
+func naclSecretName(ctx context.Context, c kclient.Reader, namespace string) (string, error) {
 	ns := &corev1.Namespace{}
 	err := c.Get(ctx, kclient.ObjectKey{
 		Name: namespace,

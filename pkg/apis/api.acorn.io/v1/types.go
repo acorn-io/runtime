@@ -300,15 +300,15 @@ type BuilderPortOptions struct {
 }
 
 type InfoSpec struct {
-	Version         string `json:"version"`
-	Tag             string `json:"tag"`
-	GitCommit       string `json:"gitCommit"`
-	Dirty           bool   `json:"dirty"`
-	ControllerImage string `json:"controllerImage"`
-	APIServerImage  string `json:"apiServerImage,omitempty"`
-	PublicKey       string `json:"publicKey,omitempty"`
-	Config          Config `json:"config"`
-	UserConfig      Config `json:"userConfig"`
+	Version         string              `json:"version"`
+	Tag             string              `json:"tag"`
+	GitCommit       string              `json:"gitCommit"`
+	Dirty           bool                `json:"dirty"`
+	ControllerImage string              `json:"controllerImage"`
+	APIServerImage  string              `json:"apiServerImage,omitempty"`
+	PublicKeys      []EncryptionKeySpec `json:"publicKeys,omitempty"`
+	Config          Config              `json:"config"`
+	UserConfig      Config              `json:"userConfig"`
 }
 
 type Config struct {
@@ -324,6 +324,11 @@ type Config struct {
 	InternalClusterDomain        string         `json:"internalClusterDomain" usage:"The Kubernetes internal cluster domain (default svc.cluster.local)" wrangler:"nullable"`
 	AcornDNS                     *string        `json:"acornDNS" name:"acorn-dns" usage:"enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)"`
 	AcornDNSEndpoint             *string        `json:"acornDNSEndpoint" name:"acorn-dns-endpoint" usage:"The URL to access the Acorn DNS service"`
+}
+
+type EncryptionKeySpec struct {
+	KeyID       string            `json:"keyID"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

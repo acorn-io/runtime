@@ -141,14 +141,14 @@ func TestEncryptionEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	keyBytes, err := base64.StdEncoding.DecodeString(info.Spec.PublicKey)
+	keyBytes, err := base64.StdEncoding.DecodeString(info.Spec.PublicKeys[0].KeyID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Len(t, keyBytes, 32)
 
-	encData, err := nacl.MultipleKeyEncrypt(plainTextData, []string{info.Spec.PublicKey})
+	encData, err := nacl.MultipleKeyEncrypt(plainTextData, []string{info.Spec.PublicKeys[0].KeyID})
 	if err != nil {
 		t.Fatal(err)
 	}
