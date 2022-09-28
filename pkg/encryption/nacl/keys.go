@@ -10,6 +10,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/nacl/box"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -26,17 +27,18 @@ type NaclKeys map[string]*NaclKey
 type NaclKey struct {
 	AcornNamespace    string
 	Primary           *bool
-	PublicKey         string
+	PublicKey         *[32]byte
 	acornNamespaceUID string
-	privateKey        string
+	privateKey        *[32]byte
 }
 
 type naclKeyStore map[string]naclStoredKey
 type naclStoredKey struct {
-	AcornNamespace    string `json:"acornNamespace,omitempty"`
-	Primary           *bool  `json:"primary,omitempty"`
-	AcornNamespaceUID string `json:"acornNamespaceUID,omitempty"`
-	PrivateKey        string `json:"privateKey,omitempty"`
+	AcornNamespace    string    `json:"acornNamespace,omitempty"`
+	Primary           *bool     `json:"primary,omitempty"`
+	AcornNamespaceUID string    `json:"acornNamespaceUID,omitempty"`
+	PrivateKey        *[32]byte `json:"privateKey,omitempty"`
+	PublicKey         *[32]byte `json:"publicKey,omitempty"`
 }
 
 func GetOrCreatePrimaryNaclKey(ctx context.Context, c kclient.Client, namespace string) (*NaclKey, error) {
@@ -93,7 +95,7 @@ func GetAllNaclKeys(ctx context.Context, c kclient.Reader, namespace string) (Na
 func GetPublicKey(ctx context.Context, c kclient.Reader, namespace string) (string, error) {
 	key, err := GetPrimaryNaclKey(ctx, c, "", namespace)
 	if key != nil {
-		return key.PublicKey, err
+		return keyBytesToB64String(key.PublicKey), err
 	}
 	return "", err
 }
@@ -107,8 +109,8 @@ func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, ex
 		return nil, err
 	}
 
-	naclKey.PublicKey = base64.StdEncoding.EncodeToString(publicKey[:])
-	naclKey.privateKey = base64.StdEncoding.EncodeToString(privateKey[:])
+	naclKey.PublicKey = publicKey
+	naclKey.privateKey = privateKey
 
 	ns := &corev1.Namespace{}
 	err = c.Get(ctx, kclient.ObjectKey{
@@ -172,12 +174,17 @@ func createOrUpdateNaclKeySecret(ctx context.Context, c kclient.Client, key *Nac
 
 func keyToBytes(key string) (*[32]byte, error) {
 	returnBytes := &[32]byte{}
-	if bytes, err := base64.StdEncoding.DecodeString(key); err != nil {
+	if bytes, err := base64.RawURLEncoding.DecodeString(key); err != nil {
 		return nil, err
 	} else {
 		copy(returnBytes[:], bytes)
 	}
 	return returnBytes, nil
+}
+
+func keyBytesToB64String(key *[32]byte) string {
+	bytes := key[:]
+	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 
 func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error) {
@@ -203,8 +210,12 @@ func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error)
 		return nil, NewErrKeyNotFound(false)
 	}
 
-	for pubKey, keyInfo := range store {
-		to[pubKey] = &NaclKey{
+	for pubKeyString, keyInfo := range store {
+		pubKey, err := keyToBytes(pubKeyString)
+		if err != nil {
+			return nil, err
+		}
+		to[pubKeyString] = &NaclKey{
 			AcornNamespace:    keyInfo.AcornNamespace,
 			Primary:           keyInfo.Primary,
 			PublicKey:         pubKey,
@@ -212,7 +223,7 @@ func secretToNaclKeys(secret *corev1.Secret, namespace string) (NaclKeys, error)
 			acornNamespaceUID: string(uid),
 		}
 		if *keyInfo.Primary {
-			to["primary"] = to[pubKey]
+			to["primary"] = to[pubKeyString]
 		}
 	}
 
@@ -234,11 +245,14 @@ func (k *NaclKey) toSecretData(existingData map[string][]byte) (map[string][]byt
 			}
 		}
 	}
-	store[k.PublicKey] = naclStoredKey{
+	stringKey := keyBytesToB64String(k.PublicKey)
+	logrus.Errorf("StringKey: %s", stringKey)
+	store[stringKey] = naclStoredKey{
 		AcornNamespace:    k.AcornNamespace,
 		Primary:           k.Primary,
 		AcornNamespaceUID: k.acornNamespaceUID,
 		PrivateKey:        k.privateKey,
+		PublicKey:         k.PublicKey,
 	}
 
 	to[naclStoreKey], err = json.Marshal(store)

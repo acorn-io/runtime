@@ -27,27 +27,18 @@ func DecryptNamespacedData(ctx context.Context, c kclient.Client, data []byte, n
 }
 
 func (k *NaclKey) Decrypt(encData []byte) ([]byte, error) {
-	pubkey, err := keyToBytes(k.PublicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	privkey, err := keyToBytes(k.privateKey)
-	if err != nil {
-		return nil, err
-	}
-
+	pubKeyString := keyBytesToB64String(k.PublicKey)
 	preppedData, err := unwrapForDecryption(encData)
 	if err != nil {
 		return nil, err
 	}
 
-	encryptedData, ok := preppedData[k.PublicKey]
+	encryptedData, ok := preppedData[pubKeyString]
 	if !ok {
 		return nil, &ErrDecryptionKeyNotAvailable{}
 	}
 
-	decryptedBytes, ok := box.OpenAnonymous(nil, encryptedData, pubkey, privkey)
+	decryptedBytes, ok := box.OpenAnonymous(nil, encryptedData, k.PublicKey, k.privateKey)
 	if !ok {
 		return nil, &ErrUnableToDecrypt{}
 	}
@@ -58,7 +49,7 @@ func (k *NaclKey) Decrypt(encData []byte) ([]byte, error) {
 func unwrapForDecryption(data []byte) (map[string][]byte, error) {
 	trimmedData := strings.TrimPrefix(string(data), "ACORNENC:")
 
-	data, err := base64.StdEncoding.DecodeString(trimmedData)
+	data, err := base64.RawURLEncoding.DecodeString(trimmedData)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +62,7 @@ func unwrapForDecryption(data []byte) (map[string][]byte, error) {
 
 	returnData := map[string][]byte{}
 	for k, v := range *mappedData {
-		returnData[k], err = base64.StdEncoding.DecodeString(v)
+		returnData[k], err = base64.RawURLEncoding.DecodeString(v)
 		if err != nil {
 			return nil, err
 		}

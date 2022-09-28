@@ -41,14 +41,14 @@ func (s *Storage) New() runtime.Object {
 }
 
 func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
-	var publicKeys []apiv1.EncryptionKeySpec
+	var publicKeys []apiv1.EncryptionKey
 	ns, _ := request.NamespaceFrom(ctx)
 	if ns != "" {
 		_, err := nacl.GetOrCreatePrimaryNaclKey(ctx, s.client, ns)
 		if err != nil {
 			return nil, err
 		}
-		publicKeys, err = encryption.GetEncryptionKeySpecList(ctx, s.client, ns)
+		publicKeys, err = encryption.GetEncryptionKeyList(ctx, s.client, ns)
 		if err != nil {
 			return nil, err
 		}

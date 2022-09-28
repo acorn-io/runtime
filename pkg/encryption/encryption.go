@@ -10,19 +10,19 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetEncryptionKeySpecList(ctx context.Context, c kclient.Reader, namespace string) ([]apiv1.EncryptionKeySpec, error) {
+func GetEncryptionKeyList(ctx context.Context, c kclient.Reader, namespace string) ([]apiv1.EncryptionKey, error) {
 	var keyNotFound *nacl.ErrKeyNotFound
 
-	keys, err := naclKeysToEncryptionKeySpecList(ctx, c, namespace)
+	keys, err := naclKeysToEncryptionKeyList(ctx, c, namespace)
 	if errors.As(err, &keyNotFound) {
 		logrus.Error(err)
-		return []apiv1.EncryptionKeySpec{}, nil
+		return []apiv1.EncryptionKey{}, nil
 	}
 	return keys, err
 }
 
-func naclKeysToEncryptionKeySpecList(ctx context.Context, c kclient.Reader, namespace string) ([]apiv1.EncryptionKeySpec, error) {
-	out := []apiv1.EncryptionKeySpec{}
+func naclKeysToEncryptionKeyList(ctx context.Context, c kclient.Reader, namespace string) ([]apiv1.EncryptionKey, error) {
+	out := []apiv1.EncryptionKey{}
 	values, err := nacl.GetAllNaclKeys(ctx, c, namespace)
 	if err != nil {
 		return out, err
@@ -31,7 +31,7 @@ func naclKeysToEncryptionKeySpecList(ctx context.Context, c kclient.Reader, name
 		if pubKey == "primary" {
 			continue
 		}
-		out = append(out, apiv1.EncryptionKeySpec{
+		out = append(out, apiv1.EncryptionKey{
 			KeyID:       pubKey,
 			Annotations: map[string]string{},
 		})

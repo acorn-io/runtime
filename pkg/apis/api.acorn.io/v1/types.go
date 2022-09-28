@@ -300,15 +300,15 @@ type BuilderPortOptions struct {
 }
 
 type InfoSpec struct {
-	Version         string              `json:"version"`
-	Tag             string              `json:"tag"`
-	GitCommit       string              `json:"gitCommit"`
-	Dirty           bool                `json:"dirty"`
-	ControllerImage string              `json:"controllerImage"`
-	APIServerImage  string              `json:"apiServerImage,omitempty"`
-	PublicKeys      []EncryptionKeySpec `json:"publicKeys,omitempty"`
-	Config          Config              `json:"config"`
-	UserConfig      Config              `json:"userConfig"`
+	Version         string          `json:"version"`
+	Tag             string          `json:"tag"`
+	GitCommit       string          `json:"gitCommit"`
+	Dirty           bool            `json:"dirty"`
+	ControllerImage string          `json:"controllerImage"`
+	APIServerImage  string          `json:"apiServerImage,omitempty"`
+	PublicKeys      []EncryptionKey `json:"publicKeys,omitempty"`
+	Config          Config          `json:"config"`
+	UserConfig      Config          `json:"userConfig"`
 }
 
 type Config struct {
@@ -326,7 +326,7 @@ type Config struct {
 	AcornDNSEndpoint             *string        `json:"acornDNSEndpoint" name:"acorn-dns-endpoint" usage:"The URL to access the Acorn DNS service"`
 }
 
-type EncryptionKeySpec struct {
+type EncryptionKey struct {
 	KeyID       string            `json:"keyID"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 }

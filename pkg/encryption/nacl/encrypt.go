@@ -25,7 +25,7 @@ func Encrypt(msg, recipientPublicKey string) (*EncryptedData, error) {
 	encryptedBytes, err := box.SealAnonymous(nil, []byte(msg), key, crypto_rand.Reader)
 	return &EncryptedData{
 		PublicKey:        recipientPublicKey,
-		EncryptedContent: base64.StdEncoding.EncodeToString(encryptedBytes),
+		EncryptedContent: base64.RawURLEncoding.EncodeToString(encryptedBytes),
 	}, err
 }
 
@@ -49,7 +49,7 @@ func (f *EncryptedData) Marshal() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	b64 := base64.StdEncoding.EncodeToString(jsonBytes)
+	b64 := base64.RawURLEncoding.EncodeToString(jsonBytes)
 	return strings.Join([]string{"ACORNENC", b64}, ":"), nil
 }
 
@@ -58,6 +58,6 @@ func (f MultiEncryptedData) Marshal() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	b64 := base64.StdEncoding.EncodeToString(jsonBytes)
+	b64 := base64.RawURLEncoding.EncodeToString(jsonBytes)
 	return strings.Join([]string{"ACORNENC", b64}, ":"), nil
 }

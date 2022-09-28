@@ -31,7 +31,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus":         schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Credential":                     schema_pkg_apis_apiacornio_v1_Credential(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.CredentialList":                 schema_pkg_apis_apiacornio_v1_CredentialList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKeySpec":              schema_pkg_apis_apiacornio_v1_EncryptionKeySpec(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey":                  schema_pkg_apis_apiacornio_v1_EncryptionKey(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Image":                          schema_pkg_apis_apiacornio_v1_Image(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageDetails":                   schema_pkg_apis_apiacornio_v1_ImageDetails(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageList":                      schema_pkg_apis_apiacornio_v1_ImageList(ref),
@@ -1229,7 +1229,7 @@ func schema_pkg_apis_apiacornio_v1_CredentialList(ref common.ReferenceCallback) 
 	}
 }
 
-func schema_pkg_apis_apiacornio_v1_EncryptionKeySpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_apiacornio_v1_EncryptionKey(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -1688,7 +1688,7 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKeySpec"),
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey"),
 									},
 								},
 							},
@@ -1711,7 +1711,7 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKeySpec"},
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey"},
 	}
 }
 
