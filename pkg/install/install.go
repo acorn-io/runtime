@@ -115,6 +115,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	klogv2.SetOutput(io.Discard)
 	utilruntime.ErrorHandlers = nil
 
+	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "production" {
 		if opts.Config.LetsEncryptEmail == "" {
 			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt (required for production)")
@@ -123,7 +124,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			}
 			opts.Config.LetsEncryptEmail = result
 		}
+	}
 
+	// Validate E-Mail address provided for Let's Encrypt registration
+	if opts.Config.LetsEncryptEmail != "" {
 		mail, ok := validMailAddress(opts.Config.LetsEncryptEmail)
 		if !ok {
 			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
