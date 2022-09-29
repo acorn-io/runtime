@@ -300,15 +300,16 @@ type BuilderPortOptions struct {
 }
 
 type InfoSpec struct {
-	Version         string          `json:"version"`
-	Tag             string          `json:"tag"`
-	GitCommit       string          `json:"gitCommit"`
-	Dirty           bool            `json:"dirty"`
-	ControllerImage string          `json:"controllerImage"`
-	APIServerImage  string          `json:"apiServerImage,omitempty"`
-	PublicKeys      []EncryptionKey `json:"publicKeys,omitempty"`
-	Config          Config          `json:"config"`
-	UserConfig      Config          `json:"userConfig"`
+	Version                string          `json:"version"`
+	Tag                    string          `json:"tag"`
+	GitCommit              string          `json:"gitCommit"`
+	Dirty                  bool            `json:"dirty"`
+	ControllerImage        string          `json:"controllerImage"`
+	APIServerImage         string          `json:"apiServerImage,omitempty"`
+	PublicKeys             []EncryptionKey `json:"publicKeys,omitempty"`
+	Config                 Config          `json:"config"`
+	UserConfig             Config          `json:"userConfig"`
+	LetsEncryptCertificate string          `json:"letsEncryptCertificate,omitempty"`
 }
 
 type Config struct {
