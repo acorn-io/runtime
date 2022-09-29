@@ -319,7 +319,7 @@ type Config struct {
 	ClusterDomains               []string       `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
 	TLSEnabled                   *bool          `json:"tlsEnabled" name:"tls-enabled" usage:"If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)"`
 	LetsEncrypt                  *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"staging|production|disabled. If set, the Let's Encrypt environment to use for TLS certificates (default staging)"`
-	LetsEncryptEmail             string         `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=production. The email address to use for Let's Encrypt (default '')"`
+	LetsEncryptEmail             string         `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=production. The email address to use for Let's Encrypt registration(default '')"`
 	SetPodSecurityEnforceProfile *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
 	PodSecurityEnforceProfile    string         `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
 	DefaultPublishMode           v1.PublishMode `json:"defaultPublishMode" usage:"If no publish mode is set default to this value (default user)" wrangler:"nullable,options=all|none|defined"`
