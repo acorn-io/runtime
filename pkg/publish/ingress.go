@@ -19,12 +19,12 @@ import (
 )
 
 func toPrefix(serviceName string, appInstance *v1.AppInstance) string {
-	hostPrefix := serviceName + "---" + appInstance.Name
+	hostPrefix := serviceName + "." + appInstance.Name
 	if serviceName == "default" {
 		hostPrefix = appInstance.Name
 	}
 	if appInstance.Namespace != system.DefaultUserNamespace {
-		hostPrefix += "---" + appInstance.Namespace
+		hostPrefix += "." + appInstance.Namespace
 	}
 	return hostPrefix
 }
