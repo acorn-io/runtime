@@ -6,7 +6,7 @@ const (
 	Namespace            = "acorn-system"
 	ConfigName           = "acorn-config"
 	TLSSecretName        = "acorn-tls"
-	LESecretName         = "acorn-le"
+	LEAccountSecretName         = "acorn-le-account"
 	DefaultUserNamespace = "acorn"
 	DNSSecretName        = "acorn-dns"
 )
