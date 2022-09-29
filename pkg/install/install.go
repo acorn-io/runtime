@@ -134,6 +134,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			}
 			opts.Config.LetsEncryptEmail = result
 		}
+		pterm.Info.Println("You've enabled automatic TLS certificate provisioning with Let's Encrypt production. This can take a few minutes to configure.")
 	}
 
 	// Validate E-Mail address provided for Let's Encrypt registration
