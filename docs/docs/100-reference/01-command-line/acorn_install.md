@@ -30,6 +30,9 @@ acorn install
       --image string                          Override the default image used for the deployment
       --ingress-class-name string             The ingress class name to assign to all created ingress resources (default '')
       --internal-cluster-domain string        The Kubernetes internal cluster domain (default svc.cluster.local)
+      --lets-encrypt string                   staging|production|disabled. If set, the Let's Encrypt environment to use for TLS certificates (default staging)
+      --lets-encrypt-email string             Required if --lets-encrypt=production. The email address to use for Let's Encrypt registration(default '')
+      --lets-encrypt-tos-agree                Required if --lets-encrypt=production. If true, you agree to the Let's Encrypt terms of service (default false)
       --mode string                           Initialize only 'config', 'resources', or 'both' (default 'both')
   -o, --output string                         Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string   The name of the PodSecurity profile to set (default baseline)

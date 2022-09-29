@@ -184,6 +184,16 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.LetsEncrypt != nil {
+		in, out := &in.LetsEncrypt, &out.LetsEncrypt
+		*out = new(string)
+		**out = **in
+	}
+	if in.LetsEncryptTOSAgree != nil {
+		in, out := &in.LetsEncryptTOSAgree, &out.LetsEncryptTOSAgree
+		*out = new(bool)
+		**out = **in
+	}
 	if in.SetPodSecurityEnforceProfile != nil {
 		in, out := &in.SetPodSecurityEnforceProfile, &out.SetPodSecurityEnforceProfile
 		*out = new(bool)
