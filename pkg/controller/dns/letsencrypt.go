@@ -198,7 +198,7 @@ func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 	 * Construct new LE User
 	 */
 	targetUsername := strings.TrimPrefix(domain, ".") // leading dot can be an issue
-	email := fmt.Sprintf("%s@on-acorn.io", targetUsername)
+	email := "staging-certs@acorn.io"
 	url := LetsEncryptURLStaging
 	if strings.EqualFold(*cfg.LetsEncrypt, "production") {
 		url = LetsEncryptURLProduction
