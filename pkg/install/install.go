@@ -117,6 +117,15 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "production" {
+		if opts.Config.LetsEncryptTOSAgree == nil || !*opts.Config.LetsEncryptTOSAgree {
+			ok, err := pterm.DefaultInteractiveConfirm.Show("You are choosing to use Let's Encrypt production environment for TLS certificates. To do so, you must agree to their Terms of Service: https://community.letsencrypt.org/tos\nTip: use --lets-encrypt-tos-agree to skip this prompt\nDo you agree to Let's Encrypt TOS?")
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return fmt.Errorf("you must agree to Let's Encrypt TOS to use their production environment")
+			}
+		}
 		if opts.Config.LetsEncryptEmail == "" {
 			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt (required for production)")
 			if err != nil {
