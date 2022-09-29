@@ -36,14 +36,14 @@ const (
 )
 
 type LEUser struct {
-	Name         string
-	Email        string
-	Registration *registration.Resource
-	Key          crypto.PrivateKey
-	URL          string
+	name         string
+	email        string
+	registration *registration.Resource
+	key          crypto.PrivateKey
+	url          string
 }
 
-func FromSecret(secret *corev1.Secret) (*LEUser, error) {
+func fromSecret(secret *corev1.Secret) (*LEUser, error) {
 	block, _ := pem.Decode(secret.Data["privateKey"])
 	x509Encoded := block.Bytes
 	privateKey, err := x509.ParseECPrivateKey(x509Encoded)
@@ -57,44 +57,44 @@ func FromSecret(secret *corev1.Secret) (*LEUser, error) {
 	}
 
 	return &LEUser{
-		Name:         string(secret.Data["name"]),
-		Email:        string(secret.Data["email"]),
-		Registration: &reg,
-		Key:          privateKey,
-		URL:          string(secret.Data["url"]),
+		name:         string(secret.Data["name"]),
+		email:        string(secret.Data["email"]),
+		registration: &reg,
+		key:          privateKey,
+		url:          string(secret.Data["url"]),
 	}, nil
 }
 
 func (u *LEUser) GetEmail() string {
-	return u.Email
+	return u.email
 }
-func (u LEUser) GetRegistration() *registration.Resource {
-	return u.Registration
+func (u *LEUser) GetRegistration() *registration.Resource {
+	return u.registration
 }
 func (u *LEUser) GetPrivateKey() crypto.PrivateKey {
-	return u.Key
+	return u.key
 }
 
-func (u *LEUser) Register() error {
-	if u.Name == "" || u.Email == "" {
+func (u *LEUser) register() error {
+	if u.name == "" || u.email == "" {
 		return fmt.Errorf("not registering LE User: missing name or email")
 	}
 
-	if u.URL == "" {
+	if u.url == "" {
 		return fmt.Errorf("not registering LE User: missing URL")
 	}
 
-	if u.Key == nil {
+	if u.key == nil {
 		key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		if err != nil {
 			return err
 		}
-		u.Key = key
+		u.key = key
 	}
 
 	conf := lego.NewConfig(u)
 
-	conf.CADirURL = u.URL
+	conf.CADirURL = u.url
 
 	client, err := lego.NewClient(conf)
 	if err != nil {
@@ -105,22 +105,22 @@ func (u *LEUser) Register() error {
 	if err != nil {
 		return err
 	}
-	u.Registration = reg
+	u.registration = reg
 
-	logrus.Infof("registered LE User: %s", u.Name)
+	logrus.Infof("registered LE User: %s", u.name)
 
 	return nil
 
 }
 
-func (u *LEUser) ToSecret() (*corev1.Secret, error) {
-	if u.Registration == nil {
+func (u *LEUser) toSecret() (*corev1.Secret, error) {
+	if u.registration == nil {
 		return nil, fmt.Errorf("not saving LE User: missing registration")
 	}
-	x509Encoded, _ := x509.MarshalECPrivateKey(u.Key.(*ecdsa.PrivateKey))
+	x509Encoded, _ := x509.MarshalECPrivateKey(u.key.(*ecdsa.PrivateKey))
 	pemEncoded := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: x509Encoded})
 
-	reg, err := json.Marshal(u.Registration)
+	reg, err := json.Marshal(u.registration)
 	if err != nil {
 		return nil, err
 	}
@@ -134,17 +134,17 @@ func (u *LEUser) ToSecret() (*corev1.Secret, error) {
 			},
 		},
 		Data: map[string][]byte{
-			"name":         []byte(u.Name),
-			"email":        []byte(u.Email),
+			"name":         []byte(u.name),
+			"email":        []byte(u.email),
 			"privateKey":   pemEncoded,
 			"registration": reg,
-			"url":          []byte(u.URL),
+			"url":          []byte(u.url),
 		},
 	}, nil
 }
 
-func (u *LEUser) GenerateWildcardCert(dnsendpoint, domain, token string) (*certificate.Resource, error) {
-	if u.Registration == nil {
+func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certificate.Resource, error) {
+	if u.registration == nil {
 		return nil, fmt.Errorf("not generating LE cert: missing registration")
 	}
 
@@ -154,7 +154,7 @@ func (u *LEUser) GenerateWildcardCert(dnsendpoint, domain, token string) (*certi
 
 	conf := lego.NewConfig(u)
 
-	conf.CADirURL = u.URL
+	conf.CADirURL = u.url
 
 	client, err := lego.NewClient(conf)
 	if err != nil {
@@ -186,13 +186,13 @@ func matchLeURLToEnv(url string) string {
 }
 
 func (u *LEUser) toHash() string {
-	toHash := []byte(fmt.Sprintf("%s-%s-%s", u.Name, matchLeURLToEnv(u.URL), u.Email))
+	toHash := []byte(fmt.Sprintf("%s-%s-%s", u.name, matchLeURLToEnv(u.url), u.email))
 	dig := sha1.New()
 	dig.Write([]byte(toHash))
 	return hex.EncodeToString(dig.Sum(nil))
 }
 
-func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client, domain string) (*LEUser, error) {
+func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client, domain string) (*LEUser, error) {
 
 	/*
 	 * Construct new LE User
@@ -211,9 +211,9 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 	}
 
 	newLEUser := &LEUser{
-		Name:  targetUsername,
-		Email: email,
-		URL:   url,
+		name:  targetUsername,
+		email: email,
+		url:   url,
 	}
 
 	newLEUserHash := newLEUser.toHash()
@@ -230,7 +230,7 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 
 	// Existing LE User Secret found
 	if err == nil {
-		currentLEUser, err := FromSecret(leAccountSecret)
+		currentLEUser, err := fromSecret(leAccountSecret)
 		if err != nil {
 			return nil, err
 		}
@@ -249,11 +249,11 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 		}
 	}
 
-	if err := newLEUser.Register(); err != nil {
+	if err := newLEUser.register(); err != nil {
 		return nil, fmt.Errorf("problem registering Let's Encrypt User: %w", err)
 	}
 
-	sec, err := newLEUser.ToSecret()
+	sec, err := newLEUser.toSecret()
 	if err != nil {
 		return nil, fmt.Errorf("problem creating Let's Encrypt User secret: %w", err)
 	}
@@ -262,13 +262,13 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 		return nil, fmt.Errorf("problem creating Let's Encrypt User secret: %w", err)
 	}
 
-	logrus.Infof("Registered Let's Encrypt User: %s", newLEUser.Name)
+	logrus.Infof("Registered Let's Encrypt User: %s", newLEUser.name)
 
 	return newLEUser, nil
 
 }
 
-func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kclient.Client, dnsendpoint, domain, token string) (*corev1.Secret, error) {
+func (u *LEUser) ensureWildcardCertificateSecret(ctx context.Context, client kclient.Client, dnsendpoint, domain, token string) (*corev1.Secret, error) {
 
 	sec := &corev1.Secret{}
 	secErr := client.Get(ctx, router.Key(system.Namespace, system.TLSSecretName), sec)
@@ -305,7 +305,7 @@ func (u *LEUser) EnsureWildcardCertificateSecret(ctx context.Context, client kcl
 		}
 	}
 
-	cert, err := u.GenerateWildcardCert(dnsendpoint, domain, token)
+	cert, err := u.generateWildcardCert(dnsendpoint, domain, token)
 	if err != nil {
 		return nil, fmt.Errorf("problem generating wildcard certificate: %w", err)
 	}

@@ -65,13 +65,13 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 
 	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
 		// Ensure that we have a Let's Encrypt account ready
-		leUser, err := EnsureLEUser(req.Ctx, cfg, req.Client, domain)
+		leUser, err := ensureLEUser(req.Ctx, cfg, req.Client, domain)
 		if err != nil {
 			return err
 		}
 
 		// Generate wildcard certificate for domain
-		_, err = leUser.EnsureWildcardCertificateSecret(req.Ctx, req.Client, *cfg.AcornDNSEndpoint, domain, token)
+		_, err = leUser.ensureWildcardCertificateSecret(req.Ctx, req.Client, *cfg.AcornDNSEndpoint, domain, token)
 		if err != nil {
 			return err
 		}
