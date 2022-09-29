@@ -127,7 +127,7 @@ func (u *LEUser) ToSecret() (*corev1.Secret, error) {
 
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      system.LESecretName,
+			Name:      system.LEAccountSecretName,
 			Namespace: system.Namespace,
 			Labels: map[string]string{
 				labels.AcornManaged: "true",
@@ -223,7 +223,7 @@ func EnsureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 	 */
 
 	leAccountSecret := &corev1.Secret{}
-	err := client.Get(ctx, router.Key(system.Namespace, system.LESecretName), leAccountSecret)
+	err := client.Get(ctx, router.Key(system.Namespace, system.LEAccountSecretName), leAccountSecret)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
