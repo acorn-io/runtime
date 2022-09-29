@@ -40,7 +40,7 @@ func (d *DNSProvider) CleanUp(domain, token, keyAuth string) error {
 }
 
 func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
-	return 30 * time.Second, 5 * time.Second
+	return 3 * time.Minute, 1 * time.Minute
 }
 
 /*

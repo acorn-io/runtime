@@ -21,6 +21,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
+	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/sirupsen/logrus"
@@ -143,6 +144,10 @@ func (u *LEUser) toSecret() (*corev1.Secret, error) {
 	}, nil
 }
 
+func noOpCheck(_, _, _ string, _ dns01.PreCheckFunc) (bool, error) {
+	return true, nil
+}
+
 func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certificate.Resource, error) {
 	if u.registration == nil {
 		return nil, fmt.Errorf("not generating LE cert: missing registration")
@@ -163,7 +168,7 @@ func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certi
 
 	dnsProvider := NewDNSProvider(dnsendpoint, domain, token)
 
-	if err := client.Challenge.SetDNS01Provider(dnsProvider); err != nil {
+	if err := client.Challenge.SetDNS01Provider(dnsProvider, dns01.WrapPreCheck(noOpCheck)); err != nil {
 		return nil, err
 	}
 
