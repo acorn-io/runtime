@@ -191,6 +191,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.AcornDNSEndpoint != nil {
 		mergedConfig.AcornDNSEndpoint = newConfig.AcornDNSEndpoint
 	}
+	if newConfig.LetsEncryptTOSAgree != nil {
+		mergedConfig.LetsEncryptTOSAgree = newConfig.LetsEncryptTOSAgree
+	}
 	if newConfig.LetsEncrypt != nil {
 		mergedConfig.LetsEncrypt = newConfig.LetsEncrypt
 	}

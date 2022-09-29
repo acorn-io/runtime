@@ -125,6 +125,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			if !ok {
 				return fmt.Errorf("you must agree to Let's Encrypt TOS to use their production environment")
 			}
+			opts.Config.LetsEncryptTOSAgree = &ok
 		}
 		if opts.Config.LetsEncryptEmail == "" {
 			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt (required for production)")
