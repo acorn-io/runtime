@@ -28,6 +28,7 @@ acorn secret`,
 	cmd.AddCommand(NewSecretCreate())
 	cmd.AddCommand(NewSecretDelete())
 	cmd.AddCommand(NewSecretExpose())
+	cmd.AddCommand(NewSecretEncrypt())
 	return cmd
 }
 
