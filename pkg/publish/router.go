@@ -61,11 +61,12 @@ func Router(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 					rules = append(rules, routerRule(hostname, router))
 				}
 			}
-			hostPrefix := toPrefix(serviceName, app)
+			svcName := serviceName
 			if i > 0 {
-				hostPrefix = toPrefix(name.SafeConcatName(serviceName, fmt.Sprint(port.Port)), app)
+				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
 			}
 			for _, domain := range cfg.ClusterDomains {
+				hostPrefix := toPrefix(domain, svcName, app)
 				hostname := hostPrefix + domain
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
