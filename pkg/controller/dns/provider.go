@@ -20,26 +20,26 @@ const (
  * DNS01 Challenge Solver (Lego Interface)
  */
 
-type DNSProvider struct {
+type ACMEDNS01ChallengeProvider struct {
 	client DNSClient
 }
 
-func NewDNSProvider(endpoint, domain, token string) *DNSProvider {
-	return &DNSProvider{
+func NewACMEDNS01ChallengeProvider(endpoint, domain, token string) *ACMEDNS01ChallengeProvider {
+	return &ACMEDNS01ChallengeProvider{
 		client: NewDNSClient(endpoint, domain, token),
 	}
 }
 
-func (d *DNSProvider) Present(domain, token, keyAuth string) error {
+func (d *ACMEDNS01ChallengeProvider) Present(domain, token, keyAuth string) error {
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 	return d.client.SetTXTRecord(fqdn, value)
 }
 
-func (d *DNSProvider) CleanUp(domain, token, keyAuth string) error {
+func (d *ACMEDNS01ChallengeProvider) CleanUp(domain, token, keyAuth string) error {
 	return d.client.DeleteDNSRecord(domain)
 }
 
-func (d *DNSProvider) Timeout() (timeout, interval time.Duration) {
+func (d *ACMEDNS01ChallengeProvider) Timeout() (timeout, interval time.Duration) {
 	return 3 * time.Minute, 1 * time.Minute
 }
 

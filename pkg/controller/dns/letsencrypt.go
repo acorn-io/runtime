@@ -166,7 +166,7 @@ func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certi
 		return nil, err
 	}
 
-	dnsProvider := NewDNSProvider(dnsendpoint, domain, token)
+	dnsProvider := NewACMEDNS01ChallengeProvider(dnsendpoint, domain, token)
 
 	if err := client.Challenge.SetDNS01Provider(dnsProvider, dns01.WrapPreCheck(noOpCheck)); err != nil {
 		return nil, err
