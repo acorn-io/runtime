@@ -147,7 +147,7 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 			Containers: []corev1.Container{
 				{
 					Name:            "exec",
-					Image:           opts.RuntimeImage,
+					Image:           image,
 					ImagePullPolicy: corev1.PullIfNotPresent,
 					Command: []string{
 						"tail",
