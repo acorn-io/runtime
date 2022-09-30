@@ -84,7 +84,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 			}
 			svcName := serviceName
 			if i > 0 {
-				name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
+				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
 			}
 			for _, domain := range cfg.ClusterDomains {
 				hostPrefix := toPrefix(domain, svcName, app)
