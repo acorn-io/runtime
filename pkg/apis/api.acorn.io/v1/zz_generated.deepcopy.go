@@ -179,11 +179,6 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.TLSEnabled != nil {
-		in, out := &in.TLSEnabled, &out.TLSEnabled
-		*out = new(bool)
-		**out = **in
-	}
 	if in.LetsEncrypt != nil {
 		in, out := &in.LetsEncrypt, &out.LetsEncrypt
 		*out = new(string)

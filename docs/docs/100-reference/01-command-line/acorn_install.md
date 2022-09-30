@@ -37,7 +37,6 @@ acorn install
   -o, --output string                         Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string   The name of the PodSecurity profile to set (default baseline)
       --set-pod-security-enforce-profile      Set the PodSecurity profile on created namespaces (default true)
-      --tls-enabled                           If true HTTPS URLs will be rendered for HTTP endpoint URLs (default false)
 ```
 
 ### Options inherited from parent commands

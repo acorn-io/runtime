@@ -29,9 +29,6 @@ var (
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
-	if c.TLSEnabled == nil {
-		c.TLSEnabled = new(bool)
-	}
 	if len(c.DefaultPublishMode) == 0 {
 		c.DefaultPublishMode = v1.PublishModeDefined
 	}
@@ -159,9 +156,6 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		} else {
 			mergedConfig.IngressClassName = newConfig.IngressClassName
 		}
-	}
-	if newConfig.TLSEnabled != nil {
-		mergedConfig.TLSEnabled = newConfig.TLSEnabled
 	}
 	if newConfig.SetPodSecurityEnforceProfile == nil {
 		mergedConfig.SetPodSecurityEnforceProfile = newConfig.SetPodSecurityEnforceProfile
