@@ -129,6 +129,21 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 	}
 
+	kclient, err := k8sclient.Default()
+	if err != nil {
+		return err
+	}
+
+	var installIngressController bool
+	if ok, err := config.IsDockerDesktop(ctx, kclient); err != nil {
+		return err
+	} else if ok {
+		if opts.Config.IngressClassName == nil {
+			installIngressController = true
+			opts.Config.IngressClassName = &[]string{"traefik"}[0]
+		}
+	}
+
 	apply, err := newApply(ctx)
 	if err != nil {
 		return err
@@ -157,14 +172,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 		s.Success()
 
-		kclient, err := k8sclient.Default()
-		if err != nil {
-			return err
-		}
-
-		if ok, err := config.IsDockerDesktop(ctx, kclient); err != nil {
-			return err
-		} else if ok {
+		if installIngressController {
 			if err := installTraefik(ctx, opts.Progress, kclient, apply); err != nil {
 				return err
 			}
@@ -190,6 +198,8 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			}
 		}
 		s.SuccessWithWarning(msg)
+	} else {
+		s.Success()
 	}
 	s.Success()
 
@@ -213,26 +223,18 @@ func traefikResources() (result []runtime.Object, _ error) {
 		return nil, err
 	}
 	for _, obj := range objs {
-		if obj.GetObjectKind().GroupVersionKind().Kind == "IngressClass" {
-			m, err := meta.Accessor(obj)
-			if err != nil {
-				return nil, err
-			}
-
-			anno := m.GetAnnotations()
-			if anno == nil {
-				anno = map[string]string{}
-			}
-			anno["ingressclass.kubernetes.io/is-default-class"] = "true"
-			m.SetAnnotations(anno)
-
-			labels := m.GetLabels()
-			if labels == nil {
-				labels = map[string]string{}
-			}
-			labels[labels2.AcornManaged] = "true"
-			m.SetLabels(labels)
+		m, err := meta.Accessor(obj)
+		if err != nil {
+			return nil, err
 		}
+
+		labels := m.GetLabels()
+		if labels == nil {
+			labels = map[string]string{}
+		}
+		labels[labels2.AcornManaged] = "true"
+		m.SetLabels(labels)
+
 	}
 
 	return objs, nil
