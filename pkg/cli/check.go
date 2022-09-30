@@ -26,12 +26,14 @@ type Check struct {
 	Quiet  bool   `usage:"No Results. Success or Failure only." short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 
-	Image string `usage:"Override the image used for test deployments." short:"i"`
+	Image            string  `usage:"Override the image used for test deployments." short:"i"`
+	IngressClassName *string `usage:"Specify ingress class used for tests"`
+	TestNamespace    *string `usage:"Specify namespace used for tests" short:"n"`
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
 
-	checkOpts := install.CheckOptions{RuntimeImage: a.Image}
+	checkOpts := install.CheckOptions{RuntimeImage: a.Image, IngressClassName: a.IngressClassName, Namespace: a.TestNamespace}
 	checkresult := install.RunChecks(cmd.Context(), checkOpts,
 		install.CheckRBAC,
 		install.CheckNodesReady,

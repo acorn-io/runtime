@@ -41,6 +41,23 @@ type CheckResult struct {
 type CheckOptions struct {
 	// RuntimeImage is required for tests that spin up a pod and that we want to work in airgap environments
 	RuntimeImage string `json:"runtimeImage"`
+
+	// IngressClassName is required for tests that check for ingress capabilities
+	IngressClassName *string `json:"ingressClassName"`
+
+	// Namespace to override the namespace in which tests are executed (default: acorn-system)
+	Namespace *string `json:"namespace"`
+}
+
+func (copts *CheckOptions) setDefaults() {
+	if copts.Namespace == nil {
+		ns := system.Namespace
+		copts.Namespace = &ns
+	}
+
+	if copts.RuntimeImage == "" {
+		copts.RuntimeImage = DefaultImage()
+	}
 }
 
 // PreInstallChecks is a list of all checks that are run before the installation.
@@ -76,6 +93,7 @@ func IsFailed(results []CheckResult) bool {
 
 // RunChecks runs a list of checks and returns their results as a list.
 func RunChecks(ctx context.Context, opts CheckOptions, checks ...func(ctx context.Context, opts CheckOptions) CheckResult) []CheckResult {
+	opts.setDefaults()
 	var results []CheckResult
 	for _, check := range checks {
 		results = append(results, check(ctx, opts))
@@ -92,6 +110,7 @@ func silenceKlog() {
 }
 
 func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
+
 	result := CheckResult{
 		Name: "Exec",
 	}
@@ -122,7 +141,7 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: system.Namespace,
+			Namespace: *opts.Namespace,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -154,7 +173,7 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 
 	// Wait for pod to be ready
 	var podList corev1.PodList
-	watcher, err := cli.Watch(ctx, &podList, client.InNamespace(system.Namespace), client.MatchingFields{"metadata.name": pod.GetName()})
+	watcher, err := cli.Watch(ctx, &podList, client.InNamespace(*opts.Namespace), client.MatchingFields{"metadata.name": pod.GetName()})
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating watcher: %v", err)
@@ -267,7 +286,10 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	ep := &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: system.Namespace,
+			Namespace: *opts.Namespace,
+			Labels: map[string]string{
+				"app": objectName,
+			},
 		},
 		Subsets: []corev1.EndpointSubset{
 			{
@@ -278,7 +300,6 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 				},
 				Ports: []corev1.EndpointPort{
 					{
-						Name:     "http",
 						Port:     80,
 						Protocol: corev1.ProtocolTCP,
 					},
@@ -291,7 +312,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: system.Namespace,
+			Namespace: *opts.Namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
@@ -308,7 +329,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	ing := &networkingv1.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objectName,
-			Namespace: system.Namespace,
+			Namespace: *opts.Namespace,
 		},
 		Spec: networkingv1.IngressSpec{
 			Rules: []networkingv1.IngressRule{
@@ -335,6 +356,10 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 				},
 			},
 		},
+	}
+
+	if opts.IngressClassName != nil {
+		ing.Spec.IngressClassName = opts.IngressClassName
 	}
 
 	// Create objects
@@ -373,20 +398,20 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 
 	// Wait for ingress to be ready, 10s timeout
 	ingw := &networkingv1.IngressList{Items: []networkingv1.Ingress{*ing}}
-	w, err := cli.Watch(ctx, ingw, client.InNamespace(system.Namespace))
+	w, err := cli.Watch(ctx, ingw, client.InNamespace(*opts.Namespace))
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error watching ingress: %v", err)
 		return result
 	}
 
-	nctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 	for {
 		select {
 		case <-nctx.Done():
 			result.Passed = false
-			result.Message = "Ingress not ready (test timed out)"
+			result.Message = "Ingress not ready (test timed out after 1 minute)"
 			return result
 		case f := <-w.ResultChan():
 			if f.Type == watch.Modified {

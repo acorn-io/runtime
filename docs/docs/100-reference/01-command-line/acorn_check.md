@@ -19,10 +19,12 @@ acorn check
 ### Options
 
 ```
-  -h, --help            help for check
-  -i, --image string    Override the image used for test deployments.
-  -o, --output string   Output format (json, yaml, {{gotemplate}})
-  -q, --quiet           No Results. Success or Failure only.
+  -h, --help                        help for check
+  -i, --image string                Override the image used for test deployments.
+      --ingress-class-name string   Specify ingress class used for tests
+  -o, --output string               Output format (json, yaml, {{gotemplate}})
+  -q, --quiet                       No Results. Success or Failure only.
+  -n, --test-namespace string       Specify namespace used for tests
 ```
 
 ### Options inherited from parent commands
