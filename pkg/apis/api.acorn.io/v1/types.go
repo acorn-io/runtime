@@ -318,7 +318,7 @@ type Config struct {
 
 	IngressClassName             *string        `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
 	ClusterDomains               []string       `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
-	LetsEncrypt                  *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"staging|production|disabled. If set, the Let's Encrypt environment to use for TLS certificates (default staging)"`
+	LetsEncrypt                  *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"enabled|disabled|staging. If enabled, uses the Let's Encrypt production environment to issue a wildcard TLS certificate. (default disabled)"`
 	LetsEncryptEmail             string         `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=production. The email address to use for Let's Encrypt registration(default '')"`
 	LetsEncryptTOSAgree          *bool          `json:"letsEncryptTOSAgree" name:"lets-encrypt-tos-agree" usage:"Required if --lets-encrypt=production. If true, you agree to the Let's Encrypt terms of service (default false)"`
 	SetPodSecurityEnforceProfile *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`

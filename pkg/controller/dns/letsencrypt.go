@@ -184,7 +184,7 @@ func matchLeURLToEnv(url string) string {
 	if url == LetsEncryptURLStaging {
 		return "staging"
 	} else if url == LetsEncryptURLProduction {
-		return "production"
+		return "enabled"
 	} else {
 		return "disabled"
 	}
@@ -205,7 +205,7 @@ func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 	targetUsername := strings.TrimPrefix(domain, ".") // leading dot can be an issue
 	email := "staging-certs@acorn.io"
 	url := LetsEncryptURLStaging
-	if strings.EqualFold(*cfg.LetsEncrypt, "production") {
+	if strings.EqualFold(*cfg.LetsEncrypt, "enabled") {
 		url = LetsEncryptURLProduction
 		if cfg.LetsEncryptEmail == "" {
 			return nil, fmt.Errorf("let's encrypt email is required for production")

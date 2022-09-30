@@ -25,7 +25,7 @@ var (
 	AcornDNSStateDefault    = "auto"
 
 	// Let's Encrypt
-	LetsEncryptOptionDefault = "staging"
+	LetsEncryptOptionDefault = "disabled"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
@@ -57,7 +57,7 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 	if c.LetsEncryptTOSAgree == nil {
 		c.LetsEncryptTOSAgree = new(bool)
 	}
-	if *c.LetsEncrypt == "production" {
+	if *c.LetsEncrypt == "enabled" {
 		if c.LetsEncryptEmail == "" {
 			return fmt.Errorf("letsencrypt email is required when using production")
 		}
