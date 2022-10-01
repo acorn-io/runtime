@@ -138,7 +138,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	// Validate E-Mail address provided for Let's Encrypt registration
-	if opts.Config.LetsEncryptEmail != "" {
+	if opts.Config.LetsEncryptEmail != "" || (opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled") {
 		mail, ok := validMailAddress(opts.Config.LetsEncryptEmail)
 		if !ok {
 			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
