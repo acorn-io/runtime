@@ -638,7 +638,20 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							},
 						},
 					},
-					"tlsEnabled": {
+					"letsEncrypt": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"letsEncryptEmail": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"letsEncryptTOSAgree": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
@@ -684,7 +697,7 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "tlsEnabled", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "internalClusterDomain", "acornDNS", "acornDNSEndpoint"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "internalClusterDomain", "acornDNS", "acornDNSEndpoint"},
 			},
 		},
 	}
@@ -1704,6 +1717,12 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
 							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config"),
+						},
+					},
+					"letsEncryptCertificate": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},
