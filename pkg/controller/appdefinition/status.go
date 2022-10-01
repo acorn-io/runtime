@@ -24,7 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -394,11 +393,13 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 		return "", err
 	}
 
-	ingressTLSHosts := []string{}
+	ingressTLSHosts := map[string]interface{}{}
 	for _, ingress := range ingresses.Items {
 		if ingress.Spec.TLS != nil {
 			for _, tls := range ingress.Spec.TLS {
-				ingressTLSHosts = append(ingressTLSHosts, tls.Hosts...)
+				for _, host := range tls.Hosts {
+					ingressTLSHosts[host] = nil
+				}
 			}
 		}
 	}
@@ -420,7 +421,7 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 					if err != nil {
 						return "", err
 					}
-					if slices.Contains(ingressTLSHosts, url.Host) {
+					if _, ok := ingressTLSHosts[url.Host]; ok {
 						buf.WriteString("https://")
 					} else {
 						buf.WriteString("http://")
