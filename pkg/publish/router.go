@@ -79,14 +79,14 @@ func Router(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 			return nil, err
 		}
 
-		tlsIngress := getCertsForPublishedHosts(rules, tlsCerts)
-		for i, ing := range tlsIngress {
+		filteredTLSCerts := filterCertsForPublishedHosts(rules, tlsCerts)
+		for i, tlsCert := range filteredTLSCerts {
 			originalSecret := &corev1.Secret{}
-			err := req.Get(originalSecret, app.Labels[labels.AcornRootNamespace], ing.SecretName)
+			err := req.Get(originalSecret, tlsCert.SecretNamespace, tlsCert.SecretName)
 			if err != nil {
 				return nil, err
 			}
-			secretName := ing.SecretName + "-" + string(originalSecret.UID)[:12]
+			secretName := tlsCert.SecretName + "-" + string(originalSecret.UID)[:12]
 			result = append(result, &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        secretName,
@@ -98,10 +98,13 @@ func Router(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 				Data: originalSecret.Data,
 			})
 			//Override the secret name to the copied name
-			tlsIngress[i].SecretName = secretName
+			filteredTLSCerts[i].SecretName = secretName
+			filteredTLSCerts[i].SecretNamespace = app.Status.Namespace
 		}
 
-		labelMap, annotations := routerIngressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
+		tlsIngress := getCertsForPublishedHosts(rules, filteredTLSCerts)
+
+		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
 		result = append(result, &networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
