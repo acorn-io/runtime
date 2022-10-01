@@ -59,10 +59,10 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 	}
 	if *c.LetsEncrypt == "enabled" {
 		if c.LetsEncryptEmail == "" {
-			return fmt.Errorf("letsencrypt email is required when using production")
+			return fmt.Errorf("letsencrypt email is required when Let's Encrypt is enabled")
 		}
 		if !*c.LetsEncryptTOSAgree {
-			return fmt.Errorf("letsencrypt TOS must be agreed to when using production")
+			return fmt.Errorf("letsencrypt TOS must be agreed to when Let's Encrypt is enabled")
 		}
 	}
 

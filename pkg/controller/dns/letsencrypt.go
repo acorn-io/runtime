@@ -208,7 +208,7 @@ func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 	if strings.EqualFold(*cfg.LetsEncrypt, "enabled") {
 		url = LetsEncryptURLProduction
 		if cfg.LetsEncryptEmail == "" {
-			return nil, fmt.Errorf("let's encrypt email is required for production")
+			return nil, fmt.Errorf("let's encrypt email is required")
 		}
 	}
 	if cfg.LetsEncryptEmail != "" {

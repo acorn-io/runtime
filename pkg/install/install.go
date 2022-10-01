@@ -118,23 +118,23 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {
 		if opts.Config.LetsEncryptTOSAgree == nil || !*opts.Config.LetsEncryptTOSAgree {
-			ok, err := pterm.DefaultInteractiveConfirm.Show("You are choosing to use Let's Encrypt production environment for TLS certificates. To do so, you must agree to their Terms of Service: https://community.letsencrypt.org/tos\nTip: use --lets-encrypt-tos-agree to skip this prompt\nDo you agree to Let's Encrypt TOS?")
+			ok, err := pterm.DefaultInteractiveConfirm.Show("You are choosing to enable Let's Encrypt for TLS certificates. To do so, you must agree to their Terms of Service: https://community.letsencrypt.org/tos\nTip: use --lets-encrypt-tos-agree to skip this prompt\nDo you agree to Let's Encrypt TOS?")
 			if err != nil {
 				return err
 			}
 			if !ok {
-				return fmt.Errorf("you must agree to Let's Encrypt TOS to use their production environment")
+				return fmt.Errorf("you must agree to Let's Encrypt TOS when enabling Let's Encrypt")
 			}
 			opts.Config.LetsEncryptTOSAgree = &ok
 		}
 		if opts.Config.LetsEncryptEmail == "" {
-			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt (required for production)")
+			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt")
 			if err != nil {
 				return err
 			}
 			opts.Config.LetsEncryptEmail = result
 		}
-		pterm.Info.Println("You've enabled automatic TLS certificate provisioning with Let's Encrypt production. This can take a few minutes to configure.")
+		pterm.Info.Println("You've enabled automatic TLS certificate provisioning with Let's Encrypt. This can take a few minutes to configure.")
 	}
 
 	// Validate E-Mail address provided for Let's Encrypt registration
