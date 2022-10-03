@@ -35,7 +35,7 @@ func promptInstall[V any](ctx context.Context, f twoFunc[V]) (V, error) {
 		}
 
 		if shouldInstall {
-			installErr := install.Install(ctx, install.DefaultImage(), nil)
+			installErr := install.Install(ctx, install.DefaultImage(), &install.Options{})
 			if installErr != nil {
 				return v, installErr
 			}
