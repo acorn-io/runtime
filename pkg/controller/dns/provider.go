@@ -81,6 +81,5 @@ func (d *DNSClient) SetTXTRecord(domain, text string) error {
 
 func (d *DNSClient) DeleteDNSRecord(domain string) error {
 	prefix := strings.TrimSuffix(strings.TrimSuffix(domain, "."), d.domain)
-	d.dns.DeleteRecord(d.endpoint, d.domain, prefix, d.token)
-	return nil
+	return d.dns.DeleteRecord(d.endpoint, d.domain, prefix, d.token)
 }

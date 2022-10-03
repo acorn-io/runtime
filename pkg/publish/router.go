@@ -104,7 +104,7 @@ func Router(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 
 		tlsIngress := getCertsForPublishedHosts(rules, filteredTLSCerts)
 
-		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
+		labelMap, annotations := routerIngressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
 		result = append(result, &networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{

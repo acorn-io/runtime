@@ -316,6 +316,9 @@ func (u *LEUser) ensureWildcardCertificateSecret(ctx context.Context, client kcl
 	}
 
 	x509crt, err := certcrypto.ParsePEMCertificate([]byte(cert.Certificate))
+	if err != nil {
+		return nil, fmt.Errorf("problem parsing pem certificate: %w", err)
+	}
 
 	sec = &corev1.Secret{
 		Type: corev1.SecretTypeTLS,

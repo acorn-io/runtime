@@ -15,7 +15,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -424,7 +423,6 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 					} else {
 						host, _, _ = strings.Cut(a, ":")
 					}
-					logrus.Errorf("endpoint address %s parsed as %#v", endpoint.Address, host)
 					if _, ok := ingressTLSHosts[host]; ok {
 						buf.WriteString("https://")
 					} else {
