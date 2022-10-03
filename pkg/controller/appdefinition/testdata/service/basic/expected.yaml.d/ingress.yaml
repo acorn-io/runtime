@@ -44,10 +44,10 @@ metadata:
     "acorn.io/service-name": "buildimage"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"buildimage.app-name.app-namespace.local.on-acorn.io":{"port":81,"service":"buildimage"}}'
+    acorn.io/targets: '{"buildimage-app-name-1234567890abcdef.local.on-acorn.io":{"port":81,"service":"buildimage"}}'
 spec:
   rules:
-    - host: buildimage.app-name.app-namespace.local.on-acorn.io
+    - host: buildimage-app-name-1234567890abcdef.local.on-acorn.io
       http:
         paths:
           - backend:
