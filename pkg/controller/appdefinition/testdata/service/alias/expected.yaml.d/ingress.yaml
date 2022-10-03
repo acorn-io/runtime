@@ -12,7 +12,7 @@ metadata:
     "con2key": "value"
     "both": "con2val"
   annotations:
-    acorn.io/targets: '{"localhost":{"port":81,"service":"svc1"},"svc1.app-name.app-namespace.local.on-acorn.io":{"port":81,"service":"svc1"}}'
+    acorn.io/targets: '{"localhost":{"port":81,"service":"svc1"},"svc1-app-name-1234567890abcdef.local.on-acorn.io":{"port":81,"service":"svc1"}}'
     "con1": "value"
     "con2": "value"
     "both": "con2val"
@@ -28,7 +28,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: svc1.app-name.app-namespace.local.on-acorn.io
+    - host: svc1-app-name-1234567890abcdef.local.on-acorn.io
       http:
         paths:
           - backend:

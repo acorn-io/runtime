@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -22,12 +23,12 @@ var (
 	// AcornDNSEndpointDefault will be overridden at build time for releases
 	AcornDNSEndpointDefault = "https://staging-dns.acrn.io/v1"
 	AcornDNSStateDefault    = "auto"
+
+	// Let's Encrypt
+	LetsEncryptOptionDefault = "disabled"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
-	if c.TLSEnabled == nil {
-		c.TLSEnabled = new(bool)
-	}
 	if len(c.DefaultPublishMode) == 0 {
 		c.DefaultPublishMode = v1.PublishModeDefined
 	}
@@ -49,6 +50,20 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 	}
 	if c.InternalClusterDomain == "" {
 		c.InternalClusterDomain = InternalClusterDomainDefault
+	}
+	if c.LetsEncrypt == nil {
+		c.LetsEncrypt = &LetsEncryptOptionDefault
+	}
+	if c.LetsEncryptTOSAgree == nil {
+		c.LetsEncryptTOSAgree = new(bool)
+	}
+	if *c.LetsEncrypt == "enabled" {
+		if c.LetsEncryptEmail == "" {
+			return fmt.Errorf("letsencrypt email is required when Let's Encrypt is enabled")
+		}
+		if !*c.LetsEncryptTOSAgree {
+			return fmt.Errorf("letsencrypt TOS must be agreed to when Let's Encrypt is enabled")
+		}
 	}
 
 	return nil
@@ -142,9 +157,6 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 			mergedConfig.IngressClassName = newConfig.IngressClassName
 		}
 	}
-	if newConfig.TLSEnabled != nil {
-		mergedConfig.TLSEnabled = newConfig.TLSEnabled
-	}
 	if newConfig.SetPodSecurityEnforceProfile == nil {
 		mergedConfig.SetPodSecurityEnforceProfile = newConfig.SetPodSecurityEnforceProfile
 	}
@@ -172,6 +184,15 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.AcornDNSEndpoint != nil {
 		mergedConfig.AcornDNSEndpoint = newConfig.AcornDNSEndpoint
+	}
+	if newConfig.LetsEncryptTOSAgree != nil {
+		mergedConfig.LetsEncryptTOSAgree = newConfig.LetsEncryptTOSAgree
+	}
+	if newConfig.LetsEncrypt != nil {
+		mergedConfig.LetsEncrypt = newConfig.LetsEncrypt
+	}
+	if newConfig.LetsEncryptEmail != "" {
+		mergedConfig.LetsEncryptEmail = newConfig.LetsEncryptEmail
 	}
 
 	return &mergedConfig
