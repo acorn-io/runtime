@@ -3,12 +3,14 @@ package buildkit
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -22,6 +24,11 @@ func GetRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 func checkDeployment(ctx context.Context, c client.Reader) error {
 	var dep appsv1.Deployment
 	return c.Get(ctx, client.ObjectKey{Name: system.BuildKitName, Namespace: system.Namespace}, &dep)
+}
+
+func checkControllerDeployment(ctx context.Context, c client.Reader) error {
+	var dep appsv1.Deployment
+	return c.Get(ctx, client.ObjectKey{Name: system.ControllerName, Namespace: system.Namespace}, &dep)
 }
 
 func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
@@ -58,6 +65,10 @@ func deleteObjects(ctx context.Context) error {
 			Group:   "apps",
 			Version: "v1",
 			Kind:    "Deployment",
+		}, schema.GroupVersionKind{
+			Group:   "apps",
+			Version: "v1",
+			Kind:    "Daemonset",
 		}).
 		Apply(ctx, nil)
 }
@@ -72,9 +83,38 @@ func applyObjects(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return apply.
+
+	err = apply.
 		WithOwnerSubContext("acorn-buildkitd").
 		Apply(ctx, nil, objects(system.Namespace, system.BuildkitImage, system.RegistryImage)...)
+	if err != nil {
+		return err
+	}
+
+	// check if the controller is running outside of a deployment
+	err = checkControllerDeployment(ctx, c)
+	if !apierror.IsNotFound(err) {
+		registryNodePort, err := GetRegistryPort(ctx, c)
+		if err != nil {
+			return err
+		}
+
+		var dep appsv1.Deployment
+		err1 := c.Get(ctx, client.ObjectKey{Name: system.ControllerName, Namespace: system.Namespace}, &dep)
+		if err1 != nil {
+			return err
+		}
+
+		var image string = dep.Spec.Template.Spec.Containers[0].Image
+		err = apply.
+			WithOwnerSubContext("acorn-buildkitd").
+			Apply(ctx, nil, containerdConfigPathDaemonSet(system.Namespace, image, strconv.Itoa(registryNodePort))...)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func objects(namespace, buildKitImage, registryImage string) []client.Object {
@@ -223,6 +263,67 @@ func objects(namespace, buildKitImage, registryImage string) []client.Object {
 									EmptyDir: &corev1.EmptyDirVolumeSource{},
 								},
 								Name: "registry",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func containerdConfigPathDaemonSet(namespace, image, registryServiceNodePort string) []client.Object {
+	return []client.Object{
+		&appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      system.ContainerdConfigPathName,
+				Namespace: namespace,
+			},
+			Spec: appsv1.DaemonSetSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"ds": system.ContainerdConfigPathName,
+					},
+				},
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							"ds": system.ContainerdConfigPathName,
+						},
+					},
+					Spec: corev1.PodSpec{
+						Volumes: []corev1.Volume{
+							{
+								Name: "etc",
+								VolumeSource: corev1.VolumeSource{
+									HostPath: &corev1.HostPathVolumeSource{
+										Path: "/etc",
+									},
+								},
+							},
+						},
+						Containers: []corev1.Container{
+							{
+								Name: system.ContainerdConfigPathName,
+								Command: []string{
+									"/usr/local/bin/ds-containerd-config-path-entry",
+								},
+								Env: []corev1.EnvVar{
+									{
+										Name:  "REGISTRY_SERVICE_NODEPORT",
+										Value: registryServiceNodePort,
+									},
+								},
+								Image: image,
+								VolumeMounts: []corev1.VolumeMount{
+									{
+										Name:      "etc",
+										MountPath: "/etc",
+									},
+								},
+								SecurityContext: &corev1.SecurityContext{
+									RunAsUser: &[]int64{0}[0],
+								},
 							},
 						},
 					},
