@@ -1,6 +1,7 @@
 package publish
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -51,6 +52,12 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	}
 
 	ingressClassName := cfg.IngressClassName
+	if ingressClassName == nil {
+		ingressClassName, err = IngressClassNameIfNoDefault(req.Ctx, req.Client)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	ps, err := ports.NewForIngressPublish(app)
 	if err != nil {
@@ -142,6 +149,25 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	}
 
 	return result, nil
+}
+
+// IngressClassNameIfNoDefault returns an ingress class name if there is exactly one IngressClass and it is not
+// set as the default. We return a pointer here because "" is not a valid value for ingressClassName and will cause the
+// the ingress to fail.
+func IngressClassNameIfNoDefault(ctx context.Context, client kclient.Client) (*string, error) {
+	//
+	var ingressClasses networkingv1.IngressClassList
+	if err := client.List(ctx, &ingressClasses); err != nil {
+		return nil, err
+	}
+	if len(ingressClasses.Items) == 1 {
+		ic := ingressClasses.Items[0]
+		val := ic.Annotations["ingressclass.kubernetes.io/is-default-class"]
+		if val != "true" {
+			return &ic.Name, nil
+		}
+	}
+	return nil, nil
 }
 
 func routerIngressLabelsAndAnnotations(name, targetJSON string, app *v1.AppInstance, portSet, rawPS *ports.Set) (map[string]string, map[string]string) {

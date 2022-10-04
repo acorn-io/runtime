@@ -180,8 +180,13 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	} else if ok {
 		if opts.Config.IngressClassName == nil {
-			installIngressController = true
-			opts.Config.IngressClassName = &[]string{"traefik"}[0]
+			installIngressController, err = missingIngressClass(ctx, kclient)
+			if err != nil {
+				return err
+			}
+			if installIngressController {
+				opts.Config.IngressClassName = &[]string{"traefik"}[0]
+			}
 		}
 	}
 
@@ -281,20 +286,20 @@ func traefikResources() (result []runtime.Object, _ error) {
 	return objs, nil
 }
 
+func missingIngressClass(ctx context.Context, client kclient.Client) (bool, error) {
+	ingressClassList := &networkingv1.IngressClassList{}
+	err := client.List(ctx, ingressClassList)
+	if err != nil {
+		return false, err
+	}
+	return len(ingressClassList.Items) <= 0, nil
+}
+
 func installTraefik(ctx context.Context, p progress.Builder, client kclient.WithWatch, apply apply.Apply) (err error) {
 	pb := p.New("Installing Traefik Ingress Controller")
 	defer func() {
 		_ = pb.Fail(err)
 	}()
-
-	ingressClassList := &networkingv1.IngressClassList{}
-	err = client.List(ctx, ingressClassList)
-	if err != nil {
-		return err
-	}
-	if len(ingressClassList.Items) > 0 {
-		return nil
-	}
 
 	objs, err := traefikResources()
 	if err != nil {

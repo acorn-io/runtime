@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -324,6 +325,13 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		},
 	}
 
+	ingressClassName, err := publish.IngressClassNameIfNoDefault(ctx, cli)
+	if err != nil {
+		result.Passed = false
+		result.Message = fmt.Sprintf("Error ingress class: %v", err)
+		return result
+	}
+
 	// Create a new ingress object
 	pt := networkingv1.PathTypeImplementationSpecific
 	ing := &networkingv1.Ingress{
@@ -332,6 +340,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 			Namespace: *opts.Namespace,
 		},
 		Spec: networkingv1.IngressSpec{
+			IngressClassName: ingressClassName,
 			Rules: []networkingv1.IngressRule{
 				{
 					Host: "inflight-check.acorn.io",
