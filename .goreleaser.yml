@@ -109,6 +109,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
       - "--platform=linux/amd64"
+    extra_files:
+      - scripts/ds-containerd-config-path-entry
   - use: buildx
     goos: linux
     goarch: arm64
@@ -124,6 +126,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
       - "--platform=linux/arm64"
+    extra_files:
+      - scripts/ds-containerd-config-path-entry
   - use: buildx
     goos: linux
     goarch: arm
@@ -140,6 +144,8 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
       - "--platform=linux/arm/v7"
+    extra_files:
+      - scripts/ds-containerd-config-path-entry
 
 docker_manifests:
   - use: docker
