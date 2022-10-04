@@ -28,6 +28,7 @@ ENTRYPOINT ["/usr/local/bin/acorn"]
 
 FROM base AS goreleaser
 COPY acorn /usr/local/bin/acorn
+COPY ./scripts/ds-containerd-config-path-entry /usr/local/bin/ds-containerd-config-path-entry
 
 FROM base
 COPY --from=build /src/bin/acorn /usr/local/bin/acorn
