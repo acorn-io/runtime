@@ -9,6 +9,8 @@ To install Acorn, you will need the Acorn CLI and a Kubernetes cluster. Follow o
 acorn install
 ```
 
+In many cases, the default installation options for Acorn are sufficient, but there are a number of options you can use to customize Acorn. See our [Installation Options](/installation/options) page for more details.
+
 ## Acorn CLI
 
 ### Homebrew (macOS & Linux)
