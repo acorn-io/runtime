@@ -2,11 +2,7 @@
 title: TLS Certificates
 ---
 
-Applications that publish HTTP endpoints can be protected by TLS certificates. In the
-future, Acorn will provide built-in mechanisms to automatically provide certificates
-for each endpoint. Today, adding a certificate must follow the manual approach.
-
-<!-- TODO: ## Automatic -->
+Applications that publish HTTP endpoints can be protected by TLS certificates. This page describes the process for securing custom endpoints. Acorn-generated endpoints (ones ending in `on-acorn.io`) can be automatically secured via our [Let's Encrypt integration](/installation/options#tls-via-lets-encrypt). In the future, Acorn will provide a similar mechanism to secure custom endpoint as well, but for now custom endpoints require the following approach.
 
 ## Manually adding certificates
 
