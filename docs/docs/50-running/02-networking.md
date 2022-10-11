@@ -99,13 +99,13 @@ This will prevent Acorn from reserving a domain for your cluster. If you disable
 The endpoints generated for your Acorn apps follow this convention:
 
 ```
-<container name>.<app name>.<namespace>.<cluster domain>
+<container name>-<app name>-<namespace>.<cluster domain>
 ```
 
 Here's an example:
 
 ```
-web.purple-water.my-namespace.73fh5y.on-acorn.io
+web-purple-water-my-namespace.73fh5y.on-acorn.io
 ```
 
 Let's break that FQDN down:
