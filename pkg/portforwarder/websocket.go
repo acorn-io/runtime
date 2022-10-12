@@ -2,9 +2,11 @@ package portforwarder
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/acorn-io/acorn/pkg/k8schannel"
 	corev1 "k8s.io/api/core/v1"
@@ -18,11 +20,18 @@ type WebSocketDialer struct {
 }
 
 func (w *WebSocketDialer) DialContext(ctx context.Context, address string) (net.Conn, error) {
-	conn, err := w.dialer.DialContext(ctx, w.url, nil)
-	if err != nil {
-		return nil, err
+	for i := 0; ; i++ {
+		// It seems to be that port forwards are very unreliable on connect
+		conn, err := w.dialer.DialContext(ctx, w.url, nil)
+		if err != nil {
+			if i < 5 {
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			return nil, fmt.Errorf("failed to connect: %w", err)
+		}
+		return conn.ForStream(0), nil
 	}
-	return conn.ForStream(0), nil
 }
 
 func NewWebSocketDialerForURL(cfg *rest.Config, url *url.URL) (*WebSocketDialer, error) {
