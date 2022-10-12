@@ -18,17 +18,8 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	wg := sync.WaitGroup{}
-
-	defer func() {
-		cancel()
-		wg.Wait()
-		app, err := c.AppGet(ctx, appName)
-		if err == nil {
-			fmt.Println()
-			dev.PrintAppStatus(app)
-		}
-	}()
 
 	if !quiet {
 		wg.Add(1)
@@ -38,12 +29,21 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 		}()
 	}
 
-	return waitForApp(ctx, c, app)
+	app, err = waitForApp(ctx, c, app)
+	if err != nil {
+		return err
+	}
+
+	cancel()
+	wg.Wait()
+	fmt.Println()
+	dev.PrintAppStatus(app)
+	return nil
 }
 
-func waitForApp(ctx context.Context, c client.Client, app *apiv1.App) error {
+func waitForApp(ctx context.Context, c client.Client, app *apiv1.App) (*apiv1.App, error) {
 	w := objwatcher.New[*apiv1.App](c.GetClient())
-	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+	return w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
 		if app.Status.Ready {
 			return true, nil
 		}
@@ -54,5 +54,4 @@ func waitForApp(ctx context.Context, c client.Client, app *apiv1.App) error {
 		}
 		return false, nil
 	})
-	return err
 }
