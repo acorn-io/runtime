@@ -381,8 +381,9 @@ func PrintAppStatus(app *apiv1.App) {
 	msg, ready := appStatusMessage(app)
 	if ready {
 		pterm.DefaultBox.Println(pterm.LightGreen(msg))
+	} else {
+		pterm.Println(pterm.LightYellow(msg))
 	}
-	pterm.Println(pterm.LightYellow(msg))
 }
 
 func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {

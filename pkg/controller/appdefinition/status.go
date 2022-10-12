@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -23,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/sets"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -182,8 +184,12 @@ func JobStatus(req router.Request, resp router.Response) error {
 			return err
 		}
 
+		messageSet := sets.NewString()
+		for _, message := range messages {
+			messageSet.Insert(message...)
+		}
 		jobStatus := v1.JobStatus{
-			Message: strings.Join(messages, "; "),
+			Message: strings.Join(messageSet.List(), "; "),
 		}
 		if job.Status.Active > 0 {
 			jobStatus.Running = true
@@ -214,10 +220,10 @@ func JobStatus(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func podsStatus(req router.Request, namespace string, sel klabels.Selector) (bool, []string, error) {
+func podsStatus(req router.Request, namespace string, sel klabels.Selector) (bool, map[string][]string, error) {
 	var (
 		isTransition bool
-		message      []string
+		messages     = map[string][]string{}
 		pods         = &corev1.PodList{}
 	)
 	err := req.List(pods, &kclient.ListOptions{
@@ -233,6 +239,7 @@ func podsStatus(req router.Request, namespace string, sel klabels.Selector) (boo
 	})
 
 	for _, pod := range pods.Items {
+		var message []string
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == corev1.PodScheduled {
 				if cond.Status != corev1.ConditionTrue {
@@ -253,9 +260,10 @@ func podsStatus(req router.Request, namespace string, sel klabels.Selector) (boo
 		if transition {
 			isTransition = true
 		}
+		messages[pod.Labels[labels.AcornContainerName]] = message
 	}
 
-	return isTransition, message, nil
+	return isTransition, messages, nil
 }
 
 func AppStatus(req router.Request, resp router.Response) error {
@@ -286,7 +294,7 @@ func AppStatus(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	isTransition, message, err := podsStatus(req, app.Status.Namespace, klabels.SelectorFromSet(map[string]string{
+	isTransition, podMessages, err := podsStatus(req, app.Status.Namespace, klabels.SelectorFromSet(map[string]string{
 		labels.AcornManaged: "true",
 		labels.AcornAppName: app.Name,
 	}).Add(*notJob))
@@ -294,22 +302,42 @@ func AppStatus(req router.Request, resp router.Response) error {
 		return err
 	}
 
+	var messages []string
+
 	container := map[string]v1.ContainerStatus{}
-	for depName := range app.Status.AppSpec.Containers {
-		container[depName] = v1.ContainerStatus{}
+	for dep := range app.Status.AppSpec.Containers {
+		container[dep] = v1.ContainerStatus{
+			Created: ports.IsLinked(app, dep),
+		}
 	}
 
 	for _, dep := range deps.Items {
-		status := container[dep.Labels[labels.AcornContainerName]]
+		containerName := dep.Labels[labels.AcornContainerName]
+		if containerName == "" {
+			continue
+		}
+
+		status := container[containerName]
 		status.Ready = dep.Status.ReadyReplicas
 		status.ReadyDesired = dep.Status.Replicas
 		status.UpToDate = dep.Status.UpdatedReplicas
 		status.Created = true
-		container[dep.Labels[labels.AcornContainerName]] = status
+		container[containerName] = status
 
-		if status.Ready != status.ReadyDesired {
+		if podMessage := podMessages[containerName]; len(podMessage) > 0 {
+			messages = append(messages, podMessage...)
+		} else if dep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(app.Generation)) {
 			isTransition = true
-			message = append(message, dep.Labels[labels.AcornAppName]+" is not ready")
+			messages = append(messages, containerName+" pending update")
+		} else if status.Ready != status.ReadyDesired {
+			isTransition = true
+			messages = append(messages, containerName+" is not ready")
+		}
+	}
+
+	for name, status := range container {
+		if !status.Created {
+			messages = append(messages, name+" pending create")
 		}
 	}
 	app.Status.ContainerStatus = container
@@ -319,8 +347,9 @@ func AppStatus(req router.Request, resp router.Response) error {
 	}
 
 	if isTransition {
-		sort.Strings(message)
-		cond.Unknown(strings.TrimSpace(strings.Join(message, "; ")))
+		// dedup, sort
+		messages := sets.NewString(messages...).List()
+		cond.Unknown(strings.TrimSpace(strings.Join(messages, "; ")))
 	} else {
 		cond.Success()
 	}
