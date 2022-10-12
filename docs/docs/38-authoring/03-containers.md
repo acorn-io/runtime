@@ -19,7 +19,7 @@ containers:{
 
 ### Standard build options
 
-Acorn provides a mechanism to build your own containers for your application. If you have an existing project that already defines an Dockerfile, you can build it using Acorn.
+Acorn provides a mechanism to build your own containers for your application. If you have an existing project that already defines a Dockerfile, you can build it using Acorn.
 
 ```acorn
 containers: {
@@ -80,7 +80,7 @@ A port definition is:
 Where:
 
 * `NAME`: is an optional name for the port, like `db` or `metrics`.
-* `PORT`: is required numeric value of the port.
+* `PORT`: is the required numeric value of the port.
 * `TYPE`: is an optional value of `UDP`, `TCP`, or `HTTP`.
 
 An example of a named port:
@@ -98,7 +98,7 @@ When the user runs the built Acorn image, they can reference this port by name `
 
 ### Scopes
 
-As an author, there are three scopes used to define the ports **default** access behavior `internal`, `expose`, and `publish`. These settings can be changed at runtime by the operator.
+As an author, there are three scopes used to define the port's **default** access behavior: `internal`, `expose`, and `publish`. These settings can be changed at runtime by the operator.
 
 | Scope | Accessibility |
 | ------| --------------|
@@ -315,7 +315,7 @@ In the above example the `web` container would have 60 seconds (10 tries * 6 sec
 
 ## Defining sidecar containers
 
-Sometimes a container needs some setup before it runs, or has additional services running along side it. For these scenarios, the `sidecar` can be defined as part of the container.
+Sometimes a container needs some setup before it runs, or has additional services running alongside it. For these scenarios, the `sidecar` can be defined as part of the container.
 
 ```acorn
 containers: {

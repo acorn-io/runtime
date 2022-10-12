@@ -123,7 +123,10 @@ If you need to expose your Acorn app to users and workloads outside of your clus
 
 By default, all HTTP services are automatically published via the underlying Ingress controller. To publish no ports you can use `-p none`.
 
-// Note this is going to go through a major refactor and likely to change, but the concept holds.
+:::caution
+
+Note this is going to go through a major refactor and likely to change, but the concept holds.
+:::
 
 Publishing services is a runtime level decision for the user to make. If a user wants to publish all exposed ports when launching the Acorn app the `-P` flag is used.
 

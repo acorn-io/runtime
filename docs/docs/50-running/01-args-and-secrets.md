@@ -20,7 +20,7 @@ acorn run [IMAGE] --a-string "oneday" --int-arg 4 --bool-defaults-true --negate-
 
 ### Passing complex arguments
 
-To pass complex arguments is to create a file in the local directory and pass it to Acorn with the `@` syntax:
+To pass complex arguments, create a file in the local directory and pass it to Acorn with the `@` syntax:
 
 ```yaml title="config.yaml"
 my:
@@ -72,7 +72,7 @@ When this Acorn runs it will use the values in the `my-predefined-creds` secret.
 
 ### Overview
 
-Encrypted secrets provide a way to pass sensitive information to Acorn apps through public channels. To accomplish this, Acorn uses a [libsodium sealed box](https://libsodium.gitbook.io/doc/public-key_cryptography/sealed_boxes) that is encrypted with the Acorn namespaces public key. This data can only be decrypted by Acorn in the intended namespace. For convenience data can be encrypted with multiple Acorn namespace public keys and put into the same data field. At runtime Acorn will try to decrypt the data with it's own key pair. Once decrypted inside the namespace the values are stored in regular Kubernetes secrets for the app to consume. The primary use for encrypted secrets is to provide a mechanism to pass the data through untrusted systems like pipelines and command lines.
+Encrypted secrets provide a way to pass sensitive information to Acorn apps through public channels. To accomplish this, Acorn uses a [libsodium sealed box](https://libsodium.gitbook.io/doc/public-key_cryptography/sealed_boxes) that is encrypted with the Acorn namespace's public key. This data can only be decrypted by Acorn in the intended namespace. For convenience data can be encrypted with multiple Acorn namespace public keys and put into the same data field. At runtime Acorn will try to decrypt the data with its own key pair. Once decrypted inside the namespace the values are stored in regular Kubernetes secrets for the app to consume. The primary use for encrypted secrets is to provide a mechanism to pass the data through untrusted systems like pipelines and command lines.
 
 The [encryption reference section](/reference/encryption) explains how to use the Acorn public key to encrypt secrets in other languages.
 

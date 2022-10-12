@@ -2,7 +2,7 @@
 title: Publishing Acorn Images
 ---
 
-Once the application is in a state where it ready to move to test and production you will need to build an Acorn image and publish it to a registry. Acorn images are only accessible to the Acorn namespace they were built in. In order to use them in other namespaces or on other Kubernetes clusters, the images need to be tagged and published to a registry.
+Once the application is in a state where it is ready to move to test and production you will need to build an Acorn image and publish it to a registry. Acorn images are only accessible to the Acorn namespace they were built in. In order to use them in other namespaces or on other Kubernetes clusters, the images need to be tagged and published to a registry.
 
 ## Building and tagging an Acorn image
 
@@ -62,7 +62,7 @@ You will be prompted for your username and password to login. If your company ha
 Pushing to a registry requires 2 things:
 
 1. User is logged in and authorized.
-1. Image is tagged  the remote registry.
+1. Image is tagged for the remote registry.
 
 ```shell
 acorn push index.docker.io/myorg/image:v1.0

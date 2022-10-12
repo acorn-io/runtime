@@ -3,7 +3,7 @@ title: Options
 ---
 
 ## Acorn image
-When you install acorn, it will launch several workloads in your cluster, including an api-server and controller. By default, these workloads will use the `ghcr.io/acorn-io/acorn` image. You can customize this image by setting the `--image` option. This is useful if you are installing acorn in an environment where you are required to pull images from an private registry.
+When you install acorn, it will launch several workloads in your cluster, including an api-server and controller. By default, these workloads will use the `ghcr.io/acorn-io/acorn` image. You can customize this image by setting the `--image` option. This is useful if you are installing acorn in an environment where you are required to pull images from a private registry.
 
 ## TLS via Let's Encrypt
 

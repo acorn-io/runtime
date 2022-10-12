@@ -20,7 +20,7 @@ args: {
 }
 ```
 
-Arg names should be in camelCase, and when entered by the user the will be dash separated.
+Arg names should be in camelCase, and when entered by the user they will be dash separated.
 
 `thisVariableName` becomes `--this-variable-name` when the user passes it on the command line.
 
@@ -28,7 +28,7 @@ Arg names should be in camelCase, and when entered by the user the will be dash 
 
 When defining arguments to the Acorn, it is helpful to the end user to also provide some context. When the user runs `acorn [IMAGE] --help` the output shows all available arguments and if defined provides a short help string.
 
-When defining args add a `// Comment` above the argument. That will be shown the user when they do a `--help`
+When defining args add a `// Comment` above the argument. That will be shown to the user when they do a `--help`
 
 ```acorn
 args: {
