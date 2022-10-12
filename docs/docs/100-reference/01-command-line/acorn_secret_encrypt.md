@@ -13,6 +13,7 @@ acorn secret encrypt [flags] STRING
 
 ```
   -h, --help                 help for encrypt
+      --plaintext-stdin      Take the plaintext from stdin
       --public-key strings   Pass one or more cluster publicKey values
 ```
 
