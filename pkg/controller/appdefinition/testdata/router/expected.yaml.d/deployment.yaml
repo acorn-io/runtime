@@ -37,8 +37,7 @@ spec:
             name: http
             protocol: TCP
           readinessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 8080
           resources: {}
           volumeMounts:
