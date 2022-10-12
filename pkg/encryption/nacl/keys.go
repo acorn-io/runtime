@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/sirupsen/logrus"
@@ -156,7 +155,7 @@ func createOrUpdateNaclKeySecret(ctx context.Context, c kclient.Client, key *Nac
 					labels.AcornManaged:         "true",
 				},
 			},
-			Type: v1.SecretTypeOpaque,
+			Type: corev1.SecretTypeOpaque,
 			Data: keyData,
 		})
 	}
