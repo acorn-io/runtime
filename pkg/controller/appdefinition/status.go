@@ -196,13 +196,12 @@ func JobStatus(req router.Request, resp router.Response) error {
 			running = true
 			runningName = job.Name
 		}
-		if job.Status.Failed > 0 {
+		if job.Status.Succeeded > 0 {
+			jobStatus.Succeed = true
+		} else if job.Status.Failed > 0 {
 			jobStatus.Failed = true
 			failed = true
 			failedName = job.Name
-		}
-		if job.Status.Succeeded > 0 {
-			jobStatus.Succeed = true
 		}
 		app.Status.JobsStatus[job.Name] = jobStatus
 	}
