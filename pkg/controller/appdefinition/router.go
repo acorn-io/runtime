@@ -102,8 +102,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 							},
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: "/",
+									TCPSocket: &corev1.TCPSocketAction{
 										Port: intstr.IntOrString{
 											IntVal: 8080,
 										},
