@@ -70,6 +70,18 @@ func (s *Exec) appAndArgs(ctx context.Context, c hclient.Client, args []string) 
 	return appName, nil, err
 }
 
+func (s *Exec) filterContainers(containers []apiv1.ContainerReplica) (result []apiv1.ContainerReplica) {
+	for _, c := range containers {
+		if s.Container == "" {
+			result = append(result, c)
+		} else if c.Spec.ContainerName == s.Container {
+			result = append(result, c)
+			break
+		}
+	}
+	return result
+}
+
 func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, args []string) error {
 	containers, err := c.ContainerReplicaList(ctx, &hclient.ContainerReplicaListOptions{
 		App: app.Name,
@@ -82,6 +94,8 @@ func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, ar
 		displayNames []string
 		names        = map[string]string{}
 	)
+
+	containers = s.filterContainers(containers)
 
 	for _, container := range containers {
 		displayName := fmt.Sprintf("%s (%s %s)", container.Name, container.Status.Columns.State, table.FormatCreated(container.CreationTimestamp))
