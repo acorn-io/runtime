@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_toPrefix(t *testing.T) {
+func TestToPrefix(t *testing.T) {
 	type args struct {
 		domain      string
 		serviceName string
@@ -29,7 +29,7 @@ func Test_toPrefix(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantHostPrefix: "app-test-green-star-fefc5537672b",
+			wantHostPrefix: "app-test-green-star-6b72f64c5182",
 		},
 		{
 			name: "\"on-acorn.io\" Service Name No -",
@@ -43,7 +43,7 @@ func Test_toPrefix(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantHostPrefix: "apptest-green-star-404b24abeb8c",
+			wantHostPrefix: "apptest-green-star-75803e8503f9",
 		},
 		{
 			name: "\"on-acorn.io\" AppInstance Name No -",
@@ -57,7 +57,7 @@ func Test_toPrefix(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantHostPrefix: "app-test-greenstar-e735671e185a",
+			wantHostPrefix: "app-test-greenstar-c832271c0202",
 		},
 		{
 			name: "\"custom domain\"",

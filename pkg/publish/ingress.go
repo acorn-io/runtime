@@ -23,16 +23,17 @@ import (
 
 func toPrefix(domain, serviceName string, appInstance *v1.AppInstance) (hostPrefix string) {
 	if strings.HasSuffix(domain, "on-acorn.io") {
-		appInstanceSplitName := strings.Split(appInstance.GetName()+"-"+serviceName, "-")
+		appInstanceSplitName := strings.Split(serviceName, "-")
 		var appInstanceIDSegment string
 		var appInstanceIDSegmentByte [32]byte
 
 		for _, sliceName := range appInstanceSplitName {
 			appInstanceIDSegment += sliceName + ":"
 		}
+		appInstanceIDSegment += appInstance.GetName()
 		appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
 		appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
-		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 63-len(domain)-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
+		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 63-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
 	} else {
 		hostPrefix = serviceName + "." + appInstance.Name
 		if serviceName == "default" {
@@ -105,7 +106,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 			}
 			for _, domain := range cfg.ClusterDomains {
 				hostPrefix := toPrefix(domain, svcName, app)
-				hostname := hostPrefix + domain
+				hostname := name.Limit(hostPrefix+domain, 255)
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
 				rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
