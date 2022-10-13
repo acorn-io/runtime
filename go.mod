@@ -4,7 +4,7 @@ go 1.18
 
 replace (
 	cloud.google.com/go v0.93.3 => cloud.google.com/go v0.100.2
-	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
+	github.com/docker/docker => github.com/docker/docker v20.10.19+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf
 	go.etcd.io/etcd/server/v3 v3.5.1 => github.com/acorn-io/etcd/server/v3 v3.5.1-ot-1
