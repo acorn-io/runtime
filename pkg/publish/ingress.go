@@ -23,18 +23,15 @@ import (
 
 func toPrefix(domain, serviceName string, appInstance *v1.AppInstance) (hostPrefix string) {
 	if strings.HasSuffix(domain, "on-acorn.io") {
-		appInstanceSplitName := strings.Split(appInstance.GetName(), "-")
+		appInstanceSplitName := strings.Split(appInstance.GetName()+"-"+serviceName, "-")
 		var appInstanceIDSegment string
 		var appInstanceIDSegmentByte [32]byte
-		if len(appInstanceSplitName) == 2 {
-			appInstanceIDSegment = serviceName + ":" + appInstanceSplitName[0] + ":" + appInstanceSplitName[1]
-			appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
-			appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
-		} else {
-			appInstanceIDSegment = serviceName + ":" + appInstanceSplitName[0]
-			appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
-			appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
+
+		for _, sliceName := range appInstanceSplitName {
+			appInstanceIDSegment += sliceName + ":"
 		}
+		appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
+		appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
 		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 63-len(domain)-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
 	} else {
 		hostPrefix = serviceName + "." + appInstance.Name
