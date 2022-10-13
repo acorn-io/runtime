@@ -52,7 +52,7 @@ func TestVolumeListGetDelete(t *testing.T) {
 
 	assert.Len(t, vols, 1)
 	assert.Equal(t, "10G", vols[0].Spec.Capacity.String())
-	assert.Equal(t, "local-path", vols[0].Spec.Class)
+	assert.Equal(t, "hostpath", vols[0].Spec.Class)
 	assert.Equal(t, ns.Name, vols[0].Namespace)
 
 	vol, err := c.VolumeGet(ctx, vols[0].Name)
