@@ -9,7 +9,7 @@ import (
 
 func NewLogs() *cobra.Command {
 	return cli.Command(&Logs{}, cobra.Command{
-		Use:          "logs [flags] APP_NAME",
+		Use:          "logs [flags] APP_NAME|CONTAINER_NAME",
 		SilenceUsage: true,
 		Short:        "Log all pods from app",
 		Args:         cobra.RangeArgs(1, 1),

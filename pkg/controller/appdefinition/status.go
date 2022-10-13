@@ -32,19 +32,29 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 	app.Status.Ready = false
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionReady)
 
-	var errs []error
+	var (
+		errs          []error
+		transitioning = sets.NewString()
+	)
 	for _, condition := range app.Status.Conditions {
 		if condition.Type == v1.AppInstanceConditionReady {
 			continue
 		}
 
-		if condition.Status != metav1.ConditionTrue {
+		if condition.Status == metav1.ConditionFalse {
 			errs = append(errs, errors.New(condition.Message))
+		} else if condition.Status == metav1.ConditionUnknown && condition.Message != "" {
+			transitioning.Insert(condition.Message)
 		}
 	}
 
 	if len(errs) > 0 {
 		cond.Error(merr.NewErrors(errs...))
+		return nil
+	}
+
+	if transitioning.Len() > 0 {
+		cond.Unknown(strings.Join(transitioning.List(), ", "))
 		return nil
 	}
 
