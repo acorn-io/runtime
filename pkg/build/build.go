@@ -14,13 +14,10 @@ import (
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/cue"
-	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/typed"
 	imagename "github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 type Options struct {
@@ -197,65 +194,6 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 	return result, nil
 }
 
-func buildAcorns(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
-	result := map[string]v1.ImageData{}
-
-	for _, entry := range typed.Sorted(acorns) {
-		key, acornImage := entry.Key, entry.Value
-		if acornImage.Image != "" {
-			imageDetails, err := c.ImageDetails(ctx, acornImage.Image, nil)
-			if err != nil {
-				return nil, err
-			}
-
-			if tags.SHAPattern.MatchString(imageDetails.AppImage.ID) {
-				// TODO: This is a terrible hack and should be redone once we move builder logic server side
-				acornImage.Image = fmt.Sprintf("127.0.0.1:%d/acorn/%s:%s", system.RegistryPort, c.GetNamespace(), imageDetails.AppImage.ID)
-			}
-
-			tag, err := imagename.ParseReference(acornImage.Image)
-			if err != nil {
-				return nil, err
-			}
-
-			opts, err := remoteopts.WithClientDialer(ctx, c)
-			if err != nil {
-				return nil, err
-			}
-
-			index, err := remote.Index(tag, opts...)
-			if err != nil {
-				return nil, err
-			}
-
-			digest, err := index.Digest()
-			if err != nil {
-				return nil, err
-			}
-
-			result[key] = v1.ImageData{
-				Image: tag.Context().Digest(digest.String()).Name(),
-			}
-		} else if acornImage.Build != nil {
-			appImage, err := Build(ctx, filepath.Join(cwd, acornImage.Build.Acornfile), &Options{
-				Client:    c,
-				Cwd:       filepath.Join(cwd, acornImage.Build.Context),
-				Platforms: platforms,
-				Args:      acornImage.Build.BuildArgs,
-				Streams:   &streams,
-				FullTag:   true,
-			})
-			if err != nil {
-				return nil, err
-			}
-			result[key] = v1.ImageData{
-				Image: appImage.ID,
-			}
-		}
-	}
-
-	return result, nil
-}
 func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
@@ -301,11 +239,6 @@ func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderS
 	}
 
 	data.Images, err = buildImages(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Images)
-	if err != nil {
-		return data, err
-	}
-
-	data.Acorns, err = buildAcorns(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Acorns)
 	if err != nil {
 		return data, err
 	}

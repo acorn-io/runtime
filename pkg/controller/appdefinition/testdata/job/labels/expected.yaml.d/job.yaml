@@ -8,7 +8,6 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/job-name": "job1"
     "acorn.io/managed": "true"
-    "acorn.io/root-prefix": "app-name"
     "alljobs": "value"
     "job1": "value"
     "job3": "value"
@@ -26,7 +25,6 @@ spec:
       labels:
         "acorn.io/app-namespace": "app-namespace"
         "acorn.io/app-name": "app-name"
-        "acorn.io/root-prefix": "app-name"
         "acorn.io/job-name": "job1"
         "acorn.io/managed": "true"
         "alljobs": "value"

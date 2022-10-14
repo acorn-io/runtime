@@ -202,11 +202,6 @@ func (s *Storage) getPermissions(ctx context.Context, image string) (result v1.P
 		}
 	}
 
-	for _, entry := range typed.Sorted(details.AppSpec.Acorns) {
-		result.ClusterRules = append(result.ClusterRules, entry.Value.Permissions.Get().ClusterRules...)
-		result.Rules = append(result.Rules, entry.Value.Permissions.Get().Rules...)
-	}
-
 	return result, nil
 }
 

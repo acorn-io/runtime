@@ -51,10 +51,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeList":                     schema_pkg_apis_apiacornio_v1_VolumeList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeSpec":                     schema_pkg_apis_apiacornio_v1_VolumeSpec(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeStatus":                   schema_pkg_apis_apiacornio_v1_VolumeStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn":                     schema_pkg_apis_internalacornio_v1_Acorn(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild":                schema_pkg_apis_internalacornio_v1_AcornBuild(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec":          schema_pkg_apis_internalacornio_v1_AcornBuilderSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus":               schema_pkg_apis_internalacornio_v1_AcornStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Alias":                     schema_pkg_apis_internalacornio_v1_Alias(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns":                schema_pkg_apis_internalacornio_v1_AppColumns(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage":                  schema_pkg_apis_internalacornio_v1_AppImage(ref),
@@ -103,7 +101,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount":               schema_pkg_apis_internalacornio_v1_VolumeMount(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest":             schema_pkg_apis_internalacornio_v1_VolumeRequest(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeSecretMount":         schema_pkg_apis_internalacornio_v1_VolumeSecretMount(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.acornAliases":              schema_pkg_apis_internalacornio_v1_acornAliases(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.containerAliases":          schema_pkg_apis_internalacornio_v1_containerAliases(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.envVal":                    schema_pkg_apis_internalacornio_v1_envVal(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.routeTarget":               schema_pkg_apis_internalacornio_v1_routeTarget(ref),
@@ -2159,155 +2156,6 @@ func schema_pkg_apis_apiacornio_v1_VolumeStatus(ref common.ReferenceCallback) co
 	}
 }
 
-func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"labels": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
-									},
-								},
-							},
-						},
-					},
-					"annotations": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
-									},
-								},
-							},
-						},
-					},
-					"image": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"build": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
-						},
-					},
-					"profiles": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"deployArgs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"object"},
-										Format: "",
-									},
-								},
-							},
-						},
-					},
-					"ports": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
-									},
-								},
-							},
-						},
-					},
-					"environment": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"),
-									},
-								},
-							},
-						},
-					},
-					"secrets": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding"),
-									},
-								},
-							},
-						},
-					},
-					"volumes": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"),
-									},
-								},
-							},
-						},
-					},
-					"links": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
-									},
-								},
-							},
-						},
-					},
-					"permissions": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
-	}
-}
-
 func schema_pkg_apis_internalacornio_v1_AcornBuild(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -2374,74 +2222,6 @@ func schema_pkg_apis_internalacornio_v1_AcornBuilderSpec(ref common.ReferenceCal
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_AcornStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"containerStatus": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus"),
-									},
-								},
-							},
-						},
-					},
-					"jobsStatus": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus"),
-									},
-								},
-							},
-						},
-					},
-					"acornStatus": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus"),
-									},
-								},
-							},
-						},
-					},
-					"stopped": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"ready": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus"},
 	}
 }
 
@@ -2859,20 +2639,6 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							},
 						},
 					},
-					"acornStatus": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus"),
-									},
-								},
-							},
-						},
-					},
 					"ready": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
@@ -2933,7 +2699,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus"},
 	}
 }
 
@@ -3043,20 +2809,6 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 							},
 						},
 					},
-					"acorns": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn"),
-									},
-								},
-							},
-						},
-					},
 					"routers": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -3075,7 +2827,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
 	}
 }
 
@@ -3917,20 +3669,6 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 						},
 					},
 					"images": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData"),
-									},
-								},
-							},
-						},
-					},
-					"acorns": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -4946,33 +4684,6 @@ func schema_pkg_apis_internalacornio_v1_VolumeSecretMount(ref common.ReferenceCa
 				},
 			},
 		},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_acornAliases(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"env": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"},
 	}
 }
 

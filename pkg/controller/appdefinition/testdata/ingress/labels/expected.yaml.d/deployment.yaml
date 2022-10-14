@@ -34,8 +34,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "con1"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
-        "acorn.io/root-namespace": "app-namespace"
         "port-number.acorn.io/81": "true"
         "service-name.acorn.io/con1": "true"
         "allconsl1": "value"

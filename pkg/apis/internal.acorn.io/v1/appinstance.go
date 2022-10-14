@@ -17,7 +17,6 @@ var (
 	AppInstanceConditionSecrets    = "secrets"
 	AppInstanceConditionContainers = "containers"
 	AppInstanceConditionJobs       = "jobs"
-	AppInstanceConditionAcorns     = "acorns"
 	AppInstanceConditionReady      = "Ready"
 )
 
@@ -124,7 +123,6 @@ type AppInstanceStatus struct {
 	Columns            AppColumns                 `json:"columns,omitempty"`
 	ContainerStatus    map[string]ContainerStatus `json:"containerStatus,omitempty"`
 	JobsStatus         map[string]JobStatus       `json:"jobsStatus,omitempty"`
-	AcornStatus        map[string]AcornStatus     `json:"acornStatus,omitempty"`
 	Ready              bool                       `json:"ready,omitempty"`
 	Stopped            bool                       `json:"stopped,omitempty"`
 	Namespace          string                     `json:"namespace,omitempty"`
@@ -132,14 +130,6 @@ type AppInstanceStatus struct {
 	AppSpec            AppSpec                    `json:"appSpec,omitempty"`
 	Conditions         []Condition                `json:"conditions,omitempty"`
 	Endpoints          []Endpoint                 `json:"endpoints,omitempty"`
-}
-
-type AcornStatus struct {
-	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
-	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
-	AcornStatus     map[string]AcornStatus     `json:"acornStatus,omitempty"`
-	Stopped         bool                       `json:"stopped,omitempty"`
-	Ready           bool                       `json:"ready,omitempty"`
 }
 
 type Endpoint struct {

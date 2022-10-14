@@ -329,18 +329,6 @@ func checkForDuplicateNames(in *AppSpec) error {
 			return err
 		}
 	}
-	for name, a := range in.Acorns {
-		for _, port := range a.Ports {
-			if port.ServiceName != "" && port.ServiceName != name {
-				if err := addName(names, port.ServiceName, "port"); err != nil {
-					return err
-				}
-			}
-		}
-		if err := addName(names, name, "acorn"); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
@@ -351,24 +339,6 @@ func addImpliedResources(in *AppSpec) error {
 	}
 	if in.Secrets == nil {
 		in.Secrets = map[string]Secret{}
-	}
-
-	for _, a := range in.Acorns {
-		for _, volumeBinding := range a.Volumes {
-			if _, ok := in.Volumes[volumeBinding.Volume]; !ok {
-				in.Volumes[volumeBinding.Volume] = VolumeRequest{
-					Size:        volumeBinding.Size,
-					AccessModes: volumeBinding.AccessModes,
-				}
-			}
-		}
-		for _, secretBinding := range a.Secrets {
-			if _, ok := in.Secrets[secretBinding.Secret]; !ok {
-				in.Secrets[secretBinding.Secret] = Secret{
-					Type: "opaque",
-				}
-			}
-		}
 	}
 
 	for containerName, c := range in.Containers {
@@ -455,17 +425,6 @@ func (in *AccessModes) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type acornAliases struct {
-	Env NameValues `json:"env,omitempty"`
-}
-
-func (a acornAliases) SetAcorn(dst Acorn) Acorn {
-	if len(a.Env) > 0 {
-		dst.Environment = append(dst.Environment, a.Env...)
-	}
-	return dst
-}
-
 type containerAliases struct {
 	Cmd                 CommandSlice           `json:"cmd,omitempty"`
 	Env                 EnvVars                `json:"env,omitempty"`
@@ -531,23 +490,6 @@ func adjustBuildForContextDirs(c Container) *Build {
 	build.BaseImage = c.Image
 	build.ContextDirs = dirs
 	return build
-}
-
-func (in *Acorn) UnmarshalJSON(data []byte) error {
-	var a Acorn
-	type acorn Acorn
-	if err := json.Unmarshal(data, (*acorn)(&a)); err != nil {
-		return err
-	}
-
-	var alias acornAliases
-	if err := json.Unmarshal(data, &alias); err != nil {
-		return err
-	}
-
-	a = alias.SetAcorn(a)
-	*in = a
-	return nil
 }
 
 func (in *Container) UnmarshalJSON(data []byte) error {
@@ -979,19 +921,6 @@ func (in *CommandSlice) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, (*commandSlice)(in))
 }
 
-func (in *AcornBuild) UnmarshalJSON(data []byte) error {
-	if isString(data) {
-		s, err := parseString(data)
-		if err != nil {
-			return err
-		}
-		in.Context = s
-		in.Acornfile = filepath.Join(s, "Acornfile")
-		return nil
-	}
-	type acornBuild AcornBuild
-	return json.Unmarshal(data, (*acornBuild)(in))
-}
 
 func (in *Build) UnmarshalJSON(data []byte) error {
 	if isString(data) {

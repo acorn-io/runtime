@@ -35,8 +35,6 @@ const (
 	AcornCredential              = Prefix + "credential"
 	AcornPullSecret              = Prefix + "pull-secret"
 	AcornSecretRevPrefix         = "secret-rev." + Prefix
-	AcornRootNamespace           = Prefix + "root-namespace"
-	AcornRootPrefix              = Prefix + "root-prefix"
 	AcornPublishURL              = Prefix + "publish-url"
 	AcornTargets                 = Prefix + "targets"
 	AcornDNSHash                 = Prefix + "dns-hash"
@@ -48,16 +46,6 @@ const (
 	AcornCertNotValidAfter       = Prefix + "cert-not-valid-after"
 	AcornLetsEncryptSettingsHash = Prefix + "le-hash"
 )
-
-func RootPrefix(parentLabels map[string]string, name string) string {
-	prefix := parentLabels[AcornRootPrefix]
-	if prefix == "" {
-		prefix = name
-	} else {
-		prefix += "." + name
-	}
-	return prefix
-}
 
 func Merge(base, overlay map[string]string) map[string]string {
 	result := maps.Clone(base)

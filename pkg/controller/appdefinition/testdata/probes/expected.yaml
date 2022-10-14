@@ -32,7 +32,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
         "port-number.acorn.io/81": "true"
         "service-name.acorn.io/oneimage": "true"
       annotations:
@@ -195,7 +194,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "nodefault"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
         "port-number.acorn.io/81": "true"
         "service-name.acorn.io/nodefault": "true"
       annotations:

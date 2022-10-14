@@ -47,7 +47,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Labels[labels.AcornRootNamespace], appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,6 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addConfigMaps(appInstance, resp); err != nil {
 		return err
 	}
-	addAcorns(appInstance, tag, pullSecrets, resp)
 
 	resp.Objects(pullSecrets.Objects()...)
 	return pullSecrets.Err()
@@ -285,17 +284,6 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 		})
 	}
 	return ports
-}
-
-func resolveTagForAcorn(tag name.Reference, namespace, image string) string {
-	if DigestPattern.MatchString(image) && strings.HasPrefix(tag.Context().RegistryStr(), "127.0.0.") &&
-		tag.Context().RepositoryStr() == "acorn/"+namespace {
-		_, hash, ok := strings.Cut(image, ":")
-		if ok {
-			return hash
-		}
-	}
-	return resolveTag(tag, image)
 }
 
 func resolveTag(tag name.Reference, image string) string {
@@ -563,10 +551,6 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 
 func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets) (*appsv1.Deployment, error) {
 	var (
-		extraLabels = []string{
-			labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
-			labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
-		}
 		stateful = isStateful(appInstance, container)
 	)
 
@@ -582,7 +566,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
-	podLabels := containerLabels(appInstance, container, name, extraLabels...)
+	podLabels := containerLabels(appInstance, container, name)
 	deploymentLabels := containerLabels(appInstance, container, name)
 	matchLabels := selectorMatchLabels(appInstance, name)
 	maps.Copy(podLabels, ports.ToPodLabels(appInstance, name))

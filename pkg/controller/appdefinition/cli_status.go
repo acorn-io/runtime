@@ -45,21 +45,6 @@ func message(app *v1.AppInstance) string {
 	return buf.String()
 }
 
-func subContainerStatus(status v1.AcornStatus) (result v1.ContainerStatus) {
-	for _, status := range status.ContainerStatus {
-		result.Ready += status.Ready
-		result.UpToDate += status.UpToDate
-		result.ReadyDesired += status.ReadyDesired
-	}
-	for _, acorn := range status.AcornStatus {
-		status := subContainerStatus(acorn)
-		result.Ready += status.Ready
-		result.UpToDate += status.UpToDate
-		result.ReadyDesired += status.ReadyDesired
-	}
-	return
-}
-
 func uptodate(app *v1.AppInstance) string {
 	if app.Status.Namespace == "" {
 		return "-"
@@ -71,11 +56,6 @@ func uptodate(app *v1.AppInstance) string {
 		desired, uptodate int32
 	)
 	for _, status := range app.Status.ContainerStatus {
-		uptodate += status.UpToDate
-		desired += status.ReadyDesired
-	}
-	for _, status := range app.Status.AcornStatus {
-		status := subContainerStatus(status)
 		uptodate += status.UpToDate
 		desired += status.ReadyDesired
 	}
@@ -96,11 +76,6 @@ func healthy(app *v1.AppInstance) string {
 		ready, desired int32
 	)
 	for _, status := range app.Status.ContainerStatus {
-		desired += status.ReadyDesired
-		ready += status.Ready
-	}
-	for _, status := range app.Status.AcornStatus {
-		status := subContainerStatus(status)
 		desired += status.ReadyDesired
 		ready += status.Ready
 	}

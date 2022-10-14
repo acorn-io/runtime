@@ -18,35 +18,8 @@ status:
         environment:
           - name: env-name
             value: env-value
-    acorns:
-      acorn-name:
-        image: "acorn-image-name"
-        environment:
-          - name: env-name
-            value: env-value
   conditions:
     - type: defined
       reason: Success
       status: "True"
       success: true
----
-
-kind: AppInstance
-apiVersion: internal.acorn.io/v1
-metadata:
-  name: acorn-name
-  namespace: app-created-namespace
-  labels:
-    acorn.io/acorn-name: acorn-name
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-    acorn.io/root-prefix: app-name
-spec:
-  image: acorn-image-name
-  publishMode: none
-  environment:
-    - name: env-name
-      value: env-value
-    - name: from-cli-name
-      value: from-cli-value

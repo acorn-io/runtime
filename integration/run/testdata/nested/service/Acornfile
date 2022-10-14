@@ -1,4 +1,0 @@
-containers: nginx: {
-	image: "nginx"
-	ports: expose: "81:80/http"
-}

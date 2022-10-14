@@ -88,7 +88,7 @@ func aliases(secret *apiv1.Secret, apps []apiv1.App) (result []string) {
 	}
 
 	if secret.Labels[labels.AcornSecretGenerated] == "true" {
-		names.Insert(fmt.Sprintf("%s.%s", secret.Labels[labels.AcornRootPrefix], secret.Labels[labels.AcornSecretName]))
+		names.Insert(fmt.Sprintf("%s.%s", secret.Labels[labels.AcornAppName], secret.Labels[labels.AcornSecretName]))
 	}
 
 	return names.List()

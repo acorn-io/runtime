@@ -405,28 +405,6 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	defer cancel()
 	eg := errgroup.Group{}
 	eg.Go(func() error {
-		// Don't recursively watch if app's pods are in the same namespace.
-		if app.Status.Namespace == app.Namespace {
-			return nil
-		}
-		_, err := appWatcher.BySelector(ctx, app.Status.Namespace, labels.Everything(), func(app *v1.AppInstance) (bool, error) {
-			if watching.shouldWatch("AppInstance", app.Namespace, app.Name) {
-				eg.Go(func() error {
-					err := App(ctx, app, output, options)
-					if err != nil {
-						output <- Message{
-							Time: time.Now(),
-							Err:  err,
-						}
-					}
-					return nil
-				})
-			}
-			return false, nil
-		})
-		return err
-	})
-	eg.Go(func() error {
 		defer cancel()
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
 			if watching.shouldWatch("Pod", pod.Namespace, pod.Name) {

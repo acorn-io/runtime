@@ -1,57 +1,13 @@
 package secrets
 
 import (
-	"context"
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 )
-
-func TestSecretCrossbinding(t *testing.T) {
-	ctx := context.Background()
-	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
-
-	image, err := build.Build(ctx, "../testdata/secrets/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "../testdata/secrets",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Ready
-	})
-
-	secondApp := &v1.AppInstance{}
-	err = kclient.Get(ctx, router.Key(app.Status.Namespace, "second"), secondApp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	secret := &corev1.Secret{}
-	err = kclient.Get(ctx, router.Key(secondApp.Status.Namespace, "second"), secret)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, "true", string(secret.Data["parent"]))
-
-}
 
 func TestSecretCreate(t *testing.T) {
 	restConfig := helper.StartAPI(t)

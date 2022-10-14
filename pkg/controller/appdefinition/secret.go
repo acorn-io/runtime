@@ -154,7 +154,7 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
+			Namespace:    appInstance.Namespace,
 			Labels:       labelsForSecret(secretName, appInstance, secretRef),
 			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
@@ -194,7 +194,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
+			Namespace:    appInstance.Namespace,
 			Labels:       labelsForSecret(secretName, appInstance, secretRef),
 			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
@@ -202,7 +202,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		Type: v1.SecretTypeTemplate,
 	}
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Labels[labels.AcornRootNamespace], appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
+			Namespace:    appInstance.Namespace,
 			Labels:       labelsForSecret(secretName, appInstance, secretRef),
 			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
@@ -281,7 +281,7 @@ func generateOpaque(req router.Request, appInstance *v1.AppInstance, secretName 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
+			Namespace:    appInstance.Namespace,
 			Labels:       labelsForSecret(secretName, appInstance, secretRef),
 			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
@@ -296,7 +296,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
-			Namespace:    appInstance.Labels[labels.AcornRootNamespace],
+			Namespace:    appInstance.Namespace,
 			Labels:       labelsForSecret(secretName, appInstance, secretRef),
 			Annotations:  annotationsForSecret(secretName, appInstance, secretRef),
 		},
@@ -339,11 +339,9 @@ func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte, 
 func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev1.Secret, error) {
 	var err error
 
-	if ownerNamespace, ok := secret.Labels[labels.AcornRootNamespace]; ok {
-		secret.Data, err = decryptData(req.Ctx, req.Client, secret.Data, ownerNamespace)
-		if err != nil {
-			return secret, err
-		}
+	secret.Data, err = decryptData(req.Ctx, req.Client, secret.Data, secret.Namespace)
+	if err != nil {
+		return secret, err
 	}
 
 	if existing == nil {
@@ -365,8 +363,6 @@ func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev
 func acornLabelsForSecret(secretName string, appInstance *v1.AppInstance) map[string]string {
 	return map[string]string{
 		labels.AcornAppName:         appInstance.Name,
-		labels.AcornRootNamespace:   appInstance.Labels[labels.AcornRootNamespace],
-		labels.AcornRootPrefix:      labels.RootPrefix(appInstance.Labels, appInstance.Name),
 		labels.AcornManaged:         "true",
 		labels.AcornSecretName:      secretName,
 		labels.AcornSecretGenerated: "true",
@@ -388,7 +384,7 @@ func getSecret(req router.Request, appInstance *v1.AppInstance, name string) (*c
 
 	var secrets corev1.SecretList
 	err := req.List(&secrets, &kclient.ListOptions{
-		Namespace:     appInstance.Labels[labels.AcornRootNamespace],
+		Namespace:     appInstance.Namespace,
 		LabelSelector: klabels.SelectorFromSet(l),
 	})
 	if err != nil {

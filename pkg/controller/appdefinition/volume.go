@@ -153,11 +153,9 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 
 func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.VolumeRequest) map[string]string {
 	labelMap := map[string]string{
-		labels.AcornAppName:       appInstance.Name,
-		labels.AcornAppNamespace:  appInstance.Namespace,
-		labels.AcornManaged:       "true",
-		labels.AcornRootNamespace: appInstance.Labels[labels.AcornRootNamespace],
-		labels.AcornRootPrefix:    labels.RootPrefix(appInstance.Labels, appInstance.Name),
+		labels.AcornAppName:      appInstance.Name,
+		labels.AcornAppNamespace: appInstance.Namespace,
+		labels.AcornManaged:      "true",
 	}
 	return labels.Merge(labelMap, labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Labels,
 		volumeRequest.Labels, appInstance.Spec.Labels))
