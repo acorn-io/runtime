@@ -2,47 +2,32 @@ package images
 
 import (
 	"context"
-	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/pull"
-	"github.com/acorn-io/acorn/pkg/tags"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/acorn-io/acorn/pkg/imagedetails"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/mink/pkg/stores"
+	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewImageDetails(c client.WithWatch, images *Storage) *ImageDetails {
-	return &ImageDetails{
+func NewImageDetails(c client.WithWatch) rest.Storage {
+	return stores.NewCreateGet(scheme.Scheme, &ImageDetailStrategy{
 		client: c,
-		images: images,
-	}
+	})
 }
 
-type ImageDetails struct {
-	images *Storage
+type ImageDetailStrategy struct {
 	client client.WithWatch
 }
 
-func (s *ImageDetails) NamespaceScoped() bool {
-	return true
+func (s *ImageDetailStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+	return s.GetDetails(ctx, namespace, name, nil, nil)
 }
 
-func (s *ImageDetails) New() runtime.Object {
-	return &apiv1.ImageDetails{}
-}
-
-func (s *ImageDetails) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
-	if createValidation != nil {
-		if err := createValidation(ctx, obj); err != nil {
-			return nil, err
-		}
-	}
-
+func (s *ImageDetailStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
 	details := obj.(*apiv1.ImageDetails)
 	if details.Name == "" {
 		ri, ok := request.RequestInfoFrom(ctx)
@@ -50,70 +35,14 @@ func (s *ImageDetails) Create(ctx context.Context, obj runtime.Object, createVal
 			details.Name = ri.Name
 		}
 	}
-	return s.GetDetails(ctx, details.Name, details.Profiles, details.DeployArgs)
-}
-
-func (s *ImageDetails) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	name = strings.ReplaceAll(name, "+", "/")
-	return s.GetDetails(ctx, name, nil, nil)
-}
-
-func (s *ImageDetails) GetDetails(ctx context.Context, name string, profiles []string, deployArgs map[string]any) (*apiv1.ImageDetails, error) {
 	ns, _ := request.NamespaceFrom(ctx)
-	imageName := name
+	return s.GetDetails(ctx, ns, details.Name, details.Profiles, details.DeployArgs)
+}
 
-	image, err := s.images.ImageGet(ctx, name)
-	if err != nil && !apierror.IsNotFound(err) {
-		return nil, err
-	} else if err != nil && apierror.IsNotFound(err) && tags.IsLocalReference(name) {
-		return nil, err
-	} else if err == nil {
-		ns = image.Namespace
-		imageName = image.Name
-	}
+func (s *ImageDetailStrategy) New() types.Object {
+	return &apiv1.ImageDetails{}
+}
 
-	appImage, err := pull.AppImage(ctx, s.client, ns, imageName)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &apiv1.ImageDetails{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      imageName,
-			Namespace: ns,
-		},
-		AppImage: *appImage,
-	}
-
-	appDef, err := appdefinition.NewAppDefinition([]byte(appImage.Acornfile))
-	if err != nil {
-		result.ParseError = err.Error()
-		return result, nil
-	}
-
-	if len(deployArgs) > 0 || len(profiles) > 0 {
-		appDef, deployArgs, err = appDef.WithArgs(deployArgs, profiles)
-		if err != nil {
-			result.ParseError = err.Error()
-			return result, nil
-		}
-		result.DeployArgs = deployArgs
-	}
-
-	appSpec, err := appDef.AppSpec()
-	if err != nil {
-		result.ParseError = err.Error()
-		return result, nil
-	}
-
-	result.AppSpec = appSpec
-
-	paramSpec, err := appDef.Args()
-	if err != nil {
-		result.ParseError = err.Error()
-		return result, nil
-	}
-
-	result.Params = paramSpec
-	return result, nil
+func (s *ImageDetailStrategy) GetDetails(ctx context.Context, namespace, name string, profiles []string, deployArgs map[string]any) (*apiv1.ImageDetails, error) {
+	return imagedetails.GetImageDetails(ctx, s.client, namespace, name, profiles, deployArgs)
 }

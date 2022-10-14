@@ -33,11 +33,18 @@ func (c *client) ImageDetails(ctx context.Context, imageName string, opts *Image
 	imageName = strings.ReplaceAll(imageName, "/", "+")
 
 	detailsResult := &apiv1.ImageDetails{}
-	err := c.RESTClient.Get().
+
+	if opts != nil {
+		detailsResult.DeployArgs = opts.DeployArgs
+		detailsResult.Profiles = opts.Profiles
+	}
+
+	err := c.RESTClient.Post().
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(imageName).
 		SubResource("details").
+		Body(detailsResult).
 		Do(ctx).Into(detailsResult)
 	if err != nil {
 		return nil, err

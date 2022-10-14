@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
+	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/merr"
@@ -15,13 +16,15 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	authv1 "k8s.io/api/authorization/v1"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/endpoints/request"
 )
 
-func (s *Storage) checkRemotePermissions(ctx context.Context, namespace, image string) error {
+func (s *Strategy) checkRemotePermissions(ctx context.Context, namespace, image string) error {
 	keyChain, err := pullsecret.Keychain(ctx, s.client, namespace)
 	if err != nil {
 		return err
@@ -39,7 +42,7 @@ func (s *Storage) checkRemotePermissions(ctx context.Context, namespace, image s
 	return nil
 }
 
-func (s *Storage) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
+func (s *Strategy) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
 	err := s.client.Create(ctx, sar)
 	if err != nil {
 		return err
@@ -52,7 +55,7 @@ func (s *Storage) check(ctx context.Context, sar *authv1.SubjectAccessReview, ru
 	return nil
 }
 
-func (s *Storage) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
+func (s *Strategy) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
 	if len(rule.Verbs) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
@@ -73,7 +76,7 @@ func (s *Storage) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectA
 	return nil
 }
 
-func (s *Storage) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
+func (s *Strategy) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
 	if len(rule.APIGroups) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
 	}
@@ -124,7 +127,7 @@ func (s *Storage) checkResourceRole(ctx context.Context, sar *authv1.SubjectAcce
 	return nil
 }
 
-func (s *Storage) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
+func (s *Strategy) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
 	var errs []error
 	for _, rule := range rules {
 		if len(rule.NonResourceURLs) > 0 {
@@ -140,7 +143,7 @@ func (s *Storage) checkRules(ctx context.Context, sar *authv1.SubjectAccessRevie
 	return merr.NewErrors(errs...)
 }
 
-func (s *Storage) compareAndCheckPermissions(ctx context.Context, perms v1.Permissions, requestedPerms *v1.Permissions) error {
+func (s *Strategy) compareAndCheckPermissions(ctx context.Context, perms v1.Permissions, requestedPerms *v1.Permissions) error {
 	if len(perms.ClusterRules) == 0 && len(perms.Rules) == 0 {
 		return nil
 	}
@@ -183,8 +186,8 @@ func (s *Storage) compareAndCheckPermissions(ctx context.Context, perms v1.Permi
 	return merr.NewErrors(errs...)
 }
 
-func (s *Storage) getPermissions(ctx context.Context, image string) (result v1.Permissions, _ error) {
-	details, err := s.imageDetails.GetDetails(ctx, image, nil, nil)
+func (s *Strategy) getPermissions(ctx context.Context, namespace, image string) (result v1.Permissions, _ error) {
+	details, err := s.clientFactory.Namespace(namespace).ImageDetails(ctx, image, nil)
 	if err != nil {
 		return result, err
 	}
@@ -205,9 +208,9 @@ func (s *Storage) getPermissions(ctx context.Context, image string) (result v1.P
 	return result, nil
 }
 
-func (s *Storage) resolveTag(ctx context.Context, namespace, image string) (string, error) {
-	localImage, err := s.images.ImageGet(ctx, image)
-	if apierror.IsNotFound(err) {
+func (s *Strategy) resolveTag(ctx context.Context, namespace, image string) (string, error) {
+	localImage, err := s.clientFactory.Namespace(namespace).ImageGet(ctx, image)
+	if apierrors.IsNotFound(err) {
 		if tags.IsLocalReference(image) {
 			return "", err
 		}
@@ -220,4 +223,23 @@ func (s *Storage) resolveTag(ctx context.Context, namespace, image string) (stri
 		return strings.TrimPrefix(localImage.Digest, "sha256:"), nil
 	}
 	return image, nil
+}
+
+func (s *Strategy) createNamespace(ctx context.Context, name string) error {
+	ns := &corev1.Namespace{}
+	err := s.client.Get(ctx, hclient.ObjectKey{
+		Name: name,
+	}, ns)
+	if apierrors.IsNotFound(err) {
+		err := s.client.Create(ctx, &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("unable to create namespace %s: %w", name, err)
+		}
+		return nil
+	}
+	return err
 }

@@ -5,160 +5,93 @@ import (
 	"encoding/json"
 	"strings"
 
-	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/namespace"
-	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/acorn-io/acorn/pkg/watcher"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	mtypes "github.com/acorn-io/mink/pkg/types"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
+	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/apiserver/pkg/registry/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apiserver/pkg/storage"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c client.WithWatch) *Storage {
-	return &Storage{
-		TableConvertor: tables.ContainerConverter,
-		client:         c,
+type Translator struct {
+	client kclient.Client
+}
+
+func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
+	for {
+		prefix, suffix, ok := strings.Cut(name, ".")
+		if !ok {
+			break
+		}
+		app := &v1.AppInstance{}
+		err := t.client.Get(ctx, router.Key(namespace, prefix), app)
+		if err != nil {
+			return namespace, name, err
+		}
+
+		name = suffix
+		namespace = app.Status.Namespace
 	}
+
+	return namespace, name, nil
 }
 
-type Storage struct {
-	rest.TableConvertor
-
-	client client.WithWatch
-}
-
-func (s *Storage) NewList() runtime.Object {
-	return &apiv1.ContainerReplicaList{}
-}
-
-func (s *Storage) NamespaceScoped() bool {
-	return true
-}
-
-func (s *Storage) New() runtime.Object {
-	return &apiv1.ContainerReplica{}
-}
-
-func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-	con, err := s.get(ctx, name)
-	if err != nil {
-		return nil, false, err
+func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (string, storage.ListOptions) {
+	sel := opts.Predicate.Label
+	if sel == nil {
+		sel = klabels.Everything()
 	}
-	if deleteValidation != nil {
-		if err := deleteValidation(ctx, con); err != nil {
-			return nil, false, err
+	req, _ := klabels.NewRequirement(labels.AcornManaged, selection.Equals, []string{"true"})
+	sel = sel.Add(*req)
+
+	if namespace != "" {
+		req, _ := klabels.NewRequirement(labels.AcornAppNamespace, selection.Equals, []string{namespace})
+		sel = sel.Add(*req)
+	}
+	opts.Predicate.Label = sel
+	return "", opts
+}
+
+func (t *Translator) ToPublic(objs ...runtime.Object) (result []mtypes.Object) {
+	for _, obj := range objs {
+		for _, con := range podToContainers(obj.(*corev1.Pod)) {
+			con := con
+			result = append(result, &con)
 		}
 	}
-	return con, true, s.client.Delete(ctx, &corev1.Pod{
+	if len(result) == 0 && len(objs) > 0 {
+		result = append(result, &apiv1.ContainerReplica{})
+	}
+	return
+}
+
+func (t *Translator) FromPublic(_ context.Context, obj runtime.Object) (mtypes.Object, error) {
+	con := obj.(*apiv1.ContainerReplica)
+	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      con.Status.PodName,
 			Namespace: con.Status.PodNamespace,
 		},
-	})
+	}, nil
 }
 
-func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return s.get(ctx, name)
+func (t *Translator) NewPublicList() mtypes.ObjectList {
+	return &apiv1.ContainerReplicaList{}
 }
 
-func newNotFoundContainer(name string) error {
-	return apierrors.NewNotFound(schema.GroupResource{
-		Group:    api.Group,
-		Resource: "containers",
-	}, name)
-}
-
-func (s *Storage) get(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
-	var ok bool
-
-	ns, podName, err := namespace.DenormalizeName(ctx, s.client, name)
-	if apierrors.IsNotFound(err) {
-		podName, _, ok = strings.Cut(podName, ".")
-		if !ok {
-			return nil, newNotFoundContainer(name)
-		}
-	} else if err != nil {
-		return nil, err
-	}
-
-	pod := &corev1.Pod{}
-	err = s.client.Get(ctx, client.ObjectKey{
-		Name:      podName,
-		Namespace: ns,
-	}, pod)
-	if apierrors.IsNotFound(err) {
-		return nil, newNotFoundContainer(name)
-	} else if err != nil {
-		return nil, err
-	}
-
-	for _, container := range podToContainers(pod) {
-		if container.Name == name {
-			return &container, nil
-		}
-	}
-
-	return nil, newNotFoundContainer(name)
-}
-
-func (s *Storage) Watch(ctx context.Context, options *internalversion.ListOptions) (watch.Interface, error) {
-	opts := watcher.ListOptions("", options)
-	opts.LabelSelector = namespace.Selector(ctx)
-	w, err := s.client.Watch(ctx, &corev1.PodList{}, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return watcher.Transform(w, func(obj runtime.Object) (result []runtime.Object) {
-		for _, con := range podToContainers(obj.(*corev1.Pod)) {
-			con := con
-			if options.FieldSelector != nil {
-				if !options.FieldSelector.Matches(fields.Set{
-					"metadata.name":      con.Name,
-					"metadata.namespace": con.Namespace,
-				}) {
-					continue
-				}
-			}
-			result = append(result, &con)
-		}
-
-		return
-	}), nil
-}
-
-func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
-	pods := &corev1.PodList{}
-	err := s.client.List(ctx, pods, &client.ListOptions{
-		LabelSelector: namespace.Selector(ctx),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	result := &apiv1.ContainerReplicaList{
-		ListMeta: pods.ListMeta,
-	}
-
-	for _, pod := range pods.Items {
-		result.Items = append(result.Items, podToContainers(&pod)...)
-	}
-
-	return result, nil
+func (t *Translator) NewPublic() mtypes.Object {
+	return &apiv1.ContainerReplica{}
 }
 
 func podToContainers(pod *corev1.Pod) (result []apiv1.ContainerReplica) {
@@ -244,7 +177,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 	result.Namespace = namespace
 	result.OwnerReferences = nil
 	result.UID = uid
-	result.Spec.AppName = pod.Labels[labels.AcornRootPrefix]
+	result.Spec.AppName = pod.Labels[labels.AcornAppName]
 	result.Spec.JobName = jobName
 	result.Spec.ContainerName = containerName
 	result.Spec.SidecarName = sidecarName

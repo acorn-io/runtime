@@ -3,6 +3,8 @@ package registry
 import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
 	"github.com/acorn-io/acorn/pkg/server/registry/builders"
@@ -12,64 +14,112 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/info"
 	"github.com/acorn-io/acorn/pkg/server/registry/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
+	"github.com/acorn-io/mink/pkg/db"
+	"github.com/acorn-io/mink/pkg/serializer"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	clientgo "k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func APIStores(c client.WithWatch, cfg *clientgo.Config) (map[string]rest.Storage, error) {
-	buildersStorage := builders.NewStorage(c)
-	imagesStorage := images.NewStorage(c)
-	imagesDetails := images.NewImageDetails(c, imagesStorage)
-	containerStorage := containers.NewStorage(c)
-	secretsStorage := secrets.NewStorage(c)
-	tagsStorage := images.NewTagStorage(c, imagesStorage)
-	containerExec, err := containers.NewContainerExec(c, containerStorage, cfg)
+func APIStoresForInspection(cfg *clientgo.Config) (map[string]rest.Storage, error) {
+	c, err := k8sclient.New(cfg)
 	if err != nil {
 		return nil, err
 	}
-	buildersPort, err := builders.NewBuildkitPort(c, buildersStorage, cfg)
+	return APIStores(c, cfg, cfg, nil)
+}
+
+func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Factory) (map[string]rest.Storage, error) {
+	clientFactory, err := client.NewClientFactory(localCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	registryPort, err := builders.NewRegistryPort(c, buildersStorage, cfg)
+	buildersStorage, buildersStatus, err := builders.NewStorage(c, db)
 	if err != nil {
 		return nil, err
 	}
 
-	appsStorage := apps.NewStorage(c, imagesStorage, imagesDetails)
-	logsStorage, err := apps.NewLogs(c, appsStorage, cfg)
+	imagesStorage, err := images.NewStorage(c, db)
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]rest.Storage{
+	containersStorage, containersStatus, err := containers.NewStorage(c, db)
+	if err != nil {
+		return nil, err
+	}
+
+	containerExec, err := containers.NewContainerExec(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	buildersPort, err := builders.NewBuildkitPort(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	registryPort, err := builders.NewRegistryPort(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	appsStorage, appStatusStorage, err := apps.NewStorage(c, clientFactory, db)
+	if err != nil {
+		return nil, err
+	}
+
+	logsStorage, err := apps.NewLogs(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	volumesStorage, volumesStatus, err := volumes.NewStorage(c, db)
+	if err != nil {
+		return nil, err
+	}
+
+	stores := map[string]rest.Storage{
 		"apps":                   appsStorage,
+		"apps/status":            appStatusStorage,
 		"apps/log":               logsStorage,
-		"builders":               builders.NewStorage(c),
+		"builders":               buildersStorage,
 		"builders/port":          buildersPort,
 		"builders/registryport":  registryPort,
 		"images":                 imagesStorage,
-		"images/tag":             tagsStorage,
-		"images/push":            images.NewImagePush(c, imagesStorage),
-		"images/pull":            images.NewImagePull(c, imagesStorage, tagsStorage),
-		"images/details":         imagesDetails,
-		"volumes":                volumes.NewStorage(c),
-		"containerreplicas":      containerStorage,
+		"images/tag":             images.NewTagStorage(c),
+		"images/push":            images.NewImagePush(c),
+		"images/pull":            images.NewImagePull(c, clientFactory),
+		"images/details":         images.NewImageDetails(c),
+		"volumes":                volumesStorage,
+		"containerreplicas":      containersStorage,
 		"containerreplicas/exec": containerExec,
-		"credentials":            credentials.NewStorage(c),
-		"secrets":                secretsStorage,
-		"secrets/expose":         secrets.NewExpose(c, secretsStorage),
+		"credentials":            credentials.NewStore(c),
+		"credentials/expose":     credentials.NewExpose(c),
+		"secrets":                secrets.NewStorage(c),
+		"secrets/expose":         secrets.NewExpose(c),
 		"infos":                  info.NewStorage(c),
-	}, nil
+	}
+
+	if db != nil {
+		stores["builders/status"] = buildersStatus
+		stores["containerreplicas/status"] = containersStatus
+		stores["volumes/status"] = volumesStatus
+	}
+
+	return stores, nil
 }
 
-func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIGroupInfo, error) {
-	stores, err := APIStores(c, cfg)
+func APIGroups(c kclient.WithWatch, cfg, localCfg *clientgo.Config, dsn string) (*genericapiserver.APIGroupInfo, error) {
+	var dbFactory *db.Factory
+	if dsn != "" {
+		dbFactory = db.NewFactory(scheme.Scheme, dsn, nil)
+	}
+	stores, err := APIStores(c, cfg, localCfg, dbFactory)
 	if err != nil {
 		return nil, err
 	}
@@ -90,30 +140,6 @@ func APIGroups(c client.WithWatch, cfg *clientgo.Config) (*genericapiserver.APIG
 
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(api.Group, newScheme, scheme.ParameterCodec, scheme.Codecs)
 	apiGroupInfo.VersionedResourcesStorageMap["v1"] = stores
-	apiGroupInfo.NegotiatedSerializer = &noProtobufSerializer{r: apiGroupInfo.NegotiatedSerializer}
+	apiGroupInfo.NegotiatedSerializer = serializer.NewNoProtobufSerializer(apiGroupInfo.NegotiatedSerializer)
 	return &apiGroupInfo, nil
-}
-
-type noProtobufSerializer struct {
-	r runtime.NegotiatedSerializer
-}
-
-func (n *noProtobufSerializer) SupportedMediaTypes() []runtime.SerializerInfo {
-	si := n.r.SupportedMediaTypes()
-	result := make([]runtime.SerializerInfo, 0, len(si))
-	for _, s := range si {
-		if s.MediaType == runtime.ContentTypeProtobuf {
-			continue
-		}
-		result = append(result, s)
-	}
-	return result
-}
-
-func (n *noProtobufSerializer) EncoderForVersion(serializer runtime.Encoder, gv runtime.GroupVersioner) runtime.Encoder {
-	return n.r.EncoderForVersion(serializer, gv)
-}
-
-func (n *noProtobufSerializer) DecoderToVersion(serializer runtime.Decoder, gv runtime.GroupVersioner) runtime.Decoder {
-	return n.r.DecoderToVersion(serializer, gv)
 }

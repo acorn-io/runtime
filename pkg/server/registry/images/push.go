@@ -10,6 +10,8 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/remoteopts"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -17,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,15 +28,14 @@ const (
 	DefaultRegistry = "NO_DEFAULT"
 )
 
-func NewImagePush(c client.WithWatch, images *Storage) *ImagePush {
+func NewImagePush(c client.WithWatch) *ImagePush {
 	return &ImagePush{
 		client: c,
-		images: images,
 	}
 }
 
 type ImagePush struct {
-	images *Storage
+	*strategy.DestroyAdapter
 	client client.WithWatch
 }
 
@@ -46,16 +48,16 @@ func (i *ImagePush) New() runtime.Object {
 }
 
 func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
-	id = strings.ReplaceAll(id, "+", "/")
+	ns, _ := request.NamespaceFrom(ctx)
+	tagName := strings.ReplaceAll(id, "+", "/")
 
-	imageObj, err := i.images.Get(ctx, id, nil)
+	image := &apiv1.Image{}
+	err := i.client.Get(ctx, router.Key(ns, id), image)
 	if err != nil {
 		return nil, err
 	}
 
-	image := imageObj.(*apiv1.Image)
-
-	_, process, err := i.ImagePush(ctx, image, id)
+	_, process, err := i.ImagePush(ctx, image, tagName)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +143,30 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 
 	progress := make(chan ggcrv1.Update)
 	writeOpts = append(writeOpts, remote.WithProgress(progress))
-	go func() { _ = remote.WriteIndex(pushTag, remoteImage, writeOpts...) }()
-	return image, progress, nil
+	go func() {
+		err := remote.WriteIndex(pushTag, remoteImage, writeOpts...)
+		handleWriteIndexError(err, progress)
+	}()
+	return image, keepalive(progress), nil
+}
+
+func handleWriteIndexError(err error, progress chan ggcrv1.Update) {
+	if err == nil {
+		return
+	}
+	select {
+	case i, ok := <-progress:
+		if ok {
+			progress <- i
+			progress <- ggcrv1.Update{
+				Error: err,
+			}
+			close(progress)
+		}
+	default:
+		progress <- ggcrv1.Update{
+			Error: err,
+		}
+		close(progress)
+	}
 }

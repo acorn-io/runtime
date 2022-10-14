@@ -18,7 +18,7 @@ func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, 
 		},
 		ServerAddress: serverAddress,
 		Username:      username,
-		Password:      password,
+		Password:      &password,
 	}
 	return credential, c.Client.Create(ctx, credential)
 }
@@ -42,7 +42,7 @@ func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, 
 	}
 
 	credential.Username = username
-	credential.Password = password
+	credential.Password = &password
 	return credential, c.Client.Update(ctx, credential)
 }
 

@@ -13,57 +13,72 @@ import (
 	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
+	"github.com/acorn-io/mink/pkg/db"
+	"github.com/acorn-io/mink/pkg/strategy"
+	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apiserver/pkg/storage"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c client.WithWatch) *Storage {
-	return &Storage{
+type DBStrategy struct {
+	strategy.CompleteStrategy
+	rest.TableConvertor
+}
+
+func NewDBStrategy(db *db.Factory) (*DBStrategy, error) {
+	dbStrategy, err := db.NewDBStrategy(&apiv1.Image{})
+	if err != nil {
+		return nil, err
+	}
+	return &DBStrategy{
+		CompleteStrategy: dbStrategy,
+		TableConvertor:   tables.ImageConverter,
+	}, nil
+}
+
+type DynamicStrategy struct {
+	rest.TableConvertor
+	client kclient.WithWatch
+}
+
+func NewDynamicStrategy(c kclient.WithWatch) *DynamicStrategy {
+	return &DynamicStrategy{
 		TableConvertor: tables.ImageConverter,
 		client:         c,
 	}
 }
 
-type Storage struct {
-	rest.TableConvertor
-
-	client client.WithWatch
+func (s *DynamicStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+	return s.ImageGet(ctx, namespace, name)
 }
 
-func (s *Storage) NewList() runtime.Object {
-	return &apiv1.ImageList{}
-}
-
-func (s *Storage) NamespaceScoped() bool {
-	return true
-}
-
-func (s *Storage) New() runtime.Object {
-	return &apiv1.Image{}
-}
-
-func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
-	images, err := s.ImageList(ctx)
+func (s *DynamicStrategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
+	images, err := s.ImageList(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}
 	return &images, nil
 }
 
-func (s *Storage) ImageList(ctx context.Context) (apiv1.ImageList, error) {
-	ns, _ := request.NamespaceFrom(ctx)
-	if ns != "" {
-		return s.forNamespace(ctx, ns)
+func (s *DynamicStrategy) New() types.Object {
+	return &apiv1.Image{}
+}
+
+func (s *DynamicStrategy) NewList() types.ObjectList {
+	return &apiv1.ImageList{}
+}
+
+func (s *DynamicStrategy) ImageList(ctx context.Context, namespace string) (apiv1.ImageList, error) {
+	if namespace != "" {
+		return s.forNamespace(ctx, namespace)
 	}
 
 	var (
@@ -91,7 +106,7 @@ func (s *Storage) ImageList(ctx context.Context) (apiv1.ImageList, error) {
 	return result, nil
 }
 
-func (s *Storage) forNamespace(ctx context.Context, ns string) (apiv1.ImageList, error) {
+func (s *DynamicStrategy) forNamespace(ctx context.Context, ns string) (apiv1.ImageList, error) {
 	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
 		return apiv1.ImageList{}, err
 	} else if !ok {
@@ -153,45 +168,33 @@ func (s *Storage) forNamespace(ctx context.Context, ns string) (apiv1.ImageList,
 	return result, nil
 }
 
-func (s *Storage) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return s.ImageGet(ctx, name)
-}
-
-func (s *Storage) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-	image, matchedReference, err := s.imageGet(ctx, name)
-	if apierrors.IsNotFound(err) {
-		return nil, false, nil
-	} else if err != nil {
-		return nil, false, err
-	}
-
-	if deleteValidation != nil {
-		if err := deleteValidation(ctx, image); err != nil {
-			return nil, false, err
-		}
+func (s *DynamicStrategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
+	image, matchedReference, err := s.imageGet(ctx, obj.GetNamespace(), obj.GetName())
+	if err != nil {
+		return nil, err
 	}
 
 	if matchedReference != "" {
 		tagCount, err := tags2.Remove(ctx, s.client, image.Namespace, image.Digest, matchedReference)
 		if tagCount > 0 || err != nil {
-			return nil, true, err
+			return image, nil
 		}
 	}
 
 	repo, err := getRepo(image.Namespace)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
 	opts, err := remoteopts.WithServerDialer(ctx, s.client)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
-	return image, true, remote.Delete(repo.Digest(image.Digest), opts...)
+	return image, remote.Delete(repo.Digest(image.Digest), opts...)
 }
 
-func (s *Storage) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {
+func (s *DynamicStrategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
 	name = strings.ReplaceAll(name, "+", "/")
 
 	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
@@ -203,12 +206,12 @@ func (s *Storage) ImageGet(ctx context.Context, name string) (*apiv1.Image, erro
 		}, name)
 	}
 
-	image, _, err := s.imageGet(ctx, name)
+	image, _, err := s.imageGet(ctx, namespace, name)
 	return image, err
 }
 
-func (s *Storage) imageGet(ctx context.Context, imageName string) (*apiv1.Image, string, error) {
-	images, err := s.ImageList(ctx)
+func (s *DynamicStrategy) imageGet(ctx context.Context, namespace, imageName string) (*apiv1.Image, string, error) {
+	images, err := s.ImageList(ctx, namespace)
 	if err != nil {
 		return nil, "", err
 	}

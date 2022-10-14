@@ -1,4 +1,4 @@
-package secrets
+package credentials
 
 import (
 	"github.com/acorn-io/mink/pkg/stores"

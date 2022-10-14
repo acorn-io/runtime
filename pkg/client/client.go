@@ -26,11 +26,26 @@ func Default() (Client, error) {
 	return New(cfg, ns)
 }
 
-func New(restConfig *rest.Config, namespace string) (Client, error) {
-	if namespace == "" {
-		namespace = system.UserNamespace()
-	}
+type Factory struct {
+	client     kclient.WithWatch
+	restConfig *rest.Config
+	restClient *rest.RESTClient
+	dialer     *k8schannel.Dialer
+}
 
+func (f *Factory) Namespace(namespace string) Client {
+	return &IgnoreUninstalled{
+		client: &client{
+			Namespace:  namespace,
+			Client:     f.client,
+			RESTConfig: f.restConfig,
+			RESTClient: f.restClient,
+			Dialer:     f.dialer,
+		},
+	}
+}
+
+func NewClientFactory(restConfig *rest.Config) (*Factory, error) {
 	k8sclient, err := k8sclient.New(restConfig)
 	if err != nil {
 		return nil, err
@@ -51,15 +66,24 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 		return nil, err
 	}
 
-	return &IgnoreUninstalled{
-		client: &client{
-			Namespace:  namespace,
-			Client:     k8sclient,
-			RESTConfig: restConfig,
-			RESTClient: restClient,
-			Dialer:     dialer,
-		},
+	return &Factory{
+		client:     k8sclient,
+		restConfig: restConfig,
+		restClient: restClient,
+		dialer:     dialer,
 	}, nil
+}
+
+func New(restConfig *rest.Config, namespace string) (Client, error) {
+	if namespace == "" {
+		namespace = system.UserNamespace()
+	}
+
+	f, err := NewClientFactory(restConfig)
+	if err != nil {
+		return nil, err
+	}
+	return f.Namespace(namespace), nil
 }
 
 type AppUpdateOptions struct {
@@ -190,6 +214,8 @@ type ImagePushOptions struct {
 }
 
 type ImageDetailsOptions struct {
+	Profiles   []string
+	DeployArgs map[string]any
 }
 
 type ContainerReplicaExecOptions struct {

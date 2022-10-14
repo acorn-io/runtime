@@ -81,7 +81,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	existing.Username = a.Username
-	existing.Password = a.Password
+	existing.Password = &a.Password
 	cred, err := client.CredentialUpdate(cmd.Context(), args[0], a.Username, a.Password)
 	if err != nil {
 		return err

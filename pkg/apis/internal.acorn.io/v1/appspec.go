@@ -31,13 +31,6 @@ const (
 
 type ChangeType string
 
-type AcornBuild struct {
-	OriginalImage string     `json:"originalImage,omitempty"`
-	Context       string     `json:"context,omitempty"`
-	Acornfile     string     `json:"acornfile,omitempty"`
-	BuildArgs     GenericMap `json:"buildArgs,omitempty"`
-}
-
 type Build struct {
 	Context     string            `json:"context,omitempty"`
 	Dockerfile  string            `json:"dockerfile,omitempty"`

@@ -11,7 +11,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
-	objwatcher "github.com/acorn-io/acorn/pkg/watcher"
+	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
 	"github.com/loft-sh/devspace/pkg/devspace/sync"
 	logpkg "github.com/loft-sh/devspace/pkg/util/log"

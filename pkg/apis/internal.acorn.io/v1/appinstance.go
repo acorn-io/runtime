@@ -69,6 +69,7 @@ type AppInstanceSpec struct {
 	Ports           []PortBinding    `json:"ports,omitempty"`
 	DeployArgs      GenericMap       `json:"deployArgs,omitempty"`
 	Permissions     *Permissions     `json:"permissions,omitempty"`
+	ClusterName     string           `json:"clusterName,omitempty"`
 }
 
 func (in AppInstanceSpec) GetDevMode() bool {
@@ -130,6 +131,7 @@ type AppInstanceStatus struct {
 	AppSpec            AppSpec                    `json:"appSpec,omitempty"`
 	Conditions         []Condition                `json:"conditions,omitempty"`
 	Endpoints          []Endpoint                 `json:"endpoints,omitempty"`
+	ClusterName        string                     `json:"clusterName,omitempty"`
 }
 
 type Endpoint struct {

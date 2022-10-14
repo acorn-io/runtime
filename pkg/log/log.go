@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	applabels "github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/watcher"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -332,7 +332,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 	return eg.Wait()
 }
 
-func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message, options *Options) error {
+func appNoFollow(ctx context.Context, app *apiv1.App, output chan<- Message, options *Options) error {
 	if app.Status.Namespace == "" {
 		return nil
 	}
@@ -356,7 +356,7 @@ func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message
 		}
 	}
 
-	apps := &v1.AppInstanceList{}
+	apps := &apiv1.AppList{}
 	err = options.Client.List(ctx, apps, &client.ListOptions{
 		Namespace: app.Status.Namespace,
 	})
@@ -373,7 +373,7 @@ func appNoFollow(ctx context.Context, app *v1.AppInstance, output chan<- Message
 	return nil
 }
 
-func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, options *Options) error {
+func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Options) error {
 	options, err := options.Complete()
 	if err != nil {
 		return err
@@ -384,12 +384,12 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	}
 
 	var (
-		appWatcher = watcher.New[*v1.AppInstance](options.Client)
+		appWatcher = watcher.New[*apiv1.App](options.Client)
 		podWatcher = watcher.New[*corev1.Pod](options.Client)
 		watching   = watching{}
 	)
 
-	app, err = appWatcher.ByName(ctx, app.Namespace, app.Name, func(app *v1.AppInstance) (bool, error) {
+	app, err = appWatcher.ByName(ctx, app.Namespace, app.Name, func(app *apiv1.App) (bool, error) {
 		return app.Status.Namespace != "", nil
 	})
 	if err != nil {
@@ -426,7 +426,7 @@ func App(ctx context.Context, app *v1.AppInstance, output chan<- Message, option
 	})
 	eg.Go(func() error {
 		defer cancel()
-		_, err := appWatcher.ByObject(ctx, app, func(app *v1.AppInstance) (bool, error) {
+		_, err := appWatcher.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
 			return !app.DeletionTimestamp.IsZero(), nil
 		})
 		return err

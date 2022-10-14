@@ -7,18 +7,20 @@ import (
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/portforwarder"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/system"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	client2 "sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (c *client) BuilderCreate(ctx context.Context) (*apiv1.Builder, error) {
 	builder := &apiv1.Builder{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "builder",
-			Namespace: c.Namespace,
+			Name:      system.BuildKitName,
+			Namespace: system.Namespace,
 		},
 	}
 	return builder, c.Client.Create(ctx, builder)
@@ -39,16 +41,21 @@ func (c *client) BuilderDelete(ctx context.Context) (*apiv1.Builder, error) {
 }
 
 func (c *client) BuilderGet(ctx context.Context) (*apiv1.Builder, error) {
-	builder := &apiv1.Builder{}
-	err := c.Client.Get(ctx, client2.ObjectKey{
-		Name:      "builder",
+	builders := &apiv1.BuilderList{}
+	err := c.Client.List(ctx, builders, &k8sclient.ListOptions{
 		Namespace: c.Namespace,
-	}, builder)
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	return builder, nil
+	if len(builders.Items) == 0 {
+		builder := &apiv1.Builder{}
+		return builder, c.Client.Get(ctx, kclient.ObjectKey{
+			Name:      system.BuildKitName,
+			Namespace: system.Namespace,
+		}, builder)
+	}
+	return &builders.Items[0], nil
 }
 
 func (c *client) builderCreatePrint(ctx context.Context) (*apiv1.Builder, error) {
@@ -79,6 +86,7 @@ func (c *client) BuilderDialer(ctx context.Context) (func(ctx context.Context) (
 
 	req := c.RESTClient.Get().
 		Resource("builders").
+		Namespace(builder.Namespace).
 		Name(builder.Name).
 		SubResource("port").
 		VersionedParams(&apiv1.BuilderPortOptions{}, scheme.ParameterCodec)
@@ -103,6 +111,7 @@ func (c *client) BuilderRegistryDialer(ctx context.Context) (func(ctx context.Co
 
 	req := c.RESTClient.Get().
 		Resource("builders").
+		Namespace(builder.Namespace).
 		Name(builder.Name).
 		SubResource("registryport").
 		VersionedParams(&apiv1.BuilderPortOptions{}, scheme.ParameterCodec)

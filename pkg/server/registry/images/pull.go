@@ -5,31 +5,34 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/remoteopts"
+	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewImagePull(c client.WithWatch, images *Storage, tags *TagStorage) *ImagePull {
+func NewImagePull(c kclient.WithWatch, clientFactory *client.Factory) *ImagePull {
 	return &ImagePull{
-		client: c,
-		images: images,
-		tags:   tags,
+		client:        c,
+		clientFactory: clientFactory,
 	}
 }
 
 type ImagePull struct {
-	images *Storage
-	tags   *TagStorage
-	client client.WithWatch
+	*strategy.DestroyAdapter
+	client        kclient.WithWatch
+	clientFactory *client.Factory
 }
 
 func (i *ImagePull) NamespaceScoped() bool {
@@ -118,25 +121,57 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 	// we can control closing the result channel in case we need to write an error
 	progress2 := make(chan ggcrv1.Update)
 	opts = append(opts, remote.WithProgress(progress))
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
 		for update := range progress {
 			progress2 <- update
 		}
 	}()
 
 	go func() {
-		defer close(progress2)
+		defer func() {
+			wg.Wait()
+			close(progress2)
+		}()
 
 		// don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex()
 		if err = remote.WriteIndex(repo.Digest(hash.Hex), index, opts...); err == nil {
-			if _, err := i.tags.ImageTag(ctx, hash.Hex, imageName); err != nil {
+			if err := i.clientFactory.Namespace(namespace).ImageTag(ctx, hash.Hex, imageName); err != nil {
 				progress2 <- ggcrv1.Update{
 					Error: err,
 				}
 			}
+		} else {
+			handleWriteIndexError(err, progress)
 		}
 	}()
 
-	return progress2, nil
+	return keepalive(progress2), nil
+}
+
+func keepalive(c <-chan ggcrv1.Update) <-chan ggcrv1.Update {
+	result := make(chan ggcrv1.Update)
+	go func() {
+		var (
+			lastUpdate ggcrv1.Update
+			timer      = time.NewTicker(time.Second)
+			ok         bool
+		)
+		defer close(result)
+		defer timer.Stop()
+		for {
+			select {
+			case lastUpdate, ok = <-c:
+				if !ok {
+					return
+				}
+			case <-timer.C:
+			}
+			result <- lastUpdate
+		}
+	}()
+	return result
 }

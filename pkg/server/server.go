@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net"
 
+	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	openapi2 "github.com/acorn-io/acorn/pkg/openapi"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry"
+	"github.com/acorn-io/baaah/pkg/clientaggregator"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/pflag"
@@ -17,6 +19,7 @@ import (
 	"k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/filters"
 	"k8s.io/apiserver/pkg/server/options"
+	"k8s.io/client-go/rest"
 	netutils "k8s.io/utils/net"
 )
 
@@ -26,6 +29,8 @@ type Server struct {
 
 type Config struct {
 	server.RecommendedConfig
+	DSN             string
+	LocalRestConfig *rest.Config
 }
 
 func (s *Server) AddFlags(fs *pflag.FlagSet) {
@@ -75,7 +80,20 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 		return err
 	}
 
-	apiGroups, err := registry.APIGroups(c, cfg)
+	localCfg := config.LocalRestConfig
+	if localCfg == nil {
+		localCfg = cfg
+	} else {
+		localClient, err := kclient.New(localCfg)
+		if err != nil {
+			return err
+		}
+		aggr := clientaggregator.New(c)
+		aggr.AddGroup(api.Group, localClient)
+		c = aggr
+	}
+
+	apiGroups, err := registry.APIGroups(c, cfg, localCfg, config.DSN)
 	if err != nil {
 		return err
 	}
