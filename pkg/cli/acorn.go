@@ -25,7 +25,6 @@ func New() *cobra.Command {
 		NewContainer(),
 		NewController(),
 		NewCredential(),
-		NewDashboard(),
 		NewRender(),
 		NewExec(),
 		NewImage(),

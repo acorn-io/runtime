@@ -33,7 +33,6 @@ acorn install
       --lets-encrypt string                   enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)
       --lets-encrypt-email string             Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')
       --lets-encrypt-tos-agree                Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)
-      --mode string                           Initialize only 'config', 'resources', or 'both' (default 'both')
   -o, --output string                         Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string   The name of the PodSecurity profile to set (default baseline)
       --set-pod-security-enforce-profile      Set the PodSecurity profile on created namespaces (default true)
