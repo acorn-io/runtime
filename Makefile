@@ -1,12 +1,6 @@
 build:
 	CGO_ENABLED=0 go build -o bin/acorn -ldflags "-s -w" .
 
-download-latest-ui:
-	curl -sL https://cdn.acrn.io/ui/latest.tar.gz | tar xzf - -C pkg/ui/server/static/dashboard --strip-components=1
-
-download-ui:
-	curl -sL https://cdn.acrn.io/ui/latest.tar.gz | tar xzf - -C pkg/ui/server/static/dashboard --strip-components=1
-
 generate:
 	go generate
 

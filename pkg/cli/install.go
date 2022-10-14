@@ -29,8 +29,6 @@ type Install struct {
 	ControllerReplicas *int `usage:"acorn-controller deployment replica count"`
 
 	apiv1.Config
-
-	Mode string `usage:"Initialize only 'config', 'resources', or 'both' (default 'both')"`
 }
 
 func (i *Install) Run(cmd *cobra.Command, args []string) error {

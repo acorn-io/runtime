@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	uiv1 "github.com/acorn-io/acorn/pkg/apis/ui.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install/progress"
 	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
@@ -61,7 +60,6 @@ type Options struct {
 	APIServerReplicas  *int
 	ControllerReplicas *int
 	Config             apiv1.Config
-	Mode               uiv1.InstallMode
 	Progress           progress.Builder
 }
 
@@ -69,10 +67,6 @@ func (o *Options) complete() *Options {
 	if o == nil {
 		o := &Options{}
 		return o.complete()
-	}
-
-	if o.Mode == "" {
-		o.Mode = uiv1.InstallModeBoth
 	}
 
 	if o.Progress == nil {
@@ -195,46 +189,41 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	if opts.Mode.DoConfig() {
-		c, err := k8sclient.Default()
-		if err != nil {
-			return err
-		}
-		if err := config.Set(ctx, c, &opts.Config); err != nil {
+	c, err := k8sclient.Default()
+	if err != nil {
+		return err
+	}
+	if err := config.Set(ctx, c, &opts.Config); err != nil {
+		return err
+	}
+
+	s := opts.Progress.New("Installing ClusterRoles")
+	if err := applyRoles(apply); err != nil {
+		return s.Fail(err)
+	}
+	s.Success()
+
+	s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
+	if err := applyDeployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply); err != nil {
+		return s.Fail(err)
+	}
+	s.Success()
+
+	if installIngressController {
+		if err := installTraefik(ctx, opts.Progress, kclient, apply); err != nil {
 			return err
 		}
 	}
 
-	if opts.Mode.DoResources() {
-		s := opts.Progress.New("Installing ClusterRoles")
-		if err := applyRoles(apply); err != nil {
-			return s.Fail(err)
-		}
-		s.Success()
-
-		s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
-		if err := applyDeployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply); err != nil {
-			return s.Fail(err)
-		}
-		s.Success()
-
-		if installIngressController {
-			if err := installTraefik(ctx, opts.Progress, kclient, apply); err != nil {
-				return err
-			}
-		}
-
-		if err := waitController(ctx, opts.Progress, *opts.ControllerReplicas, image, kclient); err != nil {
-			return err
-		}
-
-		if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, kclient); err != nil {
-			return err
-		}
-
+	if err := waitController(ctx, opts.Progress, *opts.ControllerReplicas, image, kclient); err != nil {
+		return err
 	}
 
-	s := opts.Progress.New("Running Post-install Checks")
+	if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, kclient); err != nil {
+		return err
+	}
+
+	s = opts.Progress.New("Running Post-install Checks")
 	checkResults := PostInstallChecks(ctx, checkOpts)
 	if IsFailed(checkResults) {
 		msg := "Post-install checks failed. Use `acorn check` to debug or `acorn install --checks=false` to skip"
