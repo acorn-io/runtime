@@ -18,6 +18,11 @@ A simple application deployment framework for Kubernetes.
 - [Community Slack](https://slack.acorn.io)
 - [Discussions Forum](https://github.com/acorn-io/acorn/discussions)
 
+## Contributing
+For the basics on how to contribute to acorn, checkout [CONTRIBUTING.md](CONTRIBUTING.md).
+
+More details can also be found in our [developer wiki](https://github.com/acorn-io/acorn/wiki).
+
  ## License
 Copyright (c) 2022 [Acorn Labs, Inc.](http://acorn.io)
 
