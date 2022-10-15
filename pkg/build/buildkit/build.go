@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sync"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -93,7 +94,10 @@ func Build(ctx context.Context, client client.Client, cwd string, platforms []v1
 			options.FrontendAttrs["build-arg:"+key] = value
 		}
 
-		res, err := bkc.Solve(ctx, nil, options, progress(ctx, streams))
+		ch, progressDone := progress(ctx, streams)
+		defer func() { <-progressDone }()
+
+		res, err := bkc.Solve(ctx, nil, options, ch)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -105,10 +109,11 @@ func Build(ctx context.Context, client client.Client, cwd string, platforms []v1
 	return platforms, result, nil
 }
 
-func progress(ctx context.Context, streams streams.Streams) chan *buildkit.SolveStatus {
+func progress(ctx context.Context, streams streams.Streams) (chan *buildkit.SolveStatus, chan struct{}) {
 	var (
-		c   console.Console
-		err error
+		c    console.Console
+		err  error
+		done = make(chan struct{})
 	)
 
 	if f, ok := streams.Out.(console.File); ok {
@@ -119,6 +124,11 @@ func progress(ctx context.Context, streams streams.Streams) chan *buildkit.Solve
 	}
 
 	ch := make(chan *buildkit.SolveStatus, 1)
-	go func() { _, _ = progressui.DisplaySolveStatus(ctx, "", c, streams.Err, ch) }()
-	return ch
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		_, _ = progressui.DisplaySolveStatus(ctx, "", c, streams.Err, ch)
+		close(done)
+	}()
+	return ch, done
 }
