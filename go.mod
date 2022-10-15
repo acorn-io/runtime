@@ -1,6 +1,6 @@
 module github.com/acorn-io/acorn
 
-go 1.18
+go 1.19
 
 replace (
 	cloud.google.com/go v0.93.3 => cloud.google.com/go v0.100.2
