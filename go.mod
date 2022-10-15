@@ -28,7 +28,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/loft-sh/devspace v1.1.1-0.20220513082635-025444ad7c56
+	github.com/loft-sh/devspace/v2 v2.5.1+incompatible
 	github.com/moby/buildkit v0.10.4
 	github.com/moby/locker v1.0.1
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
