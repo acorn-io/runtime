@@ -32,7 +32,7 @@ require (
 	github.com/moby/buildkit v0.10.4
 	github.com/moby/locker v1.0.1
 	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198
-	github.com/pterm/pterm v0.12.46
+	github.com/pterm/pterm v0.12.49
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
 	github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a
 	github.com/sirupsen/logrus v1.9.0
@@ -110,7 +110,7 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/gookit/color v1.5.0 // indirect
+	github.com/gookit/color v1.5.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
