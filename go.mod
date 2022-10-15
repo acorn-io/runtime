@@ -9,7 +9,7 @@ replace (
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf
 	go.etcd.io/etcd/server/v3 v3.5.4 => github.com/acorn-io/etcd/server/v3 v3.5.4-ot-1
 	k8s.io/apiserver v0.25.2 => github.com/acorn-io/apiserver v0.25.2-ot-1
-	k8s.io/client-go => k8s.io/client-go v0.25.2
+	k8s.io/client-go/v11 => k8s.io/client-go v11.0.0+incompatible
 	k8s.io/component-base v0.25.2 => github.com/acorn-io/component-base v0.25.2-ot-1
 )
 
