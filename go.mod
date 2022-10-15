@@ -39,9 +39,9 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
-	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167
-	golang.org/x/exp v0.0.0-20220907003533-145caa8ea1d0
-	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
+	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
+	golang.org/x/exp v0.0.0-20221012211006-4de253d81b95
+	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
 	k8s.io/api v0.25.2
 	k8s.io/apiextensions-apiserver v0.25.2
 	k8s.io/apimachinery v0.25.2
