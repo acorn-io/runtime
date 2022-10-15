@@ -342,3 +342,21 @@ type InfoList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Info `json:"items"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AcornBuild struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec   v1.AcornBuildSpec   `json:"spec,omitempty"`
+	Status v1.AcornBuildStatus `json:"status,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AcornBuildList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AcornBuild `json:"items"`
+}

@@ -16,6 +16,8 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornBuild":                     schema_pkg_apis_apiacornio_v1_AcornBuild(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornBuildList":                 schema_pkg_apis_apiacornio_v1_AcornBuildList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.App":                            schema_pkg_apis_apiacornio_v1_App(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AppList":                        schema_pkg_apis_apiacornio_v1_AppList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Builder":                        schema_pkg_apis_apiacornio_v1_Builder(ref),
@@ -51,6 +53,12 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeList":                     schema_pkg_apis_apiacornio_v1_VolumeList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeSpec":                     schema_pkg_apis_apiacornio_v1_VolumeSpec(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeStatus":                   schema_pkg_apis_apiacornio_v1_VolumeStatus(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild":                schema_pkg_apis_internalacornio_v1_AcornBuild(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildList":            schema_pkg_apis_internalacornio_v1_AcornBuildList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildPush":            schema_pkg_apis_internalacornio_v1_AcornBuildPush(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildSpec":            schema_pkg_apis_internalacornio_v1_AcornBuildSpec(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildStatus":          schema_pkg_apis_internalacornio_v1_AcornBuildStatus(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuild":           schema_pkg_apis_internalacornio_v1_AcornImageBuild(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Alias":                     schema_pkg_apis_internalacornio_v1_Alias(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns":                schema_pkg_apis_internalacornio_v1_AppColumns(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage":                  schema_pkg_apis_internalacornio_v1_AppImage(ref),
@@ -71,6 +79,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar":                    schema_pkg_apis_internalacornio_v1_EnvVar(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExecProbe":                 schema_pkg_apis_internalacornio_v1_ExecProbe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File":                      schema_pkg_apis_internalacornio_v1_File(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GitRepoWatch":              schema_pkg_apis_internalacornio_v1_GitRepoWatch(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.HTTPProbe":                 schema_pkg_apis_internalacornio_v1_HTTPProbe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image":                     schema_pkg_apis_internalacornio_v1_Image(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec":          schema_pkg_apis_internalacornio_v1_ImageBuilderSpec(ref),
@@ -378,6 +387,100 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                          schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
 		"k8s.io/apimachinery/pkg/runtime.Unknown":                                           schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
 		"k8s.io/apimachinery/pkg/version.Info":                                              schema_k8sio_apimachinery_pkg_version_Info(ref),
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_AcornBuild(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_AcornBuildList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornBuild"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornBuild", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -2174,6 +2277,213 @@ func schema_pkg_apis_apiacornio_v1_VolumeStatus(ref common.ReferenceCallback) co
 	}
 }
 
+func schema_pkg_apis_internalacornio_v1_AcornBuild(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_AcornBuildList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_AcornBuildPush(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"registry": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"imageName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_AcornBuildSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"build": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuild"),
+						},
+					},
+					"watch": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GitRepoWatch"),
+						},
+					},
+					"push": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildPush"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuildPush", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GitRepoWatch"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_AcornBuildStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"clusterName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_AcornImageBuild(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"gitRepoURL": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"context": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"buildArgs": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_internalacornio_v1_Alias(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -3477,6 +3787,36 @@ func schema_pkg_apis_internalacornio_v1_File(ref common.ReferenceCallback) commo
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_GitRepoWatch(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"revision": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"branch": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"pr": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

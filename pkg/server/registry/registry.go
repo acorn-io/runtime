@@ -6,6 +6,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/server/registry/acornbuilds"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
 	"github.com/acorn-io/acorn/pkg/server/registry/builders"
 	"github.com/acorn-io/acorn/pkg/server/registry/containers"
@@ -83,7 +84,14 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Facto
 		return nil, err
 	}
 
+	acornBuildStorage, acornBuildStatus, err := acornbuilds.NewStorage(c, db)
+	if err != nil {
+		return nil, err
+	}
+
 	stores := map[string]rest.Storage{
+		"acornbuilds":            acornBuildStorage,
+		"acornbuilds/status":     acornBuildStatus,
 		"apps":                   appsStorage,
 		"apps/status":            appStatusStorage,
 		"apps/log":               logsStorage,

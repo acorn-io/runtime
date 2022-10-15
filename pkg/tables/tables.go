@@ -20,6 +20,12 @@ var (
 	}
 	AppConverter = MustConverter(App)
 
+	AcornBuild = [][]string{
+		{"Name", "{{ . | name }}"},
+		{"Created", "{{ago .CreationTimestamp}}"},
+	}
+	AcornBuildConverter = MustConverter(AcornBuild)
+
 	Volume = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"App-Name", "Status.AppName"},
