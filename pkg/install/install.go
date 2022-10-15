@@ -13,18 +13,18 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install/progress"
-	k8sclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	labels2 "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/podstatus"
 	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/acorn/pkg/version"
-	"github.com/acorn-io/acorn/pkg/watcher"
-	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/pterm/pterm"
-	"github.com/rancher/wrangler/pkg/apply"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/yaml"
 	"golang.org/x/sync/errgroup"
@@ -158,7 +158,6 @@ func Install(ctx context.Context, image string, opts *Options) error {
 				}
 			}
 			s.SuccessWithWarning(msg)
-
 		} else {
 			s.Success()
 		}
@@ -198,13 +197,18 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	s := opts.Progress.New("Installing ClusterRoles")
-	if err := applyRoles(apply); err != nil {
+	if err := applyRoles(ctx, apply); err != nil {
 		return s.Fail(err)
 	}
 	s.Success()
 
+	kclient, err = k8sclient.Default()
+	if err != nil {
+		return err
+	}
+
 	s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
-	if err := applyDeployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply); err != nil {
+	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply, kclient); err != nil {
 		return s.Fail(err)
 	}
 	s.Success()
@@ -236,23 +240,12 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	} else {
 		s.Success()
 	}
-	s.Success()
 
 	pterm.Success.Println("Installation done")
 	return nil
 }
 
 func TraefikResources() (result []kclient.Object, _ error) {
-	objs, err := traefikResources()
-	if err != nil {
-		return nil, err
-	}
-	return typed.MapSlice(objs, func(obj runtime.Object) kclient.Object {
-		return obj.(kclient.Object)
-	}), nil
-}
-
-func traefikResources() (result []runtime.Object, _ error) {
 	objs, err := objectsFromFile("traefik.yaml")
 	if err != nil {
 		return nil, err
@@ -290,12 +283,12 @@ func installTraefik(ctx context.Context, p progress.Builder, client kclient.With
 		_ = pb.Fail(err)
 	}()
 
-	objs, err := traefikResources()
+	objs, err := TraefikResources()
 	if err != nil {
 		return err
 	}
 
-	return apply.WithSetID("acorn-install-traefik").WithDefaultNamespace(system.Namespace).ApplyObjects(objs...)
+	return apply.WithOwnerSubContext("acorn-install-traefik").WithNamespace(system.Namespace).Apply(ctx, nil, objs...)
 }
 
 func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name string, scale int32) error {
@@ -370,20 +363,13 @@ func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string
 	return s.Fail(err)
 }
 
-func AllResources() (result []kclient.Object, _ error) {
+func AllResources() ([]kclient.Object, error) {
 	opts := &Options{}
-	resources, err := resources(DefaultImage(), opts.complete())
-	if err != nil {
-		return nil, err
-	}
-	for _, resource := range resources {
-		result = append(result, resource.(kclient.Object))
-	}
-	return
+	return resources(DefaultImage(), opts.complete())
 }
 
-func resources(image string, opts *Options) ([]runtime.Object, error) {
-	var objs []runtime.Object
+func resources(image string, opts *Options) ([]kclient.Object, error) {
+	var objs []kclient.Object
 
 	roles, err := Roles()
 	if err != nil {
@@ -427,7 +413,9 @@ func printObject(image string, opts *Options) error {
 		return enc.Encode(m)
 	}
 
-	data, err := yaml.Export(objs...)
+	data, err := yaml.Export(typed.MapSlice(objs, func(t kclient.Object) runtime.Object {
+		return t
+	})...)
 	if err != nil {
 		return err
 	}
@@ -436,7 +424,12 @@ func printObject(image string, opts *Options) error {
 	return err
 }
 
-func applyDeployments(imageName string, apiServerReplicas, controllerReplicas int, apply apply.Apply) error {
+func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, controllerReplicas int, apply apply.Apply, c kclient.Client) error {
+	// handle upgrade from <= v0.3.x
+	if err := resetNamespace(ctx, c); err != nil {
+		return err
+	}
+
 	objs, err := Namespace()
 	if err != nil {
 		return err
@@ -448,15 +441,15 @@ func applyDeployments(imageName string, apiServerReplicas, controllerReplicas in
 	}
 
 	objs = append(objs, deps...)
-	return apply.ApplyObjects(objs...)
+	return apply.Apply(ctx, nil, objs...)
 }
 
-func applyRoles(apply apply.Apply) error {
+func applyRoles(ctx context.Context, apply apply.Apply) error {
 	objs, err := Roles()
 	if err != nil {
 		return err
 	}
-	err = apply.ApplyObjects(objs...)
+	err = apply.Apply(ctx, nil, objs...)
 	if err != nil {
 		if merrs, ok := err.(merr.Errors); ok {
 			for _, err := range merrs {
@@ -470,19 +463,19 @@ func applyRoles(apply apply.Apply) error {
 	return nil
 }
 
-func Config(cfg apiv1.Config) ([]runtime.Object, error) {
+func Config(cfg apiv1.Config) ([]kclient.Object, error) {
 	cfgObj, err := config.AsConfigMap(&cfg)
 	if err != nil {
 		return nil, err
 	}
-	return []runtime.Object{cfgObj}, nil
+	return []kclient.Object{cfgObj}, nil
 }
 
-func Namespace() ([]runtime.Object, error) {
+func Namespace() ([]kclient.Object, error) {
 	return objectsFromFile("namespace.yaml")
 }
 
-func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int) ([]runtime.Object, error) {
+func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int) ([]kclient.Object, error) {
 	apiServerObjects, err := objectsFromFile("apiserver.yaml")
 	if err != nil {
 		return nil, err
@@ -506,7 +499,7 @@ func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int)
 	return replaceImage(runtimeImage, append(apiServerObjects, controllerObjects...))
 }
 
-func replaceReplicas(replicas int, objs []runtime.Object) ([]runtime.Object, error) {
+func replaceReplicas(replicas int, objs []kclient.Object) ([]kclient.Object, error) {
 	for _, obj := range objs {
 		ustr := obj.(*unstructured.Unstructured)
 		if ustr.GetKind() == "Deployment" {
@@ -519,7 +512,7 @@ func replaceReplicas(replicas int, objs []runtime.Object) ([]runtime.Object, err
 	return objs, nil
 }
 
-func replaceImage(image string, objs []runtime.Object) ([]runtime.Object, error) {
+func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error) {
 	for _, obj := range objs {
 		ustr := obj.(*unstructured.Unstructured)
 		if ustr.GetKind() == "Deployment" {
@@ -538,32 +531,50 @@ func replaceImage(image string, objs []runtime.Object) ([]runtime.Object, error)
 	return objs, nil
 }
 
-func Roles() ([]runtime.Object, error) {
+func Roles() ([]kclient.Object, error) {
 	return objectsFromFile("role.yaml")
 }
 
 func newApply(ctx context.Context) (apply.Apply, error) {
-	cfg, err := restconfig.Default()
+	c, err := k8sclient.Default()
 	if err != nil {
 		return nil, err
 	}
 
-	apply, err := apply.NewForConfig(cfg)
+	apply := apply.New(c)
 	if err != nil {
 		return nil, err
 	}
-	return apply.
-		WithContext(ctx).
-		WithDynamicLookup().
-		WithSetID("acorn-install"), nil
+	return apply.WithOwnerSubContext("acorn-install"), nil
 }
 
-func objectsFromFile(name string) ([]runtime.Object, error) {
+func objectsFromFile(name string) (result []kclient.Object, _ error) {
 	f, err := files.Open(name)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	return yaml.ToObjects(f)
+	objs, err := yaml.ToObjects(f)
+	if err != nil {
+		return nil, err
+	}
+	return typed.MapSlice(objs, func(obj runtime.Object) kclient.Object {
+		return obj.(kclient.Object)
+	}), nil
+}
+
+func resetNamespace(ctx context.Context, c kclient.Client) error {
+	ns := &corev1.Namespace{}
+	err := c.Get(ctx, router.Key("", system.Namespace), ns)
+	if apierror.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	if ns.Labels[apply.LabelHash] == "9df1d588ddd6e2cf9585be17cd3442d14cfa76ca" {
+		delete(ns.Labels, apply.LabelHash)
+		return c.Update(ctx, ns)
+	}
+	return nil
 }
