@@ -11,12 +11,11 @@ import (
 )
 
 func (c *Controller) initData(ctx context.Context) error {
-	err := c.apply.WithOwnerSubContext("acorn-controller-data").Apply(ctx, nil,
-		&corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: system.Namespace,
-			},
-		})
+	err := c.apply.Ensure(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: system.Namespace,
+		},
+	})
 	if err != nil {
 		return err
 	}
