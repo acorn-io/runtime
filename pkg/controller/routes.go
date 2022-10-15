@@ -37,7 +37,6 @@ func routes(router *router.Router) {
 	appRouter.HandlerFunc(appdefinition.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
 	appRouter.HandlerFunc(appdefinition.JobStatus)
-	appRouter.HandlerFunc(appdefinition.AcornStatus)
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.CLIStatus)
 	appRouter.HandlerFunc(appdefinition.UpdateGeneration)

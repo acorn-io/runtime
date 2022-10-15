@@ -6,17 +6,20 @@ import (
 	"net/http"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
+	"github.com/acorn-io/mink/pkg/strategy"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/client-go/kubernetes"
 	clientgo "k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewLogs(c client.WithWatch, apps *Storage, cfg *clientgo.Config) (*Logs, error) {
+func NewLogs(c client.WithWatch, cfg *clientgo.Config) (*Logs, error) {
 	k8s, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -24,14 +27,13 @@ func NewLogs(c client.WithWatch, apps *Storage, cfg *clientgo.Config) (*Logs, er
 	return &Logs{
 		k8s:    k8s,
 		client: c,
-		apps:   apps,
 	}, nil
 }
 
 type Logs struct {
+	*strategy.DestroyAdapter
 	k8s    kubernetes.Interface
 	client client.WithWatch
-	apps   *Storage
 }
 
 func (i *Logs) NamespaceScoped() bool {
@@ -47,7 +49,9 @@ func (i *Logs) NewConnectOptions() (runtime.Object, bool, string) {
 }
 
 func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
-	app, err := i.apps.get(ctx, id)
+	ns, _ := request.NamespaceFrom(ctx)
+	app := &apiv1.App{}
+	err := i.client.Get(ctx, kclient.ObjectKey{Namespace: ns, Name: id}, app)
 	if err != nil {
 		return nil, err
 	}

@@ -32,7 +32,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
         "service-name.acorn.io/oneimage": "true"
         "port-number.acorn.io/81": "true"
         "port-number.acorn.io/91": "true"
@@ -87,7 +86,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "buildimage"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
       annotations:
         "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","probes":null}'
     spec:

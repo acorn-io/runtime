@@ -1,11 +1,5 @@
 package v1
 
-#AcornBuild: {
-	buildArgs: [string]: _
-	context:   string | *"."
-	acornfile: string | *"Acornfile"
-}
-
 #Build: {
 	buildArgs: [string]: string
 	context:    string | *"."
@@ -215,23 +209,6 @@ package v1
 
 #Secret: *#SecretOpaque | #SecretBasicAuth | #SecretGenerated | #SecretTemplate | #SecretToken
 
-#AcornSecretBinding: {
-	secret: string
-	target: string
-} | string
-
-#AcornServiceBinding: {
-	target:  string
-	service: string
-} | string
-
-#AcornVolumeBinding: {
-	volume:      string
-	target:      string
-	size:        int | string | *10
-	accessModes: [#AccessMode, ...#AccessMode] | #AccessMode | *"readWriteOnce"
-} | string
-
 #Router: {
 	labels: [string]:      string
 	annotations: [string]: string
@@ -253,24 +230,6 @@ package v1
 	=~#RouteTargetName | #RouteTarget
 }
 
-#Acorn: {
-	labels:                *[...#ScopedLabel] | #ScopedLabelMap
-	annotations:           *[...#ScopedLabel] | #ScopedLabelMap
-	image?:                string
-	build?:                string | #AcornBuild
-	ports:                 #PortSingle | *[...#Port] | #PortMap
-	volumes:               *[...#AcornVolumeBinding] | {[=~#DNSName]:  string}
-	secrets:               *[...#AcornSecretBinding] | {[=~#DNSName]:  string}
-	links:                 *[...#AcornServiceBinding] | {[=~#DNSName]: string}
-	[=~"env|environment"]: #EnvVars
-	deployArgs: [string]: #Args
-	profiles: [...string]
-	permissions: {
-		rules: [...#RuleSpec]
-		clusterRules: [...#RuleSpec]
-	}
-}
-
 #RouteTargetName: "[a-z][-a-z0-9]*(:[0-9]+)?"
 
 #PathName: "/.*"
@@ -288,7 +247,6 @@ package v1
 	images: [=~#DNSName]:     #Image
 	volumes: [=~#DNSName]:    #Volume
 	secrets: [=~#DNSName]:    #Secret
-	acorns: [=~#DNSName]:     #Acorn
 	routers: [=~#DNSName]:    #Router
 	labels: [string]:         string
 	annotations: [string]:    string

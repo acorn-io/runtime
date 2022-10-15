@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func DenormalizeName(ctx context.Context, c client.Client, name string) (string, string, error) {
+func DenormalizeName(ctx context.Context, c client.Client, namespace, name string) (string, string, error) {
 	ns, _ := request.NamespaceFrom(ctx)
 	for {
 		prefix, suffix, ok := strings.Cut(name, ".")
@@ -37,12 +37,12 @@ func NormalizedName(obj metav1.ObjectMeta) (string, string) {
 	ns := obj.Namespace
 	name := obj.Name
 
-	rootNS := obj.Labels[labels.AcornRootNamespace]
+	rootNS := obj.Labels[labels.AcornAppNamespace]
 	if rootNS != "" {
 		ns = rootNS
 	}
-	if len(obj.Labels[labels.AcornRootPrefix]) > 0 {
-		name = obj.Labels[labels.AcornRootPrefix] + "." + obj.Name
+	if len(obj.Labels[labels.AcornAppName]) > 0 {
+		name = obj.Labels[labels.AcornAppName] + "." + obj.Name
 	}
 	return ns, name
 }
@@ -58,7 +58,7 @@ func Selector(ctx context.Context) klabels.Selector {
 	}
 
 	return klabels.SelectorFromSet(map[string]string{
-		labels.AcornManaged:       "true",
-		labels.AcornRootNamespace: nsName,
+		labels.AcornManaged:      "true",
+		labels.AcornAppNamespace: nsName,
 	})
 }

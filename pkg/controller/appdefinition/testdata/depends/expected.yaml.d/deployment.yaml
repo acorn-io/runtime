@@ -24,7 +24,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "container-name"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"dependencies":[{"targetName":"db"}],"image":"image-name","probes":null}'
     spec:
@@ -66,7 +65,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "web"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"dependencies":[{"targetName":"container-name"}],"image":"image-name","probes":null}'
     spec:

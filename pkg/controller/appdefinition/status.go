@@ -20,7 +20,6 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -60,83 +59,16 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 			ready = false
 		}
 	}
-	for _, v := range app.Status.AcornStatus {
-		if !v.Ready {
-			ready = false
-		}
-	}
 
 	cond.Success()
 	app.Status.Ready = ready && app.Spec.Image == app.Status.AppImage.ID &&
 		app.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 		app.Status.Condition(v1.AppInstanceConditionContainers).Success &&
 		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&
-		app.Status.Condition(v1.AppInstanceConditionAcorns).Success &&
 		app.Status.Condition(v1.AppInstanceConditionSecrets).Success &&
 		app.Status.Condition(v1.AppInstanceConditionPulled).Success &&
 		app.Status.Condition(v1.AppInstanceConditionController).Success &&
 		app.Status.Condition(v1.AppInstanceConditionDefined).Success
-	return nil
-}
-
-func AcornStatus(req router.Request, resp router.Response) error {
-	app := req.Object.(*v1.AppInstance)
-	cond := condition.Setter(app, resp, v1.AppInstanceConditionAcorns)
-	app.Status.AcornStatus = map[string]v1.AcornStatus{}
-
-	for acornName := range app.Status.AppSpec.Acorns {
-		app.Status.AcornStatus[acornName] = v1.AcornStatus{}
-	}
-
-	var (
-		failed         bool
-		failedName     string
-		failedMessage  string
-		waiting        bool
-		waitingName    string
-		waitingMessage string
-	)
-
-	for _, acornName := range typed.SortedKeys(app.Status.AppSpec.Acorns) {
-		appInstance := &v1.AppInstance{}
-		err := req.Get(appInstance, app.Status.Namespace, acornName)
-		if apierrors.IsNotFound(err) {
-			continue
-		} else if err != nil {
-			cond.Error(err)
-			return nil
-		}
-		app.Status.AcornStatus[acornName] = v1.AcornStatus{
-			ContainerStatus: appInstance.Status.ContainerStatus,
-			JobsStatus:      appInstance.Status.JobsStatus,
-			AcornStatus:     appInstance.Status.AcornStatus,
-			Stopped:         appInstance.Status.Stopped,
-			Ready:           appInstance.Status.Ready,
-		}
-
-		for _, condition := range appInstance.Status.Conditions {
-			if condition.Error {
-				failed = true
-				failedName = acornName
-				failedMessage = condition.Message
-			} else if condition.Transitioning || !condition.Success {
-				waiting = true
-				waitingName = acornName
-				waitingMessage = condition.Message
-			}
-		}
-	}
-
-	switch {
-	case failed:
-		cond.Error(fmt.Errorf("%s: failed [%s]", failedName, failedMessage))
-	case waiting:
-		cond.Unknown(fmt.Sprintf("%s: waiting [%s]", waitingName, waitingMessage))
-	default:
-		cond.Success()
-	}
-
-	resp.Objects(app)
 	return nil
 }
 

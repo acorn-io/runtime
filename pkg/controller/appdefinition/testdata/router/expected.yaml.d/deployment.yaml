@@ -22,7 +22,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/router-name": "router-name"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
         port-number.acorn.io/8080: "true"
         service-name.acorn.io/router-name: "true"
     spec:

@@ -8,7 +8,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
-	objwatcher "github.com/acorn-io/acorn/pkg/watcher"
+	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
 )
 
 func App(ctx context.Context, c client.Client, appName string, quiet bool) error {

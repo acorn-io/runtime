@@ -87,6 +87,7 @@ type ContainerReplicaStatus struct {
 	Image                string                  `json:"image"`
 	ImageID              string                  `json:"imageID"`
 	Started              *bool                   `json:"started,omitempty"`
+	ClusterName          string                  `json:"clusterName,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -95,10 +96,11 @@ type Image struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Digest     string `json:"digest,omitempty"`
-	Repository string `json:"repository,omitempty"`
-	Tag        string `json:"tag,omitempty"`
-	Reference  string `json:"reference,omitempty"`
+	Digest      string `json:"digest,omitempty"`
+	Repository  string `json:"repository,omitempty"`
+	Tag         string `json:"tag,omitempty"`
+	Reference   string `json:"reference,omitempty"`
+	ClusterName string `json:"clusterName,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -136,9 +138,11 @@ type ImageDetails struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
+	// Input Params
 	DeployArgs v1.GenericMap `json:"deployArgs,omitempty"`
 	Profiles   []string      `json:"profiles,omitempty"`
 
+	// Output Params
 	AppImage   v1.AppImage   `json:"appImage,omitempty"`
 	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
 	Params     *v1.ParamSpec `json:"params,omitempty"`
@@ -198,6 +202,7 @@ type VolumeStatus struct {
 	VolumeName   string        `json:"volumeName,omitempty"`
 	Status       string        `json:"status,omitempty"`
 	Columns      VolumeColumns `json:"columns,omitempty"`
+	ClusterName  string        `json:"clusterName,omitempty"`
 }
 
 type VolumeColumns struct {
@@ -215,12 +220,8 @@ type ContainerReplicaExecOptions struct {
 	DebugImage string   `json:"debugImage,omitempty"`
 }
 
-type CredentialStorageType string
-
 const (
-	CredentialStorageTypeCluster = CredentialStorageType("cluster")
-	CredentialStorageTypeClient  = CredentialStorageType("client")
-	SecretTypeCredential         = "acorn.io/credential"
+	SecretTypeCredential = "acorn.io/credential"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -229,10 +230,9 @@ type Credential struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	ServerAddress string                `json:"serverAddress,omitempty"`
-	Storage       CredentialStorageType `json:"storage,omitempty"`
-	Username      string                `json:"username,omitempty"`
-	Password      string                `json:"password,omitempty"`
+	ServerAddress string  `json:"serverAddress,omitempty"`
+	Username      string  `json:"username,omitempty"`
+	Password      *string `json:"password,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -281,7 +281,8 @@ type Builder struct {
 }
 
 type BuilderStatus struct {
-	Ready bool `json:"ready,omitempty"`
+	ClusterName string `json:"clusterName,omitempty"`
+	Ready       bool   `json:"ready,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

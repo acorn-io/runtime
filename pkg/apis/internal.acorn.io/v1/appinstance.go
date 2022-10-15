@@ -17,7 +17,6 @@ var (
 	AppInstanceConditionSecrets    = "secrets"
 	AppInstanceConditionContainers = "containers"
 	AppInstanceConditionJobs       = "jobs"
-	AppInstanceConditionAcorns     = "acorns"
 	AppInstanceConditionReady      = "Ready"
 )
 
@@ -70,6 +69,7 @@ type AppInstanceSpec struct {
 	Ports           []PortBinding    `json:"ports,omitempty"`
 	DeployArgs      GenericMap       `json:"deployArgs,omitempty"`
 	Permissions     *Permissions     `json:"permissions,omitempty"`
+	ClusterName     string           `json:"clusterName,omitempty"`
 }
 
 func (in AppInstanceSpec) GetDevMode() bool {
@@ -124,7 +124,6 @@ type AppInstanceStatus struct {
 	Columns            AppColumns                 `json:"columns,omitempty"`
 	ContainerStatus    map[string]ContainerStatus `json:"containerStatus,omitempty"`
 	JobsStatus         map[string]JobStatus       `json:"jobsStatus,omitempty"`
-	AcornStatus        map[string]AcornStatus     `json:"acornStatus,omitempty"`
 	Ready              bool                       `json:"ready,omitempty"`
 	Stopped            bool                       `json:"stopped,omitempty"`
 	Namespace          string                     `json:"namespace,omitempty"`
@@ -132,14 +131,7 @@ type AppInstanceStatus struct {
 	AppSpec            AppSpec                    `json:"appSpec,omitempty"`
 	Conditions         []Condition                `json:"conditions,omitempty"`
 	Endpoints          []Endpoint                 `json:"endpoints,omitempty"`
-}
-
-type AcornStatus struct {
-	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
-	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
-	AcornStatus     map[string]AcornStatus     `json:"acornStatus,omitempty"`
-	Stopped         bool                       `json:"stopped,omitempty"`
-	Ready           bool                       `json:"ready,omitempty"`
+	ClusterName        string                     `json:"clusterName,omitempty"`
 }
 
 type Endpoint struct {

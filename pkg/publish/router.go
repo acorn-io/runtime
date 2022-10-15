@@ -41,7 +41,7 @@ func Router(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 	}
 
 	// Look for Secrets in the app namespace that contain cert manager TLS certs
-	tlsCerts, err := getCerts(req, app.Labels[labels.AcornRootNamespace])
+	tlsCerts, err := getCerts(req, app.Namespace)
 	if err != nil {
 		return nil, err
 	}

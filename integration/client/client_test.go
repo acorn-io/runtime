@@ -99,8 +99,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 			GenerateName: "simple-app",
 			Namespace:    ns.Name,
 			Labels: map[string]string{
-				labels.AcornRootNamespace: ns.Name,
-				labels.AcornManaged:       "true",
+				labels.AcornManaged: "true",
 			},
 		},
 		Spec: v1.AppInstanceSpec{

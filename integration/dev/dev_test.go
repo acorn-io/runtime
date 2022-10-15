@@ -12,7 +12,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/watcher"
+	"github.com/acorn-io/baaah/pkg/watcher"
 	"golang.org/x/sync/errgroup"
 )
 

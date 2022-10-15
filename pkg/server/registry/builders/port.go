@@ -11,25 +11,28 @@ import (
 	"github.com/acorn-io/acorn/pkg/portforwarder"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/mink/pkg/strategy"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/apiserver/pkg/endpoints/request"
+	registryrest "k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	clientgo "k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/client-go/rest"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type BuildkitPort struct {
-	builders   *Storage
-	client     client.WithWatch
+	*strategy.DestroyAdapter
+	client     kclient.WithWatch
 	proxy      httputil.ReverseProxy
-	RESTClient clientgo.Interface
+	RESTClient rest.Interface
 	k8s        kubernetes.Interface
 }
 
-func NewBuildkitPort(client client.WithWatch, builders *Storage, cfg *clientgo.Config) (*BuildkitPort, error) {
-	cfg = clientgo.CopyConfig(cfg)
+func NewBuildkitPort(client kclient.WithWatch, cfg *rest.Config) (*BuildkitPort, error) {
+	cfg = rest.CopyConfig(cfg)
 	restconfig.SetScheme(cfg, scheme.Scheme)
 
 	k8s, err := kubernetes.NewForConfig(cfg)
@@ -37,15 +40,14 @@ func NewBuildkitPort(client client.WithWatch, builders *Storage, cfg *clientgo.C
 		return nil, err
 	}
 
-	transport, err := clientgo.TransportFor(cfg)
+	transport, err := rest.TransportFor(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &BuildkitPort{
-		k8s:      k8s,
-		client:   client,
-		builders: builders,
+		k8s:    k8s,
+		client: client,
 		proxy: httputil.ReverseProxy{
 			FlushInterval: 200 * time.Millisecond,
 			Transport:     transport,
@@ -66,8 +68,11 @@ func (c *BuildkitPort) connect(pod *corev1.Pod, port int) (http.Handler, error) 
 	}), nil
 }
 
-func (c *BuildkitPort) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
-	_, err := c.builders.Get(ctx, id, nil)
+func (c *BuildkitPort) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
+	ns, _ := request.NamespaceFrom(ctx)
+
+	builder := &apiv1.Builder{}
+	err := c.client.Get(ctx, router.Key(ns, id), builder)
 	if err != nil {
 		return nil, err
 	}

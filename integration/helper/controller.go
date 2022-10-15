@@ -114,15 +114,13 @@ func StartAPI(t *testing.T) *rest.Config {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	srv := server.New()
 	srv.Options.SecureServing.Listener = l
 	srv.Options.Authentication.TolerateInClusterLookupFailure = true
 	cfg, err := srv.NewConfig("dev")
-	if err == nil {
-		go func() {
-			err := srv.Run(context.Background(), cfg)
-			t.Log("failed to start api", err)
-		}()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	kubeconfig := clientcmdapi.Config{
@@ -140,6 +138,7 @@ func StartAPI(t *testing.T) *rest.Config {
 		},
 		CurrentContext: "default",
 	}
+
 	restConfig, err := clientcmd.NewDefaultClientConfig(kubeconfig, &clientcmd.ConfigOverrides{}).ClientConfig()
 	if err != nil {
 		t.Fatal(err)
@@ -147,6 +146,15 @@ func StartAPI(t *testing.T) *rest.Config {
 
 	restConfig = restconfig.SetScheme(restConfig, scheme.Scheme)
 	restConfig.GroupVersion = &apiv1.SchemeGroupVersion
+
+	if err == nil {
+		go func() {
+			cfg.LocalRestConfig = restConfig
+			err := srv.Run(context.Background(), cfg)
+			t.Log("failed to start api", err)
+		}()
+	}
+
 	restClient, err := rest.RESTClientFor(restConfig)
 	if err != nil {
 		t.Fatal(err)

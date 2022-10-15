@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -42,20 +41,13 @@ func toRouters(appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 }
 
 func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) (result []kclient.Object, _ error) {
-	var (
-		extraLabels = []string{
-			labels.AcornRootNamespace, appInstance.Labels[labels.AcornRootNamespace],
-			labels.AcornRootPrefix, labels.RootPrefix(appInstance.Labels, appInstance.Name),
-		}
-	)
-
 	if ports.IsLinked(appInstance, routerName) || len(router.Routes) == 0 {
 		return nil, nil
 	}
 
 	conf, confName := toNginxConf(routerName, router)
 
-	podLabels := routerLabels(appInstance, router, routerName, extraLabels...)
+	podLabels := routerLabels(appInstance, router, routerName)
 	deploymentLabels := routerLabels(appInstance, router, routerName)
 	matchLabels := routerSelectorMatchLabels(appInstance, routerName)
 	maps.Copy(podLabels, ports.ToRouterLabels(appInstance, routerName))

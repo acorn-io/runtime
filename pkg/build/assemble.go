@@ -105,11 +105,6 @@ func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
 	}
 
 	result.Images, err = digestOnlyImages(imageData.Images)
-	if err != nil {
-		return
-	}
-
-	result.Acorns, err = digestOnlyImages(imageData.Acorns)
 	return
 }
 
@@ -127,12 +122,6 @@ func allImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageI
 	result = append(result, remoteImages...)
 
 	remoteImages, err = images(data.Images, opts)
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, remoteImages...)
-
-	remoteImages, err = images(data.Acorns, opts)
 	if err != nil {
 		return nil, err
 	}

@@ -31,13 +31,6 @@ const (
 
 type ChangeType string
 
-type AcornBuild struct {
-	OriginalImage string     `json:"originalImage,omitempty"`
-	Context       string     `json:"context,omitempty"`
-	Acornfile     string     `json:"acornfile,omitempty"`
-	BuildArgs     GenericMap `json:"buildArgs,omitempty"`
-}
-
 type Build struct {
 	Context     string            `json:"context,omitempty"`
 	Dockerfile  string            `json:"dockerfile,omitempty"`
@@ -310,7 +303,6 @@ type AppSpec struct {
 	Images      map[string]Image         `json:"images,omitempty"`
 	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
 	Secrets     map[string]Secret        `json:"secrets,omitempty"`
-	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
 	Routers     map[string]Router        `json:"routers,omitempty"`
 }
 
@@ -327,21 +319,6 @@ type Router struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Routes      Routes            `json:"routes,omitempty"`
-}
-
-type Acorn struct {
-	Labels      ScopedLabels     `json:"labels,omitempty"`
-	Annotations ScopedLabels     `json:"annotations,omitempty"`
-	Image       string           `json:"image,omitempty"`
-	Build       *AcornBuild      `json:"build,omitempty"`
-	Profiles    []string         `json:"profiles,omitempty"`
-	DeployArgs  GenericMap       `json:"deployArgs,omitempty"`
-	Ports       Ports            `json:"ports,omitempty"`
-	Environment NameValues       `json:"environment,omitempty"`
-	Secrets     []SecretBinding  `json:"secrets,omitempty"`
-	Volumes     []VolumeBinding  `json:"volumes,omitempty"`
-	Links       []ServiceBinding `json:"links,omitempty"`
-	Permissions *Permissions     `json:"permissions,omitempty"`
 }
 
 type Secret struct {

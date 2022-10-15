@@ -80,6 +80,12 @@ var (
 	}
 	InfoConverter = MustConverter(Info)
 
+	Builder = [][]string{
+		{"Name", "Name"},
+		{"Ready", "Status.Ready"},
+	}
+	BuilderConverter = MustConverter(Builder)
+
 	RuleRequests = [][]string{
 		{"Verbs", "Verbs"},
 		{"Resource", "Resource"},

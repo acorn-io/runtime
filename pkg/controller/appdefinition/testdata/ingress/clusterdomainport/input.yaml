@@ -4,8 +4,6 @@ metadata:
   uid: 1234567890abcdef
   name: app-name
   namespace: app-namespace
-  labels:
-    acorn.io/root-namespace: app-namespace
 spec:
   image: test
 status:

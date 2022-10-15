@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/info"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/acorn-io/mink/pkg/strategy"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
@@ -23,6 +24,7 @@ func NewStorage(c client.WithWatch) *Storage {
 }
 
 type Storage struct {
+	*strategy.DestroyAdapter
 	rest.TableConvertor
 
 	client client.WithWatch

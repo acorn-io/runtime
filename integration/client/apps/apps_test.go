@@ -10,7 +10,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -249,11 +248,9 @@ func TestAppUpdate(t *testing.T) {
 	}, thirdApp.Annotations)
 
 	assert.Equal(t, map[string]string{
-		"label1":                  "val1",
-		"label2":                  "val3",
-		"label3":                  "val3",
-		labels.AcornRootNamespace: c.GetNamespace(),
-		labels.AcornManaged:       "true",
+		"label1": "val1",
+		"label2": "val3",
+		"label3": "val3",
 	}, thirdApp.Labels)
 
 	assert.Equal(t, v1.PublishModeNone, thirdApp.Spec.PublishMode)

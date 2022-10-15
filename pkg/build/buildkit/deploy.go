@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/acorn/pkg/watcher"
+	"github.com/acorn-io/baaah/pkg/watcher"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"

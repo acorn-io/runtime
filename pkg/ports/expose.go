@@ -81,12 +81,6 @@ func IsLinked(app *v1.AppInstance, name string) bool {
 		}
 	}
 
-	for _, port := range app.Status.AppSpec.Acorns[name].Ports {
-		if port.ServiceName != name && IsLinked(app, port.ServiceName) {
-			return true
-		}
-	}
-
 	return false
 }
 
@@ -119,49 +113,6 @@ func (p *Set) IsRouterService(name string) bool {
 		}
 	}
 	return false
-}
-
-func ForAcorn(app *v1.AppInstance, acornName string) (result []v1.PortBinding) {
-	bound := map[v1.PortDef]bool{}
-	for _, port := range app.Status.AppSpec.Acorns[acornName].Ports {
-		pb := v1.PortBinding(port)
-		pb.Expose = true
-		if app.Spec.PublishMode == v1.PublishModeNone {
-			pb.Publish = false
-		}
-		result = append(result, pb)
-		for _, binding := range app.Spec.Ports {
-			if !binding.Publish || !matches(binding, port) {
-				continue
-			}
-			bound[port] = true
-			result = append(result, v1.PortBinding{
-				ServiceName:       binding.ServiceName,
-				Port:              binding.Port,
-				TargetPort:        port.TargetPort,
-				TargetServiceName: port.TargetServiceName,
-				Protocol:          port.Protocol,
-				Publish:           true,
-			})
-		}
-	}
-	if app.Spec.PublishMode != v1.PublishModeNone {
-		for _, port := range app.Status.AppSpec.Acorns[acornName].Ports {
-			if bound[port] {
-				continue
-			}
-
-			// ports with port.Publish=true will be added from the loop above
-			if !port.Publish && app.Spec.PublishMode == v1.PublishModeAll {
-				pb := v1.PortBinding(port)
-				pb.Publish = true
-				pb.Expose = false
-				result = append(result, pb)
-			}
-		}
-	}
-
-	return
 }
 
 func NewForRouterPublish(app *v1.AppInstance) (*Set, error) {
@@ -416,14 +367,6 @@ func New(app *v1.AppInstance) (*Set, error) {
 		for _, sidecar := range typed.SortedValues(container.Sidecars) {
 			result.AddPorts(Target{ContainerName: containerName}, sidecar.Ports...)
 		}
-	}
-
-	for _, entry := range typed.Sorted(app.Status.AppSpec.Acorns) {
-		acornName, acorn := entry.Key, entry.Value
-		if IsLinked(app, acornName) {
-			continue
-		}
-		result.AddPorts(Target{AcornName: acornName}, acorn.Ports...)
 	}
 
 	for _, routerName := range typed.SortedKeys(app.Status.AppSpec.Routers) {

@@ -33,7 +33,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "container-name"
         "acorn.io/managed": "true"
-        "acorn.io/root-prefix": "app-name"
       annotations:
         acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","probes":null}'
     spec:

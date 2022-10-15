@@ -1,6 +1,0 @@
-jobs: tester: build: "."
-acorns: service: {
-	build: "./service"
-	ports: internal: "82:81"
-	ports: expose: "83:81"
-}

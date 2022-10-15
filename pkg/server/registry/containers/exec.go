@@ -8,9 +8,11 @@ import (
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/watcher"
+	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/rancher/wrangler/pkg/name"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	corev1 "k8s.io/api/core/v1"
@@ -18,11 +20,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
-	"k8s.io/apiserver/pkg/registry/rest"
+	registryrest "k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	clientgo "k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/client-go/rest"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -34,15 +36,16 @@ var (
 )
 
 type ContainerExec struct {
-	containers *Storage
-	client     client.WithWatch
+	*strategy.DestroyAdapter
+	client     kclient.WithWatch
+	t          *Translator
 	proxy      httputil.ReverseProxy
-	RESTClient clientgo.Interface
+	RESTClient rest.Interface
 	k8s        kubernetes.Interface
 }
 
-func NewContainerExec(client client.WithWatch, containers *Storage, cfg *clientgo.Config) (*ContainerExec, error) {
-	cfg = clientgo.CopyConfig(cfg)
+func NewContainerExec(client kclient.WithWatch, cfg *rest.Config) (*ContainerExec, error) {
+	cfg = rest.CopyConfig(cfg)
 	restconfig.SetScheme(cfg, scheme.Scheme)
 
 	k8s, err := kubernetes.NewForConfig(cfg)
@@ -50,15 +53,17 @@ func NewContainerExec(client client.WithWatch, containers *Storage, cfg *clientg
 		return nil, err
 	}
 
-	transport, err := clientgo.TransportFor(cfg)
+	transport, err := rest.TransportFor(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ContainerExec{
-		k8s:        k8s,
-		client:     client,
-		containers: containers,
+		k8s: k8s,
+		t: &Translator{
+			client: client,
+		},
+		client: client,
 		proxy: httputil.ReverseProxy{
 			FlushInterval: 200 * time.Millisecond,
 			Transport:     transport,
@@ -92,18 +97,23 @@ func (c *ContainerExec) connect(podName, podNamespace, containerName string, exe
 	}), nil
 }
 
-func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
+func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
 	execOpt := options.(*apiv1.ContainerReplicaExecOptions)
 	if id == "_" && execOpt.DebugImage != "" {
 		return c.execNew(ctx, execOpt)
 	}
 
-	obj, err := c.containers.Get(ctx, id, nil)
+	container := &apiv1.ContainerReplica{}
+	ns, _ := request.NamespaceFrom(ctx)
+	ns, name, err := c.t.FromPublicName(ctx, ns, id)
 	if err != nil {
 		return nil, err
 	}
 
-	container := obj.(*apiv1.ContainerReplica)
+	err = c.client.Get(ctx, k8sclient.ObjectKey{Namespace: ns, Name: name}, container)
+	if err != nil {
+		return nil, err
+	}
 
 	containerName := container.Spec.ContainerName
 	if container.Spec.SidecarName != "" {
