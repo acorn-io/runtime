@@ -189,11 +189,15 @@ func (c IgnoreUninstalled) BuilderDelete(ctx context.Context) (*apiv1.Builder, e
 }
 
 func (c IgnoreUninstalled) BuilderDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
-	return c.client.BuilderDialer(ctx)
+	return promptInstall(ctx, func() (func(context.Context) (net.Conn, error), error) {
+		return c.client.BuilderDialer(ctx)
+	})
 }
 
 func (c IgnoreUninstalled) BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
-	return c.client.BuilderRegistryDialer(ctx)
+	return promptInstall(ctx, func() (func(context.Context) (net.Conn, error), error) {
+		return c.client.BuilderRegistryDialer(ctx)
+	})
 }
 
 func (c IgnoreUninstalled) CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
