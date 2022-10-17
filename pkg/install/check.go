@@ -16,19 +16,19 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/watcher"
+	"github.com/pkg/errors"
 	"github.com/rancher/wrangler/pkg/name"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	storagev1 "k8s.io/api/storage/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CheckResult describes the results of a check, making it human-readable
@@ -172,28 +172,13 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 		}
 	}()
 
-	// Wait for pod to be ready
-	var podList corev1.PodList
-	watcher, err := cli.Watch(ctx, &podList, client.InNamespace(*opts.Namespace), client.MatchingFields{"metadata.name": pod.GetName()})
+	_, err = watcher.New[*corev1.Pod](cli).ByObject(ctx, pod, func(pod *corev1.Pod) (bool, error) {
+		return pod.Status.Phase == corev1.PodRunning, nil
+	})
 	if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating watcher: %v", err)
 		return result
-	}
-	defer watcher.Stop()
-	for {
-		event := <-watcher.ResultChan()
-		if event.Type == watch.Error {
-			result.Passed = false
-			result.Message = fmt.Sprintf("Error watching pod: %v", event.Object)
-			return result
-		}
-		if event.Type == watch.Added || event.Type == watch.Modified {
-			pod := event.Object.(*corev1.Pod)
-			if pod.Status.Phase == corev1.PodRunning {
-				break
-			}
-		}
 	}
 
 	// Execute command in container
@@ -378,7 +363,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		return result
 	}
 	defer func() {
-		if err := cli.Delete(ctx, ep); err != nil && !errors.IsNotFound(err) {
+		if err := cli.Delete(ctx, ep); err != nil && !apierrors.IsNotFound(err) {
 			klog.Errorf("Error deleting endpoint: %v", err)
 		}
 	}()
@@ -405,35 +390,24 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		}
 	}()
 
-	// Wait for ingress to be ready, 10s timeout
-	ingw := &networkingv1.IngressList{Items: []networkingv1.Ingress{*ing}}
-	w, err := cli.Watch(ctx, ingw, client.InNamespace(*opts.Namespace))
-	if err != nil {
+	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+	_, err = watcher.New[*networkingv1.Ingress](cli).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
+		return ing.Status.LoadBalancer.Ingress != nil, nil
+	})
+	if errors.Is(err, context.DeadlineExceeded) {
+		result.Passed = false
+		result.Message = "Ingress not ready (test timed out after 1 minute)"
+		return result
+	} else if err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error watching ingress: %v", err)
 		return result
 	}
 
-	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-	for {
-		select {
-		case <-nctx.Done():
-			result.Passed = false
-			result.Message = "Ingress not ready (test timed out after 1 minute)"
-			return result
-		case f := <-w.ResultChan():
-			if f.Type == watch.Modified {
-				ing := f.Object.(*networkingv1.Ingress)
-				if ing.Status.LoadBalancer.Ingress != nil {
-					result.Passed = true
-					result.Message = "Ingress is ready"
-					return result
-				}
-			}
-		}
-	}
-
+	result.Passed = true
+	result.Message = "Ingress is ready"
+	return result
 }
 
 /*
