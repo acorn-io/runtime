@@ -130,9 +130,9 @@ func translatePermissions(err error) error {
 	if err == nil {
 		return err
 	}
-	if strings.HasPrefix(err.Error(), PrefixErrRulesNeeded) {
+	if i := strings.Index(err.Error(), PrefixErrRulesNeeded); i != -1 {
 		perms := v1.Permissions{}
-		marshalErr := json.Unmarshal([]byte(strings.TrimPrefix(err.Error(), PrefixErrRulesNeeded)), &perms)
+		marshalErr := json.Unmarshal([]byte(err.Error()[i+len(PrefixErrRulesNeeded):]), &perms)
 		if marshalErr == nil {
 			return &ErrRulesNeeded{
 				Permissions: perms,
