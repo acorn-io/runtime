@@ -20,7 +20,7 @@ key: {
 }
 ```
 
-They start with a name `key` and are wrap a collection of fields and values in `{}`. A more Acorn specific example is:
+They start with a name `key` and wrap a collection of fields and values in `{}`. A more Acorn specific example is:
 
 ```acorn
 containers: {
@@ -30,7 +30,7 @@ containers: {
 }
 ```
 
-In the above example, there is a object called `containers`, which contains another object called `my-app`.  Keys do not need to be quoted, unless they contain a `-`.
+In the above example, there is an object called `containers`, which contains another object called `my-app`.  Keys do not need to be quoted, unless they contain a `-`.
 
 For convenience, you can collapse objects which have only one field to a single `:` line and omit the braces.  For example these:
 
@@ -113,7 +113,7 @@ localData: {
 
 Strings can be a single line or multiline.  A single line string is surrounded by `"` quotes.
 
-Multiline strings are enclosed in triple quotes `"""`. The opening `"""` must be followed by a newline. The closing `"""` must also be on it's own line. The whitespace directly preceding the closing quotles must match the preceding whitespace on all other lines and is not included not included in the value.  This allows you to indent the text to match current level without the indenting becoming part of the actual value.
+Multiline strings are enclosed in triple quotes `"""`. The opening `"""` must be followed by a newline. The closing `"""` must also be on it's own line. The whitespace directly preceding the closing quotles must match the preceding whitespace on all other lines and is not included in the value.  This allows you to indent the text to match current level without the indenting becoming part of the actual value.
 
 ```acorn
 singleLine: "Hi!"
@@ -211,7 +211,7 @@ containers: app: {
 data: port // Evaluates to 3307
 localData: {
     port: 3306
-    exposedServicePort: topLevelPort // Evaluates to 3306
+    exposedServicePort: topLevelPort // Evaluates to 3307
 }
 ```
 
@@ -333,7 +333,7 @@ Regular expression syntax is the one accepted by RE2 outlined here [https://gith
 
 ### If statements
 
-Support for standard `if` statements are available in an Acornfile. If conditions evaluate to a boolean, and apply their body if the condition is true.
+Support for standard `if` statements is available in an Acornfile. If conditions evaluate to a boolean, and apply their body if the condition is true.
 
 ```acorn
 localData: {
@@ -389,7 +389,7 @@ localData:{
     }
 }
 
-for k, v in localData.config { 
+for k, v in localData.dataVols { 
     volumes: {
        "\(k)": {}
     }

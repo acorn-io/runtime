@@ -24,7 +24,7 @@ containers: {
 
 ### Stateful applications
 
-Applications that have stateful data or where an operator would care which order the containers will be removed in a scale down event should not use the `scale` field and should instead create unique instances of the container.
+Applications that have stateful data or where an operator would care in which order the containers will be removed in a scale down event should not use the `scale` field and should instead create unique instances of the container.
 
 To accomplish this, users can leverage `for` loops in the Acornfile. Within the `for` loop all items unique to that instance should be defined. In most cases, this will be a container and data volumes. The loop can contain any of the top level objects if needed.
 
@@ -76,7 +76,10 @@ containers: {
 secrets: {
     "yaml-config": {
         type: "template"
-        data: {template: std.toYAML(localData.config)}
+        data: {
+            template: std.toYAML(localData.config)
+        }
+    }
 }
 
 localData: {
@@ -85,7 +88,7 @@ localData: {
             isGoing: {
                 to: "be a yaml file"
             }
-        }, args.userConfig)
+        }}, args.userConfig)
 }
 ```
 

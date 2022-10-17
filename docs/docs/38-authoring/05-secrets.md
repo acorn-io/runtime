@@ -162,7 +162,7 @@ secrets: {
 }
 ```
 
-In the above example the secret renders a template secret with one key call "password.txt" the token from the secret named "token." See [advanced topics](/authoring/advanced) for other uses for the template secret type.
+In the above example the secret renders a template secret with one key called "password.txt", consuming the token from the secret named "token." See [advanced topics](/authoring/advanced) for other uses for the template secret type.
 
 ### Token secrets
 
@@ -176,9 +176,9 @@ secrets: {
             length: 32 // optional
             characters: "abcdedfhifj01234567890" // optional
         }
-    }
-    data: {
-        token: "" // optional
+        data: {
+            token: "" // optional
+        }
     }
 }
 ```

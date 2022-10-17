@@ -34,6 +34,6 @@ You can use a precreated volumes by binding the volume at runtime.
 acorn run -v db-data:my-data [IMAGE]
 ```
 
-This Acorn app will use the volume named `db-data` as it's `my-data` volume.
+This Acorn app will use the volume named `db-data` as its `my-data` volume.
 
 The volume will match the size and class of the pre-created PV `db-data`.

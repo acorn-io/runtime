@@ -12,7 +12,7 @@ Acorn is a work in progress.  Features will evolve over time and there may be br
 
 ### What is Acorn?
 
-Acorn is an application packaging and deployment framework that simplifies running apps on Kubernetes. Acorn is able to package up all of an applications Docker images, configuration, and deployment specifications into a single Acorn image artifact. This artifact is publishable to any OCI container registry allowing it to be deployed on any dev, test, or production Kubernetes.  The portability of Acorn images enables developers to develop applications locally and move to production without having to switch tools or technology stacks.
+Acorn is an application packaging and deployment framework that simplifies running apps on Kubernetes. Acorn is able to package up all of an application's Docker images, configuration, and deployment specifications into a single Acorn image artifact. This artifact is publishable to any OCI container registry allowing it to be deployed on any dev, test, or production Kubernetes.  The portability of Acorn images enables developers to develop applications locally and move to production without having to switch tools or technology stacks.
 
 Developers create Acorn images by describing the application configuration in an [Acornfile](/authoring/overview). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
 
@@ -33,7 +33,7 @@ Helm is a popular package manager for Kubernetes. After working with Helm charts
 specifically to offer a simplified application deployment experience for Kubernetes. Here are some of the
 differences between Acorn and Helm.
 
-1. Helm charts are templates for Kubernetes YAML files, whereas Acornfiles define application-level contructs. Acorn is
+1. Helm charts are templates for Kubernetes YAML files, whereas Acornfiles define application-level constructs. Acorn is
 a layer of abstraction on top of Kubernetes. Acorn users do not work with Kubernetes YAML files directly. By design, no Kubernetes
 knowledge is needed to use Acorn. 
 
