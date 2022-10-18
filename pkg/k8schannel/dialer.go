@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -54,7 +55,9 @@ func GetHeadersFor(cfg *rest.Config) (http.Header, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = rt.RoundTrip(&http.Request{})
+	_, err = rt.RoundTrip(&http.Request{
+		URL: &url.URL{},
+	})
 	return headerCapture.headers, err
 }
 
