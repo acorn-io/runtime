@@ -1,4 +1,4 @@
-FROM node:18-buster as src
+FROM node:19-buster as src
 COPY / /usr/src
 WORKDIR /usr/src
 RUN yarn install
