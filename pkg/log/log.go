@@ -66,11 +66,12 @@ type Message struct {
 }
 
 type Options struct {
-	RestConfig *rest.Config
-	Client     client.WithWatch
-	PodClient  v12.PodsGetter
-	TailLines  *int64
-	Follow     bool
+	RestConfig       *rest.Config
+	Client           client.WithWatch
+	PodClient        v12.PodsGetter
+	TailLines        *int64
+	Follow           bool
+	ContainerReplica string
 }
 
 func (o *Options) restConfig() (*rest.Config, error) {
@@ -260,11 +261,17 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 			return nil
 		}
 		for _, container := range pod.Spec.Containers {
+			if !matchesContainer(pod, container, options) {
+				continue
+			}
 			if err := Container(ctx, pod, container.Name, output, options); err != nil {
 				return err
 			}
 		}
 		for _, container := range pod.Spec.InitContainers {
+			if !matchesContainer(pod, container, options) {
+				continue
+			}
 			if err := Container(ctx, pod, container.Name, output, options); err != nil {
 				return err
 			}
@@ -286,6 +293,9 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 			}
 			for _, container := range pod.Spec.Containers {
 				container := container
+				if !matchesContainer(pod, container, options) {
+					continue
+				}
 				if !isContainerLoggable(pod, container.Name) {
 					continue
 				}
@@ -306,6 +316,9 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 			}
 			for _, container := range pod.Spec.InitContainers {
 				container := container
+				if !matchesContainer(pod, container, options) {
+					continue
+				}
 				if !isContainerLoggable(pod, container.Name) {
 					continue
 				}
@@ -351,26 +364,36 @@ func appNoFollow(ctx context.Context, app *apiv1.App, output chan<- Message, opt
 	}
 
 	for _, pod := range pods.Items {
+		if !matchesPod(&pod, options) {
+			continue
+		}
 		if err := Pod(ctx, &pod, output, options); err != nil {
 			return err
 		}
 	}
 
-	apps := &apiv1.AppList{}
-	err = options.Client.List(ctx, apps, &client.ListOptions{
-		Namespace: app.Status.Namespace,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, app := range apps.Items {
-		if err := App(ctx, &app, output, options); err != nil {
-			return err
-		}
-	}
-
 	return nil
+}
+
+func matchesPod(pod *corev1.Pod, options *Options) bool {
+	if options == nil || options.ContainerReplica == "" {
+		return true
+	}
+	parts := strings.SplitN(options.ContainerReplica, ".", 3)
+	return len(parts) > 1 && pod.Name == parts[1]
+}
+
+func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Options) bool {
+	if options == nil || options.ContainerReplica == "" {
+		return true
+	}
+	parts := strings.SplitN(options.ContainerReplica, ".", 3)
+	if len(parts) == 3 {
+		return pod.Name == parts[1] && container.Name == parts[2]
+	} else if len(parts) == 2 {
+		return pod.Name == parts[1] && container.Name == pod.Labels[applabels.AcornContainerName]
+	}
+	return false
 }
 
 func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Options) error {
@@ -407,6 +430,9 @@ func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Op
 	eg.Go(func() error {
 		defer cancel()
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
+			if !matchesPod(pod, options) {
+				return false, nil
+			}
 			if watching.shouldWatch("Pod", pod.Namespace, pod.Name) {
 				eg.Go(func() error {
 					err := Pod(ctx, pod, output, options)

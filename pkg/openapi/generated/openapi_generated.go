@@ -1819,6 +1819,12 @@ func schema_pkg_apis_apiacornio_v1_LogOptions(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
+					"containerReplica": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
