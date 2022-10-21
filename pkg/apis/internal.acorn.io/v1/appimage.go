@@ -5,6 +5,12 @@ type AppImage struct {
 	Acornfile string     `json:"acornfile,omitempty"`
 	ImageData ImagesData `json:"imageData,omitempty"`
 	BuildArgs GenericMap `json:"buildArgs,omitempty"`
+	VCS       VCS        `json:"vcs,omitempty"`
+}
+
+type VCS struct {
+	Revision string `json:"revision,omitempty"`
+	Modified bool   `json:"modified,omitempty"`
 }
 
 type Platform struct {

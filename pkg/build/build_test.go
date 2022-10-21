@@ -6,6 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestVCS(t *testing.T) {
+	vcs := vcs(".")
+	assert.NotEqual(t, "", vcs.Revision)
+}
+
 func Test_toContextCopyDockerFile(t *testing.T) {
 	type args struct {
 		baseImage   string
