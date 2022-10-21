@@ -132,7 +132,7 @@ If you would like to see the generated objects prior to installing to your Kuber
 acorn install -o yaml > install.yaml
 ```
 
-This will generate the Kubernetes objects yaml files and write them to install.yaml which can then be installed to your cluster using:
+This will generate the Kubernetes objects yaml files and write them to `install.yaml` which can then be installed to your cluster using:
 
 ```shell
 kubectl apply -f install.yaml
