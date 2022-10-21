@@ -62,6 +62,9 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 	if err := addFile(tempDir, appdefinition.ImageDataFile, imageData); err != nil {
 		return "", err
 	}
+	if err := addFile(tempDir, appdefinition.VCSDataFile, appImage.VCS); err != nil {
+		return "", err
+	}
 	if err := addFile(tempDir, "Dockerfile", "FROM scratch\nCOPY . /"); err != nil {
 		return "", err
 	}

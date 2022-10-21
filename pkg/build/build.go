@@ -98,6 +98,8 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		return nil, err
 	}
 
+	vcs := vcs(filepath.Dir(file))
+
 	appDefinition, err := appdefinition.NewAppDefinition(fileData)
 	if err != nil {
 		return nil, err
@@ -119,6 +121,7 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 		Acornfile: string(fileData),
 		ImageData: imageData,
 		BuildArgs: buildArgs,
+		VCS:       vcs,
 	}
 	if err != nil {
 		return nil, err
