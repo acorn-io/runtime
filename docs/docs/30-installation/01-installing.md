@@ -129,7 +129,7 @@ Acorn supports persistent storage through the use of volumes. For this to work, 
 If you would like to see the generated objects prior to installing to your Kubernetes cluster run: 
 
 ```shell
-acorn install -o yaml >> install.yaml
+acorn install -o yaml > install.yaml
 ```
 
 This will generate the Kubernetes objects yaml files and write them to install.yaml which can then be installed to your cluster using:
