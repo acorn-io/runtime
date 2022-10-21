@@ -47,6 +47,11 @@ func convert_url_Values_To__LogOptions(in *url.Values, out *LogOptions, s conver
 			return err
 		}
 	}
+	if values, ok := map[string][]string(*in)["containerReplica"]; ok && len(values) > 0 {
+		if err := runtime.Convert_Slice_string_To_string(&values, &out.ContainerReplica, s); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
