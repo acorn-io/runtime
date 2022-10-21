@@ -143,13 +143,19 @@ func translatePermissions(err error) error {
 }
 
 func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
-	app, err := c.AppGet(ctx, name)
+	appName, _, _ := strings.Cut(name, ".")
+
+	app, err := c.AppGet(ctx, appName)
 	if err != nil {
 		return nil, err
 	}
 
 	if opts == nil {
 		opts = &LogOptions{}
+	}
+
+	if name != appName && opts.ContainerReplica == "" {
+		opts.ContainerReplica = name
 	}
 
 	resp, err := c.RESTClient.Get().

@@ -6,7 +6,7 @@ title: "acorn logs"
 Log all pods from app
 
 ```
-acorn logs [flags] APP_NAME
+acorn logs [flags] APP_NAME|CONTAINER_NAME
 ```
 
 ### Options

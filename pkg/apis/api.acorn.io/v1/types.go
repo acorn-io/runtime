@@ -128,8 +128,9 @@ type LogMessage struct {
 type LogOptions struct {
 	metav1.TypeMeta `json:",inline"`
 
-	TailLines *int64 `json:"tailLines,omitempty"`
-	Follow    bool   `json:"follow,omitempty"`
+	TailLines        *int64 `json:"tailLines,omitempty"`
+	Follow           bool   `json:"follow,omitempty"`
+	ContainerReplica string `json:"containerReplica,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
