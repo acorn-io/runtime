@@ -40,6 +40,6 @@ func New(cfg *rest.Config) (client.WithWatch, error) {
 	}
 	return client.NewWithWatch(cfg, client.Options{
 		Scheme: scheme.Scheme,
-		Mapper: m,
+		Mapper: NewMapper(scheme.Scheme, m),
 	})
 }
