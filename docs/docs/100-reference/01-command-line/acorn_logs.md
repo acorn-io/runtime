@@ -12,8 +12,9 @@ acorn logs [flags] APP_NAME
 ### Options
 
 ```
-  -f, --follow   Follow log output
-  -h, --help     help for logs
+  -f, --follow     Follow log output
+  -n, --tail-lines Number of log output lines
+  -h, --help       help for logs
 ```
 
 ### Options inherited from parent commands

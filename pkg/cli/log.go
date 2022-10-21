@@ -17,7 +17,8 @@ func NewLogs() *cobra.Command {
 }
 
 type Logs struct {
-	Follow bool `short:"f" usage:"Follow log output"`
+	Follow    bool  `short:"f" usage:"Follow log output"`
+	TailLines int64 `short:"n" usage:"Number of lines in log output"`
 }
 
 func (s *Logs) Run(cmd *cobra.Command, args []string) error {
@@ -25,8 +26,15 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	var tailLines *int64
+	if s.TailLines == 0 {
+		tailLines = nil
+	} else {
+		tailLines = &s.TailLines
+	}
 
 	return log.Output(cmd.Context(), c, args[0], &client.LogOptions{
-		Follow: s.Follow,
+		Follow:    s.Follow,
+		TailLines: tailLines,
 	})
 }
