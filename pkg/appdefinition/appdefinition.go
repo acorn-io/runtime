@@ -19,13 +19,12 @@ import (
 )
 
 const (
-	AcornCueFile       = "Acornfile"
-	ImageDataFile      = "images.json"
-	BuildDataFile      = "build.json"
-	BuildTransform     = "github.com/acorn-io/acorn/schema/v1/transform/build"
-	NormalizeTransform = "github.com/acorn-io/acorn/schema/v1/transform/normalize"
-	Schema             = "github.com/acorn-io/acorn/schema/v1"
-	AppType            = "#App"
+	AcornCueFile  = "Acornfile"
+	ImageDataFile = "images.json"
+	VCSDataFile   = "vcs.json"
+	BuildDataFile = "build.json"
+	Schema        = "github.com/acorn-io/acorn/schema/v1"
+	AppType       = "#App"
 )
 
 var Defaults = []byte(`
@@ -301,6 +300,11 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
 			result.Acornfile = string(data)
 		} else if header.Name == ImageDataFile {
 			err := json.NewDecoder(tar).Decode(&result.ImageData)
+			if err != nil {
+				return nil, err
+			}
+		} else if header.Name == VCSDataFile {
+			err := json.NewDecoder(tar).Decode(&result.VCS)
 			if err != nil {
 				return nil, err
 			}
