@@ -20,7 +20,7 @@ func NewLogs() *cobra.Command {
 type Logs struct {
 	Follow bool   `short:"f" usage:"Follow log output"`
 	Since  string `short:"s" usage:"Show logs since timestamp (e.g. 42m for 42 minutes)"`
-	TailLines int64 `short:"n" usage:"Number of lines in log output"`
+	Tail   int64  `short:"n" usage:"Number of lines in log output"`
 }
 
 func (s *Logs) Run(cmd *cobra.Command, args []string) error {
@@ -29,15 +29,17 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	var tailLines *int64
-	if s.TailLines < 0 {
-		err := fmt.Errorf("TailLines: Invalid value: %d: must be greater than or equal to 0", s.TailLines)
+	if s.Tail < 0 {
+		err := fmt.Errorf("Tail: Invalid value: %d: must be greater than or equal to 0", s.Tail)
 		return err
+	} else if s.Tail == 0 {
+		tailLines = nil
 	} else {
-		tailLines = &s.TailLines
+		tailLines = &s.Tail
 	}
 	return log.Output(cmd.Context(), c, args[0], &client.LogOptions{
-		Follow:    s.Follow,
-		TailLines: tailLines,
+		Follow: s.Follow,
+		Tail:   tailLines,
 		Since:  s.Since,
 	})
 }
