@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/log"
@@ -27,8 +28,9 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	var tailLines *int64
-	if s.TailLines == 0 {
-		tailLines = nil
+	if s.TailLines < 0 {
+		err := fmt.Errorf("TailLines: Invalid value: %d: must be greater than or equal to 0", s.TailLines)
+		return err
 	} else {
 		tailLines = &s.TailLines
 	}

@@ -13,7 +13,7 @@ acorn logs [flags] APP_NAME
 
 ```
   -f, --follow     Follow log output
-  -n, --tail-lines Number of log output lines
+  -n, --tail-lines Number of lines in log output
   -h, --help       help for logs
 ```
 
