@@ -66,7 +66,7 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 		err := log.App(ctx, app, output, &log.Options{
 			Client:           i.client,
 			PodClient:        i.k8s.CoreV1(),
-			TailLines:        opts.TailLines,
+			Tail:             opts.Tail,
 			Follow:           opts.Follow,
 			ContainerReplica: opts.ContainerReplica,
 		})

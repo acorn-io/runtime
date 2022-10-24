@@ -12,8 +12,10 @@ acorn logs [flags] APP_NAME|CONTAINER_NAME
 ### Options
 
 ```
-  -f, --follow   Follow log output
-  -h, --help     help for logs
+  -f, --follow         Follow log output
+  -s, --since string   Show logs since timestamp (e.g. 42m for 42 minutes)
+  -n, --tail int       Number of lines in log output
+  -h, --help           help for logs
 ```
 
 ### Options inherited from parent commands

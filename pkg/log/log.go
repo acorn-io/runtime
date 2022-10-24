@@ -69,7 +69,7 @@ type Options struct {
 	RestConfig       *rest.Config
 	Client           client.WithWatch
 	PodClient        v12.PodsGetter
-	TailLines        *int64
+	Tail             *int64
 	Follow           bool
 	ContainerReplica string
 }
@@ -159,9 +159,9 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 	}
 
 	var (
-		first     = true
-		since     *metav1.Time
-		tailLines = options.TailLines
+		first = true
+		since *metav1.Time
+		tail  = options.Tail
 	)
 
 	for {
@@ -190,7 +190,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 			Follow:     options.Follow,
 			SinceTime:  since,
 			Timestamps: true,
-			TailLines:  tailLines,
+			TailLines:  tail,
 		})
 		readCloser, err := req.Stream(ctx)
 		if err != nil {
@@ -223,7 +223,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 		}
 		if lastTS != nil {
 			since = lastTS
-			tailLines = nil
+			tail = nil
 		}
 
 		if !options.Follow {
