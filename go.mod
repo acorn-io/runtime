@@ -23,7 +23,7 @@ require (
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.8
 	github.com/go-acme/lego/v4 v4.9.0
-	github.com/google/go-cmp v0.5.8
+	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.11.0
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20221014154406-a0f66878d012
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -112,7 +112,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gookit/color v1.5.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
