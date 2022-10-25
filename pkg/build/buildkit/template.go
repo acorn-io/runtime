@@ -21,11 +21,6 @@ func GetRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	return getRegistryPort(ctx, c)
 }
 
-func checkDeployment(ctx context.Context, c client.Reader) error {
-	var dep appsv1.Deployment
-	return c.Get(ctx, client.ObjectKey{Name: system.BuildKitName, Namespace: system.Namespace}, &dep)
-}
-
 func checkControllerDeployment(ctx context.Context, c client.Reader) error {
 	var dep appsv1.Deployment
 	return c.Get(ctx, client.ObjectKey{Name: system.ControllerName, Namespace: system.Namespace}, &dep)
