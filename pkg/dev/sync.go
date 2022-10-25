@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -57,15 +58,17 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 }
 
 func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, error) {
-	if s, err := os.Stat(localDir); err == nil && !s.IsDir() {
+	source := filepath.Join(cwd, localDir)
+	if s, err := os.Stat(source); err == nil && !s.IsDir() {
 		return nil, nil
 	}
-	err := os.MkdirAll(localDir, 0755)
+	err := os.MkdirAll(source, 0755)
 	if err != nil {
 		return nil, err
 	}
-	s, err := sync.NewSync(filepath.Join(cwd, localDir), sync.Options{
+	s, err := sync.NewSync(source, sync.Options{
 		DownstreamDisabled: !bidirectional,
+		Polling:            true,
 		Verbose:            true,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
 		Log:                logpkg.NewDefaultPrefixLogger(strings.TrimPrefix(con.Name, con.Spec.AppName+".")+": (sync): ", logpkg.GetInstance()),
@@ -74,7 +77,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		return nil, err
 	}
 
-	cmd := filepath.Join(appdefinition.AcornHelperPath, strings.TrimSpace(appdefinition.AcornHelper))
+	cmd := path.Join(appdefinition.AcornHelperPath, strings.TrimSpace(appdefinition.AcornHelper))
 	io, err := client.ContainerReplicaExec(ctx, con.Name, []string{
 		cmd, "sync", "upstream", remoteDir,
 	}, false, nil)
