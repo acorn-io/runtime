@@ -69,7 +69,7 @@ type Options struct {
 	RestConfig       *rest.Config
 	Client           client.WithWatch
 	PodClient        v12.PodsGetter
-	Tail             *int64
+	TailLines        *int64
 	Follow           bool
 	ContainerReplica string
 }
@@ -161,7 +161,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 	var (
 		first = true
 		since *metav1.Time
-		tail  = options.Tail
+		tail  = options.TailLines
 	)
 
 	for {

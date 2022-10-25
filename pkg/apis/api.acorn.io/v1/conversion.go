@@ -37,8 +37,8 @@ func Convert_url_Values_To__ContainerReplicaExecOptions(in, out interface{}, s c
 
 func convert_url_Values_To__LogOptions(in *url.Values, out *LogOptions, s conversion.Scope) error {
 	if values, ok := map[string][]string(*in)["tailLines"]; ok && len(values) > 0 {
-		out.Tail = new(int64)
-		if err := runtime.Convert_Slice_string_To_int64(&values, out.Tail, s); err != nil {
+		out.TailLines = new(int64)
+		if err := runtime.Convert_Slice_string_To_int64(&values, out.TailLines, s); err != nil {
 			return err
 		}
 	}

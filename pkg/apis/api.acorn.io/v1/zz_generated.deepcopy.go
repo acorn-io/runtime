@@ -761,8 +761,8 @@ func (in *LogMessage) DeepCopy() *LogMessage {
 func (in *LogOptions) DeepCopyInto(out *LogOptions) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	if in.Tail != nil {
-		in, out := &in.Tail, &out.Tail
+	if in.TailLines != nil {
+		in, out := &in.TailLines, &out.TailLines
 		*out = new(int64)
 		**out = **in
 	}
