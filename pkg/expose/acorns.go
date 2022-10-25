@@ -45,8 +45,8 @@ func Acorns(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 			})
 		}
 
-		ds := toDaemonSet(service, app, ports)
-		dsSvc := toDaemonSetService(service, app, ds, ports)
+		ds := toRouterDeployment(service, app, ports)
+		dsSvc := toRouterDeploymentService(service, app, ds, ports)
 		svc := toService(cfg, service, app, dsSvc)
 
 		result = append(result, ds, dsSvc, svc)
@@ -68,15 +68,15 @@ type exposedPort struct {
 	DestIPs []string
 }
 
-func toDaemonSet(serviceName string, app *v1.AppInstance, exposedPorts []exposedPort) *appsv1.DaemonSet {
+func toRouterDeployment(serviceName string, app *v1.AppInstance, exposedPorts []exposedPort) *appsv1.Deployment {
 	labels := toAcornLabels(app, serviceName)
-	ds := &appsv1.DaemonSet{
+	ds := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      toName(app, serviceName),
 			Namespace: system.Namespace,
 			Labels:    labels,
 		},
-		Spec: appsv1.DaemonSetSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: metav1.SetAsLabelSelector(labels),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -138,7 +138,7 @@ func toDaemonSet(serviceName string, app *v1.AppInstance, exposedPorts []exposed
 	return ds
 }
 
-func toDaemonSetService(serviceName string, appInstance *v1.AppInstance, ds *appsv1.DaemonSet, exposedPorts []exposedPort) *corev1.Service {
+func toRouterDeploymentService(serviceName string, appInstance *v1.AppInstance, ds *appsv1.Deployment, exposedPorts []exposedPort) *corev1.Service {
 	var (
 		labels = toAcornLabels(appInstance, serviceName)
 	)
@@ -154,9 +154,8 @@ func toDaemonSetService(serviceName string, appInstance *v1.AppInstance, ds *app
 			Ports: typed.MapSlice(exposedPorts, func(v exposedPort) corev1.ServicePort {
 				return ports.ToServicePort(v.Port)
 			}),
-			Selector:              labels,
-			Type:                  corev1.ServiceTypeClusterIP,
-			InternalTrafficPolicy: &[]corev1.ServiceInternalTrafficPolicyType{corev1.ServiceInternalTrafficPolicyLocal}[0],
+			Selector: labels,
+			Type:     corev1.ServiceTypeClusterIP,
 		},
 	}
 }
