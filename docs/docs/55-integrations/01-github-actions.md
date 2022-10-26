@@ -27,7 +27,7 @@ jobs:
           echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Build and Push
         run: |
-          acorn build -t ghcr.io/${{ github.repository }}:$TAG .
+          acorn build --tag ghcr.io/${{ github.repository }}:$TAG .
           acorn push ghcr.io/${{ github.repository }}:$TAG
 ```
 
@@ -60,6 +60,7 @@ jobs:
 | --------------- | ---------| ----------- |
 | `acorn-version` | `latest` | Version of Acorn to install
 | `k3s-version`   | `latest` | Version of K3s to install
+| `kubeconfig`    | (none)   | Provide a kubeconfig to use instead of installing k3s
 
 See [actions-setup](https://github.com/acorn-io/actions-setup#readme) for additional advanced options.  For example it is possible to point acorn at an existing k8s cluster instead of spinning up a new one.
 
