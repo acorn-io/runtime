@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/gc"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
+	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -29,6 +30,7 @@ func routes(router *router.Router) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
+	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).Middleware(appdefinition.IgnoreTerminatingNamespace)
@@ -51,4 +53,5 @@ func routes(router *router.Router) {
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(dns.RequireLBs).Handler(dns.NewDNSHandler())
 	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).Handler(dns.NewDNSConfigHandler())
+	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).Middleware(tls.IgnoreWildcardCertSecret).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, excluding the on-acorn.io wildcard cert
 }
