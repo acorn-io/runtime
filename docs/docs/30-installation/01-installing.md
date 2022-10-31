@@ -124,6 +124,19 @@ For this to work, your Kubernetes cluster must have an [ingress controller](http
 
 Acorn supports persistent storage through the use of volumes. For this to work, your Kubernetes cluster must have a [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/).
 
+### Manual Install
+
+If you would like to see the generated objects prior to installing to your Kubernetes cluster run: 
+
+```shell
+acorn install -o yaml > install.yaml
+```
+
+This will generate the Kubernetes objects yaml files and write them to `install.yaml` which can then be installed to your cluster using:
+
+```shell
+kubectl apply -f install.yaml
+```
 ### Local Development Clusters
 
 For local development, Acorn has been tested with Rancher Desktop, Docker Desktop, and Minikube. If you are using one of these systems, please consider the following:
