@@ -29,7 +29,7 @@ func toPrefix(domain, serviceName string, appInstance *v1.AppInstance) (hostPref
 		appInstanceIDSegment = serviceName + ":" + appInstance.GetName()
 		appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
 		appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
-		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 63-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
+		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 62-len(appInstanceIDSegment)) + "-" + appInstanceIDSegment
 	} else {
 		hostPrefix = serviceName + "." + appInstance.Name
 		if serviceName == "default" {
@@ -102,7 +102,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 			}
 			for _, domain := range cfg.ClusterDomains {
 				hostPrefix := toPrefix(domain, svcName, app)
-				hostname := name.Limit(hostPrefix+domain, 255)
+				hostname := hostPrefix + domain
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
 				rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
