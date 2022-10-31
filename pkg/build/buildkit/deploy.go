@@ -61,19 +61,19 @@ func SyncBuildkitPod(ctx context.Context, client client.Client) error {
 }
 
 func GetBuildkitPod(ctx context.Context, client client.WithWatch) (int, *corev1.Pod, error) {
-	port, err := getRegistryPort(ctx, client)
-	if err == nil {
-		err = checkDeployment(ctx, client)
+	ok, err := Exists(ctx, client)
+	if err != nil {
+		return 0, nil, err
 	}
-	if apierror.IsNotFound(err) {
+
+	if !ok {
 		err = applyObjects(ctx)
 		if err != nil {
 			return 0, nil, err
 		}
-
-		port, err = getRegistryPort(ctx, client)
-
 	}
+
+	port, err := getRegistryPort(ctx, client)
 	if err != nil {
 		return 0, nil, err
 	}
