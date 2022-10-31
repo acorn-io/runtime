@@ -2,6 +2,8 @@ package publish
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -21,8 +23,13 @@ import (
 
 func toPrefix(domain, serviceName string, appInstance *v1.AppInstance) (hostPrefix string) {
 	if strings.HasSuffix(domain, "on-acorn.io") {
-		appInstanceIDSegment := strings.SplitN(string(appInstance.GetUID()), "-", 2)[0]
-		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 63-len(domain)-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
+		var appInstanceIDSegment string
+		var appInstanceIDSegmentByte [32]byte
+
+		appInstanceIDSegment = serviceName + ":" + appInstance.GetName()
+		appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
+		appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
+		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 62-len(appInstanceIDSegment)) + "-" + appInstanceIDSegment
 	} else {
 		hostPrefix = serviceName + "." + appInstance.Name
 		if serviceName == "default" {
