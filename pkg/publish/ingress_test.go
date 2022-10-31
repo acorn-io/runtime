@@ -29,7 +29,7 @@ func TestToPrefix(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantHostPrefix: "app-test-green-star-6b72f64c5182",
+			wantHostPrefix: "app-test-green-star-ea6262056030",
 		},
 		{
 			name: "\"on-acorn.io\" Service Name No -",
@@ -57,7 +57,7 @@ func TestToPrefix(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantHostPrefix: "app-test-greenstar-c832271c0202",
+			wantHostPrefix: "app-test-greenstar-80a29e4be6e0",
 		},
 		{
 			name: "\"custom domain\"",
