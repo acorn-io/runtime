@@ -19,8 +19,9 @@ NAME                      READY   STATUS    RESTARTS   AGE
 webapp-556947c87d-gt97r   1/1     Running   0          3m54s
 
 ```
-### Note :
+:::caution
 When the app is removed the namespace will also be deleted.
+
 ## Service Accounts
 
-All containers launched as part of an Acorn will have a service account attached named "acorn"
+All Kubernetes deployments launched as part of an Acorn will have a service account attached named "acorn"
