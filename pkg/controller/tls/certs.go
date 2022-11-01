@@ -3,26 +3,26 @@ package tls
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/name"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
+// ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
 func ProvisionWildcardCert(req router.Request, cfg *apiv1.Config, domain, token string) error {
-	// Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
 	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
+		logrus.Infof("Provisioning wildcard cert for %v", domain)
 		// Ensure that we have a Let's Encrypt account ready
-		leUser, err := ensureLEUser(req.Ctx, cfg, req.Client, domain)
+		leUser, err := ensureLEUser(req.Ctx, cfg, req.Client)
 		if err != nil {
 			return err
 		}
@@ -77,6 +77,13 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 
 	appInstanceIDSegment := strings.SplitN(string(appInstance.GetUID()), "-", 2)[0]
 
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	}
+
+	leUser, err := ensureLEUser(req.Ctx, cfg, req.Client)
+
 	// FIXME: use error list instead of exiting on first error?
 	for _, pb := range appInstance.Spec.Ports {
 		// Skip: name empty, not FQDN, already covered by on-acorn.io
@@ -99,22 +106,12 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 			return findSecretErr
 		}
 
-		newSec := &corev1.Secret{
-			Type: corev1.SecretTypeTLS,
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: appInstance.Namespace,
-				Labels: map[string]string{
-					labels.AcornManaged: "true",
-					labels.AcornAppName: appInstance.Name,
-				},
-				Annotations: map[string]string{
-					labels.AcornDomain:             pb.ServiceName,
-					labels.AcornCertNotValidBefore: time.Time{}.Format(time.RFC3339), // Zero time
-					labels.AcornCertNotValidAfter:  time.Time{}.Format(time.RFC3339), // Zero time
-				},
-			},
+		cert, err := leUser.getCert(req.Ctx, pb.ServiceName)
+		if err != nil {
+			return err
 		}
+
+		newSec, err := leUser.certToSecret(cert, pb.ServiceName, appInstance.Namespace, secretName)
 
 		if err := req.Client.Create(req.Ctx, newSec); err != nil {
 			return fmt.Errorf("error creating TLS secret %s/%s: %v", appInstance.Namespace, secretName, err)

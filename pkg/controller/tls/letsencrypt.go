@@ -12,22 +12,29 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/challenge/dns01"
+	"github.com/go-acme/lego/v4/challenge/http01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
+	"github.com/rancher/wrangler/pkg/name"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -37,7 +44,6 @@ const (
 )
 
 type LEUser struct {
-	name         string
 	email        string
 	registration *registration.Resource
 	key          crypto.PrivateKey
@@ -58,7 +64,6 @@ func fromSecret(secret *corev1.Secret) (*LEUser, error) {
 	}
 
 	return &LEUser{
-		name:         string(secret.Data["name"]),
 		email:        string(secret.Data["email"]),
 		registration: &reg,
 		key:          privateKey,
@@ -77,8 +82,8 @@ func (u *LEUser) GetPrivateKey() crypto.PrivateKey {
 }
 
 func (u *LEUser) register() error {
-	if u.name == "" || u.email == "" {
-		return fmt.Errorf("not registering LE User: missing name or email")
+	if u.email == "" {
+		return fmt.Errorf("not registering LE User: missing email")
 	}
 
 	if u.url == "" {
@@ -108,7 +113,7 @@ func (u *LEUser) register() error {
 	}
 	u.registration = reg
 
-	logrus.Infof("registered LE User: %s", u.name)
+	logrus.Infof("registered LE User: %s", u.email)
 
 	return nil
 
@@ -135,7 +140,6 @@ func (u *LEUser) toSecret() (*corev1.Secret, error) {
 			},
 		},
 		Data: map[string][]byte{
-			"name":         []byte(u.name),
 			"email":        []byte(u.email),
 			"privateKey":   pemEncoded,
 			"registration": reg,
@@ -148,6 +152,19 @@ func noOpCheck(_, _, _ string, _ dns01.PreCheckFunc) (bool, error) {
 	return true, nil
 }
 
+func (u *LEUser) leClient() (*lego.Client, error) {
+	conf := lego.NewConfig(u)
+
+	conf.CADirURL = u.url
+
+	client, err := lego.NewClient(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
 func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certificate.Resource, error) {
 	if u.registration == nil {
 		return nil, fmt.Errorf("not generating LE cert: missing registration")
@@ -157,11 +174,7 @@ func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certi
 		return nil, fmt.Errorf("not generating LE cert: missing domain or token")
 	}
 
-	conf := lego.NewConfig(u)
-
-	conf.CADirURL = u.url
-
-	client, err := lego.NewClient(conf)
+	client, err := u.leClient()
 	if err != nil {
 		return nil, err
 	}
@@ -191,18 +204,17 @@ func matchLeURLToEnv(url string) string {
 }
 
 func (u *LEUser) toHash() string {
-	toHash := []byte(fmt.Sprintf("%s-%s-%s", u.name, matchLeURLToEnv(u.url), u.email))
+	toHash := []byte(name.Limit(fmt.Sprintf("%s-%s", matchLeURLToEnv(u.url), u.email), 63))
 	dig := sha1.New()
 	dig.Write([]byte(toHash))
 	return hex.EncodeToString(dig.Sum(nil))
 }
 
-func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client, domain string) (*LEUser, error) {
+func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client) (*LEUser, error) {
 
 	/*
 	 * Construct new LE User
 	 */
-	targetUsername := strings.TrimPrefix(domain, ".") // leading dot can be an issue
 	email := "staging-certs@acorn.io"
 	url := LetsEncryptURLStaging
 	if strings.EqualFold(*cfg.LetsEncrypt, "enabled") {
@@ -216,7 +228,6 @@ func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 	}
 
 	newLEUser := &LEUser{
-		name:  targetUsername,
 		email: email,
 		url:   url,
 	}
@@ -267,7 +278,7 @@ func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client,
 		return nil, fmt.Errorf("problem creating Let's Encrypt User secret: %w", err)
 	}
 
-	logrus.Infof("Registered Let's Encrypt User: %s", newLEUser.name)
+	logrus.Infoln("Registered Let's Encrypt User")
 
 	return newLEUser, nil
 
@@ -315,12 +326,35 @@ func (u *LEUser) ensureWildcardCertificateSecret(ctx context.Context, client kcl
 		return nil, fmt.Errorf("problem generating wildcard certificate: %w", err)
 	}
 
+	sec, err = u.certToSecret(cert, domain, system.Namespace, system.TLSSecretName)
+	if err != nil {
+		return nil, err
+	}
+
+	if apierrors.IsNotFound(secErr) {
+		if err := client.Create(ctx, sec); err != nil {
+			return sec, fmt.Errorf("problem creating wildcard certificate secret: %w", err)
+		}
+	} else {
+		if err := client.Update(ctx, sec); err != nil {
+			return sec, fmt.Errorf("problem updating wildcard certificate secret: %w", err)
+		}
+	}
+
+	logrus.Infof("Created new wildcard certificate secret for domain %s", domain)
+
+	return sec, nil
+}
+
+func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, name string) (*corev1.Secret, error) {
+	leSettingsHash := u.toHash()
+
 	x509crt, err := certcrypto.ParsePEMCertificate([]byte(cert.Certificate))
 	if err != nil {
 		return nil, fmt.Errorf("problem parsing pem certificate: %w", err)
 	}
 
-	sec = &corev1.Secret{
+	sec := &corev1.Secret{
 		Type: corev1.SecretTypeTLS,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      system.TLSSecretName,
@@ -341,17 +375,128 @@ func (u *LEUser) ensureWildcardCertificateSecret(ctx context.Context, client kcl
 		},
 	}
 
-	if apierrors.IsNotFound(secErr) {
-		if err := client.Create(ctx, sec); err != nil {
-			return sec, fmt.Errorf("problem creating wildcard certificate secret: %w", err)
-		}
-	} else {
-		if err := client.Update(ctx, sec); err != nil {
-			return sec, fmt.Errorf("problem updating wildcard certificate secret: %w", err)
-		}
+	return sec, nil
+
+}
+
+func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resource, error) {
+	client, err := u.leClient()
+	if err != nil {
+		return nil, err
 	}
 
-	logrus.Infof("Created new wildcard certificate secret for domain %s", domain)
+	// Setup HTTP Challenge Server
+	port, err := freePort()
+	if err != nil {
+		return nil, err
+	}
 
-	return sec, nil
+	httpProviderServer := http01.NewProviderServer("0.0.0.0", strconv.Itoa(port))
+
+	if err := client.Challenge.SetHTTP01Provider(httpProviderServer); err != nil {
+		return nil, err
+	}
+
+
+	// Setup Ingress + Service for HTTP Challenge
+	challengeObjectName := name.Limit(fmt.Sprintf("%s-le-challenge", strings.ReplaceAll(domain, ".", "-")), 63)
+
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      challengeObjectName,
+			Namespace: system.Namespace,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
+			Annotations: map[string]string{
+				labels.AcornDomain:                  domain,
+				labels.AcornLetsEncryptSettingsHash: u.toHash(),
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"app": system.ControllerName,
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       80,
+					TargetPort: intstr.FromInt(port),
+				},
+			},
+		},
+	}
+
+	ing := &networkingv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      challengeObjectName,
+			Namespace: system.Namespace,
+			Annotations: map[string]string{
+				labels.AcornDomain:                  domain,
+				labels.AcornLetsEncryptSettingsHash: u.toHash(),
+			},
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
+		},
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
+				{
+					Host: domain,
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
+								{
+									Path: fmt.Sprintf("/.well-known/acme-challenge/%s") // TODO: get challenge token
+									PathType: func() *networkingv1.PathType {
+										pt := networkingv1.PathTypeImplementationSpecific
+										return &pt
+									}(),
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: challengeObjectName,
+											Port: networkingv1.ServiceBackendPort{
+												Name: "http",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	c, err := k8sclient.Default()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.Create(ctx, svc); err != nil {
+		return nil, err
+	}
+
+	if err := c.Create(ctx, ing); err != nil {
+		return nil, err
+	}
+
+	// Try to obtain the certificate
+	request := certificate.ObtainRequest{
+		Domains: []string{fmt.Sprintf("%s", strings.TrimPrefix(domain, "."))},
+		Bundle:  true,
+	}
+
+	return client.Certificate.Obtain(request)
+
+}
+
+func freePort() (int, error) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return 0, err
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
 }
