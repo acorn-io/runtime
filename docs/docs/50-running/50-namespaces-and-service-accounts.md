@@ -3,7 +3,7 @@ title: Namespaces and Service Accounts
 ---
 ## Namespaces 
 
-By design Acorn will run apps under the Acorn namespace. If you are planning to deploy an app to a pre-created namespace you will need to label it explicitly.
+By design Acorn will run apps under the `acorn` namespace. If you are planning to deploy an app to a pre-created namespace you will need to label it explicitly.
 
 #### To label :
 
