@@ -14,6 +14,11 @@ func TestCredentialCreate(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
+	reg, close := helper.StartRegistry(t)
+	reg1, close1 := helper.StartRegistry(t)
+	defer close()
+	defer close1()
+
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
@@ -23,27 +28,27 @@ func TestCredentialCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cred, err := c.CredentialCreate(ctx, "example.com:443", "user", "pass")
+	cred, err := c.CredentialCreate(ctx, reg, "user", "pass")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "example.com:443", cred.Name)
-	assert.Equal(t, "example.com:443", cred.ServerAddress)
+	assert.Equal(t, reg, cred.Name)
+	assert.Equal(t, reg, cred.ServerAddress)
 	assert.Equal(t, "user", cred.Username)
 	assert.Nil(t, cred.Password)
 
-	cred1, err := c.CredentialCreate(ctx, "two.example.com:443", "user2", "pass2")
+	cred1, err := c.CredentialCreate(ctx, reg1, "user2", "pass2")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "two.example.com:443", cred1.Name)
-	assert.Equal(t, "two.example.com:443", cred1.ServerAddress)
+	assert.Equal(t, reg1, cred1.Name)
+	assert.Equal(t, reg1, cred1.ServerAddress)
 	assert.Equal(t, "user2", cred1.Username)
 	assert.Nil(t, cred1.Password)
 
-	cred1New, err := c.CredentialGet(ctx, "two.example.com:443")
+	cred1New, err := c.CredentialGet(ctx, reg1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,6 +60,11 @@ func TestCredentialList(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
+	reg, close := helper.StartRegistry(t)
+	reg1, close1 := helper.StartRegistry(t)
+	defer close()
+	defer close1()
+
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
@@ -64,12 +74,12 @@ func TestCredentialList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cred1, err := c.CredentialCreate(ctx, "example.com:443", "user", "pass")
+	cred1, err := c.CredentialCreate(ctx, reg, "user", "pass")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred2, err := c.CredentialCreate(ctx, "two.example.com:443", "user2", "pass2")
+	cred2, err := c.CredentialCreate(ctx, reg1, "user2", "pass2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +90,7 @@ func TestCredentialList(t *testing.T) {
 	}
 
 	sort.Slice(creds, func(i, j int) bool {
-		return creds[i].Name < creds[j].Name
+		return creds[i].Username < creds[j].Username
 	})
 
 	assert.Equal(t, cred1, &creds[0])
@@ -91,6 +101,11 @@ func TestCredentialGet(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
+	reg, close := helper.StartRegistry(t)
+	reg1, close1 := helper.StartRegistry(t)
+	defer close()
+	defer close1()
+
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
@@ -100,17 +115,17 @@ func TestCredentialGet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, "example.com:443", "user", "pass")
+	_, err = c.CredentialCreate(ctx, reg, "user", "pass")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred1, err := c.CredentialCreate(ctx, "two.example.com:443", "user2", "pass2")
+	cred1, err := c.CredentialCreate(ctx, reg1, "user2", "pass2")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred1New, err := c.CredentialGet(ctx, "two.example.com:443")
+	cred1New, err := c.CredentialGet(ctx, reg1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,6 +137,11 @@ func TestCredentialUpdate(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
+	reg, close := helper.StartRegistry(t)
+	reg1, close1 := helper.StartRegistry(t)
+	defer close()
+	defer close1()
+
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
@@ -131,22 +151,22 @@ func TestCredentialUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, "example.com:443", "user", "pass")
+	_, err = c.CredentialCreate(ctx, reg, "user", "pass")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, "two.example.com:443", "user2", "pass2")
+	_, err = c.CredentialCreate(ctx, reg1, "user2", "pass2")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred1New, err := c.CredentialUpdate(ctx, "two.example.com:443", "user3", "pass3")
+	cred1New, err := c.CredentialUpdate(ctx, reg1, "user3", "pass3")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred1NewNew, err := c.CredentialGet(ctx, "two.example.com:443")
+	cred1NewNew, err := c.CredentialGet(ctx, reg1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,6 +180,11 @@ func TestCredentialDelete(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
+	reg, close := helper.StartRegistry(t)
+	reg1, close1 := helper.StartRegistry(t)
+	defer close()
+	defer close1()
+
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
@@ -169,12 +194,12 @@ func TestCredentialDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, "example.com:443", "user", "pass")
+	_, err = c.CredentialCreate(ctx, reg, "user", "pass")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, "two.example.com:443", "user2", "pass2")
+	_, err = c.CredentialCreate(ctx, reg1, "user2", "pass2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +211,7 @@ func TestCredentialDelete(t *testing.T) {
 
 	assert.Len(t, creds, 2)
 
-	_, err = c.CredentialDelete(ctx, "two.example.com:443")
+	_, err = c.CredentialDelete(ctx, reg1)
 	if err != nil {
 		t.Fatal(err)
 	}
