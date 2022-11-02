@@ -110,6 +110,18 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	klogv2.SetOutput(io.Discard)
 	utilruntime.ErrorHandlers = nil
 
+	kclient, err := k8sclient.Default()
+	if err != nil {
+		return err
+	}
+
+	serverConf, err := config.Get(ctx, kclient)
+	if err != nil {
+		return err
+	}
+
+	opts.Config = *config.Merge(serverConf, &opts.Config)
+
 	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {
 		if opts.Config.LetsEncryptTOSAgree == nil || !*opts.Config.LetsEncryptTOSAgree {
@@ -161,11 +173,6 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		} else {
 			s.Success()
 		}
-	}
-
-	kclient, err := k8sclient.Default()
-	if err != nil {
-		return err
 	}
 
 	var installIngressController bool

@@ -138,7 +138,7 @@ func IsDockerDesktop(ctx context.Context, getter kclient.Reader) (bool, error) {
 	return false, nil
 }
 
-func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
+func Merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	var (
 		mergedConfig apiv1.Config
 	)
@@ -235,7 +235,7 @@ func AsConfigMap(cfg *apiv1.Config) (*corev1.ConfigMap, error) {
 }
 
 func asConfigMap(existing, cfg *apiv1.Config) (*corev1.ConfigMap, error) {
-	newConfig := merge(existing, cfg)
+	newConfig := Merge(existing, cfg)
 
 	configBytes, err := json.Marshal(newConfig)
 	if err != nil {
