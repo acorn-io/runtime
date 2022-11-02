@@ -92,7 +92,6 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 		}
 
 		secretName := name.Limit(appInstance.GetName()+"-tls-"+pb.ServiceName, 63-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
-		logrus.Infof("Provisioning TLS cert for %v in secret %s/%s", pb.ServiceName, appInstance.Namespace, secretName)
 
 		// Find existing secret if exists
 		existingSecret := &corev1.Secret{}
@@ -106,12 +105,16 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 			return findSecretErr
 		}
 
+		logrus.Infof("Provisioning TLS cert for %v in secret %s/%s", pb.ServiceName, appInstance.Namespace, secretName)
 		cert, err := leUser.getCert(req.Ctx, pb.ServiceName)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error getting cert for %v: %v", pb.ServiceName, err)
 		}
 
 		newSec, err := leUser.certToSecret(cert, pb.ServiceName, appInstance.Namespace, secretName)
+		if err != nil {
+			return fmt.Errorf("Error converting cert to secret: %v", err)
+		}
 
 		if err := req.Client.Create(req.Ctx, newSec); err != nil {
 			return fmt.Errorf("error creating TLS secret %s/%s: %v", appInstance.Namespace, secretName, err)

@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/acorn/pkg/watcher"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -41,6 +43,11 @@ import (
 const (
 	LetsEncryptURLStaging    = "https://acme-staging-v02.api.letsencrypt.org/directory"
 	LetsEncryptURLProduction = "https://acme-v02.api.letsencrypt.org/directory"
+)
+
+var (
+	CertificateRequests             = map[string]any{}
+	ErrCertificateRequestInProgress = errors.New("certificate request in progress")
 )
 
 type LEUser struct {
@@ -166,6 +173,7 @@ func (u *LEUser) leClient() (*lego.Client, error) {
 }
 
 func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certificate.Resource, error) {
+
 	if u.registration == nil {
 		return nil, fmt.Errorf("not generating LE cert: missing registration")
 	}
@@ -173,6 +181,16 @@ func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certi
 	if domain == "" || token == "" {
 		return nil, fmt.Errorf("not generating LE cert: missing domain or token")
 	}
+
+	wildcardDomain := fmt.Sprintf("*.%s", strings.TrimPrefix(domain, "."))
+
+	if _, ok := CertificateRequests[wildcardDomain]; ok {
+		logrus.Infof("certificate request already in progress for %s", wildcardDomain)
+		return nil, ErrCertificateRequestInProgress
+	}
+
+	CertificateRequests[wildcardDomain] = nil
+	defer delete(CertificateRequests, wildcardDomain)
 
 	client, err := u.leClient()
 	if err != nil {
@@ -186,7 +204,7 @@ func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certi
 	}
 
 	request := certificate.ObtainRequest{
-		Domains: []string{fmt.Sprintf("*.%s", strings.TrimPrefix(domain, "."))},
+		Domains: []string{wildcardDomain},
 		Bundle:  true,
 	}
 
@@ -357,8 +375,8 @@ func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, nam
 	sec := &corev1.Secret{
 		Type: corev1.SecretTypeTLS,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      system.TLSSecretName,
-			Namespace: system.Namespace,
+			Name:      name,
+			Namespace: namespace,
 			Annotations: map[string]string{
 				labels.AcornDomain:                  domain,
 				labels.AcornLetsEncryptSettingsHash: leSettingsHash,
@@ -380,23 +398,32 @@ func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, nam
 }
 
 func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resource, error) {
+
+	// Do not start a new challenge if we already have one in progress
+	if _, ok := CertificateRequests[domain]; ok {
+		logrus.Infof("certificate for domain %s is already being requested, waiting for it to be ready", domain)
+		return nil, ErrCertificateRequestInProgress
+	}
+
 	client, err := u.leClient()
 	if err != nil {
 		return nil, err
 	}
 
-	// Setup HTTP Challenge Server
+	// Find a free port for the HTTP challenge server
 	port, err := freePort()
 	if err != nil {
 		return nil, err
 	}
 
+	// Setup HTTP Challenge Server
 	httpProviderServer := http01.NewProviderServer("0.0.0.0", strconv.Itoa(port))
 
 	if err := client.Challenge.SetHTTP01Provider(httpProviderServer); err != nil {
 		return nil, err
 	}
 
+	logrus.Debugf("HTTP01 Provider Server Address for %s: %s", domain, httpProviderServer.GetAddress())
 
 	// Setup Ingress + Service for HTTP Challenge
 	challengeObjectName := name.Limit(fmt.Sprintf("%s-le-challenge", strings.ReplaceAll(domain, ".", "-")), 63)
@@ -447,7 +474,7 @@ func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resou
 						HTTP: &networkingv1.HTTPIngressRuleValue{
 							Paths: []networkingv1.HTTPIngressPath{
 								{
-									Path: fmt.Sprintf("/.well-known/acme-challenge/%s") // TODO: get challenge token
+									Path: "/.well-known/acme-challenge/",
 									PathType: func() *networkingv1.PathType {
 										pt := networkingv1.PathTypeImplementationSpecific
 										return &pt
@@ -477,10 +504,19 @@ func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resou
 	if err := c.Create(ctx, svc); err != nil {
 		return nil, err
 	}
+	defer c.Delete(ctx, svc)
 
 	if err := c.Create(ctx, ing); err != nil {
 		return nil, err
 	}
+	defer c.Delete(ctx, ing)
+
+	// Wait for Ingress to be ready
+	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+	_, err = watcher.New[*networkingv1.Ingress](c).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
+		return ing.Status.LoadBalancer.Ingress != nil, nil
+	})
 
 	// Try to obtain the certificate
 	request := certificate.ObtainRequest{
