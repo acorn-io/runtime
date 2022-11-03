@@ -72,7 +72,6 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.E
 					Protocol:   protocol,
 					Pending:    true,
 				})
-
 			}
 		}
 	}

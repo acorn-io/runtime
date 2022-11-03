@@ -405,11 +405,10 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 			}
 
 			if endpoint.Pending {
-				switch endpoint.Protocol {
-				case "tcp":
-					buf.WriteString("<Pending>")
-				case "http":
+				if endpoint.Protocol == "http" {
 					buf.WriteString("<Pending Ingress>")
+				} else {
+					buf.WriteString("<Pending Load Balancer>")
 				}
 			} else {
 				buf.WriteString(endpoint.Address)
