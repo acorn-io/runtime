@@ -65,26 +65,44 @@ func RenewCert(req router.Request, resp router.Response) error {
 	}
 
 	domain := sec.Annotations[labels.AcornDomain]
-	logrus.Infof("Renewing TLS cert for %s", domain)
 
-	// Get new certificate
-	cert, err := leUser.getCert(req.Ctx, domain)
-	if err != nil {
-		return fmt.Errorf("Error getting cert for %v: %v", domain, err)
-	}
+	go func() {
 
-	// Convert cert to secret
-	newSec, err := leUser.certToSecret(cert, domain, sec.Namespace, sec.Name)
-	if err != nil {
-		return fmt.Errorf("Error converting cert to secret: %v", err)
-	}
+		// Do not start a new challenge if we already have one in progress
+		if !lockDomain(domain) {
+			logrus.Infof("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
+			return
+		}
+		defer unlockDomain(domain)
 
-	// Update existing secret
-	if err := req.Client.Update(req.Ctx, newSec); err != nil {
-		return fmt.Errorf("Error updating secret: %v", err)
-	}
+		logrus.Infof("Renewing TLS cert for %s", domain)
+
+		// Get new certificate
+		cert, err := leUser.getCert(req.Ctx, domain)
+		if err != nil {
+			logrus.Errorf("Error getting cert for %v: %v", domain, err)
+			return
+		}
+
+		// Convert cert to secret
+		newSec, err := leUser.certToSecret(cert, domain, sec.Namespace, sec.Name)
+		if err != nil {
+			logrus.Errorf("Error converting cert to secret: %v", err)
+			return
+		}
+
+		// Update existing secret
+		if err := req.Client.Update(req.Ctx, newSec); err != nil {
+			logrus.Errorf("Error updating secret: %v", err)
+			return
+		}
+
+		logrus.Infof("TLS secret %s/%s renewed for domain %s", newSec.Namespace, newSec.Name, domain)
+
+	}()
 
 	return nil
+
 }
 
 // ProvisionCerts handles the provisioning of new TLS certificates for AppInstances
@@ -129,20 +147,34 @@ func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Cl
 		return findSecretErr
 	}
 
-	logrus.Infof("Provisioning TLS cert for %v in secret %s/%s", domain, namespace, secretName)
-	cert, err := u.getCert(ctx, domain)
-	if err != nil {
-		return fmt.Errorf("Error getting cert for %v: %v", domain, err)
-	}
+	go func() {
+		// Do not start a new challenge if we already have one in progress
+		if !lockDomain(domain) {
+			logrus.Infof("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
+			return
+		}
+		defer unlockDomain(domain)
 
-	newSec, err := u.certToSecret(cert, domain, namespace, secretName)
-	if err != nil {
-		return fmt.Errorf("Error converting cert to secret: %v", err)
-	}
+		logrus.Infof("Provisioning TLS cert for %v in secret %s/%s", domain, namespace, secretName)
+		cert, err := u.getCert(ctx, domain)
+		if err != nil {
+			logrus.Errorf("Error getting cert for %v: %v", domain, err)
+			return
+		}
 
-	if err := client.Create(ctx, newSec); err != nil {
-		return fmt.Errorf("error creating TLS secret %s/%s: %v", namespace, secretName, err)
-	}
+		newSec, err := u.certToSecret(cert, domain, namespace, secretName)
+		if err != nil {
+			logrus.Errorf("Error converting cert to secret: %v", err)
+			return
+		}
+
+		if err := client.Create(ctx, newSec); err != nil {
+			logrus.Errorf("error creating TLS secret %s/%s: %v", namespace, secretName, err)
+			return
+		}
+
+		logrus.Infof("TLS secret %s/%s created for domain %s", namespace, secretName, domain)
+	}()
 
 	return nil
 }

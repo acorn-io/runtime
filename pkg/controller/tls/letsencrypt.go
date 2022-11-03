@@ -16,6 +16,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/acorn-io/acorn/pkg/config"
@@ -46,6 +47,7 @@ const (
 )
 
 var (
+	CertificatesRequestLock         = &sync.Mutex{}
 	CertificateRequests             = map[string]any{}
 	ErrCertificateRequestInProgress = errors.New("certificate request in progress")
 )
@@ -307,23 +309,32 @@ func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, nam
 
 func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resource, error) {
 
-	// Do not start a new challenge if we already have one in progress
-	if _, ok := CertificateRequests[domain]; ok {
-		logrus.Infof("certificate for domain %s is already being requested, waiting for it to be ready", domain)
-		return nil, ErrCertificateRequestInProgress
-	}
-
-	// Create "lock" for this domain
-	CertificateRequests[domain] = nil
-	defer delete(CertificateRequests, domain)
-
-	// Get certificate
 	if strings.HasPrefix(domain, "*.") {
 		return u.dnsChallenge(ctx, domain)
 	}
 
 	return u.httpChallenge(ctx, domain)
 
+}
+
+func lockDomain(domain string) bool {
+	CertificatesRequestLock.Lock()
+	if _, ok := CertificateRequests[domain]; ok {
+		CertificatesRequestLock.Unlock()
+		logrus.Infof("certificate for domain %s is already being requested, waiting for it to be ready", domain)
+		return false
+	}
+
+	// Create "lock" for this domain
+	CertificateRequests[domain] = nil
+	CertificatesRequestLock.Unlock()
+	return true
+}
+
+func unlockDomain(domain string) {
+	CertificatesRequestLock.Lock()
+	delete(CertificateRequests, domain)
+	CertificatesRequestLock.Unlock()
 }
 
 // freePort returns a free port that is ready to use, e.g. for the HTTP01 challenge server
@@ -362,7 +373,7 @@ func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
 
 	// (a) let's encrypt user settings changed -> renew
 	if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != u.toHash() {
-		logrus.Info("let's encrypt settings changed, must renew certificate for %s", sec.Annotations[labels.AcornDomain])
+		logrus.Infof("let's encrypt settings changed, must renew certificate for %s", sec.Annotations[labels.AcornDomain])
 		return true
 	}
 
@@ -413,7 +424,7 @@ func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.
 
 	// Try to obtain the certificate
 	request := certificate.ObtainRequest{
-		Domains: []string{fmt.Sprintf("%s", strings.TrimPrefix(domain, "."))},
+		Domains: []string{strings.TrimPrefix(domain, ".")},
 		Bundle:  true,
 	}
 
@@ -521,12 +532,20 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 	if err := c.Create(ctx, svc); err != nil {
 		return nil, err
 	}
-	defer c.Delete(ctx, svc)
+	defer func() {
+		if err := c.Delete(ctx, svc); err != nil {
+			logrus.Errorf("Error deleting service: %v", err)
+		}
+	}()
 
 	if err := c.Create(ctx, ing); err != nil {
 		return nil, err
 	}
-	defer c.Delete(ctx, ing)
+	defer func() {
+		if err := c.Delete(ctx, ing); err != nil {
+			logrus.Errorf("Error deleting ingress: %v", err)
+		}
+	}()
 
 	// Wait for Ingress to be ready
 	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
@@ -534,10 +553,13 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 	_, err = watcher.New[*networkingv1.Ingress](c).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
 		return ing.Status.LoadBalancer.Ingress != nil, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	// Try to obtain the certificate
 	request := certificate.ObtainRequest{
-		Domains: []string{fmt.Sprintf("%s", strings.TrimPrefix(domain, "."))},
+		Domains: []string{strings.TrimPrefix(domain, ".")},
 		Bundle:  true,
 	}
 
