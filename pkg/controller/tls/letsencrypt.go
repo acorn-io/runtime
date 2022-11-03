@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -221,6 +221,10 @@ func matchLeURLToEnv(url string) string {
 	}
 }
 
+// toHash returns a hash of the configurable fields of the LEUser
+// It is used to determine if the LEUser has changed and needs to be updated.
+// For this, we only check the email and url fields, since the key and registration are generated
+// and identify the user against the ACME server.
 func (u *LEUser) toHash() string {
 	toHash := []byte(name.Limit(fmt.Sprintf("%s-%s", matchLeURLToEnv(u.url), u.email), 63))
 	dig := sha1.New()
@@ -228,7 +232,12 @@ func (u *LEUser) toHash() string {
 	return hex.EncodeToString(dig.Sum(nil))
 }
 
-func ensureLEUser(ctx context.Context, cfg *apiv1.Config, client kclient.Client) (*LEUser, error) {
+func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
+
+	cfg, err := config.Get(ctx, client)
+	if err != nil {
+		return nil, err
+	}
 
 	/*
 	 * Construct new LE User
@@ -311,31 +320,10 @@ func (u *LEUser) ensureWildcardCertificateSecret(ctx context.Context, client kcl
 		return nil, secErr
 	}
 
-	leSettingsHash := u.toHash()
-
 	// Existing LE Cert Secret found, let's check if it's still valid
 	if secErr == nil {
-
-		// (a) domain or let's encrypt user settings changed -> renew
-		if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != leSettingsHash {
-			logrus.Info("domain or let's encrypt settings changed, renewing wildcard certificate")
-		} else {
-
-			x509crt, err := certcrypto.ParsePEMCertificate([]byte(sec.Data[corev1.TLSCertKey]))
-			if err != nil {
-				// (b) unreadable certificate -> renew
-				logrus.Errorf("problem parsing existing TLS secret: %v", err)
-			} else {
-				timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
-				if timeToExpire > 7*24*time.Hour {
-					// (c) cert is still valid for more than 7 days -> return it
-					logrus.Infof("existing TLS secret %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
-					return sec, nil
-				} else {
-					// (d) cert is expired -> renew
-					logrus.Infof("existing TLS secret %s is expiring after %s (%d hours), renewing it...", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
-				}
-			}
+		if !u.mustRenew(sec) {
+			return sec, nil
 		}
 	}
 
@@ -528,6 +516,7 @@ func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resou
 
 }
 
+// freePort returns a free port that is ready to use, e.g. for the HTTP01 challenge server
 func freePort() (int, error) {
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -535,4 +524,43 @@ func freePort() (int, error) {
 	}
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
+// stillValid checks if the certificate is still valid for at least 7 days
+func stillValid(cert []byte) bool {
+	x509crt, err := certcrypto.ParsePEMCertificate(cert)
+	if err != nil {
+		// (a) unreadable certificate -> renew
+		logrus.Errorf("problem parsing certificate: %v", err)
+		return false
+	} else {
+		timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
+		if timeToExpire > 7*24*time.Hour {
+			// (b) cert is still valid for more than 7 days -> good to go
+			logrus.Infof("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+			return true
+		} else {
+			// (c) cert is expired -> renew
+			logrus.Infof("certificate for %s is expiring after %s (%d hours) and should be renewed", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+			return false
+		}
+	}
+}
+
+// mustRenew returns true if the certificate must be renewed, either because the Let's Encrypt settings changed, the certificate is invalid or it's about to expire
+func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
+
+	// (a) let's encrypt user settings changed -> renew
+	if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != u.toHash() {
+		logrus.Info("let's encrypt settings changed, must renew certificate for %s", sec.Annotations[labels.AcornDomain])
+		return true
+	}
+
+	// (b) certificate is expired or expiring soon or unreadable -> renew
+	if !stillValid([]byte(sec.Data[corev1.TLSCertKey])) {
+		return true
+	}
+
+	return false
+
 }

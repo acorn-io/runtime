@@ -6,7 +6,6 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/name"
@@ -22,7 +21,7 @@ func ProvisionWildcardCert(req router.Request, cfg *apiv1.Config, domain, token 
 	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
 		logrus.Infof("Provisioning wildcard cert for %v", domain)
 		// Ensure that we have a Let's Encrypt account ready
-		leUser, err := ensureLEUser(req.Ctx, cfg, req.Client)
+		leUser, err := ensureLEUser(req.Ctx, req.Client)
 		if err != nil {
 			return err
 		}
@@ -65,7 +64,38 @@ func IgnoreWildcardCertSecret(h router.Handler) router.Handler {
 
 // RenewCert handles the renewal of existing TLS certificates
 func RenewCert(req router.Request, resp router.Response) error {
-	logrus.Infof("Renewing TLS cert for %v", req.Key)
+	sec := req.Object.(*corev1.Secret)
+
+	leUser, err := ensureLEUser(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	}
+
+	// Early exit if existing cert is still valid
+	if !leUser.mustRenew(sec) {
+		return nil
+	}
+
+	domain := sec.Annotations[labels.AcornDomain]
+	logrus.Infof("Renewing TLS cert for %s", domain)
+
+	// Get new certificate
+	cert, err := leUser.getCert(req.Ctx, domain)
+	if err != nil {
+		return fmt.Errorf("Error getting cert for %v: %v", domain, err)
+	}
+
+	// Convert cert to secret
+	newSec, err := leUser.certToSecret(cert, domain, sec.Namespace, sec.Name)
+	if err != nil {
+		return fmt.Errorf("Error converting cert to secret: %v", err)
+	}
+
+	// Update existing secret
+	if err := req.Client.Update(req.Ctx, newSec); err != nil {
+		return fmt.Errorf("Error updating secret: %v", err)
+	}
+
 	return nil
 }
 
@@ -77,12 +107,10 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 
 	appInstanceIDSegment := strings.SplitN(string(appInstance.GetUID()), "-", 2)[0]
 
-	cfg, err := config.Get(req.Ctx, req.Client)
+	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
 		return err
 	}
-
-	leUser, err := ensureLEUser(req.Ctx, cfg, req.Client)
 
 	// FIXME: use error list instead of exiting on first error?
 	for _, pb := range appInstance.Spec.Ports {
