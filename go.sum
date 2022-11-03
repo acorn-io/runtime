@@ -195,8 +195,8 @@ github.com/acorn-io/component-base v0.25.2-ot-1/go.mod h1:/5qYr5BXGNPs+cRd6+WL1N
 github.com/acorn-io/etcd/server/v3 v3.5.4-ot-1 h1:sQMBy/UImb1923toh9U0oIxlpO7crLrD7eKE/orB/pQ=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf h1:y2vkS4R2O+iRDUP8QLvS10i7RoVaMP4spSPGdM93jXo=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
-github.com/acorn-io/mink v0.0.0-20221015002203-a58541a4f675 h1:OrALGkeO5agFnNAZAcNLBr/xd9Sq09SDgxSBNwj1dwg=
-github.com/acorn-io/mink v0.0.0-20221015002203-a58541a4f675/go.mod h1:P0HVRf9COoW+vGHohm125qR9VbaLMlIaDM1ZFgLTV6w=
+github.com/acorn-io/mink v0.0.0-20221102221115-be238dbdd92d h1:hmY52it+yWi7/30ZquzZNjWJNmUYK7RZNIWAzBOhHDU=
+github.com/acorn-io/mink v0.0.0-20221102221115-be238dbdd92d/go.mod h1:P0HVRf9COoW+vGHohm125qR9VbaLMlIaDM1ZFgLTV6w=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=
