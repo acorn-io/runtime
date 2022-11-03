@@ -53,5 +53,5 @@ func routes(router *router.Router) {
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(dns.RequireLBs).Handler(dns.NewDNSHandler())
 	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).Handler(dns.NewDNSConfigHandler())
-	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).Middleware(tls.IgnoreWildcardCertSecret).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, excluding the on-acorn.io wildcard cert
+	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
 }

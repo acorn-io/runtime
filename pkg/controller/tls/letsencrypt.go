@@ -172,45 +172,6 @@ func (u *LEUser) leClient() (*lego.Client, error) {
 	return client, nil
 }
 
-func (u *LEUser) generateWildcardCert(dnsendpoint, domain, token string) (*certificate.Resource, error) {
-
-	if u.registration == nil {
-		return nil, fmt.Errorf("not generating LE cert: missing registration")
-	}
-
-	if domain == "" || token == "" {
-		return nil, fmt.Errorf("not generating LE cert: missing domain or token")
-	}
-
-	wildcardDomain := fmt.Sprintf("*.%s", strings.TrimPrefix(domain, "."))
-
-	if _, ok := CertificateRequests[wildcardDomain]; ok {
-		logrus.Infof("certificate request already in progress for %s", wildcardDomain)
-		return nil, ErrCertificateRequestInProgress
-	}
-
-	CertificateRequests[wildcardDomain] = nil
-	defer delete(CertificateRequests, wildcardDomain)
-
-	client, err := u.leClient()
-	if err != nil {
-		return nil, err
-	}
-
-	dnsProvider := NewACMEDNS01ChallengeProvider(dnsendpoint, domain, token)
-
-	if err := client.Challenge.SetDNS01Provider(dnsProvider, dns01.WrapPreCheck(noOpCheck)); err != nil {
-		return nil, err
-	}
-
-	request := certificate.ObtainRequest{
-		Domains: []string{wildcardDomain},
-		Bundle:  true,
-	}
-
-	return client.Certificate.Obtain(request)
-}
-
 func matchLeURLToEnv(url string) string {
 	if url == LetsEncryptURLStaging {
 		return "staging"
@@ -266,7 +227,7 @@ func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
 	 */
 
 	leAccountSecret := &corev1.Secret{}
-	err := client.Get(ctx, router.Key(system.Namespace, system.LEAccountSecretName), leAccountSecret)
+	err = client.Get(ctx, router.Key(system.Namespace, system.LEAccountSecretName), leAccountSecret)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
@@ -311,47 +272,6 @@ func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
 
 }
 
-func (u *LEUser) ensureWildcardCertificateSecret(ctx context.Context, client kclient.Client, dnsendpoint, domain, token string) (*corev1.Secret, error) {
-
-	sec := &corev1.Secret{}
-	secErr := client.Get(ctx, router.Key(system.Namespace, system.TLSSecretName), sec)
-	if secErr != nil && !apierrors.IsNotFound(secErr) {
-		// error fetching the existing secret, but it could exist
-		return nil, secErr
-	}
-
-	// Existing LE Cert Secret found, let's check if it's still valid
-	if secErr == nil {
-		if !u.mustRenew(sec) {
-			return sec, nil
-		}
-	}
-
-	cert, err := u.generateWildcardCert(dnsendpoint, domain, token)
-	if err != nil {
-		return nil, fmt.Errorf("problem generating wildcard certificate: %w", err)
-	}
-
-	sec, err = u.certToSecret(cert, domain, system.Namespace, system.TLSSecretName)
-	if err != nil {
-		return nil, err
-	}
-
-	if apierrors.IsNotFound(secErr) {
-		if err := client.Create(ctx, sec); err != nil {
-			return sec, fmt.Errorf("problem creating wildcard certificate secret: %w", err)
-		}
-	} else {
-		if err := client.Update(ctx, sec); err != nil {
-			return sec, fmt.Errorf("problem updating wildcard certificate secret: %w", err)
-		}
-	}
-
-	logrus.Infof("Created new wildcard certificate secret for domain %s", domain)
-
-	return sec, nil
-}
-
 func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, name string) (*corev1.Secret, error) {
 	leSettingsHash := u.toHash()
 
@@ -393,6 +313,115 @@ func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resou
 		return nil, ErrCertificateRequestInProgress
 	}
 
+	// Create "lock" for this domain
+	CertificateRequests[domain] = nil
+	defer delete(CertificateRequests, domain)
+
+	// Get certificate
+	if strings.HasPrefix(domain, "*.") {
+		return u.dnsChallenge(ctx, domain)
+	}
+
+	return u.httpChallenge(ctx, domain)
+
+}
+
+// freePort returns a free port that is ready to use, e.g. for the HTTP01 challenge server
+func freePort() (int, error) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return 0, err
+	}
+	defer l.Close()
+	return l.Addr().(*net.TCPAddr).Port, nil
+}
+
+// stillValid checks if the certificate is still valid for at least 7 days
+func stillValid(cert []byte) bool {
+	x509crt, err := certcrypto.ParsePEMCertificate(cert)
+	if err != nil {
+		// (a) unreadable certificate -> renew
+		logrus.Errorf("problem parsing certificate: %v", err)
+		return false
+	} else {
+		timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
+		if timeToExpire > 7*24*time.Hour {
+			// (b) cert is still valid for more than 7 days -> good to go
+			logrus.Infof("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+			return true
+		} else {
+			// (c) cert is expired -> renew
+			logrus.Infof("certificate for %s is expiring after %s (%d hours) and should be renewed", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+			return false
+		}
+	}
+}
+
+// mustRenew returns true if the certificate must be renewed, either because the Let's Encrypt settings changed, the certificate is invalid or it's about to expire
+func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
+
+	// (a) let's encrypt user settings changed -> renew
+	if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != u.toHash() {
+		logrus.Info("let's encrypt settings changed, must renew certificate for %s", sec.Annotations[labels.AcornDomain])
+		return true
+	}
+
+	// (b) certificate is expired or expiring soon or unreadable -> renew
+	if !stillValid([]byte(sec.Data[corev1.TLSCertKey])) {
+		return true
+	}
+
+	return false
+
+}
+
+func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.Resource, error) {
+	if !strings.HasSuffix(domain, "on-acorn.io") {
+		return nil, fmt.Errorf("ACME DNS challenge is only supported for on-acorn.io subdomains, not for %s", domain)
+	}
+
+	client, err := u.leClient()
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := k8sclient.Default()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get DNS config
+	cfg, err := config.Get(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	dnsEndpoint := *cfg.AcornDNSEndpoint
+
+	dnsSecret := &corev1.Secret{}
+	err = c.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	}
+	token := string(dnsSecret.Data["token"])
+
+	dnsProvider := NewACMEDNS01ChallengeProvider(dnsEndpoint, strings.TrimPrefix(domain, "*"), token)
+
+	if err := client.Challenge.SetDNS01Provider(dnsProvider, dns01.WrapPreCheck(noOpCheck)); err != nil {
+		return nil, err
+	}
+
+	// Try to obtain the certificate
+	request := certificate.ObtainRequest{
+		Domains: []string{fmt.Sprintf("%s", strings.TrimPrefix(domain, "."))},
+		Bundle:  true,
+	}
+
+	return client.Certificate.Obtain(request)
+
+}
+
+func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate.Resource, error) {
 	client, err := u.leClient()
 	if err != nil {
 		return nil, err
@@ -513,54 +542,4 @@ func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resou
 	}
 
 	return client.Certificate.Obtain(request)
-
-}
-
-// freePort returns a free port that is ready to use, e.g. for the HTTP01 challenge server
-func freePort() (int, error) {
-	l, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return 0, err
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
-}
-
-// stillValid checks if the certificate is still valid for at least 7 days
-func stillValid(cert []byte) bool {
-	x509crt, err := certcrypto.ParsePEMCertificate(cert)
-	if err != nil {
-		// (a) unreadable certificate -> renew
-		logrus.Errorf("problem parsing certificate: %v", err)
-		return false
-	} else {
-		timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
-		if timeToExpire > 7*24*time.Hour {
-			// (b) cert is still valid for more than 7 days -> good to go
-			logrus.Infof("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
-			return true
-		} else {
-			// (c) cert is expired -> renew
-			logrus.Infof("certificate for %s is expiring after %s (%d hours) and should be renewed", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
-			return false
-		}
-	}
-}
-
-// mustRenew returns true if the certificate must be renewed, either because the Let's Encrypt settings changed, the certificate is invalid or it's about to expire
-func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
-
-	// (a) let's encrypt user settings changed -> renew
-	if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != u.toHash() {
-		logrus.Info("let's encrypt settings changed, must renew certificate for %s", sec.Annotations[labels.AcornDomain])
-		return true
-	}
-
-	// (b) certificate is expired or expiring soon or unreadable -> renew
-	if !stillValid([]byte(sec.Data[corev1.TLSCertKey])) {
-		return true
-	}
-
-	return false
-
 }
