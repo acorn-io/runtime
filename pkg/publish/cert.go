@@ -94,11 +94,11 @@ func getCerts(req router.Request, namespace string) ([]*TLSCert, error) {
 	return result, nil
 }
 
-func filterCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (filteredCerts []*TLSCert) {
+func filterCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (filteredCerts []TLSCert) {
 	for _, rule := range rules {
 		for _, cert := range certs {
 			if cert.certForThisDomain(rule.Host) {
-				filteredCerts = append(filteredCerts, cert)
+				filteredCerts = append(filteredCerts, *cert)
 				break
 			}
 		}
@@ -106,7 +106,7 @@ func filterCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLS
 	return
 }
 
-func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (ingressTLS []networkingv1.IngressTLS) {
+func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []TLSCert) (ingressTLS []networkingv1.IngressTLS) {
 	certSecretToHostMapping := map[string][]string{}
 	for _, rule := range rules {
 		for _, cert := range certs {

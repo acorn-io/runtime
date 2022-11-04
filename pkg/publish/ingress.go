@@ -115,13 +115,13 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 		}
 
 		filteredTLSCerts := filterCertsForPublishedHosts(rules, tlsCerts)
-		for _, tlsCert := range filteredTLSCerts {
+		for i, tlsCert := range filteredTLSCerts {
 			originalSecret := &corev1.Secret{}
 			err := req.Get(originalSecret, tlsCert.SecretNamespace, tlsCert.SecretName)
 			if err != nil {
 				return nil, err
 			}
-			secretName := system.TLSSecretName + "-" + hostPrefix + "-" + string(originalSecret.UID)[:5]
+			secretName := system.TLSSecretName + "-" + string(originalSecret.UID)[:12]
 			result = append(result, &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        secretName,
@@ -132,6 +132,8 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				Type: corev1.SecretTypeTLS,
 				Data: originalSecret.Data,
 			})
+			filteredTLSCerts[i].SecretName = secretName
+			filteredTLSCerts[i].SecretNamespace = app.Status.Namespace
 		}
 
 		tlsIngress := getCertsForPublishedHosts(rules, filteredTLSCerts)
