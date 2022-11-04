@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rancher/wrangler/pkg/merr"
 )
+
+var Upgrader = &websocket.Upgrader{CheckOrigin: func(req *http.Request) bool {
+	return true
+}, HandshakeTimeout: 15 * time.Second}
 
 type stream struct {
 	cond        sync.Cond

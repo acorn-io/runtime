@@ -1,13 +1,14 @@
 package client
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -59,13 +60,14 @@ func (c *client) ImageDetails(ctx context.Context, imageName string, opts *Image
 }
 
 func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePullOptions) (<-chan ImageProgress, error) {
-	resp, err := c.RESTClient.Post().
+	url := c.RESTClient.Get().
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(strings.ReplaceAll(imageName, "/", "+")).
 		SubResource("pull").
-		Body(&apiv1.ImagePull{}).
-		Stream(ctx)
+		URL()
+
+	conn, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -73,23 +75,23 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 	result := make(chan ImageProgress, 1000)
 	go func() {
 		defer close(result)
-		lines := bufio.NewScanner(resp)
-		for lines.Scan() {
-			line := lines.Text()
+		defer conn.Close()
+		for {
+			_, data, err := conn.ReadMessage()
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				break
+			} else if err != nil {
+				logrus.Errorf("error reading websocket: %v", err)
+				break
+			}
+
 			progress := ImageProgress{}
-			if err := json.Unmarshal([]byte(line), &progress); err == nil {
+			if err := json.Unmarshal(data, &progress); err == nil {
 				result <- progress
 			} else {
 				result <- ImageProgress{
 					Error: err.Error(),
 				}
-			}
-		}
-
-		err := lines.Err()
-		if err != nil {
-			result <- ImageProgress{
-				Error: err.Error(),
 			}
 		}
 	}()
@@ -103,13 +105,14 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 		return nil, err
 	}
 
-	resp, err := c.RESTClient.Post().
+	url := c.RESTClient.Get().
 		Namespace(image.Namespace).
 		Resource("images").
 		Name(strings.ReplaceAll(imageName, "/", "+")).
 		SubResource("push").
-		Body(&apiv1.ImagePush{}).
-		Stream(ctx)
+		URL()
+
+	conn, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -117,23 +120,23 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 	result := make(chan ImageProgress)
 	go func() {
 		defer close(result)
-		lines := bufio.NewScanner(resp)
-		for lines.Scan() {
-			line := lines.Text()
+		defer conn.Close()
+		for {
+			_, data, err := conn.ReadMessage()
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				break
+			} else if err != nil {
+				logrus.Errorf("error reading websocket: %v", err)
+				break
+			}
+
 			progress := ImageProgress{}
-			if err := json.Unmarshal([]byte(line), &progress); err == nil {
+			if err := json.Unmarshal(data, &progress); err == nil {
 				result <- progress
 			} else {
 				result <- ImageProgress{
 					Error: err.Error(),
 				}
-			}
-		}
-
-		err := lines.Err()
-		if err != nil {
-			result <- ImageProgress{
-				Error: err.Error(),
 			}
 		}
 	}()
