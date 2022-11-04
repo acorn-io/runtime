@@ -115,9 +115,9 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 		}
 
 		filteredTLSCerts := filterCertsForPublishedHosts(rules, tlsCerts)
-		for i, _ := range filteredTLSCerts {
+		for _, tlsCert := range filteredTLSCerts {
 			originalSecret := &corev1.Secret{}
-			err := req.Get(originalSecret, system.Namespace, system.TLSSecretName)
+			err := req.Get(originalSecret, tlsCert.SecretNamespace, tlsCert.SecretName)
 			if err != nil {
 				return nil, err
 			}
@@ -132,9 +132,6 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				Type: corev1.SecretTypeTLS,
 				Data: originalSecret.Data,
 			})
-			//Override the secret name to the copied name
-			filteredTLSCerts[i].SecretName = secretName
-			filteredTLSCerts[i].SecretNamespace = app.Status.Namespace
 		}
 
 		tlsIngress := getCertsForPublishedHosts(rules, filteredTLSCerts)
