@@ -121,7 +121,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 			if err != nil {
 				return nil, err
 			}
-			secretName := system.TLSSecretName + "-" + string(originalSecret.UID)[:12]
+			secretName := tlsCert.SecretName + "-" + string(originalSecret.UID)[:12]
 			result = append(result, &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        secretName,
