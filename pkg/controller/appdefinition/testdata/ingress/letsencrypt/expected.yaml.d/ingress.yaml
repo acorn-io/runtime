@@ -1,0 +1,79 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: app1
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/service-name": "app1"
+    "acorn.io/managed": "true"
+  annotations:
+    acorn.io/targets: '{"app1-app-name-0239846da3fc.local.on-acorn.io":{"port":81,"service":"app1"},"ci1.acorn.not":{"port":81,"service":"app1"}}'
+spec:
+  rules:
+    - host: ci1.acorn.not
+      http:
+        paths:
+          - backend:
+              service:
+                name: app1
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    - host: app1-app-name-0239846da3fc.local.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: app1
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - ci1.acorn.not
+      secretName: test-tls-1234567890ab
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: app2
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/service-name": "app2"
+    "acorn.io/managed": "true"
+  annotations:
+    acorn.io/targets: '{"app2-app-name-35d9abff6d43.local.on-acorn.io":{"port":81,"service":"app2"},"ci1.acorn.not":{"port":81,"service":"app2"}}'
+spec:
+  rules:
+    - host: ci1.acorn.not
+      http:
+        paths:
+          - backend:
+              service:
+                name: app2
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    - host: app2-app-name-35d9abff6d43.local.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: app2
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - ci1.acorn.not
+      secretName: test-tls-1234567890ab
+---
+

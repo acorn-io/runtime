@@ -1,0 +1,33 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  ports:
+    - targetServiceName: app1
+      serviceName: ci1.acorn.not
+      publish: true
+    - targetServiceName: app2
+      serviceName: ci1.acorn.not
+      publish: true
+status:
+  namespace: app-created-namespace
+  appSpec:
+    containers:
+      app1:
+        image: "image-name"
+        ports:
+          - port: 80
+            targetPort: 81
+            publish: true
+            protocol: http
+      app2:
+        image: "image-name"
+        ports:
+          - port: 80
+            targetPort: 81
+            publish: true
+            protocol: http

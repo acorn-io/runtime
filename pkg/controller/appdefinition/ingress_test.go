@@ -62,3 +62,6 @@ func TestIngressClusterDomainWithPort(t *testing.T) {
 func TestIngressLabels(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/labels", DeploySpec)
 }
+func TestLetsEncrypt(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/letsencrypt", DeploySpec)
+}
