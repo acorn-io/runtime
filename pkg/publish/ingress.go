@@ -81,6 +81,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	if err != nil {
 		return nil, err
 	}
+
 	for _, serviceName := range ps.ServiceNames() {
 		var (
 			rules   []networkingv1.IngressRule
