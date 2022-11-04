@@ -81,7 +81,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	if err != nil {
 		return nil, err
 	}
-
+	var hostPrefix string
 	for _, serviceName := range ps.ServiceNames() {
 		var (
 			rules   []networkingv1.IngressRule
@@ -101,7 +101,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
 			}
 			for _, domain := range cfg.ClusterDomains {
-				hostPrefix := toPrefix(domain, svcName, app)
+				hostPrefix = toPrefix(domain, svcName, app)
 				hostname := hostPrefix + domain
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
@@ -115,13 +115,13 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 		}
 
 		filteredTLSCerts := filterCertsForPublishedHosts(rules, tlsCerts)
-		for i, tlsCert := range filteredTLSCerts {
+		for i, _ := range filteredTLSCerts {
 			originalSecret := &corev1.Secret{}
-			err := req.Get(originalSecret, tlsCert.SecretNamespace, tlsCert.SecretName)
+			err := req.Get(originalSecret, system.Namespace, system.TLSSecretName)
 			if err != nil {
 				return nil, err
 			}
-			secretName := tlsCert.SecretName + "-" + string(originalSecret.UID)[:12]
+			secretName := system.TLSSecretName + "-" + hostPrefix + "-" + string(originalSecret.UID)[:5]
 			result = append(result, &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        secretName,
