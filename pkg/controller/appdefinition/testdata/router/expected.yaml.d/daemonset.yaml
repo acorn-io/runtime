@@ -1,4 +1,4 @@
-kind: DaemonSet
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: app-name-app-namespace-app-name-1234567890ab

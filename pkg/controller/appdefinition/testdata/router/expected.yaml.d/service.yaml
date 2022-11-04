@@ -1,50 +1,3 @@
-kind: DaemonSet
-apiVersion: apps/v1
-metadata:
-  name: app-name-app-namespace-app-name-1234567890ab
-  namespace: acorn-system
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-    acorn.io/service-name: app-name
-spec:
-  selector:
-    matchLabels:
-      acorn.io/app-name: app-name
-      acorn.io/app-namespace: app-namespace
-      acorn.io/managed: "true"
-      acorn.io/service-name: app-name
-  template:
-    metadata:
-      labels:
-        acorn.io/app-name: app-name
-        acorn.io/app-namespace: app-namespace
-        acorn.io/managed: "true"
-        acorn.io/service-name: app-name
-    spec:
-      containers:
-      - env:
-        - name: SRC_PORT
-          value: "80"
-        - name: DEST_PROTO
-          value: tcp
-        - name: DEST_PORT
-          value: "80"
-        - name: DEST_IPS
-        image: rancher/klipper-lb:v0.3.4
-        name: port-80
-        ports:
-        - containerPort: 80
-          protocol: TCP
-        resources: { }
-        securityContext:
-          capabilities:
-            add:
-            - NET_ADMIN
-      enableServiceLinks: false
-      automountServiceAccountToken: false
----
 kind: Service
 apiVersion: v1
 metadata:
@@ -57,7 +10,6 @@ metadata:
     acorn.io/service-name: app-name
 spec:
   type: ClusterIP
-  internalTrafficPolicy: Local
   ports:
     - appProtocol: HTTP
       name: "80"
