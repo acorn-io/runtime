@@ -6,10 +6,13 @@ import (
 	"net/http"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8schannel"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/mink/pkg/strategy"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
@@ -78,10 +81,13 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 	}()
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-		if f, ok := rw.(http.Flusher); ok {
-			f.Flush()
+		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
+		if err != nil {
+			logrus.Errorf("Error during handshake for app logs: %v", err)
+			return
 		}
+		defer conn.Close()
+
 		for message := range output {
 			lm := apiv1.LogMessage{
 				Line:          message.Line,
@@ -105,11 +111,13 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 			if err != nil {
 				panic("failed to marshal update: " + err.Error())
 			}
-			_, _ = rw.Write(append(data, '\n'))
-			if f, ok := rw.(http.Flusher); ok {
-				f.Flush()
+			if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+				logrus.Errorf("Error writing log message: %v", err)
+				break
 			}
 		}
+	
+		_ = conn.CloseHandler()(websocket.CloseNormalClosure, "")
 	}), nil
 }
 

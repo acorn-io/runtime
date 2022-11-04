@@ -10,12 +10,16 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/remoteopts"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -40,11 +44,11 @@ func (i *ImagePull) NamespaceScoped() bool {
 }
 
 func (i *ImagePull) New() runtime.Object {
-	return &apiv1.LogOptions{}
+	return &apiv1.ImagePull{}
 }
 
 func (i *ImagePull) NewConnectOptions() (runtime.Object, bool, string) {
-	return &apiv1.LogOptions{}, false, ""
+	return &apiv1.ImagePull{}, false, ""
 }
 
 func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Object, r rest.Responder) (http.Handler, error) {
@@ -57,6 +61,13 @@ func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Obje
 	}
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
+		if err != nil {
+			logrus.Errorf("Error during handshake for image pull: %v", err)
+			return
+		}
+		defer conn.Close()
+
 		for update := range progress {
 			p := ImageProgress{
 				Total:    update.Total,
@@ -69,13 +80,18 @@ func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Obje
 			if err != nil {
 				panic("failed to marshal update: " + err.Error())
 			}
-			_, _ = rw.Write(append(data, '\n'))
+			if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+				logrus.Errorf("Error writing pull status: %v", err)
+				break
+			}
 		}
+
+		_ = conn.CloseHandler()(websocket.CloseNormalClosure, "")
 	}), nil
 }
 
 func (i *ImagePull) ConnectMethods() []string {
-	return []string{"POST"}
+	return []string{"GET"}
 }
 
 func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) (<-chan ggcrv1.Update, error) {
@@ -149,29 +165,5 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 		}
 	}()
 
-	return keepalive(progress2), nil
-}
-
-func keepalive(c <-chan ggcrv1.Update) <-chan ggcrv1.Update {
-	result := make(chan ggcrv1.Update)
-	go func() {
-		var (
-			lastUpdate ggcrv1.Update
-			timer      = time.NewTicker(time.Second)
-			ok         bool
-		)
-		defer close(result)
-		defer timer.Stop()
-		for {
-			select {
-			case lastUpdate, ok = <-c:
-				if !ok {
-					return
-				}
-			case <-timer.C:
-			}
-			result <- lastUpdate
-		}
-	}()
-	return result
+	return typed.Every(500*time.Millisecond, progress2), nil
 }

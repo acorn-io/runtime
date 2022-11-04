@@ -5,16 +5,21 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -63,6 +68,13 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 	}
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
+		if err != nil {
+			logrus.Errorf("Error during handshake for image push: %v", err)
+			return
+		}
+		defer conn.Close()
+
 		for update := range process {
 			p := ImageProgress{
 				Total:    update.Total,
@@ -75,8 +87,13 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 			if err != nil {
 				panic("failed to marshal update: " + err.Error())
 			}
-			_, _ = rw.Write(append(data, '\n'))
+			if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+				logrus.Errorf("Error writing push status: %v", err)
+				break
+			}
 		}
+
+		_ = conn.CloseHandler()(websocket.CloseNormalClosure, "")
 	}), nil
 }
 
@@ -85,7 +102,7 @@ func (i *ImagePush) NewConnectOptions() (runtime.Object, bool, string) {
 }
 
 func (i *ImagePush) ConnectMethods() []string {
-	return []string{"POST"}
+	return []string{"GET"}
 }
 
 type ImageProgress struct {
@@ -147,7 +164,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		err := remote.WriteIndex(pushTag, remoteImage, writeOpts...)
 		handleWriteIndexError(err, progress)
 	}()
-	return image, keepalive(progress), nil
+	return image, typed.Every(500*time.Millisecond, progress), nil
 }
 
 func handleWriteIndexError(err error, progress chan ggcrv1.Update) {

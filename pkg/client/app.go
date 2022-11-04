@@ -1,10 +1,8 @@
 package client
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"sort"
 	"strings"
 
@@ -13,6 +11,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -158,13 +158,15 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 		opts.ContainerReplica = name
 	}
 
-	resp, err := c.RESTClient.Get().
+	url := c.RESTClient.Get().
 		Namespace(app.Namespace).
 		Resource("apps").
 		Name(app.Name).
 		SubResource("log").
 		VersionedParams((*apiv1.LogOptions)(opts), scheme.ParameterCodec).
-		Stream(ctx)
+		URL()
+
+	conn, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -172,23 +174,22 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 	result := make(chan apiv1.LogMessage)
 	go func() {
 		defer close(result)
-		lines := bufio.NewScanner(resp)
-		for lines.Scan() {
-			line := lines.Text()
+		defer conn.Close()
+		for {
+			_, data, err := conn.ReadMessage()
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				break
+			} else if err != nil {
+				logrus.Errorf("error reading websocket: %v", err)
+				break
+			}
 			message := apiv1.LogMessage{}
-			if err := json.Unmarshal([]byte(line), &message); err == nil {
+			if err := json.Unmarshal(data, &message); err == nil {
 				result <- message
-			} else if !errors.Is(err, context.Canceled) && err.Error() != "unexpected end of JSON input" {
+			} else {
 				result <- apiv1.LogMessage{
 					Error: err.Error(),
 				}
-			}
-		}
-
-		err := lines.Err()
-		if err != nil && !errors.Is(err, context.Canceled) {
-			result <- apiv1.LogMessage{
-				Error: err.Error(),
 			}
 		}
 	}()
