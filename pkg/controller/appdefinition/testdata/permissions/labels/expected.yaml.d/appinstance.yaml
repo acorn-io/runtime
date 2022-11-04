@@ -25,6 +25,7 @@ spec:
     value: "value"
   image: test
   permissions:
+  - serviceName: foo
     clusterRules:
     - verbs:
       - create

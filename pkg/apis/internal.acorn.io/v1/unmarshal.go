@@ -921,7 +921,6 @@ func (in *CommandSlice) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, (*commandSlice)(in))
 }
 
-
 func (in *Build) UnmarshalJSON(data []byte) error {
 	if isString(data) {
 		s, err := parseString(data)

@@ -87,6 +87,7 @@ var (
 	BuilderConverter = MustConverter(Builder)
 
 	RuleRequests = [][]string{
+		{"Service", "Service"},
 		{"Verbs", "Verbs"},
 		{"Resource", "Resource"},
 		{"Scope", "Scope"},

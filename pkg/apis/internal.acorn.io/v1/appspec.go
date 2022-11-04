@@ -226,6 +226,7 @@ type ScopedLabel struct {
 type PolicyRule rbacv1.PolicyRule
 
 type Permissions struct {
+	ServiceName  string       `json:"serviceName,omitempty"`
 	Rules        []PolicyRule `json:"rules,omitempty"`
 	ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
 }
@@ -242,6 +243,15 @@ func (in *Permissions) Get() Permissions {
 		return Permissions{}
 	}
 	return *in
+}
+
+func FindPermission(serviceName string, perms []Permissions) Permissions {
+	for _, perm := range perms {
+		if serviceName == perm.ServiceName {
+			return perm
+		}
+	}
+	return Permissions{}
 }
 
 type Files map[string]File

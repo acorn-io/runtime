@@ -13,7 +13,7 @@ var (
 )
 
 type ErrRulesNeeded struct {
-	Permissions v1.Permissions
+	Permissions []v1.Permissions
 }
 
 func (e *ErrRulesNeeded) Error() string {

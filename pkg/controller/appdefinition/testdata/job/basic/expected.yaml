@@ -7,7 +7,6 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
     pod-security.kubernetes.io/enforce: baseline
-
 ---
 kind: Job
 apiVersion: batch/v1

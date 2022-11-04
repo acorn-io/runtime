@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: acorn
+  name: foo
   namespace: app-created-namespace
   labels:
     acorn.io/app-name: app-name
@@ -15,8 +15,8 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: acorn
+  name: foo
 subjects:
 - kind: ServiceAccount
-  name: acorn
+  name: foo
   namespace: app-created-namespace
