@@ -81,7 +81,6 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	if err != nil {
 		return nil, err
 	}
-	var hostPrefix string
 	for _, serviceName := range ps.ServiceNames() {
 		var (
 			rules   []networkingv1.IngressRule
@@ -101,7 +100,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
 			}
 			for _, domain := range cfg.ClusterDomains {
-				hostPrefix = toPrefix(domain, svcName, app)
+				hostPrefix := toPrefix(domain, svcName, app)
 				hostname := hostPrefix + domain
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
@@ -132,6 +131,7 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				Type: corev1.SecretTypeTLS,
 				Data: originalSecret.Data,
 			})
+			//Override the secret name to the copied name
 			filteredTLSCerts[i].SecretName = secretName
 			filteredTLSCerts[i].SecretNamespace = app.Status.Namespace
 		}
