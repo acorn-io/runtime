@@ -26,7 +26,7 @@ func toPrefix(domain, serviceName string, appInstance *v1.AppInstance) (hostPref
 		var appInstanceIDSegment string
 		var appInstanceIDSegmentByte [32]byte
 
-		appInstanceIDSegment = serviceName + ":" + appInstance.GetName()
+		appInstanceIDSegment = serviceName + ":" + appInstance.GetName() + ":" + appInstance.Namespace
 		appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
 		appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
 		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 62-len(appInstanceIDSegment)) + "-" + appInstanceIDSegment
