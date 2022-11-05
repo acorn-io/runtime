@@ -9,10 +9,10 @@ metadata:
     acorn.io/managed: "true"
     acorn.io/service-name: router-name
   annotations:
-    acorn.io/targets: '{"router-name-app-name-759bba8fe656.local.on-acorn.io":{"port":8080,"service":"router-name"}}'
+    acorn.io/targets: '{"router-name-app-name-3de5df498ac6.local.on-acorn.io":{"port":8080,"service":"router-name"}}'
 spec:
   rules:
-    - host: router-name-app-name-759bba8fe656.local.on-acorn.io
+    - host: router-name-app-name-3de5df498ac6.local.on-acorn.io
       http:
         paths:
           - backend:
