@@ -171,6 +171,16 @@ func toNginxConf(routerName string, router v1.Router) (string, string) {
 			buf.WriteString(strconv.Itoa(port))
 			buf.WriteString(";\n}\n")
 		}
+		if route.PathType == v1.PathTypePrefix && route.Path == "/" {
+			buf.WriteString("location ")
+			buf.WriteString("/")
+			buf.WriteString(" {\n  proxy_pass ")
+			buf.WriteString("http://")
+			buf.WriteString(route.TargetServiceName)
+			buf.WriteString(":")
+			buf.WriteString(strconv.Itoa(port))
+			buf.WriteString(";\n}\n")
+		}
 	}
 	buf.WriteString("}\n")
 

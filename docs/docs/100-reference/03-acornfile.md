@@ -8,14 +8,15 @@ The root level elements are,
 [args](#args)
 [containers](#containers),
 [jobs](#jobs),
+[routers](#routers),
 [volumes](#volumes),
 [secrets](#secrets),
-[acorns](#acorns),
 and [localData](#localData).
 
 [containers](#containers),
-[jobs](#jobs), and
-[acorns](#acorns) are all maps where the keys must be unique across all types. For example, it is
+[jobs](#jobs),
+and [routers](#routers)
+are all maps where the keys must be unique across all types. For example, it is
 not possible to have a container named `foo` and a job named `foo`, they will conflict and fail. Additional
 the keys could be using in a DNS name so the keys must only contain the characters `a-z`, `0-9` and `-`.
 
@@ -32,16 +33,16 @@ containers: {
 jobs: {
 }
 
+// Defintion of HTTP routes to services
+routers: {
+}
+
 // Definition of volumes that this acorn needs to run
 volumes: {
 }
 
 // Definition of secrets that this acorn needs to run
 secrets: {
-}
-
-// Definition of Acorns to run
-acorns: {
 }
 
 // Arbitrary information that can be embedded to help render this Acornfile
@@ -436,10 +437,76 @@ The following shorthand syntaxes are supported
 | @daily (or @midnight)   | Run once a day at midnight	                                | 0 0 * * *     |
 | @hourly	               | Run once an hour at the beginning of the hour	            | 0 * * * *     |
 
+## routers
+`routers` support path based HTTP routing so one can expose multiple containers through a
+single published service.  For example, if you have two containers named `auth` and `api`
+they would have to be exposed as two different HTTP services like `auth.example.com` and `api.example.com`.
+The router feature allows you to expose these two containers as `myapp.example.com/auth` and
+`myapp.example.com/api`.
+
+```acorn
+routers: myapp: {
+    routes: {
+        // Short syntax to match all prefixes /auth and route to the auth:8080 container
+        "/auth": "auth:8080"
+
+        // Verbose syntax
+        "/api": {
+            // can be "exact" or "prefix"
+            pathType: "exact"
+            targetServiceName: "api"
+            targetPort: 8081
+        }
+    }
+}
+
+containers: auth: {
+    image: "auth"
+    ports: "8080/http"
+}
+
+containers: api: {
+    image: "api"
+    ports: "8081/http"
+}
+```
+
+### pathType
+
+`pathType` describes the matching behavior of the route. Currently, "prefix" and "exact"
+are supported. "exact" will require that the path matches the string and "prefix" requires
+the path to start with the path string. The short syntax of routes will default to "prefix".
+
+```acorn
+routers: myapp: routes: {
+    "/api": {
+        pathType: "exact"
+        targetServiceName: "api"
+        targetPort: 8081
+    }
+
+    // Default to "prefix" match for short syntax
+    "/auth": "auth:8080"
+}
+```
+
+### targetServiceName
+
+`targetServiceName` is the destination service of the route.  This name typically corresponds to
+to a `container` name.  Technically it can be any acorn resource that exposes a service name which
+is currently `containers`, `jobs`, `routers` and linked in services.
+
+### targetPort
+
+`targetPort` is the destination port of the route. The target `container` or `job` must have this
+port defined or else the traffic will be dropped.  If you are targeting another router, routers
+implicitly have the internal port `80`
+
+
 ## volumes
 `volumes` store persistent data that can be mounted by containers
 ```acorn
-container: db: {
+containers: db: {
 	image: "mariadb"
 	dirs: "/var/lib/mysql": "data"
 }
