@@ -1,30 +1,25 @@
 ---
-title: "acorn rm"
+title: "acorn container rm"
 ---
-## acorn rm
+## acorn container rm
 
-Delete an app, container, or volume
+Delete a container
 
 ```
-acorn rm [flags] [APP_NAME]
+acorn container rm [CONTAINER_NAME...] [flags]
 ```
 
 ### Examples
 
 ```
 
-acorn rm APP_NAME
-acorn rm -t container,volume APP_NAME
+acorn container rm my-container
 ```
 
 ### Options
 
 ```
-  -a, --all          Delete all types
-  -t, --type         Delete by type (container, volume, app, secret, or c, v, a, s)
-  -f, --force        Force Delete
-  -h, --help         help for rm
-  
+  -h, --help   help for rm
 ```
 
 ### Options inherited from parent commands
@@ -36,9 +31,11 @@ acorn rm -t container,volume APP_NAME
       --debug-level int     Debug log level (valid 0-9) (default 7)
       --kubeconfig string   Location of a kubeconfig file
       --namespace string    Namespace to work in (default "acorn")
+  -o, --output string       Output format (json, yaml, {{gotemplate}})
+  -q, --quiet               Output only names
 ```
 
 ### SEE ALSO
 
-* [acorn](acorn.md)	 - 
+* [acorn container](acorn_container.md)	 - Manage containers
 
