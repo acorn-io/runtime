@@ -22,32 +22,34 @@ To launch the Acorn app with all ports internal, you can launch with the `-P=fal
 
 ## Publish individual ports
 
-Publishing ports makes the services available outside of the cluster. HTTP ports will be exposed via the layer 7 ingress and TCP/UDP ports will be exposed via service load balancers.
+Publishing ports makes the services available outside of the cluster. HTTP ports will be exposed via the layer 7 ingress and TCP/UDP ports will be exposed via service load balancers. When specifying a port to publish without its protocol, the protocol defined for it in the Acornfile will be used. If no protocol is defined in the Acornfile, the default will be tcp.
 
 | Flag value | Description |
 | ---------- | ----------- |
-| `-p 80` | Publish port 80/tcp in the Acorn to port 80/tcp as a service load balancer. |
+| `-p 80` | Publish port 80 in the Acorn to port 80 with its protocol. |
 | `-p 80/http` | Publish port 80/http in the Acorn to a random hostname. |
-| `-p 81:80` | Publish 80/tcp in the Acorn to 81/tcp as a service load balancer. |
-| `-p 81:80/tcp` | Equivalent to `-p 81:80`. |
-| `-p app:80` | Publish container `app` port 80/tcp in the Acorn to 80/tcp as a service load balancer. |
-| `-p app:80/tcp` | Equivalent to `-p app:80`. |
+| `-p 81:80` | Publish port 80 in the Acorn to 81 on cluster with the port's protocol.|
+| `-p 81:80/tcp` | Publish 80/tcp in the Acorn to 81 as a cluster service. |
+| `-p 81:80/http` | Publish 80/http in the Acorn to 81 with a random hostname. |
+| `-p app:80` | Publish container `app` port 80 in the Acorn to 80 on cluster with its protocol. |
+| `-p app:80/tcp` | Publish container `app` port 80/tcp in the Acorn to 80 as a cluster service. |
+| `-p app:80/http` | Publish container `app` port 80/http in the Acorn to 80 with a random hostname. |
 | `-p app.example.com:app` | Publish container `app` protocol HTTP from the Acorn to external name `app.example.com`. |
 | `-p app.example.com:app:80` | Publish container `app` port 80 from the Acorn to external name `app.example.com`. |
-| `-p app:80` | Publish container `app` port 80 from the Acorn. |
 
 ## Expose individual ports
 
-Exposing ports makes the services available to applications and other Acorns running on the cluster.
+Exposing ports makes the services available to applications and other Acorns running on the cluster. When specifying a port to expose without its protocol the protocol defined for it in the Acornfile will be used. If no protocol is defined in the Acornfile, the default will be tcp.
 
 | Flag value | Description |
 | ---------- | ----------- |
-| `--expose 80` | Expose port 80/tcp in the Acorn to port 80/tcp as a cluster service. |
-| `--expose 81:80` | Expose 80/tcp in the Acorn to 81/tcp as a cluster service. |
-| `--expose 81:80/tcp` | Equivalent to `--expose 81:80`. |
+| `--expose 80` | Expose port 80 in the Acorn to port 80 with its protocol. |
+| `--expose 81:80` | Expose 80 in the Acorn to 81 on cluster with its protocol. |
+| `--expose 81:80/tcp` | Expose 80/tcp in the Acorn to 81 as a cluster service. |
 | `--expose 81:80/http` | Expose 80/http in the Acorn to 81 as a cluster service. |
-| `--expose app:80` | Expose container `app` port 80/tcp in the Acorn to 80/tcp as a cluster service. |
-| `--expose app:80/tcp` | Equivalent to `--expose app:80`. |
+| `--expose app:80` | Expose container `app` port 80 with its protocol in the Acorn to 80 as a cluster service. |
+| `--expose app:80/tcp` |  Expose container `app` port 80/tcp in the Acorn to 80 as a cluster service. |
+| `--expose app:80/http` |  Expose container `app` port 80/http in the Acorn to 80  as a cluster service. |
 | `--expose web:80:app:80` | Expose container `app` port 80/tcp as cluster service called `web` on port 80/tcp. |
 
 ## DNS
