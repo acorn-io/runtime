@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewStop() *cobra.Command {
-	return cli.Command(&Stop{}, cobra.Command{
+func NewStop(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Stop{client: c.ClientFactory}, cobra.Command{
 		Use: "stop [flags] [APP_NAME...]",
 		Example: `
 acorn stop my-app
@@ -21,10 +21,11 @@ acorn stop my-app1 my-app2`,
 }
 
 type Stop struct {
+	client client.ClientFactory
 }
 
 func (a *Stop) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

@@ -3,12 +3,13 @@ package cli
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/spf13/cobra"
 )
 
-func NewInstall() *cobra.Command {
-	return cli.Command(&Install{}, cobra.Command{
+func NewInstall(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Install{client: c.ClientFactory}, cobra.Command{
 		Use: "install [flags]",
 		Example: `
 acorn install`,
@@ -29,6 +30,7 @@ type Install struct {
 	ControllerReplicas *int `usage:"acorn-controller deployment replica count"`
 
 	apiv1.Config
+	client client.ClientFactory
 }
 
 func (i *Install) Run(cmd *cobra.Command, args []string) error {

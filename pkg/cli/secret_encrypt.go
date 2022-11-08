@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/client"
 	"io"
 	"os"
 	"strings"
@@ -9,14 +10,13 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-func NewSecretEncrypt() *cobra.Command {
-	cmd := cli.Command(&Encrypt{}, cobra.Command{
+func NewSecretEncrypt(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Encrypt{client: c.ClientFactory}, cobra.Command{
 		Use:          "encrypt [flags] STRING",
 		SilenceUsage: true,
 		Short:        "Encrypt string information with clusters public key",
@@ -28,14 +28,14 @@ func NewSecretEncrypt() *cobra.Command {
 type Encrypt struct {
 	PlaintextStdin bool     `usage:"Take the plaintext from stdin"`
 	PublicKey      []string `usage:"Pass one or more cluster publicKey values"`
+	client         client.ClientFactory
 }
 
 func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter([][]string{
 		{"Name", "{{.}}"},
 	}, "", true, "")
-
-	c, err := client.Default()
+	c, err := e.client.CreateDefault()
 	if err != nil {
 		return err
 	}

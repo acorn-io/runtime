@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewPush() *cobra.Command {
-	return cli.Command(&Push{}, cobra.Command{
+func NewPush(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Push{client: c.ClientFactory}, cobra.Command{
 		Use:          "push [flags] IMAGE",
 		SilenceUsage: true,
 		Short:        "Push an image to a remote registry",
@@ -17,10 +17,11 @@ func NewPush() *cobra.Command {
 }
 
 type Push struct {
+	client client.ClientFactory
 }
 
 func (s *Push) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

@@ -2,14 +2,15 @@ package cli
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/client"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 )
 
-func NewAll() *cobra.Command {
-	return cli.Command(&All{}, cobra.Command{
+func NewAll(c client.CommandContext) *cobra.Command {
+	return cli.Command(&All{client: c.ClientFactory}, cobra.Command{
 		Use: "all",
 		Example: `
 acorn all`,
@@ -23,6 +24,7 @@ type All struct {
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	Images bool   `usage:"Include images in output" short:"i"`
 	All    bool   `usage:"Include stopped apps/containers" short:"a"`
+	client client.ClientFactory
 }
 
 func (a *All) Run(cmd *cobra.Command, args []string) error {
@@ -34,6 +36,7 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 		Quiet:  a.Quiet,
 		Output: a.Output,
 		All:    a.All,
+		client: a.client,
 	}
 	appErr := app.Run(cmd, nil)
 
@@ -41,6 +44,7 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 		Quiet:  a.Quiet,
 		Output: a.Output,
 		All:    a.All,
+		client: a.client,
 	}
 	if !a.Quiet {
 		fmt.Println("")
@@ -51,6 +55,7 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 	vol := &Volume{
 		Quiet:  a.Quiet,
 		Output: a.Output,
+		client: a.client,
 	}
 	if !a.Quiet {
 		fmt.Println("")
@@ -61,6 +66,7 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 	sec := &Secret{
 		Quiet:  a.Quiet,
 		Output: a.Output,
+		client: a.client,
 	}
 	if !a.Quiet {
 		fmt.Println("")
@@ -75,6 +81,7 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 			Quiet:  a.Quiet,
 			Output: a.Output,
 			All:    a.All,
+			client: a.client,
 		}
 		if !a.Quiet {
 			fmt.Println("")

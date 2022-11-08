@@ -23,8 +23,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func NewRun(out io.Writer) *cobra.Command {
-	cmd := cli.Command(&Run{out: out}, cobra.Command{
+func NewRun(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Run{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:          "run [flags] IMAGE|DIRECTORY [acorn args]",
 		SilenceUsage: true,
 		Short:        "Run an app from an image or Acornfile",
@@ -100,7 +100,8 @@ type Run struct {
 	Quiet             bool  `usage:"Do not print status" short:"q"`
 	Update            bool  `usage:"Update the app if it already exists" short:"u"`
 
-	out io.Writer
+	out    io.Writer
+	client client.ClientFactory
 }
 
 type RunArgs struct {
@@ -214,7 +215,7 @@ func buildImage(ctx context.Context, file, cwd string, args, profiles []string) 
 }
 
 func (s *Run) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

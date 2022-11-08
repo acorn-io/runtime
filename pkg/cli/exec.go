@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewExec() *cobra.Command {
-	cmd := cli.Command(&Exec{}, cobra.Command{
+func NewExec(c hclient.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Exec{client: c.ClientFactory}, cobra.Command{
 		Use:          "exec [flags] APP_NAME|CONTAINER_NAME CMD",
 		SilenceUsage: true,
 		Short:        "Run a command in a container",
@@ -31,6 +31,7 @@ type Exec struct {
 	TTY         bool   `usage:"Not used" short:"t"`
 	DebugImage  string `usage:"Use image as container root for command" short:"d"`
 	Container   string `usage:"Name of container to exec into" short:"c"`
+	client      hclient.ClientFactory
 }
 
 func (s *Exec) appAndArgs(ctx context.Context, c hclient.Client, args []string) (string, []string, error) {
@@ -146,7 +147,7 @@ func (s *Exec) execContainer(ctx context.Context, c hclient.Client, containerNam
 
 func (s *Exec) Run(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-	c, err := hclient.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

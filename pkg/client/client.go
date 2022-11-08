@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"net"
-
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
@@ -13,10 +11,24 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"k8s.io/client-go/rest"
+	"net"
+	"os"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
-func Default() (Client, error) {
+type CommandContext struct {
+	ClientFactory ClientFactory
+	StdOut        *os.File
+	StdErr        *os.File
+	StdIn         *strings.Reader
+}
+type ClientFactory interface {
+	CreateDefault() (Client, error)
+}
+type CmdClient struct{}
+
+func (c *CmdClient) CreateDefault() (Client, error) {
 	cfg, err := restconfig.Default()
 	if err != nil {
 		return nil, err
@@ -233,6 +245,8 @@ type Client interface {
 
 	GetNamespace() string
 	GetClient() kclient.WithWatch
+
+	PromptUser(obj string) error
 }
 
 type ImagePullOptions struct {

@@ -2,14 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/client"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewVolumeDelete() *cobra.Command {
-	cmd := cli.Command(&VolumeDelete{}, cobra.Command{
+func NewVolumeDelete(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&VolumeDelete{client: c.ClientFactory}, cobra.Command{
 		Use:          "rm [VOLUME_NAME...]",
 		Example:      `acorn volume rm my-volume`,
 		SilenceUsage: true,
@@ -18,10 +18,12 @@ func NewVolumeDelete() *cobra.Command {
 	return cmd
 }
 
-type VolumeDelete struct{}
+type VolumeDelete struct {
+	client client.ClientFactory
+}
 
 func (a *VolumeDelete) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

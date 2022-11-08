@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSecretCreate() *cobra.Command {
-	cmd := cli.Command(&SecretCreate{}, cobra.Command{
+func NewSecretCreate(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&SecretCreate{client: c.ClientFactory}, cobra.Command{
 		Use: "create [flags] SECRET_NAME",
 		Example: `
 # Create secret with specific keys
@@ -32,9 +32,10 @@ acorn secret create --data @key-name=secret.yaml my-secret`,
 }
 
 type SecretCreate struct {
-	Data []string `usage:"Secret data format key=value or @key=filename to read from file"`
-	File string   `usage:"File to read for entire secret in cue/yaml/json format"`
-	Type string   `usage:"Secret type"`
+	Data   []string `usage:"Secret data format key=value or @key=filename to read from file"`
+	File   string   `usage:"File to read for entire secret in cue/yaml/json format"`
+	Type   string   `usage:"Secret type"`
+	client client.ClientFactory
 }
 
 func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
@@ -83,7 +84,7 @@ func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
 }
 
 func (a *SecretCreate) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

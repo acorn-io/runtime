@@ -20,6 +20,10 @@ type IgnoreUninstalled struct {
 	client Client
 }
 
+func (c IgnoreUninstalled) PromptUser(obj string) error {
+	return c.client.PromptUser(obj)
+}
+
 type twoFunc[V any] func() (V, error)
 
 func promptInstall[V any](ctx context.Context, f twoFunc[V]) (V, error) {

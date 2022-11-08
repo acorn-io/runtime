@@ -1,0 +1,53 @@
+
+APPS:
+---
+metadata:
+  creationTimestamp: null
+  name: found
+spec:
+  secrets:
+  - secret: found.secret
+    target: found
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  columns: {}
+
+
+CONTAINERS:
+---
+metadata:
+  creationTimestamp: null
+  name: found.container
+spec:
+  appName: found
+status:
+  columns: {}
+  image: ""
+  imageID: ""
+  lastState: {}
+  ready: false
+  restartCount: 0
+  state: {}
+
+
+VOLUMES:
+---
+metadata:
+  creationTimestamp: null
+  name: found.volume
+spec: {}
+status:
+  appName: found
+  columns: {}
+  volumeName: found.volume
+
+
+SECRETS:
+---
+metadata:
+  creationTimestamp: null
+  name: found.secret
+

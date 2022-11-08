@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewLogs() *cobra.Command {
-	return cli.Command(&Logs{}, cobra.Command{
+func NewLogs(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Logs{client: c.ClientFactory}, cobra.Command{
 		Use:          "logs [flags] APP_NAME|CONTAINER_NAME",
 		SilenceUsage: true,
 		Short:        "Log all pods from app",
@@ -21,10 +21,11 @@ type Logs struct {
 	Follow bool   `short:"f" usage:"Follow log output"`
 	Since  string `short:"s" usage:"Show logs since timestamp (e.g. 42m for 42 minutes)"`
 	Tail   int64  `short:"n" usage:"Number of lines in log output"`
+	client client.ClientFactory
 }
 
 func (s *Logs) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

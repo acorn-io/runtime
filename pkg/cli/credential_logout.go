@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCredentialLogout(root bool) *cobra.Command {
-	c := cli.Command(&CredentialLogout{}, cobra.Command{
+func NewCredentialLogout(root bool, c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&CredentialLogout{client: c.ClientFactory}, cobra.Command{
 		Use:     "logout [flags] [SERVER_ADDRESS]",
 		Aliases: []string{"rm"},
 		Example: `
@@ -19,16 +19,17 @@ acorn logout ghcr.io`,
 		Args:         cobra.ExactArgs(1),
 	})
 	if root {
-		c.Aliases = nil
+		cmd.Aliases = nil
 	}
-	return c
+	return cmd
 }
 
 type CredentialLogout struct {
+	client client.ClientFactory
 }
 
 func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

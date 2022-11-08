@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewPull() *cobra.Command {
-	return cli.Command(&Pull{}, cobra.Command{
+func NewPull(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Pull{client: c.ClientFactory}, cobra.Command{
 		Use:          "pull [flags] IMAGE",
 		SilenceUsage: true,
 		Short:        "Pull an image from a remote registry",
@@ -17,10 +17,11 @@ func NewPull() *cobra.Command {
 }
 
 type Pull struct {
+	client client.ClientFactory
 }
 
 func (s *Pull) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

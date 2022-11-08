@@ -1,0 +1,20 @@
+
+APPS:
+NAME      IMAGE     HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE
+found                                      292y ago               
+
+CONTAINERS:
+NAME              APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE
+found.container                                 0              292y ago   
+
+VOLUMES:
+NAME           APP-NAME   BOUND-VOLUME   CAPACITY   STATUS    ACCESS-MODES   CREATED
+found.volume   found      found.volume   <nil>                               292y ago
+
+SECRETS:
+ALIAS         NAME           TYPE      KEYS      CREATED
+found.found   found.secret             []        292y ago
+
+IMAGES:
+REPOSITORY   TAG       IMAGE-ID
+testrepo     testtag   found-image1

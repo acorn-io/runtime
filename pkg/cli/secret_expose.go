@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSecretExpose() *cobra.Command {
-	cmd := cli.Command(&Expose{}, cobra.Command{
+func NewSecretExpose(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Expose{client: c.ClientFactory}, cobra.Command{
 		Use:     "expose [flags] [SECRET_NAME...]",
 		Aliases: []string{"secrets", "s"},
 		Example: `
@@ -26,6 +26,7 @@ acorn secret`,
 type Expose struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client client.ClientFactory
 }
 
 type exposeEntry struct {
@@ -36,7 +37,7 @@ type exposeEntry struct {
 }
 
 func (a *Expose) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

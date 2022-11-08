@@ -2,6 +2,7 @@ package cli
 
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/server"
 	"github.com/spf13/cobra"
 )
@@ -10,8 +11,8 @@ var (
 	apiServer = server.New()
 )
 
-func NewApiServer() *cobra.Command {
-	api := &APIServer{}
+func NewApiServer(c client.CommandContext) *cobra.Command {
+	api := &APIServer{client: c.ClientFactory}
 	cmd := cli.Command(api, cobra.Command{
 		Use:          "api-server [flags] [APP_NAME...]",
 		SilenceUsage: true,
@@ -23,6 +24,7 @@ func NewApiServer() *cobra.Command {
 }
 
 type APIServer struct {
+	client client.ClientFactory
 }
 
 func (a *APIServer) Run(cmd *cobra.Command, args []string) error {

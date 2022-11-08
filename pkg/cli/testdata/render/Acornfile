@@ -1,0 +1,7 @@
+// Acornfile
+containers: {
+	app1: {
+		image: "nginx"
+		ports: publish: "80/http"
+	}
+} 

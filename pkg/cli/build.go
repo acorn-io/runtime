@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func NewBuild() *cobra.Command {
-	cmd := cli.Command(&Build{}, cobra.Command{
+func NewBuild(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Build{client: c.ClientFactory}, cobra.Command{
 		Use: "build [flags] DIRECTORY",
 		Example: `
 # Build from Acornfile file in the local directory
@@ -33,14 +33,14 @@ type Build struct {
 	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
 	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
 	Profile  []string `usage:"Profile to assign default values"`
+	client   client.ClientFactory
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
 	if s.Push && (len(s.Tag) == 0 || s.Tag[0] == "") {
 		return fmt.Errorf("--push must be used with --tag")
 	}
-
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

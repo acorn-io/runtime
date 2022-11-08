@@ -1,0 +1,44 @@
+{
+    "client": {
+        "version": {
+            "tag": "v0.0.0-dev"
+        }
+    },
+    "server": {
+        "version": "",
+        "tag": "",
+        "gitCommit": "",
+        "dirty": false,
+        "controllerImage": "",
+        "config": {
+            "ingressClassName": null,
+            "clusterDomains": null,
+            "letsEncrypt": null,
+            "letsEncryptEmail": "",
+            "letsEncryptTOSAgree": null,
+            "setPodSecurityEnforceProfile": null,
+            "podSecurityEnforceProfile": "",
+            "defaultPublishMode": "",
+            "internalClusterDomain": "",
+            "acornDNS": null,
+            "acornDNSEndpoint": null,
+            "autoUpgradeInterval": null
+        },
+        "userConfig": {
+            "ingressClassName": null,
+            "clusterDomains": null,
+            "letsEncrypt": null,
+            "letsEncryptEmail": "",
+            "letsEncryptTOSAgree": null,
+            "setPodSecurityEnforceProfile": null,
+            "podSecurityEnforceProfile": "",
+            "defaultPublishMode": "",
+            "internalClusterDomain": "",
+            "acornDNS": null,
+            "acornDNSEndpoint": null,
+            "autoUpgradeInterval": null
+        }
+    },
+    "namespace": {}
+}
+

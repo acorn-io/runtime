@@ -1,0 +1,36 @@
+{
+  "containers": {
+    "app1": {
+      "labels": {},
+      "annotations": {},
+      "files": {},
+      "image": "nginx",
+      "entrypoint": [],
+      "ports": {
+        "internal": [],
+        "expose": [],
+        "publish": "80/http"
+      },
+      "sidecars": {},
+      "permissions": {
+        "rules": [],
+        "clusterRules": []
+      }
+    }
+  },
+  "args": {
+    "dev": false
+  },
+  "profiles": {
+    "dev": {
+      "dev": true
+    }
+  },
+  "jobs": {},
+  "images": {},
+  "volumes": {},
+  "secrets": {},
+  "routers": {},
+  "labels": {},
+  "annotations": {}
+}

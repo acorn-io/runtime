@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func NewUpdate(out io.Writer) *cobra.Command {
-	cmd := cli.Command(&Update{out: out}, cobra.Command{
+func NewUpdate(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:          "update [flags] APP_NAME [deploy flags]",
 		SilenceUsage: true,
 		Short:        "Update a deployed app",
@@ -32,11 +32,12 @@ type Update struct {
 	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
 	RunArgs
 
-	out io.Writer
+	out    io.Writer
+	client client.ClientFactory
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

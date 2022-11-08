@@ -3,6 +3,9 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/acorn-io/acorn/pkg/prompt"
+	"github.com/pterm/pterm"
 	"sort"
 	"strings"
 
@@ -437,6 +440,16 @@ func (c *client) appStop(ctx context.Context, name string) error {
 	if app.Spec.Stop == nil || !*app.Spec.Stop {
 		app.Spec.Stop = &[]bool{true}[0]
 		return c.Client.Update(ctx, app)
+	}
+	return nil
+}
+func (c *client) PromptUser(obj string) error {
+	msg := "Do you want to remove the above " + obj
+	if ok, err := prompt.Bool(msg, false); err != nil {
+		return err
+	} else if !ok {
+		pterm.Warning.Println("Aborting remove")
+		return fmt.Errorf("aborting remove")
 	}
 	return nil
 }
