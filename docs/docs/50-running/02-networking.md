@@ -22,7 +22,7 @@ To launch the Acorn app with all ports internal, you can launch with the `-P=fal
 
 ## Publish individual ports
 
-Publishing ports makes the services available outside of the cluster. HTTP ports will be exposed via the layer 7 ingress and TCP/UDP ports will be exposed via service load balancers. When specifying a port to publish without its protocol the protocol defined for it in the Acornfile will be used. If no protocol is defined in the Acornfile, the default will be tcp.
+Publishing ports makes the services available outside of the cluster. HTTP ports will be exposed via the layer 7 ingress and TCP/UDP ports will be exposed via service load balancers. When specifying a port to publish without its protocol, the protocol defined for it in the Acornfile will be used. If no protocol is defined in the Acornfile, the default will be tcp.
 
 | Flag value | Description |
 | ---------- | ----------- |
