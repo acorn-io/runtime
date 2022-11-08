@@ -35,6 +35,69 @@ volumes: {
 }
 ```
 
+## Volumes with subpaths
+
+Volume subpaths allow you to utilize the underlying file structure of a volume to reference specific parts within it. This is useful for times that we want to mount specific, but not all, parts of a volume to a container. For example, say that we have a volume, named `example-volume`, with the following content.
+
+```
+example-volume
+|- data-1
+   |- nested-data-1
+   |- nested-data-2
+|- data-2
+```
+
+In this example, we want to create a mount for the content found in `data-1` to a container. Without subpaths, our Acornfile would look something like this.
+
+```acorn
+containers: {
+    "my-app": {
+        image: "web"
+        // ...
+        dirs: {
+            "/data": "volume://example-volume"
+        }
+    }
+}
+```
+
+This makes the content of `example-volume` available to our container. If we wanted to access `data-1`, we can now do so under the `data-1` directory. However, this also comes along with the `data-2` directory that we don't care to have. We can solve this by using subpaths.
+
+```acorn
+containers: {
+    "my-app": {
+        image: "web"
+        // ...
+        dirs: {
+            "/data": "volume://example-volume?subpath=data-1"
+        }
+    }
+}
+```
+
+As a result, the only content mounted in our container from `example-volume` is `data-1`. We can take this a step further and have another container that has a mount for the `data-2` directory without bringing along `data-1`.
+
+```acorn
+containers: {
+    "my-app": {
+        image: "web"
+        // ...
+        dirs: {
+            "/data": "volume://example-volume?subpath=data-1"
+        }
+    }
+     "my-other-app": {
+        image: "web"
+        // ...
+        dirs: {
+            "/data": "volume://example-volume?subpath=data-2"
+        }
+    }
+}
+```
+
+By utilizing subpaths, we now have a single volume being utilized by two containers without collisions occuring between them. If you'd like to see another example of subpaths in action you can take a look at our [Getting Started](../37-getting-started.md) guide.
+
 ## Volumes with sidecars
 
 Sidecars can share volumes with the primary app container or have volumes for their exclusive use. In order to share data, a volume must be created and mounted in both containers.
