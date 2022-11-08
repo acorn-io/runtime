@@ -120,3 +120,49 @@ To highlight the level of control this gives you, consider the following:
 If you set your cluster domain to `my-company.com`, deployed into the default `acorn` namespace, named your app `blog`, and the container name in the Acornfile was `default`, the published endpoint for your app would be: `http://blog.my-company.com`
 
 In addition to this method of controlling your endpoint, you can publish to an explicit external name using the `--publish` flag. See the [publishing ports](#publish-individual-ports) section for more details.
+## Routers
+If you have two containers normally they would be exposed as two different HTTP services. The router feature allows you to expose these two containers as a single HTTP service with separate routes. Let's take a look at how we can achieve this below.
+
+Starting with a sample Acornfile that exposes two services
+```acorn
+containers: {
+        api: {
+                image: "nginx"
+                ports: publish: "80/http"
+        }
+        auth: {
+                image: "nginx"
+                ports: publish: "80/http"
+        }
+}
+```
+If you start this Acornfile with `acorn run` the generated output should look like
+```shell
+ STATUS: ENDPOINTS[http://api-wild-cloud-a6e8ab1cb5b0.local.on-acorn.io => api:80, http://auth-wild-cloud-aa56b1c98c71.local.on-acorn.io => auth:80] HEALTHY[2] UPTODATE[2] OK
+```
+Adding in the router to the Acornfile
+```acorn
+routers: myroute: {
+    routes: {
+        "/auth": "auth:80"
+        "/api": {
+            pathType: "exact"
+            targetServiceName: "api"
+            targetPort: 80
+        }
+    }
+}
+
+containers: auth: {
+    image: "nginx"
+    ports: "80/http"
+}
+
+containers: api: {
+    image: "nginx"
+    ports: "80/http"
+}
+```
+Results in an endpoint that now routes to both services through `/api` and `/auth`
+```shell
+| STATUS: ENDPOINTS[http://api-delicate-leaf-4ceee54b0305.local.on-acorn.io => api:80, http://auth-delicate-leaf-a6e05d96a0dd.local.on-acorn.io => auth:80, http://myroute-delicate-leaf-6633a4aeebf3.local.on-acorn.io => myroute:8080] HEALTHY[2] UPTODATE[2] OK |
