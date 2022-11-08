@@ -15,7 +15,7 @@ import (
 )
 
 func NewImage() *cobra.Command {
-	return cli.Command(&Image{}, cobra.Command{
+	cmd := cli.Command(&Image{}, cobra.Command{
 		Use:     "image [flags] [APP_NAME...]",
 		Aliases: []string{"images", "i"},
 		Example: `
@@ -24,6 +24,8 @@ acorn images`,
 		Short:        "List images",
 		Args:         cobra.MaximumNArgs(1),
 	})
+	cmd.AddCommand(NewImageDelete())
+	return cmd
 }
 
 type Image struct {

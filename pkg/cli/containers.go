@@ -11,7 +11,7 @@ import (
 )
 
 func NewContainer() *cobra.Command {
-	return cli.Command(&Container{}, cobra.Command{
+	cmd := cli.Command(&Container{}, cobra.Command{
 		Use:     "container [flags] [APP_NAME...]",
 		Aliases: []string{"containers", "c"},
 		Example: `
@@ -19,6 +19,8 @@ acorn containers`,
 		SilenceUsage: true,
 		Short:        "List or get running containers",
 	})
+	cmd.AddCommand(NewContainerDelete())
+	return cmd
 }
 
 type Container struct {
