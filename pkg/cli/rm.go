@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"fmt"
+	"github.com/pterm/pterm"
 	"strings"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
@@ -11,25 +11,31 @@ import (
 )
 
 func NewRm() *cobra.Command {
-	return cli.Command(&Rm{}, cobra.Command{
-		Use: "rm [flags] [APP_NAME|VOL_NAME...]",
+	cmd := cli.Command(&Rm{}, cobra.Command{
+		Use: "rm [flags] [APP_NAME...]",
 		Example: `
 acorn rm
-acorn rm -v some-volume`,
+acorn rm -t volume,container APP_NAME`,
 		SilenceUsage: true,
-		Short:        "Delete an app, container, or volume",
+		Short:        "Delete an app, container, secret or volume",
 	})
+	return cmd
 }
 
 type Rm struct {
-	Volumes    bool `usage:"Delete volumes" short:"v"`
-	Images     bool `usage:"Delete images/tags" short:"i"`
-	Secrets    bool `usage:"Delete secrets" short:"s"`
-	Containers bool `usage:"Delete apps/containers" short:"c"`
-	All        bool `usage:"Delete all types" short:"a"`
+	All   bool   `usage:"Delete all types" short:"a"`
+	Type  string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
+	Force bool   `usage:"Force Delete" short:"f"`
+}
+type RmObjects struct {
+	App       bool
+	Container bool
+	Secret    bool
+	Volume    bool
 }
 
 func (a *Rm) Run(cmd *cobra.Command, args []string) error {
+	var rmObjects RmObjects
 	cfg, err := restconfig.Default()
 	if err != nil {
 		return err
@@ -39,20 +45,23 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	// If nothing is set default to containers
-	if !(a.Images ||
-		a.Volumes ||
-		a.Secrets ||
-		a.Containers) {
-		a.Containers = true
+	if len(args) == 0 {
+		pterm.Error.Println("No AppName arg provided")
 	}
-
 	if a.All {
-		a.Volumes = true
-		a.Images = true
-		a.Containers = true
-		a.Secrets = true
+		rmObjects = RmObjects{
+			App:    true,
+			Secret: true,
+			Volume: true,
+		}
+	} else if a.Type != "" { // If nothing is set default to containers
+		for _, obj := range strings.Split(a.Type, ",") {
+			addRmObject(&rmObjects, obj)
+		}
+	} else {
+		rmObjects = RmObjects{
+			App: true,
+		}
 	}
 
 	for _, arg := range args {
@@ -65,59 +74,34 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			}
 			arg = name
 		}
-		if a.Volumes {
-			v, err := c.VolumeDelete(cmd.Context(), arg)
+		if rmObjects.App {
+			err := removeApp(arg, c, cmd, a.Force)
 			if err != nil {
-				return fmt.Errorf("deleting volume %s: %w", arg, err)
+				return err
 			}
-			if v != nil {
-				fmt.Println(arg)
-				continue
+			err = removeContainer(arg, c, cmd, a.Force)
+			if err != nil {
+				return err
 			}
 		}
-
-		if a.Images {
-			i, err := c.ImageDelete(cmd.Context(), arg)
+		if rmObjects.Container {
+			err := removeContainer(arg, c, cmd, a.Force)
 			if err != nil {
-				return fmt.Errorf("deleting image %s: %w", arg, err)
-			}
-			if i != nil {
-				fmt.Println(arg)
-				continue
+				return err
 			}
 		}
-
-		if a.Containers {
-			app, err := c.AppDelete(cmd.Context(), arg)
+		if rmObjects.Volume {
+			err := removeVolume(arg, c, cmd, a.Force)
 			if err != nil {
-				return fmt.Errorf("deleting app %s: %w", arg, err)
-			}
-			if app != nil {
-				fmt.Println(arg)
-				continue
-			}
-
-			replica, err := c.ContainerReplicaDelete(cmd.Context(), arg)
-			if err != nil {
-				return fmt.Errorf("deleting container %s: %w", arg, err)
-			}
-			if replica != nil {
-				fmt.Println(arg)
-				continue
+				return err
 			}
 		}
-
-		if a.Secrets {
-			secret, err := c.SecretDelete(cmd.Context(), arg)
+		if rmObjects.Secret {
+			err := removeSecret(arg, c, cmd, a.Force)
 			if err != nil {
-				return fmt.Errorf("deleting secret %s: %w", arg, err)
-			}
-			if secret != nil {
-				fmt.Println(arg)
-				continue
+				return err
 			}
 		}
 	}
-
 	return nil
 }
