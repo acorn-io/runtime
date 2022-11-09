@@ -23,9 +23,9 @@ acorn rm -t volume,container APP_NAME`,
 }
 
 type Rm struct {
-	All   bool   `usage:"Delete all types" short:"a"`
-	Type  string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
-	Force bool   `usage:"Force Delete" short:"f"`
+	All   bool     `usage:"Delete all types" short:"a"`
+	Type  []string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
+	Force bool     `usage:"Force Delete" short:"f"`
 }
 type RmObjects struct {
 	App       bool
@@ -54,8 +54,8 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			Secret: true,
 			Volume: true,
 		}
-	} else if a.Type != "" { // If nothing is set default to containers
-		for _, obj := range strings.Split(a.Type, ",") {
+	} else if len(a.Type) > 0 { // If nothing is set default to containers
+		for _, obj := range a.Type {
 			addRmObject(&rmObjects, obj)
 		}
 	} else {

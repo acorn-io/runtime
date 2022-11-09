@@ -79,12 +79,11 @@ func getContainersToDelete(arg string, client client.Client, cmd *cobra.Command)
 }
 func removeContainer(arg string, c client.Client, cmd *cobra.Command, f bool) error {
 	conToDel, err := getContainersToDelete(arg, c, cmd)
-
+	if len(conToDel) == 0 {
+		pterm.Info.Println("No containers associated with " + arg)
+		return nil
+	}
 	if !f {
-		if len(conToDel) == 0 {
-			pterm.Info.Println("No containers associated with " + arg)
-			return nil
-		}
 		for _, con := range conToDel {
 			pterm.FgRed.Println(con)
 		}
@@ -113,12 +112,11 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, f bool) error
 	if err != nil {
 		return err
 	}
-
+	if len(volToDel) == 0 {
+		pterm.Info.Println("No volumes associated with " + arg)
+		return nil
+	}
 	if !f {
-		if len(volToDel) == 0 {
-			pterm.Info.Println("No volumes associated with " + arg)
-			return nil
-		}
 		for _, vol := range volToDel {
 			pterm.FgRed.Println(vol)
 		}
@@ -169,11 +167,11 @@ func removeApp(arg string, c client.Client, cmd *cobra.Command, f bool) error {
 
 func removeSecret(arg string, c client.Client, cmd *cobra.Command, f bool) error {
 	secToDel, err := getSecretsToRemove(arg, c, cmd)
+	if len(secToDel) == 0 {
+		pterm.Info.Println("No secrets associated with " + arg)
+		return nil
+	}
 	if !f {
-		if len(secToDel) == 0 {
-			pterm.Info.Println("No secrets associated with " + arg)
-			return nil
-		}
 		for _, sec := range secToDel {
 			pterm.FgRed.Println(sec)
 		}
