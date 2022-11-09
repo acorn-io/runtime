@@ -110,21 +110,26 @@ acorn install
 
 Acorn can install onto any type of Kubernetes cluster capable of running normal workloads. The following are requirements and considerations for installing Acorn.
 
-### Privileges
+### Cluster Requirements
+#### Kubernetes version
+
+Acorn requires Kubernetes 1.23 or greater.
+
+#### Privileges
 
 You must have cluster admin privileges to install Acorn. See our [RBAC documentation](/architecture/security-considerations#rbac) for more details.
 
-### Ingress and Service LoadBalancers
+#### Ingress and Service LoadBalancers
 
 Acorn can publish your applications as publicly accessible endpoints.
 
 For this to work, your Kubernetes cluster must have an [ingress controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for HTTP endpoints and means for fulfilling [services of type LoadBalancer](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) for non-HTTP endpoints, such as TCP endpoints.
 
-### Storage
+#### Storage
 
 Acorn supports persistent storage through the use of volumes. For this to work, your Kubernetes cluster must have a [default storage class](https://kubernetes.io/docs/concepts/storage/storage-classes/).
 
-### Manual Install
+### YAML Based Install
 
 If you would like to see the generated objects prior to installing to your Kubernetes cluster run: 
 
