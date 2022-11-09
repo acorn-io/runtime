@@ -41,4 +41,5 @@ acorn images
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
+* [acorn image rm](acorn_image_rm.md)	 - Delete an Image
 

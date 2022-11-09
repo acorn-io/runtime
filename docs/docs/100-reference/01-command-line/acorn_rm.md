@@ -3,28 +3,27 @@ title: "acorn rm"
 ---
 ## acorn rm
 
-Delete an app, container, or volume
+Delete an app, container, secret or volume
 
 ```
-acorn rm [flags] [APP_NAME]
+acorn rm [flags] [APP_NAME...]
 ```
 
 ### Examples
 
 ```
 
-acorn rm APP_NAME
-acorn rm -t container,volume APP_NAME
+acorn rm
+acorn rm -t volume,container APP_NAME
 ```
 
 ### Options
 
 ```
-  -a, --all          Delete all types
-  -t, --type         Delete by type (container, volume, app, secret, or c, v, a, s)
-  -f, --force        Force Delete
-  -h, --help         help for rm
-  
+  -a, --all           Delete all types
+  -f, --force         Force Delete
+  -h, --help          help for rm
+  -t, --type string   Delete by type (container,app,volume,secret or c,a,v,s)
 ```
 
 ### Options inherited from parent commands

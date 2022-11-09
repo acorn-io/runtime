@@ -25,6 +25,7 @@ acorn container rm my-container
 ### Options inherited from parent commands
 
 ```
+  -a, --all                 Include stopped containers
   -A, --all-namespaces      Namespace to work in
       --context string      Context to use in the kubeconfig file
       --debug               Enable debug logging

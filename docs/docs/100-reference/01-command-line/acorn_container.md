@@ -39,4 +39,5 @@ acorn containers
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
+* [acorn container rm](acorn_container_rm.md)	 - Delete a container
 

@@ -3,10 +3,10 @@ title: "acorn volume rm"
 ---
 ## acorn volume rm
 
-Delete a secret
+Delete a volume
 
 ```
-acorn secret rm [VOLUME_NAME...] [flags]
+acorn volume rm [VOLUME_NAME...] [flags]
 ```
 
 ### Examples

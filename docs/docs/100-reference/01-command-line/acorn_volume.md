@@ -3,7 +3,7 @@ title: "acorn volume"
 ---
 ## acorn volume
 
-List or get volumes
+Manage volumes
 
 ```
 acorn volume [flags] [VOLUME_NAME...]
@@ -38,4 +38,5 @@ acorn volume
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
+* [acorn volume rm](acorn_volume_rm.md)	 - Delete a volume
 

@@ -43,7 +43,7 @@ acorn [flags]
 * [acorn pull](acorn_pull.md)	 - Pull an image from a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry
 * [acorn render](acorn_render.md)	 - Evaluate and display an Acornfile with args
-* [acorn rm](acorn_rm.md)	 - Delete an app, container, or volume
+* [acorn rm](acorn_rm.md)	 - Delete an app, container, secret or volume
 * [acorn run](acorn_run.md)	 - Run an app from an image or Acornfile
 * [acorn secret](acorn_secret.md)	 - Manage secrets
 * [acorn start](acorn_start.md)	 - Start an app
@@ -51,6 +51,6 @@ acorn [flags]
 * [acorn tag](acorn_tag.md)	 - Tag an image
 * [acorn uninstall](acorn_uninstall.md)	 - Uninstall acorn and associated resources
 * [acorn update](acorn_update.md)	 - Update a deployed app
-* [acorn volume](acorn_volume.md)	 - List or get volumes
+* [acorn volume](acorn_volume.md)	 - Manage volumes
 * [acorn wait](acorn_wait.md)	 - Wait an app to be ready then exit with status code 0
 
