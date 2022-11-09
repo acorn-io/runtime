@@ -3,7 +3,7 @@ title: "acorn image rm"
 ---
 ## acorn image rm
 
-Delete an image
+Delete an Image
 
 ```
 acorn image rm [IMAGE_NAME...] [flags]
