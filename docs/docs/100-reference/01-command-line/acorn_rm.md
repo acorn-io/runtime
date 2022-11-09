@@ -20,10 +20,10 @@ acorn rm -t volume,container APP_NAME
 ### Options
 
 ```
-  -a, --all           Delete all types
-  -f, --force         Force Delete
-  -h, --help          help for rm
-  -t, --type string   Delete by type (container,app,volume,secret or c,a,v,s)
+  -a, --all            Delete all types
+  -f, --force          Force Delete
+  -h, --help           help for rm
+  -t, --type strings   Delete by type (container,app,volume,secret or c,a,v,s)
 ```
 
 ### Options inherited from parent commands
