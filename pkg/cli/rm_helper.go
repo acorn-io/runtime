@@ -28,6 +28,8 @@ func addRmObject(rmObjects *RmObjects, obj string) {
 		rmObjects.Secret = true
 	case "v":
 		rmObjects.Volume = true
+	default:
+		pterm.Warning.Printf("%s is not a valid type\n", obj)
 	}
 }
 func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([]string, error) {
