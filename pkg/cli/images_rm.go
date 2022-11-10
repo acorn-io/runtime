@@ -10,9 +10,8 @@ import (
 
 func NewImageDelete() *cobra.Command {
 	cmd := cli.Command(&ImageDelete{}, cobra.Command{
-		Use: "rm [IMAGE_NAME...]",
-		Example: `
-acorn image rm my-image`,
+		Use:          "rm [IMAGE_NAME...]",
+		Example:      `acorn image rm my-image`,
 		SilenceUsage: true,
 		Short:        "Delete an Image",
 	})

@@ -10,9 +10,8 @@ import (
 
 func NewVolumeDelete() *cobra.Command {
 	cmd := cli.Command(&VolumeDelete{}, cobra.Command{
-		Use: "rm [VOLUME_NAME...]",
-		Example: `
-acorn volume rm my-volume`,
+		Use:          "rm [VOLUME_NAME...]",
+		Example:      `acorn volume rm my-volume`,
 		SilenceUsage: true,
 		Short:        "Delete a volume",
 	})

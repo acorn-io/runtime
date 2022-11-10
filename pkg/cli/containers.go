@@ -17,7 +17,7 @@ func NewContainer() *cobra.Command {
 		Example: `
 acorn containers`,
 		SilenceUsage: true,
-		Short:        "List or get running containers",
+		Short:        "Manage containers",
 	})
 	cmd.AddCommand(NewContainerDelete())
 	return cmd

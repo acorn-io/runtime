@@ -21,7 +21,7 @@ func NewImage() *cobra.Command {
 		Example: `
 acorn images`,
 		SilenceUsage: true,
-		Short:        "List images",
+		Short:        "Manage images",
 		Args:         cobra.MaximumNArgs(1),
 	})
 	cmd.AddCommand(NewImageDelete())
