@@ -39,5 +39,5 @@ acorn image rm my-image
 
 ### SEE ALSO
 
-* [acorn image](acorn_image.md)	 - List images
+* [acorn image](acorn_image.md)	 - Manage images
 

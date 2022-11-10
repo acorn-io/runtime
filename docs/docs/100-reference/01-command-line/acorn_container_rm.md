@@ -38,5 +38,5 @@ acorn container rm my-container
 
 ### SEE ALSO
 
-* [acorn container](acorn_container.md)	 - List or get running containers
+* [acorn container](acorn_container.md)	 - Manage containers
 

@@ -3,7 +3,7 @@ title: "acorn container"
 ---
 ## acorn container
 
-List or get running containers
+Manage containers
 
 ```
 acorn container [flags] [APP_NAME...]

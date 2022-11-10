@@ -3,7 +3,7 @@ title: "acorn image"
 ---
 ## acorn image
 
-List images
+Manage images
 
 ```
 acorn image [flags] [APP_NAME...]
