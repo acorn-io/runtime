@@ -31,10 +31,10 @@ acorn [flags]
 * [acorn app](acorn_app.md)	 - List or get apps
 * [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
 * [acorn check](acorn_check.md)	 - Check if the cluster is ready for Acorn
-* [acorn container](acorn_container.md)	 - List or get running containers
+* [acorn container](acorn_container.md)	 - Manage containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
-* [acorn image](acorn_image.md)	 - List images
+* [acorn image](acorn_image.md)	 - Manage images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
 * [acorn install](acorn_install.md)	 - Install and configure acorn in the cluster
 * [acorn login](acorn_login.md)	 - Add registry credentials

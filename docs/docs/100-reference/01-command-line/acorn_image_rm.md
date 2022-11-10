@@ -12,7 +12,6 @@ acorn image rm [IMAGE_NAME...] [flags]
 ### Examples
 
 ```
-
 acorn image rm my-image
 ```
 

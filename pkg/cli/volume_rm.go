@@ -19,8 +19,7 @@ acorn volume rm my-volume`,
 	return cmd
 }
 
-type VolumeDelete struct {
-}
+type VolumeDelete struct{}
 
 func (a *VolumeDelete) Run(cmd *cobra.Command, args []string) error {
 	client, err := client.Default()

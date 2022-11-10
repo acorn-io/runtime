@@ -12,7 +12,6 @@ acorn volume rm [VOLUME_NAME...] [flags]
 ### Examples
 
 ```
-
 acorn volume rm my-volume
 ```
 

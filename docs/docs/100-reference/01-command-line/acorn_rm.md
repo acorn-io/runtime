@@ -13,7 +13,7 @@ acorn rm [flags] [APP_NAME...]
 
 ```
 
-acorn rm
+acorn rm APP_NAME
 acorn rm -t volume,container APP_NAME
 ```
 

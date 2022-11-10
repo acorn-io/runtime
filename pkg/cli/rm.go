@@ -14,7 +14,7 @@ func NewRm() *cobra.Command {
 	cmd := cli.Command(&Rm{}, cobra.Command{
 		Use: "rm [flags] [APP_NAME...]",
 		Example: `
-acorn rm
+acorn rm APP_NAME
 acorn rm -t volume,container APP_NAME`,
 		SilenceUsage: true,
 		Short:        "Delete an app, container, secret or volume",
