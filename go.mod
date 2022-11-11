@@ -24,7 +24,7 @@ require (
 	github.com/containerd/containerd v1.6.9
 	github.com/go-acme/lego/v4 v4.9.0
 	github.com/google/go-cmp v0.5.9
-	github.com/google/go-containerregistry v0.12.0
+	github.com/google/go-containerregistry v0.12.1
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20221014154406-a0f66878d012
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
