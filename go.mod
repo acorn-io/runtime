@@ -9,7 +9,7 @@ replace (
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf
 	go.etcd.io/etcd/server/v3 v3.5.4 => github.com/acorn-io/etcd/server/v3 v3.5.4-ot-1
 	k8s.io/apiserver v0.25.2 => github.com/acorn-io/apiserver v0.25.2-ot-1
-	k8s.io/client-go => k8s.io/client-go v0.25.2
+	k8s.io/client-go => k8s.io/client-go v0.25.4
 	k8s.io/component-base v0.25.2 => github.com/acorn-io/component-base v0.25.2-ot-1
 )
 
@@ -45,16 +45,16 @@ require (
 	golang.org/x/exp v0.0.0-20221111094246-ab4555d3164f
 	golang.org/x/sync v0.1.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	k8s.io/api v0.25.2
-	k8s.io/apiextensions-apiserver v0.25.2
-	k8s.io/apimachinery v0.25.2
-	k8s.io/apiserver v0.25.2
+	k8s.io/api v0.25.4
+	k8s.io/apiextensions-apiserver v0.25.4
+	k8s.io/apimachinery v0.25.4
+	k8s.io/apiserver v0.25.4
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.80.1
-	k8s.io/kube-aggregator v0.25.2
+	k8s.io/kube-aggregator v0.25.4
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
-	k8s.io/kubectl v0.25.2
+	k8s.io/kubectl v0.25.4
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/controller-runtime v0.12.3
 	sigs.k8s.io/yaml v1.3.0
