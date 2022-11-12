@@ -16,7 +16,7 @@ var (
 	RegistryImage            = "registry:2.7.1"
 	NginxImage               = "nginx:1.23.1-alpine"
 	RegistryPort             = 5000
-	BuildkitImage            = "moby/buildkit:v0.10.3"
+	BuildkitImage            = "moby/buildkit:v0.10.6"
 	BuildKitName             = "buildkitd"
 	ControllerName           = "acorn-controller"
 	APIServerName            = "acorn-api"
