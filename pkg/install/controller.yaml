@@ -25,4 +25,6 @@ spec:
           image: ghcr.io/acorn-io/acorn
           args:
             - controller
+          securityContext:
+            runAsUser: 1000
       serviceAccountName: acorn-system

@@ -30,7 +30,13 @@ spec:
       serviceAccountName: acorn
       containers:
         - name: nginx
-          image: nginx:1.23.1-alpine
+          image: ghcr.io/acorn-io/acorn:main
+          command:
+            - /docker-entrypoint.sh
+          args:
+            - nginx
+            - -g
+            - daemon off;
           ports:
           - containerPort: 8080
             name: http

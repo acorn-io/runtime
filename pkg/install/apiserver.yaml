@@ -50,4 +50,6 @@ spec:
             - api-server
           ports:
             - containerPort: 7443
+          securityContext:
+            runAsUser: 1000
       serviceAccountName: acorn-system

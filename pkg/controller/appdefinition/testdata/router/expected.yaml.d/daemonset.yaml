@@ -32,7 +32,9 @@ spec:
         - name: DEST_PORT
           value: "80"
         - name: DEST_IPS
-        image: rancher/klipper-lb:v0.3.4
+        command:
+          - /usr/local/bin/klipper-lb
+        image: ghcr.io/acorn-io/acorn:main
         name: port-80
         ports:
         - containerPort: 80

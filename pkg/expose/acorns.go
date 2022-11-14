@@ -8,6 +8,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -99,8 +100,9 @@ func toRouterDeployment(serviceName string, app *v1.AppInstance, exposedPorts []
 		containerNames[name] = true
 
 		ds.Spec.Template.Spec.Containers = append(ds.Spec.Template.Spec.Containers, corev1.Container{
-			Name:  name,
-			Image: system.KlipperLBImage,
+			Name:    name,
+			Image:   install.DefaultImage(),
+			Command: []string{"/usr/local/bin/klipper-lb"},
 			SecurityContext: &corev1.SecurityContext{
 				Capabilities: &corev1.Capabilities{
 					Add: []corev1.Capability{

@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e -x
+
+if mount -t binfmt_misc none /proc/sys/fs/binfmt_misc; then
+    for i in /usr/bin/qemu-*; do
+        i=$(basename $i)
+        if [ -e /proc/sys/fs/binfmt_misc/$i ] && ! grep -q POCF /proc/sys/fs/binfmt_misc/$i; then
+            echo -1 > /proc/sys/fs/binfmt_misc/$i
+        fi
+    done
+
+    umount /proc/sys/fs/binfmt_misc
+
+    if [ -e /usr/bin/qemu-x86_64 ]; then
+        QEMU_PRESERVE_ARGV0=1 binfmt -install amd64
+    fi
+
+    if [ -e /usr/bin/qemu-aarch64 ]; then
+        QEMU_PRESERVE_ARGV0=1 binfmt -install arm64
+    fi
+fi
+
+exec /usr/local/bin/buildkitd "$@"
