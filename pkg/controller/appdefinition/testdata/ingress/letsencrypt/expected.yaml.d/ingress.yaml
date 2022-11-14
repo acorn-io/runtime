@@ -9,7 +9,7 @@ metadata:
     "acorn.io/service-name": "app1"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"app1-app-name-0239846da3fc.local.on-acorn.io":{"port":81,"service":"app1"},"ci1.acorn.not":{"port":81,"service":"app1"}}'
+    acorn.io/targets: '{"app1-app-name-04396c88dd5a.local.on-acorn.io":{"port":81,"service":"app1"},"ci1.acorn.not":{"port":81,"service":"app1"}}'
 spec:
   rules:
     - host: ci1.acorn.not
@@ -22,7 +22,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: app1-app-name-0239846da3fc.local.on-acorn.io
+    - host: app1-app-name-04396c88dd5a.local.on-acorn.io
       http:
         paths:
           - backend:
@@ -48,7 +48,7 @@ metadata:
     "acorn.io/service-name": "app2"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"app2-app-name-35d9abff6d43.local.on-acorn.io":{"port":81,"service":"app2"},"ci1.acorn.not":{"port":81,"service":"app2"}}'
+    acorn.io/targets: '{"app2-app-name-5aa0a7481ff4.local.on-acorn.io":{"port":81,"service":"app2"},"ci1.acorn.not":{"port":81,"service":"app2"}}'
 spec:
   rules:
     - host: ci1.acorn.not
@@ -61,7 +61,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: app2-app-name-35d9abff6d43.local.on-acorn.io
+    - host: app2-app-name-5aa0a7481ff4.local.on-acorn.io
       http:
         paths:
           - backend:
