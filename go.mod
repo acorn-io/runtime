@@ -42,7 +42,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.2.0
-	golang.org/x/exp v0.0.0-20221111094246-ab4555d3164f
+	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	golang.org/x/sync v0.1.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.25.2
