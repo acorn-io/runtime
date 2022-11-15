@@ -1,12 +1,12 @@
 args: {
 	// This is a string
-	str: string
+	str: "astring"
 
 	// This is a string with default
 	strDefault: string | *"hi"
 
 	// This is an int
-	i: int
+	i: 3
 
 	// This is a int with default
 	iDefault: int | *4
