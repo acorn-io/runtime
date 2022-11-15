@@ -21,7 +21,7 @@ require (
 	github.com/acorn-io/mink v0.0.0-20221102221115-be238dbdd92d
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/containerd/console v1.0.3
-	github.com/containerd/containerd v1.6.9
+	github.com/containerd/containerd v1.6.10
 	github.com/go-acme/lego/v4 v4.9.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.12.1
