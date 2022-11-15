@@ -35,6 +35,7 @@ func WithClientDialer(ctx context.Context, c client.Client) ([]remote.Option, er
 	}
 
 	return append(opts, remote.WithTransport(&http.Transport{
+		MaxIdleConns: -1,
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			n := net.Dialer{}
 			if strings.HasPrefix(addr, "127.0.0.") {
@@ -69,6 +70,7 @@ func WithServerDialer(ctx context.Context, c kclient.WithWatch) ([]remote.Option
 		}
 
 		return append(opts, remote.WithTransport(&http.Transport{
+			MaxIdleConns: -1,
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				n := net.Dialer{}
 				if strings.HasPrefix(addr, "127.0.0.") {
@@ -80,6 +82,7 @@ func WithServerDialer(ctx context.Context, c kclient.WithWatch) ([]remote.Option
 	}
 
 	return append(opts, remote.WithTransport(&http.Transport{
+		MaxIdleConns: -1,
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			n := net.Dialer{}
 			if strings.HasPrefix(addr, "127.0.0.") {
