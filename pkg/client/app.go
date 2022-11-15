@@ -76,6 +76,7 @@ func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOpti
 }
 
 func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+
 	app, err := c.AppGet(ctx, name)
 	if err != nil {
 		return nil, err
@@ -87,6 +88,21 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 
 	if opts.Image != "" {
 		app.Spec.Image = opts.Image
+	}
+
+	// Reset Mode (Not patch mode)
+	if opts.Reset {
+
+		o := opts.ToRun()
+
+		nApp := ToApp(app.Namespace, opts.Image, &o)
+
+		nApp.Name = app.Name
+		nApp.ObjectMeta.UID = app.ObjectMeta.UID
+		nApp.ObjectMeta.ResourceVersion = app.ObjectMeta.ResourceVersion
+
+		return nApp, nil
+
 	}
 
 	app.Labels = typed.Concat(app.Labels, appScoped(opts.Labels))

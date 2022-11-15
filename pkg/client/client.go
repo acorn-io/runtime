@@ -101,6 +101,7 @@ type AppUpdateOptions struct {
 	DevMode         *bool
 	Image           string
 	TargetNamespace string
+	Reset           bool // Reset is used to indicate whether the update should be a patch (reset=false: only change specified fields) or a full update (reset=true: reset unspecified fields to defaults)
 }
 
 type LogOptions apiv1.LogOptions
@@ -124,6 +125,24 @@ type AppRunOptions struct {
 
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 	return AppUpdateOptions{
+		Annotations:     a.Annotations,
+		Labels:          a.Labels,
+		PublishMode:     a.PublishMode,
+		Volumes:         a.Volumes,
+		Secrets:         a.Secrets,
+		Links:           a.Links,
+		Ports:           a.Ports,
+		DeployArgs:      a.DeployArgs,
+		DevMode:         a.DevMode,
+		Profiles:        a.Profiles,
+		Permissions:     a.Permissions,
+		Env:             a.Env,
+		TargetNamespace: a.TargetNamespace,
+	}
+}
+
+func (a AppUpdateOptions) ToRun() AppRunOptions {
+	return AppRunOptions{
 		Annotations:     a.Annotations,
 		Labels:          a.Labels,
 		PublishMode:     a.PublishMode,
