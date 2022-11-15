@@ -2,7 +2,7 @@
 
 FROM tonistiigi/binfmt:qemu-v6.2.0 AS binfmt
 FROM moby/buildkit:v0.10.6 AS buildkit
-FROM registry:2.7.1 AS registry
+FROM registry:2.8.1 AS registry
 FROM rancher/klipper-lb:v0.3.5 AS klipper-lb
 
 FROM golang:1.19-alpine AS helper
