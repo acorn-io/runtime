@@ -16,7 +16,7 @@ COPY / /src
 WORKDIR /src
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build make build
 
-FROM nginx:1.23.1-alpine AS base
+FROM nginx:1.23.2-alpine AS base
 RUN apk add --no-cache ca-certificates iptables ip6tables fuse3 git openssh pigz xz \
   && ln -s fusermount3 /usr/bin/fusermount
 RUN adduser -D acorn
