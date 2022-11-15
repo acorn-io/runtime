@@ -111,6 +111,7 @@ dockers:
       - "--platform=linux/amd64"
     extra_files:
       - scripts/ds-containerd-config-path-entry
+      - scripts/setup-binfmt
   - use: buildx
     goos: linux
     goarch: arm64
@@ -128,6 +129,7 @@ dockers:
       - "--platform=linux/arm64"
     extra_files:
       - scripts/ds-containerd-config-path-entry
+      - scripts/setup-binfmt
   - use: buildx
     goos: linux
     goarch: arm
@@ -146,6 +148,7 @@ dockers:
       - "--platform=linux/arm/v7"
     extra_files:
       - scripts/ds-containerd-config-path-entry
+      - scripts/setup-binfmt
 
 docker_manifests:
   - use: docker
