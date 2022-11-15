@@ -81,7 +81,7 @@ const config = {
           },
           {
             label: 'Users Slack',
-            to: 'https://slack.acorn.com',
+            to: 'https://slack.acorn.io',
           },
           {
             label: 'Twitter',
