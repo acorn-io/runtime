@@ -7,6 +7,10 @@ generate:
 image:
 	docker build .
 
+setup-ci-image:
+	docker build -t ghcr.io/acorn-io/acorn:main .
+	docker save ghcr.io/acorn-io/acorn:main | docker exec -i $$(docker ps | grep k3s | awk '{print $$1}') ctr --address /run/k3s/containerd/containerd.sock images import -
+
 validate:
 	golangci-lint run
 

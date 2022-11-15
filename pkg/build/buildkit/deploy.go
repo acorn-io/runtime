@@ -28,20 +28,15 @@ func Exists(ctx context.Context, c client.Client) (bool, error) {
 		return false, err
 	}
 
-	// check if the controller is running outside of a deployment
-	err = checkControllerDeployment(ctx, c)
-	if !apierror.IsNotFound(err) {
-		ds := &appsv1.DaemonSet{}
-		err1 := c.Get(ctx, client.ObjectKey{
-			Name:      system.ContainerdConfigPathName,
-			Namespace: system.Namespace,
-		}, ds)
-
-		if apierror.IsNotFound(err1) {
-			return false, nil
-		} else if err1 != nil {
-			return false, err1
-		}
+	ds := &appsv1.DaemonSet{}
+	err1 := c.Get(ctx, client.ObjectKey{
+		Name:      system.ContainerdConfigPathName,
+		Namespace: system.Namespace,
+	}, ds)
+	if apierror.IsNotFound(err1) {
+		return false, nil
+	} else if err1 != nil {
+		return false, err1
 	}
 
 	return true, nil

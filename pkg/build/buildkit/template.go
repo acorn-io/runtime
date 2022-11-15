@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -19,11 +19,6 @@ import (
 
 func GetRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	return getRegistryPort(ctx, c)
-}
-
-func checkControllerDeployment(ctx context.Context, c client.Reader) error {
-	var dep appsv1.Deployment
-	return c.Get(ctx, client.ObjectKey{Name: system.ControllerName, Namespace: system.Namespace}, &dep)
 }
 
 func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
@@ -81,35 +76,19 @@ func applyObjects(ctx context.Context) error {
 
 	err = apply.
 		WithOwnerSubContext("acorn-buildkitd").
-		Apply(ctx, nil, objects(system.Namespace, system.BuildkitImage, system.RegistryImage)...)
+		Apply(ctx, nil, objects(system.Namespace, install.DefaultImage(), install.DefaultImage())...)
 	if err != nil {
 		return err
 	}
 
-	// check if the controller is running outside of a deployment
-	err = checkControllerDeployment(ctx, c)
-	if !apierror.IsNotFound(err) {
-		registryNodePort, err := GetRegistryPort(ctx, c)
-		if err != nil {
-			return err
-		}
-
-		var dep appsv1.Deployment
-		err1 := c.Get(ctx, client.ObjectKey{Name: system.ControllerName, Namespace: system.Namespace}, &dep)
-		if err1 != nil {
-			return err
-		}
-
-		var image string = dep.Spec.Template.Spec.Containers[0].Image
-		err = apply.
-			WithOwnerSubContext("acorn-buildkitd").
-			Apply(ctx, nil, containerdConfigPathDaemonSet(system.Namespace, image, strconv.Itoa(registryNodePort))...)
-		if err != nil {
-			return err
-		}
+	registryNodePort, err := GetRegistryPort(ctx, c)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	return apply.
+		WithOwnerSubContext("acorn-buildkitd").
+		Apply(ctx, nil, containerdConfigPathDaemonSet(system.Namespace, install.DefaultImage(), strconv.Itoa(registryNodePort))...)
 }
 
 func objects(namespace, buildKitImage, registryImage string) []client.Object {
@@ -164,7 +143,8 @@ func objects(namespace, buildKitImage, registryImage string) []client.Object {
 										Value: "true",
 									},
 								},
-								Image: registryImage,
+								Image:   registryImage,
+								Command: []string{"/usr/local/bin/registry", "serve", "/etc/docker/registry/config.yml"},
 								LivenessProbe: &corev1.Probe{
 									ProbeHandler: corev1.ProbeHandler{
 										TCPSocket: &corev1.TCPSocketAction{
@@ -207,8 +187,9 @@ func objects(namespace, buildKitImage, registryImage string) []client.Object {
 								},
 							},
 							{
-								Name:  "buildkitd",
-								Image: buildKitImage,
+								Name:    "buildkitd",
+								Image:   buildKitImage,
+								Command: []string{"/usr/local/bin/setup-binfmt"},
 								Args: []string{
 									"--debug",
 									"--addr",
