@@ -1,25 +1,25 @@
 ---
-title: "acorn container rm"
+title: "acorn container kill"
 ---
-## acorn container rm
+## acorn container kill
 
 Delete a container
 
 ```
-acorn container rm [CONTAINER_NAME...] [flags]
+acorn container kill [CONTAINER_NAME...] [flags]
 ```
 
 ### Examples
 
 ```
 
-acorn container rm my-container
+acorn container kill app-name.containername-generated-hash
 ```
 
 ### Options
 
 ```
-  -h, --help   help for rm
+  -h, --help   help for kill
 ```
 
 ### Options inherited from parent commands
