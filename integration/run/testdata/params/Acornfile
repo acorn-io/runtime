@@ -7,6 +7,6 @@ containers: {
 		env: {
 			arg: "\(args.someInt)"
 		}
-		image: "nginx"
+		image: "public.ecr.aws/nginx/nginx:latest"
 	}
 }

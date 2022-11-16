@@ -1,2 +1,2 @@
-containers: nginx2: image: "nginx"
+containers: nginx2: image: "public.ecr.aws/nginx/nginx:latest"
 containers: nginx2: dirs: "/usr/share/www": "vol"

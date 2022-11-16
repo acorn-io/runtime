@@ -1,1 +1,1 @@
-FROM busybox
+FROM public.ecr.aws/docker/library/busybox:latest

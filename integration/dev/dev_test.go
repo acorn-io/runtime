@@ -21,10 +21,10 @@ const (
 containers: default: build: {}
 `
 	dockerfile1 = `
-FROM busybox
+FROM public.ecr.aws/docker/library/busybox:latest
 CMD ["echo", "hi"]`
 	dockerfile2 = `
-FROM busybox
+FROM public.ecr.aws/docker/library/busybox:latest
 CMD ["echo", "bye"]`
 )
 

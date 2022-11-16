@@ -1,2 +1,2 @@
-containers: default: image: "nginx"
+containers: default: image: "public.ecr.aws/nginx/nginx:latest"
 containers: default: dirs: "/usr/share/www": "vol"

@@ -128,6 +128,6 @@ func TestFriendlyNameInContainer(t *testing.T) {
 
 	_, img, _ := strings.Cut(image.ImageData.Containers["default"].Image, "@")
 	assert.Len(t, cs, 1)
-	assert.Equal(t, "nginx", cs[0].Spec.Image)
+	assert.Equal(t, "public.ecr.aws/nginx/nginx:latest", cs[0].Spec.Image)
 	assert.True(t, strings.HasSuffix(cs[0].Status.ImageID, img))
 }

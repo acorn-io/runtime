@@ -94,7 +94,7 @@ profiles: {
 
 containers: {
 	web: {
-		image: "nginx"
+		image: "public.ecr.aws/nginx/nginx:latest"
 		scale: args.replicas
 	}
 }`)
