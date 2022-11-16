@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch API",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
+            "args": ["api-server"], 
+        },
+        {
+            "name": "Launch Controller",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
+            "args": ["controller"], 
+        },
+        {
+            "name": "Run Acornfile",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
+            "args": ["run", "."],
+            "console": "integratedTerminal",
+        }
+    ]
+}
