@@ -13,9 +13,6 @@ builds:
     goarch:
       - amd64
       - arm64
-      - arm
-    goarm:
-      - "7"
     ignore:
       - goos: windows
         goarch: arm64
@@ -130,25 +127,6 @@ dockers:
     extra_files:
       - scripts/ds-containerd-config-path-entry
       - scripts/setup-binfmt
-  - use: buildx
-    goos: linux
-    goarch: arm
-    goarm: "7"
-    dockerfile: Dockerfile
-    image_templates:
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
-    build_flag_templates:
-      - "--target=goreleaser"
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
-      - "--platform=linux/arm/v7"
-    extra_files:
-      - scripts/ds-containerd-config-path-entry
-      - scripts/setup-binfmt
 
 docker_manifests:
   - use: docker
@@ -156,13 +134,11 @@ docker_manifests:
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
   - use: docker
     name_template: ghcr.io/acorn-io/acorn:latest
     image_templates:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-amd64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
-      - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
 
 docker_signs:
   - artifacts: all
