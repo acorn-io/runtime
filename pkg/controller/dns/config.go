@@ -6,6 +6,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/dns"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -96,17 +97,8 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	// Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
 	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
-		// Ensure that we have a Let's Encrypt account ready
-		leUser, err := ensureLEUser(req.Ctx, cfg, req.Client, domain)
-		if err != nil {
-			return err
-		}
-
-		// Generate wildcard certificate for domain
-		_, err = leUser.ensureWildcardCertificateSecret(req.Ctx, req.Client, *cfg.AcornDNSEndpoint, domain, token)
-		if err != nil {
+		if err := tls.ProvisionWildcardCert(req, domain, token); err != nil {
 			return err
 		}
 	}
