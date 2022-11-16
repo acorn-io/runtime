@@ -54,11 +54,11 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			Secret: true,
 			Volume: true,
 		}
-	} else if len(a.Type) > 0 { // If nothing is set default to containers
+	} else if len(a.Type) > 0 {
 		for _, obj := range a.Type {
 			addRmObject(&rmObjects, obj)
 		}
-	} else {
+	} else { // If nothing is set default to App
 		rmObjects = RmObjects{
 			App: true,
 		}

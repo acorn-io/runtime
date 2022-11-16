@@ -10,9 +10,9 @@ import (
 
 func NewContainerDelete() *cobra.Command {
 	cmd := cli.Command(&ContainerDelete{}, cobra.Command{
-		Use: "rm [CONTAINER_NAME...]",
+		Use: "kill [CONTAINER_NAME...]",
 		Example: `
-acorn container rm my-container`,
+acorn container kill app-name.containername-generated-hash`,
 		SilenceUsage: true,
 		Short:        "Delete a container",
 	})
@@ -29,15 +29,6 @@ func (a *ContainerDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, container := range args {
-		app, err := client.AppDelete(cmd.Context(), container)
-		if err != nil {
-			return fmt.Errorf("deleting app %s: %w", container, err)
-		}
-		if app != nil {
-			fmt.Println(container)
-			continue
-		}
-
 		replicaDelete, err := client.ContainerReplicaDelete(cmd.Context(), container)
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", container, err)

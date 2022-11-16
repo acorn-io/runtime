@@ -32,6 +32,7 @@ func addRmObject(rmObjects *RmObjects, obj string) {
 		pterm.Warning.Printf("%s is not a valid type\n", obj)
 	}
 }
+
 func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([]string, error) {
 	var result []string
 	secrets, err := client.SecretList(cmd.Context())
@@ -77,13 +78,13 @@ func getContainersToDelete(arg string, client client.Client, cmd *cobra.Command)
 	}
 	return result, nil
 }
-func removeContainer(arg string, c client.Client, cmd *cobra.Command, f bool) error {
+func removeContainer(arg string, c client.Client, cmd *cobra.Command, force bool) error {
 	conToDel, err := getContainersToDelete(arg, c, cmd)
 	if len(conToDel) == 0 {
 		pterm.Info.Println("No containers associated with " + arg)
 		return nil
 	}
-	if !f {
+	if !force {
 		for _, con := range conToDel {
 			pterm.FgRed.Println(con)
 		}
@@ -107,7 +108,7 @@ func removeContainer(arg string, c client.Client, cmd *cobra.Command, f bool) er
 	}
 	return nil
 }
-func removeVolume(arg string, c client.Client, cmd *cobra.Command, f bool) error {
+func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) error {
 	volToDel, err := getVolumesToDelete(arg, c, cmd)
 	if err != nil {
 		return err
@@ -116,7 +117,7 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, f bool) error
 		pterm.Info.Println("No volumes associated with " + arg)
 		return nil
 	}
-	if !f {
+	if !force {
 		for _, vol := range volToDel {
 			pterm.FgRed.Println(vol)
 		}
@@ -144,8 +145,8 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, f bool) error
 	}
 	return nil
 }
-func removeApp(arg string, c client.Client, cmd *cobra.Command, f bool) error {
-	if !f {
+func removeApp(arg string, c client.Client, cmd *cobra.Command, force bool) error {
+	if !force {
 		pterm.FgRed.Println(arg)
 		err := promptUser("app")
 		if err != nil {
@@ -165,13 +166,13 @@ func removeApp(arg string, c client.Client, cmd *cobra.Command, f bool) error {
 	return nil
 }
 
-func removeSecret(arg string, c client.Client, cmd *cobra.Command, f bool) error {
+func removeSecret(arg string, c client.Client, cmd *cobra.Command, force bool) error {
 	secToDel, err := getSecretsToRemove(arg, c, cmd)
 	if len(secToDel) == 0 {
 		pterm.Info.Println("No secrets associated with " + arg)
 		return nil
 	}
-	if !f {
+	if !force {
 		for _, sec := range secToDel {
 			pterm.FgRed.Println(sec)
 		}
