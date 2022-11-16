@@ -2,21 +2,21 @@
 
 FROM tonistiigi/binfmt:qemu-v6.2.0 AS binfmt
 FROM moby/buildkit:v0.10.6 AS buildkit
-FROM registry:2.8.1 AS registry
+FROM public.ecr.aws/docker/library/registry:2.8.1 AS registry
 FROM rancher/klipper-lb:v0.3.5 AS klipper-lb
 
-FROM golang:1.19-alpine AS helper
+FROM public.ecr.aws/docker/library/golang:1.19-alpine AS helper
 WORKDIR /usr/src
 RUN apk -U add curl
 RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v5.18.5.tar.gz | tar xvzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/acorn-helper -ldflags "-s -w" ./helper
 
-FROM golang:1.19 AS build
+FROM public.ecr.aws/docker/library/golang:1.19 AS build
 COPY / /src
 WORKDIR /src
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build make build
 
-FROM nginx:1.23.2-alpine AS base
+FROM public.ecr.aws/nginx/nginx:1.23.2-alpine AS base
 RUN apk add --no-cache ca-certificates iptables ip6tables fuse3 git openssh pigz xz \
   && ln -s fusermount3 /usr/bin/fusermount
 RUN adduser -D acorn

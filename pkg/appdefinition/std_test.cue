@@ -1,5 +1,5 @@
 containers: default: {
-	image: "nginx"
+	image: "public.ecr.aws/nginx/nginx:latest"
 	files: "a": std.toYAML(localData)
 }
 

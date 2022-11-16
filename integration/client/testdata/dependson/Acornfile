@@ -1,16 +1,16 @@
 containers: {
 	one: {
-		image: "nginx"
+		image: "public.ecr.aws/nginx/nginx:latest"
 		ports: "80/http"
 		dependsOn: ["job1", "job2"]
 	}
 	two: {
-		image: "nginx"
+		image: "public.ecr.aws/nginx/nginx:latest"
 		ports: "80/http"
 		dependsOn: "one"
 	}
 	three: {
-		image: "nginx"
+		image: "public.ecr.aws/nginx/nginx:latest"
 		ports: "80/http"
 		dependsOn: "two"
 	}
@@ -18,12 +18,12 @@ containers: {
 
 jobs: {
 	job1: {
-		image:"busybox"
+		image:"public.ecr.aws/docker/library/busybox:latest"
 		command: "/bin/true"
 		dependsOn: "job2"
 	}
 	job2: {
-		image:"busybox"
+		image:"public.ecr.aws/docker/library/busybox:latest"
 		command: "/bin/true"
 	}
 }

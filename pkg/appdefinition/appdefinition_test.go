@@ -145,7 +145,7 @@ containers: {
         build: {}
       }
       right: {
-        image: "nginx"
+        image: "public.ecr.aws/nginx/nginx:latest"
         dirs: "/var/tmp": "./foo/bar"
       }
     }
@@ -201,9 +201,9 @@ images: {
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["left"].Build.Dockerfile)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["left"].Build.Context)
 
-	assert.Equal(t, "nginx", buildSpec.Containers["file"].Sidecars["right"].Image)
+	assert.Equal(t, "public.ecr.aws/nginx/nginx:latest", buildSpec.Containers["file"].Sidecars["right"].Image)
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["right"].Build.Dockerfile)
-	assert.Equal(t, "nginx", buildSpec.Containers["file"].Sidecars["right"].Build.BaseImage)
+	assert.Equal(t, "public.ecr.aws/nginx/nginx:latest", buildSpec.Containers["file"].Sidecars["right"].Build.BaseImage)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["right"].Build.Context)
 	assert.Equal(t, "./foo/bar", buildSpec.Containers["file"].Sidecars["right"].Build.ContextDirs["/var/tmp"])
 

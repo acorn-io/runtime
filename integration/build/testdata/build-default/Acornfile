@@ -5,5 +5,5 @@ args: {
 profiles: build: include: bool | *true
 
 if args.include {
-	containers: default: image: "busybox"
+	containers: default: image: "public.ecr.aws/docker/library/busybox:latest"
 }
