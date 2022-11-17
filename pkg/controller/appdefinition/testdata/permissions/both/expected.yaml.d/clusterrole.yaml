@@ -6,6 +6,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+    acorn.io/job-name: oneimage
 rules:
 - apiGroups:
   - foo.io
@@ -13,7 +14,6 @@ rules:
   - bar
   verbs:
   - create
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -23,6 +23,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+    acorn.io/container-name: twoimage
 rules:
 - apiGroups:
   - foo.io

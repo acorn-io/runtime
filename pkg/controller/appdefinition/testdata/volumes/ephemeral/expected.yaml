@@ -40,7 +40,7 @@ spec:
       imagePullSecrets:
         - name: container-name-pull-1234567890ab
       terminationGracePeriodSeconds: 5
-      serviceAccountName: acorn
+      serviceAccountName: container-name
       enableServiceLinks: false
       volumes:
         - name: foo

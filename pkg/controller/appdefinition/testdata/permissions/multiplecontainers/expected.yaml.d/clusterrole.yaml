@@ -6,6 +6,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+    acorn.io/container-name: oneimage
 rules:
 - apiGroups:
   - foo.io
@@ -22,6 +23,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+    acorn.io/container-name: twoimage
 rules:
 - apiGroups:
   - foo.io

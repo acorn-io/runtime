@@ -6,6 +6,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+    acorn.io/job-name: oneimage
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -23,6 +24,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+    acorn.io/container-name: twoimage
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

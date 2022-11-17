@@ -32,7 +32,7 @@ spec:
       terminationGracePeriodSeconds: 5
       hostname: oneimage
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: oneimage
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
       containers:
@@ -86,7 +86,7 @@ spec:
       hostname: buildimage
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: buildimage
       imagePullSecrets:
         - name: buildimage-pull-1234567890ab
       containers:

@@ -52,7 +52,7 @@ spec:
       terminationGracePeriodSeconds: 5
       hostname: con1
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: con1
       imagePullSecrets:
         - name: con1-pull-1234567890ab
       containers:
