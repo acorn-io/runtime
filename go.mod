@@ -30,6 +30,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/loft-sh/devspace v1.1.1-0.20220513082635-025444ad7c56
+	github.com/mitchellh/hashstructure v1.1.0
 	github.com/moby/buildkit v0.10.6
 	github.com/moby/locker v1.0.1
 	github.com/opencontainers/image-spec v1.1.0-rc2

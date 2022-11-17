@@ -3,10 +3,12 @@ package appdefinition
 import (
 	"archive/tar"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	cue2 "cuelang.org/go/cue"
@@ -15,6 +17,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/schema"
+	"github.com/mitchellh/hashstructure"
 	"sigs.k8s.io/yaml"
 )
 
@@ -176,6 +179,33 @@ func (a *AppDefinition) JSON() (string, error) {
 	return string(data), err
 }
 
+var ErrBuildHashImgNotFound error = errors.New("no image found for given build hash")
+
+func FindImage(build *v1.Build, imageDatas []v1.ImagesData, originalImage string) (string, error) {
+
+	if build == nil {
+		build = &v1.Build{}
+	}
+	if build.BaseImage == "" {
+		build.BaseImage = originalImage
+	}
+
+	buildhash, err := hashstructure.Hash(build, nil)
+	if err != nil {
+		return "", err
+	}
+
+	hash := strconv.FormatUint(buildhash, 10)
+
+	for _, imageData := range imageDatas {
+		if img, ok := imageData[hash]; ok {
+			return img, nil
+		}
+	}
+	return "", fmt.Errorf("%w: %s", ErrBuildHashImgNotFound, hash)
+
+}
+
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	app, err := a.ctx.Value()
 	if err != nil {
@@ -200,37 +230,55 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		return nil, err
 	}
 
-	for _, imageData := range a.imageDatas {
-		for c, con := range imageData.Containers {
-			if conSpec, ok := spec.Containers[c]; ok {
-				conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-				spec.Containers[c] = conSpec
-			}
-			for s, con := range con.Sidecars {
-				if conSpec, ok := spec.Containers[c].Sidecars[s]; ok {
-					conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-					spec.Containers[c].Sidecars[s] = conSpec
-				}
-			}
+	// Containers + Container Sidecars
+	for conName, conSpec := range spec.Containers {
+		img, err := FindImage(conSpec.Build, a.imageDatas, conSpec.Image)
+		if err != nil && !errors.Is(err, ErrBuildHashImgNotFound) {
+			return nil, err
 		}
-		for c, con := range imageData.Jobs {
-			if conSpec, ok := spec.Jobs[c]; ok {
-				conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-				spec.Jobs[c] = conSpec
+
+		conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, img)
+		spec.Containers[conName] = conSpec
+
+		for sName, sSpec := range conSpec.Sidecars {
+			img, err := FindImage(sSpec.Build, a.imageDatas, sSpec.Image)
+			if err != nil && !errors.Is(err, ErrBuildHashImgNotFound) {
+				return nil, err
 			}
-			for s, con := range con.Sidecars {
-				if conSpec, ok := spec.Jobs[c].Sidecars[s]; ok {
-					conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-					spec.Jobs[c].Sidecars[s] = conSpec
-				}
-			}
+			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, img)
+			spec.Containers[conName].Sidecars[sName] = conSpec
 		}
-		for i, img := range imageData.Images {
-			if imgSpec, ok := spec.Images[i]; ok {
-				imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, img.Image)
-				spec.Images[i] = imgSpec
-			}
+	}
+
+	// Jobs + Job Sidecars
+	for conName, conSpec := range spec.Jobs {
+		img, err := FindImage(conSpec.Build, a.imageDatas, conSpec.Image)
+		if err != nil && !errors.Is(err, ErrBuildHashImgNotFound) {
+			return nil, err
 		}
+
+		conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, img)
+		spec.Jobs[conName] = conSpec
+
+		for sName, sSpec := range conSpec.Sidecars {
+			img, err := FindImage(sSpec.Build, a.imageDatas, sSpec.Image)
+			if err != nil && !errors.Is(err, ErrBuildHashImgNotFound) {
+				return nil, err
+			}
+			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, img)
+			spec.Containers[conName].Sidecars[sName] = conSpec
+		}
+	}
+
+	// Images
+	for conName, conSpec := range spec.Images {
+		img, err := FindImage(conSpec.Build, a.imageDatas, conSpec.Image)
+		if err != nil && !errors.Is(err, ErrBuildHashImgNotFound) {
+			return nil, err
+		}
+
+		conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, img)
+		spec.Images[conName] = conSpec
 	}
 
 	return spec, nil

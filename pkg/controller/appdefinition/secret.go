@@ -235,12 +235,12 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 
 		template = imageSecretRegexp.ReplaceAllStringFunc(template, func(t string) string {
 			groups := imageSecretRegexp.FindStringSubmatch(t)
-			digest, ok := appInstance.Status.AppImage.ImageData.Images[groups[1]]
+			digest, ok := appInstance.Status.AppImage.ImageData[groups[1]] // FIXME: does this still work with the switch from indexed-by-containername to indexed-by-buildhash?
 			if !ok {
 				return t
 			}
 
-			return resolveTag(tag, digest.Image)
+			return resolveTag(tag, digest)
 		})
 
 		secret.Data[entry.Key] = []byte(template)

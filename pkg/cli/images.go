@@ -6,6 +6,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -134,34 +135,39 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 		return imageContainers, err
 	}
 
-	imageData := imgDetails.AppImage.ImageData
-
-	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Containers)...)
-	imageContainers = append(imageContainers, newImageContainerList(image, imageData.Jobs)...)
+	imageContainers = append(imageContainers, newImageContainerList(image, imgDetails)...)
 
 	return imageContainers, nil
 }
 
-func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []imageContainer {
+func newImageContainerList(image apiv1.Image, imgDetails *client.ImageDetails) []imageContainer {
 	imageContainers := []imageContainer{}
 
-	for k, v := range containers {
+	for k, v := range imgDetails.AppSpec.Containers {
+		img, err := appdefinition.FindImage(v.Build, []v1.ImagesData{imgDetails.AppImage.ImageData}, "")
+		if err != nil {
+			continue
+		}
 		ImgContainer := imageContainer{
 			Repo:      image.Repository,
 			Tag:       image.Tag,
 			Container: k,
-			Digest:    v.Image,
+			Digest:    img,
 			ImageID:   image.Name,
 		}
 
 		imageContainers = append(imageContainers, ImgContainer)
 
-		for sidecar, img := range v.Sidecars {
+		for k, v := range v.Sidecars {
+			img, err := appdefinition.FindImage(v.Build, []v1.ImagesData{imgDetails.AppImage.ImageData}, "")
+			if err != nil {
+				continue
+			}
 			ic := imageContainer{
 				Repo:      image.Repository,
 				Tag:       image.Tag,
-				Container: sidecar,
-				Digest:    img.Image,
+				Container: k,
+				Digest:    img,
 				ImageID:   image.Name,
 			}
 			imageContainers = append(imageContainers, ic)

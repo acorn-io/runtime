@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -18,6 +19,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
 	imagename "github.com/google/go-containerregistry/pkg/name"
+	"github.com/mitchellh/hashstructure"
+	"github.com/sirupsen/logrus"
 )
 
 type Options struct {
@@ -138,11 +141,11 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
-	result := map[string]v1.ContainerData{}
+func buildContainers(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (v1.ImagesData, error) {
+	result := v1.ImagesData{}
 
 	for _, entry := range typed.Sorted(containers) {
-		key, container := entry.Key, entry.Value
+		container := entry.Value
 
 		if container.Image == "" && container.Build == nil {
 			return nil, fmt.Errorf("either image or build field must be set")
@@ -160,10 +163,17 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 			return nil, err
 		}
 
-		result[key] = v1.ContainerData{
-			Image:    id,
-			Sidecars: map[string]v1.ImageData{},
+		buildhash, err := hashstructure.Hash(container.Build, nil)
+		if err != nil {
+			return nil, err
 		}
+		hash := strconv.FormatUint(buildhash, 10)
+
+		if h, ok := result[hash]; ok {
+			logrus.Errorf("different image for same hash %s: existing '%s' vs new '%s'", hash, h, id)
+		}
+
+		result[hash] = id
 
 		var sidecarKeys []string
 		for k := range container.Sidecars {
@@ -172,7 +182,7 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 		sort.Strings(sidecarKeys)
 
 		for _, entry := range typed.Sorted(container.Sidecars) {
-			sidecarKey, sidecar := entry.Key, entry.Value
+			_, sidecar := entry.Key, entry.Value
 			if sidecar.Image != "" || sidecar.Build == nil {
 				// this is a copy, it's fine to modify it
 				if sidecar.Build == nil {
@@ -188,20 +198,29 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 			if err != nil {
 				return nil, err
 			}
-			result[key].Sidecars[sidecarKey] = v1.ImageData{
-				Image: id,
+			buildhash, err := hashstructure.Hash(sidecar.Build, nil)
+			if err != nil {
+				return nil, err
 			}
+
+			hash := strconv.FormatUint(buildhash, 10)
+
+			if h, ok := result[hash]; ok {
+				logrus.Errorf("different image for same hash %s: existing '%s' vs new '%s'", hash, h, id)
+			}
+
+			result[hash] = id
 		}
 	}
 
 	return result, nil
 }
 
-func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
-	result := map[string]v1.ImageData{}
+func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (v1.ImagesData, error) {
+	result := v1.ImagesData{}
 
 	for _, entry := range typed.Sorted(images) {
-		key, image := entry.Key, entry.Value
+		_, image := entry.Key, entry.Value
 		if image.Image != "" || image.Build == nil {
 			image.Build = &v1.Build{
 				BaseImage: image.Image,
@@ -213,9 +232,18 @@ func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, c
 			return nil, err
 		}
 
-		result[key] = v1.ImageData{
-			Image: id,
+		buildhash, err := hashstructure.Hash(image.Build, nil)
+		if err != nil {
+			return nil, err
 		}
+
+		hash := strconv.FormatUint(buildhash, 10)
+
+		if h, ok := result[hash]; ok {
+			logrus.Errorf("different image for same hash %s: existing '%s' vs new '%s'", hash, h, id)
+		}
+
+		result[hash] = id
 	}
 
 	return result, nil
@@ -223,27 +251,36 @@ func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, c
 
 func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
 	var (
-		err  error
-		data = v1.ImagesData{
-			Images: map[string]v1.ImageData{},
-		}
+		err                                error
+		data                               = v1.ImagesData{}
+		containerImages, jobImages, images v1.ImagesData
 	)
 
 	buildCache := &buildCache{}
 
-	data.Containers, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Containers)
+	containerImages, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Containers)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Jobs)
+	jobImages, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Jobs)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Images)
+	images, err = buildImages(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Images)
 	if err != nil {
 		return data, err
+	}
+
+	for k, v := range containerImages {
+		data[k] = v
+	}
+	for k, v := range jobImages {
+		data[k] = v
+	}
+	for k, v := range images {
+		data[k] = v
 	}
 
 	return data, nil

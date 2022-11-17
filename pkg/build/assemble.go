@@ -15,49 +15,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
-func digestOnlyImages(data map[string]v1.ImageData) (map[string]v1.ImageData, error) {
-	result := map[string]v1.ImageData{}
-	for k, v := range data {
-		t, err := name.NewDigest(v.Image)
-		if err != nil {
-			return result, fmt.Errorf("parsing %s: %w", v.Image, err)
-		}
-
-		result[k] = v1.ImageData{
-			Image: t.DigestStr(),
-		}
-	}
-	if len(result) == 0 {
-		return nil, nil
-	}
-	return result, nil
-}
-
-func digestOnlyContainers(data map[string]v1.ContainerData) (map[string]v1.ContainerData, error) {
-	result := map[string]v1.ContainerData{}
-	for k, v := range data {
-		t, err := name.NewDigest(v.Image)
-		if err != nil {
-			return result, fmt.Errorf("parsing %s: %w", v.Image, err)
-		}
-		sidecars, err := digestOnlyImages(v.Sidecars)
-		if err != nil {
-			return nil, err
-		}
-		result[k] = v1.ContainerData{
-			Image:    t.DigestStr(),
-			Sidecars: sidecars,
-		}
-	}
-	if len(result) == 0 {
-		return nil, nil
-	}
-	return result, nil
-}
-
-func images(data map[string]v1.ImageData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
+func images(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
 	for _, entry := range typed.Sorted(data) {
-		d, err := name.NewDigest(entry.Value.Image)
+		d, err := name.NewDigest(entry.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -70,64 +30,28 @@ func images(data map[string]v1.ImageData, opts []remote.Option) (result []ggcrv1
 	return
 }
 
-func containerImages(data map[string]v1.ContainerData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
-	for _, entry := range typed.Sorted(data) {
-		d, err := name.NewDigest(entry.Value.Image)
-		if err != nil {
-			return nil, err
-		}
-		img, err := remote.Index(d, opts...)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, img)
-
-		sidecarImages, err := images(entry.Value.Sidecars, opts)
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, sidecarImages...)
-	}
-
-	return
+func containerImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
+	return images(data, opts)
 }
 
-func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
-	result.Containers, err = digestOnlyContainers(imageData.Containers)
-	if err != nil {
-		return
-	}
+func digestOnly(imageData v1.ImagesData) (v1.ImagesData, error) {
+	result := v1.ImagesData{}
+	for k, v := range imageData {
+		t, err := name.NewDigest(v)
+		if err != nil {
+			return result, fmt.Errorf("parsing %s: %w", v, err)
+		}
 
-	result.Jobs, err = digestOnlyContainers(imageData.Jobs)
-	if err != nil {
-		return
+		result[k] = t.DigestStr()
 	}
-
-	result.Images, err = digestOnlyImages(imageData.Images)
-	return
+	if len(result) == 0 {
+		return nil, nil
+	}
+	return result, nil
 }
 
-func allImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
-	remoteImages, err := containerImages(data.Containers, opts)
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, remoteImages...)
-
-	remoteImages, err = containerImages(data.Jobs, opts)
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, remoteImages...)
-
-	remoteImages, err = images(data.Images, opts)
-	if err != nil {
-		return nil, err
-	}
-	result = append(result, remoteImages...)
-
-	return
+func allImages(data v1.ImagesData, opts []remote.Option) ([]ggcrv1.ImageIndex, error) {
+	return containerImages(data, opts)
 }
 
 func createAppManifest(ctx context.Context, c client.Client, ref string, data v1.ImagesData, fullDigest bool) (string, error) {
