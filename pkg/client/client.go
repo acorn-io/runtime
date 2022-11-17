@@ -101,7 +101,7 @@ type AppUpdateOptions struct {
 	DevMode         *bool
 	Image           string
 	TargetNamespace string
-	Reset           bool // Reset is used to indicate whether the update should be a patch (reset=false: only change specified fields) or a full update (reset=true: reset unspecified fields to defaults)
+	Replace         bool // Replace is used to indicate whether the update should be a patch (replace=false: only change specified fields) or a full update (replace=true: reset unspecified fields to defaults)
 }
 
 type LogOptions apiv1.LogOptions

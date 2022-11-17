@@ -264,7 +264,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 			Image:   image,
 			RunArgs: s.RunArgs,
 			out:     s.out,
-			Reset:   true,
+			Replace: true,
 		}
 		err := u.Run(cmd, append([]string{s.Name}, args...))
 		if err != nil {
