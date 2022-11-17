@@ -42,7 +42,7 @@ spec:
           imagePullSecrets:
             - name: oneimage-pull-1234567890ab
           restartPolicy: Never
-          serviceAccountName: acorn
+          serviceAccountName: oneimage
           enableServiceLinks: false
           terminationGracePeriodSeconds: 5
           containers:

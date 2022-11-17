@@ -1,0 +1,37 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/container-name: oneimage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: oneimage
+subjects:
+- kind: ServiceAccount
+  name: oneimage
+  namespace: app-created-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: twoimage
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/container-name: twoimage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: twoimage
+subjects:
+- kind: ServiceAccount
+  name: twoimage
+  namespace: app-created-namespace

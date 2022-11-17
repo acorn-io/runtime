@@ -193,8 +193,10 @@ func (in *AppInstanceSpec) DeepCopyInto(out *AppInstanceSpec) {
 	out.DeployArgs = in.DeployArgs.DeepCopy()
 	if in.Permissions != nil {
 		in, out := &in.Permissions, &out.Permissions
-		*out = new(Permissions)
-		(*in).DeepCopyInto(*out)
+		*out = make([]Permissions, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 

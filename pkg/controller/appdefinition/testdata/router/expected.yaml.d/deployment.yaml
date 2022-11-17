@@ -27,7 +27,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: router-name
       containers:
         - name: nginx
           image: ghcr.io/acorn-io/acorn:main

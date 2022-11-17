@@ -121,7 +121,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 							},
 						},
 					},
-					ServiceAccountName: "acorn",
+					ServiceAccountName: routerName,
 				},
 			},
 		},
@@ -141,6 +141,14 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 			},
 			Data: map[string]string{
 				"config": conf,
+			},
+		},
+		&corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        routerName,
+				Namespace:   appInstance.Status.Namespace,
+				Labels:      deploymentLabels,
+				Annotations: deploymentAnnotations,
 			},
 		},
 	}, nil

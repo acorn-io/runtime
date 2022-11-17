@@ -68,7 +68,7 @@ type AppInstanceSpec struct {
 	Links           []ServiceBinding `json:"services,omitempty"`
 	Ports           []PortBinding    `json:"ports,omitempty"`
 	DeployArgs      GenericMap       `json:"deployArgs,omitempty"`
-	Permissions     *Permissions     `json:"permissions,omitempty"`
+	Permissions     []Permissions    `json:"permissions,omitempty"`
 	ClusterName     string           `json:"clusterName,omitempty"`
 }
 

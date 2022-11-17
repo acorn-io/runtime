@@ -131,7 +131,7 @@ func translatePermissions(err error) error {
 		return err
 	}
 	if i := strings.Index(err.Error(), PrefixErrRulesNeeded); i != -1 {
-		perms := v1.Permissions{}
+		perms := []v1.Permissions{}
 		marshalErr := json.Unmarshal([]byte(err.Error()[i+len(PrefixErrRulesNeeded):]), &perms)
 		if marshalErr == nil {
 			return &ErrRulesNeeded{

@@ -30,7 +30,7 @@ spec:
         - name: oneimage-pull-1234567890ab
       enableServiceLinks: false
       hostname: oneimage
-      serviceAccountName: acorn
+      serviceAccountName: oneimage
       containers:
         - name: oneimage
           image: image-name

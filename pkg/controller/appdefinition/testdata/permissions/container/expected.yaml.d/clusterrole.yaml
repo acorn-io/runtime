@@ -1,17 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: acorn-app-name-app-namespace-1234567890ab
+  name: oneimage-app-name-app-namespace-1234567890ab
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
-    global: value
-    global2: value
-  annotations:
-    globala: value
-    global2a: value
-
+    acorn.io/container-name: oneimage
 rules:
 - apiGroups:
   - foo.io

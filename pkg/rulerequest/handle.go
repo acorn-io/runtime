@@ -17,10 +17,10 @@ import (
 func PromptRun(ctx context.Context, c client.Client, dangerous bool, image string, opts client.AppRunOptions) (*apiv1.App, error) {
 	app, err := c.AppRun(ctx, image, &opts)
 	if permErr := (*client.ErrRulesNeeded)(nil); errors.As(err, &permErr) {
-		if ok, promptErr := handleDangerous(dangerous, &permErr.Permissions); promptErr != nil {
+		if ok, promptErr := handleDangerous(dangerous, permErr.Permissions); promptErr != nil {
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 		} else if ok {
-			opts.Permissions = &permErr.Permissions
+			opts.Permissions = permErr.Permissions
 			app, err = c.AppRun(ctx, image, &opts)
 		}
 	}
@@ -30,20 +30,22 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 func PromptUpdate(ctx context.Context, c client.Client, dangerous bool, name string, opts client.AppUpdateOptions) (*apiv1.App, error) {
 	app, err := c.AppUpdate(ctx, name, &opts)
 	if permErr := (*client.ErrRulesNeeded)(nil); errors.As(err, &permErr) {
-		if ok, promptErr := handleDangerous(dangerous, &permErr.Permissions); promptErr != nil {
+		if ok, promptErr := handleDangerous(dangerous, permErr.Permissions); promptErr != nil {
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 		} else if ok {
-			opts.Permissions = &permErr.Permissions
+			opts.Permissions = permErr.Permissions
 			app, err = c.AppUpdate(ctx, name, &opts)
 		}
 	}
 	return app, err
 }
 
-func handleDangerous(dangerous bool, perms *v1.Permissions) (bool, error) {
+func handleDangerous(dangerous bool, perms []v1.Permissions) (bool, error) {
 	if dangerous {
 		return true, nil
 	}
+
+	requests := ToRuleRequests(perms)
 
 	pterm.Warning.Println(
 		`This application would like to request the following runtime permissions.
@@ -51,7 +53,6 @@ This could be VERY DANGEROUS to the cluster if you do not trust this
 application. If you are unsure say no.`)
 	pterm.Println()
 
-	requests := ToRuleRequests(perms)
 	writer := table.NewWriter(tables.RuleRequests, "", false, "")
 	for _, request := range requests {
 		writer.Write(request)

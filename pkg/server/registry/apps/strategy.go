@@ -69,7 +69,6 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 
 	if err := s.compareAndCheckPermissions(ctx, perms, params.Spec.Permissions); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
-		return
 	}
 
 	return result

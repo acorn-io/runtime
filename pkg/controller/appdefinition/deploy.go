@@ -63,7 +63,6 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	}
 
 	addNamespace(cfg, appInstance, resp)
-	addServiceAccount(appInstance, resp)
 	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
@@ -597,7 +596,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					Containers:                    containers,
 					InitContainers:                initContainers,
 					Volumes:                       volumes,
-					ServiceAccountName:            "acorn",
+					ServiceAccountName:            name,
 				},
 			},
 		},
@@ -627,7 +626,11 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, dep)
+		sa := toServiceAccount(dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance)
+		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
+			result = append(result, toPermissions(perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)...)
+		}
+		result = append(result, dep, sa)
 	}
 	return result, nil
 }

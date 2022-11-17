@@ -143,50 +143,60 @@ func (s *Strategy) checkRules(ctx context.Context, sar *authv1.SubjectAccessRevi
 	return merr.NewErrors(errs...)
 }
 
-func (s *Strategy) compareAndCheckPermissions(ctx context.Context, perms v1.Permissions, requestedPerms *v1.Permissions) error {
-	if len(perms.ClusterRules) == 0 && len(perms.Rules) == 0 {
+func (s *Strategy) compareAndCheckPermissions(ctx context.Context, perms []v1.Permissions, requestedPerms []v1.Permissions) error {
+	if len(perms) == 0 {
 		return nil
 	}
 
-	if !equality.Semantic.DeepEqual(perms.ClusterRules, requestedPerms.Get().ClusterRules) ||
-		!equality.Semantic.DeepEqual(perms.Rules, requestedPerms.Get().Rules) {
-		return &client.ErrRulesNeeded{
-			Permissions: perms,
+	permsError, errs := client.ErrRulesNeeded{Permissions: []v1.Permissions{}}, []error{}
+	for _, perm := range perms {
+		if len(perm.ClusterRules) == 0 && len(perm.Rules) == 0 {
+			continue
+		}
+
+		if specPerms := v1.FindPermission(perm.ServiceName, requestedPerms); !specPerms.HasRules() ||
+			!equality.Semantic.DeepEqual(perm.ClusterRules, specPerms.Get().ClusterRules) ||
+			!equality.Semantic.DeepEqual(perm.ClusterRules, specPerms.Get().ClusterRules) {
+			permsError.Permissions = append(permsError.Permissions, perm)
+			continue
+		}
+
+		user, ok := request.UserFrom(ctx)
+		if !ok {
+			return fmt.Errorf("failed to find active user to check current privileges")
+		}
+
+		sar := &authv1.SubjectAccessReview{
+			Spec: authv1.SubjectAccessReviewSpec{
+				User:   user.GetName(),
+				Groups: user.GetGroups(),
+				Extra:  map[string]authv1.ExtraValue{},
+				UID:    user.GetUID(),
+			},
+		}
+
+		for k, v := range user.GetExtra() {
+			sar.Spec.Extra[k] = v
+		}
+
+		if err := s.checkRules(ctx, sar, perm.ClusterRules, ""); err != nil {
+			errs = append(errs, err)
+		}
+
+		ns, _ := request.NamespaceFrom(ctx)
+		if err := s.checkRules(ctx, sar, perm.Rules, ns); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
-	user, ok := request.UserFrom(ctx)
-	if !ok {
-		return fmt.Errorf("failed to find active user to check current privileges")
-	}
-
-	sar := &authv1.SubjectAccessReview{
-		Spec: authv1.SubjectAccessReviewSpec{
-			User:   user.GetName(),
-			Groups: user.GetGroups(),
-			Extra:  map[string]authv1.ExtraValue{},
-			UID:    user.GetUID(),
-		},
-	}
-
-	for k, v := range user.GetExtra() {
-		sar.Spec.Extra[k] = v
-	}
-
-	var errs []error
-	if err := s.checkRules(ctx, sar, perms.ClusterRules, ""); err != nil {
-		errs = append(errs, err)
-	}
-
-	ns, _ := request.NamespaceFrom(ctx)
-	if err := s.checkRules(ctx, sar, perms.Rules, ns); err != nil {
-		errs = append(errs, err)
+	if len(permsError.Permissions) != 0 {
+		return &permsError
 	}
 
 	return merr.NewErrors(errs...)
 }
 
-func (s *Strategy) getPermissions(ctx context.Context, namespace, image string) (result v1.Permissions, _ error) {
+func (s *Strategy) getPermissions(ctx context.Context, namespace, image string) (result []v1.Permissions, _ error) {
 	details, err := s.clientFactory.Namespace(namespace).ImageDetails(ctx, image, nil)
 	if err != nil {
 		return result, err
@@ -196,16 +206,30 @@ func (s *Strategy) getPermissions(ctx context.Context, namespace, image string) 
 		return result, errors.New(details.ParseError)
 	}
 
-	for _, entry := range typed.Sorted(details.AppSpec.Containers) {
-		result.ClusterRules = append(result.ClusterRules, entry.Value.Permissions.Get().ClusterRules...)
-		result.Rules = append(result.Rules, entry.Value.Permissions.Get().Rules...)
-		for _, sidecar := range typed.Sorted(entry.Value.Sidecars) {
-			result.ClusterRules = append(result.ClusterRules, sidecar.Value.Permissions.Get().ClusterRules...)
-			result.Rules = append(result.Rules, sidecar.Value.Permissions.Get().Rules...)
-		}
-	}
+	result = append(result, buildPermissionsFrom(details.AppSpec.Containers)...)
+	result = append(result, buildPermissionsFrom(details.AppSpec.Jobs)...)
 
 	return result, nil
+}
+
+func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
+	permissions := []v1.Permissions{}
+	for _, entry := range typed.Sorted(containers) {
+		entryPermissions := v1.Permissions{
+			ServiceName:  entry.Key,
+			ClusterRules: entry.Value.Permissions.Get().ClusterRules,
+			Rules:        entry.Value.Permissions.Get().Rules,
+		}
+
+		for _, sidecar := range typed.Sorted(entry.Value.Sidecars) {
+			entryPermissions.ClusterRules = append(entryPermissions.ClusterRules, sidecar.Value.Permissions.Get().ClusterRules...)
+			entryPermissions.Rules = append(entryPermissions.Rules, sidecar.Value.Permissions.Get().Rules...)
+		}
+
+		permissions = append(permissions, entryPermissions)
+	}
+
+	return permissions
 }
 
 func (s *Strategy) resolveTag(ctx context.Context, namespace, image string) (string, error) {

@@ -30,7 +30,7 @@ spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       hostname: container-name
-      serviceAccountName: acorn
+      serviceAccountName: container-name
       imagePullSecrets:
         - name: container-name-pull-1234567890ab
       containers:
@@ -70,7 +70,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: web
       hostname: web
       imagePullSecrets:
         - name: web-pull-1234567890ab

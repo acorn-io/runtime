@@ -33,7 +33,7 @@ spec:
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: oneimage
       containers:
         - name: oneimage
           image: "image-name"
@@ -87,7 +87,7 @@ spec:
       imagePullSecrets:
         - name: buildimage-pull-1234567890ab
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: buildimage
       containers:
         - name: buildimage
           image: "sha256:build-image"

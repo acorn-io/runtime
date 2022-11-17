@@ -29,7 +29,11 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, job)
+		sa := toServiceAccount(job.GetName(), job.GetLabels(), job.GetAnnotations(), appInstance)
+		if perms := v1.FindPermission(job.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
+			result = append(result, toPermissions(perms, job.GetLabels(), job.GetAnnotations(), appInstance)...)
+		}
+		result = append(result, job, sa)
 	}
 	return result, nil
 }
@@ -75,7 +79,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Containers:                    setTerminationPath(containers),
 				InitContainers:                setTerminationPath(initContainers),
 				Volumes:                       volumes,
-				ServiceAccountName:            "acorn",
+				ServiceAccountName:            name,
 			},
 		},
 	}

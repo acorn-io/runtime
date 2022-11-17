@@ -96,7 +96,7 @@ type AppUpdateOptions struct {
 	Ports           []v1.PortBinding
 	Env             []v1.NameValue
 	Profiles        []string
-	Permissions     *v1.Permissions
+	Permissions     []v1.Permissions
 	DeployArgs      map[string]any
 	DevMode         *bool
 	Image           string
@@ -119,7 +119,7 @@ type AppRunOptions struct {
 	TargetNamespace string
 	DeployArgs      map[string]any
 	DevMode         *bool
-	Permissions     *v1.Permissions
+	Permissions     []v1.Permissions
 }
 
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {

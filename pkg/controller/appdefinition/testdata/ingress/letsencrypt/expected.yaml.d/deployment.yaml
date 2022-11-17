@@ -29,7 +29,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: app1
       hostname: app1
       imagePullSecrets:
         - name: app1-pull-1234567890ab
@@ -74,7 +74,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      serviceAccountName: acorn
+      serviceAccountName: app2
       hostname: app2
       imagePullSecrets:
         - name: app2-pull-1234567890ab

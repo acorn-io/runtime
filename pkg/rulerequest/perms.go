@@ -7,25 +7,28 @@ import (
 )
 
 type RuleRequest struct {
+	Service  string
 	Scope    string
 	Verbs    string
 	Resource string
 }
 
-func ToRuleRequests(perm *v1.Permissions) (result []RuleRequest) {
-	result = append(result, rulesToRequests(perm.ClusterRules, "cluster")...)
-	result = append(result, rulesToRequests(perm.Rules, "app")...)
-	return
-}
-
-func rulesToRequests(rules []v1.PolicyRule, scope string) (result []RuleRequest) {
-	for _, rule := range rules {
-		result = append(result, ruleToRequests(rule, scope)...)
+func ToRuleRequests(perms []v1.Permissions) (result []RuleRequest) {
+	for _, perm := range perms {
+		result = append(result, rulesToRequests(perm.ServiceName, perm.ClusterRules, "cluster")...)
+		result = append(result, rulesToRequests(perm.ServiceName, perm.Rules, "app")...)
 	}
 	return
 }
 
-func ruleToRequests(rule v1.PolicyRule, scope string) (result []RuleRequest) {
+func rulesToRequests(serviceName string, rules []v1.PolicyRule, scope string) (result []RuleRequest) {
+	for _, rule := range rules {
+		result = append(result, ruleToRequests(serviceName, rule, scope)...)
+	}
+	return
+}
+
+func ruleToRequests(serviceName string, rule v1.PolicyRule, scope string) (result []RuleRequest) {
 	verbs := strings.Join(rule.Verbs, ",")
 
 	if len(rule.NonResourceURLs) > 0 {
@@ -47,6 +50,7 @@ func ruleToRequests(rule v1.PolicyRule, scope string) (result []RuleRequest) {
 
 			if len(rule.ResourceNames) == 0 {
 				result = append(result, RuleRequest{
+					Service:  serviceName,
 					Scope:    scope,
 					Resource: resource,
 					Verbs:    verbs,
@@ -54,6 +58,7 @@ func ruleToRequests(rule v1.PolicyRule, scope string) (result []RuleRequest) {
 			} else {
 				for _, resourceName := range rule.ResourceNames {
 					result = append(result, RuleRequest{
+						Service:  serviceName,
 						Scope:    scope,
 						Resource: resource + "/" + resourceName,
 						Verbs:    verbs,
