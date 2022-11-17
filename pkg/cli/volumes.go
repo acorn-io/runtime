@@ -17,8 +17,9 @@ func NewVolume() *cobra.Command {
 		Example: `
 acorn volume`,
 		SilenceUsage: true,
-		Short:        "List or get volumes",
+		Short:        "Manage volumes",
 	})
+	cmd.AddCommand(NewVolumeDelete())
 	return cmd
 }
 

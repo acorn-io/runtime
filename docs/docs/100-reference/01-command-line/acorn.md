@@ -31,10 +31,10 @@ acorn [flags]
 * [acorn app](acorn_app.md)	 - List or get apps
 * [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
 * [acorn check](acorn_check.md)	 - Check if the cluster is ready for Acorn
-* [acorn container](acorn_container.md)	 - List or get running containers
+* [acorn container](acorn_container.md)	 - Manage containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
-* [acorn image](acorn_image.md)	 - List images
+* [acorn image](acorn_image.md)	 - Manage images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
 * [acorn install](acorn_install.md)	 - Install and configure acorn in the cluster
 * [acorn login](acorn_login.md)	 - Add registry credentials
@@ -43,7 +43,7 @@ acorn [flags]
 * [acorn pull](acorn_pull.md)	 - Pull an image from a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry
 * [acorn render](acorn_render.md)	 - Evaluate and display an Acornfile with args
-* [acorn rm](acorn_rm.md)	 - Delete an app, container, or volume
+* [acorn rm](acorn_rm.md)	 - Delete an app, container, secret or volume
 * [acorn run](acorn_run.md)	 - Run an app from an image or Acornfile
 * [acorn secret](acorn_secret.md)	 - Manage secrets
 * [acorn start](acorn_start.md)	 - Start an app
@@ -51,6 +51,6 @@ acorn [flags]
 * [acorn tag](acorn_tag.md)	 - Tag an image
 * [acorn uninstall](acorn_uninstall.md)	 - Uninstall acorn and associated resources
 * [acorn update](acorn_update.md)	 - Update a deployed app
-* [acorn volume](acorn_volume.md)	 - List or get volumes
+* [acorn volume](acorn_volume.md)	 - Manage volumes
 * [acorn wait](acorn_wait.md)	 - Wait an app to be ready then exit with status code 0
 

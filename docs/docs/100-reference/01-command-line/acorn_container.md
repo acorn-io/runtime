@@ -3,7 +3,7 @@ title: "acorn container"
 ---
 ## acorn container
 
-List or get running containers
+Manage containers
 
 ```
 acorn container [flags] [APP_NAME...]
@@ -39,4 +39,5 @@ acorn containers
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
+* [acorn container kill](acorn_container_kill.md)	 - Delete a container
 

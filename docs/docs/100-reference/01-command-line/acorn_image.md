@@ -3,7 +3,7 @@ title: "acorn image"
 ---
 ## acorn image
 
-List images
+Manage images
 
 ```
 acorn image [flags] [APP_NAME...]
@@ -41,4 +41,5 @@ acorn images
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
+* [acorn image rm](acorn_image_rm.md)	 - Delete an Image
 

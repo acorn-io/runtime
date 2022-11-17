@@ -35,6 +35,8 @@ func (a *SecretDelete) Run(cmd *cobra.Command, args []string) error {
 		}
 		if deleted != nil {
 			fmt.Println(secret)
+		} else {
+			fmt.Printf("Error: No such secret: %s\n", secret)
 		}
 	}
 
