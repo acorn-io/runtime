@@ -401,6 +401,50 @@ containers: web: {
 }
 ```
 
+### permissions
+
+`permissions` allow you to define what resources the container can interact with on-cluster and what it can do with them.
+
+```acorn
+containers: web: {
+    image: "nginx"
+    permissions: {
+		// These are permissions that will only be granted for this container in its namespace.
+		rules: [{
+			// Configure what actions you can do on the defined resources
+			verbs: [
+				"get", 
+				"list", 
+				"watch",
+				"create", 
+			]
+			// Define what API group the resources belong to
+			apiGroups: [
+				"api.sample.io"
+			]
+			// Configure which resources in the above apiGroups to apply the above verbs to
+			resources: [
+				"fooresource"
+			]
+		}]
+		// These are permissions that will be granted for this container in all namespaces.
+		clusterrules: [{
+			verbs: [
+				"get", 
+				"list", 
+				"watch",
+			]
+			apiGroups: [
+				"api.sample.io"
+			]
+			resources: [
+				"fooresource"
+			]
+		}]
+    }
+}
+```
+
 ## jobs
 `jobs` are containers that are run once to completion. If the configuration of the job changes, the will
 be ran once again.  All fields that apply to [containers](#containers) also apply to
