@@ -24,10 +24,6 @@ If you add this flag, you'll be prompted during install to agree to Let's Encryp
 acorn install --lets-encrypt enabled --lets-encrypt-tos-agree=true --lets-encrypt-email <your email>
 ```
 
-:::note
-This feature currently only secures acorn-generated endpoints. If you are configuring custom endpoints for your acorn apps, see our [section on configuring TLS Certificates](/running/certificates). 
-:::
-
 :::info
 Let's Encrypt integration is only useful if you are running a non-local Kubernetes cluster. If you are running acorn on a local cluster such as Docker Desktop, Rancher Desktop, or minikube, enabling Let's Encrypt will have no effect. We don't issue certificates for the `.local.on-acorn.io` domains that are used in this scenario.
 :::
