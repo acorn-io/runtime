@@ -1,5 +1,5 @@
 ---
-title: Upgrades
+title: Manual Upgrades
 ---
 
 When upgrading an Acorn app, you do not need to pass in all arguments on every update. The args are persisted between runs and only the passed in updates are changed.

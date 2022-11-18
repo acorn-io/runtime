@@ -2,14 +2,12 @@
 title: TLS Certificates
 ---
 
-Applications that publish HTTP endpoints can be protected by TLS certificates. This page describes the process for securing custom endpoints. Acorn-generated endpoints (ones ending in `on-acorn.io`) can be automatically secured via our [Let's Encrypt integration](/installation/options#tls-via-lets-encrypt). In the future, Acorn will provide a similar mechanism to secure custom endpoints as well, but for now custom endpoints require the following approach.
+Applications that publish HTTP endpoints can be protected by TLS certificates.  If you've enabled Acorn's [Let's Encrypt integration](/installation/options#tls-via-lets-encrypt), a valid certificate will be provisioned for your app's endpoints. This applies to on-acorn.io generated endpoints and custom endpoints configured using the [publish flag](/running/networking#publish-individual-ports).
 
 ## Manually adding certificates
+If you don't wish to use Acorn's Let's Encrypt integration, you can configure certificates manually or by integrating with cert-manager. Acorn will automatically look for SANs in secrets of type `kubernetes.io/tls` for the exposed FQDN of the application in the Acorn namespace.
 
-Acorn will automatically look for SANs in secrets of type `kubernetes.io/tls` for the
-exposed FQDN of the application in the Acorn namespace.
-
-Assume you are deploying an app and plan to host on `my-app.example.com`
+The following examples assume you are deploying an app and plan to host on `my-app.example.com`
 
 ### Add existing certificates using kubectl
 
