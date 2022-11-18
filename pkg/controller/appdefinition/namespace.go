@@ -49,7 +49,7 @@ func ensureNamespaceOwned(req router.Request, appInstance *v1.AppInstance) error
 	if ns.Labels[labels.AcornAppNamespace] != appInstance.Namespace ||
 		ns.Labels[labels.AcornAppName] != appInstance.Name {
 		err := fmt.Errorf("can not use namespace %s, existing namespace must have labels "+
-			"acorn.io/app-namespace"+" and acorn.io/app-name (Apply Using: kubectl label namespaces %s acorn.io/app-name=%s "+
+			"acorn.io/app-namespace"+" and acorn.io/app-name (Apply Using: kubectl label namespaces %s acorn.io/app-name=%s; "+
 			"kubectl label namespaces %s acorn.io/app-namespace=acorn) "+
 			"Namespace will be deleted when the app is deleted",
 			appInstance.Spec.TargetNamespace, appInstance.Spec.TargetNamespace, appInstance.Name,
