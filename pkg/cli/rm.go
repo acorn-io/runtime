@@ -79,7 +79,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			err = removeContainer(arg, c, cmd, a.Force)
+			err = removeContainer(arg, c, cmd, true)
 			if err != nil {
 				return err
 			}
