@@ -25,7 +25,8 @@ func NewUpdate(out io.Writer) *cobra.Command {
 }
 
 type Update struct {
-	Image string `json:"image,omitempty"`
+	Image   string `json:"image,omitempty"`
+	Replace bool   `usage:"Toggle replacing update, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
 	RunArgs
 
 	out io.Writer
@@ -68,6 +69,9 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	opts := runOpts.ToUpdate()
 	opts.Image = image
 	opts.DeployArgs = deployParams
+
+	// Overwrite == true means patchMode == false
+	opts.Replace = s.Replace
 
 	if s.Output != "" {
 		app, err := client.ToAppUpdate(cmd.Context(), c, name, &opts)

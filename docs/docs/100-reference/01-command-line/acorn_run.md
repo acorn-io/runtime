@@ -68,6 +68,7 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
   -q, --quiet                     Do not print status
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
       --target-namespace string   The name of the namespace to be created and deleted for the application resources
+  -u, --update                    Update the app if it already exists
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
       --wait                      Wait for app to become ready before command exiting (default true)
 ```

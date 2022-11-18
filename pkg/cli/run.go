@@ -19,6 +19,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/wait"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -73,6 +74,7 @@ type Run struct {
 	BidirectionalSync bool  `usage:"In interactive mode download changes in addition to uploading" short:"b"`
 	Wait              *bool `usage:"Wait for app to become ready before command exiting (default true)"`
 	Quiet             bool  `usage:"Do not print status" short:"q"`
+	Update            bool  `usage:"Update the app if it already exists" short:"u"`
 
 	out io.Writer
 }
@@ -193,6 +195,26 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Update mode -> early exits on invalid combinations
+	if s.Update {
+		if s.Interactive {
+			return fmt.Errorf("cannot use --update/-u with --dev/-i")
+		}
+		if s.Name == "" {
+			return fmt.Errorf("--name/-n NAME is required when updating an app")
+		}
+
+		// unset update mode if app does not exist
+		_, err := c.AppGet(cmd.Context(), s.Name)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				s.Update = false
+			} else {
+				return err
+			}
+		}
+	}
+
 	opts, err := s.ToOpts()
 	if err != nil {
 		return err
@@ -234,6 +256,22 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 			return nil
 		} else if err != nil {
 			return err
+		}
+	}
+
+	if s.Update {
+		u := Update{
+			Image:   image,
+			RunArgs: s.RunArgs,
+			out:     s.out,
+			Replace: true,
+		}
+		err := u.Run(cmd, append([]string{s.Name}, args...))
+		if err != nil {
+			return err
+		}
+		if s.Wait == nil || *s.Wait {
+			return wait.App(cmd.Context(), c, s.Name, s.Quiet)
 		}
 	}
 
