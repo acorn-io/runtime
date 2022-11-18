@@ -21,7 +21,30 @@ webapp-556947c87d-gt97r   1/1     Running   0          3m54s
 ```
 :::caution
 When the app is removed the namespace will also be deleted.
+:::
 
 ## Service Accounts
 
-All Kubernetes deployments launched as part of an Acorn will have a service account attached named "acorn"
+All Kubernetes deployments or jobs launched by Acorn will have a service account attached based on their definition in the Acornfile. 
+
+For example:
+
+```acorn
+containers: {
+    "my-app-container": {
+        // ...
+    }
+}
+jobs: {
+    "my-app-job": {
+        // ...
+    }
+}
+routers: {
+    "my-app-router": {
+        // ...
+    }
+}
+```
+
+Running the above Acornfile will result in three sevice accounts named `my-app-container`, `my-app-job`, and `my-app-router` being created.
