@@ -45,3 +45,8 @@ status:
         build:
           dockerfile: "Dockerfile"
           context: "."
+  conditions:
+  - type: defined
+    reason: Success
+    status: "True"
+    success: true

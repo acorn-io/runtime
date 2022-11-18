@@ -1,0 +1,30 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/service-name": "oneimage"
+    "acorn.io/container-name": "oneimage"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "TCP"
+      appProtocol: "HTTP"
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: "TCP"
+      name: "90"
+  selector:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "service-name.acorn.io/oneimage": "true"
+    "port-number.acorn.io/81": "true"
+    "port-number.acorn.io/91": "true"
