@@ -13,6 +13,8 @@ status:
       status: "True"
       success: true
   namespace: app-created-namespace
+  appImage:
+    id: foo.io/test
   appSpec:
     containers:
       oneimage:

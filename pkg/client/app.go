@@ -41,20 +41,23 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Labels:      appScoped(opts.Labels),
 		},
 		Spec: v1.AppInstanceSpec{
-			Image:           image,
-			PublishMode:     opts.PublishMode,
-			DeployArgs:      opts.DeployArgs,
-			Volumes:         opts.Volumes,
-			Secrets:         opts.Secrets,
-			Links:           opts.Links,
-			Ports:           opts.Ports,
-			Profiles:        opts.Profiles,
-			DevMode:         opts.DevMode,
-			Permissions:     opts.Permissions,
-			Environment:     opts.Env,
-			Labels:          opts.Labels,
-			Annotations:     opts.Annotations,
-			TargetNamespace: opts.TargetNamespace,
+			Image:               image,
+			PublishMode:         opts.PublishMode,
+			DeployArgs:          opts.DeployArgs,
+			Volumes:             opts.Volumes,
+			Secrets:             opts.Secrets,
+			Links:               opts.Links,
+			Ports:               opts.Ports,
+			Profiles:            opts.Profiles,
+			DevMode:             opts.DevMode,
+			Permissions:         opts.Permissions,
+			Environment:         opts.Env,
+			Labels:              opts.Labels,
+			Annotations:         opts.Annotations,
+			TargetNamespace:     opts.TargetNamespace,
+			AutoUpgrade:         opts.AutoUpgrade,
+			NotifyUpgrade:       opts.NotifyUpgrade,
+			AutoUpgradeInterval: opts.AutoUpgradeInterval,
 		},
 	}
 }
@@ -124,6 +127,15 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 	if opts.TargetNamespace != "" {
 		app.Spec.TargetNamespace = opts.TargetNamespace
+	}
+	if opts.AutoUpgrade != nil {
+		app.Spec.AutoUpgrade = opts.AutoUpgrade
+	}
+	if opts.NotifyUpgrade != nil {
+		app.Spec.NotifyUpgrade = opts.NotifyUpgrade
+	}
+	if opts.AutoUpgradeInterval != "" {
+		app.Spec.AutoUpgradeInterval = opts.AutoUpgradeInterval
 	}
 
 	return app, nil
@@ -427,4 +439,22 @@ func (c *client) appStop(ctx context.Context, name string) error {
 		return c.Client.Update(ctx, app)
 	}
 	return nil
+}
+
+func (c *client) AppConfirmUpgrade(ctx context.Context, name string) error {
+	app := &apiv1.App{}
+	err := c.Client.Get(ctx, kclient.ObjectKey{
+		Name:      name,
+		Namespace: c.Namespace,
+	}, app)
+	if err != nil {
+		return err
+	}
+
+	return c.RESTClient.Post().
+		Namespace(app.Namespace).
+		Resource("apps").
+		Name(app.Name).
+		SubResource("confirmupgrade").
+		Body(&apiv1.ConfirmUpgrade{}).Do(ctx).Error()
 }

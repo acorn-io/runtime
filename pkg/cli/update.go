@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/deployargs"
@@ -25,8 +26,9 @@ func NewUpdate(out io.Writer) *cobra.Command {
 }
 
 type Update struct {
-	Image   string `json:"image,omitempty"`
-	Replace bool   `usage:"Toggle replacing update, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Image          string `json:"image,omitempty"`
+	Replace        bool   `usage:"Toggle replacing update, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	ConfirmUpgrade *bool  `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
 	RunArgs
 
 	out io.Writer
@@ -41,15 +43,36 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	image := s.Image
 
-	if image == "" {
+	if s.ConfirmUpgrade != nil && *s.ConfirmUpgrade {
+		if image != "" {
+			return fmt.Errorf("cannot set an image (%v) and confirm ann upgrade at the same time", image)
+		}
+
+		err := c.AppConfirmUpgrade(cmd.Context(), name)
+		if err != nil {
+			return err
+		}
+	}
+
+	imageForFlags := image
+	if imageForFlags == "" {
 		app, err := c.AppGet(cmd.Context(), name)
 		if err != nil {
 			return err
 		}
-		image = app.Spec.Image
+
+		imageForFlags = app.Spec.Image
+
+		if _, isPattern := autoupgrade.AutoUpgradePattern(imageForFlags); isPattern {
+			imageForFlags = app.Status.AppImage.ID
+		}
 	}
 
-	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)
+	if imageForFlags == "" {
+		return fmt.Errorf("cannot update app. Image not found")
+	}
+
+	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, imageForFlags)
 	if err != nil {
 		return err
 	}

@@ -202,7 +202,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		Type: v1.SecretTypeTemplate,
 	}
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Spec.Image)
+	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 				return t
 			}
 
-			return resolveTag(tag, digest.Image)
+			return pull.ResolveTag(tag, digest.Image)
 		})
 
 		secret.Data[entry.Key] = []byte(template)

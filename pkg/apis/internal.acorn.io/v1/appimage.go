@@ -2,6 +2,8 @@ package v1
 
 type AppImage struct {
 	ID        string     `json:"id,omitempty"`
+	Name      string     `json:"name,omitempty"`
+	Digest    string     `json:"digest,omitempty"`
 	Acornfile string     `json:"acornfile,omitempty"`
 	ImageData ImagesData `json:"imageData,omitempty"`
 	BuildArgs GenericMap `json:"buildArgs,omitempty"`

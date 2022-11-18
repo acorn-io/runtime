@@ -79,6 +79,9 @@ func TestVolumeLabelsAnnotations(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
+			AppImage: v1.AppImage{
+				ID: "image",
+			},
 			AppSpec: v1.AppSpec{
 				Labels: map[string]string{
 					"globalfromacornfile": "val",

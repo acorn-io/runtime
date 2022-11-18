@@ -73,6 +73,8 @@ spec:
 
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     containers:
       container-name:

@@ -13,6 +13,8 @@ spec:
       service: con-link
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     acorns:
       acrn:

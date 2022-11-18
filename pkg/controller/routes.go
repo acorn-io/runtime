@@ -3,8 +3,9 @@ package controller
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
-	"github.com/acorn-io/acorn/pkg/controller/dns"
+	"github.com/acorn-io/acorn/pkg/controller/config"
 	"github.com/acorn-io/acorn/pkg/controller/gc"
+	"github.com/acorn-io/acorn/pkg/controller/ingress"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
 	"github.com/acorn-io/acorn/pkg/controller/tls"
@@ -34,8 +35,8 @@ func routes(router *router.Router) {
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace).Middleware(appdefinition.IgnoreTerminatingNamespace)
-	appRouter.Middleware(appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
-	appRouter.HandlerFunc(appdefinition.CreateSecrets)
+	appRouter.Middleware(appdefinition.ImagePulled).Middleware(appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
+	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.CreateSecrets)
 	appRouter.HandlerFunc(appdefinition.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
 	appRouter.HandlerFunc(appdefinition.JobStatus)
@@ -52,7 +53,8 @@ func routes(router *router.Router) {
 	router.Type(&appsv1.Deployment{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Service{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
-	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(dns.RequireLBs).Handler(dns.NewDNSHandler())
-	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).Handler(dns.NewDNSConfigHandler())
+	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
+	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).Handler(config.NewDNSConfigHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
+	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).HandlerFunc(config.HandleAutoUpgradeInterval)
 }

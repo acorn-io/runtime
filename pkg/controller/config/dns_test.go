@@ -1,8 +1,9 @@
-package dns
+package config
 
 import (
 	"testing"
 
+	"github.com/acorn-io/acorn/pkg/dns"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router/tester"
@@ -132,4 +133,30 @@ func TestDisabling(t *testing.T) {
 	assert.Equal(t, "disabled", secret.Annotations[labels.AcornDNSState])
 	assert.Equal(t, []byte("test.on-acorn.io"), secret.Data["domain"])
 	assert.Equal(t, []byte("token"), secret.Data["token"])
+}
+
+// TODO Use a mock library to create more robust mock for this. Right now, just CreateRecord has been implemented to
+// simply not panic. This is enough for the handler to assume the call succeeded and move on
+type mockClient struct{}
+
+func (t *mockClient) CreateRecords(endpoint, domain, token string, records []dns.RecordRequest) error {
+	return nil
+}
+
+func (t *mockClient) ReserveDomain(endpoint string) (string, string, error) {
+	return "test.on-acorn.io", "token", nil
+}
+
+func (t *mockClient) Renew(endpoint, domain, token string, renew dns.RenewRequest) (dns.RenewResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t *mockClient) DeleteRecord(endpoint, domain, fqdn, token string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (t *mockClient) PurgeRecords(endpoint, domain, token string) error {
+	return nil
 }

@@ -3,9 +3,9 @@ package pull
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -18,6 +18,44 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var (
+	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
+)
+
+func ListTags(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, []string, error) {
+	tag, err := GetTag(ctx, c, namespace, image)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	opts, err := GetPullOptions(ctx, c, tag, namespace)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tags, err := remote.List(tag.Context(), opts...)
+	return tag, tags, err
+}
+
+func ImageDigest(ctx context.Context, c client.Reader, namespace, image string) (string, error) {
+	tag, err := GetTag(ctx, c, namespace, image)
+	if err != nil {
+		return "", err
+	}
+
+	opts, err := GetPullOptions(ctx, c, tag, namespace)
+	if err != nil {
+		return "", err
+	}
+
+	descriptor, err := remote.Head(tag, opts...)
+	if err != nil {
+		return "", err
+	}
+
+	return descriptor.Digest.String(), nil
+}
 
 func AppImage(ctx context.Context, c client.Reader, namespace, image string) (*v1.AppImage, error) {
 	tag, err := GetTag(ctx, c, namespace, image)
@@ -37,6 +75,13 @@ func AppImage(ctx context.Context, c client.Reader, namespace, image string) (*v
 
 	appImage.ID = image
 	return appImage, nil
+}
+
+func ResolveTag(tag imagename.Reference, image string) string {
+	if DigestPattern.MatchString(image) {
+		return tag.Context().Digest(image).String()
+	}
+	return image
 }
 
 func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, error) {
@@ -73,14 +118,16 @@ func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, err
 		return nil, err
 	}
 
-	return tarToAppImage(tag, reader)
-}
-
-func tarToAppImage(tag imagename.Reference, reader io.Reader) (*v1.AppImage, error) {
 	app, err := appdefinition.AppImageFromTar(reader)
 	if err != nil {
 		return nil, fmt.Errorf("invalid image %s: %v", tag, err)
 	}
+
+	digest, err := img.Digest()
+	if err != nil {
+		return nil, err
+	}
+	app.Digest = digest.String()
 	return app, nil
 }
 

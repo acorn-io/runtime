@@ -13,6 +13,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
+    id: test
     imageData:
       images:
         foo:

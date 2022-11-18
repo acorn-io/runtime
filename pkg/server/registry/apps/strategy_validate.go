@@ -24,7 +24,7 @@ import (
 	"k8s.io/apiserver/pkg/endpoints/request"
 )
 
-func (s *Strategy) checkRemotePermissions(ctx context.Context, namespace, image string) error {
+func (s *Strategy) checkRemoteAccess(ctx context.Context, namespace, image string) error {
 	keyChain, err := pullsecret.Keychain(ctx, s.client, namespace)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (s *Strategy) checkRemotePermissions(ctx context.Context, namespace, image 
 		return err
 	}
 
-	_, err = remote.Image(ref, remote.WithContext(ctx), remote.WithAuthFromKeychain(keyChain))
+	_, err = remote.Head(ref, remote.WithContext(ctx), remote.WithAuthFromKeychain(keyChain))
 	if err != nil {
 		return fmt.Errorf("failed to pull %s: %v", image, err)
 	}
@@ -143,12 +143,14 @@ func (s *Strategy) checkRules(ctx context.Context, sar *authv1.SubjectAccessRevi
 	return merr.NewErrors(errs...)
 }
 
-func (s *Strategy) compareAndCheckPermissions(ctx context.Context, perms []v1.Permissions, requestedPerms []v1.Permissions) error {
+// checkRequestedPermsSatisfyImagePerms checks that the user requested permissions are enough to satisfy the permissions
+// specified by the image's Acornfile
+func (s *Strategy) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions, requestedPerms []v1.Permissions) error {
 	if len(perms) == 0 {
 		return nil
 	}
 
-	permsError, errs := client.ErrRulesNeeded{Permissions: []v1.Permissions{}}, []error{}
+	permsError := &client.ErrRulesNeeded{Permissions: []v1.Permissions{}}
 	for _, perm := range perms {
 		if len(perm.ClusterRules) == 0 && len(perm.Rules) == 0 {
 			continue
@@ -160,12 +162,24 @@ func (s *Strategy) compareAndCheckPermissions(ctx context.Context, perms []v1.Pe
 			permsError.Permissions = append(permsError.Permissions, perm)
 			continue
 		}
+	}
 
-		user, ok := request.UserFrom(ctx)
-		if !ok {
-			return fmt.Errorf("failed to find active user to check current privileges")
-		}
+	if len(permsError.Permissions) != 0 {
+		return permsError
+	}
+	return nil
+}
 
+// checkPermissionsForPrivilegeEscalation is an actual RBAC check to prevent privilege escalation. The user making the request must have the
+// permissions that they are requesting the app gets
+func (s *Strategy) checkPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) error {
+	user, ok := request.UserFrom(ctx)
+	if !ok {
+		return fmt.Errorf("failed to find active user to check current privileges")
+	}
+
+	var errs []error
+	for _, perm := range requestedPerms {
 		sar := &authv1.SubjectAccessReview{
 			Spec: authv1.SubjectAccessReviewSpec{
 				User:   user.GetName(),
@@ -187,10 +201,6 @@ func (s *Strategy) compareAndCheckPermissions(ctx context.Context, perms []v1.Pe
 		if err := s.checkRules(ctx, sar, perm.Rules, ns); err != nil {
 			errs = append(errs, err)
 		}
-	}
-
-	if len(permsError.Permissions) != 0 {
-		return &permsError
 	}
 
 	return merr.NewErrors(errs...)
@@ -232,21 +242,19 @@ func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
 	return permissions
 }
 
-func (s *Strategy) resolveTag(ctx context.Context, namespace, image string) (string, error) {
+func (s *Strategy) resolveLocalImage(ctx context.Context, namespace, image string) (string, bool, error) {
 	localImage, err := s.clientFactory.Namespace(namespace).ImageGet(ctx, image)
 	if apierrors.IsNotFound(err) {
 		if tags.IsLocalReference(image) {
-			return "", err
+			return "", false, err
 		}
-		if err := s.checkRemotePermissions(ctx, namespace, image); err != nil {
-			return "", err
-		}
+
 	} else if err != nil {
-		return "", err
+		return "", false, err
 	} else {
-		return strings.TrimPrefix(localImage.Digest, "sha256:"), nil
+		return strings.TrimPrefix(localImage.Digest, "sha256:"), true, nil
 	}
-	return image, nil
+	return image, false, nil
 }
 
 func (s *Strategy) createNamespace(ctx context.Context, name string) error {

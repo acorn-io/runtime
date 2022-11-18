@@ -58,6 +58,8 @@ spec:
       value: "shouldbeignored"
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     labels:
       global2: "value"

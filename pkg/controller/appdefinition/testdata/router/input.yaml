@@ -9,6 +9,8 @@ spec:
   publishMode: all
 status:
   namespace: app-created-namespace
+  appImage:
+    id: test
   appSpec:
     routers:
       router-name:
