@@ -79,10 +79,6 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			err = removeContainer(arg, c, cmd, a.Force)
-			if err != nil {
-				return err
-			}
 		}
 		if rmObjects.Container {
 			err := removeContainer(arg, c, cmd, a.Force)
