@@ -428,7 +428,7 @@ containers: web: {
 			]
 		}]
 		// These are permissions that will be granted for this container in all namespaces.
-		clusterrules: [{
+		clusterRules: [{
 			verbs: [
 				"get", 
 				"list", 

@@ -28,7 +28,7 @@ containers:{
                     "fooresource"
                 ]
             }]
-            clusterrules: [{
+            clusterRules: [{
                 verbs: [
                     "get", 
                     "list", 
@@ -41,27 +41,28 @@ containers:{
                     "fooresource"
                 ]
             }]
-        / ...
+        // ...
     }
 }
 ```
 
 :::info
-If you're curious, running this Acornfile creates a few `permissions` related things for us, such as a:
-- `ServiceAccount` bound to the `container`'s `Deployment`
+Standard with every [container](03-containers.md) and [job](06-jobs.md) definition, you get a `ServiceAccount` with the same name as that service.
+
+If you're curious, creating `permissions` in our Acornfile generates a few on-cluster resources that interact with this `ServiceAccount`, such as a:
 - `Role` with the `rules` we specified
-- `ClusterRole` with the `clusterrules` we specified
-- `RoleBinding` with `Role` bound to the `ServiceAccount`
+- `ClusterRole` with the `clusterRules` we specified
+- `RoleBinding` with the `Role` bound to the `ServiceAccount`
 - `ClusterRoleBinding` with the `ClusterRole` bound to the `ServiceAccount`
 :::
 
 With this Acornfile, we accomplish our original goal. Breaking down the Acornfile a bit further, we get 5 keywords that are set to define permissions. Let's look at them one at a time.
 
 ## Rules
-Physically defining the permissions of your application, `rules` get converted into a `Role` that then gets attached to your application's unique `ServiceAccount`. This is only applicable for your application's unique namespace and as a result the permissions will not work in other namespaces.
+Physically defining the permissions of your application, `rules` get converted into a `Role` that then gets attached to your application's unique `ServiceAccount`. This is only applicable for your application's unique namespace and, as a result, the permissions will not work in other namespaces.
 
 ## ClusterRules
-Similar to `rules`, `clusterrules` define the permissions application's namespace but with the added benefit of working in other ones as well. Instead of creating a `Role` that gets attached to your application's `ServiceAccount`, you get a `ClusterRole`. If you would like to allow your application to perform the defined rules in any namespace on the cluster then `clusterrules` are the way to go.
+Similar to `rules`, `clusterRules` define permissions in the application's namespace but with the added benefit of working in other ones as well. Instead of creating a `Role` that gets attached to your application's `ServiceAccount`, you get a `ClusterRole`. If you would like to allow your application to perform the defined rules in any namespace on the cluster then `clusterRules` are the way to go.
 
 ## Verbs
 To define what actions your application can perform on a given resource, you define a `verb`. These `verbs` are words that allow you to declaritively define what actions your application can perform on given resources.
