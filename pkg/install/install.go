@@ -116,6 +116,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			return err
 		}
 	}
+	err := checkLetsEncryptFlags(ctx, opts)
+	if err != nil {
+		return err
+	}
 
 	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {
@@ -251,7 +255,23 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	pterm.Success.Println("Installation done")
 	return nil
 }
+func checkLetsEncryptFlags(ctx context.Context, opts *Options) error {
+	k8client, err := k8sclient.Default()
+	if err != nil {
+		return err
+	}
 
+	serverConf, err := config.Get(ctx, k8client)
+	if err != nil {
+		return err
+	}
+	if opts.Config.LetsEncrypt == nil && serverConf.LetsEncrypt != nil {
+		opts.Config.LetsEncrypt = serverConf.LetsEncrypt
+		opts.Config.LetsEncryptEmail = serverConf.LetsEncryptEmail
+		opts.Config.LetsEncryptTOSAgree = serverConf.LetsEncryptTOSAgree
+	}
+	return nil
+}
 func TraefikResources() (result []kclient.Object, _ error) {
 	objs, err := objectsFromFile("traefik.yaml")
 	if err != nil {
