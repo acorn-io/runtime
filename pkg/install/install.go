@@ -267,7 +267,11 @@ func checkLetsEncryptFlags(ctx context.Context, opts *Options) error {
 	}
 	if opts.Config.LetsEncrypt == nil && serverConf.LetsEncrypt != nil {
 		opts.Config.LetsEncrypt = serverConf.LetsEncrypt
+	}
+	if opts.Config.LetsEncryptEmail == "" && serverConf.LetsEncryptEmail != "" {
 		opts.Config.LetsEncryptEmail = serverConf.LetsEncryptEmail
+	}
+	if opts.Config.LetsEncryptTOSAgree == nil && serverConf.LetsEncryptTOSAgree != nil {
 		opts.Config.LetsEncryptTOSAgree = serverConf.LetsEncryptTOSAgree
 	}
 	return nil
