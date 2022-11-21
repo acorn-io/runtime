@@ -122,8 +122,6 @@ func (u *LEUser) register() error {
 	}
 	u.registration = reg
 
-	logrus.Infof("registered LE User: %s", u.email)
-
 	return nil
 
 }
@@ -268,7 +266,7 @@ func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
 		return nil, fmt.Errorf("problem creating Let's Encrypt User secret: %w", err)
 	}
 
-	logrus.Infoln("Registered Let's Encrypt User")
+	logrus.Infof("Registered Let's Encrypt User: %s", newLEUser.email)
 
 	return newLEUser, nil
 
@@ -321,7 +319,7 @@ func lockDomain(domain string) bool {
 	CertificatesRequestLock.Lock()
 	if _, ok := CertificateRequests[domain]; ok {
 		CertificatesRequestLock.Unlock()
-		logrus.Infof("certificate for domain %s is already being requested, waiting for it to be ready", domain)
+		logrus.Debugf("certificate for domain %s is already being requested, waiting for it to be ready", domain)
 		return false
 	}
 
@@ -358,7 +356,7 @@ func stillValid(cert []byte) bool {
 		timeToExpire := x509crt.NotAfter.Sub(time.Now().UTC())
 		if timeToExpire > 7*24*time.Hour {
 			// (b) cert is still valid for more than 7 days -> good to go
-			logrus.Infof("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
+			logrus.Debugf("certificate for %s is still valid until %s (%d hours)", x509crt.Subject.CommonName, x509crt.NotAfter, int(timeToExpire.Hours()))
 			return true
 		} else {
 			// (c) cert is expired -> renew
