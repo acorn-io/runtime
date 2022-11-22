@@ -28,7 +28,7 @@ func TestCredentialCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cred, err := c.CredentialCreate(ctx, reg, "user", "pass")
+	cred, err := c.CredentialCreate(ctx, reg, "user", "pass", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestCredentialCreate(t *testing.T) {
 	assert.Equal(t, "user", cred.Username)
 	assert.Nil(t, cred.Password)
 
-	cred1, err := c.CredentialCreate(ctx, reg1, "user2", "pass2")
+	cred1, err := c.CredentialCreate(ctx, reg1, "user2", "pass2", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,12 +74,12 @@ func TestCredentialList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cred1, err := c.CredentialCreate(ctx, reg, "user", "pass")
+	cred1, err := c.CredentialCreate(ctx, reg, "user", "pass", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred2, err := c.CredentialCreate(ctx, reg1, "user2", "pass2")
+	cred2, err := c.CredentialCreate(ctx, reg1, "user2", "pass2", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,12 +115,12 @@ func TestCredentialGet(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, reg, "user", "pass")
+	_, err = c.CredentialCreate(ctx, reg, "user", "pass", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cred1, err := c.CredentialCreate(ctx, reg1, "user2", "pass2")
+	cred1, err := c.CredentialCreate(ctx, reg1, "user2", "pass2", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,12 +151,12 @@ func TestCredentialUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, reg, "user", "pass")
+	_, err = c.CredentialCreate(ctx, reg, "user", "pass", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, reg1, "user2", "pass2")
+	_, err = c.CredentialCreate(ctx, reg1, "user2", "pass2", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,12 +194,12 @@ func TestCredentialDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, reg, "user", "pass")
+	_, err = c.CredentialCreate(ctx, reg, "user", "pass", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.CredentialCreate(ctx, reg1, "user2", "pass2")
+	_, err = c.CredentialCreate(ctx, reg1, "user2", "pass2", false)
 	if err != nil {
 		t.Fatal(err)
 	}
