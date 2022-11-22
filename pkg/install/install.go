@@ -97,12 +97,9 @@ func DefaultImage() string {
 	return image
 }
 
-func validMailAddress(address string) (string, bool) {
-	addr, err := mail.ParseAddress(address)
-	if err != nil {
-		return "", false
-	}
-	return addr.Address, true
+func validMailAddress(address string) bool {
+	_, err := mail.ParseAddress(address)
+	return err == nil
 }
 
 func Install(ctx context.Context, image string, opts *Options) error {
@@ -117,9 +114,23 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 	}
 
+	c, err := k8sclient.Default()
+	if err != nil {
+		return err
+	}
+
+	serverConf, err := config.Incomplete(ctx, c)
+	if err != nil {
+		return err
+	}
+
 	// Require E-Mail address when using Let's Encrypt production
 	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {
-		if opts.Config.LetsEncryptTOSAgree == nil || !*opts.Config.LetsEncryptTOSAgree {
+		agreed := opts.Config.GetLetsEncryptTOSAgree()
+		if !agreed && opts.Config.LetsEncryptTOSAgree == nil && serverConf.GetLetsEncryptTOSAgree() {
+			agreed = true
+		}
+		if !agreed {
 			ok, err := prompt.Bool("You are choosing to enable Let's Encrypt for TLS certificates. To do so, you must agree to their Terms of Service: https://letsencrypt.org/documents/LE-SA-v1.3-September-21-2022.pdf\nTip: use --lets-encrypt-tos-agree to skip this prompt\nDo you agree to Let's Encrypt TOS?", false)
 			if err != nil {
 				return err
@@ -129,7 +140,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			}
 			opts.Config.LetsEncryptTOSAgree = &ok
 		}
-		if opts.Config.LetsEncryptEmail == "" {
+		if opts.Config.LetsEncryptEmail == "" && serverConf.LetsEncryptEmail == "" {
 			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt")
 			if err != nil {
 				return err
@@ -141,11 +152,13 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	// Validate E-Mail address provided for Let's Encrypt registration
 	if opts.Config.LetsEncryptEmail != "" || (opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled") {
-		mail, ok := validMailAddress(opts.Config.LetsEncryptEmail)
-		if !ok {
+		email := opts.Config.LetsEncryptEmail
+		if email == "" {
+			email = serverConf.LetsEncryptEmail
+		}
+		if !validMailAddress(email) {
 			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
 		}
-		opts.Config.LetsEncryptEmail = mail
 	}
 
 	opts = opts.complete()
@@ -170,17 +183,12 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 	}
 
-	kclient, err := k8sclient.Default()
-	if err != nil {
-		return err
-	}
-
 	var installIngressController bool
-	if ok, err := config.IsDockerDesktop(ctx, kclient); err != nil {
+	if ok, err := config.IsDockerDesktop(ctx, c); err != nil {
 		return err
 	} else if ok {
 		if opts.Config.IngressClassName == nil {
-			installIngressController, err = missingIngressClass(ctx, kclient)
+			installIngressController, err = missingIngressClass(ctx, c)
 			if err != nil {
 				return err
 			}
@@ -195,10 +203,6 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	c, err := k8sclient.Default()
-	if err != nil {
-		return err
-	}
 	if err := config.Set(ctx, c, &opts.Config); err != nil {
 		return err
 	}
@@ -209,28 +213,23 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 	s.Success()
 
-	kclient, err = k8sclient.Default()
-	if err != nil {
-		return err
-	}
-
 	s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
-	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply, kclient); err != nil {
+	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply, c); err != nil {
 		return s.Fail(err)
 	}
 	s.Success()
 
 	if installIngressController {
-		if err := installTraefik(ctx, opts.Progress, kclient, apply); err != nil {
+		if err := installTraefik(ctx, opts.Progress, c, apply); err != nil {
 			return err
 		}
 	}
 
-	if err := waitController(ctx, opts.Progress, *opts.ControllerReplicas, image, kclient); err != nil {
+	if err := waitController(ctx, opts.Progress, *opts.ControllerReplicas, image, c); err != nil {
 		return err
 	}
 
-	if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, kclient); err != nil {
+	if err := waitAPI(ctx, opts.Progress, *opts.APIServerReplicas, image, c); err != nil {
 		return err
 	}
 
