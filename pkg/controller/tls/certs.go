@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -20,7 +21,7 @@ import (
 
 // ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
 func ProvisionWildcardCert(req router.Request, domain, token string) error {
-	logrus.Infof("Provisioning wildcard cert for %v", domain)
+	logrus.Debugf("Provisioning wildcard cert for %v", domain)
 	// Ensure that we have a Let's Encrypt account ready
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
@@ -51,8 +52,6 @@ func RequireSecretTypeTLS(h router.Handler) router.Handler {
 func RenewCert(req router.Request, resp router.Response) error {
 	sec := req.Object.(*corev1.Secret)
 
-	logrus.Infof("Renewing certificate for %v", sec.Name)
-
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -60,7 +59,7 @@ func RenewCert(req router.Request, resp router.Response) error {
 
 	// Early exit if existing cert is still valid
 	if !leUser.mustRenew(sec) {
-		logrus.Infof("Certificate for %v is still valid", sec.Name)
+		logrus.Debugf("Certificate for %v is still valid", sec.Name)
 		return nil
 	}
 
@@ -70,7 +69,7 @@ func RenewCert(req router.Request, resp router.Response) error {
 
 		// Do not start a new challenge if we already have one in progress
 		if !lockDomain(domain) {
-			logrus.Infof("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
+			logrus.Debugf("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
 			return
 		}
 		defer unlockDomain(domain)
@@ -109,6 +108,18 @@ func RenewCert(req router.Request, resp router.Response) error {
 // Note: this does not actually provision the certificates, it just creates the empty secret
 // which is picked up by the route handled by RenewCert above
 func ProvisionCerts(req router.Request, resp router.Response) error {
+
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	}
+
+	// Early exit if Let's Encrypt is not enabled
+	// Just to be on the safe side, we check for all possible allowed configuration values
+	if strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
+		return nil
+	}
+
 	appInstance := req.Object.(*v1.AppInstance)
 
 	appInstanceIDSegment := strings.SplitN(string(appInstance.GetUID()), "-", 2)[0]
@@ -150,7 +161,7 @@ func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Cl
 	go func() {
 		// Do not start a new challenge if we already have one in progress
 		if !lockDomain(domain) {
-			logrus.Infof("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
+			logrus.Debugf("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
 			return
 		}
 		defer unlockDomain(domain)
