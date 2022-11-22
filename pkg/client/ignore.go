@@ -204,9 +204,9 @@ func (c IgnoreUninstalled) BuilderRegistryDialer(ctx context.Context) (func(ctx 
 	})
 }
 
-func (c IgnoreUninstalled) CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
+func (c IgnoreUninstalled) CredentialCreate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
 	return promptInstall(ctx, func() (*apiv1.Credential, error) {
-		return c.client.CredentialCreate(ctx, serverAddress, username, password)
+		return c.client.CredentialCreate(ctx, serverAddress, username, password, noValidate)
 	})
 }
 

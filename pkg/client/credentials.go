@@ -14,9 +14,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
-	if err := credentialValidate(ctx, username, password, serverAddress); err != nil {
-		return nil, err
+func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
+	if !noValidate {
+		if err := credentialValidate(ctx, username, password, serverAddress); err != nil {
+			return nil, err
+		}
 	}
 
 	credential := &apiv1.Credential{
