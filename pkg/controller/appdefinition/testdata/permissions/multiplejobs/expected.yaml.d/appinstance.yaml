@@ -42,7 +42,7 @@ status:
   appImage:
     id: test
   appSpec:
-    containers:
+    jobs:
       oneimage:
         sidecars:
           left:
@@ -59,7 +59,7 @@ status:
         build:
           dockerfile: "Dockerfile"
           context: "."
-    twoimage:
+      twoimage:
         sidecars:
           left:
             image: "foo"
@@ -75,3 +75,8 @@ status:
         build:
           dockerfile: "Dockerfile"
           context: "."
+  conditions:
+  - type: defined
+    reason: Success
+    status: "True"
+    success: true
