@@ -502,7 +502,7 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 								{
 									Path: "/.well-known/acme-challenge/",
 									PathType: func() *networkingv1.PathType {
-										pt := networkingv1.PathTypeImplementationSpecific
+										pt := networkingv1.PathTypePrefix
 										return &pt
 									}(),
 									Backend: networkingv1.IngressBackend{
