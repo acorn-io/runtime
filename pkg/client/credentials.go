@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"sort"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -12,13 +11,6 @@ import (
 )
 
 func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
-	s := credentials.Strategy{}
-	if !noValidate {
-		if err := s.CredentialValidate(ctx, username, password, serverAddress); err != nil {
-			return nil, err
-		}
-	}
-
 	credential := &apiv1.Credential{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverAddress,
@@ -27,6 +19,7 @@ func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, 
 		ServerAddress: serverAddress,
 		Username:      username,
 		Password:      &password,
+		NoValidate:    noValidate,
 	}
 	return credential, c.Client.Create(ctx, credential)
 }
@@ -40,12 +33,6 @@ func (c *client) CredentialGet(ctx context.Context, serverAddress string) (*apiv
 }
 
 func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
-	s := credentials.Strategy{}
-	if !noValidate {
-		if err := s.CredentialValidate(ctx, username, password, serverAddress); err != nil {
-			return nil, err
-		}
-	}
 	credential := &apiv1.Credential{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      serverAddress,
@@ -57,6 +44,7 @@ func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, 
 
 	credential.Username = username
 	credential.Password = &password
+	credential.NoValidate = noValidate
 	return credential, c.Client.Update(ctx, credential)
 }
 
