@@ -78,6 +78,9 @@ Before using Acorn on your cluster you need to initialize Acorn by running:
 acorn install
 ```
 
+:::note
+Acorn has a handful of installation requirements. If you're installing to your desktop Kubernetes cluster, you likely meet the requirements. If you're installing into a remote cluster, please review the detailed [installation instructions](/installation/installing).
+
 You will only need to do this once per cluster.
 
 ### Build/Run First Acorn app
