@@ -161,7 +161,7 @@ func TestCredentialUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cred1New, err := c.CredentialUpdate(ctx, reg1, "user3", "pass3")
+	cred1New, err := c.CredentialUpdate(ctx, reg1, "user3", "pass3", false)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -218,8 +218,8 @@ func (c IgnoreUninstalled) CredentialGet(ctx context.Context, serverAddress stri
 	return c.client.CredentialGet(ctx, serverAddress)
 }
 
-func (c IgnoreUninstalled) CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
-	return c.client.CredentialUpdate(ctx, serverAddress, username, password)
+func (c IgnoreUninstalled) CredentialUpdate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
+	return c.client.CredentialUpdate(ctx, serverAddress, username, password, noValidate)
 }
 
 func (c IgnoreUninstalled) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {

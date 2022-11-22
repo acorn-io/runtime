@@ -197,7 +197,7 @@ type Client interface {
 	CredentialCreate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error)
 	CredentialList(ctx context.Context) ([]apiv1.Credential, error)
 	CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
-	CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialUpdate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error)
 	CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
 
 	SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error)
