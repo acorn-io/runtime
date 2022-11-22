@@ -46,13 +46,7 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 	}
 	return result
 }
-func (s *Strategy) ValidateUpdate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.Credential)
-
-	if !params.NoValidate {
-		if err := s.credentialValidate(ctx, params.Username, *params.Password, params.ServerAddress); err != nil {
-			result = append(result, field.Invalid(field.NewPath("namespace"), params.Namespace, err.Error()))
-		}
-	}
-	return result
+	return s.Validate(ctx, params)
 }
