@@ -11,7 +11,9 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	klabels "k8s.io/apimachinery/pkg/labels"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -119,14 +121,49 @@ func (d *depCheckingResponse) isDepReady(depName string) (ready bool, found bool
 		return false, true
 	}
 
-	if depDep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(d.app.Generation)) ||
-		depDep.Status.ObservedGeneration != depDep.Generation ||
-		depDep.Status.Replicas != depDep.Status.ReadyReplicas ||
-		depDep.Status.Replicas != depDep.Status.UpdatedReplicas {
+	available := false
+	for _, cond := range depDep.Status.Conditions {
+		if cond.Type == "Available" && cond.Status == corev1.ConditionTrue {
+			available = true
+			break
+		}
+	}
+
+	if !available {
 		return false, true
 	}
 
-	return true, true
+	if depDep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(d.app.Generation)) ||
+		depDep.Status.ObservedGeneration != depDep.Generation ||
+		depDep.Status.Replicas != depDep.Status.ReadyReplicas ||
+		depDep.Status.Replicas != depDep.Status.UpdatedReplicas ||
+		(depDep.Spec.Replicas != nil && *depDep.Spec.Replicas == 0) {
+		return false, true
+	}
+
+	reps := &appsv1.ReplicaSetList{}
+	err = d.req.List(reps, &kclient.ListOptions{
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornAppName:       d.app.Name,
+			labels.AcornAppNamespace:  d.app.Namespace,
+			labels.AcornContainerName: depName,
+		}),
+		Namespace: d.app.Status.Namespace,
+	})
+	if err != nil {
+		return false, true
+	}
+
+	for _, rep := range reps.Items {
+		if rep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(d.app.Generation)) &&
+			rep.Generation == rep.Status.ObservedGeneration &&
+			rep.Status.Replicas == rep.Status.ReadyReplicas &&
+			rep.Status.Replicas == rep.Status.AvailableReplicas {
+			return true, true
+		}
+	}
+
+	return false, true
 }
 
 type depCheck func(string) (bool, bool)
