@@ -88,6 +88,22 @@ func (in *AppInstanceSpec) GetDevMode() bool {
 	return in.DevMode != nil && *in.DevMode
 }
 
+func (in *AppInstanceSpec) GetProfiles() []string {
+	if in.GetDevMode() {
+		found := false
+		for _, profile := range in.Profiles {
+			if profile == "dev?" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return append([]string{"dev?"}, in.Profiles...)
+		}
+	}
+	return in.Profiles
+}
+
 type ServiceBinding struct {
 	Target  string `json:"target,omitempty"`
 	Service string `json:"service,omitempty"`
