@@ -242,7 +242,7 @@ type Credential struct {
 	ServerAddress string  `json:"serverAddress,omitempty"`
 	Username      string  `json:"username,omitempty"`
 	Password      *string `json:"password,omitempty"`
-	NoValidate    bool    `json:"noValidate,omitempty"`
+	SkipValidate  bool    `json:"skipValidate,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

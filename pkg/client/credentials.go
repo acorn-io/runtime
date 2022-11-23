@@ -10,7 +10,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
+func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipValidate bool) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverAddress,
@@ -19,7 +19,7 @@ func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, 
 		ServerAddress: serverAddress,
 		Username:      username,
 		Password:      &password,
-		NoValidate:    noValidate,
+		SkipValidate:  skipValidate,
 	}
 	return credential, c.Client.Create(ctx, credential)
 }
@@ -32,7 +32,7 @@ func (c *client) CredentialGet(ctx context.Context, serverAddress string) (*apiv
 	}, credential)
 }
 
-func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, password string, noValidate bool) (*apiv1.Credential, error) {
+func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipValidate bool) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      serverAddress,
@@ -44,7 +44,7 @@ func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, 
 
 	credential.Username = username
 	credential.Password = &password
-	credential.NoValidate = noValidate
+	credential.SkipValidate = skipValidate
 	return credential, c.Client.Update(ctx, credential)
 }
 

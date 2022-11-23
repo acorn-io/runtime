@@ -39,7 +39,7 @@ func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
 }
 func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.Credential)
-	if !params.NoValidate {
+	if !params.SkipValidate {
 		if err := s.credentialValidate(ctx, params.Username, *params.Password, params.ServerAddress); err != nil {
 			result = append(result, field.Invalid(field.NewPath("namespace"), params.Namespace, err.Error()))
 		}
