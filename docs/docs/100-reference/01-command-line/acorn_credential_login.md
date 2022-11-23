@@ -20,9 +20,9 @@ acorn login ghcr.io
 
 ```
   -h, --help              help for login
-  -v, --no-validate       Bypass login validation
   -p, --password string   Password
       --password-stdin    Take the password from stdin
+      --skip-validate     Bypass login validation
   -u, --username string   Username
 ```
 
