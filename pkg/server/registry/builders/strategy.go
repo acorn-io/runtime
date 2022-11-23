@@ -8,8 +8,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/acorn-io/mink/pkg/db"
-	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -20,39 +18,23 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewDBStrategy(db *db.Factory) (*DBStrategy, error) {
-	dbStrategy, err := db.NewDBStrategy(&apiv1.Builder{})
-	if err != nil {
-		return nil, err
-	}
-	return &DBStrategy{
-		CompleteStrategy: dbStrategy,
-		TableConvertor:   tables.BuilderConverter,
-	}, nil
-}
-
-type DBStrategy struct {
-	strategy.CompleteStrategy
-	rest.TableConvertor
-}
-
-func NewDynamicStrategy(c kclient.WithWatch) *DynamicStrategy {
-	return &DynamicStrategy{
+func NewStrategy(c kclient.WithWatch) *Strategy {
+	return &Strategy{
 		TableConvertor: tables.BuilderConverter,
 		client:         c,
 	}
 }
 
-type DynamicStrategy struct {
+type Strategy struct {
 	rest.TableConvertor
 	client kclient.WithWatch
 }
 
-func (s *DynamicStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
 	return s.get(ctx, false, namespace, name)
 }
 
-func (s *DynamicStrategy) get(ctx context.Context, create bool, namespace, name string) (types.Object, error) {
+func (s *Strategy) get(ctx context.Context, create bool, namespace, name string) (types.Object, error) {
 	if namespace != system.Namespace || name != system.BuildKitName {
 		return nil, apierrors.NewNotFound(schema.GroupResource{
 			Group:    api.Group,
@@ -86,7 +68,7 @@ func (s *DynamicStrategy) get(ctx context.Context, create bool, namespace, name 
 	return builder, nil
 }
 
-func (s *DynamicStrategy) Validate(ctx context.Context, object runtime.Object) (errors field.ErrorList) {
+func (s *Strategy) Validate(ctx context.Context, object runtime.Object) (errors field.ErrorList) {
 	obj := object.(kclient.Object)
 	if obj.GetName() != system.BuildKitName {
 		errors = append(errors, field.Invalid(field.NewPath("metadata", "name"),
@@ -99,11 +81,11 @@ func (s *DynamicStrategy) Validate(ctx context.Context, object runtime.Object) (
 	return
 }
 
-func (s *DynamicStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
+func (s *Strategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
 	return s.get(ctx, true, obj.GetNamespace(), obj.GetName())
 }
 
-func (s *DynamicStrategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
+func (s *Strategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
 	if namespace == "" || namespace == system.Namespace {
 		obj, err := s.Get(ctx, system.Namespace, system.BuildKitName)
 		if apierrors.IsNotFound(err) {
@@ -118,14 +100,14 @@ func (s *DynamicStrategy) List(ctx context.Context, namespace string, opts stora
 	return &apiv1.BuilderList{}, nil
 }
 
-func (s *DynamicStrategy) New() types.Object {
+func (s *Strategy) New() types.Object {
 	return &apiv1.Builder{}
 }
 
-func (s *DynamicStrategy) NewList() types.ObjectList {
+func (s *Strategy) NewList() types.ObjectList {
 	return &apiv1.BuilderList{}
 }
 
-func (s *DynamicStrategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
+func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
 	return obj, buildkit.Delete(ctx)
 }

@@ -1,4 +1,4 @@
-package builders
+package info
 
 import (
 	"github.com/acorn-io/mink/pkg/stores"
@@ -7,5 +7,5 @@ import (
 )
 
 func NewStorage(c client.WithWatch) rest.Storage {
-	return stores.NewCreateGetListDelete(c.Scheme(), NewStrategy(c))
+	return stores.NewListOnly(NewStrategy(c))
 }

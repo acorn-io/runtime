@@ -23,7 +23,6 @@ func NewApiServer() *cobra.Command {
 }
 
 type APIServer struct {
-	DSN string `usage:"DB DSN" env:"DB_DSN"`
 }
 
 func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
@@ -31,7 +30,6 @@ func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	cfg.DSN = a.DSN
 
 	return apiServer.Run(cmd.Context(), cfg)
 }

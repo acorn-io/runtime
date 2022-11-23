@@ -19,14 +19,23 @@ type Strategy struct {
 	rest.TableConvertor
 }
 
-func NewStrategy(c kclient.WithWatch, expose bool) *Strategy {
+func NewStrategy(c kclient.WithWatch, expose bool) strategy.CompleteStrategy {
+	storage := newStorageStrategy(c, expose)
+	return NewStrategyWithStorage(c, storage)
+}
+
+func NewStrategyWithStorage(c kclient.WithWatch, storage strategy.CompleteStrategy) strategy.CompleteStrategy {
 	return &Strategy{
-		CompleteStrategy: translation.NewTranslationStrategy(&Translator{
-			client: c,
-			expose: expose,
-		}, remote.NewRemote(&corev1.Secret{}, &corev1.SecretList{}, c)),
-		TableConvertor: tables.CredentialConverter,
+		CompleteStrategy: storage,
+		TableConvertor:   tables.CredentialConverter,
 	}
+}
+
+func newStorageStrategy(c kclient.WithWatch, expose bool) strategy.CompleteStrategy {
+	return translation.NewTranslationStrategy(&Translator{
+		client: c,
+		expose: expose,
+	}, remote.NewRemote(&corev1.Secret{}, &corev1.SecretList{}, c))
 }
 
 func (s *Strategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {

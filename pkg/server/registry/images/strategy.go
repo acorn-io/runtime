@@ -13,8 +13,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
-	"github.com/acorn-io/mink/pkg/db"
-	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -28,39 +26,23 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type DBStrategy struct {
-	strategy.CompleteStrategy
-	rest.TableConvertor
-}
-
-func NewDBStrategy(db *db.Factory) (*DBStrategy, error) {
-	dbStrategy, err := db.NewDBStrategy(&apiv1.Image{})
-	if err != nil {
-		return nil, err
-	}
-	return &DBStrategy{
-		CompleteStrategy: dbStrategy,
-		TableConvertor:   tables.ImageConverter,
-	}, nil
-}
-
-type DynamicStrategy struct {
+type Strategy struct {
 	rest.TableConvertor
 	client kclient.WithWatch
 }
 
-func NewDynamicStrategy(c kclient.WithWatch) *DynamicStrategy {
-	return &DynamicStrategy{
+func NewStrategy(c kclient.WithWatch) *Strategy {
+	return &Strategy{
 		TableConvertor: tables.ImageConverter,
 		client:         c,
 	}
 }
 
-func (s *DynamicStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
 	return s.ImageGet(ctx, namespace, name)
 }
 
-func (s *DynamicStrategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
+func (s *Strategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
 	images, err := s.ImageList(ctx, namespace)
 	if err != nil {
 		return nil, err
@@ -68,15 +50,15 @@ func (s *DynamicStrategy) List(ctx context.Context, namespace string, opts stora
 	return &images, nil
 }
 
-func (s *DynamicStrategy) New() types.Object {
+func (s *Strategy) New() types.Object {
 	return &apiv1.Image{}
 }
 
-func (s *DynamicStrategy) NewList() types.ObjectList {
+func (s *Strategy) NewList() types.ObjectList {
 	return &apiv1.ImageList{}
 }
 
-func (s *DynamicStrategy) ImageList(ctx context.Context, namespace string) (apiv1.ImageList, error) {
+func (s *Strategy) ImageList(ctx context.Context, namespace string) (apiv1.ImageList, error) {
 	if namespace != "" {
 		return s.forNamespace(ctx, namespace)
 	}
@@ -106,7 +88,7 @@ func (s *DynamicStrategy) ImageList(ctx context.Context, namespace string) (apiv
 	return result, nil
 }
 
-func (s *DynamicStrategy) forNamespace(ctx context.Context, ns string) (apiv1.ImageList, error) {
+func (s *Strategy) forNamespace(ctx context.Context, ns string) (apiv1.ImageList, error) {
 	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
 		return apiv1.ImageList{}, err
 	} else if !ok {
@@ -168,7 +150,7 @@ func (s *DynamicStrategy) forNamespace(ctx context.Context, ns string) (apiv1.Im
 	return result, nil
 }
 
-func (s *DynamicStrategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
+func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
 	image, matchedReference, err := s.imageGet(ctx, obj.GetNamespace(), obj.GetName())
 	if err != nil {
 		return nil, err
@@ -194,7 +176,7 @@ func (s *DynamicStrategy) Delete(ctx context.Context, obj types.Object) (types.O
 	return image, remote.Delete(repo.Digest(image.Digest), opts...)
 }
 
-func (s *DynamicStrategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
+func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
 	name = strings.ReplaceAll(name, "+", "/")
 
 	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
@@ -210,7 +192,7 @@ func (s *DynamicStrategy) ImageGet(ctx context.Context, namespace, name string) 
 	return image, err
 }
 
-func (s *DynamicStrategy) imageGet(ctx context.Context, namespace, imageName string) (*apiv1.Image, string, error) {
+func (s *Strategy) imageGet(ctx context.Context, namespace, imageName string) (*apiv1.Image, string, error) {
 	images, err := s.ImageList(ctx, namespace)
 	if err != nil {
 		return nil, "", err

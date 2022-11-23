@@ -29,7 +29,6 @@ type Server struct {
 
 type Config struct {
 	server.RecommendedConfig
-	DSN             string
 	LocalRestConfig *rest.Config
 }
 
@@ -93,7 +92,7 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 		c = aggr
 	}
 
-	apiGroups, err := registry.APIGroups(c, cfg, localCfg, config.DSN)
+	apiGroups, err := registry.APIGroups(c, cfg, localCfg)
 	if err != nil {
 		return err
 	}

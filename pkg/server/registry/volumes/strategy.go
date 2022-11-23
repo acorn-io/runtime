@@ -1,9 +1,7 @@
 package volumes
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/acorn-io/mink/pkg/db"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
@@ -17,21 +15,22 @@ type Strategy struct {
 	rest.TableConvertor
 }
 
-func NewStrategy(c kclient.WithWatch, db *db.Factory) (*Strategy, error) {
-	storageStrategy, err := newStorageStrategy(c, db)
+func NewStrategy(c kclient.WithWatch) (strategy.CompleteStrategy, error) {
+	storageStrategy, err := newStorageStrategy(c)
 	if err != nil {
 		return nil, err
 	}
+	return NewStrategyWithStorage(c, storageStrategy)
+}
+
+func NewStrategyWithStorage(c kclient.WithWatch, storage strategy.CompleteStrategy) (strategy.CompleteStrategy, error) {
 	return &Strategy{
-		CompleteStrategy: storageStrategy,
+		CompleteStrategy: storage,
 		TableConvertor:   tables.VolumeConverter,
 	}, nil
 }
 
-func newStorageStrategy(c kclient.WithWatch, db *db.Factory) (strategy.CompleteStrategy, error) {
-	if db != nil {
-		return db.NewDBStrategy(&apiv1.Volume{})
-	}
+func newStorageStrategy(c kclient.WithWatch) (strategy.CompleteStrategy, error) {
 	return translation.NewTranslationStrategy(&Translator{
 		c: c,
 	}, remote.NewRemote(&corev1.PersistentVolume{}, &corev1.PersistentVolumeList{}, c)), nil
