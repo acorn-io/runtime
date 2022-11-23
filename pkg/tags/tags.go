@@ -188,7 +188,7 @@ func Get(ctx context.Context, c client.Reader, namespace string) (map[string][]s
 // Note that the other functions in this package generally operate on the entire reference of an image as one opaque "tag"
 // but this function is only returning the portion that follows the final semicolon. For example, the "tags" returned by the
 // Get function are like "foo/bar:v1", but this function would just return "v1" for that image.
-func GetTagsMatchingRepository(reference name.Reference, ctx context.Context, c client.Reader, namespace string) ([]string, error) {
+func GetTagsMatchingRepository(reference name.Reference, ctx context.Context, c client.Reader, namespace, defaultReg string) ([]string, error) {
 	images, err := Get(ctx, c, namespace)
 	if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func GetTagsMatchingRepository(reference name.Reference, ctx context.Context, c 
 	var result []string
 	for _, tags := range images {
 		for _, tag := range tags {
-			r, err := name.ParseReference(tag)
+			r, err := name.ParseReference(tag, name.WithDefaultRegistry(defaultReg))
 			if err != nil {
 				continue
 			}

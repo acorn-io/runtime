@@ -18,6 +18,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const defaultNoReg = "xxx-no-reg"
+
 var (
 	syncQueue       = make(chan struct{}, 1)
 	ticker          *time.Ticker
@@ -198,17 +200,27 @@ func (d *daemon) sync(ctx context.Context) error {
 	// If it determines a newer version of an image is available for an app, it will update the app with that information
 	// which will trigger the appInstance handlers to pick up the change and deploy the new version of the app
 	for imageKey, appsForImage := range refresh {
-		current, tags, err := pull.ListTags(ctx, d.client, imageKey.namespace, imageKey.image)
-		if err != nil {
-			logrus.Errorf("Problem listing tags for image %v: %v", imageKey.image, err)
-		}
-		r, err := imagename.ParseReference(imageKey.image)
+		current, err := imagename.ParseReference(imageKey.image, imagename.WithDefaultRegistry(defaultNoReg))
 		if err != nil {
 			logrus.Errorf("Problem parsing image referece %v: %v", imageKey.image, err)
+			continue
 		}
-		localTags, err := tags2.GetTagsMatchingRepository(r, ctx, d.client, "acorn")
+		// if the registry after being parsed is our default fake one, then this is a local image with no registry
+		hasValidRegistry := current.Context().RegistryStr() != defaultNoReg
+		var tags []string
+		var pullErr error
+		if hasValidRegistry {
+			_, tags, pullErr = pull.ListTags(ctx, d.client, imageKey.namespace, imageKey.image)
+		}
+		localTags, err := tags2.GetTagsMatchingRepository(current, ctx, d.client, "acorn", defaultNoReg)
 		if err != nil {
+			// We aren't doing a continue here because this just means there was a parsing error with the local images
+			// configMap. We should still see if the image can be updated via digest or if there are non-local images
 			logrus.Errorf("Problem finding local tags matching %v: %v", imageKey.image, err)
+		}
+		if len(localTags) == 0 && pullErr != nil {
+			// We aren't doing a continue here because it is still possible we can find a new version via digest
+			logrus.Errorf("Couldn't find any remote tags for image %v. Error: %v", imageKey.image, pullErr)
 		}
 		tags = append(tags, localTags...)
 
@@ -234,11 +246,8 @@ func (d *daemon) sync(ctx context.Context) error {
 					updated = true
 					mode, _ := Mode(app.Spec)
 					t := current.Context().Tag(newTag).Name()
-					// go-containerregistry adds this prefix by default. We need to strip it if it wasn't present in the original so that
-					// local images work
-					if strings.HasPrefix(t, "index.docker.io/library/") && !strings.HasPrefix(imageKey.image, "index.docker.io/library/") {
-						t = strings.TrimPrefix(t, "index.docker.io/library/")
-					}
+					// If the registry is our fake default, remove it from the constructed reference
+					t = strings.TrimPrefix(t, defaultNoReg+"/")
 					switch mode {
 					case "enabled":
 						if app.Status.AvailableAppImage == t {
@@ -273,12 +282,19 @@ func (d *daemon) sync(ctx context.Context) error {
 			// In either case, we also want to check to see if new content was pushed to the current tag
 			// This satisfies the usecase of autoUpgrade with an app's tag is something static, like "latest"
 			if !updated {
-				digest, err := pull.ImageDigest(ctx, d.client, app.Namespace, imageKey.image)
-				if err != nil {
-					logrus.Errorf("Problem getting digest app %v: %v", appKey, err)
-					continue
+				var digest string
+				var pullErr error
+				if hasValidRegistry {
+					digest, pullErr = pull.ImageDigest(ctx, d.client, app.Namespace, imageKey.image)
 				}
-				if app.Status.AppImage.Digest != digest {
+				// Whether or not we got a digest from a remote registry, check to see if there is a version of this tag locally
+				if localDigest, ok, _ := tags2.ResolveLocal(ctx, d.client, app.Namespace, imageKey.image); ok && localDigest != "" {
+					digest = localDigest
+				}
+				if digest == "" && pullErr != nil {
+					logrus.Errorf("Problem getting updated digest for image %v from remote. Error: %v", imageKey.image, pullErr)
+				}
+				if strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
 					mode, _ := Mode(app.Spec)
 					switch mode {
 					case "enabled":
@@ -297,8 +313,8 @@ func (d *daemon) sync(ctx context.Context) error {
 						logrus.Warnf("Unrecognized auto-upgrade mode %v for %v", mode, app.Name)
 						continue
 					}
-					logrus.Infof("Triggering an auto-upprade of app %v because a new digest was detected for image %v",
-						appKey, imageKey.image)
+					logrus.Infof("Triggering an auto-upprade of app %v because a new digest [%v] was detected for image %v",
+						appKey, digest, imageKey.image)
 					if err := d.client.Status().Update(ctx, &app); err != nil {
 						logrus.Errorf("Problem updating %v: %v", appKey, err)
 						continue
@@ -355,6 +371,7 @@ func removeTagPattern(image string) string {
 	return strings.TrimSuffix(image, ":"+p)
 }
 
+// AutoUpgradePattern returns the tag and a boolean indicating whether it is actually a pattern (versus a concrete tag)
 func AutoUpgradePattern(image string) (string, bool) {
 	// This first bit is adapted from https://github.com/google/go-containerregistry/blob/main/pkg/name/tag.go
 	// Split on ":"
