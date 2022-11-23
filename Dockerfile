@@ -3,7 +3,7 @@
 FROM tonistiigi/binfmt:qemu-v6.2.0 AS binfmt
 FROM moby/buildkit:v0.10.6 AS buildkit
 FROM public.ecr.aws/docker/library/registry:2.8.1 AS registry
-FROM rancher/klipper-lb:v0.3.5 AS klipper-lb
+FROM rancher/klipper-lb:v0.4.0 AS klipper-lb
 
 FROM public.ecr.aws/docker/library/golang:1.19-alpine AS helper
 WORKDIR /usr/src
