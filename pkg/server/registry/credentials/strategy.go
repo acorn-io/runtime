@@ -41,7 +41,7 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 	params := obj.(*apiv1.Credential)
 	if !params.SkipValidate {
 		if err := s.credentialValidate(ctx, params.Username, *params.Password, params.ServerAddress); err != nil {
-			result = append(result, field.Invalid(field.NewPath("namespace"), params.Namespace, err.Error()))
+			result = append(result, field.Forbidden(field.NewPath("username/password"), err.Error()))
 		}
 	}
 	return result
