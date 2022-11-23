@@ -15,7 +15,7 @@ func GetEncryptionKeyList(ctx context.Context, c kclient.Reader, namespace strin
 
 	keys, err := naclKeysToEncryptionKeyList(ctx, c, namespace)
 	if errors.As(err, &keyNotFound) {
-		logrus.Error(err)
+		logrus.Error("failed to get encryption keys", err)
 		return []apiv1.EncryptionKey{}, nil
 	}
 	return keys, err
