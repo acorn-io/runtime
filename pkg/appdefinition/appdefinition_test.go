@@ -1999,7 +1999,8 @@ profiles: {
 func TestProfileDefaultValues(t *testing.T) {
 	data := `
 containers: default: files: a: std.toJSON(args)
-profiles: test: {
+// include some non-alpha characters
+profiles: "foo - bar": {
 	a: "b"
 }
 `
@@ -2008,14 +2009,14 @@ profiles: test: {
 		t.Fatal(err)
 	}
 
-	defaultAppDef, args, err := appDef.WithArgs(nil, []string{"test"})
+	defaultAppDef, args, err := appDef.WithArgs(nil, []string{"foo - bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, map[string]any{"a": "b"}, args)
 	assert.Equal(t, map[string]any{"a": "b", "dev": false}, getVals(t, defaultAppDef))
 
-	appDef, args, err = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"test"})
+	appDef, args, err = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"foo - bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
