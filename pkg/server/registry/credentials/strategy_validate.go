@@ -18,9 +18,8 @@ func (s *Strategy) credentialValidate(ctx context.Context, username, password, s
 	}
 
 	// Build a new transport for the registry which validates authentication
-	scopes := []string{transport.PullScope, transport.PushScope}
 	auth := &authn.Basic{Username: username, Password: password}
-	_, err = transport.NewWithContext(ctx, reg, auth, http.DefaultTransport, scopes)
+	_, err = transport.NewWithContext(ctx, reg, auth, http.DefaultTransport, nil)
 	if err != nil {
 		return err
 	}
