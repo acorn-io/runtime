@@ -22,7 +22,7 @@ require (
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.10
-	github.com/go-acme/lego/v4 v4.9.0
+	github.com/go-acme/lego/v4 v4.9.1
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.12.1
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20221014154406-a0f66878d012
