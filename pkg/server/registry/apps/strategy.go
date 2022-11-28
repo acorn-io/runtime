@@ -90,10 +90,7 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 }
 
 func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
-	oldParams, newParams := old.(*apiv1.App), obj.(*apiv1.App)
-	if oldParams.Spec.Image == newParams.Spec.Image {
-		return nil
-	}
+	newParams := obj.(*apiv1.App)
 	return s.Validate(ctx, newParams)
 }
 
