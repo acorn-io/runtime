@@ -30,6 +30,7 @@ acorn login ghcr.io`,
 }
 
 type CredentialLogin struct {
+	SkipChecks    bool   `usage:"Bypass login validation checks"`
 	PasswordStdin bool   `usage:"Take the password from stdin"`
 	Password      string `usage:"Password" short:"p"`
 	Username      string `usage:"Username" short:"u"`
@@ -71,7 +72,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 
 	existing, err := client.CredentialGet(cmd.Context(), args[0])
 	if apierror.IsNotFound(err) {
-		cred, err := client.CredentialCreate(cmd.Context(), args[0], a.Username, a.Password)
+		cred, err := client.CredentialCreate(cmd.Context(), args[0], a.Username, a.Password, a.SkipChecks)
 		if err != nil {
 			return err
 		}
@@ -82,7 +83,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 
 	existing.Username = a.Username
 	existing.Password = &a.Password
-	cred, err := client.CredentialUpdate(cmd.Context(), args[0], a.Username, a.Password)
+	cred, err := client.CredentialUpdate(cmd.Context(), args[0], a.Username, a.Password, a.SkipChecks)
 	if err != nil {
 		return err
 	}

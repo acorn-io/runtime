@@ -194,10 +194,10 @@ type Client interface {
 	AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error)
 	AppConfirmUpgrade(ctx context.Context, name string) error
 
-	CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error)
 	CredentialList(ctx context.Context) ([]apiv1.Credential, error)
 	CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
-	CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error)
+	CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error)
 	CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error)
 
 	SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error)

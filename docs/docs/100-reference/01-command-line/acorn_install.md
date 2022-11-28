@@ -23,7 +23,6 @@ acorn install
       --acorn-dns-endpoint string             The URL to access the Acorn DNS service
       --api-server-replicas int               acorn-api deployment replica count
       --auto-upgrade-interval string          For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
-      --checks                                Disable preflight checks with --checks=false
       --cluster-domain strings                The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int               acorn-controller deployment replica count
       --default-publish-mode string           If no publish mode is set default to this value (default user)
@@ -37,6 +36,7 @@ acorn install
   -o, --output string                         Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string   The name of the PodSecurity profile to set (default baseline)
       --set-pod-security-enforce-profile      Set the PodSecurity profile on created namespaces (default true)
+      --skip-checks                           Bypass installation checks
 ```
 
 ### Options inherited from parent commands

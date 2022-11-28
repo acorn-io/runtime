@@ -2,23 +2,15 @@ package client
 
 import (
 	"context"
-	"net/http"
 	"sort"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
-	if err := credentialValidate(ctx, username, password, serverAddress); err != nil {
-		return nil, err
-	}
-
+func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverAddress,
@@ -27,6 +19,7 @@ func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, 
 		ServerAddress: serverAddress,
 		Username:      username,
 		Password:      &password,
+		SkipChecks:    skipChecks,
 	}
 	return credential, c.Client.Create(ctx, credential)
 }
@@ -39,11 +32,7 @@ func (c *client) CredentialGet(ctx context.Context, serverAddress string) (*apiv
 	}, credential)
 }
 
-func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, password string) (*apiv1.Credential, error) {
-	if err := credentialValidate(ctx, username, password, serverAddress); err != nil {
-		return nil, err
-	}
-
+func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      serverAddress,
@@ -55,6 +44,7 @@ func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, 
 
 	credential.Username = username
 	credential.Password = &password
+	credential.SkipChecks = skipChecks
 	return credential, c.Client.Update(ctx, credential)
 }
 
@@ -95,24 +85,4 @@ func (c *client) CredentialDelete(ctx context.Context, serverAddress string) (*a
 		return credential, nil
 	}
 	return credential, err
-}
-
-// credentialValidate takes a username, password and serverAddress string to validate
-// whether their combination is valid and will succeed login for pushes/pulls.
-func credentialValidate(ctx context.Context, username, password, serverAddress string) error {
-	// Build a registry struct for the host
-	reg, err := name.NewRegistry(serverAddress)
-	if err != nil {
-		return err
-	}
-
-	// Build a new transport for the registry which validates authentication
-	scopes := []string{transport.PullScope, transport.PushScope}
-	auth := &authn.Basic{Username: username, Password: password}
-	_, err = transport.NewWithContext(ctx, reg, auth, http.DefaultTransport, scopes)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
