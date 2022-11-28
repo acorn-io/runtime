@@ -352,3 +352,7 @@ type InfoList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Info `json:"items"`
 }
+
+func (c *Config) GetLetsEncryptTOSAgree() bool {
+	return c.LetsEncryptTOSAgree != nil && *c.LetsEncryptTOSAgree
+}
