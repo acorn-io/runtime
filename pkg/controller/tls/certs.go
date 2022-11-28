@@ -2,6 +2,8 @@ package tls
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"strings"
 
@@ -14,6 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -145,6 +149,56 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 	return nil
 }
 
+// certFromSecret converts TLS secret data to a TLS certificate
+func certFromSecret(secret corev1.Secret) (*x509.Certificate, error) {
+	tlsPEM, ok := secret.Data["tls.crt"]
+	if !ok {
+		return nil, fmt.Errorf("key tls.crt not found in secret %s/%s", secret.Namespace, secret.Name)
+	}
+
+	tlsCertBytes, _ := pem.Decode(tlsPEM)
+	if tlsCertBytes == nil {
+		return nil, fmt.Errorf("failed to parse Cert PEM stored in secret  %s/%s", secret.Namespace, secret.Name)
+	}
+
+	return x509.ParseCertificate(tlsCertBytes.Bytes)
+}
+
+// findExistingCert returns the first TLS secret that matches the given domain
+func findExistingCertSecret(ctx context.Context, client kclient.Client, target string) (*corev1.Secret, error) {
+	// Find existing certificate if exists
+	existingTLSSecrets := &corev1.SecretList{}
+	if err := client.List(ctx, existingTLSSecrets, &kclient.ListOptions{LabelSelector: klabels.SelectorFromSet(map[string]string{
+		labels.AcornManaged: "true",
+	})}); err != nil {
+		logrus.Errorf("Error listing existing TLS secrets: %v", err)
+	}
+
+	for _, sec := range existingTLSSecrets.Items {
+		logrus.Debugf("Found existing TLS secret: %s/%s", sec.Namespace, sec.Name)
+		if sec.Type != corev1.SecretTypeTLS {
+			continue
+		}
+		domain, ok := sec.Annotations[labels.AcornDomain]
+		if !ok {
+			continue
+		}
+
+		if domain == target {
+			cert, err := certFromSecret(sec)
+			if err != nil {
+				logrus.Errorf("Error parsing cert from secret: %v", err)
+				continue
+			}
+			if err := cert.VerifyHostname(target); err == nil {
+				return &sec, nil
+			}
+		}
+
+	}
+	return nil, nil
+}
+
 func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Client, domain string, namespace string, secretName string) error {
 	// Find existing secret if exists
 	existingSecret := &corev1.Secret{}
@@ -156,6 +210,45 @@ func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Cl
 		// Not found is ok, we'll create the secret below.. other errors are bad
 		logrus.Errorf("Error getting secret %s/%s: %v", namespace, secretName, findSecretErr)
 		return findSecretErr
+	}
+
+	// Let's see if we have some existing certificate that matches the domain
+	existingSecret, err := findExistingCertSecret(ctx, client, domain)
+	if err != nil {
+		return err
+	}
+	if existingSecret != nil {
+		// We found an existing certificate
+		// 1. It's in the same namespace, so it will be picked up automatically
+		if existingSecret.Namespace == namespace {
+			logrus.Debugf("Found existing TLS secret %s/%s for domain %s", existingSecret.Namespace, existingSecret.Name, domain)
+			// Skip: TLS secret already exists, nothing to do here, renewal will be handled elsewhere
+			return nil
+		}
+
+		logrus.Debugf("Found existing TLS secret %s/%s for domain %s, copying to %s/%s", existingSecret.Namespace, existingSecret.Name, domain, namespace, secretName)
+
+		// 2. Copy secret to new namespace
+		copiedSecret := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: namespace,
+				Labels: map[string]string{
+					labels.AcornManaged: "true",
+				},
+				Annotations: map[string]string{
+					labels.AcornDomain: domain,
+				},
+			},
+			Data: existingSecret.Data,
+			Type: existingSecret.Type,
+		}
+
+		if err := client.Create(ctx, copiedSecret); err != nil {
+			logrus.Errorf("Error creating TLS secret %s/%s: %v", copiedSecret.Namespace, copiedSecret.Name, err)
+			return err
+		}
+		return nil
 	}
 
 	go func() {
