@@ -2,6 +2,7 @@ package credentials
 
 import (
 	"context"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -39,7 +40,7 @@ func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
 }
 func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.Credential)
-	if !params.SkipValidate {
+	if !params.SkipChecks {
 		if err := s.credentialValidate(ctx, params.Username, *params.Password, params.ServerAddress); err != nil {
 			result = append(result, field.Forbidden(field.NewPath("username/password"), err.Error()))
 		}

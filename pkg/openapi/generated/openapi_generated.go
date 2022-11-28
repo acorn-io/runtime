@@ -1229,7 +1229,7 @@ func schema_pkg_apis_apiacornio_v1_Credential(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
-					"skipValidate": {
+					"skipChecks": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
