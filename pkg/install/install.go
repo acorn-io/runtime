@@ -56,7 +56,7 @@ var (
 type Mode string
 
 type Options struct {
-	Checks             *bool
+	SkipChecks         bool
 	OutputFormat       string
 	APIServerReplicas  *int
 	ControllerReplicas *int
@@ -154,7 +154,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	checkOpts := CheckOptions{RuntimeImage: image}
-	if opts.Checks == nil || *opts.Checks {
+	if !opts.SkipChecks {
 		s := opts.Progress.New("Running Pre-install Checks")
 		checkResults := PreInstallChecks(ctx, checkOpts)
 		if IsFailed(checkResults) {
@@ -234,16 +234,20 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	s = opts.Progress.New("Running Post-install Checks")
-	checkResults := PostInstallChecks(ctx, checkOpts)
-	if IsFailed(checkResults) {
-		msg := "Post-install checks failed. Use `acorn check` to debug or `acorn install --checks=false` to skip"
-		for _, result := range checkResults {
-			if !result.Passed {
-				msg += fmt.Sprintf("\n%s: %s", result.Name, result.Message)
+	if !opts.SkipChecks {
+		s = opts.Progress.New("Running Post-install Checks")
+		checkResults := PostInstallChecks(ctx, checkOpts)
+		if IsFailed(checkResults) {
+			msg := "Post-install checks failed. Use `acorn check` to debug or `acorn install --checks=false` to skip"
+			for _, result := range checkResults {
+				if !result.Passed {
+					msg += fmt.Sprintf("\n%s: %s", result.Name, result.Message)
+				}
 			}
+			s.SuccessWithWarning(msg)
+		} else {
+			s.Success()
 		}
-		s.SuccessWithWarning(msg)
 	} else {
 		s.Success()
 	}
