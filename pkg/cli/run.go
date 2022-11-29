@@ -218,6 +218,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	existingApp, err := c.AppGet(cmd.Context(), s.Name)
+	if existingApp != nil && !s.Update {
+		return fmt.Errorf("appinstances.internal.acorn.io \"%s\" already exists", s.Name)
+	}
 
 	// Force install prompt if needed
 	_, err = c.Info(cmd.Context())
@@ -325,7 +329,6 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		app := client.ToApp(c.GetNamespace(), image, &opts)
 		return outputApp(s.out, s.Output, app)
 	}
-
 	app, err := rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, opts)
 	if err != nil {
 		return err
