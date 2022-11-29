@@ -218,7 +218,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	existingApp, err := c.AppGet(cmd.Context(), s.Name)
+	existingApp, _ := c.AppGet(cmd.Context(), s.Name)
 	if existingApp != nil && !s.Update {
 		return fmt.Errorf("appinstances.internal.acorn.io \"%s\" already exists", s.Name)
 	}
