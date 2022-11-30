@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/types"
 )
 
 func digestOnlyImages(data map[string]v1.ImageData) (map[string]v1.ImageData, error) {
@@ -55,32 +56,62 @@ func digestOnlyContainers(data map[string]v1.ContainerData) (map[string]v1.Conta
 	return result, nil
 }
 
-func images(data map[string]v1.ImageData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
-	for _, entry := range typed.Sorted(data) {
-		d, err := name.NewDigest(entry.Value.Image)
-		if err != nil {
-			return nil, err
-		}
+func digestToIndexAddendum(ref string, opts []remote.Option) (*mutate.IndexAddendum, error) {
+	d, err := name.NewDigest(ref)
+	if err != nil {
+		return nil, err
+	}
+	descriptor, err := remote.Head(d, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	if descriptor.MediaType.IsIndex() {
 		img, err := remote.Index(d, opts...)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, img)
+		return &mutate.IndexAddendum{
+			Add: img,
+		}, nil
+	}
+
+	img, err := remote.Image(d, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	platform, err := imagePlatform(img)
+	if err != nil {
+		return nil, err
+	}
+
+	return &mutate.IndexAddendum{
+		Add: img,
+		Descriptor: ggcrv1.Descriptor{
+			Platform: platform,
+		},
+	}, nil
+}
+
+func images(data map[string]v1.ImageData, opts []remote.Option) (result []mutate.IndexAddendum, _ error) {
+	for _, entry := range typed.Sorted(data) {
+		add, err := digestToIndexAddendum(entry.Value.Image, opts)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *add)
 	}
 	return
 }
 
-func containerImages(data map[string]v1.ContainerData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
+func containerImages(data map[string]v1.ContainerData, opts []remote.Option) (result []mutate.IndexAddendum, _ error) {
 	for _, entry := range typed.Sorted(data) {
-		d, err := name.NewDigest(entry.Value.Image)
+		add, err := digestToIndexAddendum(entry.Value.Image, opts)
 		if err != nil {
 			return nil, err
 		}
-		img, err := remote.Index(d, opts...)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, img)
+		result = append(result, *add)
 
 		sidecarImages, err := images(entry.Value.Sidecars, opts)
 		if err != nil {
@@ -108,7 +139,7 @@ func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
 	return
 }
 
-func allImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageIndex, _ error) {
+func allImages(data v1.ImagesData, opts []remote.Option) (result []mutate.IndexAddendum, _ error) {
 	remoteImages, err := containerImages(data.Containers, opts)
 	if err != nil {
 		return nil, err
@@ -130,6 +161,19 @@ func allImages(data v1.ImagesData, opts []remote.Option) (result []ggcrv1.ImageI
 	return
 }
 
+func imagePlatform(img ggcrv1.Image) (*ggcrv1.Platform, error) {
+	config, err := img.ConfigFile()
+	if err != nil {
+		return nil, err
+	}
+	return &ggcrv1.Platform{
+		Architecture: config.Architecture,
+		OS:           config.OS,
+		OSVersion:    config.OSVersion,
+		Variant:      config.Variant,
+	}, nil
+}
+
 func createAppManifest(ctx context.Context, c client.Client, ref string, data v1.ImagesData, fullDigest bool) (string, error) {
 	d, err := name.NewDigest(ref)
 	if err != nil {
@@ -146,8 +190,16 @@ func createAppManifest(ctx context.Context, c client.Client, ref string, data v1
 		return "", err
 	}
 
-	index := mutate.AppendManifests(empty.Index, mutate.IndexAddendum{
+	platform, err := imagePlatform(appImage)
+	if err != nil {
+		return "", err
+	}
+
+	index := mutate.AppendManifests(mutate.IndexMediaType(empty.Index, types.DockerManifestList), mutate.IndexAddendum{
 		Add: appImage,
+		Descriptor: ggcrv1.Descriptor{
+			Platform: platform,
+		},
 	})
 
 	images, err := allImages(data, opts)
@@ -155,11 +207,7 @@ func createAppManifest(ctx context.Context, c client.Client, ref string, data v1
 		return "", err
 	}
 
-	for _, image := range images {
-		index = mutate.AppendManifests(index, mutate.IndexAddendum{
-			Add: image,
-		})
-	}
+	index = mutate.AppendManifests(index, images...)
 
 	h, err := index.Digest()
 	if err != nil {
