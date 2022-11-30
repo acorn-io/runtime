@@ -220,7 +220,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 	existingApp, _ := c.AppGet(cmd.Context(), s.Name)
 	if existingApp != nil && !s.Update {
-		return fmt.Errorf("appinstances.internal.acorn.io \"%s\" already exists", s.Name)
+		return fmt.Errorf("app \"%s\" already exists", s.Name)
 	}
 
 	// Force install prompt if needed
