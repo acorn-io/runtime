@@ -15,6 +15,7 @@ func NewContainerDelete() *cobra.Command {
 acorn container kill app-name.containername-generated-hash`,
 		SilenceUsage: true,
 		Short:        "Delete a container",
+		Aliases:      []string{"rm"},
 	})
 	return cmd
 }
