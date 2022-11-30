@@ -458,3 +458,21 @@ func (c *client) AppConfirmUpgrade(ctx context.Context, name string) error {
 		SubResource("confirmupgrade").
 		Body(&apiv1.ConfirmUpgrade{}).Do(ctx).Error()
 }
+
+func (c *client) AppPullImage(ctx context.Context, name string) error {
+	app := &apiv1.App{}
+	err := c.Client.Get(ctx, kclient.ObjectKey{
+		Name:      name,
+		Namespace: c.Namespace,
+	}, app)
+	if err != nil {
+		return err
+	}
+
+	return c.RESTClient.Post().
+		Namespace(app.Namespace).
+		Resource("apps").
+		Name(app.Name).
+		SubResource("pullimage").
+		Body(&apiv1.AppPullImage{}).Do(ctx).Error()
+}

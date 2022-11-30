@@ -83,8 +83,12 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 			}
 		}
 	} else {
-		// Auto-upgrade is off. Only need to pull if spec and status are not equal
+		// Auto-upgrade is off. Only need to pull if spec and status are not equal or we're trying to trigger a repull
 		if appInstance.Spec.Image == appInstance.Status.AppImage.Name {
+			// Repull triggered
+			if appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
+				return appInstance.Spec.Image, ""
+			}
 			return "", ""
 		} else {
 			return appInstance.Spec.Image, ""

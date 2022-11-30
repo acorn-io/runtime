@@ -88,6 +88,7 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Facto
 		"apps/status":            appStatusStorage,
 		"apps/log":               logsStorage,
 		"apps/confirmupgrade":    apps.NewConfirmUpgrade(c),
+		"apps/pullimage":         apps.NewPullAppImage(c),
 		"builders":               buildersStorage,
 		"builders/port":          buildersPort,
 		"builders/registryport":  registryPort,

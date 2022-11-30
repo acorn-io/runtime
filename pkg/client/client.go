@@ -109,8 +109,6 @@ type AppUpdateOptions struct {
 
 type LogOptions apiv1.LogOptions
 
-type ConfirmUPgrade apiv1.ConfirmUpgrade
-
 type AppRunOptions struct {
 	Name                string
 	Annotations         []v1.ScopedLabel
@@ -193,6 +191,7 @@ type Client interface {
 	AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error)
 	AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error)
 	AppConfirmUpgrade(ctx context.Context, name string) error
+	AppPullImage(ctx context.Context, name string) error
 
 	CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error)
 	CredentialList(ctx context.Context) ([]apiv1.Credential, error)

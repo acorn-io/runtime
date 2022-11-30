@@ -28,7 +28,8 @@ func NewUpdate(out io.Writer) *cobra.Command {
 type Update struct {
 	Image          string `json:"image,omitempty"`
 	Replace        bool   `usage:"Toggle replacing update, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	ConfirmUpgrade *bool  `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
+	ConfirmUpgrade bool   `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
+	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
 	RunArgs
 
 	out io.Writer
@@ -43,12 +44,23 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	image := s.Image
 
-	if s.ConfirmUpgrade != nil && *s.ConfirmUpgrade {
+	if s.ConfirmUpgrade {
 		if image != "" {
 			return fmt.Errorf("cannot set an image (%v) and confirm ann upgrade at the same time", image)
 		}
 
 		err := c.AppConfirmUpgrade(cmd.Context(), name)
+		if err != nil {
+			return err
+		}
+	}
+
+	if s.Pull {
+		if image != "" {
+			return fmt.Errorf("cannot set an image (%v) and try to re-pull at the same time", image)
+		}
+
+		err := c.AppPullImage(cmd.Context(), name)
 		if err != nil {
 			return err
 		}
