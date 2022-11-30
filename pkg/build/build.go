@@ -290,6 +290,10 @@ func buildImageAndManifest(ctx context.Context, c client.Client, cwd string, pla
 		return "", err
 	}
 
+	if len(ids) == 1 {
+		return ids[0], nil
+	}
+
 	return createManifest(ctx, c, ids, platforms)
 }
 
