@@ -110,6 +110,10 @@ func (c IgnoreUninstalled) AppUpdate(ctx context.Context, name string, opts *App
 	return c.client.AppUpdate(ctx, name, opts)
 }
 
+func (c IgnoreUninstalled) AppPullImage(ctx context.Context, name string) error {
+	return c.client.AppPullImage(ctx, name)
+}
+
 func (c IgnoreUninstalled) AppConfirmUpgrade(ctx context.Context, name string) error {
 	return c.client.AppConfirmUpgrade(ctx, name)
 }
