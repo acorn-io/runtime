@@ -62,7 +62,7 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 
 	if s.Pull || image == app.Spec.Image {
 		if s.Pull && image != "" && image != app.Spec.Image {
-			return fmt.Errorf("cannot change image (%v) and speficy --pull at the same time", image)
+			return fmt.Errorf("cannot change image (%v) and specify --pull at the same time", image)
 		}
 
 		err := c.AppPullImage(cmd.Context(), name)
