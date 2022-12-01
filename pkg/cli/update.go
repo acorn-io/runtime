@@ -55,9 +55,14 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if s.Pull {
-		if image != "" {
-			return fmt.Errorf("cannot set an image (%v) and try to re-pull at the same time", image)
+	app, err := c.AppGet(cmd.Context(), name)
+	if err != nil {
+		return err
+	}
+
+	if s.Pull || image == app.Spec.Image {
+		if s.Pull && image != "" && image != app.Spec.Image {
+			return fmt.Errorf("cannot change image (%v) and speficy --pull at the same time", image)
 		}
 
 		err := c.AppPullImage(cmd.Context(), name)
@@ -68,11 +73,6 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 
 	imageForFlags := image
 	if imageForFlags == "" {
-		app, err := c.AppGet(cmd.Context(), name)
-		if err != nil {
-			return err
-		}
-
 		imageForFlags = app.Spec.Image
 
 		if _, isPattern := autoupgrade.AutoUpgradePattern(imageForFlags); isPattern {
@@ -116,7 +116,7 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		return outputApp(s.out, s.Output, app)
 	}
 
-	app, err := rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, name, opts)
+	app, err = rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, name, opts)
 	if err != nil {
 		return err
 	}
