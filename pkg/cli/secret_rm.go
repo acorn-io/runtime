@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSecretDelete() *cobra.Command {
-	cmd := cli.Command(&SecretDelete{}, cobra.Command{
+func NewSecretDelete(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&SecretDelete{client: c.ClientFactory}, cobra.Command{
 		Use: "rm [SECRET_NAME...]",
 		Example: `
 acorn secret rm my-secret`,
@@ -20,10 +20,12 @@ acorn secret rm my-secret`,
 }
 
 type SecretDelete struct {
+	client client.ClientFactory
 }
 
 func (a *SecretDelete) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

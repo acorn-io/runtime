@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/acorn-io/acorn/pkg/client"
 	"os"
 	"testing"
 
@@ -12,9 +13,9 @@ import (
 
 func ArgsToApp(t *testing.T, args ...string) *apiv1.App {
 	t.Helper()
-
+	client := client.CommandContext{}
 	buf := &bytes.Buffer{}
-	cmd := NewRun(buf)
+	cmd := NewRun(client)
 	cmd.SetArgs(append([]string{"-o", "json"}, args...))
 	err := cmd.Execute()
 	if err != nil {

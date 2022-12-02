@@ -14,8 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewImage() *cobra.Command {
-	cmd := cli.Command(&Image{}, cobra.Command{
+func NewImage(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Image{client: c.ClientFactory}, cobra.Command{
 		Use:     "image [flags] [APP_NAME...]",
 		Aliases: []string{"images", "i"},
 		Example: `
@@ -24,7 +24,7 @@ acorn images`,
 		Short:        "Manage images",
 		Args:         cobra.MaximumNArgs(1),
 	})
-	cmd.AddCommand(NewImageDelete())
+	cmd.AddCommand(NewImageDelete(c))
 	return cmd
 }
 
@@ -34,10 +34,11 @@ type Image struct {
 	NoTrunc    bool   `usage:"Don't truncate IDs"`
 	Output     string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	Containers bool   `usage:"Show containers for images" short:"c"`
+	client     client.ClientFactory
 }
 
 func (a *Image) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

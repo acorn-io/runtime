@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewTag() *cobra.Command {
-	return cli.Command(&Tag{}, cobra.Command{
+func NewTag(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Tag{client: c.ClientFactory}, cobra.Command{
 		Use:          "tag [flags] SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]",
 		SilenceUsage: true,
 		Short:        "Tag an image",
@@ -16,10 +16,11 @@ func NewTag() *cobra.Command {
 }
 
 type Tag struct {
+	client client.ClientFactory
 }
 
 func (s *Tag) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

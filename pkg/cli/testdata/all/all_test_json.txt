@@ -1,0 +1,70 @@
+
+APPS:
+{
+    "metadata": {
+        "name": "found",
+        "creationTimestamp": null
+    },
+    "spec": {
+        "secrets": [
+            {
+                "secret": "found.secret",
+                "target": "found"
+            }
+        ]
+    },
+    "status": {
+        "columns": {},
+        "appImage": {
+            "imageData": {},
+            "vcs": {}
+        },
+        "appSpec": {}
+    }
+}
+
+
+CONTAINERS:
+{
+    "metadata": {
+        "name": "found.container",
+        "creationTimestamp": null
+    },
+    "spec": {
+        "appName": "found"
+    },
+    "status": {
+        "columns": {},
+        "state": {},
+        "lastState": {},
+        "ready": false,
+        "restartCount": 0,
+        "image": "",
+        "imageID": ""
+    }
+}
+
+
+VOLUMES:
+{
+    "metadata": {
+        "name": "found.volume",
+        "creationTimestamp": null
+    },
+    "spec": {},
+    "status": {
+        "appName": "found",
+        "volumeName": "found.volume",
+        "columns": {}
+    }
+}
+
+
+SECRETS:
+{
+    "metadata": {
+        "name": "found.secret",
+        "creationTimestamp": null
+    }
+}
+

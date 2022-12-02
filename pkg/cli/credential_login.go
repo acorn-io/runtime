@@ -13,8 +13,8 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func NewCredentialLogin(root bool) *cobra.Command {
-	c := cli.Command(&CredentialLogin{}, cobra.Command{
+func NewCredentialLogin(root bool, c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&CredentialLogin{client: c.ClientFactory}, cobra.Command{
 		Use:     "login [flags] [SERVER_ADDRESS]",
 		Aliases: []string{"add"},
 		Example: `
@@ -24,9 +24,9 @@ acorn login ghcr.io`,
 		Args:         cobra.ExactArgs(1),
 	})
 	if root {
-		c.Aliases = nil
+		cmd.Aliases = nil
 	}
-	return c
+	return cmd
 }
 
 type CredentialLogin struct {
@@ -34,10 +34,11 @@ type CredentialLogin struct {
 	PasswordStdin bool   `usage:"Take the password from stdin"`
 	Password      string `usage:"Password" short:"p"`
 	Username      string `usage:"Username" short:"u"`
+	client        client.ClientFactory
 }
 
 func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

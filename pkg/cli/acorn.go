@@ -3,6 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/client"
 	"os"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
@@ -20,35 +21,41 @@ func New() *cobra.Command {
 			HiddenDefaultCmd: true,
 		},
 	})
+	cmdContext := client.CommandContext{
+		ClientFactory: &client.CmdClient{},
+		StdOut:        os.Stdout,
+		StdErr:        os.Stderr,
+		StdIn:         nil,
+	}
 	root.AddCommand(
-		NewAll(),
-		NewApiServer(),
-		NewApp(),
-		NewBuild(),
-		NewCheck(),
-		NewContainer(),
-		NewController(),
-		NewCredential(),
-		NewRender(),
-		NewExec(),
-		NewImage(),
-		NewInstall(),
-		NewUninstall(),
-		NewInfo(),
-		NewLogs(),
-		NewCredentialLogin(true),
-		NewCredentialLogout(true),
-		NewPull(),
-		NewPush(),
-		NewRm(),
-		NewRun(os.Stdout),
-		NewUpdate(os.Stdout),
-		NewSecret(),
-		NewStart(),
-		NewStop(),
-		NewTag(),
-		NewVolume(),
-		NewWait(),
+		NewAll(cmdContext),
+		NewApiServer(cmdContext),
+		NewApp(cmdContext),
+		NewBuild(cmdContext),
+		NewCheck(cmdContext),
+		NewContainer(cmdContext),
+		NewController(cmdContext),
+		NewCredential(cmdContext),
+		NewRender(cmdContext),
+		NewExec(cmdContext),
+		NewImage(cmdContext),
+		NewInstall(cmdContext),
+		NewUninstall(cmdContext),
+		NewInfo(cmdContext),
+		NewLogs(cmdContext),
+		NewCredentialLogin(true, cmdContext),
+		NewCredentialLogout(true, cmdContext),
+		NewPull(cmdContext),
+		NewPush(cmdContext),
+		NewRm(cmdContext),
+		NewRun(cmdContext),
+		NewUpdate(cmdContext),
+		NewSecret(cmdContext),
+		NewStart(cmdContext),
+		NewStop(cmdContext),
+		NewTag(cmdContext),
+		NewVolume(cmdContext),
+		NewWait(cmdContext),
 	)
 	root.InitDefaultHelpCmd()
 	return root

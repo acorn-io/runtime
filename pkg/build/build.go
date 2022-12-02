@@ -49,7 +49,8 @@ func (b *Options) Complete() (*Options, error) {
 		current.Streams = streams.CurrentOutput()
 	}
 	if current.Client == nil {
-		current.Client, err = client.Default()
+		dc := client.CmdClient{}
+		current.Client, err = dc.CreateDefault()
 		if err != nil {
 			return nil, err
 		}

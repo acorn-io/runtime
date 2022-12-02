@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/client"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
@@ -12,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCheck() *cobra.Command {
-	return cli.Command(&Check{}, cobra.Command{
+func NewCheck(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Check{client: c.ClientFactory}, cobra.Command{
 		Use: "check",
 		Example: `
 acorn check`,
@@ -29,6 +30,7 @@ type Check struct {
 	Image            string  `usage:"Override the image used for test deployments." short:"i"`
 	IngressClassName *string `usage:"Specify ingress class used for tests"`
 	TestNamespace    *string `usage:"Specify namespace used for tests" short:"n"`
+	client           client.ClientFactory
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {

@@ -10,8 +10,8 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func NewVolume() *cobra.Command {
-	cmd := cli.Command(&Volume{}, cobra.Command{
+func NewVolume(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Volume{client: c.ClientFactory}, cobra.Command{
 		Use:     "volume [flags] [VOLUME_NAME...]",
 		Aliases: []string{"volumes", "v"},
 		Example: `
@@ -19,17 +19,18 @@ acorn volume`,
 		SilenceUsage: true,
 		Short:        "Manage volumes",
 	})
-	cmd.AddCommand(NewVolumeDelete())
+	cmd.AddCommand(NewVolumeDelete(c))
 	return cmd
 }
 
 type Volume struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client client.ClientFactory
 }
 
 func (a *Volume) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

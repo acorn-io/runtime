@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewStart() *cobra.Command {
-	return cli.Command(&Start{}, cobra.Command{
+func NewStart(c client.CommandContext) *cobra.Command {
+	return cli.Command(&Start{client: c.ClientFactory}, cobra.Command{
 		Use: "start [flags] [APP_NAME...]",
 		Example: `
 acorn start my-app
@@ -21,10 +21,11 @@ acorn start my-app1 my-app2`,
 }
 
 type Start struct {
+	client client.ClientFactory
 }
 
 func (a *Start) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

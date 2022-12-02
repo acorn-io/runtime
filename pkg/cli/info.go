@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewInfo() *cobra.Command {
-	cmd := cli.Command(&Info{}, cobra.Command{
+func NewInfo(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Info{client: c.ClientFactory}, cobra.Command{
 		Use:          "info",
 		SilenceUsage: true,
 		Short:        "Info about acorn installation",
@@ -23,6 +23,7 @@ func NewInfo() *cobra.Command {
 
 type Info struct {
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o" default:"yaml"`
+	client client.ClientFactory
 }
 
 type ClientServerVersion struct {
@@ -36,7 +37,7 @@ type ClientServerVersion struct {
 }
 
 func (s *Info) Run(cmd *cobra.Command, args []string) error {
-	c, err := client.Default()
+	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}

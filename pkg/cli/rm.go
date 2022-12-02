@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/pkg/errors"
 	"github.com/pterm/pterm"
 	"strings"
 
@@ -10,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRm() *cobra.Command {
-	cmd := cli.Command(&Rm{}, cobra.Command{
+func NewRm(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Rm{client: c.ClientFactory}, cobra.Command{
 		Use: "rm [flags] [APP_NAME...]",
 		Example: `
 acorn rm APP_NAME
@@ -23,9 +24,10 @@ acorn rm -t volume,container APP_NAME`,
 }
 
 type Rm struct {
-	All   bool     `usage:"Delete all types" short:"a"`
-	Type  []string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
-	Force bool     `usage:"Force Delete" short:"f"`
+	All    bool     `usage:"Delete all types" short:"a"`
+	Type   []string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
+	Force  bool     `usage:"Force Delete" short:"f"`
+	client client.ClientFactory
 }
 type RmObjects struct {
 	App       bool
@@ -41,12 +43,13 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	c, err := client.Default()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 	if len(args) == 0 {
 		pterm.Error.Println("No AppName arg provided")
+		return errors.New("No AppName arg provided")
 	}
 	if a.All {
 		rmObjects = RmObjects{

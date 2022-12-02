@@ -10,8 +10,8 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func NewContainer() *cobra.Command {
-	cmd := cli.Command(&Container{}, cobra.Command{
+func NewContainer(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Container{client: c.ClientFactory}, cobra.Command{
 		Use:     "container [flags] [APP_NAME...]",
 		Aliases: []string{"containers", "c"},
 		Example: `
@@ -19,7 +19,7 @@ acorn containers`,
 		SilenceUsage: true,
 		Short:        "Manage containers",
 	})
-	cmd.AddCommand(NewContainerDelete())
+	cmd.AddCommand(NewContainerDelete(c))
 	return cmd
 }
 
@@ -27,10 +27,11 @@ type Container struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	All    bool   `usage:"Include stopped containers" short:"a"`
+	client client.ClientFactory
 }
 
 func (a *Container) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

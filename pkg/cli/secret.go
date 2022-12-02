@@ -16,8 +16,8 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func NewSecret() *cobra.Command {
-	cmd := cli.Command(&Secret{}, cobra.Command{
+func NewSecret(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Secret{client: c.ClientFactory}, cobra.Command{
 		Use:     "secret [flags] [SECRET_NAME...]",
 		Aliases: []string{"secrets", "s"},
 		Example: `
@@ -25,20 +25,21 @@ acorn secret`,
 		SilenceUsage: true,
 		Short:        "Manage secrets",
 	})
-	cmd.AddCommand(NewSecretCreate())
-	cmd.AddCommand(NewSecretDelete())
-	cmd.AddCommand(NewSecretExpose())
-	cmd.AddCommand(NewSecretEncrypt())
+	cmd.AddCommand(NewSecretCreate(c))
+	cmd.AddCommand(NewSecretDelete(c))
+	cmd.AddCommand(NewSecretExpose(c))
+	cmd.AddCommand(NewSecretEncrypt(c))
 	return cmd
 }
 
 type Secret struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client client.ClientFactory
 }
 
 func (a *Secret) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

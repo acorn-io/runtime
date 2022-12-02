@@ -1,0 +1,38 @@
+---
+client:
+  version:
+    tag: v0.0.0-dev
+namespace: {}
+server:
+  config:
+    acornDNS: null
+    acornDNSEndpoint: null
+    autoUpgradeInterval: null
+    clusterDomains: null
+    defaultPublishMode: ""
+    ingressClassName: null
+    internalClusterDomain: ""
+    letsEncrypt: null
+    letsEncryptEmail: ""
+    letsEncryptTOSAgree: null
+    podSecurityEnforceProfile: ""
+    setPodSecurityEnforceProfile: null
+  controllerImage: ""
+  dirty: false
+  gitCommit: ""
+  tag: ""
+  userConfig:
+    acornDNS: null
+    acornDNSEndpoint: null
+    autoUpgradeInterval: null
+    clusterDomains: null
+    defaultPublishMode: ""
+    ingressClassName: null
+    internalClusterDomain: ""
+    letsEncrypt: null
+    letsEncryptEmail: ""
+    letsEncryptTOSAgree: null
+    podSecurityEnforceProfile: ""
+    setPodSecurityEnforceProfile: null
+  version: ""
+

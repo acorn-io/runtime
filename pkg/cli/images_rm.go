@@ -2,14 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/client"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewImageDelete() *cobra.Command {
-	cmd := cli.Command(&ImageDelete{}, cobra.Command{
+func NewImageDelete(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&ImageDelete{client: c.ClientFactory}, cobra.Command{
 		Use:          "rm [IMAGE_NAME...]",
 		Example:      `acorn image rm my-image`,
 		SilenceUsage: true,
@@ -19,10 +19,11 @@ func NewImageDelete() *cobra.Command {
 }
 
 type ImageDelete struct {
+	client client.ClientFactory
 }
 
 func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

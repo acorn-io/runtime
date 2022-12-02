@@ -1,0 +1,45 @@
+Acorn: Containerized Application Packaging Framework
+
+Usage:
+  acorn [flags]
+  acorn [command]
+
+Available Commands:
+  all         List (almost) all objects
+  app         List or get apps
+  build       Build an app from a Acornfile file
+  check       Check if the cluster is ready for Acorn
+  container   Manage containers
+  credential  Manage registry credentials
+  exec        Run a command in a container
+  help        Help about any command
+  image       Manage images
+  info        Info about acorn installation
+  install     Install and configure acorn in the cluster
+  login       Add registry credentials
+  logout      Remove registry credentials
+  logs        Log all pods from app
+  pull        Pull an image from a remote registry
+  push        Push an image to a remote registry
+  render      Evaluate and display an Acornfile with args
+  rm          Delete an app, container, secret or volume
+  run         Run an app from an image or Acornfile
+  secret      Manage secrets
+  start       Start an app
+  stop        Stop an app
+  tag         Tag an image
+  uninstall   Uninstall acorn and associated resources
+  update      Update a deployed app
+  volume      Manage volumes
+  wait        Wait an app to be ready then exit with status code 0
+
+Flags:
+  -A, --all-namespaces      Namespace to work in
+      --context string      Context to use in the kubeconfig file
+      --debug               Enable debug logging
+      --debug-level int     Debug log level (valid 0-9) (default 7)
+  -h, --help                help for acorn
+      --kubeconfig string   Location of a kubeconfig file
+      --namespace string    Namespace to work in (default "acorn")
+
+Use "acorn [command] --help" for more information about a command.

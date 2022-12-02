@@ -53,7 +53,8 @@ func (o *Options) Complete() (*Options, error) {
 	}
 
 	if result.Client == nil {
-		result.Client, err = client.Default()
+		dc := client.CmdClient{}
+		result.Client, err = dc.CreateDefault()
 		if err != nil {
 			return nil, err
 		}

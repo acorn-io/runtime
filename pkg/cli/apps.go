@@ -10,8 +10,8 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func NewApp() *cobra.Command {
-	return cli.Command(&App{}, cobra.Command{
+func NewApp(c client.CommandContext) *cobra.Command {
+	return cli.Command(&App{client: c.ClientFactory}, cobra.Command{
 		Use:     "app [flags] [APP_NAME...]",
 		Aliases: []string{"apps", "a", "ps"},
 		Example: `
@@ -25,10 +25,11 @@ type App struct {
 	All    bool   `usage:"Include stopped apps" short:"a"`
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client client.ClientFactory
 }
 
 func (a *App) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

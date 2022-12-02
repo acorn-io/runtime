@@ -10,8 +10,8 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func NewCredential() *cobra.Command {
-	cmd := cli.Command(&Credential{}, cobra.Command{
+func NewCredential(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Credential{client: c.ClientFactory}, cobra.Command{
 		Use:     "credential [flags] [SERVER_ADDRESS...]",
 		Aliases: []string{"credentials", "creds"},
 		Example: `
@@ -19,18 +19,19 @@ acorn credential`,
 		SilenceUsage: true,
 		Short:        "Manage registry credentials",
 	})
-	cmd.AddCommand(NewCredentialLogin(false))
-	cmd.AddCommand(NewCredentialLogout(false))
+	cmd.AddCommand(NewCredentialLogin(false, c))
+	cmd.AddCommand(NewCredentialLogout(false, c))
 	return cmd
 }
 
 type Credential struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client client.ClientFactory
 }
 
 func (a *Credential) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}

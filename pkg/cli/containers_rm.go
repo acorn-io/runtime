@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewContainerDelete() *cobra.Command {
-	cmd := cli.Command(&ContainerDelete{}, cobra.Command{
+func NewContainerDelete(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&ContainerDelete{client: c.ClientFactory}, cobra.Command{
 		Use: "kill [CONTAINER_NAME...]",
 		Example: `
 acorn container kill app-name.containername-generated-hash`,
@@ -21,10 +21,11 @@ acorn container kill app-name.containername-generated-hash`,
 }
 
 type ContainerDelete struct {
+	client client.ClientFactory
 }
 
 func (a *ContainerDelete) Run(cmd *cobra.Command, args []string) error {
-	client, err := client.Default()
+	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
