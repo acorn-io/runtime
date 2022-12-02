@@ -17,7 +17,9 @@ var SchemeGroupVersion = schema.GroupVersion{
 func AddToScheme(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&AppInstance{},
-		&AppInstanceList{})
+		&AppInstanceList{},
+		&ImageInstance{},
+		&ImageInstanceList{})
 
 	// Add common types
 	scheme.AddKnownTypes(SchemeGroupVersion, &metav1.Status{})

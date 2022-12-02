@@ -92,7 +92,7 @@ func Remove(ctx context.Context, c client.Client, namespace, digest, tag string)
 	return len(newTags), c.Update(ctx, configMap)
 }
 
-func Write(ctx context.Context, c client.Client, namespace, digest, tag string) error {
+func Write(ctx context.Context, c client.Client, namespace, digest string, tags []string) error {
 	tagLock.Lock(namespace)
 	defer func() { _ = tagLock.Unlock(namespace) }()
 
@@ -117,50 +117,52 @@ func Write(ctx context.Context, c client.Client, namespace, digest, tag string) 
 	}
 
 	key := strings.TrimPrefix(digest, "sha256:")
-	if slices.Contains(mapData[key], tag) {
-		return nil
-	}
-
-	normalizedTag, err := name.NewTag(tag)
-	if err != nil {
-		return err
-	}
-
-	for key, tags := range mapData {
-		for i, existingTag := range tags {
-			normalizedExistingTag, err := name.NewTag(existingTag)
-			if err != nil || normalizedExistingTag.Name() == normalizedTag.Name() {
-				mapData[key] = append(tags[:i], tags[i+1:]...)
-				continue
-			}
-		}
-	}
-
-	mapData[key] = append(mapData[key], tag)
-	data, err = json.Marshal(mapData)
-	if err != nil {
-		return err
-	}
-
-	if configMap.Data == nil {
-		configMap.Data = map[string]string{}
-	}
-
-	configMap.Data[ConfigMapKey] = string(data)
-	if configMap.UID == "" {
-		createErr := c.Create(ctx, configMap)
-		if apierrors.IsNotFound(createErr) {
-			err = c.Create(ctx, &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: configMap.Namespace,
-				},
-			})
-			if err != nil {
-				return createErr
-			}
-			return c.Create(ctx, configMap)
+	for _, tag := range tags {
+		if slices.Contains(mapData[key], tag) {
+			continue
 		} else {
-			return createErr
+			normalizedTag, err := name.NewTag(tag)
+			if err != nil {
+				return err
+			}
+
+			for key, tags := range mapData {
+				for i, existingTag := range tags {
+					normalizedExistingTag, err := name.NewTag(existingTag)
+					if err != nil || normalizedExistingTag.Name() == normalizedTag.Name() {
+						mapData[key] = append(tags[:i], tags[i+1:]...)
+						continue
+					}
+				}
+			}
+
+			mapData[key] = append(mapData[key], tag)
+			data, err = json.Marshal(mapData)
+			if err != nil {
+				return err
+			}
+
+			if configMap.Data == nil {
+				configMap.Data = map[string]string{}
+			}
+
+			configMap.Data[ConfigMapKey] = string(data)
+			if configMap.UID == "" {
+				createErr := c.Create(ctx, configMap)
+				if apierrors.IsNotFound(createErr) {
+					err = c.Create(ctx, &corev1.Namespace{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: configMap.Namespace,
+						},
+					})
+					if err != nil {
+						return createErr
+					}
+					return c.Create(ctx, configMap)
+				} else {
+					return createErr
+				}
+			}
 		}
 	}
 	return c.Update(ctx, configMap)

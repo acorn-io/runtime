@@ -3,177 +3,175 @@ package images
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"sort"
 	"strings"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
-	"github.com/acorn-io/acorn/pkg/remoteopts"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
+	"github.com/acorn-io/mink/pkg/strategy"
+	"github.com/acorn-io/mink/pkg/strategy/remote"
+	"github.com/acorn-io/mink/pkg/strategy/translation"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"k8s.io/apiserver/pkg/storage"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Strategy struct {
+	strategy.CompleteStrategy
 	rest.TableConvertor
-	client kclient.WithWatch
+
+	client        kclient.Client
+	clientFactory *client.Factory
 }
 
-func NewStrategy(c kclient.WithWatch) *Strategy {
-	return &Strategy{
-		TableConvertor: tables.ImageConverter,
-		client:         c,
+func NewStrategy(c kclient.WithWatch, clientFactory *client.Factory) (strategy.CompleteStrategy, error) {
+	storageStrategy, err := newStorageStrategy(c)
+	if err != nil {
+		return nil, err
 	}
+	return NewStrategyWithStorage(c, clientFactory, storageStrategy), nil
+}
+
+func NewStrategyWithStorage(c kclient.WithWatch, clientFactory *client.Factory, storageStrategy strategy.CompleteStrategy) strategy.CompleteStrategy {
+	return &Strategy{
+		TableConvertor:   tables.ImageConverter,
+		CompleteStrategy: storageStrategy,
+		client:           c,
+		clientFactory:    clientFactory,
+	}
+}
+
+func newStorageStrategy(kclient kclient.WithWatch) (strategy.CompleteStrategy, error) {
+	return translation.NewTranslationStrategy(
+		&Translator{},
+		remote.NewRemote(&v1.ImageInstance{}, &v1.ImageInstanceList{}, kclient)), nil
+}
+
+// TODO migrate the logic to validateUpdate when create is removed
+func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+	image := obj.(*apiv1.Image)
+	duplicateTag := make(map[string]bool)
+
+	for _, tag := range image.Tags {
+		if !(includesTag(tag) || includesRepoAndTag(tag)) {
+			duplicateTag[tag+":latest"] = true
+		} else {
+			duplicateTag[tag] = true
+		}
+
+	}
+	imageList := &apiv1.ImageList{}
+
+	err := s.client.List(ctx, imageList, &kclient.ListOptions{
+		Namespace: image.Namespace,
+	})
+	if err != nil {
+		result = append(result, field.InternalError(field.NewPath("namespace"), err))
+	}
+
+	for _, imageItem := range imageList.Items {
+		if imageItem.Digest == image.Digest {
+			continue
+		}
+		for i, tag := range imageItem.Tags {
+			if duplicateTag[imageItem.Tags[i]] {
+				result = append(result, field.Duplicate(field.NewPath("tag name"), fmt.Errorf("unable to tag image %s with tag %s as it is already in use by %s", image.Name[:12], tag, imageItem.Name[:12])))
+			}
+		}
+	}
+	return result
+}
+
+func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
+	newImage := obj.(*apiv1.Image)
+	oldImage := old.(*apiv1.Image)
+	if newImage.Digest != oldImage.Digest {
+		result = append(result, field.Duplicate(field.NewPath("digest"), fmt.Errorf("unable to updates image %s as image digests do not match", newImage.Name[:12])))
+		return result
+	}
+	return s.Validate(ctx, obj)
+}
+
+func (s *Strategy) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
+	return tables.ImageConverter.ConvertToTable(ctx, object, tableOptions)
+}
+
+func getRepo(namespace string) (name.Repository, error) {
+	return name.NewRepository("127.0.0.1:5000/acorn/" + namespace)
 }
 
 func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
 	return s.ImageGet(ctx, namespace, name)
 }
 
-func (s *Strategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
-	images, err := s.ImageList(ctx, namespace)
-	if err != nil {
-		return nil, err
-	}
-	return &images, nil
-}
-
-func (s *Strategy) New() types.Object {
-	return &apiv1.Image{}
-}
-
-func (s *Strategy) NewList() types.ObjectList {
-	return &apiv1.ImageList{}
-}
-
-func (s *Strategy) ImageList(ctx context.Context, namespace string) (apiv1.ImageList, error) {
-	if namespace != "" {
-		return s.forNamespace(ctx, namespace)
-	}
-
-	var (
-		result     apiv1.ImageList
-		namespaces = &corev1.NamespaceList{}
-	)
-
-	err := s.client.List(ctx, namespaces)
-	if err != nil {
-		return result, err
-	}
-
-	sort.Slice(namespaces.Items, func(i, j int) bool {
-		return namespaces.Items[i].Name < namespaces.Items[j].Name
-	})
-
-	for _, ns := range namespaces.Items {
-		list, err := s.forNamespace(ctx, ns.Name)
+// TODO THIS create method go away, since users wont be allowed to Create images, just ImageInstances should be created by the backend
+func (s *Strategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
+	image := obj.(*apiv1.Image)
+	for i, tag := range image.Tags {
+		_, err := name.NewTag(tag)
 		if err != nil {
-			return result, err
+			return nil, err
 		}
-		result.Items = append(result.Items, list.Items...)
+		if tag != "" && !(includesTag(tag) || includesRepoAndTag(tag)) {
+			image.Tags[i] = tag + ":latest"
+		}
 	}
-
-	return result, nil
+	imageInstance := &v1.ImageInstance{
+		TypeMeta:   image.TypeMeta,
+		ObjectMeta: image.ObjectMeta,
+		Digest:     image.Digest,
+		Tags:       image.Tags,
+	}
+	return image, s.client.Create(ctx, imageInstance)
 }
 
-func (s *Strategy) forNamespace(ctx context.Context, ns string) (apiv1.ImageList, error) {
-	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
-		return apiv1.ImageList{}, err
-	} else if !ok {
-		return apiv1.ImageList{}, nil
-	}
+func (s *Strategy) Update(ctx context.Context, obj types.Object) (types.Object, error) {
+	image := obj.(*apiv1.Image)
+	duplicateTag := make(map[string]bool)
 
-	opts, err := remoteopts.WithServerDialer(ctx, s.client)
-	if err != nil {
-		return apiv1.ImageList{}, err
-	}
-
-	repo, err := getRepo(ns)
-	if err != nil {
-		return apiv1.ImageList{}, err
-	}
-
-	names, err := remote.List(repo, opts...)
-	if tErr, ok := err.(*transport.Error); ok && tErr.StatusCode == http.StatusNotFound {
-		return apiv1.ImageList{}, nil
-	}
-	if err != nil {
-		return apiv1.ImageList{}, err
-	}
-
-	tags, err := tags2.Get(ctx, s.client, ns)
-	if err != nil {
-		return apiv1.ImageList{}, err
-	}
-
-	result := apiv1.ImageList{}
-	for _, imageName := range names {
-		if !tags2.SHAPattern.MatchString(imageName) {
-			continue
+	for i, tag := range image.Tags {
+		_, err := name.NewTag(tag)
+		if err != nil {
+			return nil, err
 		}
-		tags := tags[imageName]
-		if len(tags) == 0 {
-			tags = append(tags, "")
+		if tag != "" && !(includesTag(tag) || includesRepoAndTag(tag)) {
+			image.Tags[i] = tag + ":latest"
 		}
-		for _, tag := range tags {
-			image := apiv1.Image{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      imageName,
-					Namespace: ns,
-				},
-				Digest:    "sha256:" + imageName,
-				Reference: tag,
-			}
-			if tag != "" {
-				parsedTag, err := name.NewTag(tag)
-				if err == nil {
-					image.Repository = strings.TrimSuffix(tag, ":"+parsedTag.TagStr())
-					image.Tag = parsedTag.TagStr()
-				}
-			}
-			result.Items = append(result.Items, image)
+		currentTag := image.Tags[i]
+		if duplicateTag[image.Tags[i]] {
+			image.Tags = append(image.Tags[:i], image.Tags[i+1:]...)
 		}
+		duplicateTag[currentTag] = true
 	}
+	oldImage := &v1.ImageInstance{}
+	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: image.Namespace, Name: image.Name}, oldImage)
+	if apierrors.IsNotFound(err) {
+		return image, err
+	}
+	oldImage.Tags = image.Tags
 
-	return result, nil
+	return image, s.client.Update(ctx, oldImage)
 }
 
 func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
-	image, matchedReference, err := s.imageGet(ctx, obj.GetNamespace(), obj.GetName())
+	image := obj.(*apiv1.Image)
+	imageToDelete := &v1.ImageInstance{}
+	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: image.Namespace, Name: image.Name}, imageToDelete)
 	if err != nil {
 		return nil, err
 	}
+	return image, s.client.Delete(ctx, imageToDelete)
 
-	if matchedReference != "" {
-		tagCount, err := tags2.Remove(ctx, s.client, image.Namespace, image.Digest, matchedReference)
-		if tagCount > 0 || err != nil {
-			return image, nil
-		}
-	}
-
-	repo, err := getRepo(image.Namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	opts, err := remoteopts.WithServerDialer(ctx, s.client)
-	if err != nil {
-		return nil, err
-	}
-
-	return image, remote.Delete(repo.Digest(image.Digest), opts...)
 }
 
 func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
@@ -193,12 +191,16 @@ func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1
 }
 
 func (s *Strategy) imageGet(ctx context.Context, namespace, imageName string) (*apiv1.Image, string, error) {
-	images, err := s.ImageList(ctx, namespace)
+	result := &apiv1.ImageList{}
+
+	err := s.client.List(ctx, result, &kclient.ListOptions{
+		Namespace: namespace,
+	})
 	if err != nil {
 		return nil, "", err
 	}
 
-	return findImageMatch(images, imageName)
+	return findImageMatch(*result, imageName)
 }
 
 func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, string, error) {
@@ -207,7 +209,6 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 		digestPrefix string
 		tagName      string
 	)
-
 	if strings.HasPrefix(imageName, "sha256:") {
 		digest = imageName
 	} else if tags2.SHAPattern.MatchString(imageName) {
@@ -215,6 +216,10 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
 	} else {
+		_, err := name.NewTag(imageName)
+		if err != nil {
+			return nil, "", err
+		}
 		tag, err := name.ParseReference(imageName)
 		if err != nil {
 			return nil, "", err
@@ -232,15 +237,21 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 				return nil, "", apierrors.NewBadRequest(reason)
 			}
 			matchedImage = image
-		} else if image.Reference == imageName {
-			return &image, image.Tag, nil
-		} else if image.Reference != "" {
-			imageParsedTag, err := name.NewTag(image.Reference)
-			if err != nil {
-				continue
-			}
-			if imageParsedTag.Name() == tagName {
-				return &image, image.Reference, nil
+		}
+		if !(includesTag(imageName) || includesRepoAndTag(imageName)) {
+			imageName = imageName + ":latest"
+		}
+		for i, tag := range image.Tags {
+			if tag == imageName {
+				return &image, image.Tags[i], nil
+			} else if tag != "" {
+				imageParsedTag, err := name.NewTag(tag)
+				if err != nil {
+					continue
+				}
+				if imageParsedTag.Name() == tagName {
+					return &image, tag, nil
+				}
 			}
 		}
 	}
@@ -255,6 +266,13 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	}, imageName)
 }
 
-func getRepo(namespace string) (name.Repository, error) {
-	return name.NewRepository("127.0.0.1:5000/acorn/" + namespace)
+func includesTag(name string) bool {
+	return len(strings.Split(name, "/")) == 1 && len(strings.Split(name, ":")) == 2
+}
+
+func includesRepoAndTag(name string) bool {
+	if len(strings.Split(name, "/")) >= 2 { //repo included
+		return len(strings.Split(strings.Split(name, "/")[len(strings.Split(name, "/"))-1], ":")) == 2
+	}
+	return false
 }

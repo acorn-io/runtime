@@ -70,8 +70,16 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	var errs []error
+	if len(s.Tag) == 0 {
+		_, err = c.ImageCreate(cmd.Context(), image.ID, "")
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, tag := range s.Tag {
-		err := c.ImageTag(cmd.Context(), image.ID, tag)
+		// TODO - this is a temporary fix until ibuildthecloud lands the rest of his refactor
+		_, err := c.ImageCreate(cmd.Context(), image.ID, tag)
 		if err != nil {
 			errs = append(errs, err)
 		}

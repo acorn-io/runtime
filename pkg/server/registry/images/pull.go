@@ -3,6 +3,8 @@ package images
 import (
 	"context"
 	"encoding/json"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"strings"
 	"sync"
@@ -155,7 +157,14 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 
 		// don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex()
 		if err = remote.WriteIndex(repo.Digest(hash.Hex), index, opts...); err == nil {
-			if err := i.clientFactory.Namespace(namespace).ImageTag(ctx, hash.Hex, imageName); err != nil {
+			img := &v1.ImageInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      imageName,
+					Namespace: namespace,
+				},
+				Digest: hash.Hex,
+			}
+			if err := i.client.Create(ctx, img); err != nil {
 				progress2 <- ggcrv1.Update{
 					Error: err,
 				}

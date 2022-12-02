@@ -3,7 +3,10 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
@@ -12,21 +15,44 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
+// TODO This should go away once ibuildthecloud lands his refactor. When that is done, client/user should never be directly creating images. They are the result of builds or pushes only
+func (c *client) ImageCreate(ctx context.Context, imageName, tag string) (*apiv1.Image, error) {
+	image, err := c.ImageGet(ctx, imageName)
+	if apierrors.IsNotFound(err) {
+		image = &apiv1.Image{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "",
+				APIVersion: "",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      imageName,
+				Namespace: c.Namespace,
+			},
+			Digest: "sha256:" + imageName,
+			Tags:   []string{},
+		}
+		if tag != "" {
+			image.Tags = []string{tag}
+		}
+
+		return image, c.Client.Create(ctx, image)
+	}
+	if tag != "" {
+		image.Tags = append(image.Tags, tag)
+	}
+	return image, c.Client.Update(ctx, image)
+
+}
+
 func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 	image, err := c.ImageGet(ctx, imageName)
-	if err != nil {
+	if apierrors.IsNotFound(err) {
+		_, err := c.ImageCreate(ctx, imageName, tag)
 		return err
 	}
+	image.Tags = append(image.Tags, tag)
 
-	tagResult := &apiv1.ImageTag{}
-	err = c.RESTClient.Post().
-		Namespace(image.Namespace).
-		Resource("images").
-		Name(image.Name).
-		SubResource("tag").
-		Body(&apiv1.ImageTag{
-			TagName: tag,
-		}).Do(ctx).Into(tagResult)
+	err = c.Client.Update(ctx, image)
 	return err
 }
 
@@ -144,15 +170,51 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 	return result, nil
 }
 
-func (c *client) ImageDelete(ctx context.Context, imageName string) (*apiv1.Image, error) {
+func (c *client) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
 	image, err := c.ImageGet(ctx, imageName)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
-
+	if len(image.Tags) == 1 {
+		return image, c.Client.Delete(ctx, image)
+	}
+	var remainingTags []string
+	latest := ""
+	if !(includesTag(imageName) || includesRepoAndTag(imageName)) {
+		latest = ":latest"
+	}
+	for _, tag := range image.Tags {
+		if tag != imageName+latest {
+			remainingTags = append(remainingTags, tag)
+		}
+	}
+	if len(remainingTags) != len(image.Tags) {
+		image.Tags = remainingTags
+		err = c.RESTClient.Put().
+			Namespace(image.Namespace).
+			Resource("images").
+			Name(image.Name).
+			Body(image).
+			Do(ctx).Into(image)
+		return image, err
+	}
+	if !opts.Force && len(image.Tags) > 1 {
+		return nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", imageName)
+	}
 	return image, c.Client.Delete(ctx, image)
+}
+
+func includesTag(name string) bool {
+	return len(strings.Split(name, "/")) == 1 && len(strings.Split(name, ":")) == 2
+}
+
+func includesRepoAndTag(name string) bool {
+	if len(strings.Split(name, "/")) >= 2 { //repo included
+		return len(strings.Split(strings.Split(name, "/")[len(strings.Split(name, "/"))-1], ":")) == 2
+	}
+	return false
 }
 
 func (c *client) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, error) {
@@ -165,7 +227,6 @@ func (c *client) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, 
 
 func (c *client) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 	result := &apiv1.ImageList{}
-
 	err := c.Client.List(ctx, result, &kclient.ListOptions{
 		Namespace: c.Namespace,
 	})

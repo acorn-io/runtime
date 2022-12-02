@@ -31,10 +31,17 @@ var (
 	}
 	VolumeConverter = MustConverter(Volume)
 
-	Image = [][]string{
+	//Used for acorn image related printing
+	ImageAcorn = [][]string{
 		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
 		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
 		{"Image-ID", "{{trunc .Name}}"},
+	}
+
+	//Used for kubectl image related printing
+	Image = [][]string{
+		{"Image-ID", "{{trunc .Name}}"},
+		{"Tags", "{{if .Tags}}{{else}}<none>{{end}}{{range $index, $v := .Tags}}{{if $index}},{{end}}{{if eq $v \"\"}}<none>{{else}}{{$v}}{{end}}{{end}}"},
 	}
 	ImageConverter = MustConverter(Image)
 

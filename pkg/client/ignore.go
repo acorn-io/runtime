@@ -162,8 +162,8 @@ func (c IgnoreUninstalled) ImageGet(ctx context.Context, name string) (*apiv1.Im
 	return c.client.ImageGet(ctx, name)
 }
 
-func (c IgnoreUninstalled) ImageDelete(ctx context.Context, name string) (*apiv1.Image, error) {
-	return ignoreUninstalled(c.client.ImageDelete(ctx, name))
+func (c IgnoreUninstalled) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
+	return ignoreUninstalled(c.client.ImageDelete(ctx, name, opts))
 }
 
 func (c IgnoreUninstalled) ImagePush(ctx context.Context, tagName string, opts *ImagePushOptions) (<-chan ImageProgress, error) {
@@ -176,6 +176,10 @@ func (c IgnoreUninstalled) ImagePull(ctx context.Context, name string, opts *Ima
 	return promptInstall(ctx, func() (<-chan ImageProgress, error) {
 		return c.client.ImagePull(ctx, name, opts)
 	})
+}
+
+func (c IgnoreUninstalled) ImageCreate(ctx context.Context, id string, tag string) (*apiv1.Image, error) {
+	return c.client.ImageCreate(ctx, id, tag)
 }
 
 func (c IgnoreUninstalled) ImageTag(ctx context.Context, image, tag string) error {

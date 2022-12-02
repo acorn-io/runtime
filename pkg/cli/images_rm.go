@@ -2,9 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/client"
-
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -20,16 +19,18 @@ func NewImageDelete(c client.CommandContext) *cobra.Command {
 
 type ImageDelete struct {
 	client client.ClientFactory
+	Force  bool `usage:"Force Delete" short:"f"`
 }
 
 func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
 	for _, image := range args {
-		deleted, err := client.ImageDelete(cmd.Context(), image)
+		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
+
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", image, err)
 		}
