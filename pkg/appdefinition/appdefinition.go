@@ -105,7 +105,7 @@ func (a *AppDefinition) getArgsForProfile(args map[string]any, profiles []string
 			optional = true
 			profile = profile[:len(profile)-1]
 		}
-		path := cue2.ParsePath(fmt.Sprintf("profiles.%s", profile))
+		path := cue2.ParsePath(fmt.Sprintf("profiles[\"%s\"]", profile))
 		pValue := val.LookupPath(path)
 		if !pValue.Exists() {
 			if !optional {
