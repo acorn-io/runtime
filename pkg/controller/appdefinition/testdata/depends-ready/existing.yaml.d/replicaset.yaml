@@ -1,0 +1,17 @@
+kind: ReplicaSet
+apiVersion: apps/v1
+metadata:
+  generation: 1
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: container-name
+  annotations:
+    acorn.io/app-generation: "0"
+status:
+  observedGeneration: 1
+  readyReplicas: 1
+  availableReplicas: 1
+  replicas: 1

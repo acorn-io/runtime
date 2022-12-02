@@ -13,3 +13,9 @@ func TestDepends(t *testing.T) {
 		return CheckDependencies(router.HandlerFunc(DeploySpec)).Handle(req, resp)
 	})
 }
+
+func TestDependsReadyReplicaSet(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/depends-ready", func(req router.Request, resp router.Response) error {
+		return CheckDependencies(router.HandlerFunc(DeploySpec)).Handle(req, resp)
+	})
+}
