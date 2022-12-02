@@ -1,6 +1,7 @@
 package dev
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -71,8 +72,34 @@ type watcher struct {
 	watchingTS []time.Time
 }
 
+func (w *watcher) KeyboardTrigger(ctx context.Context) error {
+	input := bufio.NewReader(os.Stdin)
+	i := input.Buffered()
+	if i > 0 {
+		_, _ = input.Discard(i)
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		_, _, err := input.ReadLine()
+		if err != nil {
+			logrus.Errorf("failed to read input, terminating input watch: %v", err)
+			return err
+		}
+		logrus.Infof("Triggering rebuild")
+		w.Trigger()
+	}
+}
+
 func (w *watcher) Trigger() {
-	w.trigger <- struct{}{}
+	select {
+	case w.trigger <- struct{}{}:
+	default:
+	}
 }
 
 func (w *watcher) readFiles() []string {
@@ -135,6 +162,7 @@ func (w *watcher) Wait(ctx context.Context) error {
 	for {
 		if !w.foundChanges() {
 			select {
+			case <-w.trigger:
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-time.After(time.Second):
@@ -160,7 +188,7 @@ func buildLoop(ctx context.Context, file string, opts *Options) error {
 		watcher = watcher{
 			file:       file,
 			cwd:        opts.Build.Cwd,
-			trigger:    make(chan struct{}),
+			trigger:    make(chan struct{}, 1),
 			watching:   []string{file},
 			watchingTS: make([]time.Time, 1),
 			args:       opts.Args,
@@ -190,6 +218,7 @@ outer:
 		image, err := build.Build(ctx, file, &opts.Build)
 		if err != nil {
 			logrus.Errorf("Failed to build %s: %v", file, err)
+			logrus.Infof("Build failed, press [ENTER] to rebuild")
 			continue
 		}
 
@@ -229,10 +258,13 @@ outer:
 		eg.Go(func() error {
 			return appDeleteStop(ctx, opts.Client, app, cancel)
 		})
+		eg.Go(func() error {
+			return watcher.KeyboardTrigger(ctx)
+		})
 		go func() {
 			err := eg.Wait()
 			if err != nil {
-				logrus.Error(err)
+				logrus.Error("dev loop terminated, restarting: ", err)
 			}
 			startLock.Lock()
 			started = false
@@ -259,6 +291,7 @@ func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image strin
 	}
 	update := opts.Run.ToUpdate()
 	update.Image = image
+	logrus.Infof("Updating app [%s] to image [%s]", app.Name, image)
 	_, err := rulerequest.PromptUpdate(ctx, opts.Client, opts.Dangerous, app.Name, update)
 	return err
 }
@@ -325,6 +358,9 @@ func stop(opts *Options) error {
 		return err
 	}
 
+	_, _ = opts.Client.AppUpdate(ctx, existingApp.Name, &client.AppUpdateOptions{
+		DevMode: new(bool),
+	})
 	return opts.Client.AppStop(ctx, existingApp.Name)
 }
 

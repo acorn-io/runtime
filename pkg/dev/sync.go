@@ -3,10 +3,12 @@ package dev
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	sync2 "sync"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -16,6 +18,7 @@ import (
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
 	"github.com/loft-sh/devspace/pkg/devspace/sync"
 	logpkg "github.com/loft-sh/devspace/pkg/util/log"
+	"github.com/moby/buildkit/frontend/dockerfile/dockerignore"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -37,6 +40,7 @@ func containerSyncLoop(ctx context.Context, app *apiv1.App, opts *Options) error
 }
 
 func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
+	syncLock := sync2.Mutex{}
 	syncing := map[string]bool{}
 	w := objwatcher.New[*apiv1.ContainerReplica](opts.Client.GetClient())
 	_, err := w.BySelector(ctx, app.Namespace, labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
@@ -48,9 +52,20 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 				if mount.ContextDir == "" {
 					continue
 				}
-				go startSyncForPath(ctx, opts.Client, con, opts.Build.Cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
+				var (
+					remoteDir = remoteDir
+					mount     = mount
+				)
+				go func() {
+					startSyncForPath(ctx, opts.Client, con, opts.Build.Cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
+					syncLock.Lock()
+					delete(syncing, con.Name)
+					syncLock.Unlock()
+				}()
 			}
+			syncLock.Lock()
 			syncing[con.Name] = true
+			syncLock.Unlock()
 		}
 		return false, nil
 	})
@@ -66,12 +81,26 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 	if err != nil {
 		return nil, err
 	}
+	var exclude []string
+	f, err := os.Open(filepath.Join(cwd, ".dockerignore"))
+	if err == nil {
+		lines, err := dockerignore.ReadAll(f)
+		_ = f.Close()
+		if err == nil {
+			exclude = lines
+		} else {
+			return nil, err
+		}
+	} else if !os.IsNotExist(err) {
+		return nil, err
+	}
 	s, err := sync.NewSync(source, sync.Options{
 		DownstreamDisabled: !bidirectional,
 		Polling:            true,
 		Verbose:            true,
+		UploadExcludePaths: exclude,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
-		Log:                logpkg.NewDefaultPrefixLogger(strings.TrimPrefix(con.Name, con.Spec.AppName+".")+": (sync): ", logpkg.GetInstance()),
+		Log:                logpkg.NewDefaultPrefixLogger(strings.TrimPrefix(con.Name, con.Spec.AppName+".")+": (sync): ", newLogger()),
 	})
 	if err != nil {
 		return nil, err
@@ -106,9 +135,35 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 	return done, nil
 }
 
+func newLogger() logpkg.Logger {
+	return logpkg.NewStreamLogger(&ignore{
+		Out: os.Stdout,
+	}, logrus.InfoLevel)
+
+}
+
+type ignore struct {
+	Out io.Writer
+}
+
+func (i *ignore) Write(p []byte) (n int, err error) {
+	line := string(p)
+	for _, exclude := range []string{
+		"Sync stopped",
+		"Start syncing",
+		"Error: Sync Error",
+	} {
+		if strings.Contains(line, exclude) {
+			return len(p), nil
+		}
+	}
+	return i.Out.Write(p)
+}
+
 func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) {
 	for {
 		var wait <-chan struct{}
+
 		con, err := client.ContainerReplicaGet(ctx, con.Name)
 		if apierrors.IsNotFound(err) || con.Status.Phase != corev1.PodRunning {
 			return
@@ -124,7 +179,7 @@ func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.Cont
 			case <-wait:
 			}
 		} else {
-			logrus.Errorf("failed to run sync on container %s: %v", con.Name, err)
+			logrus.Debugf("failed to run sync on container %s: %v", con.Name, err)
 		}
 
 		select {
