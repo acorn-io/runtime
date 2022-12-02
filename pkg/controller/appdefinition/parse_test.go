@@ -13,6 +13,10 @@ func TestParseAppImage(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/parseappimage", ParseAppImage)
 }
 
+func TestParseAppImageDevMode(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/parsedevmode", ParseAppImage)
+}
+
 func TestParseAppImageBug(t *testing.T) {
 	appImage := &v1.AppImage{
 		ImageData: v1.ImagesData{

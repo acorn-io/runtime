@@ -1,0 +1,42 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: default
+  namespace: random
+spec:
+  devMode: true
+status:
+  conditions:
+    - type: parsed
+      reason: Success
+      status: "True"
+      success: true
+  appSpec:
+    images: {}
+    volumes: {}
+    secrets: {}
+    containers:
+      oneimage:
+        dirs: {}
+        image: "foo"
+        command: []
+        workingDir: ""
+        entrypoint: []
+        environment: []
+        sidecars: {}
+        interactive: false
+        files: {}
+        volumes: []
+        permissions: {}
+  appImage:
+    acornfile: |
+      args: image: "not-foo"
+      profiles: dev: image: "foo"
+      containers: {
+        oneimage: image: args.image
+      }
+    imageData:
+      containers:
+        buildimage: {
+          image: "sha256:build-image"
+        }
