@@ -4,7 +4,6 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
 	"github.com/acorn-io/acorn/pkg/server/registry/builders"
@@ -14,7 +13,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/info"
 	"github.com/acorn-io/acorn/pkg/server/registry/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
-	"github.com/acorn-io/mink/pkg/db"
 	"github.com/acorn-io/mink/pkg/serializer"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -24,31 +22,16 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func APIStoresForInspection(cfg *clientgo.Config) (map[string]rest.Storage, error) {
-	c, err := k8sclient.New(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return APIStores(c, cfg, cfg, nil)
-}
-
-func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Factory) (map[string]rest.Storage, error) {
+func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]rest.Storage, error) {
 	clientFactory, err := client.NewClientFactory(localCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	buildersStorage, buildersStatus, err := builders.NewStorage(c, db)
-	if err != nil {
-		return nil, err
-	}
+	buildersStorage := builders.NewStorage(c)
+	imagesStorage := images.NewStorage(c)
 
-	imagesStorage, err := images.NewStorage(c, db)
-	if err != nil {
-		return nil, err
-	}
-
-	containersStorage, containersStatus, err := containers.NewStorage(c, db)
+	containersStorage, err := containers.NewStorage(c)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +51,7 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Facto
 		return nil, err
 	}
 
-	appsStorage, appStatusStorage, err := apps.NewStorage(c, clientFactory, db)
+	appsStorage, err := apps.NewStorage(c, clientFactory)
 	if err != nil {
 		return nil, err
 	}
@@ -78,14 +61,13 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Facto
 		return nil, err
 	}
 
-	volumesStorage, volumesStatus, err := volumes.NewStorage(c, db)
+	volumesStorage, err := volumes.NewStorage(c)
 	if err != nil {
 		return nil, err
 	}
 
 	stores := map[string]rest.Storage{
 		"apps":                   appsStorage,
-		"apps/status":            appStatusStorage,
 		"apps/log":               logsStorage,
 		"apps/confirmupgrade":    apps.NewConfirmUpgrade(c),
 		"apps/pullimage":         apps.NewPullAppImage(c),
@@ -107,21 +89,11 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config, db *db.Facto
 		"infos":                  info.NewStorage(c),
 	}
 
-	if db != nil {
-		stores["builders/status"] = buildersStatus
-		stores["containerreplicas/status"] = containersStatus
-		stores["volumes/status"] = volumesStatus
-	}
-
 	return stores, nil
 }
 
-func APIGroups(c kclient.WithWatch, cfg, localCfg *clientgo.Config, dsn string) (*genericapiserver.APIGroupInfo, error) {
-	var dbFactory *db.Factory
-	if dsn != "" {
-		dbFactory = db.NewFactory(scheme.Scheme, dsn, nil)
-	}
-	stores, err := APIStores(c, cfg, localCfg, dbFactory)
+func APIGroups(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (*genericapiserver.APIGroupInfo, error) {
+	stores, err := APIStores(c, cfg, localCfg)
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/acorn-io/mink/pkg/db"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
@@ -27,23 +26,24 @@ type Strategy struct {
 	clientFactory *client.Factory
 }
 
-func NewStrategy(c kclient.WithWatch, clientFactory *client.Factory, db *db.Factory) (strategy.CompleteStrategy, error) {
-	storageStrategy, err := newStorageStrategy(c, db)
+func NewStrategy(c kclient.WithWatch, clientFactory *client.Factory) (strategy.CompleteStrategy, error) {
+	storageStrategy, err := newStorageStrategy(c)
 	if err != nil {
 		return nil, err
 	}
+	return NewStrategyWithStorage(c, clientFactory, storageStrategy), nil
+}
+
+func NewStrategyWithStorage(c kclient.WithWatch, clientFactory *client.Factory, storageStrategy strategy.CompleteStrategy) strategy.CompleteStrategy {
 	return &Strategy{
 		TableConvertor:   tables.AppConverter,
 		CompleteStrategy: storageStrategy,
 		client:           c,
 		clientFactory:    clientFactory,
-	}, nil
+	}
 }
 
-func newStorageStrategy(kclient kclient.WithWatch, db *db.Factory) (strategy.CompleteStrategy, error) {
-	if db != nil {
-		return db.NewDBStrategy(&apiv1.App{})
-	}
+func newStorageStrategy(kclient kclient.WithWatch) (strategy.CompleteStrategy, error) {
 	return translation.NewTranslationStrategy(
 		&Translator{},
 		remote.NewRemote(&v1.AppInstance{}, &v1.AppInstanceList{}, kclient)), nil

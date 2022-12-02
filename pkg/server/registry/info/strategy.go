@@ -8,41 +8,42 @@ import (
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/info"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy"
-	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/apiserver/pkg/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c client.WithWatch) *Storage {
-	return &Storage{
+func NewStrategy(c client.WithWatch) stores.ListOnly {
+	return &Strategy{
 		TableConvertor: tables.InfoConverter,
 		client:         c,
 	}
 }
 
-type Storage struct {
+type Strategy struct {
 	*strategy.DestroyAdapter
 	rest.TableConvertor
 
 	client client.WithWatch
 }
 
-func (s *Storage) NewList() runtime.Object {
+func (s *Strategy) NewList() types.ObjectList {
 	return &apiv1.InfoList{}
 }
 
-func (s *Storage) NamespaceScoped() bool {
+func (s *Strategy) NamespaceScoped() bool {
 	return true
 }
 
-func (s *Storage) New() runtime.Object {
+func (s *Strategy) New() types.Object {
 	return &apiv1.Info{}
 }
 
-func (s *Storage) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
+func (s *Strategy) List(ctx context.Context, namespace string, options storage.ListOptions) (types.ObjectList, error) {
 	var publicKeys []apiv1.EncryptionKey
 	ns, _ := request.NamespaceFrom(ctx)
 	if ns != "" {
