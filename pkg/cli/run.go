@@ -220,7 +220,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	existingApp, _ := c.AppGet(cmd.Context(), s.Name)
-	if existingApp != nil && !s.Update {
+	if existingApp != nil && !s.Update && !s.Interactive {
 		return fmt.Errorf("app \"%s\" already exists", s.Name)
 	}
 
