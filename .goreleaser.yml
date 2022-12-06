@@ -88,6 +88,7 @@ brews:
   - description: "Acorn CLI"
     homepage: "https://acorn.io"
     license: "Apache 2.0"
+    skip_upload: auto
     tap:
       owner: acorn-io
       name: homebrew-cli
