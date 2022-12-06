@@ -24,7 +24,14 @@ func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) 
 	t.Helper()
 
 	ctx := GetCTX(t)
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	var cancel context.CancelFunc
+
+	if deadline, ok := t.Deadline(); ok {
+		ctx, cancel = context.WithDeadline(ctx, deadline)
+	} else {
+		ctx, cancel = context.WithTimeout(ctx, 1*time.Minute)
+	}
+
 	defer cancel()
 
 	result, err := watchFunc()
