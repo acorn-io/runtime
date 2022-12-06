@@ -25,7 +25,7 @@ validate-ci:
 	;fi
 
 test:
-	go test ./...
+	go test $(TEST_FLAGS) ./...
 
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist

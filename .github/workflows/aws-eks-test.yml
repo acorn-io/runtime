@@ -1,5 +1,6 @@
 name: test acorn on EKS
 on:
+  workflow_dispatch:
   schedule:
     - cron: '00 7 * * *'   # time in UTC
 jobs:
@@ -49,7 +50,7 @@ jobs:
 
       - name: run acorn integration tests
         run: |
-          make test
+          make TEST_ACORN_CONTROLLER=external TEST_FLAGS="-timeout=7m" test
         env:
           KUBECONFIG: "/home/runner/.kube/config"
 
