@@ -54,6 +54,16 @@ jobs:
         env:
           KUBECONFIG: "/home/runner/.kube/config"
 
+      - name: report failure to slack
+        if: failure()
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: '${{ secrets.SLACK_BOT_CHANNEL }}'
+          slack-message: "Nightly EKS test failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
       - name: uninstall acorn
         if: always()
         run: |
