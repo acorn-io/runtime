@@ -35,13 +35,13 @@ func (c *client) SecretGet(ctx context.Context, name string) (*apiv1.Secret, err
 	}, secret)
 }
 
-func (c *client) SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (c *client) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
 	result := &apiv1.Secret{}
 	err := c.RESTClient.Get().
 		Namespace(c.Namespace).
 		Resource("secrets").
 		Name(name).
-		SubResource("expose").
+		SubResource("reveal").
 		Do(ctx).Into(result)
 	return result, err
 }

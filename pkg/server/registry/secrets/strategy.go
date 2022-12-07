@@ -21,8 +21,8 @@ type Strategy struct {
 	rest.TableConvertor
 }
 
-func NewStrategy(c kclient.WithWatch, expose bool) strategy.CompleteStrategy {
-	storage := newStorage(c, expose)
+func NewStrategy(c kclient.WithWatch, reveal bool) strategy.CompleteStrategy {
+	storage := newStorage(c, reveal)
 	return NewStrategyWithStorage(c, storage)
 
 }
@@ -34,10 +34,10 @@ func NewStrategyWithStorage(c kclient.WithWatch, storage strategy.CompleteStrate
 	}
 }
 
-func newStorage(c kclient.WithWatch, expose bool) strategy.CompleteStrategy {
+func newStorage(c kclient.WithWatch, reveal bool) strategy.CompleteStrategy {
 	return translation.NewTranslationStrategy(&Translator{
 		c:      c,
-		expose: expose,
+		reveal: reveal,
 	}, remote.NewRemote(&corev1.Secret{}, &corev1.SecretList{}, c))
 }
 

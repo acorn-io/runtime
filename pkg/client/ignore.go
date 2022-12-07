@@ -248,8 +248,8 @@ func (c IgnoreUninstalled) SecretGet(ctx context.Context, name string) (*apiv1.S
 	return c.client.SecretGet(ctx, name)
 }
 
-func (c IgnoreUninstalled) SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error) {
-	return c.client.SecretExpose(ctx, name)
+func (c IgnoreUninstalled) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
+	return c.client.SecretReveal(ctx, name)
 }
 
 func (c IgnoreUninstalled) SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error) {

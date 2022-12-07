@@ -6,6 +6,6 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewExpose(c kclient.WithWatch) rest.Storage {
+func NewReveal(c kclient.WithWatch) rest.Storage {
 	return stores.NewGetOnly(NewStrategy(c, true))
 }

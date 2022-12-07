@@ -2,6 +2,10 @@ package client
 
 import (
 	"context"
+	"net"
+	"os"
+	"strings"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
@@ -11,10 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"k8s.io/client-go/rest"
-	"net"
-	"os"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type CommandContext struct {
@@ -214,7 +215,7 @@ type Client interface {
 	SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error)
 	SecretList(ctx context.Context) ([]apiv1.Secret, error)
 	SecretGet(ctx context.Context, name string) (*apiv1.Secret, error)
-	SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error)
+	SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error)
 	SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error)
 	SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error)
 
