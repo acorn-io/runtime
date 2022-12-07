@@ -10,13 +10,14 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewExpose(c kclient.WithWatch) rest.Storage {
-	remoteResource := remote.NewWithTranslation(&Translator{
-		c:      c,
-		expose: true,
-	}, &corev1.Secret{}, &corev1.SecretList{}, c)
-	return stores.NewBuilder(c.Scheme(), &apiv1.Secret{}).
-		WithGet(remoteResource).
-		WithTableConverter(tables.SecretConverter).
+func NewStorage(c kclient.WithWatch) rest.Storage {
+	remoteResource := remote.NewWithTranslation(&Translator{},
+		&corev1.Namespace{}, &corev1.NamespaceList{}, c)
+	return stores.NewBuilder(c.Scheme(), &apiv1.Project{}).
+		WithList(&Strategy{
+			c:    c,
+			next: remoteResource,
+		}).
+		WithTableConverter(tables.ProjectConverter).
 		Build()
 }

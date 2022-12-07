@@ -1,11 +1,19 @@
 package images
 
 import (
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func NewStorage(c client.WithWatch) rest.Storage {
-	return stores.NewGetListDelete(c.Scheme(), NewStrategy(c))
+	strategy := NewStrategy(c)
+	return stores.NewBuilder(c.Scheme(), &apiv1.Image{}).
+		WithGet(strategy).
+		WithList(strategy).
+		WithDelete(strategy).
+		WithTableConverter(tables.ImageConverter).
+		Build()
 }
