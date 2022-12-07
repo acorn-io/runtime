@@ -31,40 +31,21 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 	buildersStorage := builders.NewStorage(c)
 	imagesStorage := images.NewStorage(c)
 
-	containersStorage, err := containers.NewStorage(c)
-	if err != nil {
-		return nil, err
-	}
+	containersStorage := containers.NewStorage(c)
 
 	containerExec, err := containers.NewContainerExec(c, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	buildersPort, err := builders.NewBuildkitPort(c, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	registryPort, err := builders.NewRegistryPort(c, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	appsStorage, err := apps.NewStorage(c, clientFactory)
-	if err != nil {
-		return nil, err
-	}
+	appsStorage := apps.NewStorage(c, clientFactory)
 
 	logsStorage, err := apps.NewLogs(c, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	volumesStorage, err := volumes.NewStorage(c)
-	if err != nil {
-		return nil, err
-	}
+	volumesStorage := volumes.NewStorage(c)
 
 	stores := map[string]rest.Storage{
 		"apps":                   appsStorage,
@@ -72,8 +53,6 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 		"apps/confirmupgrade":    apps.NewConfirmUpgrade(c),
 		"apps/pullimage":         apps.NewPullAppImage(c),
 		"builders":               buildersStorage,
-		"builders/port":          buildersPort,
-		"builders/registryport":  registryPort,
 		"images":                 imagesStorage,
 		"images/tag":             images.NewTagStorage(c),
 		"images/push":            images.NewImagePush(c),

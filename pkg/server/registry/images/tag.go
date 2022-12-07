@@ -4,7 +4,6 @@ import (
 	"context"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/stores"
@@ -16,9 +15,10 @@ import (
 )
 
 func NewTagStorage(c client.WithWatch) rest.Storage {
-	return stores.NewCreateOnly(scheme.Scheme, &TagStrategy{
-		client: c,
-	})
+	return stores.NewBuilder(c.Scheme(), &apiv1.ImageTag{}).
+		WithCreate(&TagStrategy{
+			client: c,
+		}).Build()
 }
 
 type TagStrategy struct {

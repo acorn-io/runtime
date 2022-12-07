@@ -5,7 +5,6 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/imagedetails"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apiserver/pkg/endpoints/request"
@@ -14,9 +13,11 @@ import (
 )
 
 func NewImageDetails(c client.WithWatch) rest.Storage {
-	return stores.NewCreateGet(scheme.Scheme, &ImageDetailStrategy{
-		client: c,
-	})
+	strategy := &ImageDetailStrategy{client: c}
+	return stores.NewBuilder(c.Scheme(), &apiv1.ImageDetails{}).
+		WithGet(strategy).
+		WithCreate(strategy).
+		Build()
 }
 
 type ImageDetailStrategy struct {

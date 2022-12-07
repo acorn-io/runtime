@@ -11,7 +11,6 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/remoteopts"
-	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -21,20 +20,17 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/storage"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Strategy struct {
-	rest.TableConvertor
 	client kclient.WithWatch
 }
 
 func NewStrategy(c kclient.WithWatch) *Strategy {
 	return &Strategy{
-		TableConvertor: tables.ImageConverter,
-		client:         c,
+		client: c,
 	}
 }
 

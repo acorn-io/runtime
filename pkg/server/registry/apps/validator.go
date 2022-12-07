@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"strings"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
-	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/merr"
@@ -16,15 +17,69 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	authv1 "k8s.io/api/authorization/v1"
-	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/endpoints/request"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (s *Strategy) checkRemoteAccess(ctx context.Context, namespace, image string) error {
+type Validator struct {
+	client        kclient.Client
+	clientFactory *client.Factory
+}
+
+func NewValidator(client kclient.Client, clientFactory *client.Factory) *Validator {
+	return &Validator{
+		client:        client,
+		clientFactory: clientFactory,
+	}
+}
+
+func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+	params := obj.(*apiv1.App)
+
+	if _, isPattern := autoupgrade.AutoUpgradePattern(params.Spec.Image); !isPattern {
+		image, local, err := s.resolveLocalImage(ctx, params.Namespace, params.Spec.Image)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			return
+		}
+
+		if !local {
+			if err := s.checkRemoteAccess(ctx, params.Namespace, image); err != nil {
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+				return
+			}
+		}
+
+		permsFromImage, err := s.getPermissions(ctx, params.Namespace, image)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+			return
+		}
+
+		if err := s.checkRequestedPermsSatisfyImagePerms(permsFromImage, params.Spec.Permissions); err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+			return
+		}
+	}
+
+	if err := s.checkPermissionsForPrivilegeEscalation(ctx, params.Spec.Permissions); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+	}
+
+	return result
+}
+
+func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
+	newParams := obj.(*apiv1.App)
+	return s.Validate(ctx, newParams)
+}
+
+func (s *Validator) checkRemoteAccess(ctx context.Context, namespace, image string) error {
 	keyChain, err := pullsecret.Keychain(ctx, s.client, namespace)
 	if err != nil {
 		return err
@@ -42,7 +97,7 @@ func (s *Strategy) checkRemoteAccess(ctx context.Context, namespace, image strin
 	return nil
 }
 
-func (s *Strategy) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
+func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
 	err := s.client.Create(ctx, sar)
 	if err != nil {
 		return err
@@ -55,7 +110,7 @@ func (s *Strategy) check(ctx context.Context, sar *authv1.SubjectAccessReview, r
 	return nil
 }
 
-func (s *Strategy) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
+func (s *Validator) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
 	if len(rule.Verbs) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
@@ -76,7 +131,7 @@ func (s *Strategy) checkNonResourceRole(ctx context.Context, sar *authv1.Subject
 	return nil
 }
 
-func (s *Strategy) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
+func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
 	if len(rule.APIGroups) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
 	}
@@ -127,7 +182,7 @@ func (s *Strategy) checkResourceRole(ctx context.Context, sar *authv1.SubjectAcc
 	return nil
 }
 
-func (s *Strategy) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
+func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
 	var errs []error
 	for _, rule := range rules {
 		if len(rule.NonResourceURLs) > 0 {
@@ -145,7 +200,7 @@ func (s *Strategy) checkRules(ctx context.Context, sar *authv1.SubjectAccessRevi
 
 // checkRequestedPermsSatisfyImagePerms checks that the user requested permissions are enough to satisfy the permissions
 // specified by the image's Acornfile
-func (s *Strategy) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions, requestedPerms []v1.Permissions) error {
+func (s *Validator) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions, requestedPerms []v1.Permissions) error {
 	if len(perms) == 0 {
 		return nil
 	}
@@ -172,7 +227,7 @@ func (s *Strategy) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions, 
 
 // checkPermissionsForPrivilegeEscalation is an actual RBAC check to prevent privilege escalation. The user making the request must have the
 // permissions that they are requesting the app gets
-func (s *Strategy) checkPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) error {
+func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) error {
 	user, ok := request.UserFrom(ctx)
 	if !ok {
 		return fmt.Errorf("failed to find active user to check current privileges")
@@ -206,7 +261,7 @@ func (s *Strategy) checkPermissionsForPrivilegeEscalation(ctx context.Context, r
 	return merr.NewErrors(errs...)
 }
 
-func (s *Strategy) getPermissions(ctx context.Context, namespace, image string) (result []v1.Permissions, _ error) {
+func (s *Validator) getPermissions(ctx context.Context, namespace, image string) (result []v1.Permissions, _ error) {
 	details, err := s.clientFactory.Namespace(namespace).ImageDetails(ctx, image, nil)
 	if err != nil {
 		return result, err
@@ -242,7 +297,7 @@ func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
 	return permissions
 }
 
-func (s *Strategy) resolveLocalImage(ctx context.Context, namespace, image string) (string, bool, error) {
+func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image string) (string, bool, error) {
 	localImage, err := s.clientFactory.Namespace(namespace).ImageGet(ctx, image)
 	if apierrors.IsNotFound(err) {
 		if tags.IsLocalReference(image) {
@@ -255,23 +310,4 @@ func (s *Strategy) resolveLocalImage(ctx context.Context, namespace, image strin
 		return strings.TrimPrefix(localImage.Digest, "sha256:"), true, nil
 	}
 	return image, false, nil
-}
-
-func (s *Strategy) createNamespace(ctx context.Context, name string) error {
-	ns := &corev1.Namespace{}
-	err := s.client.Get(ctx, hclient.ObjectKey{
-		Name: name,
-	}, ns)
-	if apierrors.IsNotFound(err) {
-		err := s.client.Create(ctx, &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("unable to create namespace %s: %w", name, err)
-		}
-		return nil
-	}
-	return err
 }
