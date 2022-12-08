@@ -129,20 +129,37 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 		return err
 	}
 
+	provisionedCerts := map[string]interface{}{}
+
+	for _, ep := range appInstance.Status.Endpoints {
+		if err := prov(req, leUser, ep.Address, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
+			return err
+		}
+		provisionedCerts[ep.Address] = nil
+	}
+
 	// FIXME: use error list instead of exiting on first error
 	for _, pb := range appInstance.Spec.Ports {
-		// Skip: name empty, not FQDN, already covered by on-acorn.io
-		if pb.ServiceName == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, pb.ServiceName)) > 0 || strings.HasSuffix(pb.ServiceName, "on-acorn.io") {
+		if _, ok := provisionedCerts[pb.ServiceName]; ok {
 			continue
 		}
-
-		secretName := name.Limit(appInstance.GetName()+"-tls-"+pb.ServiceName, 63-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
-
-		return leUser.provisionCertIfNotExists(req.Ctx, req.Client, pb.ServiceName, appInstance.Namespace, secretName)
-
+		if err := prov(req, leUser, pb.ServiceName, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
+			return err
+		}
+		provisionedCerts[pb.ServiceName] = nil
 	}
 
 	return nil
+}
+
+func prov(req router.Request, leUser *LEUser, domain, appname, segment, namespace string) error {
+	if domain == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, domain)) > 0 || strings.HasSuffix(domain, "on-acorn.io") {
+		logrus.Warnf("Skipping cert provisioning for %s", domain)
+		return nil
+	}
+	secretName := name.Limit(appname+"-tls-"+domain, 63-len(segment)-1) + "-" + segment
+
+	return leUser.provisionCertIfNotExists(req.Ctx, req.Client, domain, namespace, secretName)
 }
 
 func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Client, domain string, namespace string, secretName string) error {
