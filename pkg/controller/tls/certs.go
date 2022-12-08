@@ -17,6 +17,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 // ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
@@ -130,6 +132,7 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 	}
 
 	provisionedCerts := map[string]interface{}{}
+	var errs []error
 
 	for _, ep := range appInstance.Status.Endpoints {
 		if err := prov(req, leUser, ep.Address, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
@@ -138,18 +141,18 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 		provisionedCerts[ep.Address] = nil
 	}
 
-	// FIXME: use error list instead of exiting on first error
 	for _, pb := range appInstance.Spec.Ports {
 		if _, ok := provisionedCerts[pb.ServiceName]; ok {
 			continue
 		}
 		if err := prov(req, leUser, pb.ServiceName, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
-			return err
+			errs = append(errs, err)
+			continue
 		}
 		provisionedCerts[pb.ServiceName] = nil
 	}
 
-	return nil
+	return utilerrors.NewAggregate(errs)
 }
 
 func prov(req router.Request, leUser *LEUser, domain, appname, segment, namespace string) error {
