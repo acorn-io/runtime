@@ -107,8 +107,6 @@ func RenewCert(req router.Request, resp router.Response) error {
 }
 
 // ProvisionCerts handles the provisioning of new TLS certificates for AppInstances
-// Note: this does not actually provision the certificates, it just creates the empty secret
-// which is picked up by the route handled by RenewCert above
 func ProvisionCerts(req router.Request, resp router.Response) error {
 
 	cfg, err := config.Get(req.Ctx, req.Client)
@@ -134,11 +132,17 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 	provisionedCerts := map[string]interface{}{}
 	var errs []error
 
-	for _, ep := range appInstance.Status.Endpoints {
+	for i, ep := range appInstance.Status.Endpoints {
+		if ep.Protocol != "http" {
+			continue
+		}
+
 		if err := prov(req, leUser, ep.Address, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
 			return err
 		}
 		provisionedCerts[ep.Address] = nil
+		ep.PublishProtocol = "https"
+		appInstance.Status.Endpoints[i] = ep
 	}
 
 	for _, pb := range appInstance.Spec.Ports {

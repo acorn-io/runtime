@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -41,7 +42,7 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.E
 			case corev1.ProtocolTCP:
 				protocol = v1.ProtocolTCP
 			case corev1.ProtocolUDP:
-				protocol = v1.ProtocolTCP
+				protocol = v1.ProtocolUDP
 			default:
 				continue
 			}
@@ -135,6 +136,25 @@ func AppEndpointsStatus(req router.Request, _ router.Response) error {
 		return err
 	}
 
-	app.Status.Endpoints = append(ingressEndpoints, serviceEndpoints...)
+	eps := append(ingressEndpoints, serviceEndpoints...)
+
+	ingressTLSHosts, err := IngressTLSHosts(req.Ctx, req.Client, app)
+	if err != nil {
+		return err
+	}
+
+	for i, ep := range eps {
+		if ep.Protocol == v1.ProtocolHTTP {
+			ep.PublishProtocol = v1.ProtocolHTTP
+			if _, ok := ingressTLSHosts[strings.Split(ep.Address, ":")[0]]; ok {
+				ep.PublishProtocol = v1.ProtocolHTTPS
+			}
+		} else {
+			ep.PublishProtocol = ep.Protocol
+		}
+		eps[i] = ep
+	}
+
+	app.Status.Endpoints = eps
 	return nil
 }

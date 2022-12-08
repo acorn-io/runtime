@@ -51,9 +51,10 @@ func (in Build) BaseBuild() Build {
 type Protocol string
 
 var (
-	ProtocolTCP  = Protocol("tcp")
-	ProtocolUDP  = Protocol("udp")
-	ProtocolHTTP = Protocol("http")
+	ProtocolTCP   = Protocol("tcp")
+	ProtocolUDP   = Protocol("udp")
+	ProtocolHTTP  = Protocol("http")
+	ProtocolHTTPS = Protocol("https")
 )
 
 type PortBinding struct {
