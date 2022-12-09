@@ -145,12 +145,12 @@ func AppEndpointsStatus(req router.Request, _ router.Response) error {
 
 	for i, ep := range eps {
 		if ep.Protocol == v1.ProtocolHTTP {
-			ep.PublishProtocol = v1.ProtocolHTTP
+			ep.PublishProtocol = v1.PublishProtocolHTTP
 			if _, ok := ingressTLSHosts[strings.Split(ep.Address, ":")[0]]; ok {
-				ep.PublishProtocol = v1.ProtocolHTTPS
+				ep.PublishProtocol = v1.PublishProtocolHTTPS
 			}
 		} else {
-			ep.PublishProtocol = ep.Protocol
+			ep.PublishProtocol = v1.PublishProtocol(ep.Protocol)
 		}
 		eps[i] = ep
 	}

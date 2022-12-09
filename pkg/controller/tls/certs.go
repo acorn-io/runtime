@@ -141,7 +141,7 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 			return err
 		}
 		provisionedCerts[ep.Address] = nil
-		ep.PublishProtocol = "https"
+		ep.PublishProtocol = v1.PublishProtocolHTTPS
 		appInstance.Status.Endpoints[i] = ep
 	}
 
