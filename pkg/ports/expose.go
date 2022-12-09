@@ -385,11 +385,11 @@ func validate(m *Set) error {
 		var (
 			foundContainer bool
 			foundAcorn     bool
-			oldTargetNames sets.String
+			oldTargetNames sets.Set[string]
 			oldPort        v1.PortDef
 		)
 		for port := range ports {
-			targetNames := sets.NewString()
+			targetNames := sets.Set[string]{}
 			for _, target := range m.Ports[port] {
 				if target.ContainerName != "" {
 					targetNames.Insert(target.ContainerName)
@@ -405,7 +405,7 @@ func validate(m *Set) error {
 				oldPort = port
 			} else if !oldTargetNames.Equal(targetNames) {
 				errs = append(errs, fmt.Errorf("ports %s and %s on service %s do not share the same set of targets %v != %v",
-					oldPort, port, service, oldTargetNames.List(), targetNames.List()))
+					oldPort, port, service, oldTargetNames, targetNames))
 			}
 		}
 		if foundContainer && foundAcorn {
