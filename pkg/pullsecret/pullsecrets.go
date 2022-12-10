@@ -15,10 +15,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	SharedPullSecret = "shared-pull-secret"
-)
-
 func ForNamespace(ctx context.Context, c client.Reader, namespace string) ([]corev1.Secret, error) {
 	secrets := &corev1.SecretList{}
 	err := c.List(ctx, secrets, &client.ListOptions{
