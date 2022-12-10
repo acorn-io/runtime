@@ -513,7 +513,15 @@ func getRevision(req router.Request, namespace, secretName string) (string, erro
 	if err := req.Get(secret, namespace, secretName); err != nil {
 		return "0", err
 	}
-	return secret.ResourceVersion, nil
+	hash := sha256.New()
+	for _, entry := range typed.Sorted(secret.Data) {
+		hash.Write([]byte(entry.Key))
+		hash.Write([]byte{'\x00'})
+		hash.Write(entry.Value)
+		hash.Write([]byte{'\x00'})
+	}
+	d := hash.Sum(nil)
+	return hex.EncodeToString(d[:]), nil
 }
 
 func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, container v1.Container) (map[string]string, error) {
