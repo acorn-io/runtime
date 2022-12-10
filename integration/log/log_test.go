@@ -8,8 +8,8 @@ import (
 
 	"github.com/acorn-io/acorn/integration/helper"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,11 +23,11 @@ line 2-3
 line 2-4`
 
 func TestLog(t *testing.T) {
-	c, ns := helper.ClientAndNamespace(t)
+	logrus.SetLevel(logrus.TraceLevel)
+	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -69,11 +69,10 @@ func TestLog(t *testing.T) {
 }
 
 func TestContainerLog(t *testing.T) {
-	c, ns := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -128,11 +127,10 @@ func TestContainerLog(t *testing.T) {
 }
 
 func TestSidecarContainerLog(t *testing.T) {
-	c, ns := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata",
 	})
 	if err != nil {
 		t.Fatal(err)

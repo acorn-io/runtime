@@ -7,7 +7,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apiserver/pkg/endpoints/request"
@@ -16,9 +15,11 @@ import (
 )
 
 func NewPullAppImage(c client.WithWatch) rest.Storage {
-	return stores.NewCreateOnly(scheme.Scheme, &PullAppImageStrategy{
-		client: c,
-	})
+	return stores.NewBuilder(c.Scheme(), &apiv1.AppPullImage{}).
+		WithCreate(&PullAppImageStrategy{
+			client: c,
+		}).
+		Build()
 }
 
 type PullAppImageStrategy struct {

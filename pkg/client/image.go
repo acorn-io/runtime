@@ -6,60 +6,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/go-containerregistry/pkg/name"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
-
-// TODO This should go away once ibuildthecloud lands his refactor. When that is done, client/user should never be directly creating images. They are the result of builds or pushes only
-func (c *client) ImageCreate(ctx context.Context, imageName, tag string) (*apiv1.Image, error) {
-	image, err := c.ImageGet(ctx, imageName)
-	tagResult := &apiv1.ImageTag{}
-
-	if apierrors.IsNotFound(err) {
-		image = &apiv1.Image{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "",
-				APIVersion: "",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      imageName,
-				Namespace: c.Namespace,
-			},
-			Digest: "sha256:" + imageName,
-			Tags:   []string{},
-		}
-		if tag != "" {
-			image.Tags = []string{tag}
-		}
-
-		return image, c.RESTClient.Post().
-			Namespace(image.Namespace).
-			Resource("images").
-			Name(image.Name).
-			SubResource("tag").
-			Body(&apiv1.ImageTag{
-				Image: image,
-			}).Do(ctx).Into(tagResult)
-	}
-	if tag != "" {
-		image.Tags = []string{tag}
-	}
-	return image, c.RESTClient.Post().
-		Namespace(image.Namespace).
-		Resource("images").
-		Name(image.Name).
-		SubResource("tag").
-		Body(&apiv1.ImageTag{
-			Image: image,
-		}).Do(ctx).Into(tagResult)
-
-}
 
 func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 	image, err := c.ImageGet(ctx, imageName)
@@ -74,7 +27,7 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 		Name(image.Name).
 		SubResource("tag").
 		Body(&apiv1.ImageTag{
-			Image: image,
+			Tags: []string{tag},
 		}).Do(ctx).Into(tagResult)
 	return err
 }

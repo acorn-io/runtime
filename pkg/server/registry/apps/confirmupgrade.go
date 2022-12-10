@@ -6,7 +6,6 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apiserver/pkg/endpoints/request"
@@ -15,9 +14,10 @@ import (
 )
 
 func NewConfirmUpgrade(c client.WithWatch) rest.Storage {
-	return stores.NewCreateOnly(scheme.Scheme, &ConfirmUpgradeStrategy{
-		client: c,
-	})
+	return stores.NewBuilder(c.Scheme(), &apiv1.ConfirmUpgrade{}).
+		WithCreate(&ConfirmUpgradeStrategy{
+			client: c,
+		}).Build()
 }
 
 type ConfirmUpgradeStrategy struct {

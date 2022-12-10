@@ -3,21 +3,22 @@ package images
 import (
 	"context"
 	"encoding/json"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/k8schannel"
-	"github.com/acorn-io/acorn/pkg/pullsecret"
-	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/mink/pkg/strategy"
-	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/gorilla/websocket"
@@ -28,10 +29,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewImagePull(c kclient.WithWatch, clientFactory *client.Factory) *ImagePull {
+func NewImagePull(c kclient.WithWatch, clientFactory *client.Factory, transport http.RoundTripper) *ImagePull {
 	return &ImagePull{
 		client:        c,
 		clientFactory: clientFactory,
+		transportOpt:  remote.WithTransport(transport),
 	}
 }
 
@@ -39,6 +41,7 @@ type ImagePull struct {
 	*strategy.DestroyAdapter
 	client        kclient.WithWatch
 	clientFactory *client.Factory
+	transportOpt  remote.Option
 }
 
 func (i *ImagePull) NamespaceScoped() bool {
@@ -97,29 +100,17 @@ func (i *ImagePull) ConnectMethods() []string {
 }
 
 func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) (<-chan ggcrv1.Update, error) {
-	writeOpts, err := remoteopts.Common(ctx)
+	opts, err := images.GetAuthenticationRemoteOptions(ctx, i.client, namespace, i.transportOpt)
 	if err != nil {
 		return nil, err
 	}
 
-	keyChain, err := pullsecret.Keychain(ctx, i.client, namespace)
+	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, imageName)
 	if err != nil {
 		return nil, err
 	}
 
-	writeOpts = append(writeOpts, remote.WithAuthFromKeychain(keyChain))
-
-	opts, err := remoteopts.WithServerDialer(ctx, i.client)
-	if err != nil {
-		return nil, err
-	}
-
-	pullTag, err := name.ParseReference(imageName)
-	if err != nil {
-		return nil, err
-	}
-
-	index, err := remote.Index(pullTag, writeOpts...)
+	index, err := remote.Index(pullTag, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +120,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 		return nil, err
 	}
 
-	repo, err := getRepo(namespace)
+	repo, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -159,12 +150,17 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 		if err = remote.WriteIndex(repo.Digest(hash.Hex), index, opts...); err == nil {
 			img := &v1.ImageInstance{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      imageName,
+					Name:      hash.Hex,
 					Namespace: namespace,
 				},
-				Digest: hash.Hex,
+				Digest: hash.String(),
 			}
-			if err := i.client.Create(ctx, img); err != nil {
+			if err := i.client.Create(ctx, img); err != nil && !apierror.IsAlreadyExists(err) {
+				progress2 <- ggcrv1.Update{
+					Error: err,
+				}
+			}
+			if err := i.clientFactory.Namespace(namespace).ImageTag(ctx, hash.Hex, imageName); err != nil {
 				progress2 <- ggcrv1.Update{
 					Error: err,
 				}

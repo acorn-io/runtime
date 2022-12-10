@@ -14,8 +14,8 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/pull"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/data/convert"
@@ -202,7 +202,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		Type: v1.SecretTypeTemplate,
 	}
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
+	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 				return t
 			}
 
-			return pull.ResolveTag(tag, digest.Image)
+			return images.ResolveTag(tag, digest.Image)
 		})
 
 		secret.Data[entry.Key] = []byte(template)
@@ -318,28 +318,10 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	return updateOrCreate(req, existing, secret)
 }
 
-func decryptData(ctx context.Context, c kclient.Client, data map[string][]byte, ownerNamespace string) (map[string][]byte, error) {
-	to := map[string][]byte{}
-	for k, v := range data {
-		if strings.HasPrefix(string(v), "ACORNENC:") {
-			decryptedData, err := nacl.DecryptNamespacedData(ctx, c, v, ownerNamespace)
-			if err != nil {
-				return data, err
-			}
-			to[k] = decryptedData
-
-			continue
-		}
-		to[k] = v
-	}
-
-	return to, nil
-}
-
 func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev1.Secret, error) {
 	var err error
 
-	secret.Data, err = decryptData(req.Ctx, req.Client, secret.Data, secret.Namespace)
+	secret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, secret.Data, secret.Namespace)
 	if err != nil {
 		return secret, err
 	}
@@ -496,7 +478,7 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 				return nil, err
 			}
 			// Check fields to see if they need to be decrypted
-			existingSecret.Data, err = decryptData(req.Ctx, req.Client, existingSecret.Data, appInstance.Namespace)
+			existingSecret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, existingSecret.Data, appInstance.Namespace)
 			if err != nil {
 				return nil, err
 			}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -21,9 +20,8 @@ import (
 func depImage(t *testing.T, c client.Client) string {
 	t.Helper()
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/dependson/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/dependson",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/dependson/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/dependson",
 	})
 	if err != nil {
 		t.Fatal(err)

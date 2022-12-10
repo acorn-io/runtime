@@ -5,6 +5,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/install"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +35,7 @@ type Install struct {
 }
 
 func (i *Install) Run(cmd *cobra.Command, args []string) error {
-	var image = install.DefaultImage()
+	var image = system.DefaultImage()
 	if i.Image != "" {
 		image = i.Image
 	}

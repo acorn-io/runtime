@@ -2,47 +2,51 @@ package appdefinition
 
 import (
 	"fmt"
+	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/condition"
-	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
-func PullAppImage(req router.Request, resp router.Response) error {
-	appInstance := req.Object.(*v1.AppInstance)
-	cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
+func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
+	return func(req router.Request, resp router.Response) error {
+		appInstance := req.Object.(*v1.AppInstance)
+		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
 
-	targetImage, unknownReason := determineTargetImage(appInstance)
-	if targetImage == "" {
-		if unknownReason != "" {
-			cond.Unknown(unknownReason)
-		} else {
-			cond.Success()
+		targetImage, unknownReason := determineTargetImage(appInstance)
+		if targetImage == "" {
+			if unknownReason != "" {
+				cond.Unknown(unknownReason)
+			} else {
+				cond.Success()
+			}
+			return nil
 		}
+
+		resolvedImage, _, err := tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
+		if err != nil {
+			cond.Error(err)
+			return nil
+		}
+
+		appImage, err := images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, remote.WithTransport(transport))
+		if err != nil {
+			cond.Error(err)
+			return nil
+		}
+		appImage.Name = targetImage
+		appInstance.Status.AvailableAppImage = ""
+		appInstance.Status.ConfirmUpgradeAppImage = ""
+		appInstance.Status.AppImage = *appImage
+
+		cond.Success()
 		return nil
 	}
-
-	resolvedImage, _, err := tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
-	if err != nil {
-		cond.Error(err)
-		return nil
-	}
-
-	appImage, err := pull.AppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage)
-	if err != nil {
-		cond.Error(err)
-		return nil
-	}
-	appImage.Name = targetImage
-	appInstance.Status.AvailableAppImage = ""
-	appInstance.Status.ConfirmUpgradeAppImage = ""
-	appInstance.Status.AppImage = *appImage
-
-	cond.Success()
-	return nil
 }
 
 func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
@@ -84,11 +88,11 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 		}
 	} else {
 		// Auto-upgrade is off. Only need to pull if spec and status are not equal or we're trying to trigger a repull
-		if appInstance.Spec.Image != appInstance.Status.AppImage.Name || 
-		appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
-		        return appInstance.Spec.Image, ""
+		if appInstance.Spec.Image != appInstance.Status.AppImage.Name ||
+			appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
+			return appInstance.Spec.Image, ""
 		} else {
-		        return "", ""
+			return "", ""
 		}
 	}
 }

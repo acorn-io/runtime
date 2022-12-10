@@ -10,7 +10,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade/validate"
 	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/images"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	imagename "github.com/google/go-containerregistry/pkg/name"
@@ -210,7 +210,7 @@ func (d *daemon) sync(ctx context.Context) error {
 		var tags []string
 		var pullErr error
 		if hasValidRegistry {
-			_, tags, pullErr = pull.ListTags(ctx, d.client, imageKey.namespace, imageKey.image)
+			_, tags, pullErr = images.ListTags(ctx, d.client, imageKey.namespace, imageKey.image)
 		}
 		localTags, err := tags2.GetTagsMatchingRepository(current, ctx, d.client, "acorn", defaultNoReg)
 		if err != nil {
@@ -285,7 +285,7 @@ func (d *daemon) sync(ctx context.Context) error {
 				var digest string
 				var pullErr error
 				if hasValidRegistry {
-					digest, pullErr = pull.ImageDigest(ctx, d.client, app.Namespace, imageKey.image)
+					digest, pullErr = images.ImageDigest(ctx, d.client, app.Namespace, imageKey.image)
 				}
 				// Whether or not we got a digest from a remote registry, check to see if there is a version of this tag locally
 				if localDigest, ok, _ := tags2.ResolveLocal(ctx, d.client, app.Namespace, imageKey.image); ok && localDigest != "" {

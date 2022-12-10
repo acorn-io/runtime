@@ -136,8 +136,7 @@ func (d *depCheckingResponse) isDepReady(depName string) (ready bool, found bool
 	if depDep.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(d.app.Generation)) ||
 		depDep.Status.ObservedGeneration != depDep.Generation ||
 		depDep.Status.Replicas != depDep.Status.ReadyReplicas ||
-		depDep.Status.Replicas != depDep.Status.UpdatedReplicas ||
-		(depDep.Spec.Replicas != nil && *depDep.Spec.Replicas == 0) {
+		depDep.Status.Replicas != depDep.Status.UpdatedReplicas {
 		return false, true
 	}
 

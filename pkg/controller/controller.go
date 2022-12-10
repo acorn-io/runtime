@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/crds"
 	"github.com/acorn-io/acorn/pkg/dns"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah"
@@ -33,7 +34,7 @@ type Controller struct {
 }
 
 func New() (*Controller, error) {
-	router, err := baaah.DefaultRouter(scheme.Scheme)
+	router, err := baaah.DefaultRouter("acorn-controller", scheme.Scheme)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,12 @@ func New() (*Controller, error) {
 
 	apply := apply.New(client)
 
-	routes(router)
+	registryTransport, err := imagesystem.NewAPIBasedTransport(client, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	routes(router, registryTransport)
 
 	return &Controller{
 		Router: router,

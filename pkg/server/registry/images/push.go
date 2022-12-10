@@ -9,9 +9,9 @@ import (
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/k8schannel"
-	"github.com/acorn-io/acorn/pkg/pullsecret"
-	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -33,15 +33,17 @@ const (
 	DefaultRegistry = "NO_DEFAULT"
 )
 
-func NewImagePush(c client.WithWatch) *ImagePush {
+func NewImagePush(c client.WithWatch, transport http.RoundTripper) *ImagePush {
 	return &ImagePush{
-		client: c,
+		client:       c,
+		transportOpt: remote.WithTransport(transport),
 	}
 }
 
 type ImagePush struct {
 	*strategy.DestroyAdapter
-	client client.WithWatch
+	client       client.WithWatch
+	transportOpt remote.Option
 }
 
 func (i *ImagePush) NamespaceScoped() bool {
@@ -131,12 +133,16 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		})
 	}
 
-	opts, err := remoteopts.WithServerDialer(ctx, i.client)
+	if _, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, pushTag.String()); err != nil {
+		return nil, nil, err
+	}
+
+	opts, err := images.GetAuthenticationRemoteOptions(ctx, i.client, image.Namespace, i.transportOpt)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	repo, err := getRepo(image.Namespace)
+	repo, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, image.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,22 +152,10 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		return nil, nil, err
 	}
 
-	writeOpts, err := remoteopts.Common(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	keyChain, err := pullsecret.Keychain(ctx, i.client, image.Namespace)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	writeOpts = append(writeOpts, remote.WithAuthFromKeychain(keyChain))
-
 	progress := make(chan ggcrv1.Update)
-	writeOpts = append(writeOpts, remote.WithProgress(progress))
+	opts = append(opts, remote.WithProgress(progress))
 	go func() {
-		err := remote.WriteIndex(pushTag, remoteImage, writeOpts...)
+		err := remote.WriteIndex(pushTag, remoteImage, opts...)
 		handleWriteIndexError(err, progress)
 	}()
 	return image, typed.Every(500*time.Millisecond, progress), nil

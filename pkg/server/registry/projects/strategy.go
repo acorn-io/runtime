@@ -21,7 +21,7 @@ type Strategy struct {
 	next strategy.Lister
 }
 
-func (s *Strategy) allowed(ctx context.Context) (sets.Set[string], bool, error) {
+func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
 	user, ok := request.UserFrom(ctx)
 	if !ok {
 		return nil, false, nil
@@ -33,9 +33,9 @@ func (s *Strategy) allowed(ctx context.Context) (sets.Set[string], bool, error) 
 		return nil, false, err
 	}
 
-	result := sets.New[string]()
+	result := sets.NewString()
 
-	rulesName := sets.New[string]()
+	rulesName := sets.NewString()
 	for _, crb := range crbs.Items {
 		for _, subject := range crb.Subjects {
 			switch subject.Kind {
@@ -51,7 +51,7 @@ func (s *Strategy) allowed(ctx context.Context) (sets.Set[string], bool, error) 
 		}
 	}
 
-	for _, ruleName := range sets.List(rulesName) {
+	for _, ruleName := range rulesName.List() {
 		rule := &rbacv1.ClusterRole{}
 		err := s.c.Get(ctx, router.Key("", ruleName), rule)
 		if apierrors.IsNotFound(err) {

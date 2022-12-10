@@ -8,13 +8,10 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build/buildkit"
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/mink/pkg/strategy"
-	"github.com/acorn-io/mink/pkg/strategy/remote"
-	"github.com/acorn-io/mink/pkg/strategy/translation"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,43 +19,22 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/apiserver/pkg/registry/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Strategy struct {
-	strategy.CompleteStrategy
-	rest.TableConvertor
-
-	client        kclient.Client
-	clientFactory *client.Factory
+	client kclient.Client
+	getter strategy.Getter
 }
 
-func NewStrategy(c kclient.WithWatch, clientFactory *client.Factory) (strategy.CompleteStrategy, error) {
-	storageStrategy, err := newStorageStrategy(c)
-	if err != nil {
-		return nil, err
-	}
-	return NewStrategyWithStorage(c, clientFactory, storageStrategy), nil
-}
-
-func NewStrategyWithStorage(c kclient.WithWatch, clientFactory *client.Factory, storageStrategy strategy.CompleteStrategy) strategy.CompleteStrategy {
+func NewStrategy(getter strategy.Getter, c kclient.WithWatch) *Strategy {
 	return &Strategy{
-		TableConvertor:   tables.ImageConverter,
-		CompleteStrategy: storageStrategy,
-		client:           c,
-		clientFactory:    clientFactory,
+		client: c,
+		getter: getter,
 	}
 }
 
-func newStorageStrategy(kclient kclient.WithWatch) (strategy.CompleteStrategy, error) {
-	return translation.NewTranslationStrategy(
-		&Translator{},
-		remote.NewRemote(&v1.ImageInstance{}, &v1.ImageInstanceList{}, kclient)), nil
-}
-
-// TODO migrate the logic to validateUpdate when create is removed
-func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+func (s *Strategy) validateObject(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	image := obj.(*apiv1.Image)
 	duplicateTag := make(map[string]bool)
 
@@ -95,45 +71,24 @@ func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) 
 	newImage := obj.(*apiv1.Image)
 	oldImage := old.(*apiv1.Image)
 	if newImage.Digest != oldImage.Digest {
-		result = append(result, field.Duplicate(field.NewPath("digest"), fmt.Errorf("unable to updates image %s as image digests do not match", newImage.Name[:12])))
+		result = append(result, field.Forbidden(field.NewPath("digest"), fmt.Sprintf("unable to updates image %s as image digests do not match", newImage.Name[:12])))
 		return result
 	}
-	return s.Validate(ctx, obj)
+	return s.validateObject(ctx, obj)
 }
 
 func (s *Strategy) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
 	return tables.ImageConverter.ConvertToTable(ctx, object, tableOptions)
 }
 
-func getRepo(namespace string) (name.Repository, error) {
-	return name.NewRepository("127.0.0.1:5000/acorn/" + namespace)
-}
-
 func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+	obj, err := s.getter.Get(ctx, namespace, name)
+	if !apierrors.IsNotFound(err) && err != nil {
+		return nil, err
+	} else if err == nil {
+		return obj, nil
+	}
 	return s.ImageGet(ctx, namespace, name)
-}
-
-// TODO THIS create method go away, since users wont be allowed to Create images, just ImageInstances should be created by the backend
-func (s *Strategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
-	image := obj.(*apiv1.Image)
-
-	for i, tag := range image.Tags {
-		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
-		if err != nil {
-			return nil, err
-		}
-		if tag != "" {
-			image.Tags[i] = imageParsedTag.Name()
-		}
-	}
-
-	imageInstance := &v1.ImageInstance{
-		TypeMeta:   image.TypeMeta,
-		ObjectMeta: image.ObjectMeta,
-		Digest:     image.Digest,
-		Tags:       image.Tags,
-	}
-	return image, s.client.Create(ctx, imageInstance)
 }
 
 func (s *Strategy) Update(ctx context.Context, obj types.Object) (types.Object, error) {
@@ -178,7 +133,7 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
 	name = strings.ReplaceAll(name, "+", "/")
 
-	if ok, err := buildkit.Exists(ctx, s.client); err != nil {
+	if ok, err := imagesystem.RegistryExists(ctx, s.client); err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, apierrors.NewNotFound(schema.GroupResource{
@@ -187,11 +142,11 @@ func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1
 		}, name)
 	}
 
-	image, _, err := s.imageGet(ctx, namespace, name)
+	image, _, err := s.findImage(ctx, namespace, name)
 	return image, err
 }
 
-func (s *Strategy) imageGet(ctx context.Context, namespace, imageName string) (*apiv1.Image, string, error) {
+func (s *Strategy) findImage(ctx context.Context, namespace, imageName string) (*apiv1.Image, string, error) {
 	result := &apiv1.ImageList{}
 
 	err := s.client.List(ctx, result, &kclient.ListOptions{

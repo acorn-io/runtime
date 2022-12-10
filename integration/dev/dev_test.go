@@ -8,7 +8,6 @@ import (
 
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
@@ -61,7 +60,7 @@ func TestDev(t *testing.T) {
 	eg.Go(func() error {
 		return dev.Dev(subCtx, acornCueFile, &dev.Options{
 			Client: helper.BuilderClient(t, ns.Name),
-			Build: build.Options{
+			Build: client.AcornImageBuildOptions{
 				Cwd: tmp,
 			},
 			Run: client.AppRunOptions{
