@@ -7,10 +7,10 @@ import (
 
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -18,51 +18,50 @@ import (
 )
 
 func TestBuildFailed(t *testing.T) {
-	_, err := build.Build(helper.GetCTX(t), "./testdata/fail/Acornfile", &build.Options{
-		Cwd:    "./testdata/fail",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	_, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/fail/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/fail",
 	})
 	assert.Error(t, err)
 }
 
 func TestBuildFailedNoImageBuild(t *testing.T) {
-	_, err := build.Build(helper.GetCTX(t), "./testdata/no-image-build/Acornfile", &build.Options{
-		Cwd:    "./testdata/no-image-build",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	_, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/no-image-build/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/no-image-build",
 	})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "either image or build field must be set")
 }
 
 func TestSimpleBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/Acornfile", &build.Options{
-		Cwd:    "./testdata/simple",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Len(t, image.ImageData.Containers, 1)
-	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:"))
-	assert.False(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:5000"))
+	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:5000"))
 	assert.Len(t, image.ImageData.Images, 1)
 	assert.True(t, len(image.ImageData.Images["isimple"].Image) > 0)
 }
 
 func TestSimilarBuilds(t *testing.T) {
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+
 	// This tests a scenario where two builds only differ by a single character in the Acornfile file and otherwise all
 	// the file names and sizes are the same. A caching bug caused the second build to result in the image from the first
-	image, err := build.Build(helper.GetCTX(t), "./testdata/similar/one/Acornfile", &build.Options{
-		Cwd:    "./testdata/similar/one",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/similar/one/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/similar/one",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	image2, err := build.Build(helper.GetCTX(t), "./testdata/similar/two/Acornfile", &build.Options{
-		Cwd:    "./testdata/similar/two",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	image2, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/similar/two/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/similar/two",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -72,43 +71,39 @@ func TestSimilarBuilds(t *testing.T) {
 }
 
 func TestJobBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/jobs/Acornfile", &build.Options{
-		Cwd:    "./testdata/jobs",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/jobs/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/jobs",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Len(t, image.ImageData.Jobs, 1)
-	assert.True(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Image, "127.0.0.1:"))
-	assert.False(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Image, "127.0.0.1:5000"))
+	assert.True(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Image, "127.0.0.1:5000"))
 
 	assert.Len(t, image.ImageData.Jobs["simple"].Sidecars, 1)
-	assert.True(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Sidecars["left"].Image, "127.0.0.1:"))
-	assert.False(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Sidecars["left"].Image, "127.0.0.1:5000"))
+	assert.True(t, strings.HasPrefix(image.ImageData.Jobs["simple"].Sidecars["left"].Image, "127.0.0.1:5000"))
 }
 
 func TestSidecarBuild(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/sidecar/Acornfile", &build.Options{
-		Cwd:    "./testdata/sidecar",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/sidecar/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/sidecar",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Len(t, image.ImageData.Containers, 1)
-	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:"))
-	assert.False(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:5000"))
+	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Image, "127.0.0.1:5000"))
 
 	assert.Len(t, image.ImageData.Containers["simple"].Sidecars, 1)
-	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Sidecars["left"].Image, "127.0.0.1:"))
-	assert.False(t, strings.HasPrefix(image.ImageData.Containers["simple"].Sidecars["left"].Image, "127.0.0.1:5000"))
+	assert.True(t, strings.HasPrefix(image.ImageData.Containers["simple"].Sidecars["left"].Image, "127.0.0.1:5000"))
 }
 
 func TestTarget(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/target/Acornfile", &build.Options{
-		Cwd:    "./testdata/target",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/target/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/target",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -120,9 +115,9 @@ func TestTarget(t *testing.T) {
 }
 
 func TestContextDir(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/contextdir/Acornfile", &build.Options{
-		Cwd:    "./testdata/contextdir",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/contextdir/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/contextdir",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -133,9 +128,9 @@ func TestContextDir(t *testing.T) {
 }
 
 func TestSimpleTwo(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple-two/Acornfile", &build.Options{
-		Cwd:    "./testdata/simple-two",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/simple-two/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple-two",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -153,9 +148,9 @@ func TestSimpleTwo(t *testing.T) {
 }
 
 func TestBuildDefault(t *testing.T) {
-	image, err := build.Build(helper.GetCTX(t), "./testdata/build-default/Acornfile", &build.Options{
-		Cwd:    "./testdata/build-default",
-		Client: helper.BuilderClient(t, system.RequireUserNamespace()),
+	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/build-default/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/build-default",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -164,16 +159,17 @@ func TestBuildDefault(t *testing.T) {
 }
 
 func TestMultiArch(t *testing.T) {
+	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
+	kclient := helper.MustReturn(k8sclient.Default)
 	c, err := client.New(cfg, ns.Name)
 	if err != nil {
 		t.Fatal()
 	}
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/multiarch/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/multiarch",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/multiarch/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/multiarch",
 		Platforms: []v1.Platform{
 			{
 				Architecture: "amd64",
@@ -191,12 +187,19 @@ func TestMultiArch(t *testing.T) {
 	assert.Len(t, image.ImageData.Containers, 1)
 	assert.True(t, len(image.ImageData.Containers["web"].Image) > 0)
 
-	opts, err := remoteopts.WithClientDialer(context.Background(), c)
+	transport, err := imagesystem.NewAPIBasedTransport(kclient, helper.MustReturn(k8sclient.DefaultConfig))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tag, err := name.ParseReference(image.ImageData.Containers["web"].Image)
+	opts, err := images.GetAuthenticationRemoteOptions(context.Background(), kclient, ns.Name, remote.WithTransport(transport))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imgName := strings.ReplaceAll(image.ImageData.Containers["web"].Image, "127.0.0.1:5000",
+		"registry.acorn-image-system.svc.cluster.local:5000")
+	tag, err := name.ParseReference(imgName)
 	if err != nil {
 		t.Fatal(err)
 	}

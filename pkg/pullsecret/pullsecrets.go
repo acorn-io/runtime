@@ -6,7 +6,9 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/dockerconfig"
+	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/authn/kubernetes"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -15,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ForNamespace(ctx context.Context, c client.Reader, namespace string) ([]corev1.Secret, error) {
+func ForNamespace(ctx context.Context, c client.Reader, namespace string, requireLabel bool) ([]corev1.Secret, error) {
 	secrets := &corev1.SecretList{}
 	err := c.List(ctx, secrets, &client.ListOptions{
 		Namespace: namespace,
@@ -26,6 +28,9 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string) ([]cor
 
 	var result []corev1.Secret
 	for _, secret := range secrets.Items {
+		if requireLabel && secret.Labels[labels.AcornCredential] != "true" {
+			continue
+		}
 		if secret.Type == corev1.SecretTypeDockercfg || secret.Type == corev1.SecretTypeDockerConfigJson {
 			result = append(result, secret)
 			continue
@@ -38,15 +43,27 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string) ([]cor
 		}
 	}
 
+	for i, secret := range result {
+		result[i].Data, err = nacl.DecryptNamespacedDataMap(ctx, c, secret.Data, secret.Namespace)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return result, nil
 }
 
 func Keychain(ctx context.Context, c client.Reader, namespace string) (authn.Keychain, error) {
-	secrets, err := ForNamespace(ctx, c, namespace)
+	commonSecrets, err := ForNamespace(ctx, c, system.ImagesNamespace, true)
 	if err != nil {
 		return nil, err
 	}
-	return kubernetes.NewFromPullSecrets(ctx, secrets)
+
+	secrets, err := ForNamespace(ctx, c, namespace, false)
+	if err != nil {
+		return nil, err
+	}
+	return kubernetes.NewFromPullSecrets(ctx, append(commonSecrets, secrets...))
 }
 
 func ForImages(secretName, secretNamespace string, keychain authn.Keychain, images ...string) (*corev1.Secret, error) {

@@ -4,9 +4,11 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apps"
 	"github.com/acorn-io/acorn/pkg/server/registry/builders"
+	"github.com/acorn-io/acorn/pkg/server/registry/builds"
 	"github.com/acorn-io/acorn/pkg/server/registry/containers"
 	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
@@ -28,59 +30,49 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 		return nil, err
 	}
 
+	transport, err := imagesystem.NewAPIBasedTransport(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	buildersStorage := builders.NewStorage(c)
-	imagesStorage, err := images.NewStorage(c, nil)
+	buildersPort, err := builders.NewBuilderPort(c, transport)
 	if err != nil {
 		return nil, err
 	}
-	containersStorage, err := containers.NewStorage(c)
-	if err != nil {
-		return nil, err
-	}
+
+	buildsStorage := builds.NewStorage(c)
+	imagesStorage := images.NewStorage(c)
+
+	containersStorage := containers.NewStorage(c)
 
 	containerExec, err := containers.NewContainerExec(c, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	buildersPort, err := builders.NewBuildkitPort(c, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	registryPort, err := builders.NewRegistryPort(c, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	appsStorage, err := apps.NewStorage(c, clientFactory)
-	if err != nil {
-		return nil, err
-	}
+	appsStorage := apps.NewStorage(c, clientFactory)
 
 	logsStorage, err := apps.NewLogs(c, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	volumesStorage, err := volumes.NewStorage(c)
-	if err != nil {
-		return nil, err
-	}
+	volumesStorage := volumes.NewStorage(c)
 
 	stores := map[string]rest.Storage{
+		"acornimagebuilds":       buildsStorage,
 		"apps":                   appsStorage,
 		"apps/log":               logsStorage,
 		"apps/confirmupgrade":    apps.NewConfirmUpgrade(c),
 		"apps/pullimage":         apps.NewPullAppImage(c),
 		"builders":               buildersStorage,
 		"builders/port":          buildersPort,
-		"builders/registryport":  registryPort,
 		"images":                 imagesStorage,
 		"images/tag":             images.NewTagStorage(c),
-		"images/push":            images.NewImagePush(c),
-		"images/pull":            images.NewImagePull(c, clientFactory),
-		"images/details":         images.NewImageDetails(c),
+		"images/push":            images.NewImagePush(c, transport),
+		"images/pull":            images.NewImagePull(c, clientFactory, transport),
+		"images/details":         images.NewImageDetails(c, transport),
 		"volumes":                volumesStorage,
 		"containerreplicas":      containersStorage,
 		"containerreplicas/exec": containerExec,

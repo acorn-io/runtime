@@ -10,7 +10,25 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func DecryptNamespacedData(ctx context.Context, c kclient.Client, data []byte, namespace string) ([]byte, error) {
+func DecryptNamespacedDataMap(ctx context.Context, c kclient.Reader, data map[string][]byte, ownerNamespace string) (map[string][]byte, error) {
+	to := map[string][]byte{}
+	for k, v := range data {
+		if strings.HasPrefix(string(v), "ACORNENC:") {
+			decryptedData, err := DecryptNamespacedData(ctx, c, v, ownerNamespace)
+			if err != nil {
+				return data, err
+			}
+			to[k] = decryptedData
+
+			continue
+		}
+		to[k] = v
+	}
+
+	return to, nil
+}
+
+func DecryptNamespacedData(ctx context.Context, c kclient.Reader, data []byte, namespace string) ([]byte, error) {
 	keys, err := GetAllNaclKeys(ctx, c, namespace)
 	if err != nil {
 		return nil, err

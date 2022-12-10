@@ -57,5 +57,7 @@ func (c *Callback) Set(cond v1.Condition) {
 		}
 	}
 	*c.cond.Conditions() = append(*c.cond.Conditions(), cond.Init(c.name, c.cond.GetGeneration()))
-	c.resp.Objects(c.cond)
+	if c.resp != nil {
+		c.resp.Objects(c.cond)
+	}
 }

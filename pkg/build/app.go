@@ -8,36 +8,45 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/streams"
+	"github.com/acorn-io/acorn/pkg/buildclient"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 type AppImageOptions struct {
-	FullTag bool
+	FullTag       bool
+	RemoteOptions []remote.Option
 }
 
-func FromAppImage(ctx context.Context, c client.Client, appImage *v1.AppImage, streams streams.Output, opts *AppImageOptions) (string, error) {
+func (a *AppImageOptions) GetFullTag() bool {
+	if a == nil {
+		return false
+	}
+	return a.FullTag
+}
+
+func (a *AppImageOptions) GetRemoteOptions() []remote.Option {
+	if a == nil {
+		return nil
+	}
+	return a.RemoteOptions
+}
+
+func FromAppImage(ctx context.Context, pushRepo string, appImage *v1.AppImage, messages buildclient.Messages, opts *AppImageOptions) (string, error) {
 	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tempContext)
 
-	io := streams.Streams()
-	tag, err := buildImageNoManifest(ctx, c, tempContext, v1.Build{
+	tag, err := buildImageNoManifest(ctx, pushRepo, tempContext, v1.Build{
 		Context:    ".",
 		Dockerfile: "Dockerfile",
-	}, io)
+	}, messages)
 	if err != nil {
 		return "", err
 	}
 
-	var fullTag bool
-	if opts != nil {
-		fullTag = opts.FullTag
-	}
-
-	return createAppManifest(ctx, c, tag, appImage.ImageData, fullTag)
+	return createAppManifest(ctx, tag, appImage.ImageData, opts.GetFullTag(), opts.GetRemoteOptions())
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {

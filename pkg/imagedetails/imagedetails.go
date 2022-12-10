@@ -5,15 +5,16 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any) (*apiv1.ImageDetails, error) {
+func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
 
@@ -28,7 +29,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		imageName = image.Name
 	}
 
-	appImage, err := pull.AppImage(ctx, c, namespace, imageName)
+	appImage, err := images.PullAppImage(ctx, c, namespace, imageName, opts...)
 	if err != nil {
 		return nil, err
 	}

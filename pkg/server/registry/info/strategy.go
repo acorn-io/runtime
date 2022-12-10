@@ -7,36 +7,24 @@ import (
 	"github.com/acorn-io/acorn/pkg/encryption"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/info"
-	"github.com/acorn-io/acorn/pkg/tables"
-	"github.com/acorn-io/mink/pkg/stores"
-	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
 	"k8s.io/apiserver/pkg/endpoints/request"
-	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStrategy(c client.WithWatch) stores.ListOnly {
+func NewStrategy(c client.WithWatch) *Strategy {
 	return &Strategy{
-		TableConvertor: tables.InfoConverter,
-		client:         c,
+		client: c,
 	}
 }
 
 type Strategy struct {
-	*strategy.DestroyAdapter
-	rest.TableConvertor
-
 	client client.WithWatch
 }
 
 func (s *Strategy) NewList() types.ObjectList {
 	return &apiv1.InfoList{}
-}
-
-func (s *Strategy) NamespaceScoped() bool {
-	return true
 }
 
 func (s *Strategy) New() types.Object {

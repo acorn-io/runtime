@@ -12,51 +12,13 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/buildclient"
 	"github.com/acorn-io/acorn/pkg/cue"
-	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
 	imagename "github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
-
-type Options struct {
-	Client    client.Client
-	Cwd       string
-	Platforms []v1.Platform
-	Args      map[string]any
-	Profiles  []string
-	Streams   *streams.Output
-	FullTag   bool
-}
-
-func (b *Options) Complete() (*Options, error) {
-	var (
-		current Options
-		err     error
-	)
-	if b != nil {
-		current = *b
-	}
-	if current.Cwd == "" {
-		pwd, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		current.Cwd = pwd
-	}
-	if current.Streams == nil {
-		current.Streams = streams.CurrentOutput()
-	}
-	if current.Client == nil {
-		dc := client.CmdClient{}
-		current.Client, err = dc.CreateDefault()
-		if err != nil {
-			return nil, err
-		}
-	}
-	return &current, nil
-}
 
 func FindAcornCue(cwd string) string {
 	for _, ext := range []string{"cue", "yaml", "json"} {
@@ -86,22 +48,8 @@ func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
 	return appdefinition.NewAppDefinition(fileData)
 }
 
-func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error) {
-	opts, err := opts.Complete()
-	if err != nil {
-		return nil, err
-	}
-
-	file = ResolveFile(file, opts.Cwd)
-
-	fileData, err := cue.ReadCUE(file)
-	if err != nil {
-		return nil, err
-	}
-
-	vcs := vcs(filepath.Dir(file))
-
-	appDefinition, err := appdefinition.NewAppDefinition(fileData)
+func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts *v1.AcornImageBuildInstanceSpec, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+	appDefinition, err := appdefinition.NewAppDefinition([]byte(opts.Acornfile))
 	if err != nil {
 		return nil, err
 	}
@@ -117,29 +65,28 @@ func Build(ctx context.Context, file string, opts *Options) (*v1.AppImage, error
 	}
 	buildSpec.Platforms = opts.Platforms
 
-	imageData, err := FromSpec(ctx, opts.Client, opts.Cwd, *buildSpec, *opts.Streams)
+	imageData, err := FromSpec(ctx, pushRepo, *buildSpec, messages, remoteOpts)
 	appImage := &v1.AppImage{
-		Acornfile: string(fileData),
+		Acornfile: opts.Acornfile,
 		ImageData: imageData,
 		BuildArgs: buildArgs,
-		VCS:       vcs,
+		VCS:       opts.VCS,
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := FromAppImage(ctx, opts.Client, appImage, *opts.Streams, &AppImageOptions{
-		FullTag: opts.FullTag,
-	})
+	id, err := FromAppImage(ctx, pushRepo, appImage, messages, &AppImageOptions{})
 	if err != nil {
 		return nil, err
 	}
 	appImage.ID = id
+	appImage.Digest = "sha256:" + id
 
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, containers map[string]v1.ContainerImageBuilderSpec, opts []remote.Option) (map[string]v1.ContainerData, error) {
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
@@ -156,7 +103,7 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 			}
 		}
 
-		id, err := fromBuild(ctx, c, buildCache, cwd, platforms, *container.Build, streams.Streams())
+		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *container.Build, messages, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +132,7 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 				}
 			}
 
-			id, err := fromBuild(ctx, c, buildCache, cwd, platforms, *sidecar.Build, streams.Streams())
+			id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *sidecar.Build, messages, opts)
 			if err != nil {
 				return nil, err
 			}
@@ -198,7 +145,7 @@ func buildContainers(ctx context.Context, c client.Client, buildCache *buildCach
 	return result, nil
 }
 
-func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, streams streams.Output, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
+func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, images map[string]v1.ImageBuilderSpec, opts []remote.Option) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(images) {
@@ -209,7 +156,7 @@ func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, c
 			}
 		}
 
-		id, err := fromBuild(ctx, c, buildCache, cwd, platforms, *image.Build, streams.Streams())
+		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *image.Build, messages, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +169,7 @@ func buildImages(ctx context.Context, c client.Client, buildCache *buildCache, c
 	return result, nil
 }
 
-func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderSpec, streams streams.Output) (v1.ImagesData, error) {
+func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, messages buildclient.Messages, opts []remote.Option) (v1.ImagesData, error) {
 	var (
 		err  error
 		data = v1.ImagesData{
@@ -232,17 +179,17 @@ func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderS
 
 	buildCache := &buildCache{}
 
-	data.Containers, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Containers)
+	data.Containers, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Containers, opts)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Jobs)
+	data.Jobs, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Jobs, opts)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, c, buildCache, cwd, spec.Platforms, streams, spec.Images)
+	data.Images, err = buildImages(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Images, opts)
 	if err != nil {
 		return data, err
 	}
@@ -250,15 +197,15 @@ func FromSpec(ctx context.Context, c client.Client, cwd string, spec v1.BuilderS
 	return data, nil
 }
 
-func fromBuild(ctx context.Context, c client.Client, buildCache *buildCache, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (id string, err error) {
-	id, err = buildCache.Get(cwd, build, platforms)
+func fromBuild(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, opts []remote.Option) (id string, err error) {
+	id, err = buildCache.Get(build, platforms)
 	if err != nil || id != "" {
 		return id, err
 	}
 
 	defer func() {
 		if err == nil && id != "" {
-			buildCache.Store(cwd, build, platforms, id)
+			buildCache.Store(build, platforms, id)
 		}
 	}()
 
@@ -271,22 +218,22 @@ func fromBuild(ctx context.Context, c client.Client, buildCache *buildCache, cwd
 	}
 
 	if build.BaseImage != "" || len(build.ContextDirs) > 0 {
-		return buildWithContext(ctx, c, cwd, platforms, build, streams)
+		return buildWithContext(ctx, pushRepo, platforms, build, messages, opts)
 	}
 
-	return buildImageAndManifest(ctx, c, cwd, platforms, build, streams)
+	return buildImageAndManifest(ctx, pushRepo, platforms, build, messages, opts)
 }
 
-func buildImageNoManifest(ctx context.Context, c client.Client, cwd string, build v1.Build, streams streams.Streams) (string, error) {
-	_, ids, err := buildkit.Build(ctx, c, cwd, nil, build, streams)
+func buildImageNoManifest(ctx context.Context, pushRepo string, cwd string, build v1.Build, messages buildclient.Messages) (string, error) {
+	_, ids, err := buildkit.Build(ctx, pushRepo, cwd, nil, build, messages)
 	if err != nil {
 		return "", err
 	}
 	return ids[0], nil
 }
 
-func buildImageAndManifest(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
-	platforms, ids, err := buildkit.Build(ctx, c, cwd, platforms, build, streams)
+func buildImageAndManifest(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, opts []remote.Option) (string, error) {
+	platforms, ids, err := buildkit.Build(ctx, pushRepo, "", platforms, build, messages)
 	if err != nil {
 		return "", err
 	}
@@ -295,17 +242,16 @@ func buildImageAndManifest(ctx context.Context, c client.Client, cwd string, pla
 		return ids[0], nil
 	}
 
-	return createManifest(ctx, c, ids, platforms)
+	return createManifest(ids, platforms, opts)
 }
 
-func buildWithContext(ctx context.Context, c client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) (string, error) {
+func buildWithContext(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, opts []remote.Option) (string, error) {
 	var (
 		baseImage = build.BaseImage
-		err       error
 	)
 
 	if baseImage == "" {
-		newImage, err := buildImageAndManifest(ctx, c, cwd, platforms, build.BaseBuild(), streams)
+		newImage, err := buildImageAndManifest(ctx, pushRepo, platforms, build.BaseBuild(), messages, opts)
 		if err != nil {
 			return "", err
 		}
@@ -315,38 +261,12 @@ func buildWithContext(ctx context.Context, c client.Client, cwd string, platform
 		}
 		baseImage = strings.Replace(newImage, digest.RegistryStr(), fmt.Sprintf("127.0.0.1:%d", system.RegistryPort), 1)
 	}
-	dockerfile, err := os.CreateTemp("", "acorn-dockerfile-")
-	if err != nil {
-		return "", err
-	}
-	defer func() {
-		dockerfile.Close()
-		os.Remove(dockerfile.Name())
-	}()
 
-	for _, dir := range build.ContextDirs {
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			// don't blindly mkdirall because this could actually be a file
-			err := os.MkdirAll(dir, 0755)
-			if err != nil {
-				return "", fmt.Errorf("creating dir %s: %w", dir, err)
-			}
-		}
-	}
-
-	_, err = dockerfile.WriteString(toContextCopyDockerFile(baseImage, build.ContextDirs))
-	if err != nil {
-		return "", err
-	}
-
-	if err := dockerfile.Close(); err != nil {
-		return "", err
-	}
-
-	return buildImageAndManifest(ctx, c, "", platforms, v1.Build{
-		Context:    cwd,
-		Dockerfile: dockerfile.Name(),
-	}, streams)
+	return buildImageAndManifest(ctx, pushRepo, platforms, v1.Build{
+		Context:            ".",
+		Dockerfile:         "Dockerfile",
+		DockerfileContents: toContextCopyDockerFile(baseImage, build.ContextDirs),
+	}, messages, opts)
 }
 
 func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) string {
@@ -369,17 +289,16 @@ type buildCache struct {
 	cache map[string]string
 }
 
-func (b *buildCache) toKey(cwd string, platforms []v1.Platform, build v1.Build) (string, error) {
+func (b *buildCache) toKey(platforms []v1.Platform, build v1.Build) (string, error) {
 	data, err := json.Marshal(map[string]interface{}{
-		"cwd":       cwd,
 		"platforms": platforms,
 		"build":     build,
 	})
 	return string(data), err
 }
 
-func (b *buildCache) Get(cwd string, build v1.Build, platforms []v1.Platform) (string, error) {
-	key, err := b.toKey(cwd, platforms, build)
+func (b *buildCache) Get(build v1.Build, platforms []v1.Platform) (string, error) {
+	key, err := b.toKey(platforms, build)
 	if err != nil {
 		// ignore error and return as cache miss
 		return "", nil
@@ -387,8 +306,8 @@ func (b *buildCache) Get(cwd string, build v1.Build, platforms []v1.Platform) (s
 	return b.cache[key], nil
 }
 
-func (b *buildCache) Store(cwd string, build v1.Build, platforms []v1.Platform, id string) {
-	key, err := b.toKey(cwd, platforms, build)
+func (b *buildCache) Store(build v1.Build, platforms []v1.Platform, id string) {
+	key, err := b.toKey(platforms, build)
 	if err != nil {
 		// ignore error and return as cache miss
 		return

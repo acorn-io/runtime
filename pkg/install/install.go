@@ -12,6 +12,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade/validate"
+	"github.com/acorn-io/acorn/pkg/buildserver"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/install/progress"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
@@ -21,7 +22,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/term"
-	"github.com/acorn-io/acorn/pkg/version"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -46,10 +46,6 @@ import (
 )
 
 var (
-	InstallImage  = "ghcr.io/acorn-io/acorn"
-	DefaultBranch = "main"
-	devTag        = "v0.0.0-dev"
-
 	//go:embed *.yaml
 	files embed.FS
 )
@@ -84,18 +80,6 @@ func (o *Options) complete() *Options {
 	}
 
 	return o
-}
-
-func DefaultImage() string {
-	img := os.Getenv("ACORN_IMAGE")
-	if img != "" {
-		return img
-	}
-	var image = fmt.Sprintf("%s:%s", InstallImage, version.Tag)
-	if version.Tag == devTag {
-		image = fmt.Sprintf("%s:%s", InstallImage, DefaultBranch)
-	}
-	return image
 }
 
 func validMailAddress(address string) bool {
@@ -172,6 +156,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
 		return printObject(image, opts)
+	}
+
+	if err := upgradeFromV03(ctx, c); err != nil {
+		return err
 	}
 
 	checkOpts := CheckOptions{RuntimeImage: image}
@@ -383,7 +371,7 @@ func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string
 
 func AllResources() ([]kclient.Object, error) {
 	opts := &Options{}
-	return resources(DefaultImage(), opts.complete())
+	return resources(system.DefaultImage(), opts.complete())
 }
 
 func resources(image string, opts *Options) ([]kclient.Object, error) {
@@ -557,6 +545,10 @@ func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error)
 
 func Roles() ([]kclient.Object, error) {
 	return objectsFromFile("role.yaml")
+}
+
+func upgradeFromV03(ctx context.Context, c kclient.Client) error {
+	return buildserver.DeleteOld(ctx, c)
 }
 
 func newApply(ctx context.Context) (apply.Apply, error) {

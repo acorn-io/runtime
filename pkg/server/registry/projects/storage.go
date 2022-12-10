@@ -12,7 +12,7 @@ import (
 
 func NewStorage(c kclient.WithWatch) rest.Storage {
 	remoteResource := remote.NewWithTranslation(&Translator{},
-		&corev1.Namespace{}, &corev1.NamespaceList{}, c)
+		&corev1.Namespace{}, c)
 	return stores.NewBuilder(c.Scheme(), &apiv1.Project{}).
 		WithList(&Strategy{
 			c:    c,

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/install"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
@@ -76,7 +76,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 					Containers: []corev1.Container{
 						{
 							Name:    "nginx",
-							Image:   install.DefaultImage(),
+							Image:   system.DefaultImage(),
 							Command: []string{"/docker-entrypoint.sh"},
 							Args: []string{
 								"nginx",

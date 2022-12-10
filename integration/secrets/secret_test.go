@@ -9,7 +9,6 @@ import (
 	"github.com/acorn-io/acorn/integration/helper"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
@@ -28,9 +27,9 @@ func TestText(t *testing.T) {
 
 	c, _ := helper.ClientAndNamespace(t)
 	kclient := helper.MustReturn(k8sclient.Default)
-	image, err := build.Build(helper.GetCTX(t), "./testdata/generated/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/generated",
+	ctx := helper.GetCTX(t)
+	image, err := c.AcornImageBuild(ctx, "./testdata/generated/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/generated",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -70,12 +69,11 @@ func TestJSON(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(k8sclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
-	client := helper.MustReturn(k8sclient.Default)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/generated-json/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/generated-json",
+	image, err := c.AcornImageBuild(ctx, "./testdata/generated-json/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/generated-json",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +89,7 @@ func TestJSON(t *testing.T) {
 	})
 
 	for _, secretName := range []string{"gen", "gen2"} {
-		secret := helper.Wait(t, client.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
+		secret := helper.Wait(t, kclient.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
 			return obj.Namespace == app.Status.Namespace &&
 				obj.Name == secretName && len(obj.Data) > 0
 		})
@@ -103,11 +101,11 @@ func TestJSON(t *testing.T) {
 
 func TestIssue552(t *testing.T) {
 	c, _ := helper.ClientAndNamespace(t)
-	k8sclient := helper.MustReturn(k8sclient.Default)
+	kclient := helper.MustReturn(k8sclient.Default)
+	ctx := helper.GetCTX(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/issue-552/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/issue-552",
+	image, err := c.AcornImageBuild(ctx, "./testdata/issue-552/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/issue-552",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -124,7 +122,7 @@ func TestIssue552(t *testing.T) {
 	})
 
 	dep := &appsv1.Deployment{}
-	err = k8sclient.Get(context.Background(), router.Key(app.Status.Namespace, "icinga2-master"), dep)
+	err = kclient.Get(ctx, router.Key(app.Status.Namespace, "icinga2-master"), dep)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +132,7 @@ func TestIssue552(t *testing.T) {
 
 func TestEncryptionEndToEnd(t *testing.T) {
 	c1, _ := helper.ClientAndNamespace(t)
-	k8sclient := helper.MustReturn(k8sclient.Default)
+	kclient := helper.MustReturn(k8sclient.Default)
 
 	info, err := c1.Info(helper.GetCTX(t))
 	if err != nil {
@@ -159,9 +157,8 @@ func TestEncryptionEndToEnd(t *testing.T) {
 
 	assert.True(t, strings.HasPrefix(output, "ACORNENC:"))
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/encryption/Acornfile", &build.Options{
-		Client: c1,
-		Cwd:    "./testdata/encryption",
+	image, err := c1.AcornImageBuild(helper.GetCTX(t), "./testdata/encryption/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/encryption",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -180,7 +177,7 @@ func TestEncryptionEndToEnd(t *testing.T) {
 		return obj.Status.Namespace != ""
 	})
 
-	secret := helper.Wait(t, k8sclient.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
+	secret := helper.Wait(t, kclient.Watch, &corev1.SecretList{}, func(obj *corev1.Secret) bool {
 		return obj.Namespace == app.Status.Namespace &&
 			obj.Name == "test" && len(obj.Data) > 0
 	})
@@ -190,14 +187,14 @@ func TestEncryptionEndToEnd(t *testing.T) {
 }
 
 func TestNamespacedDecryption(t *testing.T) {
+	ctx := helper.GetCTX(t)
 	c1, _ := helper.ClientAndNamespace(t)
 	c2, _ := helper.ClientAndNamespace(t)
 
 	encdata := helper.EncryptData(t, c1, nil, plainTextData)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/encryption/Acornfile", &build.Options{
-		Client: c2,
-		Cwd:    "./testdata/encryption",
+	image, err := c2.AcornImageBuild(ctx, "./testdata/encryption/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/encryption",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -225,6 +222,7 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 	c1, _ := helper.ClientAndNamespace(t)
 	c2, _ := helper.ClientAndNamespace(t)
 	k8sclient := helper.MustReturn(k8sclient.Default)
+	ctx := helper.GetCTX(t)
 
 	keys := helper.GetEncryptionKeys(t, []client.Client{c1, c2})
 	assert.Len(t, keys, 2)
@@ -232,9 +230,8 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 	encdata := helper.EncryptData(t, nil, keys, plainTextData)
 	assert.True(t, strings.HasPrefix(encdata, "ACORNENC:"))
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/encryption/Acornfile", &build.Options{
-		Client: c1,
-		Cwd:    "./testdata/encryption",
+	image, err := c1.AcornImageBuild(ctx, "./testdata/encryption/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/encryption",
 	})
 	if err != nil {
 		t.Fatal(err)

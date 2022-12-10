@@ -78,6 +78,8 @@ func ClientAndNamespace(t *testing.T) (client.Client, *corev1.Namespace) {
 func BuilderClient(t *testing.T, namespace string) client.Client {
 	t.Helper()
 
+	StartController(t)
+
 	c, err := client.New(StartAPI(t), namespace)
 	if err != nil {
 		t.Fatal(err)
@@ -94,6 +96,11 @@ func ensureNamespace(t *testing.T) {
 			Name: system.Namespace,
 		},
 	})
+	_ = kclient.Create(context.Background(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: system.ImagesNamespace,
+		},
+	})
 }
 
 func StartAPI(t *testing.T) *rest.Config {
@@ -105,8 +112,6 @@ func StartAPI(t *testing.T) *rest.Config {
 	if apiStarted {
 		return apiRESTConfig
 	}
-
-	t.Cleanup(CleanupAPI)
 
 	ensureNamespace(t)
 
@@ -176,20 +181,10 @@ func StartAPI(t *testing.T) *rest.Config {
 	return nil
 }
 
-func CleanupAPI() {
-	fileInfo, err := os.Stat(APIServerLocalCertPath)
-	if err != nil {
-		return
-	}
-
-	if fileInfo.IsDir() {
-		_ = os.RemoveAll(APIServerLocalCertPath)
-	}
-}
-
 func StartRegistry(t *testing.T) (string, func()) {
 	t.Helper()
 
+	os.Setenv("ACORN_TEST_ALLOW_LOCALHOST_REGISTRY", "true")
 	srv := httptest.NewServer(registry.New())
 	return srv.Listener.Addr().String(), srv.Close
 }

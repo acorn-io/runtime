@@ -13,10 +13,10 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/install"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
-	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -44,7 +44,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := pull.GetTag(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
+	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 	if app.Spec.GetDevMode() && hasContextDir(container) {
 		initContainers = append(initContainers, corev1.Container{
 			Name:            "acorn-helper",
-			Image:           install.DefaultImage(),
+			Image:           system.DefaultImage(),
 			Command:         []string{"acorn-helper-init"},
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			VolumeMounts: []corev1.VolumeMount{
@@ -393,7 +393,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
 	return corev1.Container{
 		Name:           containerName,
-		Image:          pull.ResolveTag(tag, container.Image),
+		Image:          images.ResolveTag(tag, container.Image),
 		Command:        container.Entrypoint,
 		Args:           container.Command,
 		WorkingDir:     container.WorkingDir,

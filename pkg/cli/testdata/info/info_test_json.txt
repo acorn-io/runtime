@@ -23,7 +23,11 @@
             "internalClusterDomain": "",
             "acornDNS": null,
             "acornDNSEndpoint": null,
-            "autoUpgradeInterval": null
+            "autoUpgradeInterval": null,
+            "recordBuilds": null,
+            "publishBuilders": null,
+            "builderPerNamespace": null,
+            "internalRegistryPrefix": ""
         },
         "userConfig": {
             "ingressClassName": null,
@@ -38,7 +42,11 @@
             "internalClusterDomain": "",
             "acornDNS": null,
             "acornDNSEndpoint": null,
-            "autoUpgradeInterval": null
+            "autoUpgradeInterval": null,
+            "recordBuilds": null,
+            "publishBuilders": null,
+            "builderPerNamespace": null,
+            "internalRegistryPrefix": ""
         }
     },
     "namespace": {}

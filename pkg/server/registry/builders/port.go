@@ -2,93 +2,75 @@ package builders
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build/buildkit"
-	"github.com/acorn-io/acorn/pkg/portforwarder"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/strategy"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	registryrest "k8s.io/apiserver/pkg/registry/rest"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type BuildkitPort struct {
+var (
+	_ registryrest.Connecter = (*BuilderPort)(nil)
+)
+
+type BuilderPort struct {
 	*strategy.DestroyAdapter
-	client     kclient.WithWatch
-	proxy      httputil.ReverseProxy
-	RESTClient rest.Interface
-	k8s        kubernetes.Interface
+	client kclient.WithWatch
+	proxy  httputil.ReverseProxy
 }
 
-func NewBuildkitPort(client kclient.WithWatch, cfg *rest.Config) (*BuildkitPort, error) {
-	cfg = rest.CopyConfig(cfg)
-	restconfig.SetScheme(cfg, scheme.Scheme)
-
-	k8s, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	transport, err := rest.TransportFor(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return &BuildkitPort{
-		k8s:    k8s,
+func NewBuilderPort(client kclient.WithWatch, transport http.RoundTripper) (*BuilderPort, error) {
+	return &BuilderPort{
 		client: client,
 		proxy: httputil.ReverseProxy{
-			FlushInterval: 200 * time.Millisecond,
 			Transport:     transport,
+			FlushInterval: 200 * time.Millisecond,
 			Director:      func(request *http.Request) {},
 		},
-		RESTClient: k8s.CoreV1().RESTClient(),
 	}, nil
 }
 
-func (c *BuildkitPort) New() runtime.Object {
-	return &apiv1.ContainerReplicaExecOptions{}
+func (c *BuilderPort) New() runtime.Object {
+	return &apiv1.Builder{}
 }
 
-func (c *BuildkitPort) connect(pod *corev1.Pod, port int) (http.Handler, error) {
+func (c *BuilderPort) NewConnectOptions() (runtime.Object, bool, string) {
+	return nil, false, ""
+}
+
+func (c *BuilderPort) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
+	ns, _ := request.NamespaceFrom(ctx)
+
+	cfg, err := config.Get(ctx, c.client)
+	if err != nil {
+		return nil, err
+	}
+
+	builder := &apiv1.Builder{}
+	err = c.client.Get(ctx, router.Key(ns, id), builder)
+	if err != nil {
+		return nil, err
+	}
+
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		request.URL = portforwarder.URLForPortAndPod(c.RESTClient, pod, uint32(port))
+		request.URL = &url.URL{
+			Scheme: "http",
+			Host:   fmt.Sprintf("%s.%s.%s:8080", builder.Status.ServiceName, system.ImagesNamespace, cfg.InternalClusterDomain),
+		}
 		c.proxy.ServeHTTP(writer, request)
 	}), nil
 }
 
-func (c *BuildkitPort) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
-	ns, _ := request.NamespaceFrom(ctx)
-
-	builder := &apiv1.Builder{}
-	err := c.client.Get(ctx, router.Key(ns, id), builder)
-	if err != nil {
-		return nil, err
-	}
-
-	_, pod, err := buildkit.GetBuildkitPod(ctx, c.client)
-	if err != nil {
-		return nil, err
-	}
-
-	return c.connect(pod, system.BuildkitPort)
-}
-
-func (c *BuildkitPort) NewConnectOptions() (runtime.Object, bool, string) {
-	return &apiv1.ContainerReplicaExecOptions{}, false, ""
-}
-
-func (c *BuildkitPort) ConnectMethods() []string {
+func (c *BuilderPort) ConnectMethods() []string {
 	return []string{"GET"}
 }

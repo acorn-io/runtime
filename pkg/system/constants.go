@@ -4,6 +4,7 @@ import "os"
 
 const (
 	Namespace            = "acorn-system"
+	ImagesNamespace      = "acorn-image-system"
 	ConfigName           = "acorn-config"
 	TLSSecretName        = "acorn-tls"
 	LEAccountSecretName  = "acorn-le-account"
@@ -18,7 +19,6 @@ var (
 	ControllerName           = "acorn-controller"
 	APIServerName            = "acorn-api"
 	BuildkitPort             = 8080
-	IndexURL                 = "https://cdn.acrn.io/ui/latest/index.html"
 	ContainerdConfigPathName = "containerd-config-path"
 )
 

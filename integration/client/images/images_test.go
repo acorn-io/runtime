@@ -7,7 +7,6 @@ import (
 
 	client2 "github.com/acorn-io/acorn/integration/client"
 	"github.com/acorn-io/acorn/integration/helper"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
@@ -60,22 +59,12 @@ func TestImageListGetDelete(t *testing.T) {
 }
 
 func TestImageTagMove(t *testing.T) {
-	helper.StartController(t)
-	restConfig := helper.StartAPI(t)
-
+	c, ns := helper.ClientAndNamespace(t)
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
-
-	c, err := client.New(restConfig, ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	imageID := client2.NewImage(t, ns.Name)
-	image2, err := build.Build(helper.GetCTX(t), "../testdata/nginx2/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "../testdata/nginx2",
+	image2, err := c.AcornImageBuild(ctx, "../testdata/nginx2/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "../testdata/nginx2",
 	})
 	if err != nil {
 		t.Fatal(err)

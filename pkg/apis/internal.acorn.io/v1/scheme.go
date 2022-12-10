@@ -16,6 +16,10 @@ var SchemeGroupVersion = schema.GroupVersion{
 
 func AddToScheme(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
+		&AcornImageBuildInstance{},
+		&AcornImageBuildInstanceList{},
+		&BuilderInstance{},
+		&BuilderInstanceList{},
 		&AppInstance{},
 		&AppInstanceList{},
 		&ImageInstance{},

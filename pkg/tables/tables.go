@@ -7,8 +7,6 @@ var (
 		{"Message", "Message"},
 	}
 
-	CheckResultConverter = MustConverter(CheckResult)
-
 	App = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"Image", "{{ trunc .Status.AppImage.Name }}"},
@@ -92,6 +90,19 @@ var (
 		{"Ready", "Status.Ready"},
 	}
 	BuilderConverter = MustConverter(Builder)
+
+	Build = [][]string{
+		{"Name", "Name"},
+		{"Image", "Status.AppImage.ID"},
+		{"Message", "Status.BuildError"},
+	}
+	BuildConverter = MustConverter(Build)
+
+	Project = [][]string{
+		{"Name", "Name"},
+		{"Created", "{{ago .CreationTimestamp}}"},
+	}
+	ProjectConverter = MustConverter(Project)
 
 	RuleRequests = [][]string{
 		{"Service", "Service"},

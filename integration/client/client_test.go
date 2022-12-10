@@ -9,9 +9,8 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	hclient "github.com/acorn-io/acorn/pkg/client"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,25 +19,17 @@ import (
 )
 
 func TestAppsSSA(t *testing.T) {
-	helper.StartController(t)
 	cfg := helper.StartAPI(t)
-
+	c, ns := helper.ClientAndNamespace(t)
 	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, client)
-	hclient, err := hclient.New(cfg, ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	dyn, err := dynamic.NewForConfig(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata/nginx",
+	image, err := c.AcornImageBuild(ctx, "./testdata/nginx/Acornfile", &hclient.AcornImageBuildOptions{
+		Cwd: "./testdata/nginx",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +61,7 @@ func TestAppsSSA(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := hclient.AppGet(ctx, "test")
+	app, err := c.AppGet(ctx, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,19 +73,21 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 
+	c, ns := helper.ClientAndNamespace(t)
 	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, client)
+	client, err := k8sclient.New(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/nginx/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata/nginx",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/nginx/Acornfile", &hclient.AcornImageBuildOptions{
+		Cwd: "./testdata/nginx",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	appInstance := &v1.AppInstance{
+	appInstance := &apiv1.App{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "simple-app",
 			Namespace:    ns.Name,
@@ -112,11 +105,11 @@ func TestFriendlyNameInContainer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
+	helper.WaitForObject(t, client.Watch, &apiv1.AppList{}, appInstance, func(obj *apiv1.App) bool {
 		return obj.Status.ContainerStatus["default"].Ready == 1
 	})
 
-	c, err := hclient.New(cfg, ns.Name)
+	c, err = hclient.New(cfg, ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

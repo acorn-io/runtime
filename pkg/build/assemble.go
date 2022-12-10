@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/remoteopts"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
@@ -174,13 +172,8 @@ func imagePlatform(img ggcrv1.Image) (*ggcrv1.Platform, error) {
 	}, nil
 }
 
-func createAppManifest(ctx context.Context, c client.Client, ref string, data v1.ImagesData, fullDigest bool) (string, error) {
+func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, fullDigest bool, opts []remote.Option) (string, error) {
 	d, err := name.NewDigest(ref)
-	if err != nil {
-		return "", err
-	}
-
-	opts, err := remoteopts.WithClientDialer(ctx, c)
 	if err != nil {
 		return "", err
 	}
@@ -226,15 +219,11 @@ func createAppManifest(ctx context.Context, c client.Client, ref string, data v1
 	return h.Hex, nil
 }
 
-func createManifest(ctx context.Context, c client.Client, tags []string, platforms []v1.Platform) (string, error) {
-	opts, err := remoteopts.WithClientDialer(ctx, c)
-	if err != nil {
-		return "", err
-	}
-
+func createManifest(tags []string, platforms []v1.Platform, opts []remote.Option) (string, error) {
 	var (
 		currentIndex = ggcrv1.ImageIndex(empty.Index)
 		d            name.Digest
+		err          error
 	)
 
 	for i, tag := range tags {

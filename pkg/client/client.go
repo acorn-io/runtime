@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"net"
 	"os"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"k8s.io/client-go/rest"
@@ -24,9 +24,11 @@ type CommandContext struct {
 	StdErr        *os.File
 	StdIn         *strings.Reader
 }
+
 type ClientFactory interface {
 	CreateDefault() (Client, error)
 }
+
 type CmdClient struct{}
 
 func (c *CmdClient) CreateDefault() (Client, error) {
@@ -228,7 +230,6 @@ type Client interface {
 	VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error)
 	VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error)
 
-	ImageCreate(ctx context.Context, id string, tag string) (*apiv1.Image, error)
 	ImageList(ctx context.Context) ([]apiv1.Image, error)
 	ImageGet(ctx context.Context, name string) (*apiv1.Image, error)
 	ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error)
@@ -237,11 +238,10 @@ type Client interface {
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
 
-	BuilderCreate(ctx context.Context) (*apiv1.Builder, error)
-	BuilderGet(ctx context.Context) (*apiv1.Builder, error)
-	BuilderDelete(ctx context.Context) (*apiv1.Builder, error)
-	BuilderDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error)
-	BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error)
+	AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
+	AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error)
+	AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
+	AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error)
 
 	Info(ctx context.Context) (*apiv1.Info, error)
 
@@ -249,6 +249,32 @@ type Client interface {
 	GetClient() kclient.WithWatch
 
 	PromptUser(obj string) error
+}
+
+type AcornImageBuildOptions struct {
+	BuilderName string
+	Cwd         string
+	Platforms   []v1.Platform
+	Args        map[string]any
+	Profiles    []string
+	Streams     *streams.Output
+}
+
+func (a *AcornImageBuildOptions) complete() (_ *AcornImageBuildOptions, err error) {
+	var newOpt AcornImageBuildOptions
+	if a != nil {
+		newOpt = *a
+	}
+	if newOpt.Cwd == "" {
+		newOpt.Cwd, err = os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if newOpt.Streams == nil {
+		newOpt.Streams = streams.CurrentOutput()
+	}
+	return &newOpt, nil
 }
 
 type ImagePullOptions struct {

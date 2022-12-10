@@ -71,9 +71,17 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 			return fmt.Errorf("letsencrypt TOS must be agreed to when Let's Encrypt is enabled")
 		}
 	}
-
 	if c.AutoUpgradeInterval == nil || *c.AutoUpgradeInterval == "" {
 		c.AutoUpgradeInterval = &DefaultImageCheckIntervalDefault
+	}
+	if c.RecordBuilds == nil {
+		c.RecordBuilds = new(bool)
+	}
+	if c.PublishBuilders == nil {
+		c.PublishBuilders = new(bool)
+	}
+	if c.BuilderPerNamespace == nil {
+		c.BuilderPerNamespace = new(bool)
 	}
 
 	if c.HttpEndpointPattern == nil || *c.HttpEndpointPattern == "" {
@@ -213,6 +221,15 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.AutoUpgradeInterval != nil {
 		mergedConfig.AutoUpgradeInterval = newConfig.AutoUpgradeInterval
+	}
+	if newConfig.RecordBuilds != nil {
+		mergedConfig.RecordBuilds = newConfig.RecordBuilds
+	}
+	if newConfig.PublishBuilders != nil {
+		mergedConfig.PublishBuilders = newConfig.PublishBuilders
+	}
+	if newConfig.BuilderPerNamespace != nil {
+		mergedConfig.BuilderPerNamespace = newConfig.BuilderPerNamespace
 	}
 
 	return &mergedConfig
