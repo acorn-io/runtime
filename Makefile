@@ -21,6 +21,7 @@ validate-ci:
 	if [ -n "$$(git status --porcelain)" ]; then \
 		git status --porcelain; \
 		echo "Encountered dirty repo!"; \
+		git diff; \
 		exit 1 \
 	;fi
 
@@ -44,6 +45,7 @@ validate-docs:
 	if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then \
 		git status --porcelain --untracked-files=no; \
 		echo "Encountered dirty repo!"; \
+		git diff; \
 		exit 1 \
 	;fi
 
