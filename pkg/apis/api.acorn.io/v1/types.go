@@ -362,3 +362,23 @@ type InfoList struct {
 func (c *Config) GetLetsEncryptTOSAgree() bool {
 	return c.LetsEncryptTOSAgree != nil && *c.LetsEncryptTOSAgree
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Project struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+}
+
+func (in *Project) NamespaceScoped() bool {
+	return false
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ProjectList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Project `json:"items"`
+}
+
