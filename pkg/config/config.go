@@ -29,6 +29,9 @@ var (
 
 	// DefaultImageCheckIntervalDefault is the default value for the DefaultImageCheckInterval field
 	DefaultImageCheckIntervalDefault = "5m"
+
+	// Default HttpEndpointPattern set to enable Let's Encrypt
+	DefaultHttpEndpointPattern = "{{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
@@ -71,6 +74,10 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 
 	if c.AutoUpgradeInterval == nil || *c.AutoUpgradeInterval == "" {
 		c.AutoUpgradeInterval = &DefaultImageCheckIntervalDefault
+	}
+
+	if c.HttpEndpointPattern == nil || *c.HttpEndpointPattern == "" {
+		c.HttpEndpointPattern = &DefaultHttpEndpointPattern
 	}
 
 	return nil
@@ -185,6 +192,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if len(newConfig.DefaultPublishMode) > 0 {
 		mergedConfig.DefaultPublishMode = newConfig.DefaultPublishMode
+	}
+	if newConfig.HttpEndpointPattern != nil {
+		mergedConfig.HttpEndpointPattern = newConfig.HttpEndpointPattern
 	}
 	if newConfig.AcornDNS != nil {
 		mergedConfig.AcornDNS = newConfig.AcornDNS

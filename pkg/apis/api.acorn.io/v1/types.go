@@ -342,6 +342,7 @@ type Config struct {
 	SetPodSecurityEnforceProfile *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
 	PodSecurityEnforceProfile    string         `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
 	DefaultPublishMode           v1.PublishMode `json:"defaultPublishMode" usage:"If no publish mode is set default to this value (default user)" wrangler:"nullable,options=all|none|defined"`
+	HttpEndpointPattern          *string        `json:"httpEndpointPattern" name:"http-endpoint-pattern" usage:"Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}})" wrangler:"nullable"`
 	InternalClusterDomain        string         `json:"internalClusterDomain" usage:"The Kubernetes internal cluster domain (default svc.cluster.local)" wrangler:"nullable"`
 	AcornDNS                     *string        `json:"acornDNS" name:"acorn-dns" usage:"enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)"`
 	AcornDNSEndpoint             *string        `json:"acornDNSEndpoint" name:"acorn-dns-endpoint" usage:"The URL to access the Acorn DNS service"`

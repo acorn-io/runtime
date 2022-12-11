@@ -10,6 +10,7 @@ server:
     autoUpgradeInterval: null
     clusterDomains: null
     defaultPublishMode: ""
+    httpEndpointPattern: null
     ingressClassName: null
     internalClusterDomain: ""
     letsEncrypt: null
@@ -27,6 +28,7 @@ server:
     autoUpgradeInterval: null
     clusterDomains: null
     defaultPublishMode: ""
+    httpEndpointPattern: null
     ingressClassName: null
     internalClusterDomain: ""
     letsEncrypt: null
