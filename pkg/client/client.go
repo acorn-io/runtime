@@ -2,6 +2,10 @@ package client
 
 import (
 	"context"
+	"net"
+	"os"
+	"strings"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
@@ -11,10 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"k8s.io/client-go/rest"
-	"net"
-	"os"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type CommandContext struct {

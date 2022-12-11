@@ -18,6 +18,7 @@ import (
 	labels2 "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/podstatus"
 	"github.com/acorn-io/acorn/pkg/prompt"
+	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/acorn/pkg/version"
@@ -158,6 +159,13 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 		if !validMailAddress(email) {
 			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
+		}
+	}
+
+	// Validate the non-default http-endpoint-pattern
+	if opts.Config.HttpEndpointPattern != nil && *opts.Config.HttpEndpointPattern != "" {
+		if err := publish.ValidateEndpointPattern(*opts.Config.HttpEndpointPattern); err != nil {
+			return fmt.Errorf("invalid http-endpoint-pattern: %w", err)
 		}
 	}
 
