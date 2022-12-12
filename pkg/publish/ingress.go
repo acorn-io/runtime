@@ -1,18 +1,20 @@
 package publish
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
+	"text/template"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
@@ -21,25 +23,65 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toPrefix(domain, serviceName string, appInstance *v1.AppInstance) (hostPrefix string) {
-	if strings.HasSuffix(domain, "on-acorn.io") {
-		var appInstanceIDSegment string
-		var appInstanceIDSegmentByte [32]byte
+var (
+	ErrPatternParseFailed       = errors.New("failed to parse endpoint pattern")
+	ErrSegmentExceededMaxLength = errors.New("segment exceeded maximum length of 63 characters")
+	ErrParsedEndpointIsNil      = errors.New("parsed endpoint pattern and recieved nil")
+)
 
-		appInstanceIDSegment = serviceName + ":" + appInstance.GetName() + ":" + appInstance.Namespace
-		appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
-		appInstanceIDSegment = hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
-		hostPrefix = name.Limit(serviceName+"-"+appInstance.GetName(), 62-len(appInstanceIDSegment)) + "-" + appInstanceIDSegment
-	} else {
-		hostPrefix = serviceName + "." + appInstance.Name
-		if serviceName == "default" {
-			hostPrefix = appInstance.Name
-		}
-		if appInstance.Namespace != system.DefaultUserNamespace {
-			hostPrefix += "." + appInstance.Namespace
+func ValidateEndpointPattern(pattern string) error {
+	_, err := toEndpoint(pattern, "domain", "container", "appName", "appNamespace")
+	return err
+}
+
+func toEndpoint(pattern, domain, container, appName, appNamespace string) (string, error) {
+	// This should not happen since the pattern in the config (passed to this through pattern) should
+	// always be set to the default if the pattern is "". However,if it is not somehow, set it here.
+	if pattern == "" {
+		pattern = config.DefaultHttpEndpointPattern
+	}
+
+	endpointOpts := struct {
+		App           string
+		Container     string
+		Namespace     string
+		Hash          string
+		ClusterDomain string
+	}{
+		App:           appName,
+		Container:     container,
+		Namespace:     appNamespace,
+		Hash:          getAppHash(container, appName, appNamespace),
+		ClusterDomain: strings.TrimPrefix(domain, "."),
+	}
+
+	var templateBuffer bytes.Buffer
+	t := template.Must(template.New("").Parse(pattern))
+	if err := t.Execute(&templateBuffer, endpointOpts); err != nil {
+		return "", fmt.Errorf("%w %v: %v", ErrPatternParseFailed, pattern, err)
+	}
+
+	endpoint := templateBuffer.String()
+	if endpoint == "<nil>" || endpoint == "" {
+		return "", ErrParsedEndpointIsNil
+	}
+
+	for _, segment := range strings.Split(endpoint, ".") {
+		if len(segment) > 63 {
+			return "", fmt.Errorf("%w: %v", ErrSegmentExceededMaxLength, segment)
 		}
 	}
-	return
+
+	return templateBuffer.String(), nil
+}
+
+func getAppHash(serviceName, appName, appNamespace string) string {
+	var appInstanceIDSegment string
+	var appInstanceIDSegmentByte [32]byte
+
+	appInstanceIDSegment = serviceName + ":" + appName + ":" + appNamespace
+	appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
+	return hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
 }
 
 type Target struct {
@@ -101,8 +143,10 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
 			}
 			for _, domain := range cfg.ClusterDomains {
-				hostPrefix := toPrefix(domain, svcName, app)
-				hostname := hostPrefix + domain
+				hostname, err := toEndpoint(*cfg.HttpEndpointPattern, domain, svcName, app.GetName(), app.GetNamespace())
+				if err != nil {
+					return nil, err
+				}
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
 				rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
@@ -162,7 +206,6 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 // set as the default. We return a pointer here because "" is not a valid value for ingressClassName and will cause the
 // the ingress to fail.
 func IngressClassNameIfNoDefault(ctx context.Context, client kclient.Client) (*string, error) {
-	//
 	var ingressClasses networkingv1.IngressClassList
 	if err := client.List(ctx, &ingressClasses); err != nil {
 		return nil, err

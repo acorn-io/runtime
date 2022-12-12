@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/prompt"
-	"github.com/pterm/pterm"
 	"sort"
 	"strings"
+
+	"github.com/acorn-io/acorn/pkg/prompt"
+	"github.com/pterm/pterm"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"

@@ -66,8 +66,10 @@ func Router(req router.Request, app *v1.AppInstance) (result []kclient.Object, _
 				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
 			}
 			for _, domain := range cfg.ClusterDomains {
-				hostPrefix := toPrefix(domain, svcName, app)
-				hostname := hostPrefix + domain
+				hostname, err := toEndpoint(*cfg.HttpEndpointPattern, domain, svcName, app.GetName(), app.GetNamespace())
+				if err != nil {
+					return nil, err
+				}
 				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
 				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
 				rules = append(rules, routerRule(hostnameMinusPort, router))

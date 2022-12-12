@@ -219,6 +219,11 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.HttpEndpointPattern != nil {
+		in, out := &in.HttpEndpointPattern, &out.HttpEndpointPattern
+		*out = new(string)
+		**out = **in
+	}
 	if in.AcornDNS != nil {
 		in, out := &in.AcornDNS, &out.AcornDNS
 		*out = new(string)
