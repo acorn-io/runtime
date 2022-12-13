@@ -17,6 +17,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/pull"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -110,12 +111,29 @@ func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
 	return
 }
 
-func toEnv(envs []v1.EnvVar, appEnv []v1.NameValue) (result []corev1.EnvVar) {
+func translateEnvValue(app *v1.AppInstance, value string) string {
+	switch value {
+	case "${app.image}":
+		if tags.IsLocalReference(app.Status.AppImage.ID) {
+			return app.Status.AppImage.ID
+		} else if app.Status.AppImage.ID != "" && app.Status.AppImage.Digest != "" {
+			tag, err := name.NewTag(app.Status.AppImage.ID)
+			if err == nil {
+				return tag.Digest(app.Status.AppImage.Digest).String()
+			}
+		}
+	case "${app.namespace}":
+		return app.Namespace
+	}
+	return value
+}
+
+func toEnv(app *v1.AppInstance, envs []v1.EnvVar, appEnv []v1.NameValue) (result []corev1.EnvVar) {
 	for _, env := range envs {
 		if env.Secret.Name == "" {
 			result = append(result, corev1.EnvVar{
 				Name:  env.Name,
-				Value: env.Value,
+				Value: translateEnvValue(app, env.Value),
 			})
 		} else {
 			if env.Secret.Key == "" {
@@ -379,7 +397,7 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 		Command:        container.Entrypoint,
 		Args:           container.Command,
 		WorkingDir:     container.WorkingDir,
-		Env:            toEnv(container.Environment, app.Spec.Environment),
+		Env:            toEnv(app, container.Environment, app.Spec.Environment),
 		EnvFrom:        toEnvFrom(container.Environment),
 		TTY:            container.Interactive,
 		Stdin:          container.Interactive,
