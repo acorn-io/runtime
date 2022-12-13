@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
@@ -86,21 +87,21 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			Tag:    "",
 		}
 		for _, tag := range image.Tags {
+			imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+			if err != nil {
+				return err
+			}
 			if tag == "" && !a.All {
 				continue
 			}
 			if tag == "" {
 				out.Write(imagePrint)
 				continue
-			} else if includesTag(tag) {
-				imagePrint.Tag = strings.Split(tag, ":")[1]
-			} else if includesRepoAndTag(tag) {
-				imagePrint.Tag = strings.Split(strings.Split(tag, "/")[len(strings.Split(tag, "/"))-1], ":")[1]
 			} else {
-				imagePrint.Tag = "latest"
+				imagePrint.Tag = imageParsedTag.TagStr()
 			}
 
-			imagePrint.Repository = parseRepo(tag)
+			imagePrint.Repository = imageParsedTag.RepositoryStr()
 			out.Write(imagePrint)
 		}
 		if len(image.Tags) == 0 && a.All {
@@ -160,11 +161,14 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 				ImageID:   imageContainer.ImageID,
 			}
 			for _, tag := range imageContainer.Tags {
-
+				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+				if err != nil {
+					continue
+				}
 				if tagToMatch == "" || tagToMatch == tag {
 					if a.All || tag != "" {
-						imageContainerPrint.Tag = parseTag(tag)
-						imageContainerPrint.Repo = parseRepo(tag)
+						imageContainerPrint.Tag = imageParsedTag.TagStr()
+						imageContainerPrint.Repo = imageParsedTag.RepositoryStr()
 						out.Write(imageContainerPrint)
 					}
 				}
@@ -221,37 +225,4 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 	}
 
 	return imageContainers
-}
-
-func parseRepo(tag string) string {
-	parts := strings.Split(tag, ":")
-	switch len(parts) {
-	case 3:
-		return parts[0] + ":" + parts[1]
-	case 2:
-		return parts[0]
-	}
-	return "<none>"
-}
-
-func parseTag(tag string) string {
-	parts := strings.Split(tag, ":")
-	switch len(parts) {
-	case 3:
-		return parts[2]
-	case 2:
-		return parts[1]
-	}
-	return "<none>"
-}
-
-func includesTag(name string) bool {
-	return len(strings.Split(name, "/")) == 1 && len(strings.Split(name, ":")) == 2
-}
-
-func includesRepoAndTag(name string) bool {
-	if len(strings.Split(name, "/")) >= 2 { //repo included
-		return len(strings.Split(strings.Split(name, "/")[len(strings.Split(name, "/"))-1], ":")) == 2
-	}
-	return false
 }

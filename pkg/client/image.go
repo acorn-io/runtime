@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -47,7 +48,6 @@ func (c *client) ImageCreate(ctx context.Context, imageName, tag string) (*apiv1
 func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 	image, err := c.ImageGet(ctx, imageName)
 	if apierrors.IsNotFound(err) {
-		_, err := c.ImageCreate(ctx, imageName, tag)
 		return err
 	}
 	image.Tags = append(image.Tags, tag)
@@ -181,12 +181,13 @@ func (c *client) ImageDelete(ctx context.Context, imageName string, opts *ImageD
 		return image, c.Client.Delete(ctx, image)
 	}
 	var remainingTags []string
-	latest := ""
-	if !(includesTag(imageName) || includesRepoAndTag(imageName)) {
-		latest = ":latest"
+
+	imageParsedTag, err := name.NewTag(imageName, name.WithDefaultRegistry(""))
+	if err != nil {
+		return image, nil
 	}
 	for _, tag := range image.Tags {
-		if tag != imageName+latest {
+		if tag != imageParsedTag.Name() {
 			remainingTags = append(remainingTags, tag)
 		}
 	}
@@ -204,17 +205,6 @@ func (c *client) ImageDelete(ctx context.Context, imageName string, opts *ImageD
 		return nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", imageName)
 	}
 	return image, c.Client.Delete(ctx, image)
-}
-
-func includesTag(name string) bool {
-	return len(strings.Split(name, "/")) == 1 && len(strings.Split(name, ":")) == 2
-}
-
-func includesRepoAndTag(name string) bool {
-	if len(strings.Split(name, "/")) >= 2 { //repo included
-		return len(strings.Split(strings.Split(name, "/")[len(strings.Split(name, "/"))-1], ":")) == 2
-	}
-	return false
 }
 
 func (c *client) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, error) {

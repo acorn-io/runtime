@@ -63,12 +63,11 @@ func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result fie
 	duplicateTag := make(map[string]bool)
 
 	for _, tag := range image.Tags {
-		if !(includesTag(tag) || includesRepoAndTag(tag)) {
-			duplicateTag[tag+":latest"] = true
-		} else {
-			duplicateTag[tag] = true
+		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+		if err != nil {
+			continue
 		}
-
+		duplicateTag[imageParsedTag.Name()] = true
 	}
 	imageList := &apiv1.ImageList{}
 
@@ -117,15 +116,17 @@ func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Objec
 // TODO THIS create method go away, since users wont be allowed to Create images, just ImageInstances should be created by the backend
 func (s *Strategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
 	image := obj.(*apiv1.Image)
+
 	for i, tag := range image.Tags {
-		_, err := name.NewTag(tag)
+		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 		if err != nil {
 			return nil, err
 		}
-		if tag != "" && !(includesTag(tag) || includesRepoAndTag(tag)) {
-			image.Tags[i] = tag + ":latest"
+		if tag != "" {
+			image.Tags[i] = imageParsedTag.Name()
 		}
 	}
+
 	imageInstance := &v1.ImageInstance{
 		TypeMeta:   image.TypeMeta,
 		ObjectMeta: image.ObjectMeta,
@@ -140,12 +141,12 @@ func (s *Strategy) Update(ctx context.Context, obj types.Object) (types.Object, 
 	duplicateTag := make(map[string]bool)
 
 	for i, tag := range image.Tags {
-		_, err := name.NewTag(tag)
+		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 		if err != nil {
 			return nil, err
 		}
-		if tag != "" && !(includesTag(tag) || includesRepoAndTag(tag)) {
-			image.Tags[i] = tag + ":latest"
+		if tag != "" {
+			image.Tags[i] = imageParsedTag.Name()
 		}
 		currentTag := image.Tags[i]
 		if duplicateTag[image.Tags[i]] {
@@ -216,11 +217,11 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
 	} else {
-		_, err := name.NewTag(imageName)
+		_, err := name.NewTag(imageName, name.WithDefaultRegistry(""))
 		if err != nil {
 			return nil, "", err
 		}
-		tag, err := name.ParseReference(imageName)
+		tag, err := name.ParseReference(imageName, name.WithDefaultRegistry(""))
 		if err != nil {
 			return nil, "", err
 		}
@@ -238,14 +239,12 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 			}
 			matchedImage = image
 		}
-		if !(includesTag(imageName) || includesRepoAndTag(imageName)) {
-			imageName = imageName + ":latest"
-		}
+
 		for i, tag := range image.Tags {
 			if tag == imageName {
 				return &image, image.Tags[i], nil
 			} else if tag != "" {
-				imageParsedTag, err := name.NewTag(tag)
+				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 				if err != nil {
 					continue
 				}
@@ -264,15 +263,4 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 		Group:    api.Group,
 		Resource: "images",
 	}, imageName)
-}
-
-func includesTag(name string) bool {
-	return len(strings.Split(name, "/")) == 1 && len(strings.Split(name, ":")) == 2
-}
-
-func includesRepoAndTag(name string) bool {
-	if len(strings.Split(name, "/")) >= 2 { //repo included
-		return len(strings.Split(strings.Split(name, "/")[len(strings.Split(name, "/"))-1], ":")) == 2
-	}
-	return false
 }
