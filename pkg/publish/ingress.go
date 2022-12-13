@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -183,6 +184,8 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 
 		tlsIngress := getCertsForPublishedHosts(rules, filteredTLSCerts)
 		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
+		tlsIngress = setupCertManager(serviceName, annotations, rules, tlsIngress)
+
 		result = append(result, &networkingv1.Ingress{
 			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
@@ -200,6 +203,29 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 	}
 
 	return result, nil
+}
+
+func setupCertManager(serviceName string, annotations map[string]string, rules []networkingv1.IngressRule, tls []networkingv1.IngressTLS) []networkingv1.IngressTLS {
+	if (annotations["cert-manager.io/cluster-issuer"] == "" && annotations["cert-manager.io/issuer"] == "") ||
+		len(tls) != 0 {
+		// cert-manager is not being used, or we have TLS for this
+		return tls
+	}
+
+	var result []networkingv1.IngressTLS
+	hostsSeen := map[string]bool{}
+	for _, rule := range rules {
+		if hostsSeen[rule.Host] {
+			continue
+		}
+		hostsSeen[rule.Host] = true
+		result = append(result, networkingv1.IngressTLS{
+			Hosts:      []string{rule.Host},
+			SecretName: name.SafeConcatName(serviceName, "cm-cert", strconv.Itoa(len(hostsSeen))),
+		})
+	}
+
+	return result
 }
 
 // IngressClassNameIfNoDefault returns an ingress class name if there is exactly one IngressClass and it is not
