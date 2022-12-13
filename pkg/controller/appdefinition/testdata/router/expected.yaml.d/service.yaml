@@ -36,6 +36,12 @@ metadata:
 spec:
   type: ExternalName
   externalName: app-name-app-namespace-app-name-1234567890ab.acorn-system.svc.cluster.local
+  ports:
+  - appProtocol: HTTP
+    name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 80
 
 ---
 

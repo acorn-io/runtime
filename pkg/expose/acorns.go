@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -163,7 +164,7 @@ func toRouterDeploymentService(serviceName string, appInstance *v1.AppInstance, 
 }
 
 func toService(cfg *apiv1.Config, serviceName string, app *v1.AppInstance, svc *corev1.Service) *corev1.Service {
-	return &corev1.Service{
+	result := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
 			Namespace: app.Namespace,
@@ -174,6 +175,19 @@ func toService(cfg *apiv1.Config, serviceName string, app *v1.AppInstance, svc *
 			ExternalName: svc.Name + "." + svc.Namespace + "." + cfg.InternalClusterDomain,
 		},
 	}
+	for _, port := range svc.Spec.Ports {
+		result.Spec.Ports = append(result.Spec.Ports, corev1.ServicePort{
+			Name:        port.Name,
+			Protocol:    port.Protocol,
+			AppProtocol: port.AppProtocol,
+			Port:        port.Port,
+			TargetPort: intstr.IntOrString{
+				IntVal: port.Port,
+			},
+		})
+	}
+
+	return result
 }
 
 func clusterIPsForService(cfg *apiv1.Config, req router.Request, namespace, serviceName string) ([]string, error) {
