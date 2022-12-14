@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/pterm/pterm"
 	"strings"
+
+	"github.com/pterm/pterm"
 
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
@@ -42,8 +43,12 @@ func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([
 	}
 
 	for _, secret := range secrets {
-		if arg == strings.Split(aliases(&secret, apps)[0], ".")[0] {
-			result = append(result, secret.Name)
+		aliasList := aliases(&secret, apps)
+		if len(aliasList) != 0 {
+			secretName := strings.Split(aliasList[0], ".")
+			if len(secretName) != 0 && arg == secretName[0] {
+				result = append(result, secret.Name)
+			}
 		}
 	}
 	return result, nil
