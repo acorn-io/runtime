@@ -2198,7 +2198,7 @@ containers: test: {
 
 	assert.Equal(t, "pods", appSpec.Containers["test"].Permissions.Rules[0].Resources[0])
 	assert.Equal(t, "api.group", appSpec.Containers["test"].Permissions.Rules[0].APIGroups[0])
-	assert.Equal(t, "*", appSpec.Containers["test"].Permissions.Rules[0].Verbs[0])
+	assert.Equal(t, v1.DefaultVerbs, appSpec.Containers["test"].Permissions.Rules[0].Verbs)
 	assert.Equal(t, "secrets", appSpec.Containers["test"].Permissions.Rules[1].Resources[0])
 	assert.Equal(t, "", appSpec.Containers["test"].Permissions.Rules[1].APIGroups[0])
 	assert.Equal(t, []string{"get", "list", "watch"}, appSpec.Containers["test"].Permissions.Rules[1].Verbs)
