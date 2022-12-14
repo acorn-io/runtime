@@ -21,6 +21,8 @@ var (
 	MinSizeQuantity     = Quantity("5M")
 	DefaultSize         = MustParseResourceQuantity(DefaultSizeQuantity)
 	MinSize             = MustParseResourceQuantity(MinSizeQuantity)
+	DefaultVerbs        = []string{"get", "list", "watch", "update", "patch", "delete", "deletecollection", "create"}
+	ReadVerbs           = []string{"get", "list", "watch"}
 )
 
 type routeTarget struct {
@@ -533,9 +535,9 @@ func (in *PolicyRule) UnmarshalJSON(data []byte) error {
 	resource, apiGroup, _ := strings.Cut(s, ".")
 	in.Resources = []string{resource}
 	in.APIGroups = []string{apiGroup}
-	in.Verbs = []string{"*"}
+	in.Verbs = DefaultVerbs
 	if read {
-		in.Verbs = []string{"get", "list", "watch"}
+		in.Verbs = ReadVerbs
 	}
 
 	return nil
