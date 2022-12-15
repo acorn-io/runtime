@@ -143,7 +143,7 @@ func TestToEndpoint(t *testing.T) {
 				},
 			},
 			wantEndpoint: "",
-			wantErr:      ErrPatternParseFailed,
+			wantErr:      ErrInvalidPattern,
 		},
 		{
 			name: "parsed pattern's segment exceeds maximum length",
@@ -171,6 +171,38 @@ func TestToEndpoint(t *testing.T) {
 
 			if gotEndpoint != tt.wantEndpoint {
 				t.Errorf("toEndpoint() = %v, want %v", gotEndpoint, tt.wantEndpoint)
+			}
+		})
+	}
+}
+
+func TestValidateEndpointPattern(t *testing.T) {
+	tests := []struct {
+		name    string
+		pattern string
+		wantErr error
+	}{
+		{
+			name:    "valid",
+			pattern: "{{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}",
+			wantErr: nil,
+		},
+		{
+			name:    "invalid constructed domain",
+			pattern: "{{.Container}}-{{.App}}-{{.Hash}}.$INVALID$.{{.ClusterDomain}}",
+			wantErr: ErrInvalidPattern,
+		},
+		{
+			name:    "invalid go template",
+			pattern: "{{.InvalidReference}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}",
+			wantErr: ErrInvalidPattern,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateEndpointPattern(tt.pattern)
+			if !errors.Is(err, tt.wantErr) {
+				t.Fatalf("toEndpoint() error = %v, want %v", err, tt.wantErr)
 			}
 		})
 	}

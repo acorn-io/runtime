@@ -149,7 +149,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	// Validate the non-default http-endpoint-pattern
 	if opts.Config.HttpEndpointPattern != nil && *opts.Config.HttpEndpointPattern != "" {
 		if err := publish.ValidateEndpointPattern(*opts.Config.HttpEndpointPattern); err != nil {
-			return fmt.Errorf("invalid http-endpoint-pattern: %w", err)
+			return err
 		}
 	}
 
