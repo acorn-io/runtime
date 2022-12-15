@@ -111,18 +111,18 @@ acorn run .
 # => [internal] load .dockerignore
 # => => transferring context: 2B  
 # ...
-#small-butterfly
+#green-bush
 
 ```
 
-Our Acorn has started and is named `small-butterfly`.
+Our Acorn has started and is named `green-bush`.
 
 To check the status of our app we can run the following.
 
 ```shell
-acorn apps small-butterfly
-#NAME         IMAGE                                                              HEALTHY   UPTODATE   CREATED              ENDPOINTS                                           MESSAGE
-#little-dew   60d803258f7aa2680e4910c526485488949835728a2bc3519c09f1b6b3be1bb3   1         1          About a minute ago   http://web.little-dew.local.on-acorn.io => web:80   OK
+acorn apps green-bush
+#NAME         IMAGE                                                              HEALTHY   UPTODATE   CREATED              ENDPOINTS                                                              MESSAGE
+#green-bush   60d803258f7aa2680e4910c526485488949835728a2bc3519c09f1b6b3be1bb3   1         1          About a minute ago   http://web-nginx-green-bush-6cc6aeba547e.local.on-acorn.io => web:80   OK
 ```
 
 In Chrome or Firefox browsers you can now open the URL listed under the endpoints column to see our app.
