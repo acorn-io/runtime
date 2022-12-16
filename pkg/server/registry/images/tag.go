@@ -87,9 +87,7 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 		}
 		return image, err
 	}
-	for _, tag := range requestImage.Tags {
-		image.Tags = append(image.Tags, tag)
-	}
+	image.Tags = append(image.Tags, requestImage.Tags...)
 
 	return image, t.client.Update(ctx, image)
 }
