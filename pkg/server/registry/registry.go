@@ -77,6 +77,7 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 		"builders/port":          buildersPort,
 		"builders/registryport":  registryPort,
 		"images":                 imagesStorage,
+		"images/tag":             images.NewTagStorage(c),
 		"images/push":            images.NewImagePush(c),
 		"images/pull":            images.NewImagePull(c, clientFactory),
 		"images/details":         images.NewImageDetails(c),

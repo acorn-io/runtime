@@ -19,6 +19,8 @@ import (
 // TODO This should go away once ibuildthecloud lands his refactor. When that is done, client/user should never be directly creating images. They are the result of builds or pushes only
 func (c *client) ImageCreate(ctx context.Context, imageName, tag string) (*apiv1.Image, error) {
 	image, err := c.ImageGet(ctx, imageName)
+	tagResult := &apiv1.ImageTag{}
+
 	if apierrors.IsNotFound(err) {
 		image = &apiv1.Image{
 			TypeMeta: metav1.TypeMeta{
@@ -36,12 +38,26 @@ func (c *client) ImageCreate(ctx context.Context, imageName, tag string) (*apiv1
 			image.Tags = []string{tag}
 		}
 
-		return image, c.Client.Create(ctx, image)
+		return image, c.RESTClient.Post().
+			Namespace(image.Namespace).
+			Resource("images").
+			Name(image.Name).
+			SubResource("tag").
+			Body(&apiv1.ImageTag{
+				Image: image,
+			}).Do(ctx).Into(tagResult)
 	}
 	if tag != "" {
 		image.Tags = append(image.Tags, tag)
 	}
-	return image, c.Client.Update(ctx, image)
+	return image, c.RESTClient.Post().
+		Namespace(image.Namespace).
+		Resource("images").
+		Name(image.Name).
+		SubResource("tag").
+		Body(&apiv1.ImageTag{
+			Image: image,
+		}).Do(ctx).Into(tagResult)
 
 }
 
@@ -51,8 +67,15 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 		return err
 	}
 	image.Tags = append(image.Tags, tag)
-
-	err = c.Client.Update(ctx, image)
+	tagResult := &apiv1.ImageTag{}
+	err = c.RESTClient.Post().
+		Namespace(image.Namespace).
+		Resource("images").
+		Name(image.Name).
+		SubResource("tag").
+		Body(&apiv1.ImageTag{
+			Image: image,
+		}).Do(ctx).Into(tagResult)
 	return err
 }
 

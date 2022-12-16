@@ -59,35 +59,6 @@ func newStorageStrategy(kclient kclient.WithWatch) (strategy.CompleteStrategy, e
 
 // TODO migrate the logic to validateUpdate when create is removed
 func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
-	image := obj.(*apiv1.Image)
-	duplicateTag := make(map[string]bool)
-
-	for _, tag := range image.Tags {
-		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
-		if err != nil {
-			continue
-		}
-		duplicateTag[imageParsedTag.Name()] = true
-	}
-	imageList := &apiv1.ImageList{}
-
-	err := s.client.List(ctx, imageList, &kclient.ListOptions{
-		Namespace: image.Namespace,
-	})
-	if err != nil {
-		result = append(result, field.InternalError(field.NewPath("namespace"), err))
-	}
-
-	for _, imageItem := range imageList.Items {
-		if imageItem.Digest == image.Digest {
-			continue
-		}
-		for i, tag := range imageItem.Tags {
-			if duplicateTag[imageItem.Tags[i]] {
-				result = append(result, field.Duplicate(field.NewPath("tag name"), fmt.Errorf("unable to tag image %s with tag %s as it is already in use by %s", image.Name[:12], tag, imageItem.Name[:12])))
-			}
-		}
-	}
 	return result
 }
 
