@@ -116,7 +116,7 @@ type imagePrint struct {
 	Name       string `json:"name,omitempty"`
 	Digest     string `json:"digest,omitempty"`
 	Repository string `json:"repository,omitempty"`
-	Tag        string `json:"tags,omitempty"`
+	Tag        string `json:"tag,omitempty"`
 }
 
 type imageContainer struct {

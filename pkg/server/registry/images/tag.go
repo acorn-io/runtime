@@ -47,18 +47,9 @@ func (t *TagStrategy) New() types.Object {
 func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string, requestImage *apiv1.Image) (*apiv1.Image, error) {
 	image := &apiv1.Image{}
 	imageList := &apiv1.ImageList{}
-	err := t.client.Get(ctx, router.Key(namespace, imageName), image)
-	if apierror.IsNotFound(err) {
-		err = t.client.Create(ctx, requestImage)
-		if err != nil {
-			return image, err
-		}
-		err = t.client.Get(ctx, router.Key(namespace, imageName), image)
-		if err != nil {
-			return image, err
-		}
-	}
-	err = t.client.List(ctx, imageList)
+	err := t.client.List(ctx, imageList, &client.ListOptions{
+		Namespace: namespace,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -77,12 +68,24 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 		for i, tag := range img.Tags {
 			if duplicateTag[tag] {
 				img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
-				err = t.client.Update(ctx, &img)
+				err := t.client.Update(ctx, &img)
 				if err != nil {
 					return image, err
 				}
 			}
 		}
+	}
+	err = t.client.Get(ctx, router.Key(namespace, imageName), image)
+	if apierror.IsNotFound(err) {
+		err = t.client.Create(ctx, requestImage)
+		if err != nil {
+			return image, err
+		}
+		err = t.client.Get(ctx, router.Key(namespace, imageName), image)
+		if err != nil {
+			return image, err
+		}
+		return image, err
 	}
 
 	image.Tags = requestImage.Tags
