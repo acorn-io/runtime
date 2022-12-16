@@ -62,7 +62,7 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 		duplicateTag[imageParsedTag.Name()] = true
 	}
 	for _, img := range imageList.Items {
-		if img.Digest == image.Digest {
+		if img.Digest == requestImage.Digest {
 			continue
 		}
 		for i, tag := range img.Tags {
