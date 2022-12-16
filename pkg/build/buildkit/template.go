@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/apply"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -74,9 +75,12 @@ func applyObjects(ctx context.Context) error {
 		return err
 	}
 
+	// Check if there is a default storage class.
+	defaultStorageClassCheckResult := install.CheckDefaultStorageClass(ctx, install.CheckOptions{})
+
 	err = apply.
 		WithOwnerSubContext("acorn-buildkitd").
-		Apply(ctx, nil, objects(system.Namespace, install.DefaultImage(), install.DefaultImage())...)
+		Apply(ctx, nil, objects(system.Namespace, install.DefaultImage(), install.DefaultImage(), defaultStorageClassCheckResult.Passed)...)
 	if err != nil {
 		return err
 	}
@@ -91,8 +95,41 @@ func applyObjects(ctx context.Context) error {
 		Apply(ctx, nil, containerdConfigPathDaemonSet(system.Namespace, install.DefaultImage(), strconv.Itoa(registryNodePort))...)
 }
 
-func objects(namespace, buildKitImage, registryImage string) []client.Object {
-	return []client.Object{
+func objects(namespace, buildKitImage, registryImage string, persistentVolumeClaim bool) []client.Object {
+	var registryVolumeSource corev1.VolumeSource
+	var additionalObjects []client.Object
+
+	if persistentVolumeClaim {
+		// If there is a default storage class, we use a persistent volume claim for the registry.
+		additionalObjects = append(additionalObjects, &corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      system.RegistryName,
+				Namespace: namespace,
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: []corev1.PersistentVolumeAccessMode{
+					corev1.ReadWriteOnce,
+				},
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: resource.MustParse(system.RegistryStorage),
+					},
+				},
+			},
+		})
+		registryVolumeSource = corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: system.RegistryName,
+			},
+		}
+	} else {
+		// If there is no default storage class, we use an empty dir for the registry.
+		registryVolumeSource = corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		}
+	}
+
+	defaultObjects := []client.Object{
 		&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      system.RegistryName,
@@ -235,10 +272,8 @@ func objects(namespace, buildKitImage, registryImage string) []client.Object {
 						},
 						Volumes: []corev1.Volume{
 							{
-								VolumeSource: corev1.VolumeSource{
-									EmptyDir: &corev1.EmptyDirVolumeSource{},
-								},
-								Name: "registry",
+								VolumeSource: registryVolumeSource,
+								Name:         "registry",
 							},
 						},
 					},
@@ -246,6 +281,8 @@ func objects(namespace, buildKitImage, registryImage string) []client.Object {
 			},
 		},
 	}
+
+	return append(defaultObjects, additionalObjects...)
 }
 
 func containerdConfigPathDaemonSet(namespace, image, registryServiceNodePort string) []client.Object {

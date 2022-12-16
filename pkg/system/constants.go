@@ -13,6 +13,7 @@ const (
 
 var (
 	RegistryName             = "registry"
+	RegistryStorage          = "10Gi"
 	RegistryPort             = 5000
 	BuildKitName             = "buildkitd"
 	ControllerName           = "acorn-controller"

@@ -63,7 +63,10 @@ rules:
       - roles
       - clusterrolebindings
       - rolebindings
-
+  - verbs: ["get", "list", "watch"]
+    apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
