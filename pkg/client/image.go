@@ -48,7 +48,7 @@ func (c *client) ImageCreate(ctx context.Context, imageName, tag string) (*apiv1
 			}).Do(ctx).Into(tagResult)
 	}
 	if tag != "" {
-		image.Tags = append(image.Tags, tag)
+		image.Tags = []string{tag}
 	}
 	return image, c.RESTClient.Post().
 		Namespace(image.Namespace).
@@ -66,7 +66,7 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 	if apierrors.IsNotFound(err) {
 		return err
 	}
-	image.Tags = append(image.Tags, tag)
+	image.Tags = []string{tag}
 	tagResult := &apiv1.ImageTag{}
 	err = c.RESTClient.Post().
 		Namespace(image.Namespace).
