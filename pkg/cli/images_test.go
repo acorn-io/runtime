@@ -1,14 +1,15 @@
 package cli
 
 import (
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/acorn-io/acorn/pkg/cli/testdata"
+	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestImage(t *testing.T) {
@@ -48,7 +49,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntestrepo     testtag   found-image1\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\ntesttag1     latest    found-image-\ntesttag2     latest    found-image-\n",
 		},
 		{
 			name: "acorn image --no-trunc", fields: fields{
@@ -67,7 +68,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntestrepo     testtag   found-image1234567\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1234567\ntesttag1     latest    found-image-two-tags1234567\ntesttag2     latest    found-image-two-tags1234567\n",
 		},
 		{
 			name: "acorn image -a", fields: fields{
@@ -86,7 +87,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntestrepo     testtag   found-image1\n<none>       <none>    found-image-\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\n<none>       <none>    found-image-\ntesttag1     latest    found-image-\ntesttag2     latest    found-image-\n",
 		},
 		{
 			name: "acorn image -c ", fields: fields{
@@ -105,7 +106,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID             CONTAINER                      DIGEST\ntestrepo     testtag   found-image1234567   test-image-running-container   test-image-running-container\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID                      CONTAINER                      DIGEST\ntesttag      latest    found-image1234567            test-image-running-container   test-image-running-container\ntesttag1     latest    found-image-two-tags1234567   test-image-running-container   test-image-running-container\ntesttag2     latest    found-image-two-tags1234567   test-image-running-container   test-image-running-container\n",
 		},
 		{
 			name: "acorn image -q ", fields: fields{
@@ -124,7 +125,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "found-image1234567\n",
+			wantOut: "found-image1234567\nfound-image-two-tags1234567\nfound-image-two-tags1234567\n",
 		},
 		{
 			name: "acorn image -q -c", fields: fields{
@@ -143,8 +144,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "testrepo:testtag@test-image-running-container\n",
-		},
+			wantOut: "testtag:latest@test-image-running-container\ntesttag1:latest@test-image-running-container\ntesttag2:latest@test-image-running-container\n"},
 		{
 			name: "acorn image -q -a", fields: fields{
 				All:    false,
@@ -162,7 +162,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "found-image1234567\nfound-image-no-tag\n",
+			wantOut: "found-image1234567\nfound-image-no-tag\nfound-image-two-tags1234567\nfound-image-two-tags1234567\n",
 		},
 		{
 			name: "acorn image rm found-image1234567", fields: fields{
@@ -201,6 +201,44 @@ func TestImage(t *testing.T) {
 			},
 			wantErr: true,
 			wantOut: "Error: No such image: dne-image\n",
+		},
+		{
+			name: "acorn image rm found-image-two-tags1234567", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: client.CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"rm", "found-image-two-tags1234567"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: true,
+			wantOut: "deleting found-image-two-tags1234567: unable to delete found-image-two-tags1234567 (must be forced) - image is referenced in multiple repositories",
+		},
+		{
+			name: "acorn image rm found-image-two-tags1234567 -f", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: client.CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"rm", "found-image-two-tags1234567", "-f"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "found-image-two-tags1234567\n",
 		},
 	}
 	for _, tt := range tests {

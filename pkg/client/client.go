@@ -228,9 +228,10 @@ type Client interface {
 	VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error)
 	VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error)
 
+	ImageCreate(ctx context.Context, id string, tag string) (*apiv1.Image, error)
 	ImageList(ctx context.Context) ([]apiv1.Image, error)
 	ImageGet(ctx context.Context, name string) (*apiv1.Image, error)
-	ImageDelete(ctx context.Context, name string) (*apiv1.Image, error)
+	ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error)
 	ImagePush(ctx context.Context, tagName string, opts *ImagePushOptions) (<-chan ImageProgress, error)
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (<-chan ImageProgress, error)
 	ImageTag(ctx context.Context, image, tag string) error
@@ -261,6 +262,9 @@ type ImagePushOptions struct {
 type ImageDetailsOptions struct {
 	Profiles   []string
 	DeployArgs map[string]any
+}
+type ImageDeleteOptions struct {
+	Force bool `json:"force,omitempty"`
 }
 
 type ContainerReplicaExecOptions struct {

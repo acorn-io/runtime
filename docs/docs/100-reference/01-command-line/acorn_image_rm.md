@@ -18,7 +18,8 @@ acorn image rm my-image
 ### Options
 
 ```
-  -h, --help   help for rm
+  -f, --force   Force Delete
+  -h, --help    help for rm
 ```
 
 ### Options inherited from parent commands

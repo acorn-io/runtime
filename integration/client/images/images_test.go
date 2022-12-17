@@ -1,6 +1,7 @@
 package images
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -47,7 +48,7 @@ func TestImageListGetDelete(t *testing.T) {
 
 	assert.Equal(t, image.Name, newImage.Name)
 
-	delImage, err := c.ImageDelete(ctx, image.Name)
+	delImage, err := c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: false})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,12 +98,9 @@ func TestImageTagMove(t *testing.T) {
 
 	for _, image := range images {
 		if image.Name == imageID {
-			assert.Equal(t, "", image.Tag)
-			assert.Equal(t, "", image.Repository)
+			assert.Equal(t, []string([]string(nil)), image.Tags)
 		} else if image.Name == image2.ID {
-			assert.Equal(t, "latest", image.Tag)
-			assert.Equal(t, "foo", image.Repository)
-			assert.Equal(t, "foo:latest", image.Reference)
+			assert.Equal(t, "foo:latest", image.Tags[0])
 		} else {
 			t.Fatal(err, "invalid image")
 		}
@@ -158,9 +156,7 @@ func TestImageTag(t *testing.T) {
 	}
 
 	assert.Equal(t, image.Name, newImage.Name)
-	assert.Equal(t, "ghcr.io/acorn-io/acorn/test:v0.0.0-abc", newImage.Reference)
-	assert.Equal(t, "ghcr.io/acorn-io/acorn/test", newImage.Repository)
-	assert.Equal(t, "v0.0.0-abc", newImage.Tag)
+	assert.Equal(t, "ghcr.io/acorn-io/acorn/test:v0.0.0-abc", newImage.Tags[2])
 }
 
 func TestImagePush(t *testing.T) {
@@ -266,7 +262,7 @@ func TestImagePull(t *testing.T) {
 	assert.Len(t, images, 1)
 
 	image := images[0]
-	assert.Equal(t, tagName, image.Reference)
+	assert.Equal(t, tagName, image.Tags[0])
 }
 
 func TestImageDetails(t *testing.T) {
@@ -340,4 +336,53 @@ func TestImageDetails(t *testing.T) {
 	}
 
 	assert.True(t, strings.Contains(details.AppImage.Acornfile, "nginx"))
+}
+
+func TestImageDeleteTwoTags(t *testing.T) {
+	helper.StartController(t)
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	c, err := client.New(restConfig, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imageID := client2.NewImage(t, ns.Name)
+	images, err := c.ImageList(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, images, 1)
+
+	image := images[0]
+
+	assert.Equal(t, imageID, image.Name)
+	assert.False(t, strings.HasPrefix(imageID, "sha256:"))
+	assert.Equal(t, "sha256:"+image.Name, image.Digest)
+
+	err = c.ImageTag(ctx, image.Name, "repo:tag1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.ImageTag(ctx, image.Name, "repo:tag2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: false})
+	expectedErr := fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", image.Name)
+	assert.Equal(t, expectedErr, err)
+
+	_, err = c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.ImageGet(ctx, image.Name)
+	assert.True(t, apierrors.IsNotFound(err))
 }

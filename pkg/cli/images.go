@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
@@ -45,11 +46,15 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 
 	var images []apiv1.Image
 	if len(args) == 1 {
-		img, err := c.ImageGet(cmd.Context(), args[0])
+		image, err := c.ImageGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
-		images = []apiv1.Image{*img}
+		if strings.Contains(image.Digest, args[0]) && len(image.Tags) != 0 {
+			args[0] = image.Tags[0]
+		}
+
+		images = []apiv1.Image{*image}
 	} else {
 		images, err = c.ImageList(cmd.Context())
 		if err != nil {
@@ -58,13 +63,13 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if a.Containers {
-		return printContainerImages(images, cmd.Context(), c, a)
+		return printContainerImages(images, cmd.Context(), c, a, args)
 	}
 
-	out := table.NewWriter(tables.Image, system.UserNamespace(), false, a.Output)
+	out := table.NewWriter(tables.ImageAcorn, system.UserNamespace(), false, a.Output)
 	if a.Quiet {
 		out = table.NewWriter([][]string{
-			{"Name", "{{ . | name }}"},
+			{"Name", "{{ .Name }}"},
 		}, system.UserNamespace(), true, a.Output)
 	}
 
@@ -76,16 +81,53 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	})
 
 	for _, image := range images {
-		if image.Tag == "" && image.Repository == "" && !a.All {
-			continue
+		imagePrint := imagePrint{
+			Name:   image.ObjectMeta.Name,
+			Digest: image.Digest,
+			Tag:    "",
 		}
-		out.Write(image)
+		for _, tag := range image.Tags {
+			imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+			if err != nil {
+				return err
+			}
+			if tag == "" && !a.All {
+				continue
+			}
+			if tag == "" {
+				out.Write(imagePrint)
+				continue
+			} else {
+				imagePrint.Tag = imageParsedTag.TagStr()
+			}
+
+			imagePrint.Repository = imageParsedTag.RepositoryStr()
+			out.Write(imagePrint)
+		}
+		if len(image.Tags) == 0 && a.All {
+			out.Write(imagePrint)
+		}
 	}
 
 	return out.Err()
 }
 
+type imagePrint struct {
+	Name       string `json:"name,omitempty"`
+	Digest     string `json:"digest,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Tag        string `json:"tag,omitempty"`
+}
+
 type imageContainer struct {
+	Container string
+	Repo      string
+	Tags      []string
+	Digest    string
+	ImageID   string
+}
+
+type imageContainerPrint struct {
 	Container string
 	Repo      string
 	Tag       string
@@ -93,7 +135,11 @@ type imageContainer struct {
 	ImageID   string
 }
 
-func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image) error {
+func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image, args []string) error {
+	tagToMatch := ""
+	if len(args) == 1 {
+		tagToMatch = args[0]
+	}
 	out := table.NewWriter(tables.ImageContainer, system.UserNamespace(), a.Quiet, a.Output)
 
 	if a.Quiet {
@@ -103,26 +149,35 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	}
 
 	for _, image := range images {
-		if image.Tag == "" && image.Repository == "" {
-			if !a.All {
-				continue
-			}
-			if !a.Quiet {
-				image.Tag = "<none>"
-				image.Repository = "<none>"
-			} else {
-				image.Tag = image.Name
-				image.Repository = "<none>"
-			}
-		}
-
 		containerImages, err := getImageContainers(c, ctx, image)
 		if err != nil {
 			return err
 		}
-
-		for _, imgContainer := range containerImages {
-			out.Write(imgContainer)
+		for _, imageContainer := range containerImages {
+			imageContainerPrint := imageContainerPrint{
+				Container: imageContainer.Container,
+				Repo:      imageContainer.Repo,
+				Digest:    imageContainer.Digest,
+				ImageID:   imageContainer.ImageID,
+			}
+			for _, tag := range imageContainer.Tags {
+				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+				if err != nil {
+					continue
+				}
+				if tagToMatch == "" || tagToMatch == tag {
+					if a.All || tag != "" {
+						imageContainerPrint.Tag = imageParsedTag.TagStr()
+						imageContainerPrint.Repo = imageParsedTag.RepositoryStr()
+						out.Write(imageContainerPrint)
+					}
+				}
+			}
+			if len(imageContainer.Tags) == 0 && a.All {
+				imageContainerPrint.Tag = "<none>"
+				imageContainerPrint.Repo = "<none>"
+				out.Write(imageContainerPrint)
+			}
 		}
 	}
 
@@ -149,20 +204,18 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 	imageContainers := []imageContainer{}
 
 	for k, v := range containers {
-		ImgContainer := imageContainer{
-			Repo:      image.Repository,
-			Tag:       image.Tag,
+		imageContainerObject := imageContainer{
+			Tags:      image.Tags,
 			Container: k,
 			Digest:    v.Image,
 			ImageID:   image.Name,
 		}
 
-		imageContainers = append(imageContainers, ImgContainer)
+		imageContainers = append(imageContainers, imageContainerObject)
 
 		for sidecar, img := range v.Sidecars {
 			ic := imageContainer{
-				Repo:      image.Repository,
-				Tag:       image.Tag,
+				Tags:      image.Tags,
 				Container: sidecar,
 				Digest:    img.Image,
 				ImageID:   image.Name,

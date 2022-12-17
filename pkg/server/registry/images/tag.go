@@ -5,11 +5,11 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,7 +27,7 @@ type TagStrategy struct {
 
 func (t *TagStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
 	opts := obj.(*apiv1.ImageTag)
-	image, err := t.ImageTag(ctx, obj.GetNamespace(), obj.GetName(), opts.TagName)
+	image, err := t.ImageTag(ctx, obj.GetNamespace(), obj.GetName(), opts.Image)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (t *TagStrategy) Create(ctx context.Context, obj types.Object) (types.Objec
 			Name:      image.Name,
 			Namespace: image.Namespace,
 		},
-		TagName: opts.TagName,
+		Image: image,
 	}, nil
 }
 
@@ -44,17 +44,50 @@ func (t *TagStrategy) New() types.Object {
 	return &apiv1.ImageTag{}
 }
 
-func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName, tagName string) (*apiv1.Image, error) {
+func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string, requestImage *apiv1.Image) (*apiv1.Image, error) {
 	image := &apiv1.Image{}
-	err := t.client.Get(ctx, router.Key(namespace, imageName), image)
+	imageList := &apiv1.ImageList{}
+	err := t.client.List(ctx, imageList, &client.ListOptions{
+		Namespace: namespace,
+	})
 	if err != nil {
 		return nil, err
 	}
-
-	_, err = name.NewTag(tagName)
-	if err != nil {
-		return nil, err
+	duplicateTag := make(map[string]bool)
+	for _, tag := range requestImage.Tags {
+		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+		if err != nil {
+			return nil, err
+		}
+		duplicateTag[imageParsedTag.Name()] = true
 	}
+	for _, img := range imageList.Items {
+		if img.Digest == requestImage.Digest {
+			continue
+		}
+		for i, tag := range img.Tags {
+			if duplicateTag[tag] {
+				img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
+				err := t.client.Update(ctx, &img)
+				if err != nil {
+					return image, err
+				}
+			}
+		}
+	}
+	err = t.client.Get(ctx, router.Key(namespace, imageName), image)
+	if apierror.IsNotFound(err) {
+		err = t.client.Create(ctx, requestImage)
+		if err != nil {
+			return image, err
+		}
+		err = t.client.Get(ctx, router.Key(namespace, imageName), image)
+		if err != nil {
+			return image, err
+		}
+		return image, err
+	}
+	image.Tags = append(image.Tags, requestImage.Tags...)
 
-	return image, tags.Write(ctx, t.client, image.Namespace, image.Digest, tagName)
+	return image, t.client.Update(ctx, image)
 }

@@ -17,4 +17,6 @@ found.found   found.secret             []        292y ago
 
 IMAGES:
 REPOSITORY   TAG       IMAGE-ID
-testrepo     testtag   found-image1
+testtag      latest    found-image1
+testtag1     latest    found-image-
+testtag2     latest    found-image-
