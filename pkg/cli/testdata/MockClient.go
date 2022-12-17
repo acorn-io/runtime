@@ -3,12 +3,13 @@ package testdata
 import (
 	"context"
 	"fmt"
+	"net"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"net"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -361,10 +362,6 @@ func (m *MockClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, e
 	return nil, nil
 }
 
-func (m *MockClient) ImageCreate(ctx context.Context, id string, tag string) (*apiv1.Image, error) {
-	return nil, nil
-}
-
 func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.ImageDeleteOptions) (*apiv1.Image, error) {
 	switch name {
 	case "dne":
@@ -477,4 +474,24 @@ func (m *MockClient) PromptUser(s string) error {
 
 func (m *MockClient) AppConfirmUpgrade(ctx context.Context, name string) error {
 	return nil
+}
+
+func (m *MockClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) AcornImageBuild(ctx context.Context, file string, opts *client.AcornImageBuildOptions) (*v1.AppImage, error) {
+	//TODO implement me
+	panic("implement me")
 }

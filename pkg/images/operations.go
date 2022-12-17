@@ -1,17 +1,13 @@
-package pull
+package images
 
 import (
 	"context"
 	"fmt"
-	"net"
-	"net/http"
 	"regexp"
-	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build/buildkit"
-	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
 	imagename "github.com/google/go-containerregistry/pkg/name"
@@ -23,13 +19,13 @@ var (
 	DigestPattern = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 )
 
-func ListTags(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, []string, error) {
-	tag, err := GetTag(ctx, c, namespace, image)
+func ListTags(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) (imagename.Reference, []string, error) {
+	tag, err := GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	opts, err := GetPullOptions(ctx, c, tag, namespace)
+	opts, err = GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -38,13 +34,13 @@ func ListTags(ctx context.Context, c client.Reader, namespace, image string) (im
 	return tag, tags, err
 }
 
-func ImageDigest(ctx context.Context, c client.Reader, namespace, image string) (string, error) {
-	tag, err := GetTag(ctx, c, namespace, image)
+func ImageDigest(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) (string, error) {
+	tag, err := GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return "", err
 	}
 
-	opts, err := GetPullOptions(ctx, c, tag, namespace)
+	opts, err = GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
 	if err != nil {
 		return "", err
 	}
@@ -57,13 +53,13 @@ func ImageDigest(ctx context.Context, c client.Reader, namespace, image string) 
 	return descriptor.Digest.String(), nil
 }
 
-func AppImage(ctx context.Context, c client.Reader, namespace, image string) (*v1.AppImage, error) {
-	tag, err := GetTag(ctx, c, namespace, image)
+func PullAppImage(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) (*v1.AppImage, error) {
+	tag, err := GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return nil, err
 	}
 
-	opts, err := GetPullOptions(ctx, c, tag, namespace)
+	opts, err = GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -131,19 +127,26 @@ func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, err
 	return app, nil
 }
 
-func GetTag(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, error) {
+// GetRuntimePullableImageReference is similar to GetImageReference but will return 127.0.0.1:NODEPORT instead of
+// registry.acorn-image-system.svc.cluster.local:5000, only use this method if you are passing the
+// image string to a PodSpec that will be pulled by the container runtime, otherwise use GetImageReference if you will
+// be pulling the image from the apiserver/controller
+func GetRuntimePullableImageReference(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, error) {
 	if tags.SHAPattern.MatchString(image) {
-		port, err := buildkit.GetRegistryPort(ctx, c)
-		if err != nil {
-			return nil, err
-		}
+		return imagesystem.GetRuntimePullableInternalRepoForNamespaceAndID(ctx, c, namespace, image)
+	}
 
-		image = fmt.Sprintf("127.0.0.1:%d/acorn/%s@sha256:%s", port, namespace, image)
+	return imagesystem.ParseAndEnsureNotInternalRepo(ctx, c, image)
+}
+
+func GetImageReference(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, error) {
+	if tags.SHAPattern.MatchString(image) {
+		return imagesystem.GetInternalRepoForNamespaceAndID(ctx, c, namespace, image)
 	}
 	return imagename.ParseReference(image)
 }
 
-func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Reference, namespace string) ([]remote.Option, error) {
+func GetAuthenticationRemoteOptions(ctx context.Context, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
 	authn, err := pullsecret.Keychain(ctx, client, namespace)
 	if err != nil {
 		return nil, err
@@ -154,32 +157,5 @@ func GetPullOptions(ctx context.Context, client client.Reader, tag imagename.Ref
 		remote.WithAuthFromKeychain(authn),
 	}
 
-	if !strings.HasPrefix(tag.Context().RegistryStr(), "127.0.0.1:") {
-		return result, nil
-	}
-
-	c, err := k8sclient.Default()
-	if err != nil {
-		return nil, err
-	}
-
-	port, err := buildkit.GetRegistryPort(ctx, client)
-	if err != nil {
-		return nil, err
-	}
-
-	if tag.Context().RegistryStr() != fmt.Sprintf("127.0.0.1:%d", port) {
-		return result, nil
-	}
-
-	dialer, err := buildkit.GetRegistryDialer(ctx, c)
-	if err != nil {
-		return nil, err
-	}
-
-	return append(result, remote.WithTransport(&http.Transport{
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return dialer(ctx, "")
-		},
-	})), nil
+	return append(result, additionalOpts...), nil
 }

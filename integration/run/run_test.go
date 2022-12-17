@@ -9,7 +9,6 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -26,9 +25,8 @@ func TestVolume(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(ctx, "./testdata/volume/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/volume",
+	image, err := c.AcornImageBuild(ctx, "./testdata/volume/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/volume",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -78,12 +76,11 @@ func TestImageNameAnnotation(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(kclient.Default)
+	k8sclient := helper.MustReturn(kclient.Default)
 	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/named/Acornfile", &build.Options{
-		Client: c,
-		Cwd:    "./testdata/simple",
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/named/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -98,7 +95,7 @@ func TestImageNameAnnotation(t *testing.T) {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 
-	helper.Wait(t, client.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
+	helper.Wait(t, k8sclient.Watch, &corev1.PodList{}, func(pod *corev1.Pod) bool {
 		if pod.Namespace != app.Status.Namespace ||
 			pod.Labels[labels.AcornAppName] != app.Name ||
 			pod.Annotations[labels.AcornImageMapping] == "" {
@@ -119,11 +116,10 @@ func TestSimple(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, ns := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndNamespace(t)
 
-	image, err := build.Build(helper.GetCTX(t), "./testdata/simple/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata/simple",
+	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -144,12 +140,11 @@ func TestDeployParam(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	client := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, client)
+	c, ns := helper.ClientAndNamespace(t)
+	kclient := helper.MustReturn(kclient.Default)
 
-	image, err := build.Build(ctx, "./testdata/params/Acornfile", &build.Options{
-		Client: helper.BuilderClient(t, ns.Name),
-		Cwd:    "./testdata/params",
+	image, err := c.AcornImageBuild(ctx, "./testdata/params/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/params",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -165,7 +160,7 @@ func TestDeployParam(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	appInstance, err := run.Run(helper.GetCTX(t), client, &v1.AppInstance{
+	appInstance, err := run.Run(helper.GetCTX(t), kclient, &v1.AppInstance{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: ns.Name,
@@ -181,7 +176,7 @@ func TestDeployParam(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	appInstance = helper.WaitForObject(t, client.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
+	appInstance = helper.WaitForObject(t, kclient.Watch, &v1.AppInstanceList{}, appInstance, func(obj *v1.AppInstance) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 

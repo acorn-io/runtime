@@ -196,13 +196,13 @@ func isDirectory(cwd string) (bool, error) {
 	return true, nil
 }
 
-func buildImage(ctx context.Context, file, cwd string, args, profiles []string) (string, error) {
+func buildImage(ctx context.Context, c client.Client, file, cwd string, args, profiles []string) (string, error) {
 	params, err := build.ParseParams(file, cwd, args)
 	if err != nil {
 		return "", err
 	}
 
-	image, err := build.Build(ctx, file, &build.Options{
+	image, err := c.AcornImageBuild(ctx, file, &client.AcornImageBuildOptions{
 		Cwd:      cwd,
 		Args:     params,
 		Profiles: profiles,
@@ -270,7 +270,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return dev.Dev(cmd.Context(), s.File, &dev.Options{
 			Args:   args,
 			Client: c,
-			Build: build.Options{
+			Build: client.AcornImageBuildOptions{
 				Cwd:      cwd,
 				Profiles: opts.Profiles,
 			},
@@ -286,7 +286,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	image := cwd
 	if isDir {
-		image, err = buildImage(cmd.Context(), s.File, cwd, args, s.Profile)
+		image, err = buildImage(cmd.Context(), c, s.File, cwd, args, s.Profile)
 		if err == pflag.ErrHelp {
 			return nil
 		} else if err != nil {

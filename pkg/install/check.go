@@ -57,7 +57,7 @@ func (copts *CheckOptions) setDefaults() {
 	}
 
 	if copts.RuntimeImage == "" {
-		copts.RuntimeImage = DefaultImage()
+		copts.RuntimeImage = system.DefaultImage()
 	}
 }
 
@@ -124,7 +124,7 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 		return result
 	}
 
-	image := DefaultImage()
+	image := system.DefaultImage()
 	if opts.RuntimeImage != "" {
 		image = opts.RuntimeImage
 	}

@@ -7,6 +7,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/progressbar"
+	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -59,28 +60,20 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	image, err := build.Build(cmd.Context(), s.File, &build.Options{
+	image, err := c.AcornImageBuild(cmd.Context(), s.File, &client.AcornImageBuildOptions{
 		Cwd:       cwd,
 		Args:      params,
 		Platforms: platforms,
 		Profiles:  s.Profile,
+		Streams:   &streams.Current().Output,
 	})
 	if err != nil {
 		return err
 	}
 
 	var errs []error
-	if len(s.Tag) == 0 {
-		_, err = c.ImageCreate(cmd.Context(), image.ID, "")
-		if err != nil {
-			return err
-		}
-	}
-
 	for _, tag := range s.Tag {
-		// TODO - this is a temporary fix until ibuildthecloud lands the rest of his refactor
-		_, err := c.ImageCreate(cmd.Context(), image.ID, tag)
-		if err != nil {
+		if err := c.ImageTag(cmd.Context(), image.ID, tag); err != nil {
 			errs = append(errs, err)
 		}
 	}

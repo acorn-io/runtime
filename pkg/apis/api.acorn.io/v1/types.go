@@ -87,7 +87,6 @@ type ContainerReplicaStatus struct {
 	Image                string                  `json:"image"`
 	ImageID              string                  `json:"imageID"`
 	Started              *bool                   `json:"started,omitempty"`
-	ClusterName          string                  `json:"clusterName,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -168,7 +167,7 @@ type ImageTag struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Image *Image `json:"image,omitempty"`
+	Tags []string `json:"tags,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -215,7 +214,6 @@ type VolumeStatus struct {
 	VolumeName   string        `json:"volumeName,omitempty"`
 	Status       string        `json:"status,omitempty"`
 	Columns      VolumeColumns `json:"columns,omitempty"`
-	ClusterName  string        `json:"clusterName,omitempty"`
 }
 
 type VolumeColumns struct {
@@ -285,28 +283,6 @@ type Info struct {
 	Spec InfoSpec `json:"spec,omitempty"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type Builder struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-
-	Status BuilderStatus `json:"status,omitempty"`
-}
-
-type BuilderStatus struct {
-	ClusterName string `json:"clusterName,omitempty"`
-	Ready       bool   `json:"ready,omitempty"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type BuilderList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Builder `json:"items"`
-}
-
 // +k8s:conversion-gen:explicit-from=net/url.Values
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -344,6 +320,10 @@ type Config struct {
 	AcornDNS                     *string        `json:"acornDNS" name:"acorn-dns" usage:"enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)"`
 	AcornDNSEndpoint             *string        `json:"acornDNSEndpoint" name:"acorn-dns-endpoint" usage:"The URL to access the Acorn DNS service"`
 	AutoUpgradeInterval          *string        `json:"autoUpgradeInterval" name:"auto-upgrade-interval" usage:"For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)"`
+	RecordBuilds                 *bool          `json:"recordBuilds" name:"record-builds" usage:"Keep a record of each acorn build that happens"`
+	PublishBuilders              *bool          `json:"publishBuilders" name:"publish-builders" usage:"Publish the builders through ingress to so build traffic does not traverse the api-server"`
+	BuilderPerNamespace          *bool          `json:"builderPerNamespace" name:"builder-per-namespace" usage:"Create a dedicated builder per namespace"`
+	InternalRegistryPrefix       string         `json:"internalRegistryPrefix" name:"internal-registry-prefix" usage:"The image prefix to use when pushing internal images (example ghcr.io/my-org/)"`
 }
 
 type EncryptionKey struct {
@@ -361,4 +341,47 @@ type InfoList struct {
 
 func (c *Config) GetLetsEncryptTOSAgree() bool {
 	return c.LetsEncryptTOSAgree != nil && *c.LetsEncryptTOSAgree
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Project struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+}
+
+func (in *Project) NamespaceScoped() bool {
+	return false
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ProjectList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Project `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Builder v1.BuilderInstance
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type BuilderList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Builder `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AcornImageBuild v1.AcornImageBuildInstance
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AcornImageBuildList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AcornImageBuild `json:"items"`
 }

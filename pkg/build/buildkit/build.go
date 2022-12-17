@@ -3,42 +3,27 @@ package buildkit
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
-	"sync"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/streams"
-	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/containerd/console"
+	"github.com/acorn-io/acorn/pkg/buildclient"
 	cplatforms "github.com/containerd/containerd/platforms"
+	"github.com/google/uuid"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
-	"github.com/moby/buildkit/util/progress/progressui"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func Build(ctx context.Context, client client.Client, cwd string, platforms []v1.Platform, build v1.Build, streams streams.Streams) ([]v1.Platform, []string, error) {
-	dialer, err := client.BuilderDialer(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bkc, err := buildkit.New(ctx, "", buildkit.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-		return dialer(ctx)
-	}))
+func Build(ctx context.Context, pushRepo, cwd string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages) ([]v1.Platform, []string, error) {
+	bkc, err := buildkit.New(ctx, "")
 	if err != nil {
 		return nil, nil, err
 	}
 	defer bkc.Close()
 
 	var (
-		inPodName      = fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, client.GetNamespace())
-		context        = filepath.Join(cwd, build.Context)
-		dockerfilePath = filepath.Dir(filepath.Join(cwd, build.Dockerfile))
 		dockerfileName = filepath.Base(build.Dockerfile)
 		result         []string
 	)
@@ -73,16 +58,12 @@ func Build(ctx context.Context, client client.Client, cwd string, platforms []v1
 				"filename": dockerfileName,
 				"platform": cplatforms.Format(ocispecs.Platform(platform)),
 			},
-			LocalDirs: map[string]string{
-				"context":    context,
-				"dockerfile": dockerfilePath,
-			},
 			Session: []session.Attachable{authprovider.NewDockerAuthProvider(os.Stderr)},
 			Exports: []buildkit.ExportEntry{
 				{
 					Type: buildkit.ExporterImage,
 					Attrs: map[string]string{
-						"name":           inPodName,
+						"name":           pushRepo,
 						"name-canonical": "",
 						"push":           "true",
 					},
@@ -90,11 +71,21 @@ func Build(ctx context.Context, client client.Client, cwd string, platforms []v1
 			},
 		}
 
+		if cwd == "" {
+			options.Session = append(options.Session,
+				buildclient.NewFileServer(messages, build.Context, build.Dockerfile, build.DockerfileContents))
+		} else {
+			options.LocalDirs = map[string]string{
+				"context":    filepath.Join(cwd, build.Context),
+				"dockerfile": filepath.Dir(filepath.Join(cwd, build.Dockerfile)),
+			}
+		}
+
 		for key, value := range build.BuildArgs {
 			options.FrontendAttrs["build-arg:"+key] = value
 		}
 
-		ch, progressDone := progress(ctx, streams)
+		ch, progressDone := progress(messages)
 		defer func() { <-progressDone }()
 
 		res, err := bkc.Solve(ctx, nil, options, ch)
@@ -102,33 +93,29 @@ func Build(ctx context.Context, client client.Client, cwd string, platforms []v1
 			return nil, nil, err
 		}
 
-		inClusterName := fmt.Sprintf("127.0.0.1:5001/acorn/%s@%s", client.GetNamespace(), res.ExporterResponse["containerimage.digest"])
-		result = append(result, inClusterName)
+		imageName := pushRepo + "@" + res.ExporterResponse["containerimage.digest"]
+		result = append(result, imageName)
 	}
 
 	return platforms, result, nil
 }
 
-func progress(ctx context.Context, streams streams.Streams) (chan *buildkit.SolveStatus, chan struct{}) {
+func progress(messages buildclient.Messages) (chan *buildkit.SolveStatus, chan struct{}) {
 	var (
-		c    console.Console
-		err  error
-		done = make(chan struct{})
+		done      = make(chan struct{})
+		ch        = make(chan *buildkit.SolveStatus, 1)
+		sessionid = uuid.New().String()
 	)
 
-	if f, ok := streams.Out.(console.File); ok {
-		c, err = console.ConsoleFromFile(f)
-		if err != nil {
-			c = nil
-		}
-	}
-
-	ch := make(chan *buildkit.SolveStatus, 1)
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
 	go func() {
-		_, _ = progressui.DisplaySolveStatus(ctx, "", c, streams.Err, ch)
+		for status := range ch {
+			_ = messages.Send(&buildclient.Message{
+				StatusSessionID: sessionid,
+				Status:          status,
+			})
+		}
 		close(done)
 	}()
+
 	return ch, done
 }

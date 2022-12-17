@@ -3,10 +3,10 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/client"
 	"os"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
@@ -32,6 +32,7 @@ func New() *cobra.Command {
 		NewApiServer(cmdContext),
 		NewApp(cmdContext),
 		NewBuild(cmdContext),
+		NewBuildServer(cmdContext),
 		NewCheck(cmdContext),
 		NewContainer(cmdContext),
 		NewController(cmdContext),

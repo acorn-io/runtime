@@ -1,7 +1,6 @@
 package dev
 
 import (
-	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -23,7 +22,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
-	objwatcher "github.com/acorn-io/acorn/pkg/watcher"
+	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -35,7 +34,7 @@ import (
 type Options struct {
 	Args              []string
 	Client            client.Client
-	Build             build.Options
+	Build             client.AcornImageBuildOptions
 	Run               client.AppRunOptions
 	Log               client.LogOptions
 	Dangerous         bool
@@ -60,7 +59,6 @@ func (o *Options) Complete() (*Options, error) {
 		}
 	}
 
-	result.Build.Client = result.Client
 	return &result, nil
 }
 
@@ -71,29 +69,6 @@ type watcher struct {
 	trigger    chan struct{}
 	watching   []string
 	watchingTS []time.Time
-}
-
-func (w *watcher) KeyboardTrigger(ctx context.Context) error {
-	input := bufio.NewReader(os.Stdin)
-	i := input.Buffered()
-	if i > 0 {
-		_, _ = input.Discard(i)
-	}
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		_, _, err := input.ReadLine()
-		if err != nil {
-			logrus.Errorf("failed to read input, terminating input watch: %v", err)
-			return err
-		}
-		logrus.Infof("Triggering rebuild")
-		w.Trigger()
-	}
 }
 
 func (w *watcher) Trigger() {
@@ -216,10 +191,10 @@ outer:
 		}
 
 		opts.Build.Args = params
-		image, err := build.Build(ctx, file, &opts.Build)
+		image, err := opts.Client.AcornImageBuild(ctx, file, &opts.Build)
 		if err != nil {
 			logrus.Errorf("Failed to build %s: %v", file, err)
-			logrus.Infof("Build failed, press [ENTER] to rebuild")
+			logrus.Infof("Build failed, touch [%s] to rebuild", file)
 			continue
 		}
 
@@ -258,9 +233,6 @@ outer:
 		})
 		eg.Go(func() error {
 			return appDeleteStop(ctx, opts.Client, app, cancel)
-		})
-		eg.Go(func() error {
-			return watcher.KeyboardTrigger(ctx)
 		})
 		go func() {
 			err := eg.Wait()

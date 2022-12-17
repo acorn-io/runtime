@@ -5,7 +5,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 )
 
-func vcs(path string) (result v1.VCS) {
+func VCS(path string) (result v1.VCS) {
 	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{
 		DetectDotGit: true,
 	})

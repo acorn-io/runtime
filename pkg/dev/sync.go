@@ -72,14 +72,14 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 	return err
 }
 
-func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, error) {
+func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) (chan struct{}, chan error, error) {
 	source := filepath.Join(cwd, localDir)
 	if s, err := os.Stat(source); err == nil && !s.IsDir() {
-		return nil, nil
+		return nil, nil, nil
 	}
 	err := os.MkdirAll(source, 0755)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var exclude []string
 	f, err := os.Open(filepath.Join(cwd, ".dockerignore"))
@@ -89,10 +89,10 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		if err == nil {
 			exclude = lines
 		} else {
-			return nil, err
+			return nil, nil, err
 		}
 	} else if !os.IsNotExist(err) {
-		return nil, err
+		return nil, nil, err
 	}
 	s, err := sync.NewSync(source, sync.Options{
 		DownstreamDisabled: !bidirectional,
@@ -103,7 +103,7 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		Log:                logpkg.NewDefaultPrefixLogger(strings.TrimPrefix(con.Name, con.Spec.AppName+".")+": (sync): ", newLogger()),
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	cmd := path.Join(appdefinition.AcornHelperPath, strings.TrimSpace(appdefinition.AcornHelper))
@@ -111,28 +111,29 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		cmd, "sync", "upstream", remoteDir,
 	}, false, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err := s.InitUpstream(io.Stdout, io.Stdin); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	io, err = client.ContainerReplicaExec(ctx, con.Name, []string{
 		cmd, "sync", "downstream", remoteDir,
 	}, false, nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err := s.InitDownstream(io.Stdout, io.Stdin); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	done := make(chan struct{})
-	if err := s.Start(nil, nil, done, nil); err != nil {
-		return nil, err
+	waiterr := make(chan error, 1)
+	if err := s.Start(nil, nil, done, waiterr); err != nil {
+		return nil, nil, err
 	}
 
-	return done, nil
+	return done, waiterr, nil
 }
 
 func newLogger() logpkg.Logger {
@@ -162,14 +163,17 @@ func (i *ignore) Write(p []byte) (n int, err error) {
 
 func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.ContainerReplica, cwd, localDir, remoteDir string, bidirectional bool) {
 	for {
-		var wait <-chan struct{}
+		var (
+			wait    <-chan struct{}
+			waiterr <-chan error
+		)
 
 		con, err := client.ContainerReplicaGet(ctx, con.Name)
 		if apierrors.IsNotFound(err) || con.Status.Phase != corev1.PodRunning {
 			return
 		}
 		if err == nil {
-			wait, err = invokeStartSyncForPath(ctx, client, con, cwd, localDir, remoteDir, bidirectional)
+			wait, waiterr, err = invokeStartSyncForPath(ctx, client, con, cwd, localDir, remoteDir, bidirectional)
 		}
 
 		if err == nil {
@@ -177,6 +181,7 @@ func startSyncForPath(ctx context.Context, client client.Client, con *apiv1.Cont
 			case <-ctx.Done():
 				return
 			case <-wait:
+			case <-waiterr:
 			}
 		} else {
 			logrus.Debugf("failed to run sync on container %s: %v", con.Name, err)

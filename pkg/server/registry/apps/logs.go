@@ -116,7 +116,7 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 				break
 			}
 		}
-	
+
 		_ = conn.CloseHandler()(websocket.CloseNormalClosure, "")
 	}), nil
 }

@@ -47,6 +47,10 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ContainerReplicaExecOptions{},
 		&Secret{},
 		&SecretList{},
+		&Project{},
+		&ProjectList{},
+		&AcornImageBuild{},
+		&AcornImageBuildList{},
 	)
 
 	// Add common types

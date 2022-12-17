@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 
 	"github.com/AlecAivazis/survey/v2"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/install"
+	"github.com/acorn-io/acorn/pkg/system"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -39,7 +40,7 @@ func promptInstall[V any](ctx context.Context, f twoFunc[V]) (V, error) {
 		}
 
 		if shouldInstall {
-			installErr := install.Install(ctx, install.DefaultImage(), &install.Options{})
+			installErr := install.Install(ctx, system.DefaultImage(), &install.Options{})
 			if installErr != nil {
 				return v, installErr
 			}
@@ -59,7 +60,7 @@ func isNotInstalled(err error) bool {
 		if errStatus, ok := err.(*apierrors.StatusError); ok {
 			if errStatus.ErrStatus.Details != nil {
 				for _, cause := range errStatus.ErrStatus.Details.Causes {
-					if cause.Type == v1.CauseTypeUnexpectedServerResponse {
+					if cause.Type == metav1.CauseTypeUnexpectedServerResponse {
 						return true
 					}
 				}
@@ -178,10 +179,6 @@ func (c IgnoreUninstalled) ImagePull(ctx context.Context, name string, opts *Ima
 	})
 }
 
-func (c IgnoreUninstalled) ImageCreate(ctx context.Context, id string, tag string) (*apiv1.Image, error) {
-	return c.client.ImageCreate(ctx, id, tag)
-}
-
 func (c IgnoreUninstalled) ImageTag(ctx context.Context, image, tag string) error {
 	return c.client.ImageTag(ctx, image, tag)
 }
@@ -192,28 +189,22 @@ func (c IgnoreUninstalled) ImageDetails(ctx context.Context, imageName string, o
 	})
 }
 
-func (c IgnoreUninstalled) BuilderCreate(ctx context.Context) (*apiv1.Builder, error) {
-	return c.client.BuilderCreate(ctx)
-}
-
-func (c IgnoreUninstalled) BuilderGet(ctx context.Context) (*apiv1.Builder, error) {
-	return ignoreUninstalled(c.client.BuilderGet(ctx))
-}
-
-func (c IgnoreUninstalled) BuilderDelete(ctx context.Context) (*apiv1.Builder, error) {
-	return ignoreUninstalled(c.client.BuilderDelete(ctx))
-}
-
-func (c IgnoreUninstalled) BuilderDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
-	return promptInstall(ctx, func() (func(context.Context) (net.Conn, error), error) {
-		return c.client.BuilderDialer(ctx)
+func (c IgnoreUninstalled) AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error) {
+	return promptInstall(ctx, func() (*v1.AppImage, error) {
+		return c.client.AcornImageBuild(ctx, file, opts)
 	})
 }
 
-func (c IgnoreUninstalled) BuilderRegistryDialer(ctx context.Context) (func(ctx context.Context) (net.Conn, error), error) {
-	return promptInstall(ctx, func() (func(context.Context) (net.Conn, error), error) {
-		return c.client.BuilderRegistryDialer(ctx)
-	})
+func (c IgnoreUninstalled) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+	return ignoreUninstalled(c.client.AcornImageBuildGet(ctx, name))
+}
+
+func (c IgnoreUninstalled) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+	return ignoreUninstalled(c.client.AcornImageBuildDelete(ctx, name))
+}
+
+func (c IgnoreUninstalled) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
+	return ignoreUninstalled(c.client.AcornImageBuildList(ctx))
 }
 
 func (c IgnoreUninstalled) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {

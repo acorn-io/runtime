@@ -32,12 +32,13 @@ const (
 type ChangeType string
 
 type Build struct {
-	Context     string            `json:"context,omitempty"`
-	Dockerfile  string            `json:"dockerfile,omitempty"`
-	Target      string            `json:"target,omitempty"`
-	BaseImage   string            `json:"baseImage,omitempty"`
-	ContextDirs map[string]string `json:"contextDirs,omitempty"`
-	BuildArgs   map[string]string `json:"buildArgs,omitempty"`
+	Context            string            `json:"context,omitempty"`
+	Dockerfile         string            `json:"dockerfile,omitempty"`
+	DockerfileContents string            `json:"dockerfileContents,omitempty"`
+	Target             string            `json:"target,omitempty"`
+	BaseImage          string            `json:"baseImage,omitempty"`
+	ContextDirs        map[string]string `json:"contextDirs,omitempty"`
+	BuildArgs          map[string]string `json:"buildArgs,omitempty"`
 }
 
 func (in Build) BaseBuild() Build {
