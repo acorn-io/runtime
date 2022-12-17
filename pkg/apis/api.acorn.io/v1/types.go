@@ -96,11 +96,8 @@ type Image struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Digest      string `json:"digest,omitempty"`
-	Repository  string `json:"repository,omitempty"`
-	Tag         string `json:"tag,omitempty"`
-	Reference   string `json:"reference,omitempty"`
-	ClusterName string `json:"clusterName,omitempty"`
+	Digest string   `json:"digest,omitempty"`
+	Tags   []string `json:"tags,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -171,7 +168,7 @@ type ImageTag struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	TagName string `json:"tagName,omitempty"`
+	Image *Image `json:"image,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

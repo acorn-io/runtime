@@ -29,8 +29,10 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 	}
 
 	buildersStorage := builders.NewStorage(c)
-	imagesStorage := images.NewStorage(c)
-
+	imagesStorage, err := images.NewStorage(c, nil)
+	if err != nil {
+		return nil, err
+	}
 	containersStorage, err := containers.NewStorage(c)
 	if err != nil {
 		return nil, err
