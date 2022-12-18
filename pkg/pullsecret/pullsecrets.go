@@ -35,7 +35,11 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string, requir
 			result = append(result, secret)
 			continue
 		} else if secret.Type == apiv1.SecretTypeCredential {
-			secret, err := dockerconfig.FromCredentialData(secret.Data)
+			data, err := nacl.DecryptNamespacedDataMap(ctx, c, secret.Data, secret.Namespace)
+			if err != nil {
+				return nil, err
+			}
+			secret, err := dockerconfig.FromCredentialData(data)
 			if err != nil {
 				return nil, err
 			}
