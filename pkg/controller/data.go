@@ -39,7 +39,7 @@ func (c *Controller) initData(ctx context.Context) error {
 			{
 				Verbs:     []string{"get", "list"},
 				APIGroups: []string{""},
-				Resources: []string{"secrets"},
+				Resources: []string{"secrets", "namespaces"},
 			},
 			{
 				Verbs:     []string{"get"},
