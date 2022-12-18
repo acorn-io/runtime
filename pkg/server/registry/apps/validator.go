@@ -55,7 +55,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			}
 		}
 
-		permsFromImage, err := s.getPermissions(ctx, params.Namespace, image)
+		permsFromImage, err := s.getPermissions(ctx, image, params)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
 			return
@@ -261,8 +261,12 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 	return merr.NewErrors(errs...)
 }
 
-func (s *Validator) getPermissions(ctx context.Context, namespace, image string) (result []v1.Permissions, _ error) {
-	details, err := s.clientFactory.Namespace(namespace).ImageDetails(ctx, image, nil)
+func (s *Validator) getPermissions(ctx context.Context, image string, app *apiv1.App) (result []v1.Permissions, _ error) {
+	details, err := s.clientFactory.Namespace(app.Namespace).ImageDetails(ctx, image,
+		&client.ImageDetailsOptions{
+			Profiles:   app.Spec.Profiles,
+			DeployArgs: app.Spec.DeployArgs})
+
 	if err != nil {
 		return result, err
 	}
