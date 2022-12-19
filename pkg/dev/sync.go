@@ -94,13 +94,14 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 	} else if !os.IsNotExist(err) {
 		return nil, nil, err
 	}
-	s, err := sync.NewSync(source, sync.Options{
+	s, err := sync.NewSync(ctx, source, sync.Options{
 		DownstreamDisabled: !bidirectional,
 		Polling:            true,
 		Verbose:            true,
 		UploadExcludePaths: exclude,
 		InitialSync:        latest.InitialSyncStrategyPreferLocal,
-		Log:                logpkg.NewDefaultPrefixLogger(strings.TrimPrefix(con.Name, con.Spec.AppName+".")+": (sync): ", newLogger()),
+		Log: newLogger().
+			WithPrefix(strings.TrimPrefix(con.Name, con.Spec.AppName+".") + ": (sync): "),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -139,8 +140,9 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 func newLogger() logpkg.Logger {
 	return logpkg.NewStreamLogger(&ignore{
 		Out: os.Stdout,
+	}, &ignore{
+		Out: os.Stderr,
 	}, logrus.InfoLevel)
-
 }
 
 type ignore struct {
@@ -152,11 +154,14 @@ func (i *ignore) Write(p []byte) (n int, err error) {
 	for _, exclude := range []string{
 		"Sync stopped",
 		"Start syncing",
-		"Error: Sync Error",
+		"Sync Error",
 	} {
 		if strings.Contains(line, exclude) {
 			return len(p), nil
 		}
+	}
+	if !strings.Contains(string(p), "(sync)") {
+		return len(p), nil
 	}
 	return i.Out.Write(p)
 }
