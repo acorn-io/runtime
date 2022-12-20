@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -25,14 +26,35 @@ import (
 )
 
 var (
-	ErrPatternParseFailed       = errors.New("failed to parse endpoint pattern")
+	ErrInvalidPattern           = errors.New("endpoint pattern is invalid")
 	ErrSegmentExceededMaxLength = errors.New("segment exceeded maximum length of 63 characters")
 	ErrParsedEndpointIsNil      = errors.New("parsed endpoint pattern and recieved nil")
 )
 
+const dnsValidationPattern = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+
 func ValidateEndpointPattern(pattern string) error {
-	_, err := toEndpoint(pattern, "domain", "container", "appName", "appNamespace")
-	return err
+	// Validate the Go Template
+	endpoint, err := toEndpoint(pattern, "clusterdomain", "container", "app", "namespace")
+	if err != nil {
+		return err
+	}
+
+	// Validate the domain
+	valid, err := regexp.MatchString(dnsValidationPattern, endpoint)
+	if err != nil {
+		return err
+	}
+	if !valid {
+		return fmt.Errorf(
+			"%w: http-endpoint-pattern \"%v\" will look like \"%v\" which is not a valid domain, regex used for validation is: %v",
+			ErrInvalidPattern,
+			pattern,
+			endpoint,
+			dnsValidationPattern)
+	}
+
+	return nil
 }
 
 func toEndpoint(pattern, domain, container, appName, appNamespace string) (string, error) {
@@ -59,7 +81,7 @@ func toEndpoint(pattern, domain, container, appName, appNamespace string) (strin
 	var templateBuffer bytes.Buffer
 	t := template.Must(template.New("").Parse(pattern))
 	if err := t.Execute(&templateBuffer, endpointOpts); err != nil {
-		return "", fmt.Errorf("%w %v: %v", ErrPatternParseFailed, pattern, err)
+		return "", fmt.Errorf("%w %v: %v", ErrInvalidPattern, pattern, err)
 	}
 
 	endpoint := templateBuffer.String()
