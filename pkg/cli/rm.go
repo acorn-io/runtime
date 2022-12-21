@@ -1,9 +1,10 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/pterm/pterm"
-	"strings"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -65,6 +66,9 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 		rmObjects = RmObjects{
 			App: true,
 		}
+	}
+	if rmObjects.App && !rmObjects.Secret && !rmObjects.Volume {
+		a.Force = true //Do not prompt when deleting non-nested resource
 	}
 
 	for _, arg := range args {
