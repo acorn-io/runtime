@@ -150,16 +150,6 @@ type ignore struct {
 }
 
 func (i *ignore) Write(p []byte) (n int, err error) {
-	line := string(p)
-	for _, exclude := range []string{
-		"Sync stopped",
-		"Start syncing",
-		"Sync Error",
-	} {
-		if strings.Contains(line, exclude) {
-			return len(p), nil
-		}
-	}
 	if !strings.Contains(string(p), "(sync)") {
 		return len(p), nil
 	}
