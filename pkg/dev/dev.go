@@ -195,6 +195,10 @@ outer:
 		if err != nil {
 			logrus.Errorf("Failed to build %s: %v", file, err)
 			logrus.Infof("Build failed, touch [%s] to rebuild", file)
+			go func() {
+				time.Sleep(120 * time.Second)
+				watcher.Trigger()
+			}()
 			continue
 		}
 
