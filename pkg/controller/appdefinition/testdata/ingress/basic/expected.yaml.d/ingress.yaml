@@ -45,7 +45,7 @@ spec:
   tls:
     - hosts:
         - ci1.acorn.not
-      secretName: test-tls-1234567890ab
+      secretName: test-tls-app-name-app-namespace-1234567890ab
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1

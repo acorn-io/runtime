@@ -180,7 +180,7 @@ func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, full
 
 	appImage, err := remote.Image(d, opts...)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to find app metadata image: %w", err)
 	}
 
 	platform, err := imagePlatform(appImage)

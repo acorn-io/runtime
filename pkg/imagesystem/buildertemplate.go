@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func BuilderObjects(name, namespace, buildKitImage, pub, privKey, builderUID, forwardAddress string) []client.Object {
+func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, builderUID, forwardAddress string) []client.Object {
 	return []client.Object{
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -124,6 +124,10 @@ func BuilderObjects(name, namespace, buildKitImage, pub, privKey, builderUID, fo
 									{
 										Name:  "ACORN_BUILD_SERVER_UUID",
 										Value: builderUID,
+									},
+									{
+										Name:  "ACORN_BUILD_SERVER_NAMESPACE",
+										Value: forNamespace,
 									},
 									{
 										Name:  "ACORN_BUILD_SERVER_FORWARD_SERVICE",

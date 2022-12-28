@@ -51,8 +51,8 @@ func GetToken(req *http.Request, uuid string, pubKey, privKey *[32]byte) (*Token
 		return nil, err
 	}
 
-	if uuid != "" && result.BuilderUID != uuid {
-		return nil, fmt.Errorf("invalid builder UID %s!=%s", result.BuilderUID, uuid)
+	if uuid != "" && result.BuilderUUID != uuid {
+		return nil, fmt.Errorf("invalid builder UID %s!=%s", result.BuilderUUID, uuid)
 	}
 
 	if time.Since(result.Time.Time) > (10 * time.Second) {
@@ -64,10 +64,10 @@ func GetToken(req *http.Request, uuid string, pubKey, privKey *[32]byte) (*Token
 
 func CreateToken(builder *apiv1.Builder, build *apiv1.AcornImageBuild, pushRepo string) (string, error) {
 	data, err := json.Marshal(Token{
-		BuilderUID: string(builder.UID),
-		Time:       metav1.Now(),
-		Build:      (v1.AcornImageBuildInstance)(*build),
-		PushRepo:   pushRepo,
+		BuilderUUID: builder.Status.UUID,
+		Time:        metav1.Now(),
+		Build:       (v1.AcornImageBuildInstance)(*build),
+		PushRepo:    pushRepo,
 	})
 	if err != nil {
 		return "", err

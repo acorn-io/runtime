@@ -3,6 +3,7 @@ package pullsecret
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/dockerconfig"
@@ -37,7 +38,7 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string, requir
 		} else if secret.Type == apiv1.SecretTypeCredential {
 			data, err := nacl.DecryptNamespacedDataMap(ctx, c, secret.Data, secret.Namespace)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
 			}
 			secret, err := dockerconfig.FromCredentialData(data)
 			if err != nil {
@@ -50,7 +51,7 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string, requir
 	for i, secret := range result {
 		result[i].Data, err = nacl.DecryptNamespacedDataMap(ctx, c, secret.Data, secret.Namespace)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
 		}
 	}
 
@@ -58,16 +59,19 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string, requir
 }
 
 func Keychain(ctx context.Context, c client.Reader, namespace string) (authn.Keychain, error) {
-	commonSecrets, err := ForNamespace(ctx, c, system.ImagesNamespace, true)
+	keychainSecrets, err := ForNamespace(ctx, c, system.ImagesNamespace, true)
 	if err != nil {
 		return nil, err
 	}
 
-	secrets, err := ForNamespace(ctx, c, namespace, false)
-	if err != nil {
-		return nil, err
+	if namespace != "" {
+		secrets, err := ForNamespace(ctx, c, namespace, false)
+		if err != nil {
+			return nil, err
+		}
+		keychainSecrets = append(keychainSecrets, secrets...)
 	}
-	return kubernetes.NewFromPullSecrets(ctx, append(commonSecrets, secrets...))
+	return kubernetes.NewFromPullSecrets(ctx, keychainSecrets)
 }
 
 func ForImages(secretName, secretNamespace string, keychain authn.Keychain, images ...string) (*corev1.Secret, error) {

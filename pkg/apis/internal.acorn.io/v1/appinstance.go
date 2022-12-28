@@ -70,7 +70,6 @@ type AppInstanceSpec struct {
 	Ports               []PortBinding    `json:"ports,omitempty"`
 	DeployArgs          GenericMap       `json:"deployArgs,omitempty"`
 	Permissions         []Permissions    `json:"permissions,omitempty"`
-	ClusterName         string           `json:"clusterName,omitempty"`
 	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`

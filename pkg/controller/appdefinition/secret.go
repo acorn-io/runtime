@@ -323,7 +323,7 @@ func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev
 
 	secret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, secret.Data, secret.Namespace)
 	if err != nil {
-		return secret, err
+		return nil, fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
 	}
 
 	if existing == nil {
@@ -480,7 +480,7 @@ func getOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 			// Check fields to see if they need to be decrypted
 			existingSecret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, existingSecret.Data, appInstance.Namespace)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("decrypting %s/%s: %w", appInstance.Namespace, binding.Secret, err)
 			}
 			secrets[secretName] = existingSecret
 			return existingSecret, nil

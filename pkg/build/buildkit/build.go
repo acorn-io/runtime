@@ -3,20 +3,20 @@ package buildkit
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/build/authprovider"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	cplatforms "github.com/containerd/containerd/platforms"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/uuid"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
-	"github.com/moby/buildkit/session/auth/authprovider"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func Build(ctx context.Context, pushRepo, cwd string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages) ([]v1.Platform, []string, error) {
+func Build(ctx context.Context, pushRepo, cwd string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain) ([]v1.Platform, []string, error) {
 	bkc, err := buildkit.New(ctx, "")
 	if err != nil {
 		return nil, nil, err
@@ -58,7 +58,7 @@ func Build(ctx context.Context, pushRepo, cwd string, platforms []v1.Platform, b
 				"filename": dockerfileName,
 				"platform": cplatforms.Format(ocispecs.Platform(platform)),
 			},
-			Session: []session.Attachable{authprovider.NewDockerAuthProvider(os.Stderr)},
+			Session: []session.Attachable{authprovider.NewProvider(keychain)},
 			Exports: []buildkit.ExportEntry{
 				{
 					Type: buildkit.ExporterImage,
