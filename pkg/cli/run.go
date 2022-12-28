@@ -298,6 +298,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		u := Update{
 			Image:   image,
 			RunArgs: s.RunArgs,
+			client:  s.client,
 			out:     s.out,
 			Replace: true,
 		}
