@@ -3,21 +3,32 @@ package buildclient
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 	"sync"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/containerd/console"
+	"github.com/gorilla/websocket"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/pkg/errors"
 )
 
-func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer *k8schannel.Dialer,
+func wsURL(url string) string {
+	if strings.HasPrefix(url, "http") {
+		return strings.Replace(url, "http", "ws", 1)
+	}
+	return url
+}
+
+type WebSocketDialer func(ctx context.Context, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error)
+
+func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer WebSocketDialer,
 	build *apiv1.AcornImageBuild) (*v1.AppImage, error) {
-	conn, err := dialer.DialWebsocket(ctx, build.Status.BuildURL, map[string][]string{
+	conn, _, err := dialer(ctx, wsURL(build.Status.BuildURL), map[string][]string{
 		"X-Acorn-Build-Token": {build.Status.Token},
 	})
 	if err != nil {

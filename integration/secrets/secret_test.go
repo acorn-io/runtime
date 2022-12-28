@@ -214,8 +214,7 @@ func TestNamespacedDecryption(t *testing.T) {
 	})
 
 	assert.True(t, app.Status.Condition(v1.AppInstanceConditionSecrets).Error)
-	assert.Equal(t, "errored: [test: No encryption keys were found]", app.Status.Condition(v1.AppInstanceConditionSecrets).Message)
-
+	assert.Contains(t, app.Status.Condition(v1.AppInstanceConditionSecrets).Message, "No encryption keys were found")
 }
 
 func TestMultiKeyDecryptionEndToEnd(t *testing.T) {

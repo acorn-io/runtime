@@ -8,6 +8,7 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -117,7 +118,8 @@ func getCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []TLSCert
 			}
 		}
 	}
-	for secret, hosts := range certSecretToHostMapping {
+	for _, entry := range typed.Sorted(certSecretToHostMapping) {
+		secret, hosts := entry.Key, entry.Value
 		ingressTLS = append(ingressTLS, networkingv1.IngressTLS{
 			Hosts:      hosts,
 			SecretName: secret,

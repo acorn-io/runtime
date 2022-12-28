@@ -94,10 +94,13 @@ type BuilderInstance struct {
 }
 
 type BuilderInstanceStatus struct {
-	Ready       bool   `json:"ready,omitempty"`
-	Endpoint    string `json:"endpoint,omitempty"`
-	PublicKey   string `json:"publicKey,omitempty"`
-	ServiceName string `json:"serviceName,omitempty"`
+	UUID               string `json:"uuid"`
+	ObservedGeneration int64  `json:"observedGeneration,omitempty"`
+	Ready              bool   `json:"ready,omitempty"`
+	Endpoint           string `json:"endpoint,omitempty"`
+	PublicKey          string `json:"publicKey,omitempty"`
+	ServiceName        string `json:"serviceName,omitempty"`
+	Placement          string `json:"placement,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

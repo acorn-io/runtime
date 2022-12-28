@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -123,6 +124,10 @@ func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Read
 func useLocalWildcardDomain(ctx context.Context, getter kclient.Reader) (bool, error) {
 	var nodes corev1.NodeList
 	if err := getter.List(ctx, &nodes); err != nil {
+		if meta.IsNoMatchError(err) {
+			// Node type doesn't exist probably because we are running against huhb
+			return false, nil
+		}
 		return false, err
 	}
 
@@ -231,6 +236,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.BuilderPerNamespace != nil {
 		mergedConfig.BuilderPerNamespace = newConfig.BuilderPerNamespace
 	}
+	if newConfig.InternalRegistryPrefix != "" {
+		mergedConfig.InternalRegistryPrefix = newConfig.InternalRegistryPrefix
+	}
 
 	return &mergedConfig
 }
@@ -297,7 +305,7 @@ func Set(ctx context.Context, client kclient.Client, cfg *apiv1.Config) error {
 			Name: system.Namespace,
 		},
 	})
-	if err != nil && !apierror.IsAlreadyExists(err) {
+	if err != nil && !apierror.IsAlreadyExists(err) && !meta.IsNoMatchError(err) {
 		return err
 	}
 

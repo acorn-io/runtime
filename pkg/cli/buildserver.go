@@ -26,6 +26,7 @@ func NewBuildServer(c client.CommandContext) *cobra.Command {
 
 type BuildServer struct {
 	UUID           string `usage:"Build server BuilderUID" env:"ACORN_BUILD_SERVER_UUID"`
+	Namespace      string `usage:"Build server Namespace" env:"ACORN_BUILD_SERVER_NAMESPACE"`
 	PublicKey      string `usage:"Build server public key" env:"ACORN_BUILD_SERVER_PUBLIC_KEY"`
 	PrivateKey     string `usage:"Build server private key" env:"ACORN_BUILD_SERVER_PRIVATE_KEY"`
 	ListenPort     int    `usage:"HTTP listen port" env:"ACORN_BUILD_SERVER_PORT" default:"8080"`
@@ -44,7 +45,7 @@ func (s *BuildServer) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	server := buildserver.NewServer(s.UUID, pubKey, privKey, c)
+	server := buildserver.NewServer(s.UUID, s.Namespace, pubKey, privKey, c)
 	address := fmt.Sprintf("0.0.0.0:%d", s.ListenPort)
 
 	if s.ForwardService != "" {

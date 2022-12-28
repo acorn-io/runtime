@@ -33,6 +33,7 @@ type ImageInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
+	Repo   string   `json:"repo,omitempty"`
 	Digest string   `json:"digest,omitempty"`
 	Tags   []string `json:"tags,omitempty"`
 }

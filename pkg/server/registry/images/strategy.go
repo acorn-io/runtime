@@ -8,7 +8,6 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -132,15 +131,6 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 
 func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
 	name = strings.ReplaceAll(name, "+", "/")
-
-	if ok, err := imagesystem.RegistryExists(ctx, s.client); err != nil {
-		return nil, err
-	} else if !ok {
-		return nil, apierrors.NewNotFound(schema.GroupResource{
-			Group:    api.Group,
-			Resource: "images",
-		}, name)
-	}
 
 	image, _, err := s.findImage(ctx, namespace, name)
 	return image, err

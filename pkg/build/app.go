@@ -9,12 +9,14 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/buildclient"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 type AppImageOptions struct {
 	FullTag       bool
 	RemoteOptions []remote.Option
+	Keychain      authn.Keychain
 }
 
 func (a *AppImageOptions) GetFullTag() bool {
@@ -22,6 +24,13 @@ func (a *AppImageOptions) GetFullTag() bool {
 		return false
 	}
 	return a.FullTag
+}
+
+func (a *AppImageOptions) GetKeychain() authn.Keychain {
+	if a == nil {
+		return nil
+	}
+	return a.Keychain
 }
 
 func (a *AppImageOptions) GetRemoteOptions() []remote.Option {
@@ -41,7 +50,7 @@ func FromAppImage(ctx context.Context, pushRepo string, appImage *v1.AppImage, m
 	tag, err := buildImageNoManifest(ctx, pushRepo, tempContext, v1.Build{
 		Context:    ".",
 		Dockerfile: "Dockerfile",
-	}, messages)
+	}, messages, opts.GetKeychain())
 	if err != nil {
 		return "", err
 	}

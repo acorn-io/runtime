@@ -1494,6 +1494,12 @@ func schema_pkg_apis_apiacornio_v1_Image(ref common.ReferenceCallback) common.Op
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
+					"repo": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"digest": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -3060,12 +3066,6 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 							},
 						},
 					},
-					"clusterName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"autoUpgrade": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
@@ -3514,6 +3514,19 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref common.Referen
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"uuid": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
 					"ready": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
@@ -3538,7 +3551,14 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref common.Referen
 							Format: "",
 						},
 					},
+					"placement": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
+				Required: []string{"uuid"},
 			},
 		},
 	}
@@ -4291,6 +4311,12 @@ func schema_pkg_apis_internalacornio_v1_ImageInstance(ref common.ReferenceCallba
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"repo": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"digest": {
