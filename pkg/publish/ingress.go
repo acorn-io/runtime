@@ -57,6 +57,10 @@ func ValidateEndpointPattern(pattern string) error {
 	return nil
 }
 
+func truncate(s ...string) string {
+	return name.SafeConcatName(s...)
+}
+
 func toEndpoint(pattern, domain, container, appName, appNamespace string) (string, error) {
 	// This should not happen since the pattern in the config (passed to this through pattern) should
 	// always be set to the default if the pattern is "". However,if it is not somehow, set it here.
@@ -79,7 +83,9 @@ func toEndpoint(pattern, domain, container, appName, appNamespace string) (strin
 	}
 
 	var templateBuffer bytes.Buffer
-	t := template.Must(template.New("").Parse(pattern))
+	t := template.Must(template.New("").Funcs(map[string]any{
+		"truncate": truncate,
+	}).Parse(pattern))
 	if err := t.Execute(&templateBuffer, endpointOpts); err != nil {
 		return "", fmt.Errorf("%w %v: %v", ErrInvalidPattern, pattern, err)
 	}

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -160,6 +161,21 @@ func TestToEndpoint(t *testing.T) {
 			},
 			wantEndpoint: "",
 			wantErr:      ErrSegmentExceededMaxLength,
+		},
+		{
+			name: "parsed pattern's segment exceeds maximum length and should be truncated",
+			args: args{
+				domain:      "custom-domain.io",
+				serviceName: "app-name-that-is-very-long-and-should-cause-issues",
+				pattern:     config.DefaultHttpEndpointPattern,
+				appInstance: &v1.AppInstance{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{Name: "green-star", Namespace: "namespace"},
+					Spec:       v1.AppInstanceSpec{},
+					Status:     v1.AppInstanceStatus{},
+				},
+			},
+			wantEndpoint: "app-name-that-is-very-long-and-should-cause-issues-green-8049ce.custom-domain.io",
 		},
 	}
 	for _, tt := range tests {
