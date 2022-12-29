@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -17,6 +18,7 @@ import (
 
 func createBuilderObjects(req router.Request, resp router.Response) (string, string, []kclient.Object, error) {
 	builder := req.Object.(*v1.BuilderInstance)
+
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return "", "", nil, err
@@ -37,14 +39,12 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 		return "", "", nil, err
 	}
 
-	var uid string
+	var forNamespace string
 	if *cfg.BuilderPerNamespace {
-		// The UID will come from the public object which will always have the -p
-		// appended to the UID
-		uid = string(builder.UID) + "-p"
+		forNamespace = builder.Namespace
 	}
 
-	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, system.DefaultImage(), pubKey, privKey, uid, registryDNS)
+	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(), pubKey, privKey, builder.Status.UUID, registryDNS)
 
 	if *cfg.PublishBuilders {
 		ing, err := getIngress(req, name)
@@ -64,12 +64,25 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 
 func DeployBuilder(req router.Request, resp router.Response) error {
 	builder := req.Object.(*v1.BuilderInstance)
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	}
+
+	if *cfg.BuilderPerNamespace {
+		if builder.Status.UUID == "" {
+			builder.Status.UUID = uuid.New().String()
+		}
+	} else {
+		builder.Status.UUID = ""
+	}
 
 	serviceName, pubKey, objs, err := createBuilderObjects(req, resp)
 	if err != nil {
 		return err
 	}
 
+	builder.Status.ObservedGeneration = builder.Generation
 	builder.Status.PublicKey = pubKey
 	builder.Status.Endpoint = ""
 	builder.Status.ServiceName = serviceName
@@ -108,11 +121,11 @@ func getIngress(req router.Request, name string) ([]kclient.Object, error) {
 	return publish.Ingress(req, &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: system.Namespace,
+			Namespace: system.ImagesNamespace,
 		},
 		Spec: v1.AppInstanceSpec{},
 		Status: v1.AppInstanceStatus{
-			Namespace: system.Namespace,
+			Namespace: system.ImagesNamespace,
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{
 					name: {

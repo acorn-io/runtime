@@ -9,6 +9,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	"github.com/acorn-io/acorn/pkg/cue"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -80,7 +82,9 @@ func (c *client) AcornImageBuild(ctx context.Context, file string, opts *AcornIm
 		return nil, err
 	}
 
+	dialer := buildclient.WebSocketDialer(websocket.DefaultDialer.DialContext)
 	if build.Status.BuildURL == "" {
+		dialer = c.Dialer.DialWebsocket
 		build.Status.BuildURL = c.RESTClient.Get().
 			Namespace(builder.Namespace).
 			Resource("builders").
@@ -88,5 +92,6 @@ func (c *client) AcornImageBuild(ctx context.Context, file string, opts *AcornIm
 			SubResource("port").URL().String()
 	}
 
-	return buildclient.Stream(ctx, opts.Cwd, opts.Streams, c.Dialer, build)
+	logrus.Debugf("Building with URL: %s", build.Status.BuildURL)
+	return buildclient.Stream(ctx, opts.Cwd, opts.Streams, dialer, build)
 }

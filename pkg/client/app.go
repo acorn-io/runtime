@@ -193,7 +193,7 @@ func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-c
 		VersionedParams((*apiv1.LogOptions)(opts), scheme.ParameterCodec).
 		URL()
 
-	conn, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
+	conn, _, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}

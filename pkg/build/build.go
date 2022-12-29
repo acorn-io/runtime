@@ -14,9 +14,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	"github.com/acorn-io/acorn/pkg/cue"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
-	imagename "github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
@@ -48,7 +47,7 @@ func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
 	return appdefinition.NewAppDefinition(fileData)
 }
 
-func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts *v1.AcornImageBuildInstanceSpec, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts *v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
 	appDefinition, err := appdefinition.NewAppDefinition([]byte(opts.Acornfile))
 	if err != nil {
 		return nil, err
@@ -65,7 +64,7 @@ func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, 
 	}
 	buildSpec.Platforms = opts.Platforms
 
-	imageData, err := FromSpec(ctx, pushRepo, *buildSpec, messages, remoteOpts)
+	imageData, err := FromSpec(ctx, pushRepo, *buildSpec, messages, keychain, remoteOpts)
 	appImage := &v1.AppImage{
 		Acornfile: opts.Acornfile,
 		ImageData: imageData,
@@ -76,9 +75,12 @@ func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, 
 		return nil, err
 	}
 
-	id, err := FromAppImage(ctx, pushRepo, appImage, messages, &AppImageOptions{})
+	id, err := FromAppImage(ctx, pushRepo, appImage, messages, &AppImageOptions{
+		Keychain:      keychain,
+		RemoteOptions: remoteOpts,
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to finalize app image: %w", err)
 	}
 	appImage.ID = id
 	appImage.Digest = "sha256:" + id
@@ -86,7 +88,7 @@ func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, 
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, containers map[string]v1.ContainerImageBuilderSpec, opts []remote.Option) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, containers map[string]v1.ContainerImageBuilderSpec, keychain authn.Keychain, opts []remote.Option) (map[string]v1.ContainerData, error) {
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
@@ -103,7 +105,7 @@ func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCach
 			}
 		}
 
-		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *container.Build, messages, opts)
+		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *container.Build, messages, keychain, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +134,7 @@ func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCach
 				}
 			}
 
-			id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *sidecar.Build, messages, opts)
+			id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *sidecar.Build, messages, keychain, opts)
 			if err != nil {
 				return nil, err
 			}
@@ -145,7 +147,7 @@ func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCach
 	return result, nil
 }
 
-func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, images map[string]v1.ImageBuilderSpec, opts []remote.Option) (map[string]v1.ImageData, error) {
+func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, images map[string]v1.ImageBuilderSpec, keychain authn.Keychain, opts []remote.Option) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(images) {
@@ -156,7 +158,7 @@ func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, p
 			}
 		}
 
-		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *image.Build, messages, opts)
+		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *image.Build, messages, keychain, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +171,7 @@ func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, p
 	return result, nil
 }
 
-func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, messages buildclient.Messages, opts []remote.Option) (v1.ImagesData, error) {
+func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (v1.ImagesData, error) {
 	var (
 		err  error
 		data = v1.ImagesData{
@@ -179,17 +181,17 @@ func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, message
 
 	buildCache := &buildCache{}
 
-	data.Containers, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Containers, opts)
+	data.Containers, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Containers, keychain, opts)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Jobs, opts)
+	data.Jobs, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Jobs, keychain, opts)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Images, opts)
+	data.Images, err = buildImages(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Images, keychain, opts)
 	if err != nil {
 		return data, err
 	}
@@ -197,7 +199,7 @@ func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, message
 	return data, nil
 }
 
-func fromBuild(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, opts []remote.Option) (id string, err error) {
+func fromBuild(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (id string, err error) {
 	id, err = buildCache.Get(build, platforms)
 	if err != nil || id != "" {
 		return id, err
@@ -218,22 +220,22 @@ func fromBuild(ctx context.Context, pushRepo string, buildCache *buildCache, pla
 	}
 
 	if build.BaseImage != "" || len(build.ContextDirs) > 0 {
-		return buildWithContext(ctx, pushRepo, platforms, build, messages, opts)
+		return buildWithContext(ctx, pushRepo, platforms, build, messages, keychain, opts)
 	}
 
-	return buildImageAndManifest(ctx, pushRepo, platforms, build, messages, opts)
+	return buildImageAndManifest(ctx, pushRepo, platforms, build, messages, keychain, opts)
 }
 
-func buildImageNoManifest(ctx context.Context, pushRepo string, cwd string, build v1.Build, messages buildclient.Messages) (string, error) {
-	_, ids, err := buildkit.Build(ctx, pushRepo, cwd, nil, build, messages)
+func buildImageNoManifest(ctx context.Context, pushRepo string, cwd string, build v1.Build, messages buildclient.Messages, keychain authn.Keychain) (string, error) {
+	_, ids, err := buildkit.Build(ctx, pushRepo, cwd, nil, build, messages, keychain)
 	if err != nil {
 		return "", err
 	}
 	return ids[0], nil
 }
 
-func buildImageAndManifest(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, opts []remote.Option) (string, error) {
-	platforms, ids, err := buildkit.Build(ctx, pushRepo, "", platforms, build, messages)
+func buildImageAndManifest(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (string, error) {
+	platforms, ids, err := buildkit.Build(ctx, pushRepo, "", platforms, build, messages, keychain)
 	if err != nil {
 		return "", err
 	}
@@ -245,28 +247,24 @@ func buildImageAndManifest(ctx context.Context, pushRepo string, platforms []v1.
 	return createManifest(ids, platforms, opts)
 }
 
-func buildWithContext(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, opts []remote.Option) (string, error) {
+func buildWithContext(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (string, error) {
 	var (
 		baseImage = build.BaseImage
 	)
 
 	if baseImage == "" {
-		newImage, err := buildImageAndManifest(ctx, pushRepo, platforms, build.BaseBuild(), messages, opts)
+		newImage, err := buildImageAndManifest(ctx, pushRepo, platforms, build.BaseBuild(), messages, keychain, opts)
 		if err != nil {
 			return "", err
 		}
-		digest, err := imagename.NewDigest(newImage)
-		if err != nil {
-			return "", err
-		}
-		baseImage = strings.Replace(newImage, digest.RegistryStr(), fmt.Sprintf("127.0.0.1:%d", system.RegistryPort), 1)
+		baseImage = newImage
 	}
 
 	return buildImageAndManifest(ctx, pushRepo, platforms, v1.Build{
 		Context:            ".",
 		Dockerfile:         "Dockerfile",
 		DockerfileContents: toContextCopyDockerFile(baseImage, build.ContextDirs),
-	}, messages, opts)
+	}, messages, keychain, opts)
 }
 
 func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) string {

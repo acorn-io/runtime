@@ -47,7 +47,7 @@ func (c *Controller) initData(ctx context.Context) error {
 				Resources: []string{"services"},
 			},
 			{
-				Verbs:     []string{"get", "create"},
+				Verbs:     []string{"get", "create", "patch"},
 				APIGroups: []string{v1.SchemeGroupVersion.Group},
 				Resources: []string{"imageinstances"},
 			},

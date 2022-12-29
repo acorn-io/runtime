@@ -19,7 +19,7 @@ type Dialer struct {
 	needsInit bool
 }
 
-func (d *Dialer) DialWebsocket(ctx context.Context, url string, headers http.Header) (*websocket.Conn, error) {
+func (d *Dialer) DialWebsocket(ctx context.Context, url string, headers http.Header) (*websocket.Conn, *http.Response, error) {
 	newHeaders := http.Header{}
 	for k, v := range d.headers {
 		newHeaders[k] = v
@@ -37,17 +37,17 @@ func (d *Dialer) DialWebsocket(ctx context.Context, url string, headers http.Hea
 		if resp != nil && resp.Body != nil {
 			data, readErr := io.ReadAll(resp.Body)
 			if readErr == nil && len(data) > 0 {
-				return nil, fmt.Errorf("%w: %s", err, data)
+				return nil, nil, fmt.Errorf("%w: %s", err, data)
 			}
 		}
-		return nil, err
+		return nil, nil, err
 	}
 
-	return conn, nil
+	return conn, resp, nil
 }
 
 func (d *Dialer) DialContext(ctx context.Context, url string, headers http.Header) (*Connection, error) {
-	conn, err := d.DialWebsocket(ctx, url, headers)
+	conn, _, err := d.DialWebsocket(ctx, url, headers)
 	if err != nil {
 		return nil, err
 	}

@@ -3,11 +3,13 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -104,6 +106,7 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 		}
 		if level > 7 {
 			logrus.SetLevel(logrus.TraceLevel)
+			logs.Debug = log.New(os.Stderr, "ggcr: ", log.LstdFlags)
 		} else {
 			logrus.SetLevel(logrus.DebugLevel)
 		}

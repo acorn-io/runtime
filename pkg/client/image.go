@@ -69,7 +69,7 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 		SubResource("pull").
 		URL()
 
-	conn, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
+	conn, _, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 		SubResource("push").
 		URL()
 
-	conn, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
+	conn, _, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
 	if err != nil {
 		return nil, err
 	}

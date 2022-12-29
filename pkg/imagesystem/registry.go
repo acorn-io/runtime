@@ -7,29 +7,15 @@ import (
 	"strconv"
 	"strings"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/name"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-func RegistryExists(ctx context.Context, c client.Reader) (bool, error) {
-	dep := &appsv1.Deployment{}
-	err := c.Get(ctx, client.ObjectKey{
-		Name:      system.RegistryName,
-		Namespace: system.ImagesNamespace,
-	}, dep)
-	if apierrors.IsNotFound(err) {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
 
 func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, error) {
 	cfg, err := config.Get(ctx, c)
@@ -66,17 +52,43 @@ func GetRuntimePullableInternalRepoForNamespace(ctx context.Context, c client.Re
 }
 
 func GetRuntimePullableInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, namespace, imageID string) (name.Reference, error) {
-	repo, err := GetRuntimePullableInternalRepoForNamespace(ctx, c, namespace)
-	if err != nil {
+	var (
+		repo name.Repository
+	)
+	image := &v1.ImageInstance{}
+	if err := c.Get(ctx, router.Key(namespace, imageID), image); err == nil && image.Repo != "" {
+		repo, err = name.NewRepository(image.Repo)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
+	} else {
+		repo, err = GetRuntimePullableInternalRepoForNamespace(ctx, c, namespace)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return repo.Digest("sha256:" + imageID), nil
 }
 
 func GetInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, namespace, imageID string) (name.Reference, error) {
-	repo, err := GetInternalRepoForNamespace(ctx, c, namespace)
-	if err != nil {
+	var (
+		repo name.Repository
+	)
+	image := &v1.ImageInstance{}
+	if err := c.Get(ctx, router.Key(namespace, imageID), image); err == nil && image.Repo != "" {
+		repo, err = name.NewRepository(image.Repo)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
+	} else {
+		repo, err = GetInternalRepoForNamespace(ctx, c, namespace)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return repo.Digest("sha256:" + imageID), nil
 }
@@ -110,6 +122,10 @@ func GetClusterInternalRegistryDNSName(ctx context.Context, c client.Reader) (st
 		return "", err
 	}
 	return fmt.Sprintf("%s.%s.%s", system.RegistryName, system.ImagesNamespace, cfg.InternalClusterDomain), err
+}
+
+func IsClusterInternalRegistryAddressReference(url string) bool {
+	return strings.HasPrefix(url, "127.")
 }
 
 func GetClusterInternalRegistryAddress(ctx context.Context, c client.Reader) (string, error) {
