@@ -32,7 +32,7 @@ var (
 	DefaultImageCheckIntervalDefault = "5m"
 
 	// Default HttpEndpointPattern set to enable Let's Encrypt
-	DefaultHttpEndpointPattern = "{{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}"
+	DefaultHttpEndpointPattern = "{{printf \"%s-%s-%s\" .Container .App .Hash | truncate}}.{{.ClusterDomain}}"
 )
 
 func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
