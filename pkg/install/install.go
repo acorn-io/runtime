@@ -307,14 +307,16 @@ func waitDeployment(ctx context.Context, s progress.Progress, client kclient.Wit
 			_, err := watcher.New[*corev1.Pod](client).BySelector(childCtx, "acorn-system", labels.SelectorFromSet(map[string]string{
 				"app": name,
 			}), func(pod *corev1.Pod) (bool, error) {
-				if pod.Spec.Containers[0].Image != imageName {
-					return false, nil
+				for _, container := range pod.Spec.Containers {
+					if container.Image != imageName {
+						continue
+					}
+					status := podstatus.GetStatus(pod)
+					if status.Reason == "Running" {
+						return true, nil
+					}
+					s.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
 				}
-				status := podstatus.GetStatus(pod)
-				if status.Reason == "Running" {
-					return true, nil
-				}
-				s.Infof("Pod %s/%s: %s", pod.Namespace, pod.Name, status)
 				return false, nil
 			})
 			return err
