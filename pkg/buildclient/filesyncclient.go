@@ -167,10 +167,10 @@ func (s *fileSyncClient) SendMsg(m interface{}) error {
 func (s *fileSyncClient) RecvMsg(m interface{}) error {
 	for {
 		nextMessage, ok := <-s.msg
-		logrus.Tracef("fileSyncClient msg.fileSessionID=%s sessionID=%s packetNil=%v", nextMessage.FileSessionID, s.sessionID, nextMessage.Packet == nil)
 		if !ok {
 			return io.EOF
 		}
+		logrus.Tracef("fileSyncClient msg.fileSessionID=%s sessionID=%s packetNil=%v", nextMessage.FileSessionID, s.sessionID, nextMessage.Packet == nil)
 		if nextMessage.Packet == nil || nextMessage.FileSessionID != s.sessionID {
 			continue
 		}
