@@ -73,7 +73,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 
 	var errs []error
 	for _, tag := range s.Tag {
-		if err := c.ImageTag(cmd.Context(), image.ID, tag); err != nil {
+		if err = c.ImageTag(cmd.Context(), image.ID, tag); err != nil {
 			errs = append(errs, err)
 		}
 	}

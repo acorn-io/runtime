@@ -1,10 +1,10 @@
 package images
 
 import (
+	"testing"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func TestFindMatchingImage(t *testing.T) {
@@ -32,4 +32,8 @@ func TestFindMatchingImage(t *testing.T) {
 
 	_, _, err = findImageMatch(il, "123")
 	assert.Error(t, err)
+
+	_, _, err = findImageMatch(il, "ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
+	assert.Error(t, err)
+	assert.Equal(t, "images.api.acorn.io \"ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb\" not found", err.Error())
 }

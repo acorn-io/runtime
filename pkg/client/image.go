@@ -19,7 +19,6 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 	if apierrors.IsNotFound(err) {
 		return err
 	}
-	image.Tags = []string{tag}
 	tagResult := &apiv1.ImageTag{}
 	err = c.RESTClient.Post().
 		Namespace(image.Namespace).

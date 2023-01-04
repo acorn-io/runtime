@@ -126,7 +126,6 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 		return nil, err
 	}
 	return image, s.client.Delete(ctx, imageToDelete)
-
 }
 
 func (s *Strategy) ImageGet(ctx context.Context, namespace, name string) (*apiv1.Image, error) {
@@ -162,10 +161,6 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
 	} else {
-		_, err := name.NewTag(imageName, name.WithDefaultRegistry(""))
-		if err != nil {
-			return nil, "", err
-		}
 		tag, err := name.ParseReference(imageName, name.WithDefaultRegistry(""))
 		if err != nil {
 			return nil, "", err
