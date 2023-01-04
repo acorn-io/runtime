@@ -94,7 +94,7 @@ package v1
 	[=~"depends[oO]n|depends_on"]:  string | *[...string]
 	permissions: {
 		rules: [...#RuleSpec]
-		clusterRules: [...#RuleSpec]
+		clusterRules: [...#ClusterRuleSpec]
 	}
 }
 
@@ -135,6 +135,15 @@ package v1
 
 #RuleSpec: {
 	verbs: [...string]
+	apiGroups: [...string]
+	resources: [...string]
+	resourceNames: [...string]
+	nonResourceURLs: [...string]
+} | string
+
+#ClusterRuleSpec: {
+	verbs: [...string]
+	namespaces: [...string]
 	apiGroups: [...string]
 	resources: [...string]
 	resourceNames: [...string]

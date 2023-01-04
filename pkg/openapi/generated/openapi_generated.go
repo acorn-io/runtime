@@ -73,6 +73,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceList":           schema_pkg_apis_internalacornio_v1_BuilderInstanceList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus":         schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderSpec":                   schema_pkg_apis_internalacornio_v1_BuilderSpec(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ClusterPolicyRule":             schema_pkg_apis_internalacornio_v1_ClusterPolicyRule(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition":                     schema_pkg_apis_internalacornio_v1_Condition(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container":                     schema_pkg_apis_internalacornio_v1_Container(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerData":                 schema_pkg_apis_internalacornio_v1_ContainerData(ref),
@@ -3633,6 +3634,41 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 	}
 }
 
+func schema_pkg_apis_internalacornio_v1_ClusterPolicyRule(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"PolicyRule": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/api/rbac/v1.PolicyRule"),
+						},
+					},
+					"namespaces": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"PolicyRule"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/api/rbac/v1.PolicyRule"},
+	}
+}
+
 func schema_pkg_apis_internalacornio_v1_Condition(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -4619,7 +4655,7 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"),
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ClusterPolicyRule"),
 									},
 								},
 							},
@@ -4629,7 +4665,7 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ClusterPolicyRule", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"},
 	}
 }
 

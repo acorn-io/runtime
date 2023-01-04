@@ -226,10 +226,15 @@ type ScopedLabel struct {
 
 type PolicyRule rbacv1.PolicyRule
 
+type ClusterPolicyRule struct {
+	rbacv1.PolicyRule
+	Namespaces []string `json:"namespaces,omitempty"`
+}
+
 type Permissions struct {
-	ServiceName  string       `json:"serviceName,omitempty"`
-	Rules        []PolicyRule `json:"rules,omitempty"`
-	ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
+	ServiceName  string              `json:"serviceName,omitempty"`
+	Rules        []PolicyRule        `json:"rules,omitempty"`
+	ClusterRules []ClusterPolicyRule `json:"clusterRules,omitempty"`
 }
 
 func (in *Permissions) HasRules() bool {
