@@ -440,6 +440,10 @@ containers: web: {
 			resources: [
 				"fooresource"
 			]
+            // Optionally restrict permissions to a specific namespace and not globally
+            namespaces: [
+				"other-namespace"
+            ]
 		}]
     }
 }
