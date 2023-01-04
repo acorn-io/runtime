@@ -20,6 +20,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/podstatus"
 	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/acorn-io/acorn/pkg/publish"
+	"github.com/acorn-io/acorn/pkg/roles"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/term"
 	"github.com/acorn-io/baaah/pkg/apply"
@@ -546,7 +547,15 @@ func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error)
 }
 
 func Roles() ([]kclient.Object, error) {
-	return objectsFromFile("role.yaml")
+	objs, err := objectsFromFile("role.yaml")
+	if err != nil {
+		return nil, err
+	}
+	for _, role := range roles.ClusterRoles() {
+		role := role
+		objs = append(objs, &role)
+	}
+	return objs, nil
 }
 
 func upgradeFromV03(ctx context.Context, c kclient.Client) error {

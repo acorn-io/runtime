@@ -1,6 +1,12 @@
 kind: Namespace
 apiVersion: v1
 metadata:
+  name: acorn-image-system
+---
+
+kind: Namespace
+apiVersion: v1
+metadata:
   name: acorn-system
 
 ---
