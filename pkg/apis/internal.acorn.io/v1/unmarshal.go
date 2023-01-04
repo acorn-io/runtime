@@ -543,6 +543,32 @@ func (in *PolicyRule) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (in *ClusterPolicyRule) UnmarshalJSON(data []byte) error {
+	if !isString(data) {
+		type clusterPolicyRule ClusterPolicyRule
+		return json.Unmarshal(data, (*clusterPolicyRule)(in))
+	}
+
+	s, err := parseString(data)
+	if err != nil {
+		return err
+	}
+	read := strings.HasPrefix(s, "read ")
+	if read {
+		s = strings.TrimPrefix(s, "read ")
+	}
+
+	resource, apiGroup, _ := strings.Cut(s, ".")
+	in.Resources = []string{resource}
+	in.APIGroups = []string{apiGroup}
+	in.Verbs = DefaultVerbs
+	if read {
+		in.Verbs = ReadVerbs
+	}
+
+	return nil
+}
+
 func (in *Permissions) UnmarshalJSON(data []byte) error {
 	if !isArray(data) {
 		type permissions Permissions

@@ -182,6 +182,23 @@ func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAc
 	return nil
 }
 
+func (s *Validator) checkClusterRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.ClusterPolicyRule) error {
+	for _, rule := range rules {
+		if len(rule.Namespaces) == 0 {
+			if err := s.checkRules(ctx, sar, []v1.PolicyRule{(v1.PolicyRule)(rule.PolicyRule)}, ""); err != nil {
+				return err
+			}
+		} else {
+			for _, ns := range rule.Namespaces {
+				if err := s.checkRules(ctx, sar, []v1.PolicyRule{(v1.PolicyRule)(rule.PolicyRule)}, ns); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
 	var errs []error
 	for _, rule := range rules {
@@ -248,7 +265,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 			sar.Spec.Extra[k] = v
 		}
 
-		if err := s.checkRules(ctx, sar, perm.ClusterRules, ""); err != nil {
+		if err := s.checkClusterRules(ctx, sar, perm.ClusterRules); err != nil {
 			errs = append(errs, err)
 		}
 

@@ -7,24 +7,49 @@ import (
 )
 
 type RuleRequest struct {
-	Service  string
-	Scope    string
-	Verbs    string
-	Resource string
+	Service      string
+	Scope        string
+	Verbs        string
+	Resource     string
+	ResourceName string
+	Namespace    string
 }
 
 func ToRuleRequests(perms []v1.Permissions) (result []RuleRequest) {
 	for _, perm := range perms {
-		result = append(result, rulesToRequests(perm.ServiceName, perm.ClusterRules, "cluster")...)
-		result = append(result, rulesToRequests(perm.ServiceName, perm.Rules, "app")...)
+		result = append(result, clusterRulesToRequests(perm.ServiceName, perm.ClusterRules)...)
+		result = append(result, rulesToRequests(perm.ServiceName, perm.Rules)...)
 	}
 	return
 }
 
-func rulesToRequests(serviceName string, rules []v1.PolicyRule, scope string) (result []RuleRequest) {
+func clusterRulesToRequests(serviceName string, rules []v1.ClusterPolicyRule) (result []RuleRequest) {
 	for _, rule := range rules {
-		result = append(result, ruleToRequests(serviceName, rule, scope)...)
+		result = append(result, clusterRuleToRequests(serviceName, rule)...)
 	}
+	return
+}
+
+func rulesToRequests(serviceName string, rules []v1.PolicyRule) (result []RuleRequest) {
+	for _, rule := range rules {
+		result = append(result, ruleToRequests(serviceName, rule, "app")...)
+	}
+	return
+}
+
+func clusterRuleToRequests(serviceName string, rule v1.ClusterPolicyRule) (result []RuleRequest) {
+	if len(rule.Namespaces) == 0 {
+		return ruleToRequests(serviceName, (v1.PolicyRule)(rule.PolicyRule), "cluster")
+	}
+
+	for _, namespace := range rule.Namespaces {
+		requests := ruleToRequests(serviceName, (v1.PolicyRule)(rule.PolicyRule), "cluster")
+		for _, request := range requests {
+			request.Namespace = namespace
+			result = append(result, request)
+		}
+	}
+
 	return
 }
 
@@ -50,18 +75,20 @@ func ruleToRequests(serviceName string, rule v1.PolicyRule, scope string) (resul
 
 			if len(rule.ResourceNames) == 0 {
 				result = append(result, RuleRequest{
-					Service:  serviceName,
-					Scope:    scope,
-					Resource: resource,
-					Verbs:    verbs,
+					Namespace: "<APP>",
+					Service:   serviceName,
+					Scope:     scope,
+					Resource:  resource,
+					Verbs:     verbs,
 				})
 			} else {
 				for _, resourceName := range rule.ResourceNames {
 					result = append(result, RuleRequest{
-						Service:  serviceName,
-						Scope:    scope,
-						Resource: resource + "/" + resourceName,
-						Verbs:    verbs,
+						Namespace: "<APP>",
+						Service:   serviceName,
+						Scope:     scope,
+						Resource:  resource + "/" + resourceName,
+						Verbs:     verbs,
 					})
 				}
 			}
