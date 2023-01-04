@@ -11,6 +11,10 @@ func TestContainer(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/permissions/container", DeploySpec)
 }
 
+func TestContainerWithNamespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/permissions/containerwithnamespace", DeploySpec)
+}
+
 func TestMultipleContainers(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/permissions/multiplecontainers", DeploySpec)
 }

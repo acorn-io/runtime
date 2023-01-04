@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: oneimage-app-name-app-namespace-1234567890ab
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/container-name: oneimage
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: oneimage-app-name-app-namespace-1234567890ab
+subjects:
+- kind: ServiceAccount
+  name: oneimage
+  namespace: app-created-namespace

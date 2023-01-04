@@ -1790,6 +1790,7 @@ localData: permissions: {
       resources: ["resources"]
       resourceNames: ["names"]
       nonResourceURLs: ["foo"]
+	  namespaces: ["a", "b"]
     }
   ]
 }
@@ -1820,6 +1821,8 @@ containers: cont: {
 	assert.Equal(t, "groups", appSpec.Containers["cont"].Permissions.ClusterRules[0].APIGroups[0])
 	assert.Equal(t, "resources", appSpec.Containers["cont"].Permissions.ClusterRules[0].Resources[0])
 	assert.Equal(t, "names", appSpec.Containers["cont"].Permissions.ClusterRules[0].ResourceNames[0])
+	assert.Equal(t, "a", appSpec.Containers["cont"].Permissions.ClusterRules[0].Namespaces[0])
+	assert.Equal(t, "b", appSpec.Containers["cont"].Permissions.ClusterRules[0].Namespaces[1])
 	assert.Equal(t, "foo", appSpec.Containers["cont"].Permissions.ClusterRules[0].NonResourceURLs[0])
 
 	assert.Equal(t, "verb", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].Verbs[0])
@@ -1832,6 +1835,8 @@ containers: cont: {
 	assert.Equal(t, "groups", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].APIGroups[0])
 	assert.Equal(t, "resources", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Resources[0])
 	assert.Equal(t, "names", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].ResourceNames[0])
+	assert.Equal(t, "a", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Namespaces[0])
+	assert.Equal(t, "b", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Namespaces[1])
 	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].NonResourceURLs[0])
 }
 

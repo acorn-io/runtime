@@ -1,0 +1,60 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  permissions:
+  - serviceName: oneimage
+    clusterRules:
+    - verbs:
+      - create
+      apiGroups:
+      - "foo.io"
+      resources:
+      - "bar"
+    - verbs:
+        - create
+      apiGroups:
+        - "2.foo.io"
+      resources:
+        - "2.bar"
+      namespaces:
+        - "ns1"
+        - "ns2"
+    rules:
+    - verbs:
+      - patch
+      apiGroups:
+      - "bar.io"
+      resources:
+      - "foo"
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          left:
+            image: "foo"
+            ports:
+              - port: 90
+                targetPort: 91
+                protocol: tcp
+        ports:
+        - port: 80
+          targetPort: 81
+          protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+  conditions:
+    - type: defined
+      reason: Success
+      status: "True"
+      success: true
