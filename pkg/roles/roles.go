@@ -1,6 +1,7 @@
 package roles
 
 import (
+	api_acorn_io "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -94,8 +95,17 @@ var (
 	}
 )
 
+func addAPIGroup(roles []rbacv1.ClusterRole) []rbacv1.ClusterRole {
+	for i := range roles {
+		for j := range roles[i].Rules {
+			roles[i].Rules[j].APIGroups = []string{api_acorn_io.Group}
+		}
+	}
+	return roles
+}
+
 func ClusterRoles() []rbacv1.ClusterRole {
-	return []rbacv1.ClusterRole{
+	return addAPIGroup([]rbacv1.ClusterRole{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: Admin,
@@ -120,5 +130,5 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			},
 			Rules: projectRoles[Build],
 		},
-	}
+	})
 }
