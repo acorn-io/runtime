@@ -227,8 +227,8 @@ type ScopedLabel struct {
 type PolicyRule rbacv1.PolicyRule
 
 type ClusterPolicyRule struct {
-	rbacv1.PolicyRule
-	Namespaces []string `json:"namespaces,omitempty"`
+	rbacv1.PolicyRule `json:",inline"`
+	Namespaces        []string `json:"namespaces,omitempty"`
 }
 
 type Permissions struct {
