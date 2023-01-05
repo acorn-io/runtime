@@ -100,7 +100,7 @@ func TestSecretGet(t *testing.T) {
 	assert.Equal(t, secret, newSecret)
 }
 
-func TestSecretExpose(t *testing.T) {
+func TestSecretReveal(t *testing.T) {
 	helper.StartController(t)
 	restConfig := helper.StartAPI(t)
 
@@ -123,7 +123,7 @@ func TestSecretExpose(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	newSecret, err := c.SecretExpose(ctx, "secret2")
+	newSecret, err := c.SecretReveal(ctx, "secret2")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -217,7 +217,7 @@ type Client interface {
 	SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error)
 	SecretList(ctx context.Context) ([]apiv1.Secret, error)
 	SecretGet(ctx context.Context, name string) (*apiv1.Secret, error)
-	SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error)
+	SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error)
 	SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error)
 	SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error)
 

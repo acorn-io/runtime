@@ -36,7 +36,7 @@ Users will require CRUD access to all types from the `api.acorn.io` API group wi
 "containerreplicas/exec"
 "credentials"
 "secrets"
-"secrets/expose"
+"secrets/reveal"
 "infos"
 ```
 

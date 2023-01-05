@@ -10,10 +10,10 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewExpose(c kclient.WithWatch) rest.Storage {
+func NewReveal(c kclient.WithWatch) rest.Storage {
 	remoteResource := remote.NewWithTranslation(&Translator{
 		c:      c,
-		expose: true,
+		reveal: true,
 	}, &corev1.Secret{}, c)
 	return stores.NewBuilder(c.Scheme(), &apiv1.Secret{}).
 		WithGet(remoteResource).

@@ -78,7 +78,7 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 		"containerreplicas/exec": containerExec,
 		"credentials":            credentials.NewStore(c),
 		"secrets":                secrets.NewStorage(c),
-		"secrets/expose":         secrets.NewExpose(c),
+		"secrets/reveal":         secrets.NewReveal(c),
 		"infos":                  info.NewStorage(c),
 	}
 

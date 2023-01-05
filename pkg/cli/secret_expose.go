@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSecretExpose(c client.CommandContext) *cobra.Command {
-	cmd := cli.Command(&Expose{client: c.ClientFactory}, cobra.Command{
-		Use:     "expose [flags] [SECRET_NAME...]",
+func NewSecretReveal(c client.CommandContext) *cobra.Command {
+	cmd := cli.Command(&Reveal{client: c.ClientFactory}, cobra.Command{
+		Use:     "reveal [flags] [SECRET_NAME...]",
 		Aliases: []string{"secrets", "s"},
 		Example: `
 acorn secret`,
@@ -23,20 +23,20 @@ acorn secret`,
 	return cmd
 }
 
-type Expose struct {
+type Reveal struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client client.ClientFactory
 }
 
-type exposeEntry struct {
+type revealEntry struct {
 	Name  string
 	Type  string
 	Key   string
 	Value string
 }
 
-func (a *Expose) Run(cmd *cobra.Command, args []string) error {
+func (a *Reveal) Run(cmd *cobra.Command, args []string) error {
 	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (a *Expose) Run(cmd *cobra.Command, args []string) error {
 	var matchedSecrets []apiv1.Secret
 
 	for _, arg := range args {
-		secret, err := client.SecretExpose(cmd.Context(), arg)
+		secret, err := client.SecretReveal(cmd.Context(), arg)
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func (a *Expose) Run(cmd *cobra.Command, args []string) error {
 
 	for _, secret := range matchedSecrets {
 		for _, entry := range typed.Sorted(secret.Data) {
-			out.Write(&exposeEntry{
+			out.Write(&revealEntry{
 				Name:  secret.Name,
 				Type:  secret.Type,
 				Key:   entry.Key,

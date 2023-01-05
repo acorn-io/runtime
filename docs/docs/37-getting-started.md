@@ -375,7 +375,7 @@ ALIAS                                  NAME                       TYPE      KEYS
 awesome-acorn.quickstart-pg-pass          quickstart-pg-pass-sqlv9   token     [token]   139m ago
 
 # Reveal the one for the current app
-$ acorn secret expose awesome-acorn.quickstart-pg-pass
+$ acorn secret reveal awesome-acorn.quickstart-pg-pass
 NAME                       TYPE      KEY       VALUE
 quickstart-pg-pass-sqlv9   token     token     mssl8692sk47tfklx9bqnqflw7pqrk2ldb6cd9tckjlttpk4vsvpvl
 ```
