@@ -57,7 +57,7 @@ func TestText(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	gen2, err := c.SecretExpose(context.Background(), app.Name+".gen2")
+	gen2, err := c.SecretReveal(context.Background(), app.Name+".gen2")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -73,7 +73,7 @@ var (
 					"images/push",
 					"images/pull",
 					"containerreplicas/exec",
-					"secrets/expose",
+					"secrets/reveal",
 				},
 			},
 		},

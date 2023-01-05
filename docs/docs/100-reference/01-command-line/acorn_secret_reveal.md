@@ -1,12 +1,12 @@
 ---
-title: "acorn secret expose"
+title: "acorn secret reveal"
 ---
-## acorn secret expose
+## acorn secret reveal
 
 Manage secrets
 
 ```
-acorn secret expose [flags] [SECRET_NAME...]
+acorn secret reveal [flags] [SECRET_NAME...]
 ```
 
 ### Examples
@@ -19,7 +19,7 @@ acorn secret
 ### Options
 
 ```
-  -h, --help            help for expose
+  -h, --help            help for reveal
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -q, --quiet           Output only names
 ```

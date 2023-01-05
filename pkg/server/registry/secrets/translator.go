@@ -20,7 +20,7 @@ import (
 
 type Translator struct {
 	c      kclient.Client
-	expose bool
+	reveal bool
 }
 
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
@@ -91,7 +91,7 @@ func (t *Translator) ToPublic(objs ...runtime.Object) (result []types.Object) {
 			Keys:       keys,
 		}
 		sec.UID = sec.UID + "-s"
-		if t.expose {
+		if t.reveal {
 			sec.Data = secret.Data
 		}
 		result = append(result, sec)

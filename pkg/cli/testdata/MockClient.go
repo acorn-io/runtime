@@ -226,7 +226,7 @@ func (m *MockClient) SecretGet(ctx context.Context, name string) (*apiv1.Secret,
 	return nil, nil
 }
 
-func (m *MockClient) SecretExpose(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (m *MockClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
 	switch name {
 	case "dne":
 		return nil, fmt.Errorf("error: Secret %s does not exist", name)

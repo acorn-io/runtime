@@ -18,7 +18,7 @@ import (
 
 type Translator struct {
 	client kclient.Client
-	expose bool
+	reveal bool
 }
 
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
@@ -52,7 +52,7 @@ func (t *Translator) ToPublic(objs ...runtime.Object) (result []types.Object) {
 		cred.Name = cred.ServerAddress
 		cred.OwnerReferences = nil
 		cred.ManagedFields = nil
-		if t.expose {
+		if t.reveal {
 			pass := string(secret.Data["password"])
 			cred.Password = &pass
 		}

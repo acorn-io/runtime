@@ -165,7 +165,7 @@ func TestSecret(t *testing.T) {
 			wantOut: "Error: No such secret: dne\n",
 		},
 		{
-			name: "acorn secret expose found.secret", fields: fields{
+			name: "acorn secret reveal found.secret", fields: fields{
 				All:    false,
 				Quiet:  false,
 				Output: "",
@@ -177,14 +177,14 @@ func TestSecret(t *testing.T) {
 				StdIn:         strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"expose", "found.secret"},
+				args:   []string{"reveal", "found.secret"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
 			wantOut: "NAME      TYPE      KEY       VALUE\n",
 		},
 		{
-			name: "acorn secret expose dne", fields: fields{
+			name: "acorn secret reveal dne", fields: fields{
 				All:    false,
 				Quiet:  false,
 				Output: "",
@@ -196,7 +196,7 @@ func TestSecret(t *testing.T) {
 				StdIn:         strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"expose", "dne"},
+				args:   []string{"reveal", "dne"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
