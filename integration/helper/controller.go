@@ -109,6 +109,14 @@ func StartAPI(t *testing.T) *rest.Config {
 	apiStartLock.Lock()
 	defer apiStartLock.Unlock()
 
+	if os.Getenv("TEST_ACORN_API_SERVER") == "external" {
+		r, e := hclient.DefaultConfig()
+		if e != nil {
+			t.Fatal(e)
+		}
+		return r
+	}
+
 	if apiStarted {
 		return apiRESTConfig
 	}
