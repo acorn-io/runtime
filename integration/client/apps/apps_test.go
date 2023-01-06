@@ -23,7 +23,7 @@ func TestAppStartStop(t *testing.T) {
 
 	imageID := client2.NewImage(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestAppDelete(t *testing.T) {
 
 	imageID := client2.NewImage(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestAppUpdate(t *testing.T) {
 	imageID := client2.NewImage(t, ns.Name)
 	imageID2 := client2.NewImage2(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -319,7 +319,7 @@ func TestAppGet(t *testing.T) {
 
 	imageID := client2.NewImage(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -348,7 +348,7 @@ func TestAppList(t *testing.T) {
 
 	imageID := client2.NewImage(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,7 +379,7 @@ func TestAppLog(t *testing.T) {
 
 	imageID := client2.NewImage(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -424,7 +424,7 @@ func TestAppRun(t *testing.T) {
 
 	imageID := client2.NewImage(t, ns.Name)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -80,7 +80,7 @@ func BuilderClient(t *testing.T, namespace string) client.Client {
 
 	StartController(t)
 
-	c, err := client.New(StartAPI(t), namespace)
+	c, err := client.New(StartAPI(t), "", namespace)
 	if err != nil {
 		t.Fatal(err)
 	}

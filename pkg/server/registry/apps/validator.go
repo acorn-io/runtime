@@ -279,7 +279,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 }
 
 func (s *Validator) getPermissions(ctx context.Context, image string, app *apiv1.App) (result []v1.Permissions, _ error) {
-	details, err := s.clientFactory.Namespace(app.Namespace).ImageDetails(ctx, image,
+	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
 		&client.ImageDetailsOptions{
 			Profiles:   app.Spec.Profiles,
 			DeployArgs: app.Spec.DeployArgs})
@@ -319,7 +319,7 @@ func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
 }
 
 func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image string) (string, bool, error) {
-	localImage, err := s.clientFactory.Namespace(namespace).ImageGet(ctx, image)
+	localImage, err := s.clientFactory.Namespace("", namespace).ImageGet(ctx, image)
 	if apierrors.IsNotFound(err) {
 		if tags.IsLocalReference(image) {
 			return "", false, err

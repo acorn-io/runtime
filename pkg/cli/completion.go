@@ -18,7 +18,7 @@ type completionFunc func(context.Context, client.Client, string) ([]string, erro
 type noCompletionOption func([]string) bool
 
 type completion struct {
-	client           client.ClientFactory
+	client           ClientFactory
 	completionFunc   completionFunc
 	successDirective cobra.ShellCompDirective
 
@@ -43,7 +43,7 @@ func onlyNumArgs(n int) noCompletionOption {
 	}
 }
 
-func newCompletion(c client.ClientFactory, cf completionFunc) *completion {
+func newCompletion(c ClientFactory, cf completionFunc) *completion {
 	return &completion{
 		client:           c,
 		completionFunc:   cf,

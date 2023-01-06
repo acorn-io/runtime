@@ -22,8 +22,8 @@ func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace
 	if err != nil {
 		return name.Repository{}, err
 	}
-	if cfg.InternalRegistryPrefix != "" {
-		return name.NewRepository(cfg.InternalRegistryPrefix + namespace)
+	if *cfg.InternalRegistryPrefix != "" {
+		return name.NewRepository(*cfg.InternalRegistryPrefix + namespace)
 	}
 
 	dns, err := GetClusterInternalRegistryDNSName(ctx, c)
@@ -39,8 +39,8 @@ func GetRuntimePullableInternalRepoForNamespace(ctx context.Context, c client.Re
 	if err != nil {
 		return name.Repository{}, err
 	}
-	if cfg.InternalRegistryPrefix != "" {
-		return name.NewRepository(cfg.InternalRegistryPrefix + namespace)
+	if *cfg.InternalRegistryPrefix != "" {
+		return name.NewRepository(*cfg.InternalRegistryPrefix + namespace)
 	}
 
 	address, err := GetClusterInternalRegistryAddress(ctx, c)
@@ -98,7 +98,7 @@ func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.O
 	if err != nil {
 		return nil, err
 	}
-	if cfg.InternalRegistryPrefix != "" {
+	if *cfg.InternalRegistryPrefix != "" {
 		return nil, nil
 	}
 
@@ -159,8 +159,8 @@ func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, image s
 	if err != nil {
 		return nil, err
 	}
-	if cfg.InternalRegistryPrefix != "" {
-		if strings.HasPrefix(image, cfg.InternalRegistryPrefix) {
+	if *cfg.InternalRegistryPrefix != "" {
+		if strings.HasPrefix(image, *cfg.InternalRegistryPrefix) {
 			return nil, fmt.Errorf("invalid image reference prefix %s", image)
 		}
 	}

@@ -163,7 +163,7 @@ func TestMultiArch(t *testing.T) {
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
 	kclient := helper.MustReturn(k8sclient.Default)
-	c, err := client.New(cfg, ns.Name)
+	c, err := client.New(cfg, "", ns.Name)
 	if err != nil {
 		t.Fatal()
 	}

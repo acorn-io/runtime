@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func NewRun(c client.CommandContext) *cobra.Command {
+func NewRun(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Run{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:               "run [flags] IMAGE|DIRECTORY [acorn args]",
 		SilenceUsage:      true,
@@ -105,7 +105,7 @@ type Run struct {
 	Update            bool  `usage:"Update the app if it already exists" short:"u"`
 
 	out    io.Writer
-	client client.ClientFactory
+	client ClientFactory
 }
 
 type RunArgs struct {
@@ -271,9 +271,8 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	if s.Interactive && isDir {
 
-		return dev.Dev(cmd.Context(), s.File, &dev.Options{
-			Args:   args,
-			Client: c,
+		return dev.Dev(cmd.Context(), c, s.File, &dev.Options{
+			Args: args,
 			Build: client.AcornImageBuildOptions{
 				Cwd:      cwd,
 				Profiles: opts.Profiles,

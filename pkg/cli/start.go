@@ -4,11 +4,10 @@ import (
 	"fmt"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewStart(c client.CommandContext) *cobra.Command {
+func NewStart(c CommandContext) *cobra.Command {
 	return cli.Command(&Start{client: c.ClientFactory}, cobra.Command{
 		Use: "start [flags] [APP_NAME...]",
 		Example: `
@@ -22,7 +21,7 @@ acorn start my-app1 my-app2`,
 }
 
 type Start struct {
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *Start) Run(cmd *cobra.Command, args []string) error {

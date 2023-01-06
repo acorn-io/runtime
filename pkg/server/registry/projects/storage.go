@@ -1,4 +1,4 @@
-package secrets
+package projects
 
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"

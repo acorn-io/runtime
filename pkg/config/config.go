@@ -35,7 +35,7 @@ var (
 	DefaultHttpEndpointPattern = "{{printf \"%s-%s-%s\" .Container .App .Hash | truncate}}.{{.ClusterDomain}}"
 )
 
-func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error {
+func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
 	if len(c.DefaultPublishMode) == 0 {
 		c.DefaultPublishMode = v1.PublishModeDefined
 	}
@@ -81,12 +81,14 @@ func complete(c *apiv1.Config, ctx context.Context, getter kclient.Reader) error
 	if c.PublishBuilders == nil {
 		c.PublishBuilders = new(bool)
 	}
-	if c.BuilderPerNamespace == nil {
-		c.BuilderPerNamespace = new(bool)
+	if c.BuilderPerProject == nil {
+		c.BuilderPerProject = new(bool)
 	}
-
 	if c.HttpEndpointPattern == nil || *c.HttpEndpointPattern == "" {
 		c.HttpEndpointPattern = &DefaultHttpEndpointPattern
+	}
+	if c.InternalRegistryPrefix == nil {
+		c.InternalRegistryPrefix = new(string)
 	}
 
 	return nil
@@ -233,10 +235,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.PublishBuilders != nil {
 		mergedConfig.PublishBuilders = newConfig.PublishBuilders
 	}
-	if newConfig.BuilderPerNamespace != nil {
-		mergedConfig.BuilderPerNamespace = newConfig.BuilderPerNamespace
+	if newConfig.BuilderPerProject != nil {
+		mergedConfig.BuilderPerProject = newConfig.BuilderPerProject
 	}
-	if newConfig.InternalRegistryPrefix != "" {
+	if newConfig.InternalRegistryPrefix != nil {
 		mergedConfig.InternalRegistryPrefix = newConfig.InternalRegistryPrefix
 	}
 
@@ -268,6 +270,10 @@ func Incomplete(ctx context.Context, getter kclient.Reader) (*apiv1.Config, erro
 	}
 
 	config := &apiv1.Config{}
+	if len(cm.Data["config"]) == 0 {
+		return config, nil
+	}
+
 	if err := json.Unmarshal([]byte(cm.Data["config"]), config); err != nil {
 		return nil, err
 	}
@@ -297,6 +303,19 @@ func asConfigMap(existing, cfg *apiv1.Config) (*corev1.ConfigMap, error) {
 		},
 		BinaryData: nil,
 	}, nil
+}
+
+// TestSetGet will do everything that Set does, but instead of persisting the resulting config it will
+// return the merged and completed config.  This is as though you did Set() followed by Get() except that the
+// state in Kubernetes will not actually change.
+func TestSetGet(ctx context.Context, client kclient.Client, cfg *apiv1.Config) (*apiv1.Config, error) {
+	existing, err := Incomplete(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	newConfig := merge(existing, cfg)
+	return newConfig, complete(ctx, newConfig, client)
 }
 
 func Set(ctx context.Context, client kclient.Client, cfg *apiv1.Config) error {
@@ -331,6 +350,6 @@ func Get(ctx context.Context, getter kclient.Reader) (*apiv1.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = complete(cfg, ctx, getter)
+	err = complete(ctx, cfg, getter)
 	return cfg, err
 }

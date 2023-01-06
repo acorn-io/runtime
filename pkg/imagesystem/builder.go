@@ -23,8 +23,8 @@ func GetBuildPushRepoForNamespace(ctx context.Context, c client.Reader, namespac
 	if err != nil {
 		return name.Repository{}, err
 	}
-	if cfg.InternalRegistryPrefix != "" {
-		return name.NewRepository(cfg.InternalRegistryPrefix + namespace)
+	if *cfg.InternalRegistryPrefix != "" {
+		return name.NewRepository(*cfg.InternalRegistryPrefix + namespace)
 	}
 
 	return name.NewRepository(fmt.Sprintf("127.0.0.1:%d/acorn/%s", system.RegistryPort, namespace))
@@ -36,7 +36,7 @@ func GetBuilderDeploymentName(ctx context.Context, c client.Reader, builderName,
 		return "", err
 	}
 	name := system.BuildKitName
-	if *cfg.BuilderPerNamespace {
+	if *cfg.BuilderPerProject {
 		name = name2.SafeConcatName("bld", builderName, builderNamespace, digest.SHA256(builderName, builderNamespace)[:8])
 	}
 	return name, nil

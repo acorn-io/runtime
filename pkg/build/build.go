@@ -48,6 +48,8 @@ func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
 }
 
 func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts *v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+	keychain = NewRemoteKeyChain(messages, keychain)
+
 	appDefinition, err := appdefinition.NewAppDefinition([]byte(opts.Acornfile))
 	if err != nil {
 		return nil, err

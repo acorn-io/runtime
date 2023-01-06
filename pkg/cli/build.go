@@ -6,14 +6,16 @@ import (
 	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/credentials"
 	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/acorn-io/acorn/pkg/streams"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
-func NewBuild(c client.CommandContext) *cobra.Command {
+func NewBuild(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Build{client: c.ClientFactory}, cobra.Command{
 		Use: "build [flags] DIRECTORY",
 		Example: `
@@ -34,7 +36,7 @@ type Build struct {
 	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
 	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
 	Profile  []string `usage:"Profile to assign default values"`
-	client   client.ClientFactory
+	client   ClientFactory
 }
 
 func (s *Build) Run(cmd *cobra.Command, args []string) error {
@@ -42,6 +44,11 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--push must be used with --tag")
 	}
 	c, err := s.client.CreateDefault()
+	if err != nil {
+		return err
+	}
+
+	creds, err := credentials.NewStore(c)
 	if err != nil {
 		return err
 	}
@@ -61,11 +68,12 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	image, err := c.AcornImageBuild(cmd.Context(), s.File, &client.AcornImageBuildOptions{
-		Cwd:       cwd,
-		Args:      params,
-		Platforms: platforms,
-		Profiles:  s.Profile,
-		Streams:   &streams.Current().Output,
+		Credentials: creds.Get,
+		Cwd:         cwd,
+		Platforms:   platforms,
+		Args:        params,
+		Profiles:    s.Profile,
+		Streams:     &streams.Current().Output,
 	})
 	if err != nil {
 		return err
@@ -86,7 +94,17 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 
 	if s.Push {
 		for _, tag := range s.Tag {
-			prog, err := c.ImagePush(cmd.Context(), tag, nil)
+			parsedTag, err := name.NewTag(tag)
+			if err != nil {
+				return err
+			}
+			auth, _, err := creds.Get(cmd.Context(), parsedTag.RegistryStr())
+			if err != nil {
+				return err
+			}
+			prog, err := c.ImagePush(cmd.Context(), tag, &client.ImagePushOptions{
+				Auth: auth,
+			})
 			if err != nil {
 				return err
 			}

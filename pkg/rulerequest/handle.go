@@ -53,7 +53,7 @@ This could be VERY DANGEROUS to the cluster if you do not trust this
 application. If you are unsure say no.`)
 	pterm.Println()
 
-	writer := table.NewWriter(tables.RuleRequests, "", false, "")
+	writer := table.NewWriter(tables.RuleRequests, false, "")
 	for _, request := range requests {
 		writer.Write(request)
 	}

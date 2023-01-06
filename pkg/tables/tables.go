@@ -63,6 +63,12 @@ var (
 	}
 	ContainerConverter = MustConverter(Container)
 
+	CredentialClient = [][]string{
+		{"Server", "ServerAddress"},
+		{"Username", "Username"},
+		{"Local", "{{boolToStar .LocalStorage}}"},
+	}
+
 	Credential = [][]string{
 		{"Server", "ServerAddress"},
 		{"Username", "Username"},
@@ -103,6 +109,12 @@ var (
 		{"Created", "{{ago .CreationTimestamp}}"},
 	}
 	ProjectConverter = MustConverter(Project)
+
+	ProjectClient = [][]string{
+		{"Name", "Name"},
+		{"Default", "{{ boolToStar .Default }}"},
+		{"Description", "Description"},
+	}
 
 	RuleRequests = [][]string{
 		{"Service", "Service"},

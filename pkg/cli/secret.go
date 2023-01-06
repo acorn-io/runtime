@@ -7,16 +7,14 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/strings/slices"
 )
 
-func NewSecret(c client.CommandContext) *cobra.Command {
+func NewSecret(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Secret{client: c.ClientFactory}, cobra.Command{
 		Use:     "secret [flags] [SECRET_NAME...]",
 		Aliases: []string{"secrets", "s"},
@@ -36,7 +34,7 @@ acorn secret`,
 type Secret struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *Secret) Run(cmd *cobra.Command, args []string) error {
@@ -47,7 +45,7 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 
 	apps, _ := client.AppList(cmd.Context())
 
-	out := table.NewWriter(tables.Secret, system.UserNamespace(), a.Quiet, a.Output)
+	out := table.NewWriter(tables.Secret, a.Quiet, a.Output)
 	out.AddFormatFunc("alias", func(obj apiv1.Secret) string {
 		return strings.Join(aliases(&obj, apps), ",")
 	})

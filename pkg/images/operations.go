@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"regexp"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
+	"github.com/google/go-containerregistry/pkg/authn"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -146,10 +148,14 @@ func GetImageReference(ctx context.Context, c client.Reader, namespace, image st
 	return imagename.ParseReference(image)
 }
 
-func GetAuthenticationRemoteOptions(ctx context.Context, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
+func GetAuthenticationRemoteOptionsWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
 	authn, err := pullsecret.Keychain(ctx, client, namespace)
 	if err != nil {
 		return nil, err
+	}
+
+	if localAuth != nil {
+		authn = NewSimpleKeychain(registry, *localAuth, authn)
 	}
 
 	result := []remote.Option{
@@ -158,4 +164,8 @@ func GetAuthenticationRemoteOptions(ctx context.Context, client client.Reader, n
 	}
 
 	return append(result, additionalOpts...), nil
+}
+
+func GetAuthenticationRemoteOptions(ctx context.Context, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
+	return GetAuthenticationRemoteOptionsWithLocalAuth(ctx, nil, nil, client, namespace, additionalOpts...)
 }

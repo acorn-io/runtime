@@ -16,7 +16,7 @@ func TestSecretCreate(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestSecretList(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestSecretGet(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestSecretReveal(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func TestSecretUpdate(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestSecretDelete(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

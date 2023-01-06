@@ -10,7 +10,6 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -61,6 +60,11 @@ func (c *client) ImageDetails(ctx context.Context, imageName string, opts *Image
 }
 
 func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePullOptions) (<-chan ImageProgress, error) {
+	body := &apiv1.ImagePull{}
+	if opts != nil {
+		body.Auth = opts.Auth
+	}
+
 	url := c.RESTClient.Get().
 		Namespace(c.Namespace).
 		Resource("images").
@@ -73,6 +77,10 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 		return nil, err
 	}
 
+	if err := conn.WriteJSON(body); err != nil {
+		return nil, err
+	}
+
 	result := make(chan ImageProgress, 1000)
 	go func() {
 		defer close(result)
@@ -82,7 +90,9 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				break
 			} else if err != nil {
-				logrus.Errorf("error reading websocket: %v", err)
+				result <- ImageProgress{
+					Error: err.Error(),
+				}
 				break
 			}
 
@@ -101,6 +111,11 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 }
 
 func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePushOptions) (<-chan ImageProgress, error) {
+	body := &apiv1.ImagePush{}
+	if opts != nil {
+		body.Auth = opts.Auth
+	}
+
 	image, err := c.ImageGet(ctx, imageName)
 	if err != nil {
 		return nil, err
@@ -118,6 +133,10 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 		return nil, err
 	}
 
+	if err := conn.WriteJSON(body); err != nil {
+		return nil, err
+	}
+
 	result := make(chan ImageProgress)
 	go func() {
 		defer close(result)
@@ -127,7 +146,9 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				break
 			} else if err != nil {
-				logrus.Errorf("error reading websocket: %v", err)
+				result <- ImageProgress{
+					Error: err.Error(),
+				}
 				break
 			}
 

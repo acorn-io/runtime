@@ -23,7 +23,7 @@ acorn install
       --acorn-dns-endpoint string             The URL to access the Acorn DNS service
       --api-server-replicas int               acorn-api deployment replica count
       --auto-upgrade-interval string          For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
-      --builder-per-namespace                 Create a dedicated builder per namespace
+      --builder-per-project                   Create a dedicated builder per project
       --cluster-domain strings                The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int               acorn-controller deployment replica count
       --default-publish-mode string           If no publish mode is set default to this value (default user)
@@ -47,12 +47,13 @@ acorn install
 ### Options inherited from parent commands
 
 ```
-  -A, --all-namespaces      Namespace to work in
-      --context string      Context to use in the kubeconfig file
+  -A, --all-projects        Use all known projects
+      --context string      Context to use in the resolved kubeconfig file
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
-      --kubeconfig string   Location of a kubeconfig file
-      --namespace string    Namespace to work in (default "acorn")
+      --kubeconfig string   Explicitly use kubeconfig file, overriding current project
+      --namespace string    Namespace to work in resolved connection (default "acorn")
+  -j, --project string      Project to work in
 ```
 
 ### SEE ALSO

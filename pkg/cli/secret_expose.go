@@ -4,13 +4,11 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/spf13/cobra"
 )
 
-func NewSecretReveal(c client.CommandContext) *cobra.Command {
+func NewSecretReveal(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Reveal{client: c.ClientFactory}, cobra.Command{
 		Use:     "reveal [flags] [SECRET_NAME...]",
 		Aliases: []string{"secrets", "s"},
@@ -27,7 +25,7 @@ acorn secret`,
 type Reveal struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 type revealEntry struct {
@@ -48,7 +46,7 @@ func (a *Reveal) Run(cmd *cobra.Command, args []string) error {
 		{"TYPE", "Type"},
 		{"KEY", "Key"},
 		{"VALUE", "Value"},
-	}, system.UserNamespace(), a.Quiet, a.Output)
+	}, a.Quiet, a.Output)
 
 	var matchedSecrets []apiv1.Secret
 

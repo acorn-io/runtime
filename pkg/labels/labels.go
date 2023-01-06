@@ -45,6 +45,7 @@ const (
 	AcornCertNotValidBefore      = Prefix + "cert-not-valid-before"
 	AcornCertNotValidAfter       = Prefix + "cert-not-valid-after"
 	AcornLetsEncryptSettingsHash = Prefix + "le-hash"
+	AcornProject                 = Prefix + "project"
 )
 
 func Merge(base, overlay map[string]string) map[string]string {

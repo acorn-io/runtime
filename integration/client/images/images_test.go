@@ -21,7 +21,7 @@ func TestImageListGetDelete(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestImageTag(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestImagePush(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +201,7 @@ func TestImagePull(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,7 +227,7 @@ func TestImagePull(t *testing.T) {
 
 	ns = helper.TempNamespace(t, kclient)
 
-	c, err = client.New(restConfig, ns.Name)
+	c, err = client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +264,7 @@ func TestImageDetails(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +290,7 @@ func TestImageDetails(t *testing.T) {
 
 	ns = helper.TempNamespace(t, kclient)
 
-	c, err = client.New(restConfig, ns.Name)
+	c, err = client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -335,7 +335,7 @@ func TestImageDeleteTwoTags(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -384,7 +384,7 @@ func TestImageBadTag(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

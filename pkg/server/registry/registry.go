@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/acorn/pkg/server/registry/images"
 	"github.com/acorn-io/acorn/pkg/server/registry/info"
+	"github.com/acorn-io/acorn/pkg/server/registry/projects"
 	"github.com/acorn-io/acorn/pkg/server/registry/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/volumes"
 	"github.com/acorn-io/mink/pkg/serializer"
@@ -73,6 +74,7 @@ func APIStores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]
 		"images/push":            images.NewImagePush(c, transport),
 		"images/pull":            images.NewImagePull(c, clientFactory, transport),
 		"images/details":         images.NewImageDetails(c, transport),
+		"projects":               projects.NewStorage(c),
 		"volumes":                volumesStorage,
 		"containerreplicas":      containersStorage,
 		"containerreplicas/exec": containerExec,

@@ -19,7 +19,7 @@ func TestUpdatePull(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

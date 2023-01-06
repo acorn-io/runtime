@@ -85,8 +85,8 @@ github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693 h1:5uxUFWpREhhKllLkan
 github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693/go.mod h1:uiNpPSAYWhEBfbGWKpN185+EP+hZr2M/U8Ckr/Jo3Kk=
 github.com/acorn-io/apiserver v0.25.2-ot-1 h1:91Q7+Jd9BeYZhzt0C+38w2sMn8aHFOxfTdlE6MCH9UI=
 github.com/acorn-io/apiserver v0.25.2-ot-1/go.mod h1:8cynBL5SR6CIKypk9nWtZXHzEiJhLVQxeMVZ5CGzkFo=
-github.com/acorn-io/baaah v0.0.0-20221216234428-1fcd10c323bc h1:dCMJAS1ZYZhzEWQ9wijhuU3yCLOM45E0cqARW4pEyYk=
-github.com/acorn-io/baaah v0.0.0-20221216234428-1fcd10c323bc/go.mod h1:HVIZ8vDXjY2y045giWUAcoX1fIAkmqABQgKgdgo3/og=
+github.com/acorn-io/baaah v0.0.0-20230111042750-883decc2ab02 h1:3Pn6tv5FZiKLsVdJ4b5/Yw8urAS6dT7ZsB5Sto83hOI=
+github.com/acorn-io/baaah v0.0.0-20230111042750-883decc2ab02/go.mod h1:HVIZ8vDXjY2y045giWUAcoX1fIAkmqABQgKgdgo3/og=
 github.com/acorn-io/component-base v0.25.2-ot-1 h1:xinqJUNbpW2/zsvm8mDv6Q7riLhvXup9x7Kz9eIPM1M=
 github.com/acorn-io/component-base v0.25.2-ot-1/go.mod h1:/5qYr5BXGNPs+cRd6+WL1NfOYtzOstJlm1CMK06cm7s=
 github.com/acorn-io/etcd/server/v3 v3.5.4-ot-1 h1:sQMBy/UImb1923toh9U0oIxlpO7crLrD7eKE/orB/pQ=
@@ -96,6 +96,8 @@ github.com/acorn-io/mink v0.0.0-20221216234206-2755a8fb3332 h1:2ZeRsum+wwvO6bgJH
 github.com/acorn-io/mink v0.0.0-20221216234206-2755a8fb3332/go.mod h1:vhGespZm+y5YRTQ9L/zDFrOuzIbouVbA8sbykaPbzhE=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
+github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
+github.com/adrg/xdg v0.4.0/go.mod h1:N6ag73EX4wyxeaoeHctc1mas01KZgsj5tYiAIwqJE/E=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=
 github.com/agnivade/levenshtein v1.1.1/go.mod h1:veldBMzWxcCG2ZvUTKD2kJNRdCk5hVbJomOvKkmgYbo=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBbw+8quDsfcvFjOpI5iCf4p/cqCs=
@@ -513,6 +515,8 @@ github.com/otiai10/mint v1.3.3 h1:7JgpsBaN0uMkyju4tbYHu0mnM55hNKVYLsXmwr15NQI=
 github.com/otiai10/mint v1.3.3/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
 github.com/pelletier/go-buffruneio v0.2.0/go.mod h1:JkE26KsDizTr40EUHkXVtNPvgGtbSNq5BcowyYOWdKo=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
+github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 h1:KoWmjvw+nsYOo29YJK9vDA65RGE3NrOnUtO7a+RF9HU=
+github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8/go.mod h1:HKlIX3XHQyzLZPlr7++PzdhaXEj94dEiJgZDTsxEqUI=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
@@ -850,6 +854,7 @@ golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210510120138-977fb7262007/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20210616045830-e2b7044e8c71/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210616094352-59db8d763f22/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/pterm/pterm"
 
 	"github.com/acorn-io/acorn/pkg/client"
@@ -92,7 +93,7 @@ func removeContainer(arg string, c client.Client, cmd *cobra.Command, force bool
 		for _, con := range conToDel {
 			pterm.FgRed.Println(con)
 		}
-		err := c.PromptUser("containers")
+		err := prompt.Remove("containers")
 		if err != nil {
 			return err
 		}
@@ -125,7 +126,7 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) e
 		for _, vol := range volToDel {
 			pterm.FgRed.Println(vol)
 		}
-		err = c.PromptUser("volumes")
+		err = prompt.Remove("volumes")
 		if err != nil {
 			return err
 		}
@@ -152,7 +153,7 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) e
 func removeApp(arg string, c client.Client, cmd *cobra.Command, force bool) error {
 	if !force {
 		pterm.FgRed.Println(arg)
-		err := c.PromptUser("app")
+		err := prompt.Remove("app")
 		if err != nil {
 			return err
 		}
@@ -180,7 +181,7 @@ func removeSecret(arg string, c client.Client, cmd *cobra.Command, force bool) e
 		for _, sec := range secToDel {
 			pterm.FgRed.Println(sec)
 		}
-		err = c.PromptUser("secrets")
+		err = prompt.Remove("secrets")
 		if err != nil {
 			return err
 		}

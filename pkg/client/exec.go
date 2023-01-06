@@ -6,6 +6,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -21,6 +22,7 @@ func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerRe
 			DebugImage: opts.DebugImage,
 		}, scheme.ParameterCodec)
 
+	logrus.Debugf("Exec URL: %s", req.URL().String())
 	conn, err := c.Dialer.DialContext(ctx, req.URL().String(), nil)
 	if err != nil {
 		return nil, err

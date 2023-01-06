@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/client"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/deployargs"
@@ -10,7 +9,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func NewRender(c client.CommandContext) *cobra.Command {
+func NewRender(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Render{client: c.ClientFactory}, cobra.Command{
 		Use:          "render [flags] DIRECTORY [acorn args]",
 		SilenceUsage: true,
@@ -25,7 +24,7 @@ type Render struct {
 	File    string   `short:"f" usage:"Name of the dev file" default:"DIRECTORY/Acornfile"`
 	Profile []string `usage:"Profile to assign default values"`
 	Output  string   `usage:"Output in JSON or YAML" default:"json" short:"o"`
-	client  client.ClientFactory
+	client  ClientFactory
 }
 
 func (s *Render) Run(cmd *cobra.Command, args []string) error {

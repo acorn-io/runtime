@@ -64,11 +64,6 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 		return nil, err
 	}
 
-	_, process, err := i.ImagePush(ctx, image, tagName)
-	if err != nil {
-		return nil, err
-	}
-
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
 		if err != nil {
@@ -76,6 +71,20 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 			return
 		}
 		defer conn.Close()
+
+		k8schannel.AddCloseHandler(conn)
+
+		args := &apiv1.ImagePush{}
+		if err := conn.ReadJSON(args); err != nil {
+			_ = conn.CloseHandler()(websocket.CloseInternalServerErr, err.Error())
+			return
+		}
+
+		_, process, err := i.ImagePush(ctx, image, tagName, args.Auth)
+		if err != nil {
+			_ = conn.CloseHandler()(websocket.CloseInternalServerErr, err.Error())
+			return
+		}
 
 		for update := range process {
 			p := ImageProgress{
@@ -113,7 +122,7 @@ type ImageProgress struct {
 	Error    string `json:"error,omitempty"`
 }
 
-func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string) (*apiv1.Image, <-chan ggcrv1.Update, error) {
+func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ggcrv1.Update, error) {
 	pushTag, err := name.NewTag(tagName, name.WithDefaultRegistry(DefaultRegistry))
 	if err != nil {
 		return nil, nil, err
@@ -137,7 +146,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		return nil, nil, err
 	}
 
-	opts, err := images.GetAuthenticationRemoteOptions(ctx, i.client, image.Namespace, i.transportOpt)
+	opts, err := images.GetAuthenticationRemoteOptionsWithLocalAuth(ctx, pushTag, auth, i.client, image.Namespace, i.transportOpt)
 	if err != nil {
 		return nil, nil, err
 	}

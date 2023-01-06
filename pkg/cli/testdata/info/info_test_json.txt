@@ -2,6 +2,11 @@
     "client": {
         "version": {
             "tag": "v0.0.0-dev"
+        },
+        "cli": {
+            "hubServers": [
+                "acorn.io"
+            ]
         }
     },
     "server": {
@@ -26,8 +31,8 @@
             "autoUpgradeInterval": null,
             "recordBuilds": null,
             "publishBuilders": null,
-            "builderPerNamespace": null,
-            "internalRegistryPrefix": ""
+            "builderPerProject": null,
+            "internalRegistryPrefix": null
         },
         "userConfig": {
             "ingressClassName": null,
@@ -45,10 +50,10 @@
             "autoUpgradeInterval": null,
             "recordBuilds": null,
             "publishBuilders": null,
-            "builderPerNamespace": null,
-            "internalRegistryPrefix": ""
+            "builderPerProject": null,
+            "internalRegistryPrefix": null
         }
     },
-    "namespace": {}
+    "project": {}
 }
 

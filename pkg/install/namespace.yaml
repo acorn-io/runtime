@@ -14,3 +14,5 @@ kind: Namespace
 apiVersion: v1
 metadata:
   name: acorn
+  labels:
+    acorn.io/project: "true"

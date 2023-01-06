@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/mink/pkg/channel"
 	"github.com/gorilla/websocket"
@@ -25,13 +26,18 @@ type Message struct {
 	//         StatusSessionID - Status message
 	//         AppImage - Build done, result
 	//         Error - Build failed, error
+	//         RegistryServerAddress - Server requesting a registry credential, or Client responding
 
-	FileSessionID   string       `json:"fileSessionID,omitempty"`
-	StatusSessionID string       `json:"statusSessionID,omitempty"`
-	AppImage        *v1.AppImage `json:"appImage,omitempty"`
-	Error           string       `json:"error,omitempty"`
+	FileSessionID         string       `json:"fileSessionID,omitempty"`
+	StatusSessionID       string       `json:"statusSessionID,omitempty"`
+	AppImage              *v1.AppImage `json:"appImage,omitempty"`
+	Error                 string       `json:"error,omitempty"`
+	RegistryServerAddress string       `json:"registryServerAddress,omitempty"`
+
+	// The below fields are additional metadata for each one of the above messages types
 
 	FileSessionClose bool                `json:"fileSessionClose,omitempty"`
+	RegistryAuth     *apiv1.RegistryAuth `json:"registryAuth,omitempty"`
 	SyncOptions      *SyncOptions        `json:"syncOptions,omitempty"`
 	Packet           *types.Packet       `json:"packet,omitempty"`
 	Status           *client.SolveStatus `json:"status,omitempty"`

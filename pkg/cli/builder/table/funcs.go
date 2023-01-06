@@ -45,14 +45,6 @@ func Name(obj any) (string, error) {
 	return "", fmt.Errorf("invalid obj %T", obj)
 }
 
-func NamespaceName(obj any) (string, error) {
-	ro, ok := toKObject(obj)
-	if ok {
-		return ro.GetNamespace() + "/" + ro.GetName(), nil
-	}
-	return "", fmt.Errorf("invalid obj %T", obj)
-}
-
 func Noop(obj any) string {
 	return ""
 }

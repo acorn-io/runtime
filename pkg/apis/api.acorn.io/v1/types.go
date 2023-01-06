@@ -104,12 +104,19 @@ type Image struct {
 
 type ImagePush struct {
 	metav1.TypeMeta `json:",inline"`
+	Auth            *RegistryAuth `json:"auth,omitempty"`
+}
+
+type RegistryAuth struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ImagePull struct {
 	metav1.TypeMeta `json:",inline"`
+	Auth            *RegistryAuth `json:"auth,omitempty"`
 }
 
 type LogMessage struct {
@@ -323,8 +330,8 @@ type Config struct {
 	AutoUpgradeInterval          *string        `json:"autoUpgradeInterval" name:"auto-upgrade-interval" usage:"For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)"`
 	RecordBuilds                 *bool          `json:"recordBuilds" name:"record-builds" usage:"Keep a record of each acorn build that happens"`
 	PublishBuilders              *bool          `json:"publishBuilders" name:"publish-builders" usage:"Publish the builders through ingress to so build traffic does not traverse the api-server"`
-	BuilderPerNamespace          *bool          `json:"builderPerNamespace" name:"builder-per-namespace" usage:"Create a dedicated builder per namespace"`
-	InternalRegistryPrefix       string         `json:"internalRegistryPrefix" name:"internal-registry-prefix" usage:"The image prefix to use when pushing internal images (example ghcr.io/my-org/)"`
+	BuilderPerProject            *bool          `json:"builderPerProject" name:"builder-per-project" usage:"Create a dedicated builder per project"`
+	InternalRegistryPrefix       *string        `json:"internalRegistryPrefix" name:"internal-registry-prefix" usage:"The image prefix to use when pushing internal images (example ghcr.io/my-org/)"`
 }
 
 type EncryptionKey struct {
@@ -338,10 +345,6 @@ type InfoList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Info `json:"items"`
-}
-
-func (c *Config) GetLetsEncryptTOSAgree() bool {
-	return c.LetsEncryptTOSAgree != nil && *c.LetsEncryptTOSAgree
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -4,11 +4,10 @@ import (
 	"fmt"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewContainerDelete(c client.CommandContext) *cobra.Command {
+func NewContainerDelete(c CommandContext) *cobra.Command {
 	cd := &ContainerDelete{client: c.ClientFactory}
 	cmd := cli.Command(cd, cobra.Command{
 		Use: "kill [CONTAINER_NAME...]",
@@ -23,7 +22,7 @@ acorn container kill app-name.containername-generated-hash`,
 }
 
 type ContainerDelete struct {
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *ContainerDelete) Run(cmd *cobra.Command, args []string) error {

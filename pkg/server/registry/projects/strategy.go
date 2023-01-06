@@ -1,4 +1,4 @@
-package secrets
+package projects
 
 import (
 	"context"
@@ -61,22 +61,27 @@ func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
 		}
 
 		for _, policyRule := range rule.Rules {
-			if slices.Contains(policyRule.APIGroups, "") &&
-				slices.Contains(policyRule.Verbs, "list") &&
-				slices.Contains(policyRule.Resources, "namespaces") &&
+			if matches(policyRule.APIGroups, "") &&
+				matches(policyRule.Verbs, "list") &&
+				matches(policyRule.Resources, "namespaces") &&
 				len(policyRule.ResourceNames) == 0 {
 				return nil, true, nil
 			}
 
-			if slices.Contains(policyRule.APIGroups, "") &&
-				slices.Contains(policyRule.Verbs, "get") &&
-				slices.Contains(policyRule.Resources, "namespaces") {
+			if matches(policyRule.APIGroups, "") &&
+				matches(policyRule.Verbs, "get") &&
+				matches(policyRule.Resources, "namespaces") {
 				result.Insert(policyRule.ResourceNames...)
 			}
 		}
 	}
 
 	return result, false, nil
+}
+
+func matches(allowed []string, requested string) bool {
+	return slices.Contains(allowed, "*") ||
+		slices.Contains(allowed, requested)
 }
 
 func (s Strategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
