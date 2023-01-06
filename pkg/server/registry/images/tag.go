@@ -28,7 +28,7 @@ type TagStrategy struct {
 func (t *TagStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
 	opts := obj.(*apiv1.ImageTag)
 
-	image, err := t.ImageTag(ctx, obj.GetNamespace(), obj.GetName(), opts.Tags)
+	image, err := t.ImageTag(ctx, obj.GetNamespace(), obj.GetName(), opts.Tag)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (t *TagStrategy) Create(ctx context.Context, obj types.Object) (types.Objec
 			Name:      image.Name,
 			Namespace: image.Namespace,
 		},
-		Tags: image.Tags,
+		Tag: opts.Tag,
 	}, nil
 }
 
@@ -45,7 +45,7 @@ func (t *TagStrategy) New() types.Object {
 	return &apiv1.ImageTag{}
 }
 
-func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string, tags []string) (*apiv1.Image, error) {
+func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string, tagToAdd string) (*apiv1.Image, error) {
 	image := &apiv1.Image{}
 	err := t.client.Get(ctx, router.Key(namespace, imageName), image)
 	if err != nil {
@@ -59,24 +59,39 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	if err != nil {
 		return nil, err
 	}
-	set := sets.NewString()
-	for _, tag := range append(image.Tags, normalizeTags(tags)...) {
-		set.Insert(tag)
+	res, err := normalizeTags(image.Tags)
+	if err != nil {
+		return nil, err
 	}
+	set := sets.NewString(res...)
 
-	duplicateTag := make(map[string]bool)
-	for _, tag := range normalizeTags(tags) {
-		duplicateTag[tag] = true
+	imageParsedTag, err := name.NewTag(tagToAdd, name.WithDefaultRegistry(""))
+	if err != nil {
+		return nil, err
 	}
+	set.Insert(imageParsedTag.Name())
+
+	hasChanged := false
 	for _, img := range imageList.Items {
-		for i, tag := range normalizeTags(img.Tags) {
-			if duplicateTag[tag] && img.Name != image.Name {
-				img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
-				err = t.client.Update(ctx, &img)
-				if err != nil {
-					return image, err
-				}
+		res, err = normalizeTags(img.Tags)
+		if err != nil {
+			return nil, err
+		}
+		for i, tag := range res {
+			if img.Name == image.Name {
+				continue
 			}
+			if set.Has(tag) {
+				img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
+				hasChanged = true
+			}
+		}
+		if hasChanged {
+			err = t.client.Update(ctx, &img)
+			if err != nil {
+				return nil, err
+			}
+			hasChanged = false
 		}
 	}
 
@@ -84,14 +99,14 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	return image, t.client.Update(ctx, image)
 }
 
-func normalizeTags(tags []string) []string {
+func normalizeTags(tags []string) ([]string, error) {
 	var result []string
 	for _, tag := range tags {
 		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		result = append(result, imageParsedTag.Name())
 	}
-	return result
+	return result, nil
 }

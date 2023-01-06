@@ -26,7 +26,7 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 		Name(image.Name).
 		SubResource("tag").
 		Body(&apiv1.ImageTag{
-			Tags: []string{tag},
+			Tag: tag,
 		}).Do(ctx).Into(tagResult)
 	return err
 }
