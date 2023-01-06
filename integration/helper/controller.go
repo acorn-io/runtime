@@ -2,6 +2,8 @@ package helper
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net"
 	"net/http/httptest"
 	"os"
@@ -22,8 +24,10 @@ import (
 	"github.com/google/go-containerregistry/pkg/registry"
 	uuid2 "github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -193,8 +197,15 @@ func StartRegistry(t *testing.T) (string, func()) {
 	t.Helper()
 
 	os.Setenv("ACORN_TEST_ALLOW_LOCALHOST_REGISTRY", "true")
-	srv := httptest.NewServer(registry.New())
-	return srv.Listener.Addr().String(), srv.Close
+
+	if os.Getenv("TEST_ACORN_API_SERVER") != "external" {
+		srv := httptest.NewServer(registry.New())
+		return srv.Listener.Addr().String(), srv.Close
+	}
+
+	ensureNamespace(t)
+
+	return startTestRegistry(t, system.Namespace)
 }
 
 func StartController(t *testing.T) {
@@ -262,4 +273,78 @@ func lock(ctx context.Context, client kubernetes.Interface, cb func(ctx context.
 		ReleaseOnCancel: true,
 		Name:            "",
 	})
+}
+
+func int32Ptr(i int32) *int32 { return &i }
+func startTestRegistry(t *testing.T, namespace string) (string, func()) {
+	t.Helper()
+
+	restConfig := StartAPI(t)
+	k8sclient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	depSpec := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-registry",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: int32Ptr(1),
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "test-registry"}},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"app": "test-registry"}},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:  "test-registry",
+						Image: "registry:2",
+						Ports: []corev1.ContainerPort{{
+							Name:          "http",
+							Protocol:      corev1.ProtocolTCP,
+							ContainerPort: 5000,
+						}}}}}}}}
+
+	dep, err := k8sclient.AppsV1().Deployments(namespace).Create(context.Background(), depSpec, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the registry to become available before progressing
+	var retries int
+	for *dep.Spec.Replicas != dep.Status.ReadyReplicas {
+		dep, err = k8sclient.AppsV1().Deployments(namespace).Get(context.Background(), dep.GetName(), metav1.GetOptions{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if retries > 6 {
+			t.Fatal(errors.New("test registry failed to come up after 6 retries"))
+		}
+		time.Sleep(5 * time.Second)
+		retries++
+	}
+
+	svcSpec := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-registry",
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{"app": "test-registry"},
+			Type:     "ClusterIP",
+			Ports: []corev1.ServicePort{{
+				Port: 5000,
+				TargetPort: intstr.IntOrString{
+					Type:   intstr.Int,
+					IntVal: 5000,
+				}}}}}
+
+	svc, err := k8sclient.CoreV1().Services(namespace).Create(context.Background(), svcSpec, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return fmt.Sprintf("%v.%v.svc.cluster.local:5000", svc.GetName(), namespace), func() {
+		_ = k8sclient.CoreV1().Services(namespace).Delete(context.Background(), svc.GetName(), metav1.DeleteOptions{})
+		_ = k8sclient.AppsV1().Deployments(namespace).Delete(context.Background(), dep.GetName(), metav1.DeleteOptions{})
+	}
 }
