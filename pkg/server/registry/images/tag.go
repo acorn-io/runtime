@@ -4,6 +4,7 @@ import (
 	"context"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
@@ -45,14 +46,14 @@ func (t *TagStrategy) New() types.Object {
 	return &apiv1.ImageTag{}
 }
 
-func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string, tagToAdd string) (*apiv1.Image, error) {
-	image := &apiv1.Image{}
+func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string, tagToAdd string) (*v1.ImageInstance, error) {
+	image := &v1.ImageInstance{}
 	err := t.client.Get(ctx, router.Key(namespace, imageName), image)
 	if err != nil {
 		return nil, err
 	}
 
-	imageList := &apiv1.ImageList{}
+	imageList := &v1.ImageInstanceList{}
 	err = t.client.List(ctx, imageList, &client.ListOptions{
 		Namespace: namespace,
 	})
