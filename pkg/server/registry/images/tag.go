@@ -73,14 +73,14 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 
 	hasChanged := false
 	for _, img := range imageList.Items {
+		if img.Name == image.Name {
+			continue
+		}
 		res, err = normalizeTags(img.Tags)
 		if err != nil {
 			return nil, err
 		}
 		for i, tag := range res {
-			if img.Name == image.Name {
-				continue
-			}
 			if set.Has(tag) {
 				img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
 				hasChanged = true
