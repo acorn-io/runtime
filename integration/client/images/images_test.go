@@ -375,3 +375,38 @@ func TestImageDeleteTwoTags(t *testing.T) {
 	_, err = c.ImageGet(ctx, image.Name)
 	assert.True(t, apierrors.IsNotFound(err))
 }
+
+func TestImageBadTag(t *testing.T) {
+	helper.StartController(t)
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	c, err := client.New(restConfig, ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imageID := client2.NewImage(t, ns.Name)
+	images, err := c.ImageList(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, images, 1)
+
+	image := images[0]
+
+	assert.Equal(t, imageID, image.Name)
+	assert.False(t, strings.HasPrefix(imageID, "sha256:"))
+	assert.Equal(t, "sha256:"+image.Name, image.Digest)
+
+	err = c.ImageTag(ctx, image.Name, "foo:a@badtag")
+	assert.Equal(t, "tag can only contain the characters `abcdefghijklmnopqrstuvwxyz0123456789_-.ABCDEFGHIJKLMNOPQRSTUVWXYZ`: a@badtag", err.Error())
+
+	err = c.ImageTag(ctx, image.Name, "foo@@:badtag")
+	assert.Equal(t, "repository can only contain the characters `abcdefghijklmnopqrstuvwxyz0123456789_-./`: foo@@", err.Error())
+
+}
