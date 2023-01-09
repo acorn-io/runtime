@@ -56,11 +56,20 @@ jobs:
 
       - name: report failure to slack
         if: failure()
-        id: slack
+        id: slack-failure
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: '${{ secrets.SLACK_BOT_CHANNEL }}'
-          slack-message: "Nightly EKS test failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          channel-id: '${{ secrets.SLACK_BOT_FAILURE_CHANNEL }}'
+          slack-message: "❌ Nightly EKS test failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+       - name: report success to slack
+        id: slack-success
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: '${{ secrets.SLACK_BOT_SUCCESS_CHANNEL }}'
+          slack-message: " ✅ Nightly EKS test passed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
           SLACK_BOT_TOKEN: '${{ secrets.SLACK_BOT_TOKEN }}'
 
