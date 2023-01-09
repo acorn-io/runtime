@@ -47,7 +47,10 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 }
 
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container) (kclient.Object, error) {
-	containers, initContainers := toContainers(appInstance, tag, name, container)
+	containers, initContainers, err := toContainers(req, appInstance, tag, name, container)
+	if err != nil {
+		return nil, err
+	}
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
 	if err != nil {

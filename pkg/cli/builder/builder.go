@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unsafe"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/rancher/wrangler/pkg/signals"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -80,15 +81,16 @@ func Main(cmd *cobra.Command) {
 
 func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	var (
-		envs      []func()
-		arrays    = map[string]reflect.Value{}
-		slices    = map[string]reflect.Value{}
-		maps      = map[string]reflect.Value{}
-		optString = map[string]reflect.Value{}
-		optBool   = map[string]reflect.Value{}
-		optInt    = map[string]reflect.Value{}
-		ptrValue  = reflect.ValueOf(obj)
-		objValue  = ptrValue.Elem()
+		envs       []func()
+		arrays     = map[string]reflect.Value{}
+		slices     = map[string]reflect.Value{}
+		maps       = map[string]reflect.Value{}
+		quantities = map[string]reflect.Value{}
+		optString  = map[string]reflect.Value{}
+		optBool    = map[string]reflect.Value{}
+		optInt     = map[string]reflect.Value{}
+		ptrValue   = reflect.ValueOf(obj)
+		objValue   = ptrValue.Elem()
 	)
 
 	c := cmd
@@ -147,6 +149,15 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 			case reflect.Int:
 				optInt[name] = v
 				flags.IntP(name, alias, defInt, usage)
+			case reflect.Int64:
+				// In the case that a quantity tag is found and set to true, we want to create a string flag
+				// for it that will get parsed into an *int64. See assignQuantities().
+				if fieldType.Tag.Get("quantity") == "true" {
+					quantities[name] = v
+					flags.StringP(name, alias, defValue, usage)
+				} else {
+					flags.Int64P(name, alias, int64(defInt), usage)
+				}
 			case reflect.String:
 				optString[name] = v
 				flags.StringP(name, alias, defValue, usage)
@@ -180,9 +191,9 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	}
 
 	c.RunE = obj.Run
-	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, optInt, optBool, optString, envs)
-	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, optInt, optBool, optString, envs)
-	c.RunE = bind(c.RunE, arrays, slices, maps, optInt, optBool, optString, envs)
+	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, optInt, optBool, optString, quantities, envs)
+	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, optInt, optBool, optString, quantities, envs)
+	c.RunE = bind(c.RunE, arrays, slices, maps, optInt, optBool, optString, quantities, envs)
 
 	cust, ok := obj.(customizer)
 	if ok {
@@ -203,6 +214,32 @@ func assignOptBool(app *cobra.Command, maps map[string]reflect.Value) error {
 			return err
 		}
 		v.Set(reflect.ValueOf(&i))
+	}
+	return nil
+}
+
+func assignQuantities(app *cobra.Command, maps map[string]reflect.Value) error {
+	for k, v := range maps {
+		k = contextKey(k)
+
+		i, err := app.Flags().GetString(k)
+		if err != nil {
+			return err
+		}
+
+		if i == "" {
+			i = "0"
+			if defValue := app.Flags().Lookup(k).DefValue; defValue != "" {
+				i = defValue
+			}
+		}
+
+		quantity, err := v1.ParseQuantityString(i)
+		if err != nil {
+			return err
+		}
+
+		v.Set(reflect.ValueOf(&quantity))
 	}
 	return nil
 }
@@ -326,6 +363,7 @@ func bind(next func(*cobra.Command, []string) error,
 	optInt map[string]reflect.Value,
 	optBool map[string]reflect.Value,
 	optString map[string]reflect.Value,
+	quantites map[string]reflect.Value,
 	envs []func()) func(*cobra.Command, []string) error {
 	if next == nil {
 		return nil
@@ -350,6 +388,9 @@ func bind(next func(*cobra.Command, []string) error,
 			return err
 		}
 		if err := assignOptString(cmd, optString); err != nil {
+			return err
+		}
+		if err := assignQuantities(cmd, quantites); err != nil {
 			return err
 		}
 

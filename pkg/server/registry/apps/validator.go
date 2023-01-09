@@ -10,6 +10,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
+	apiv1config "github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/merr"
@@ -53,6 +54,24 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 				return
 			}
+		}
+
+		workloadsFromImage, err := s.getWorkloads(ctx, image, params)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			return
+		}
+
+		apiv1cfg, err := apiv1config.Get(ctx, s.client)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("config"), params.Spec.Image, err.Error()))
+			return
+		}
+
+		errs := checkMemory(params.Spec.Memory, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
+		if len(errs) != 0 {
+			result = append(result, errs...)
+			return
 		}
 
 		permsFromImage, err := s.getPermissions(ctx, image, params)
@@ -278,6 +297,28 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 	return merr.NewErrors(errs...)
 }
 
+func checkMemory(memory v1.Memory, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
+	validationErrors := []*field.Error{}
+	for workload, container := range workloads {
+		quantity, err := v1.ValidateMemory(
+			memory, workload, container, specMemDefault, specMemMaximum)
+
+		// Evaluate what caused the error if one exists
+		if err != nil {
+			path := field.NewPath("unknown")
+			if errors.Is(err, v1.ErrInvalidAcornMemory) {
+				path = field.NewPath("spec", "image")
+			} else if errors.Is(err, v1.ErrInvalidSetMemory) {
+				path = field.NewPath("spec", "memory", workload)
+			} else if errors.Is(err, v1.ErrInvalidDefaultMemory) {
+				path = field.NewPath("config", "workloadMemoryDefault")
+			}
+			validationErrors = append(validationErrors, field.Invalid(path, quantity.String(), err.Error()))
+		}
+	}
+	return validationErrors
+}
+
 func (s *Validator) getPermissions(ctx context.Context, image string, app *apiv1.App) (result []v1.Permissions, _ error) {
 	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
 		&client.ImageDetailsOptions{
@@ -294,6 +335,34 @@ func (s *Validator) getPermissions(ctx context.Context, image string, app *apiv1
 
 	result = append(result, buildPermissionsFrom(details.AppSpec.Containers)...)
 	result = append(result, buildPermissionsFrom(details.AppSpec.Jobs)...)
+
+	return result, nil
+}
+
+func (s *Validator) getWorkloads(ctx context.Context, image string, app *apiv1.App) (map[string]v1.Container, error) {
+	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
+		&client.ImageDetailsOptions{
+			Profiles:   app.Spec.Profiles,
+			DeployArgs: app.Spec.DeployArgs})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if details.ParseError != "" {
+		return nil, errors.New(details.ParseError)
+	}
+
+	result := make(map[string]v1.Container, len(details.AppSpec.Containers)+len(details.AppSpec.Jobs))
+	for workload, container := range details.AppSpec.Containers {
+		result[workload] = container
+		for sidecarWorkload, sidecarContainer := range container.Sidecars {
+			result[sidecarWorkload] = sidecarContainer
+		}
+	}
+	for workload, container := range details.AppSpec.Jobs {
+		result[workload] = container
+	}
 
 	return result, nil
 }

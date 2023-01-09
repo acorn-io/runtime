@@ -193,7 +193,7 @@ func hasContextDir(container v1.Container) bool {
 	return false
 }
 
-func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container) ([]corev1.Container, []corev1.Container) {
+func toContainers(req router.Request, app *v1.AppInstance, tag name.Reference, name string, container v1.Container) ([]corev1.Container, []corev1.Container, error) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
@@ -214,9 +214,18 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		})
 	}
 
-	containers = append(containers, toContainer(app, tag, name, name, container))
+	newContainer, err := toContainer(req, app, tag, name, name, container)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	containers = append(containers, newContainer)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		newContainer := toContainer(app, tag, name, entry.Key, entry.Value)
+		newContainer, err = toContainer(req, app, tag, name, entry.Key, entry.Value)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		if entry.Value.Init {
 			initContainers = append(initContainers, newContainer)
 		} else {
@@ -224,7 +233,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		}
 	}
 
-	return containers, initContainers
+	return containers, initContainers, nil
 }
 
 func pathHash(parts ...string) string {
@@ -408,8 +417,8 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 	return nil
 }
 
-func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
-	return corev1.Container{
+func toContainer(req router.Request, app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) (corev1.Container, error) {
+	containerObject := corev1.Container{
 		Name:           containerName,
 		Image:          images.ResolveTag(tag, container.Image),
 		Command:        container.Entrypoint,
@@ -425,6 +434,26 @@ func toContainer(app *v1.AppInstance, tag name.Reference, deploymentName, contai
 		StartupProbe:   toProbe(container, v1.StartupProbeType),
 		ReadinessProbe: toProbe(container, v1.ReadinessProbeType),
 	}
+
+	resources, err := toResources(req, app, container, containerName)
+	if err != nil {
+		return corev1.Container{}, err
+	}
+
+	if resources != nil {
+		containerObject.Resources = *resources
+	}
+
+	return containerObject, err
+}
+
+func toResources(req router.Request, app *v1.AppInstance, container v1.Container, containerName string) (*corev1.ResourceRequirements, error) {
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	return v1.MemoryToRequirements(app.Spec.Memory, containerName, container, cfg.WorkloadMemoryDefault, cfg.WorkloadMemoryMaximum)
 }
 
 func containerAnnotations(appInstance *v1.AppInstance, container v1.Container, name string) map[string]string {
@@ -586,7 +615,10 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		stateful = isStateful(appInstance, container)
 	)
 
-	containers, initContainers := toContainers(appInstance, tag, name, container)
+	containers, initContainers, err := toContainers(req, appInstance, tag, name, container)
+	if err != nil {
+		return nil, err
+	}
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
 	if err != nil {

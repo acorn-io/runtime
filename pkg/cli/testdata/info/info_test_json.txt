@@ -33,7 +33,9 @@
             "publishBuilders": null,
             "builderPerProject": null,
             "internalRegistryPrefix": null,
-            "ignoreUserLabelsAndAnnotations": null
+            "ignoreUserLabelsAndAnnotations": null,
+            "workloadMemoryDefault": null,
+            "workloadMemoryMaximum": null
         },
         "userConfig": {
             "ingressClassName": null,
@@ -53,7 +55,9 @@
             "publishBuilders": null,
             "builderPerProject": null,
             "internalRegistryPrefix": null,
-            "ignoreUserLabelsAndAnnotations": null
+            "ignoreUserLabelsAndAnnotations": null,
+            "workloadMemoryDefault": null,
+            "workloadMemoryMaximum": null
         }
     },
     "project": {}

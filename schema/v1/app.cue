@@ -92,6 +92,7 @@ package v1
 	ports:                          #PortSingle | *[...#Port] | #PortMap
 	[=~"probes|probe"]:             #Probes
 	[=~"depends[oO]n|depends_on"]:  string | *[...string]
+	[=~"mem|memory"]:               int
 	permissions: {
 		rules: [...#RuleSpec]
 		clusterRules: [...#ClusterRuleSpec]
