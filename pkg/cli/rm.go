@@ -67,9 +67,8 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 			App: true,
 		}
 	}
-	if rmObjects.App && !rmObjects.Secret && !rmObjects.Volume {
-		a.Force = true //Do not prompt when deleting non-nested resource
-	}
+	// Do not prompt when deleting non-nested resource
+	a.Force = a.Force || rmObjects.App && !rmObjects.Secret && !rmObjects.Volume
 
 	for _, arg := range args {
 		c := c
