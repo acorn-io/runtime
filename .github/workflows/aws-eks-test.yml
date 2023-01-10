@@ -62,7 +62,23 @@ jobs:
           channel-id: '${{ secrets.SLACK_BOT_CHANNEL }}'
           slack-message: "Nightly EKS test failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_BOT_TOKEN: '${{ secrets.SLACK_BOT_TOKEN }}'
+
+      - name: create run artifacts
+        if: always()
+        # Add any artifacts that should be assosciated with this run to /tmp/artifacts/${{ github.run_id }}
+        run: |
+          mkdir /tmp/artifacts/${{ github.run_id }} ||
+          kubectl logs -n acorn-system -l app=acorn-api > /tmp/artifacts/${{ github.run_id }}/acorn-api.log ||
+          kubectl logs -n acorn-system -l app=acorn-controller > /tmp/artifacts/${{ github.run_id }}/acorn-controller.log ||
+          true
+
+      - name: upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: run-artifacts
+          path: /tmp/artifacts/${{ github.run_id }}
 
       - name: uninstall acorn
         if: always()
