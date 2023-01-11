@@ -11,3 +11,7 @@ acorn run --link my-other-redis-acorn:redis [IMAGE]
 ```
 
 In the above example the container service from the running Acorn will be available within the new Acorn as `redis`. Your new instance will be able to resolve the `redis` name and it will connect to the remote service defined by the link.
+
+:::note 
+The port from the redis container must be explicitly exposed in the `Acornfile` i.e. `ports: expose: "5432/tcp""` this allows for a proper `ExternalName` service to be created when referenced through `--link`.
+:::
