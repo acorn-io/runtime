@@ -12,7 +12,7 @@ This example deploys the hello-world app with auto-upgrade enabled and matching 
 acorn run myorg/hello-world:v#.#.#
 ```
 
-`*` denotes a segment of the image tag that should sorted alphabetically when finding the latest tag.
+`*` denotes a segment of the image tag that should be sorted alphabetically when finding the latest tag.
 
 In this example, if you had a tag named alpha and a tag named zeta, zeta would be recognized as the newest:
 ```shell
@@ -26,6 +26,11 @@ This example would sort numerically according to major and minor version (ie v1.
 
 ```shell
 acorn run myorg/hello-world:v#.#-**
+```
+
+NOTE: Depending on your shell, you may see errors when using `*` and `**`. Using quotes will tell the shell to ignore them so Acorn can parse them:
+```shell
+acorn run "myorg/hello-world:v#.#-**"
 ```
 
 Automatic upgrades can be configured explicitly via a flag.
