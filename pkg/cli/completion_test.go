@@ -678,3 +678,77 @@ func TestImagesCompletion(t *testing.T) {
 		})
 	}
 }
+
+func TestCredentialsCompletion(t *testing.T) {
+	names := []string{"docker.io", "ghcr.io", "great.io"}
+	creds := make([]apiv1.Credential, 0, len(names))
+	for _, name := range names {
+		creds = append(creds, apiv1.Credential{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		CredentialList: creds,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Nothing to complete, return all",
+			wantNames:     names,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with g",
+			toComplete:    "g",
+			wantNames:     []string{"ghcr.io", "great.io"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with g, but great.io already in args",
+			toComplete:    "g",
+			args:          []string{"great.io"},
+			wantNames:     []string{"ghcr.io"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with g, but all g's in args",
+			toComplete:    "g",
+			args:          []string{"ghcr.io", "great.io"},
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete docker.io, only docker.io returned",
+			toComplete:    "docker.io",
+			wantNames:     []string{"docker.io"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete empty, but all names already in args",
+			args:          names,
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete something that doesn't exist",
+			toComplete:    "hello",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, credentialsCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "credentialsCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "credentialsCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}

@@ -207,3 +207,19 @@ func imagesCompletion(allowDigest bool) completionFunc {
 		return result, nil
 	}
 }
+
+func credentialsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	credentials, err := c.CredentialList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, credential := range credentials {
+		if strings.HasPrefix(credential.Name, toComplete) {
+			result = append(result, credential.Name)
+		}
+	}
+
+	return result, nil
+}

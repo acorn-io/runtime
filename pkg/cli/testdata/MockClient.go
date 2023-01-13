@@ -14,20 +14,23 @@ import (
 )
 
 type MockClientFactory struct {
-	AppList       []apiv1.App
-	ContainerList []apiv1.ContainerReplica
+	AppList        []apiv1.App
+	ContainerList  []apiv1.ContainerReplica
+	CredentialList []apiv1.Credential
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 	return &MockClient{
-		Apps:       dc.AppList,
-		Containers: dc.ContainerList,
+		Apps:        dc.AppList,
+		Containers:  dc.ContainerList,
+		Credentials: dc.CredentialList,
 	}, nil
 }
 
 type MockClient struct {
-	Apps       []apiv1.App
-	Containers []apiv1.ContainerReplica
+	Apps        []apiv1.App
+	Containers  []apiv1.ContainerReplica
+	Credentials []apiv1.Credential
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -170,7 +173,10 @@ func (m *MockClient) CredentialCreate(ctx context.Context, serverAddress, userna
 }
 
 func (m *MockClient) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
-	return []apiv1.Credential{apiv1.Credential{
+	if m.Credentials != nil {
+		return m.Credentials, nil
+	}
+	return []apiv1.Credential{{
 		TypeMeta:      metav1.TypeMeta{},
 		ObjectMeta:    metav1.ObjectMeta{Name: "test-cred"},
 		ServerAddress: "test-server-address",
