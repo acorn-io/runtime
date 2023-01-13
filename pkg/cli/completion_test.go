@@ -826,3 +826,77 @@ func TestVolumesCompletion(t *testing.T) {
 		})
 	}
 }
+
+func TestSecretsCompletion(t *testing.T) {
+	names := []string{"acorn.secret-1", "acorn.secret-2", "my-secret", "empty"}
+	secrets := make([]apiv1.Secret, 0, len(names))
+	for _, name := range names {
+		secrets = append(secrets, apiv1.Secret{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		SecretList: secrets,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Nothing to complete, return all",
+			wantNames:     names,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with a",
+			toComplete:    "a",
+			wantNames:     []string{"acorn.secret-1", "acorn.secret-2"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with a, but acorn.volume-1 already in args",
+			toComplete:    "a",
+			args:          []string{"acorn.secret-1"},
+			wantNames:     []string{"acorn.secret-2"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with a, but all a's in args",
+			toComplete:    "a",
+			args:          []string{"acorn.secret-2", "acorn.secret-1"},
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete my-secret, only my-secret returned",
+			toComplete:    "my-secret",
+			wantNames:     []string{"my-secret"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete empty, but all names already in args",
+			args:          names,
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete something that doesn't exist",
+			toComplete:    "hello",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, secretsCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "secretsCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "secretsCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}

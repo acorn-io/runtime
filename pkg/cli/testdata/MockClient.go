@@ -18,6 +18,7 @@ type MockClientFactory struct {
 	ContainerList  []apiv1.ContainerReplica
 	CredentialList []apiv1.Credential
 	VolumeList     []apiv1.Volume
+	SecretList     []apiv1.Secret
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
@@ -26,6 +27,7 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		Containers:  dc.ContainerList,
 		Credentials: dc.CredentialList,
 		Volumes:     dc.VolumeList,
+		Secrets:     dc.SecretList,
 	}, nil
 }
 
@@ -34,6 +36,7 @@ type MockClient struct {
 	Containers  []apiv1.ContainerReplica
 	Credentials []apiv1.Credential
 	Volumes     []apiv1.Volume
+	Secrets     []apiv1.Secret
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -220,7 +223,10 @@ func (m *MockClient) SecretCreate(ctx context.Context, name, secretType string, 
 }
 
 func (m *MockClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
-	return []apiv1.Secret{apiv1.Secret{
+	if m.Secrets != nil {
+		return m.Secrets, nil
+	}
+	return []apiv1.Secret{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found.secret"},
 		Type:       "",

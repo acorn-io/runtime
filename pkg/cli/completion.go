@@ -239,3 +239,19 @@ func volumesCompletion(ctx context.Context, c client.Client, toComplete string) 
 
 	return result, nil
 }
+
+func secretsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	secrets, err := c.SecretList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, secret := range secrets {
+		if strings.HasPrefix(secret.Name, toComplete) {
+			result = append(result, secret.Name)
+		}
+	}
+
+	return result, nil
+}

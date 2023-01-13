@@ -13,8 +13,9 @@ func NewSecretDelete(c client.CommandContext) *cobra.Command {
 		Use: "rm [SECRET_NAME...]",
 		Example: `
 acorn secret rm my-secret`,
-		SilenceUsage: true,
-		Short:        "Delete a secret",
+		SilenceUsage:      true,
+		Short:             "Delete a secret",
+		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})
 	return cmd
 }
