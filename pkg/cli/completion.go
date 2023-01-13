@@ -223,3 +223,19 @@ func credentialsCompletion(ctx context.Context, c client.Client, toComplete stri
 
 	return result, nil
 }
+
+func volumesCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	volumes, err := c.VolumeList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, volume := range volumes {
+		if strings.HasPrefix(volume.Name, toComplete) {
+			result = append(result, volume.Name)
+		}
+	}
+
+	return result, nil
+}

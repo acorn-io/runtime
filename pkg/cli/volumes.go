@@ -16,8 +16,9 @@ func NewVolume(c client.CommandContext) *cobra.Command {
 		Aliases: []string{"volumes", "v"},
 		Example: `
 acorn volume`,
-		SilenceUsage: true,
-		Short:        "Manage volumes",
+		SilenceUsage:      true,
+		Short:             "Manage volumes",
+		ValidArgsFunction: newCompletion(c.ClientFactory, volumesCompletion).complete,
 	})
 	cmd.AddCommand(NewVolumeDelete(c))
 	return cmd
@@ -30,7 +31,7 @@ type Volume struct {
 }
 
 func (a *Volume) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
@@ -38,7 +39,7 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Volume, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
-		volume, err := client.VolumeGet(cmd.Context(), args[0])
+		volume, err := c.VolumeGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
@@ -46,7 +47,7 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 		return out.Err()
 	}
 
-	volumes, err := client.VolumeList(cmd.Context())
+	volumes, err := c.VolumeList(cmd.Context())
 	if err != nil {
 		return err
 	}

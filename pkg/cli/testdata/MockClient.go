@@ -17,6 +17,7 @@ type MockClientFactory struct {
 	AppList        []apiv1.App
 	ContainerList  []apiv1.ContainerReplica
 	CredentialList []apiv1.Credential
+	VolumeList     []apiv1.Volume
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
@@ -24,6 +25,7 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		Apps:        dc.AppList,
 		Containers:  dc.ContainerList,
 		Credentials: dc.CredentialList,
+		Volumes:     dc.VolumeList,
 	}, nil
 }
 
@@ -31,6 +33,7 @@ type MockClient struct {
 	Apps        []apiv1.App
 	Containers  []apiv1.ContainerReplica
 	Credentials []apiv1.Credential
+	Volumes     []apiv1.Volume
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -332,7 +335,10 @@ func (m *MockClient) ContainerReplicaExec(ctx context.Context, name string, args
 }
 
 func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
-	return []apiv1.Volume{apiv1.Volume{
+	if m.Volumes != nil {
+		return m.Volumes, nil
+	}
+	return []apiv1.Volume{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found.volume"},
 		Spec:       apiv1.VolumeSpec{},

@@ -752,3 +752,77 @@ func TestCredentialsCompletion(t *testing.T) {
 		})
 	}
 }
+
+func TestVolumesCompletion(t *testing.T) {
+	names := []string{"acorn.volume-1", "acorn.volume-2", "my-volume", "empty"}
+	volumes := make([]apiv1.Volume, 0, len(names))
+	for _, name := range names {
+		volumes = append(volumes, apiv1.Volume{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		VolumeList: volumes,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Nothing to complete, return all",
+			wantNames:     names,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with a",
+			toComplete:    "a",
+			wantNames:     []string{"acorn.volume-1", "acorn.volume-2"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with a, but acorn.volume-1 already in args",
+			toComplete:    "a",
+			args:          []string{"acorn.volume-1"},
+			wantNames:     []string{"acorn.volume-2"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with a, but all a's in args",
+			toComplete:    "a",
+			args:          []string{"acorn.volume-2", "acorn.volume-1"},
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete my-volume, only my-volume returned",
+			toComplete:    "my-volume",
+			wantNames:     []string{"my-volume"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete empty, but all names already in args",
+			args:          names,
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete something that doesn't exist",
+			toComplete:    "hello",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, volumesCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "volumesCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "volumesCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}
