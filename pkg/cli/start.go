@@ -15,8 +15,9 @@ func NewStart(c client.CommandContext) *cobra.Command {
 acorn start my-app
 
 acorn start my-app1 my-app2`,
-		SilenceUsage: true,
-		Short:        "Start an app",
+		SilenceUsage:      true,
+		Short:             "Start an app",
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 
@@ -25,13 +26,13 @@ type Start struct {
 }
 
 func (a *Start) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
 	for _, arg := range args {
-		err := client.AppStart(cmd.Context(), arg)
+		err := c.AppStart(cmd.Context(), arg)
 		if err != nil {
 			return fmt.Errorf("starting %s: %w", arg, err)
 		}

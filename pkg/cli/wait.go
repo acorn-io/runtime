@@ -9,10 +9,11 @@ import (
 
 func NewWait(c client.CommandContext) *cobra.Command {
 	return cli.Command(&Wait{client: c.ClientFactory}, cobra.Command{
-		Use:          "wait [flags] APP_NAME",
-		SilenceUsage: true,
-		Short:        "Wait an app to be ready then exit with status code 0",
-		Args:         cobra.ExactArgs(1),
+		Use:               "wait [flags] APP_NAME",
+		SilenceUsage:      true,
+		Short:             "Wait an app to be ready then exit with status code 0",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 }
 

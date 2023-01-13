@@ -16,9 +16,10 @@ func NewSecretReveal(c client.CommandContext) *cobra.Command {
 		Aliases: []string{"secrets", "s"},
 		Example: `
 acorn secret`,
-		SilenceUsage: true,
-		Short:        "Manage secrets",
-		Args:         cobra.MinimumNArgs(1),
+		SilenceUsage:      true,
+		Short:             "Manage secrets",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})
 	return cmd
 }

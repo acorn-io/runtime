@@ -9,10 +9,11 @@ import (
 
 func NewPush(c client.CommandContext) *cobra.Command {
 	return cli.Command(&Push{client: c.ClientFactory}, cobra.Command{
-		Use:          "push [flags] IMAGE",
-		SilenceUsage: true,
-		Short:        "Push an image to a remote registry",
-		Args:         cobra.RangeArgs(1, 1),
+		Use:               "push [flags] IMAGE",
+		SilenceUsage:      true,
+		Short:             "Push an image to a remote registry",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(false)).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 }
 

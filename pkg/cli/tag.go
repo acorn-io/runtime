@@ -8,10 +8,11 @@ import (
 
 func NewTag(c client.CommandContext) *cobra.Command {
 	return cli.Command(&Tag{client: c.ClientFactory}, cobra.Command{
-		Use:          "tag [flags] SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]",
-		SilenceUsage: true,
-		Short:        "Tag an image",
-		Args:         cobra.RangeArgs(2, 2),
+		Use:               "tag [flags] SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]",
+		SilenceUsage:      true,
+		Short:             "Tag an image",
+		Args:              cobra.ExactArgs(2),
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(2)).complete,
 	})
 }
 

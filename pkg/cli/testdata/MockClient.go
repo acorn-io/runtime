@@ -14,13 +14,29 @@ import (
 )
 
 type MockClientFactory struct {
+	AppList        []apiv1.App
+	ContainerList  []apiv1.ContainerReplica
+	CredentialList []apiv1.Credential
+	VolumeList     []apiv1.Volume
+	SecretList     []apiv1.Secret
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
-	return &MockClient{}, nil
+	return &MockClient{
+		Apps:        dc.AppList,
+		Containers:  dc.ContainerList,
+		Credentials: dc.CredentialList,
+		Volumes:     dc.VolumeList,
+		Secrets:     dc.SecretList,
+	}, nil
 }
 
 type MockClient struct {
+	Apps        []apiv1.App
+	Containers  []apiv1.ContainerReplica
+	Credentials []apiv1.Credential
+	Volumes     []apiv1.Volume
+	Secrets     []apiv1.Secret
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -28,10 +44,13 @@ func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
 }
 
 func (m *MockClient) AppList(ctx context.Context) ([]apiv1.App, error) {
-	return []apiv1.App{apiv1.App{
+	if m.Apps != nil {
+		return m.Apps, nil
+	}
+	return []apiv1.App{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found"},
-		Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+		Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 		Status:     v1.AppInstanceStatus{},
 	}}, nil
 }
@@ -56,14 +75,14 @@ func (m *MockClient) AppGet(ctx context.Context, name string) (*apiv1.App, error
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{Ready: true},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	}
@@ -160,7 +179,10 @@ func (m *MockClient) CredentialCreate(ctx context.Context, serverAddress, userna
 }
 
 func (m *MockClient) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
-	return []apiv1.Credential{apiv1.Credential{
+	if m.Credentials != nil {
+		return m.Credentials, nil
+	}
+	return []apiv1.Credential{{
 		TypeMeta:      metav1.TypeMeta{},
 		ObjectMeta:    metav1.ObjectMeta{Name: "test-cred"},
 		ServerAddress: "test-server-address",
@@ -201,7 +223,10 @@ func (m *MockClient) SecretCreate(ctx context.Context, name, secretType string, 
 }
 
 func (m *MockClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
-	return []apiv1.Secret{apiv1.Secret{
+	if m.Secrets != nil {
+		return m.Secrets, nil
+	}
+	return []apiv1.Secret{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found.secret"},
 		Type:       "",
@@ -257,7 +282,20 @@ func (m *MockClient) SecretDelete(ctx context.Context, name string) (*apiv1.Secr
 }
 
 func (m *MockClient) ContainerReplicaList(ctx context.Context, opts *client.ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
-	return []apiv1.ContainerReplica{apiv1.ContainerReplica{
+	if m.Containers != nil {
+		if opts == nil {
+			return m.Containers, nil
+		}
+		// Do the filtering to make testing simpler
+		result := make([]apiv1.ContainerReplica, 0, len(m.Containers))
+		for _, c := range m.Containers {
+			if c.Spec.AppName == opts.App {
+				result = append(result, c)
+			}
+		}
+		return result, nil
+	}
+	return []apiv1.ContainerReplica{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
 		Spec:       apiv1.ContainerReplicaSpec{AppName: "found"},
@@ -303,7 +341,10 @@ func (m *MockClient) ContainerReplicaExec(ctx context.Context, name string, args
 }
 
 func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
-	return []apiv1.Volume{apiv1.Volume{
+	if m.Volumes != nil {
+		return m.Volumes, nil
+	}
+	return []apiv1.Volume{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found.volume"},
 		Spec:       apiv1.VolumeSpec{},
@@ -336,17 +377,20 @@ func (m *MockClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volu
 }
 
 func (m *MockClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
-	return []apiv1.Image{apiv1.Image{
+	return []apiv1.Image{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
 		Tags:       []string{"testtag:latest"},
-	}, apiv1.Image{
+		Digest:     "1234567890asdfghkl",
+	}, {
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found-image-no-tag"},
-	}, apiv1.Image{
+		Digest:     "lkjhgfdsa0987654321",
+	}, {
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
-		Tags:       []string{"testtag1:latest", "testtag2:latest"},
+		Tags:       []string{"testtag1:latest", "testtag2:v1"},
+		Digest:     "lkjhgfdsa1234567890",
 	}}, nil
 }
 

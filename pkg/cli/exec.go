@@ -9,20 +9,29 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	hclient "github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/spf13/cobra"
 )
 
-func NewExec(c hclient.CommandContext) *cobra.Command {
-	cmd := cli.Command(&Exec{client: c.ClientFactory}, cobra.Command{
-		Use:          "exec [flags] APP_NAME|CONTAINER_NAME CMD",
-		SilenceUsage: true,
-		Short:        "Run a command in a container",
-		Long:         "Run a command in a container",
+func NewExec(c client.CommandContext) *cobra.Command {
+	exec := &Exec{client: c.ClientFactory}
+	cmd := cli.Command(exec, cobra.Command{
+		Use:               "exec [flags] APP_NAME|CONTAINER_NAME CMD",
+		SilenceUsage:      true,
+		Short:             "Run a command in a container",
+		Long:              "Run a command in a container",
+		ValidArgsFunction: newCompletion(c.ClientFactory, onlyAppsWithAcornContainer(exec.Container)).withShouldCompleteOptions(exec.debugImageNoComplete).complete,
 	})
 	cmd.Flags().SetInterspersed(false)
+
+	// This will produce an error if the container flag doesn't exist or a completion function has already
+	// been registered for this flag. Not returning the error since neither of these is likely occur.
+	if err := cmd.RegisterFlagCompletionFunc("container", newCompletion(c.ClientFactory, acornContainerCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete); err != nil {
+		cmd.Printf("Error registering completion function for -c flag: %v\n", err)
+	}
+
 	return cmd
 }
 
@@ -31,10 +40,10 @@ type Exec struct {
 	TTY         bool   `usage:"Not used" short:"t"`
 	DebugImage  string `usage:"Use image as container root for command" short:"d"`
 	Container   string `usage:"Name of container to exec into" short:"c"`
-	client      hclient.ClientFactory
+	client      client.ClientFactory
 }
 
-func (s *Exec) appAndArgs(ctx context.Context, c hclient.Client, args []string) (string, []string, error) {
+func (s *Exec) appAndArgs(ctx context.Context, c client.Client, args []string) (string, []string, error) {
 	if len(args) > 0 {
 		return args[0], args[1:], nil
 	}
@@ -83,8 +92,8 @@ func (s *Exec) filterContainers(containers []apiv1.ContainerReplica) (result []a
 	return result
 }
 
-func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, args []string) error {
-	containers, err := c.ContainerReplicaList(ctx, &hclient.ContainerReplicaListOptions{
+func (s *Exec) execApp(ctx context.Context, c client.Client, app *apiv1.App, args []string) error {
+	containers, err := c.ContainerReplicaList(ctx, &client.ContainerReplicaListOptions{
 		App: app.Name,
 	})
 	if err != nil {
@@ -128,9 +137,9 @@ func (s *Exec) execApp(ctx context.Context, c hclient.Client, app *apiv1.App, ar
 	return s.execContainer(ctx, c, names[choice], args)
 }
 
-func (s *Exec) execContainer(ctx context.Context, c hclient.Client, containerName string, args []string) error {
+func (s *Exec) execContainer(ctx context.Context, c client.Client, containerName string, args []string) error {
 	tty := term.IsTerminal(os.Stdin) && term.IsTerminal(os.Stdout) && term.IsTerminal(os.Stdout)
-	cIO, err := c.ContainerReplicaExec(ctx, containerName, args, tty, &hclient.ContainerReplicaExecOptions{
+	cIO, err := c.ContainerReplicaExec(ctx, containerName, args, tty, &client.ContainerReplicaExecOptions{
 		DebugImage: s.DebugImage,
 	})
 	if err != nil {
@@ -166,4 +175,8 @@ func (s *Exec) Run(cmd *cobra.Command, args []string) error {
 		return s.execApp(ctx, c, app, args)
 	}
 	return s.execContainer(ctx, c, name, args)
+}
+
+func (s *Exec) debugImageNoComplete(_ []string) bool {
+	return s.DebugImage != ""
 }

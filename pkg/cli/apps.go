@@ -16,8 +16,9 @@ func NewApp(c client.CommandContext) *cobra.Command {
 		Aliases: []string{"apps", "a", "ps"},
 		Example: `
 acorn app`,
-		SilenceUsage: true,
-		Short:        "List or get apps",
+		SilenceUsage:      true,
+		Short:             "List or get apps",
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 
@@ -29,7 +30,7 @@ type App struct {
 }
 
 func (a *App) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
@@ -37,7 +38,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.App, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
-		app, err := client.AppGet(cmd.Context(), args[0])
+		app, err := c.AppGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
@@ -45,7 +46,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		return out.Err()
 	}
 
-	apps, err := client.AppList(cmd.Context())
+	apps, err := c.AppList(cmd.Context())
 	if err != nil {
 		return err
 	}

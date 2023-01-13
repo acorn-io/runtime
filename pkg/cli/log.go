@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/log"
@@ -9,12 +10,15 @@ import (
 )
 
 func NewLogs(c client.CommandContext) *cobra.Command {
-	return cli.Command(&Logs{client: c.ClientFactory}, cobra.Command{
-		Use:          "logs [flags] APP_NAME|CONTAINER_NAME",
-		SilenceUsage: true,
-		Short:        "Log all pods from app",
-		Args:         cobra.RangeArgs(1, 1),
+	logs := &Logs{client: c.ClientFactory}
+	return cli.Command(logs, cobra.Command{
+		Use:               "logs [flags] APP_NAME|CONTAINER_NAME",
+		SilenceUsage:      true,
+		Short:             "Log all pods from app",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
+
 }
 
 type Logs struct {

@@ -13,15 +13,15 @@ import (
 )
 
 func NewRm(c client.CommandContext) *cobra.Command {
-	cmd := cli.Command(&Rm{client: c.ClientFactory}, cobra.Command{
+	return cli.Command(&Rm{client: c.ClientFactory}, cobra.Command{
 		Use: "rm [flags] [APP_NAME...]",
 		Example: `
 acorn rm APP_NAME
 acorn rm -t volume,container APP_NAME`,
-		SilenceUsage: true,
-		Short:        "Delete an app, container, secret or volume",
+		SilenceUsage:      true,
+		Short:             "Delete an app, container, secret or volume",
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
-	return cmd
 }
 
 type Rm struct {

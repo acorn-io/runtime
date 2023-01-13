@@ -22,8 +22,9 @@ func NewSecret(c client.CommandContext) *cobra.Command {
 		Aliases: []string{"secrets", "s"},
 		Example: `
 acorn secret`,
-		SilenceUsage: true,
-		Short:        "Manage secrets",
+		SilenceUsage:      true,
+		Short:             "Manage secrets",
+		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})
 	cmd.AddCommand(NewSecretCreate(c))
 	cmd.AddCommand(NewSecretDelete(c))

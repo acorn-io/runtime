@@ -9,13 +9,15 @@ import (
 )
 
 func NewContainerDelete(c client.CommandContext) *cobra.Command {
-	cmd := cli.Command(&ContainerDelete{client: c.ClientFactory}, cobra.Command{
+	cd := &ContainerDelete{client: c.ClientFactory}
+	cmd := cli.Command(cd, cobra.Command{
 		Use: "kill [CONTAINER_NAME...]",
 		Example: `
 acorn container kill app-name.containername-generated-hash`,
-		SilenceUsage: true,
-		Short:        "Delete a container",
-		Aliases:      []string{"rm"},
+		SilenceUsage:      true,
+		Short:             "Delete a container",
+		Aliases:           []string{"rm"},
+		ValidArgsFunction: newCompletion(c.ClientFactory, containersCompletion).complete,
 	})
 	return cmd
 }
@@ -25,13 +27,13 @@ type ContainerDelete struct {
 }
 
 func (a *ContainerDelete) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
 	for _, container := range args {
-		replicaDelete, err := client.ContainerReplicaDelete(cmd.Context(), container)
+		replicaDelete, err := c.ContainerReplicaDelete(cmd.Context(), container)
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", container, err)
 		}

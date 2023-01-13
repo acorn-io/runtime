@@ -19,4 +19,4 @@ IMAGES:
 REPOSITORY   TAG       IMAGE-ID
 testtag      latest    found-image1
 testtag1     latest    found-image-
-testtag2     latest    found-image-
+testtag2     v1        found-image-

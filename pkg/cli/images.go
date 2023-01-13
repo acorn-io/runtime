@@ -17,13 +17,14 @@ import (
 
 func NewImage(c client.CommandContext) *cobra.Command {
 	cmd := cli.Command(&Image{client: c.ClientFactory}, cobra.Command{
-		Use:     "image [flags] [APP_NAME...]",
+		Use:     "image [flags] [IMAGE_REPO:TAG|IMAGE_ID]",
 		Aliases: []string{"images", "i"},
 		Example: `
 acorn images`,
-		SilenceUsage: true,
-		Short:        "Manage images",
-		Args:         cobra.MaximumNArgs(1),
+		SilenceUsage:      true,
+		Short:             "Manage images",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 	cmd.AddCommand(NewImageDelete(c))
 	return cmd
@@ -55,6 +56,9 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		}
 
 		images = []apiv1.Image{*image}
+
+		// If an image was provided explicitly, then display it even if it doesn't have tags
+		a.All = true
 	} else {
 		images, err = c.ImageList(cmd.Context())
 		if err != nil {

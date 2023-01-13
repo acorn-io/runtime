@@ -16,8 +16,9 @@ func NewCredential(c client.CommandContext) *cobra.Command {
 		Aliases: []string{"credentials", "creds"},
 		Example: `
 acorn credential`,
-		SilenceUsage: true,
-		Short:        "Manage registry credentials",
+		SilenceUsage:      true,
+		Short:             "Manage registry credentials",
+		ValidArgsFunction: newCompletion(c.ClientFactory, credentialsCompletion).complete,
 	})
 	cmd.AddCommand(NewCredentialLogin(false, c))
 	cmd.AddCommand(NewCredentialLogout(false, c))
@@ -31,7 +32,7 @@ type Credential struct {
 }
 
 func (a *Credential) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
@@ -39,7 +40,7 @@ func (a *Credential) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Credential, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
-		credential, err := client.CredentialGet(cmd.Context(), args[0])
+		credential, err := c.CredentialGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
@@ -47,7 +48,7 @@ func (a *Credential) Run(cmd *cobra.Command, args []string) error {
 		return out.Err()
 	}
 
-	credentials, err := client.CredentialList(cmd.Context())
+	credentials, err := c.CredentialList(cmd.Context())
 	if err != nil {
 		return err
 	}
