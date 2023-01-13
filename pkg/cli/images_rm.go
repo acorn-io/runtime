@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
@@ -9,10 +10,11 @@ import (
 
 func NewImageDelete(c client.CommandContext) *cobra.Command {
 	cmd := cli.Command(&ImageDelete{client: c.ClientFactory}, cobra.Command{
-		Use:          "rm [IMAGE_NAME...]",
-		Example:      `acorn image rm my-image`,
-		SilenceUsage: true,
-		Short:        "Delete an Image",
+		Use:               "rm [IMAGE_NAME...]",
+		Example:           `acorn image rm my-image`,
+		SilenceUsage:      true,
+		Short:             "Delete an Image",
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).complete,
 	})
 	return cmd
 }

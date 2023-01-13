@@ -6,7 +6,7 @@ title: "acorn image"
 Manage images
 
 ```
-acorn image [flags] [APP_NAME...]
+acorn image [flags] [IMAGE_REPO:TAG|IMAGE_ID]
 ```
 
 ### Examples

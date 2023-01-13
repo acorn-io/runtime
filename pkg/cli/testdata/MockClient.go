@@ -359,17 +359,20 @@ func (m *MockClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volu
 }
 
 func (m *MockClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
-	return []apiv1.Image{apiv1.Image{
+	return []apiv1.Image{{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
 		Tags:       []string{"testtag:latest"},
-	}, apiv1.Image{
+		Digest:     "1234567890asdfghkl",
+	}, {
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found-image-no-tag"},
-	}, apiv1.Image{
+		Digest:     "lkjhgfdsa0987654321",
+	}, {
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
-		Tags:       []string{"testtag1:latest", "testtag2:latest"},
+		Tags:       []string{"testtag1:latest", "testtag2:v1"},
+		Digest:     "lkjhgfdsa1234567890",
 	}}, nil
 }
 

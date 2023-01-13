@@ -599,3 +599,82 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 		})
 	}
 }
+
+func TestImagesCompletion(t *testing.T) {
+	mockClientFactory := &testdata.MockClientFactory{}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		allowDigest   bool
+		toComplete    string
+		args          []string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Nothing to complete, return digest or tag but not both",
+			allowDigest:   true,
+			wantNames:     []string{"testtag:latest", "lkjhgfdsa098", "testtag1:latest", "testtag2:v1"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Nothing to complete, return only tags",
+			allowDigest:   false,
+			wantNames:     []string{"testtag:latest", "testtag1:latest", "testtag2:v1"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Match image digest even if tag exists",
+			allowDigest:   true,
+			toComplete:    "l",
+			wantNames:     []string{"lkjhgfdsa098", "lkjhgfdsa123"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Don't allow matching of image digest if tag doesn't exist",
+			allowDigest:   false,
+			toComplete:    "l",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Return all tags matched, even for same image",
+			allowDigest:   true,
+			toComplete:    "testtag",
+			wantNames:     []string{"testtag:latest", "testtag1:latest", "testtag2:v1"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Don't return matched tag that is already in args",
+			allowDigest:   true,
+			args:          []string{"testtag2:v1"},
+			toComplete:    "testtag",
+			wantNames:     []string{"testtag:latest", "testtag1:latest"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Don't return matched digest that is already in args",
+			allowDigest:   true,
+			args:          []string{"lkjhgfdsa098"},
+			toComplete:    "l",
+			wantNames:     []string{"lkjhgfdsa123"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "No matches",
+			allowDigest:   true,
+			toComplete:    "acorn",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := newCompletion(mockClientFactory, imagesCompletion(tt.allowDigest)).complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "imagesCompletion(%v)(_, _, nil, %v)", tt.allowDigest, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "imagesCompletion(%v)(_, _, nil, %v)", tt.allowDigest, tt.toComplete)
+		})
+	}
+}

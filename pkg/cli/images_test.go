@@ -49,7 +49,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\ntesttag1     latest    found-image-\ntesttag2     latest    found-image-\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\ntesttag1     latest    found-image-\ntesttag2     v1        found-image-\n",
 		},
 		{
 			name: "acorn image --no-trunc", fields: fields{
@@ -68,7 +68,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1234567\ntesttag1     latest    found-image-two-tags1234567\ntesttag2     latest    found-image-two-tags1234567\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1234567\ntesttag1     latest    found-image-two-tags1234567\ntesttag2     v1        found-image-two-tags1234567\n",
 		},
 		{
 			name: "acorn image -a", fields: fields{
@@ -87,7 +87,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\n<none>       <none>    found-image-\ntesttag1     latest    found-image-\ntesttag2     latest    found-image-\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\n<none>       <none>    found-image-\ntesttag1     latest    found-image-\ntesttag2     v1        found-image-\n",
 		},
 		{
 			name: "acorn image -c ", fields: fields{
@@ -106,7 +106,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID                      CONTAINER                      DIGEST\ntesttag      latest    found-image1234567            test-image-running-container   test-image-running-container\ntesttag1     latest    found-image-two-tags1234567   test-image-running-container   test-image-running-container\ntesttag2     latest    found-image-two-tags1234567   test-image-running-container   test-image-running-container\n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID                      CONTAINER                      DIGEST\ntesttag      latest    found-image1234567            test-image-running-container   test-image-running-container\ntesttag1     latest    found-image-two-tags1234567   test-image-running-container   test-image-running-container\ntesttag2     v1        found-image-two-tags1234567   test-image-running-container   test-image-running-container\n",
 		},
 		{
 			name: "acorn image -q ", fields: fields{
@@ -144,7 +144,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "testtag:latest@test-image-running-container\ntesttag1:latest@test-image-running-container\ntesttag2:latest@test-image-running-container\n"},
+			wantOut: "testtag:latest@test-image-running-container\ntesttag1:latest@test-image-running-container\ntesttag2:v1@test-image-running-container\n"},
 		{
 			name: "acorn image -q -a", fields: fields{
 				All:    false,

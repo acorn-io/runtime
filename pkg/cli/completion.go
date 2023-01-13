@@ -175,3 +175,35 @@ func onlyAppsWithAcornContainer(containerName string) completionFunc {
 		return result, nil
 	}
 }
+
+func imagesCompletion(allowDigest bool) completionFunc {
+	return func(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+		images, err := c.ImageList(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		var result []string
+		var tagMatched bool
+		for _, image := range images {
+			tagMatched = false
+			for _, tag := range image.Tags {
+				if strings.HasPrefix(tag, toComplete) {
+					result = append(result, tag)
+					tagMatched = true
+				}
+			}
+
+			// Don't include the digest if a tag matched.
+			if allowDigest && !tagMatched {
+				digest := strings.TrimPrefix(image.Digest, "sha256:")[:12]
+				if strings.HasPrefix(digest, toComplete) {
+					result = append(result, digest)
+				}
+			}
+
+		}
+
+		return result, nil
+	}
+}

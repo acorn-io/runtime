@@ -140,7 +140,7 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	var service corev1.Service
 	err := c.Get(ctx, client.ObjectKey{Name: system.RegistryName, Namespace: system.ImagesNamespace}, &service)
 	if err != nil {
-		return 0, fmt.Errorf("getting %s/%s service: %w", system.Namespace, system.RegistryName, err)
+		return 0, fmt.Errorf("getting %s/%s service: %w", system.ImagesNamespace, system.RegistryName, err)
 	}
 	for _, port := range service.Spec.Ports {
 		if port.Name == system.RegistryName && port.NodePort > 0 {
@@ -148,7 +148,7 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 		}
 	}
 
-	return 0, fmt.Errorf("failed to find node port for registry %s/%s", system.Namespace, system.RegistryName)
+	return 0, fmt.Errorf("failed to find node port for registry %s/%s", system.ImagesNamespace, system.RegistryName)
 }
 
 func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, image string) (name.Reference, error) {
