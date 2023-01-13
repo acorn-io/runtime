@@ -78,6 +78,9 @@ func NewRun(c client.CommandContext) *cobra.Command {
   # This example would sort numerically according to major and minor version (ie v1.2) and ignore anything following the "-":
   acorn run myorg/hello-world:v#.#-**
 
+  # NOTE: Depending on your shell, you may see errors when using '*' and '**'. Using quotes will tell the shell to ignore them so Acorn can parse them:
+  acorn run "myorg/hello-world:v#.#-**" 
+
   # Automatic upgrades can be configured explicitly via a flag.
   # In this example, the tag will always be "latest", but acorn will periodically check to see if new content has been pushed to that tag:
   acorn run --auto-upgrade myorg/hello-world:latest
