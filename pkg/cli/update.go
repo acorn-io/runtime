@@ -15,10 +15,11 @@ import (
 
 func NewUpdate(c client.CommandContext) *cobra.Command {
 	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
-		Use:          "update [flags] APP_NAME [deploy flags]",
-		SilenceUsage: true,
-		Short:        "Update a deployed app",
-		Args:         cobra.MinimumNArgs(1),
+		Use:               "update [flags] APP_NAME [deploy flags]",
+		SilenceUsage:      true,
+		Short:             "Update a deployed app",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)

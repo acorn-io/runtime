@@ -15,8 +15,9 @@ func NewStop(c client.CommandContext) *cobra.Command {
 acorn stop my-app
 
 acorn stop my-app1 my-app2`,
-		SilenceUsage: true,
-		Short:        "Stop an app",
+		SilenceUsage:      true,
+		Short:             "Stop an app",
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 
@@ -25,13 +26,13 @@ type Stop struct {
 }
 
 func (a *Stop) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
 	for _, arg := range args {
-		err := client.AppStop(cmd.Context(), arg)
+		err := c.AppStop(cmd.Context(), arg)
 		if err != nil {
 			return fmt.Errorf("stopping %s: %w", arg, err)
 		}

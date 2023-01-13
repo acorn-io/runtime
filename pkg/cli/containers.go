@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
+
 	"k8s.io/utils/strings/slices"
 )
 
@@ -16,8 +17,9 @@ func NewContainer(c client.CommandContext) *cobra.Command {
 		Aliases: []string{"containers", "c"},
 		Example: `
 acorn containers`,
-		SilenceUsage: true,
-		Short:        "Manage containers",
+		SilenceUsage:      true,
+		Short:             "Manage containers",
+		ValidArgsFunction: newCompletion(c.ClientFactory, containersCompletion).complete,
 	})
 	cmd.AddCommand(NewContainerDelete(c))
 	return cmd
@@ -31,7 +33,7 @@ type Container struct {
 }
 
 func (a *Container) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
@@ -39,7 +41,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Container, system.UserNamespace(), a.Quiet, a.Output)
 
 	if len(args) == 1 {
-		app, err := client.ContainerReplicaGet(cmd.Context(), args[0])
+		app, err := c.ContainerReplicaGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
@@ -47,7 +49,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 		return out.Err()
 	}
 
-	containers, err := client.ContainerReplicaList(cmd.Context(), nil)
+	containers, err := c.ContainerReplicaList(cmd.Context(), nil)
 	if err != nil {
 		return err
 	}
