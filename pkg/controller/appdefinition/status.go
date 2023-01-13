@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -343,15 +344,9 @@ func podName(pod *corev1.Pod) string {
 	return pod.Labels[labels.AcornContainerName]
 }
 
-func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (string, error) {
-	endpointTarget := map[string][]v1.Endpoint{}
-	for _, endpoint := range app.Status.Endpoints {
-		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPort)
-		endpointTarget[target] = append(endpointTarget[target], endpoint)
-	}
-
+func IngressTLSHosts(ctx context.Context, client kclient.Client, app *v1.AppInstance) (map[string]interface{}, error) {
 	ingresses := &networkingv1.IngressList{}
-	err := req.List(ingresses, &kclient.ListOptions{
+	err := client.List(ctx, ingresses, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
 		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged: "true",
@@ -359,7 +354,7 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 		}),
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	ingressTLSHosts := map[string]interface{}{}
@@ -371,6 +366,21 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 				}
 			}
 		}
+	}
+
+	return ingressTLSHosts, nil
+}
+
+func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (string, error) {
+	endpointTarget := map[string][]v1.Endpoint{}
+	for _, endpoint := range app.Status.Endpoints {
+		target := fmt.Sprintf("%s:%d", endpoint.Target, endpoint.TargetPort)
+		endpointTarget[target] = append(endpointTarget[target], endpoint)
+	}
+
+	ingressTLSHosts, err := IngressTLSHosts(req.Ctx, req.Client, app)
+	if err != nil {
+		return "", err
 	}
 
 	var endpointStrings []string

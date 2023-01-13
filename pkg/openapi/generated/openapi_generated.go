@@ -4179,6 +4179,12 @@ func schema_pkg_apis_internalacornio_v1_Endpoint(ref common.ReferenceCallback) c
 							Format: "",
 						},
 					},
+					"publishProtocol": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"pending": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},

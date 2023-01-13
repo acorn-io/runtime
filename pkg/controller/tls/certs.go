@@ -21,6 +21,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 // ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
@@ -109,8 +111,6 @@ func RenewCert(req router.Request, resp router.Response) error {
 }
 
 // ProvisionCerts handles the provisioning of new TLS certificates for AppInstances
-// Note: this does not actually provision the certificates, it just creates the empty secret
-// which is picked up by the route handled by RenewCert above
 func ProvisionCerts(req router.Request, resp router.Response) error {
 
 	cfg, err := config.Get(req.Ctx, req.Client)
@@ -133,20 +133,44 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	// FIXME: use error list instead of exiting on first error
-	for _, pb := range appInstance.Spec.Ports {
-		// Skip: name empty, not FQDN, already covered by on-acorn.io
-		if pb.ServiceName == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, pb.ServiceName)) > 0 || strings.HasSuffix(pb.ServiceName, "on-acorn.io") {
+	provisionedCerts := map[string]interface{}{}
+	var errs []error
+
+	for i, ep := range appInstance.Status.Endpoints {
+		if ep.Protocol != "http" {
 			continue
 		}
 
-		secretName := name.Limit(appInstance.GetName()+"-tls-"+pb.ServiceName, 63-len(appInstanceIDSegment)-1) + "-" + appInstanceIDSegment
-
-		return leUser.provisionCertIfNotExists(req.Ctx, req.Client, pb.ServiceName, appInstance.Namespace, secretName)
-
+		if err := prov(req, leUser, ep.Address, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
+			return err
+		}
+		provisionedCerts[ep.Address] = nil
+		ep.PublishProtocol = v1.PublishProtocolHTTPS
+		appInstance.Status.Endpoints[i] = ep
 	}
 
-	return nil
+	for _, pb := range appInstance.Spec.Ports {
+		if _, ok := provisionedCerts[pb.ServiceName]; ok {
+			continue
+		}
+		if err := prov(req, leUser, pb.ServiceName, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		provisionedCerts[pb.ServiceName] = nil
+	}
+
+	return utilerrors.NewAggregate(errs)
+}
+
+func prov(req router.Request, leUser *LEUser, domain, appname, segment, namespace string) error {
+	if domain == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, domain)) > 0 || strings.HasSuffix(domain, "on-acorn.io") {
+		logrus.Warnf("Skipping cert provisioning for %s", domain)
+		return nil
+	}
+	secretName := name.Limit(appname+"-tls-"+domain, 63-len(segment)-1) + "-" + segment
+
+	return leUser.provisionCertIfNotExists(req.Ctx, req.Client, domain, namespace, secretName)
 }
 
 // certFromSecret converts TLS secret data to a TLS certificate

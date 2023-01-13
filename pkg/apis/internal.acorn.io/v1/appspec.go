@@ -57,6 +57,15 @@ var (
 	ProtocolHTTP = Protocol("http")
 )
 
+type PublishProtocol string
+
+var (
+	PublishProtocolTCP   = PublishProtocol("tcp")
+	PublishProtocolUDP   = PublishProtocol("udp")
+	PublishProtocolHTTP  = PublishProtocol("http")
+	PublishProtocolHTTPS = PublishProtocol("https")
+)
+
 type PortBinding struct {
 	Expose            bool     `json:"expose,omitempty"`
 	Port              int32    `json:"port,omitempty"`

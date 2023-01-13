@@ -164,11 +164,12 @@ type AppInstanceStatus struct {
 }
 
 type Endpoint struct {
-	Target     string   `json:"target,omitempty"`
-	TargetPort int32    `json:"targetPort,omitempty"`
-	Address    string   `json:"address,omitempty"`
-	Protocol   Protocol `json:"protocol,omitempty"`
-	Pending    bool     `json:"pending,omitempty"`
+	Target          string          `json:"target,omitempty"`
+	TargetPort      int32           `json:"targetPort,omitempty"`
+	Address         string          `json:"address,omitempty"`
+	Protocol        Protocol        `json:"protocol,omitempty"`
+	PublishProtocol PublishProtocol `json:"publishProtocol,omitempty"`
+	Pending         bool            `json:"pending,omitempty"`
 }
 
 func (in *AppInstanceStatus) Condition(name string) Condition {
