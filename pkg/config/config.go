@@ -94,15 +94,41 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	return nil
 }
 
-func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
+// shouldLookupAcornDNSDomain determines if given the current configuration, Acorn DNS domain should be used if
+// found. Extra care is taken to ensure we only do extra API object lookups when necessary. Most importantly some objects
+// like v1.Node won't exist in hub and will fail there, so there should be a user configuration that will make lookups
+// not happen.
+func shouldLookupAcornDNSDomain(ctx context.Context, c *apiv1.Config, getter kclient.Reader) (bool, error) {
+	if strings.EqualFold(*c.AcornDNS, "enabled") {
+		// if acorn dns is enabled then we know we have to lookup
+		return true, nil
+	}
+	if !strings.EqualFold(*c.AcornDNS, "auto") {
+		// if acorn dns is not auto, then it must be disabled, so we know we don't need to lookup
+		return false, nil
+	}
+	if len(c.ClusterDomains) > 0 {
+		// The only acorn dns option left is "auto" and if the user has set a cluster domain then
+		// by definition of what "auto" is we shouldn't lookup the acorn dns domain
+		return false, nil
+	}
+	// at this point the user has selected acorn dns "auto" and there are no cluster domains set, so now we
+	// do any additional lookup to determine if the localhost DNS should be used
 	useLocal, err := useLocalWildcardDomain(ctx, getter)
+
+	// only lookup acorn dns domain if we don't want to use localhost DNS
+	return !useLocal, err
+}
+
+func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
+	shouldLookupAcornDNSDomain, err := shouldLookupAcornDNSDomain(ctx, c, getter)
 	if err != nil {
 		return err
 	}
 
 	// Acorn DNS should be used if it is explicitly "enabled" or if it is in "auto" mode and the user hasn't set a
 	//cluster domain and the cluster doesn't qualify for using the localhost wildcard domain
-	if strings.EqualFold(*c.AcornDNS, "enabled") || (strings.EqualFold(*c.AcornDNS, "auto") && len(c.ClusterDomains) == 0 && !useLocal) {
+	if shouldLookupAcornDNSDomain {
 		dnsSecret := &corev1.Secret{}
 		err = getter.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
 		if err != nil && !apierror.IsNotFound(err) {
