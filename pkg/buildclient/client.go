@@ -15,6 +15,7 @@ import (
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 func wsURL(url string) string {
@@ -24,10 +25,12 @@ func wsURL(url string) string {
 	return url
 }
 
+type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
+
 type WebSocketDialer func(ctx context.Context, urlStr string, requestHeader http.Header) (*websocket.Conn, *http.Response, error)
 
 func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer WebSocketDialer,
-	build *apiv1.AcornImageBuild) (*v1.AppImage, error) {
+	creds CredentialLookup, build *apiv1.AcornImageBuild) (*v1.AppImage, error) {
 	conn, _, err := dialer(ctx, wsURL(build.Status.BuildURL), map[string][]string{
 		"X-Acorn-Build-Token": {build.Status.Token},
 	})
@@ -56,7 +59,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 		progressChan = &c
 	}
 
-	// Handle messages synchronous since new subscribers are started
+	// Handle messages synchronous since new subscribers are started,
 	// and we don't want to miss a message.
 	messages.OnMessage(func(msg *Message) error {
 		if msg.FileSessionID == "" {
@@ -80,12 +83,41 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 			*progressChan <- msg.Status
 		} else if msg.AppImage != nil {
 			return msg.AppImage, nil
+		} else if msg.RegistryServerAddress != "" {
+			err := messages.Send(lookupCred(ctx, creds, msg.RegistryServerAddress))
+			if err != nil {
+				return nil, err
+			}
 		} else if msg.Error != "" {
 			return nil, errors.New(msg.Error)
 		}
 	}
 
 	return nil, fmt.Errorf("build failed")
+}
+
+func lookupCred(ctx context.Context, creds CredentialLookup, serverAddress string) (result *Message) {
+	result = &Message{
+		RegistryServerAddress: serverAddress,
+	}
+
+	if creds == nil {
+		return
+	}
+
+	cred, found, err := creds(ctx, serverAddress)
+	if err != nil {
+		logrus.Errorf("failed to lookup credential for server address %s: %v", serverAddress, err)
+		return
+	} else if !found {
+		return
+	}
+
+	result.RegistryAuth = &apiv1.RegistryAuth{
+		Username: cred.Username,
+		Password: cred.Password,
+	}
+	return
 }
 
 func clientProgress(ctx context.Context, streams *streams.Output) (chan *buildkit.SolveStatus, chan struct{}) {

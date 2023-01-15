@@ -1,14 +1,14 @@
 package cli
 
 import (
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/acorn-io/acorn/pkg/cli/testdata"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSecret(t *testing.T) {
@@ -29,7 +29,7 @@ func TestSecret(t *testing.T) {
 		args           args
 		wantErr        bool
 		wantOut        string
-		commandContext client.CommandContext
+		commandContext CommandContext
 	}{
 		{
 			name: "acorn secret", fields: fields{
@@ -37,7 +37,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -56,7 +56,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -75,7 +75,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -94,7 +94,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -113,7 +113,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -132,7 +132,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -151,7 +151,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -170,7 +170,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -189,7 +189,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -208,7 +208,7 @@ func TestSecret(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,

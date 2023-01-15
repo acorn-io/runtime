@@ -19,6 +19,7 @@ Available Commands:
   login        Add registry credentials
   logout       Remove registry credentials
   logs         Log all pods from app
+  project      Manage projects
   pull         Pull an image from a remote registry
   push         Push an image to a remote registry
   render       Evaluate and display an Acornfile with args
@@ -34,12 +35,13 @@ Available Commands:
   wait         Wait an app to be ready then exit with status code 0
 
 Flags:
-  -A, --all-namespaces      Namespace to work in
-      --context string      Context to use in the kubeconfig file
+  -A, --all-projects        Use all known projects
+      --context string      Context to use in the resolved kubeconfig file
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
   -h, --help                help for acorn
-      --kubeconfig string   Location of a kubeconfig file
-      --namespace string    Namespace to work in (default "acorn")
+      --kubeconfig string   Explicitly use kubeconfig file, overriding current project
+      --namespace string    Namespace to work in resolved connection (default "acorn")
+  -j, --project string      Project to work in
 
 Use "acorn [command] --help" for more information about a command.

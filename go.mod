@@ -17,11 +17,13 @@ require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693
-	github.com/acorn-io/baaah v0.0.0-20221216234428-1fcd10c323bc
+	github.com/acorn-io/baaah v0.0.0-20230111042750-883decc2ab02
 	github.com/acorn-io/mink v0.0.0-20221216234206-2755a8fb3332
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
+	github.com/adrg/xdg v0.4.0
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.10
+	github.com/docker/cli v20.10.21+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/google/go-cmp v0.5.9
@@ -33,6 +35,7 @@ require (
 	github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98
 	github.com/moby/buildkit v0.10.6
 	github.com/opencontainers/image-spec v1.1.0-rc2
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.49
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
@@ -91,7 +94,6 @@ require (
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/cli v20.10.21+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/docker v20.10.21+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect

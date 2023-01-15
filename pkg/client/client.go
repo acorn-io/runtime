@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"os"
-	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -18,29 +17,6 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type CommandContext struct {
-	ClientFactory ClientFactory
-	StdOut        *os.File
-	StdErr        *os.File
-	StdIn         *strings.Reader
-}
-
-type ClientFactory interface {
-	CreateDefault() (Client, error)
-}
-
-type CmdClient struct{}
-
-func (c *CmdClient) CreateDefault() (Client, error) {
-	cfg, err := restconfig.Default()
-	if err != nil {
-		return nil, err
-	}
-
-	ns := system.UserNamespace()
-	return New(cfg, ns)
-}
-
 type Factory struct {
 	client     kclient.WithWatch
 	restConfig *rest.Config
@@ -48,15 +24,14 @@ type Factory struct {
 	dialer     *k8schannel.Dialer
 }
 
-func (f *Factory) Namespace(namespace string) Client {
-	return &IgnoreUninstalled{
-		client: &client{
-			Namespace:  namespace,
-			Client:     f.client,
-			RESTConfig: f.restConfig,
-			RESTClient: f.restClient,
-			Dialer:     f.dialer,
-		},
+func (f *Factory) Namespace(project, namespace string) Client {
+	return &client{
+		Project:    project,
+		Namespace:  namespace,
+		Client:     f.client,
+		RESTConfig: f.restConfig,
+		RESTClient: f.restClient,
+		Dialer:     f.dialer,
 	}
 }
 
@@ -89,7 +64,7 @@ func NewClientFactory(restConfig *rest.Config) (*Factory, error) {
 	}, nil
 }
 
-func New(restConfig *rest.Config, namespace string) (Client, error) {
+func New(restConfig *rest.Config, project, namespace string) (Client, error) {
 	if namespace == "" {
 		namespace = system.UserNamespace()
 	}
@@ -98,7 +73,7 @@ func New(restConfig *rest.Config, namespace string) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return f.Namespace(namespace), nil
+	return f.Namespace(project, namespace), nil
 }
 
 type AppUpdateOptions struct {
@@ -167,19 +142,22 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 
 func (a AppUpdateOptions) ToRun() AppRunOptions {
 	return AppRunOptions{
-		Annotations:     a.Annotations,
-		Labels:          a.Labels,
-		PublishMode:     a.PublishMode,
-		Volumes:         a.Volumes,
-		Secrets:         a.Secrets,
-		Links:           a.Links,
-		Ports:           a.Ports,
-		DeployArgs:      a.DeployArgs,
-		DevMode:         a.DevMode,
-		Profiles:        a.Profiles,
-		Permissions:     a.Permissions,
-		Env:             a.Env,
-		TargetNamespace: a.TargetNamespace,
+		Annotations:         a.Annotations,
+		Labels:              a.Labels,
+		PublishMode:         a.PublishMode,
+		Volumes:             a.Volumes,
+		Secrets:             a.Secrets,
+		Links:               a.Links,
+		Ports:               a.Ports,
+		DeployArgs:          a.DeployArgs,
+		DevMode:             a.DevMode,
+		Profiles:            a.Profiles,
+		Permissions:         a.Permissions,
+		Env:                 a.Env,
+		TargetNamespace:     a.TargetNamespace,
+		AutoUpgrade:         a.AutoUpgrade,
+		NotifyUpgrade:       a.NotifyUpgrade,
+		AutoUpgradeInterval: a.AutoUpgradeInterval,
 	}
 }
 
@@ -243,16 +221,20 @@ type Client interface {
 	AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
 	AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error)
 
+	ProjectList(ctx context.Context) ([]apiv1.Project, error)
+
 	Info(ctx context.Context) (*apiv1.Info, error)
 
+	GetProject() string
 	GetNamespace() string
 	GetClient() kclient.WithWatch
-
-	PromptUser(obj string) error
 }
+
+type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
 
 type AcornImageBuildOptions struct {
 	BuilderName string
+	Credentials CredentialLookup
 	Cwd         string
 	Platforms   []v1.Platform
 	Args        map[string]any
@@ -278,11 +260,11 @@ func (a *AcornImageBuildOptions) complete() (_ *AcornImageBuildOptions, err erro
 }
 
 type ImagePullOptions struct {
-	PullSecrets []string `json:"pullSecrets,omitempty"`
+	Auth *apiv1.RegistryAuth `json:"auth,omitempty"`
 }
 
 type ImagePushOptions struct {
-	PullSecrets []string `json:"pullSecrets,omitempty"`
+	Auth *apiv1.RegistryAuth `json:"auth,omitempty"`
 }
 
 type ImageDetailsOptions struct {
@@ -302,11 +284,16 @@ type ContainerReplicaListOptions struct {
 }
 
 type client struct {
+	Project    string
 	Namespace  string
 	Client     kclient.WithWatch
 	RESTConfig *rest.Config
 	RESTClient *rest.RESTClient
 	Dialer     *k8schannel.Dialer
+}
+
+func (c *client) GetProject() string {
+	return c.Project
 }
 
 func (c *client) GetNamespace() string {

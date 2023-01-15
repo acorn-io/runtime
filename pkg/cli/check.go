@@ -2,18 +2,16 @@ package cli
 
 import (
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/client"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/install"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
-func NewCheck(c client.CommandContext) *cobra.Command {
+func NewCheck(c CommandContext) *cobra.Command {
 	return cli.Command(&Check{client: c.ClientFactory}, cobra.Command{
 		Use: "check",
 		Example: `
@@ -30,7 +28,7 @@ type Check struct {
 	Image            string  `usage:"Override the image used for test deployments." short:"i"`
 	IngressClassName *string `usage:"Specify ingress class used for tests"`
 	TestNamespace    *string `usage:"Specify namespace used for tests" short:"n"`
-	client           client.ClientFactory
+	client           ClientFactory
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
@@ -52,7 +50,7 @@ func (a *Check) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if !a.Quiet {
-		out := table.NewWriter(tables.CheckResult, system.UserNamespace(), a.Quiet, a.Output)
+		out := table.NewWriter(tables.CheckResult, a.Quiet, a.Output)
 		for _, r := range checkresult {
 			out.Write(&r)
 		}

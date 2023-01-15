@@ -3,12 +3,8 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
-
-	"github.com/acorn-io/acorn/pkg/prompt"
-	"github.com/pterm/pterm"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -444,17 +440,6 @@ func (c *client) appStop(ctx context.Context, name string) error {
 	}
 	return nil
 }
-func (c *client) PromptUser(obj string) error {
-	msg := "Do you want to remove the above " + obj
-	if ok, err := prompt.Bool(msg, false); err != nil {
-		return err
-	} else if !ok {
-		pterm.Warning.Println("Aborting remove")
-		return fmt.Errorf("aborting remove")
-	}
-	return nil
-}
-
 func (c *client) AppConfirmUpgrade(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{

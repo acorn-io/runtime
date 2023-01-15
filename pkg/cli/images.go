@@ -9,13 +9,12 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
-func NewImage(c client.CommandContext) *cobra.Command {
+func NewImage(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Image{client: c.ClientFactory}, cobra.Command{
 		Use:     "image [flags] [IMAGE_REPO:TAG|IMAGE_ID]",
 		Aliases: []string{"images", "i"},
@@ -36,7 +35,7 @@ type Image struct {
 	NoTrunc    bool   `usage:"Don't truncate IDs"`
 	Output     string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	Containers bool   `usage:"Show containers for images" short:"c"`
-	client     client.ClientFactory
+	client     ClientFactory
 }
 
 func (a *Image) Run(cmd *cobra.Command, args []string) error {
@@ -70,11 +69,11 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		return printContainerImages(images, cmd.Context(), c, a, args)
 	}
 
-	out := table.NewWriter(tables.ImageAcorn, system.UserNamespace(), false, a.Output)
+	out := table.NewWriter(tables.ImageAcorn, false, a.Output)
 	if a.Quiet {
 		out = table.NewWriter([][]string{
 			{"Name", "{{ .Name }}"},
-		}, system.UserNamespace(), true, a.Output)
+		}, true, a.Output)
 	}
 
 	out.AddFormatFunc("trunc", func(str string) string {
@@ -144,12 +143,12 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	if len(args) == 1 {
 		tagToMatch = args[0]
 	}
-	out := table.NewWriter(tables.ImageContainer, system.UserNamespace(), a.Quiet, a.Output)
+	out := table.NewWriter(tables.ImageContainer, a.Quiet, a.Output)
 
 	if a.Quiet {
 		out = table.NewWriter([][]string{
 			{"Name", "{{if ne .Repo \"\"}}{{.Repo}}:{{end}}{{.Tag}}@{{.Digest}}"},
-		}, system.UserNamespace(), a.Quiet, a.Output)
+		}, a.Quiet, a.Output)
 	}
 
 	for _, image := range images {

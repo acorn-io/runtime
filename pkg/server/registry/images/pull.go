@@ -60,11 +60,6 @@ func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Obje
 	id = strings.ReplaceAll(id, "+", "/")
 	ns, _ := request.NamespaceFrom(ctx)
 
-	progress, err := i.ImagePull(ctx, ns, id)
-	if err != nil {
-		return nil, err
-	}
-
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
 		if err != nil {
@@ -72,6 +67,20 @@ func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Obje
 			return
 		}
 		defer conn.Close()
+
+		k8schannel.AddCloseHandler(conn)
+
+		args := &apiv1.ImagePull{}
+		if err := conn.ReadJSON(args); err != nil {
+			_ = conn.CloseHandler()(websocket.CloseInternalServerErr, err.Error())
+			return
+		}
+
+		progress, err := i.ImagePull(ctx, ns, id, args.Auth)
+		if err != nil {
+			_ = conn.CloseHandler()(websocket.CloseInternalServerErr, err.Error())
+			return
+		}
 
 		for update := range progress {
 			p := ImageProgress{
@@ -99,13 +108,13 @@ func (i *ImagePull) ConnectMethods() []string {
 	return []string{"GET"}
 }
 
-func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) (<-chan ggcrv1.Update, error) {
-	opts, err := images.GetAuthenticationRemoteOptions(ctx, i.client, namespace, i.transportOpt)
+func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ggcrv1.Update, error) {
+	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, imageName)
 	if err != nil {
 		return nil, err
 	}
 
-	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, imageName)
+	opts, err := images.GetAuthenticationRemoteOptionsWithLocalAuth(ctx, pullTag.Context(), auth, i.client, namespace, i.transportOpt)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +169,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string) 
 					Error: err,
 				}
 			}
-			if err := i.clientFactory.Namespace(namespace).ImageTag(ctx, hash.Hex, imageName); err != nil {
+			if err := i.clientFactory.Namespace("", namespace).ImageTag(ctx, hash.Hex, imageName); err != nil {
 				progress2 <- ggcrv1.Update{
 					Error: err,
 				}

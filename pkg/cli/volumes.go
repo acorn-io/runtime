@@ -3,14 +3,12 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
 
-func NewVolume(c client.CommandContext) *cobra.Command {
+func NewVolume(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Volume{client: c.ClientFactory}, cobra.Command{
 		Use:     "volume [flags] [VOLUME_NAME...]",
 		Aliases: []string{"volumes", "v"},
@@ -27,7 +25,7 @@ acorn volume`,
 type Volume struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *Volume) Run(cmd *cobra.Command, args []string) error {
@@ -36,7 +34,7 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.Volume, system.UserNamespace(), a.Quiet, a.Output)
+	out := table.NewWriter(tables.Volume, a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		volume, err := c.VolumeGet(cmd.Context(), args[0])

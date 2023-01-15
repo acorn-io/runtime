@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/client"
 	"io"
 	"os"
 	"strings"
@@ -15,12 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSecretEncrypt(c client.CommandContext) *cobra.Command {
+func NewSecretEncrypt(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Encrypt{client: c.ClientFactory}, cobra.Command{
 		Use:          "encrypt [flags] STRING",
 		SilenceUsage: true,
 		Short:        "Encrypt string information with clusters public key",
-		Args:         cobra.RangeArgs(0, 1),
+		Args:         cobra.MaximumNArgs(1),
 	})
 	return cmd
 }
@@ -28,13 +27,13 @@ func NewSecretEncrypt(c client.CommandContext) *cobra.Command {
 type Encrypt struct {
 	PlaintextStdin bool     `usage:"Take the plaintext from stdin"`
 	PublicKey      []string `usage:"Pass one or more cluster publicKey values"`
-	client         client.ClientFactory
+	client         ClientFactory
 }
 
 func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter([][]string{
 		{"Name", "{{.}}"},
-	}, "", true, "")
+	}, true, "")
 	c, err := e.client.CreateDefault()
 	if err != nil {
 		return err

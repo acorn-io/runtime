@@ -27,7 +27,7 @@ func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
 func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.Credential)
 	if !params.SkipChecks {
-		if err := s.credentialValidate(ctx, params.Username, *params.Password, params.ServerAddress); err != nil {
+		if err := CredentialValidate(ctx, params.Username, *params.Password, params.ServerAddress); err != nil {
 			result = append(result, field.Forbidden(field.NewPath("username/password"), err.Error()))
 		}
 	}
@@ -38,9 +38,9 @@ func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) 
 	return s.Validate(ctx, params)
 }
 
-// credentialValidate takes a username, password and serverAddress string to validate
+// CredentialValidate takes a username, password and serverAddress string to validate
 // whether their combination is valid and will succeed login for pushes/pulls.
-func (s *Strategy) credentialValidate(ctx context.Context, username, password, serverAddress string) error {
+func CredentialValidate(ctx context.Context, username, password, serverAddress string) error {
 	// Build a registry struct for the host
 	reg, err := name.NewRegistry(serverAddress)
 	if err != nil {

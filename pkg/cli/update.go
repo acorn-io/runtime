@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func NewUpdate(c client.CommandContext) *cobra.Command {
+func NewUpdate(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:               "update [flags] APP_NAME [deploy flags]",
 		SilenceUsage:      true,
@@ -34,7 +34,7 @@ type Update struct {
 	RunArgs
 
 	out    io.Writer
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {

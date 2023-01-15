@@ -2,12 +2,11 @@ package cli
 
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/controller"
 	"github.com/spf13/cobra"
 )
 
-func NewController(c client.CommandContext) *cobra.Command {
+func NewController(c CommandContext) *cobra.Command {
 	return cli.Command(&Controller{client: c.ClientFactory}, cobra.Command{
 		Use:          "controller",
 		SilenceUsage: true,
@@ -18,7 +17,7 @@ func NewController(c client.CommandContext) *cobra.Command {
 }
 
 type Controller struct {
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (s *Controller) Run(cmd *cobra.Command, args []string) error {

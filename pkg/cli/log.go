@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewLogs(c client.CommandContext) *cobra.Command {
+func NewLogs(c CommandContext) *cobra.Command {
 	logs := &Logs{client: c.ClientFactory}
 	return cli.Command(logs, cobra.Command{
 		Use:               "logs [flags] APP_NAME|CONTAINER_NAME",
@@ -25,7 +25,7 @@ type Logs struct {
 	Follow bool   `short:"f" usage:"Follow log output"`
 	Since  string `short:"s" usage:"Show logs since timestamp (e.g. 42m for 42 minutes)"`
 	Tail   int64  `short:"n" usage:"Number of lines in log output"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (s *Logs) Run(cmd *cobra.Command, args []string) error {

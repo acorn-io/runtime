@@ -3,14 +3,12 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
 
-func NewApp(c client.CommandContext) *cobra.Command {
+func NewApp(c CommandContext) *cobra.Command {
 	return cli.Command(&App{client: c.ClientFactory}, cobra.Command{
 		Use:     "app [flags] [APP_NAME...]",
 		Aliases: []string{"apps", "a", "ps"},
@@ -26,7 +24,7 @@ type App struct {
 	All    bool   `usage:"Include stopped apps" short:"a"`
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *App) Run(cmd *cobra.Command, args []string) error {
@@ -35,7 +33,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.App, system.UserNamespace(), a.Quiet, a.Output)
+	out := table.NewWriter(tables.App, a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		app, err := c.AppGet(cmd.Context(), args[0])

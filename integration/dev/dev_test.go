@@ -58,8 +58,7 @@ func TestDev(t *testing.T) {
 
 	eg := errgroup.Group{}
 	eg.Go(func() error {
-		return dev.Dev(subCtx, acornCueFile, &dev.Options{
-			Client: helper.BuilderClient(t, ns.Name),
+		return dev.Dev(subCtx, helper.BuilderClient(t, ns.Name), acornCueFile, &dev.Options{
 			Build: client.AcornImageBuildOptions{
 				Cwd: tmp,
 			},

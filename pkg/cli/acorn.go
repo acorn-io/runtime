@@ -7,7 +7,6 @@ import (
 	"os"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/pterm/pterm"
@@ -17,17 +16,21 @@ import (
 )
 
 func New() *cobra.Command {
-	root := cli.Command(&Acorn{}, cobra.Command{
+	a := &Acorn{}
+	root := cli.Command(a, cobra.Command{
 		Long: "Acorn: Containerized Application Packaging Framework",
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
 		},
 	})
-	cmdContext := client.CommandContext{
-		ClientFactory: &client.CmdClient{},
-		StdOut:        os.Stdout,
-		StdErr:        os.Stderr,
-		StdIn:         nil,
+	cmdContext := CommandContext{
+		ClientFactory: &CommandClientFactory{
+			cmd:   root,
+			acorn: a,
+		},
+		StdOut: os.Stdout,
+		StdErr: os.Stderr,
+		StdIn:  nil,
 	}
 	root.AddCommand(
 		NewAll(cmdContext),
@@ -48,6 +51,7 @@ func New() *cobra.Command {
 		NewLogs(cmdContext),
 		NewCredentialLogin(true, cmdContext),
 		NewCredentialLogout(true, cmdContext),
+		NewProject(cmdContext),
 		NewPull(cmdContext),
 		NewPush(cmdContext),
 		NewRm(cmdContext),
@@ -65,34 +69,16 @@ func New() *cobra.Command {
 }
 
 type Acorn struct {
-	Kubeconfig    string `usage:"Location of a kubeconfig file"`
-	Context       string `usage:"Context to use in the kubeconfig file"`
-	Namespace     string `usage:"Namespace to work in" default:"acorn"`
-	AllNamespaces bool   `usage:"Namespace to work in" default:"acorn" short:"A"`
-	Debug         bool   `usage:"Enable debug logging"`
-	DebugLevel    int    `usage:"Debug log level (valid 0-9) (default 7)"`
-}
-
-func setEnv(key, value string) error {
-	if value != "" && os.Getenv(key) == "" {
-		return os.Setenv(key, value)
-	}
-	return nil
+	Kubeconfig  string `usage:"Explicitly use kubeconfig file, overriding current project" env:"ACORN_KUBECONFIG"`
+	Context     string `usage:"Context to use in the resolved kubeconfig file" env:"ACORN_KUBECONFIG_CONTEXT"`
+	Namespace   string `usage:"Namespace to work in resolved connection (default \"acorn\")" env:"ACORN_NAMESPACE"`
+	Project     string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
+	AllProjects bool   `usage:"Use all known projects" short:"A" env:"ACORN_ALL_PROJECTS"`
+	Debug       bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
+	DebugLevel  int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
 }
 
 func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
-	if err := setEnv("KUBECONFIG", a.Kubeconfig); err != nil {
-		return err
-	}
-	if err := setEnv("CONTEXT", a.Context); err != nil {
-		return err
-	}
-	if err := setEnv("NAMESPACE", a.Namespace); err != nil {
-		return err
-	}
-	if a.AllNamespaces {
-		return os.Setenv("NAMESPACE_ALL", "true")
-	}
 	if !term.IsTerminal(os.Stdout) || !term.IsTerminal(os.Stderr) || os.Getenv("NO_COLOR") != "" || os.Getenv("NOCOLOR") != "" {
 		pterm.DisableStyling()
 	}

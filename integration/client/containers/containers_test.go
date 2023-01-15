@@ -26,7 +26,7 @@ func TestContainerList(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestContainerDelete(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestContainerGet(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +155,7 @@ func TestContainerExec(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestContainerDebugExec(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 	ns := helper.TempNamespace(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name)
+	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

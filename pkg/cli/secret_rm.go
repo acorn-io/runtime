@@ -4,11 +4,10 @@ import (
 	"fmt"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewSecretDelete(c client.CommandContext) *cobra.Command {
+func NewSecretDelete(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&SecretDelete{client: c.ClientFactory}, cobra.Command{
 		Use: "rm [SECRET_NAME...]",
 		Example: `
@@ -21,7 +20,7 @@ acorn secret rm my-secret`,
 }
 
 type SecretDelete struct {
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *SecretDelete) Run(cmd *cobra.Command, args []string) error {

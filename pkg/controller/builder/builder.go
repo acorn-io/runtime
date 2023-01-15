@@ -40,7 +40,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 	}
 
 	var forNamespace string
-	if *cfg.BuilderPerNamespace {
+	if *cfg.BuilderPerProject {
 		forNamespace = builder.Namespace
 	}
 
@@ -54,7 +54,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 		objs = append(objs, ing...)
 	}
 
-	if *cfg.BuilderPerNamespace {
+	if *cfg.BuilderPerProject {
 		resp.Objects(objs...)
 		return name, pubKey, objs, nil
 	}
@@ -69,7 +69,7 @@ func DeployBuilder(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	if *cfg.BuilderPerNamespace {
+	if *cfg.BuilderPerProject {
 		if builder.Status.UUID == "" {
 			builder.Status.UUID = uuid.New().String()
 		}

@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/config"
+	credentials2 "github.com/acorn-io/acorn/pkg/credentials"
 	"github.com/spf13/cobra"
 )
 
-func NewCredentialLogout(root bool, c client.CommandContext) *cobra.Command {
+func NewCredentialLogout(root bool, c CommandContext) *cobra.Command {
 	cmd := cli.Command(&CredentialLogout{client: c.ClientFactory}, cobra.Command{
 		Use:     "logout [flags] [SERVER_ADDRESS]",
 		Aliases: []string{"rm"},
@@ -26,7 +27,8 @@ acorn logout ghcr.io`,
 }
 
 type CredentialLogout struct {
-	client client.ClientFactory
+	client       ClientFactory
+	LocalStorage bool `usage:"Delete locally stored credential (not remotely stored)" short:"l"`
 }
 
 func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
@@ -35,12 +37,23 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cred, err := client.CredentialDelete(cmd.Context(), args[0])
+	store, err := credentials2.NewStore(client)
 	if err != nil {
 		return err
 	}
-	if cred != nil {
-		fmt.Println(cred.Name)
+
+	err = store.Remove(cmd.Context(), credentials2.Credential{
+		ServerAddress: args[0],
+		LocalStorage:  a.LocalStorage,
+	})
+	if err != nil {
+		return err
 	}
-	return nil
+
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return fmt.Errorf("failed to remove server %s from CLI config: %v", args[0], err)
+	}
+
+	return config.RemoveServer(cfg, args[0])
 }

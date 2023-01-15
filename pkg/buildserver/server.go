@@ -3,6 +3,7 @@ package buildserver
 import (
 	"context"
 	"net/http"
+	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
@@ -73,6 +74,8 @@ func (s *Server) serveHTTP(rw http.ResponseWriter, req *http.Request) error {
 	}
 	defer conn.Close()
 
+	k8schannel.AddCloseHandler(conn)
+
 	m := buildclient.NewWebsocketMessages(conn)
 	m.Start(req.Context())
 
@@ -93,10 +96,25 @@ func (s *Server) serveHTTP(rw http.ResponseWriter, req *http.Request) error {
 	return nil
 }
 
-func (s *Server) build(ctx context.Context, messages buildclient.Messages, token *Token) (*v1.AppImage, error) {
-	if err := s.recordBuildStart(ctx, &token.Build); err != nil {
-		return nil, err
+func retryOnConflict(f func() error) error {
+	var err error
+	for i := 0; i < 5; i++ {
+		err = f()
+		if apierrors.IsConflict(err) {
+			logrus.Infof("Conflict retrying: %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		return err
+	}
+	return err
+}
 
+func (s *Server) build(ctx context.Context, messages buildclient.Messages, token *Token) (*v1.AppImage, error) {
+	if err := retryOnConflict(func() error {
+		return s.recordBuildStart(ctx, &token.Build)
+	}); err != nil {
+		return nil, err
 	}
 	keychain, err := pullsecret.Keychain(ctx, s.client, token.Build.Namespace)
 	if err != nil {
@@ -112,7 +130,12 @@ func (s *Server) build(ctx context.Context, messages buildclient.Messages, token
 		return nil, err
 	}
 
-	return image, s.recordBuild(ctx, token.PushRepo, &token.Build, image)
+	if err := retryOnConflict(func() error {
+		return s.recordBuild(ctx, token.PushRepo, &token.Build, image)
+	}); err != nil {
+		return nil, err
+	}
+	return image, nil
 }
 
 func (s *Server) recordBuildStart(ctx context.Context, build *v1.AcornImageBuildInstance) error {

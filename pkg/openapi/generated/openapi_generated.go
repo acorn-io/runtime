@@ -48,6 +48,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.LogOptions":                         schema_pkg_apis_apiacornio_v1_LogOptions(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project":                            schema_pkg_apis_apiacornio_v1_Project(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectList":                        schema_pkg_apis_apiacornio_v1_ProjectList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth":                       schema_pkg_apis_apiacornio_v1_RegistryAuth(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Secret":                             schema_pkg_apis_apiacornio_v1_Secret(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.SecretList":                         schema_pkg_apis_apiacornio_v1_SecretList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Volume":                             schema_pkg_apis_apiacornio_v1_Volume(ref),
@@ -841,7 +842,7 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
-					"builderPerNamespace": {
+					"builderPerProject": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
@@ -849,13 +850,12 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 					},
 					"internalRegistryPrefix": {
 						SchemaProps: spec.SchemaProps{
-							Default: "",
-							Type:    []string{"string"},
-							Format:  "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerNamespace", "internalRegistryPrefix"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix"},
 			},
 		},
 	}
@@ -1683,9 +1683,16 @@ func schema_pkg_apis_apiacornio_v1_ImagePull(ref common.ReferenceCallback) commo
 							Format:      "",
 						},
 					},
+					"auth": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"},
 	}
 }
 
@@ -1709,9 +1716,16 @@ func schema_pkg_apis_apiacornio_v1_ImagePush(ref common.ReferenceCallback) commo
 							Format:      "",
 						},
 					},
+					"auth": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"},
 	}
 }
 
@@ -2103,6 +2117,30 @@ func schema_pkg_apis_apiacornio_v1_ProjectList(ref common.ReferenceCallback) com
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_RegistryAuth(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"username": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"password": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

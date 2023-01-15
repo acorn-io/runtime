@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewImageDelete(c client.CommandContext) *cobra.Command {
+func NewImageDelete(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&ImageDelete{client: c.ClientFactory}, cobra.Command{
 		Use:               "rm [IMAGE_NAME...]",
 		Example:           `acorn image rm my-image`,
@@ -20,7 +20,7 @@ func NewImageDelete(c client.CommandContext) *cobra.Command {
 }
 
 type ImageDelete struct {
-	client client.ClientFactory
+	client ClientFactory
 	Force  bool `usage:"Force Delete" short:"f"`
 }
 

@@ -9,6 +9,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/acorn/pkg/project"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -19,6 +20,10 @@ type MockClientFactory struct {
 	CredentialList []apiv1.Credential
 	VolumeList     []apiv1.Volume
 	SecretList     []apiv1.Secret
+}
+
+func (dc *MockClientFactory) Options() project.Options {
+	return project.Options{}
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
@@ -536,6 +541,16 @@ func (m *MockClient) AcornImageBuildDelete(ctx context.Context, name string) (*a
 }
 
 func (m *MockClient) AcornImageBuild(ctx context.Context, file string, opts *client.AcornImageBuildOptions) (*v1.AppImage, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) GetProject() string {
 	//TODO implement me
 	panic("implement me")
 }

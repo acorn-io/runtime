@@ -25,9 +25,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-func containerSyncLoop(ctx context.Context, app *apiv1.App, opts *Options) error {
+func containerSyncLoop(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
 	for {
-		err := containerSync(ctx, app, opts)
+		err := containerSync(ctx, client, app, opts)
 		if err != nil && !errors.Is(err, context.Canceled) {
 			logrus.Errorf("failed to run container sync: %s", err)
 		}
@@ -39,10 +39,10 @@ func containerSyncLoop(ctx context.Context, app *apiv1.App, opts *Options) error
 	}
 }
 
-func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
+func containerSync(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
 	syncLock := sync2.Mutex{}
 	syncing := map[string]bool{}
-	w := objwatcher.New[*apiv1.ContainerReplica](opts.Client.GetClient())
+	w := objwatcher.New[*apiv1.ContainerReplica](client.GetClient())
 	_, err := w.BySelector(ctx, app.Namespace, labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
 		if con.Spec.AppName == app.Name && con.Spec.JobName == "" && con.Status.Phase == corev1.PodRunning && !syncing[con.Name] {
 			if con.Spec.Init {
@@ -57,7 +57,7 @@ func containerSync(ctx context.Context, app *apiv1.App, opts *Options) error {
 					mount     = mount
 				)
 				go func() {
-					startSyncForPath(ctx, opts.Client, con, opts.Build.Cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
+					startSyncForPath(ctx, client, con, opts.Build.Cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
 					syncLock.Lock()
 					delete(syncing, con.Name)
 					syncLock.Unlock()

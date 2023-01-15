@@ -20,12 +20,10 @@ var (
 	APIServerName            = "acorn-api"
 	BuildkitPort             = 8080
 	ContainerdConfigPathName = "containerd-config-path"
+	DefaultHubAddress        = "acorn.io"
 )
 
 func UserNamespace() string {
-	if os.Getenv("NAMESPACE_ALL") == "true" {
-		return ""
-	}
 	ns := os.Getenv("NAMESPACE")
 	if ns != "" {
 		return ns

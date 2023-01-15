@@ -93,5 +93,5 @@ func (c *client) AcornImageBuild(ctx context.Context, file string, opts *AcornIm
 	}
 
 	logrus.Debugf("Building with URL: %s", build.Status.BuildURL)
-	return buildclient.Stream(ctx, opts.Cwd, opts.Streams, dialer, build)
+	return buildclient.Stream(ctx, opts.Cwd, opts.Streams, dialer, (buildclient.CredentialLookup)(opts.Credentials), build)
 }

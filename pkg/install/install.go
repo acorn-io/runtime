@@ -94,29 +94,23 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	klogv2.SetOutput(io.Discard)
 	utilruntime.ErrorHandlers = nil
 
-	if opts.Config.AutoUpgradeInterval != nil {
-		if _, err := validate.AutoUpgradeInterval(*opts.Config.AutoUpgradeInterval); err != nil {
-			return err
-		}
-	}
-
 	c, err := k8sclient.Default()
 	if err != nil {
 		return err
 	}
 
-	serverConf, err := config.Incomplete(ctx, c)
+	finalConfForValidation, err := config.TestSetGet(ctx, c, &opts.Config)
 	if err != nil {
 		return err
 	}
 
+	if _, err := validate.AutoUpgradeInterval(*finalConfForValidation.AutoUpgradeInterval); err != nil {
+		return err
+	}
+
 	// Require E-Mail address when using Let's Encrypt production
-	if opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled" {
-		agreed := opts.Config.GetLetsEncryptTOSAgree()
-		if !agreed && opts.Config.LetsEncryptTOSAgree == nil && serverConf.GetLetsEncryptTOSAgree() {
-			agreed = true
-		}
-		if !agreed {
+	if *finalConfForValidation.LetsEncrypt == "enabled" {
+		if !*finalConfForValidation.LetsEncryptTOSAgree {
 			ok, err := prompt.Bool("You are choosing to enable Let's Encrypt for TLS certificates. To do so, you must agree to their Terms of Service: https://letsencrypt.org/documents/LE-SA-v1.3-September-21-2022.pdf\nTip: use --lets-encrypt-tos-agree to skip this prompt\nDo you agree to Let's Encrypt TOS?", false)
 			if err != nil {
 				return err
@@ -126,7 +120,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			}
 			opts.Config.LetsEncryptTOSAgree = &ok
 		}
-		if opts.Config.LetsEncryptEmail == "" && serverConf.LetsEncryptEmail == "" {
+		if finalConfForValidation.LetsEncryptEmail == "" {
 			result, err := pterm.DefaultInteractiveTextInput.WithMultiLine(false).Show("Enter your email address for Let's Encrypt")
 			if err != nil {
 				return err
@@ -137,21 +131,16 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	// Validate E-Mail address provided for Let's Encrypt registration
-	if opts.Config.LetsEncryptEmail != "" || (opts.Config.LetsEncrypt != nil && *opts.Config.LetsEncrypt == "enabled") {
-		email := opts.Config.LetsEncryptEmail
-		if email == "" {
-			email = serverConf.LetsEncryptEmail
-		}
+	if finalConfForValidation.LetsEncryptEmail != "" || *finalConfForValidation.LetsEncrypt == "enabled" {
+		email := finalConfForValidation.LetsEncryptEmail
 		if !validMailAddress(email) {
 			return fmt.Errorf("invalid email address '%s' provided for Let's Encrypt", opts.Config.LetsEncryptEmail)
 		}
 	}
 
-	// Validate the non-default http-endpoint-pattern
-	if opts.Config.HttpEndpointPattern != nil && *opts.Config.HttpEndpointPattern != "" {
-		if err := publish.ValidateEndpointPattern(*opts.Config.HttpEndpointPattern); err != nil {
-			return err
-		}
+	// Validate the http-endpoint-pattern
+	if err := publish.ValidateEndpointPattern(*finalConfForValidation.HttpEndpointPattern); err != nil {
+		return err
 	}
 
 	opts = opts.complete()
@@ -184,7 +173,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	if ok, err := config.IsDockerDesktop(ctx, c); err != nil {
 		return err
 	} else if ok {
-		if opts.Config.IngressClassName == nil {
+		if finalConfForValidation.IngressClassName == nil {
 			installIngressController, err = missingIngressClass(ctx, c)
 			if err != nil {
 				return err
@@ -230,6 +219,12 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
+	if *finalConfForValidation.InternalRegistryPrefix == "" && *opts.ControllerReplicas > 0 {
+		if err := waitRegistry(ctx, opts.Progress, image, c); err != nil {
+			return err
+		}
+	}
+
 	if !opts.SkipChecks {
 		s = opts.Progress.New("Running Post-install Checks")
 		checkResults := PostInstallChecks(ctx, checkOpts)
@@ -244,8 +239,6 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		} else {
 			s.Success()
 		}
-	} else {
-		s.Success()
 	}
 
 	pterm.Success.Println("Installation done")
@@ -298,14 +291,14 @@ func installTraefik(ctx context.Context, p progress.Builder, client kclient.With
 	return apply.WithOwnerSubContext("acorn-install-traefik").WithNamespace(system.Namespace).Apply(ctx, nil, objs...)
 }
 
-func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name string, scale int32) error {
+func waitDeployment(ctx context.Context, s progress.Progress, client kclient.WithWatch, imageName, name, namespace string, scale int32) error {
 	childCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	eg, _ := errgroup.WithContext(ctx)
 	if scale > 0 {
 		eg.Go(func() error {
-			_, err := watcher.New[*corev1.Pod](client).BySelector(childCtx, "acorn-system", labels.SelectorFromSet(map[string]string{
+			_, err := watcher.New[*corev1.Pod](client).BySelector(childCtx, namespace, labels.SelectorFromSet(map[string]string{
 				"app": name,
 			}), func(pod *corev1.Pod) (bool, error) {
 				for _, container := range pod.Spec.Containers {
@@ -325,10 +318,9 @@ func waitDeployment(ctx context.Context, s progress.Progress, client kclient.Wit
 	}
 
 	eg.Go(func() error {
-		_, err := watcher.New[*appsv1.Deployment](client).ByName(ctx, "acorn-system", name, func(dep *appsv1.Deployment) (bool, error) {
+		_, err := watcher.New[*appsv1.Deployment](client).ByName(ctx, namespace, name, func(dep *appsv1.Deployment) (bool, error) {
 			for _, cond := range dep.Status.Conditions {
 				if cond.Type == appsv1.DeploymentAvailable {
-					//s.Infof("Deployment acorn-system/%s: %s=%s (%s) %s", name, cond.Type, cond.Status, cond.Reason, cond.Message)
 					if cond.Status == corev1.ConditionTrue && dep.Generation == dep.Status.ObservedGeneration && dep.Status.UpdatedReplicas == scale && dep.Status.ReadyReplicas == scale {
 						return true, nil
 					}
@@ -344,12 +336,17 @@ func waitDeployment(ctx context.Context, s progress.Progress, client kclient.Wit
 
 func waitController(ctx context.Context, p progress.Builder, replicas int, image string, client kclient.WithWatch) error {
 	s := p.New("Waiting for controller deployment to be available")
-	return s.Fail(waitDeployment(ctx, s, client, image, "acorn-controller", int32(replicas)))
+	return s.Fail(waitDeployment(ctx, s, client, image, "acorn-controller", system.Namespace, int32(replicas)))
+}
+
+func waitRegistry(ctx context.Context, p progress.Builder, image string, client kclient.WithWatch) error {
+	s := p.New("Waiting for registry server deployment to be available")
+	return s.Fail(waitDeployment(ctx, s, client, image, system.RegistryName, system.ImagesNamespace, 1))
 }
 
 func waitAPI(ctx context.Context, p progress.Builder, replicas int, image string, client kclient.WithWatch) error {
 	s := p.New("Waiting for API server deployment to be available")
-	if err := waitDeployment(ctx, s, client, image, "acorn-api", int32(replicas)); err != nil {
+	if err := waitDeployment(ctx, s, client, image, "acorn-api", system.Namespace, int32(replicas)); err != nil {
 		return s.Fail(err)
 	}
 

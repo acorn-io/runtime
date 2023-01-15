@@ -238,3 +238,16 @@ func (c *netConn) SetReadDeadline(t time.Time) error {
 func (c *netConn) SetWriteDeadline(t time.Time) error {
 	return c.conn.conn.SetWriteDeadline(t)
 }
+
+func AddCloseHandler(conn *websocket.Conn) {
+	conn.SetCloseHandler(func(code int, text string) error {
+		// control messages can only be 125 characters and that includes 2 bytes of padding
+		if len(text) > 123 {
+			// 120 is 125 (max size) - 2 (padding) - 2 (formatting characters [])
+			text = "[" + text[len(text)-120:] + "]"
+		}
+		message := websocket.FormatCloseMessage(code, text)
+		_ = conn.WriteControl(websocket.CloseMessage, message, time.Now().Add(time.Second))
+		return nil
+	})
+}

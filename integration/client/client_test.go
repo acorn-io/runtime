@@ -109,7 +109,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 		return obj.Status.ContainerStatus["default"].Ready == 1
 	})
 
-	c, err = hclient.New(cfg, ns.Name)
+	c, err = hclient.New(cfg, "", ns.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

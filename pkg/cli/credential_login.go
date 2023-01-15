@@ -9,11 +9,14 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/credentials"
+	"github.com/acorn-io/acorn/pkg/hub"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func NewCredentialLogin(root bool, c client.CommandContext) *cobra.Command {
+func NewCredentialLogin(root bool, c CommandContext) *cobra.Command {
 	cmd := cli.Command(&CredentialLogin{client: c.ClientFactory}, cobra.Command{
 		Use:     "login [flags] [SERVER_ADDRESS]",
 		Aliases: []string{"add"},
@@ -21,7 +24,7 @@ func NewCredentialLogin(root bool, c client.CommandContext) *cobra.Command {
 acorn login ghcr.io`,
 		SilenceUsage: true,
 		Short:        "Add registry credentials",
-		Args:         cobra.ExactArgs(1),
+		Args:         cobra.MaximumNArgs(1),
 	})
 	if root {
 		cmd.Aliases = nil
@@ -30,17 +33,34 @@ acorn login ghcr.io`,
 }
 
 type CredentialLogin struct {
+	LocalStorage  bool   `usage:"Store credential on local client for push, pull, and build (not run)" short:"l"`
 	SkipChecks    bool   `usage:"Bypass login validation checks"`
 	PasswordStdin bool   `usage:"Take the password from stdin"`
 	Password      string `usage:"Password" short:"p"`
 	Username      string `usage:"Username" short:"u"`
-	client        client.ClientFactory
+	client        ClientFactory
 }
 
 func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	var (
+		client client.Client
+	)
+
+	cfg, err := config.ReadCLIConfig()
 	if err != nil {
 		return err
+	}
+
+	var serverAddress string
+	if len(args) == 0 && a.Password != "" {
+		// HubServer slice length is guaranteed to be >=1 by the ReadCLIConfig method
+		serverAddress = cfg.HubServers[0]
+	} else {
+		serverAddress = args[0]
+	}
+
+	if serverAddress == "" {
+		return cmd.Help()
 	}
 
 	if a.PasswordStdin {
@@ -67,27 +87,78 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	if err := survey.Ask(q, a); err != nil {
+	isHub, err := hub.IsHub(cmd.Context(), serverAddress)
+	if err != nil {
 		return err
 	}
 
-	existing, err := client.CredentialGet(cmd.Context(), args[0])
-	if apierror.IsNotFound(err) {
-		cred, err := client.CredentialCreate(cmd.Context(), args[0], a.Username, a.Password, a.SkipChecks)
+	if isHub {
+		user, pass, err := hub.Login(cmd.Context(), a.Password, serverAddress)
+		if err != nil {
+			return err
+		}
+		a.Username = user
+		a.Password = pass
+		a.LocalStorage = true
+		a.SkipChecks = true
+	} else {
+		if err := survey.Ask(q, a); err != nil {
+			return err
+		}
+	}
+
+	if !a.LocalStorage {
+		client, err = a.client.CreateDefault()
+		if err != nil {
+			return err
+		}
+	}
+
+	store, err := credentials.NewStore(client)
+	if err != nil {
+		return err
+	}
+
+	err = store.Add(cmd.Context(), credentials.Credential{
+		ServerAddress: serverAddress,
+		Username:      a.Username,
+		Password:      a.Password,
+		LocalStorage:  a.LocalStorage,
+	}, a.SkipChecks)
+	if err != nil {
+		return err
+	}
+
+	if isHub {
+		// reload config, could have changed
+		cfg, err = config.ReadCLIConfig()
 		if err != nil {
 			return err
 		}
 
-		fmt.Println(cred.Name)
-		return nil
+		var projectSet bool
+		def, err := hub.DefaultProject(cmd.Context(), serverAddress, a.Username, a.Password)
+		if err != nil {
+			return err
+		}
+		if cfg.CurrentProject == "" && def != "" {
+			pterm.Info.Printf("Setting default project to %s\n", def)
+			cfg.CurrentProject = def
+			if err := cfg.Save(); err != nil {
+				return err
+			}
+			projectSet = true
+		}
+
+		if !projectSet {
+			if def == "" {
+				def = fmt.Sprintf("%s/%s/acorn", serverAddress, a.Username)
+			}
+			pterm.Info.Printf("Run \"acorn projects %s\" to list available projects\n", serverAddress)
+			pterm.Info.Printf("Run \"acorn project use %s\" to set default project\n", def)
+		}
 	}
 
-	existing.Username = a.Username
-	existing.Password = &a.Password
-	cred, err := client.CredentialUpdate(cmd.Context(), args[0], a.Username, a.Password, a.SkipChecks)
-	if err != nil {
-		return err
-	}
-	fmt.Println(cred.Name)
+	pterm.Success.Printf("Login to %s succeeded\n", serverAddress)
 	return nil
 }

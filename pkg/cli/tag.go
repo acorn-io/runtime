@@ -2,11 +2,10 @@ package cli
 
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-func NewTag(c client.CommandContext) *cobra.Command {
+func NewTag(c CommandContext) *cobra.Command {
 	return cli.Command(&Tag{client: c.ClientFactory}, cobra.Command{
 		Use:               "tag [flags] SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]",
 		SilenceUsage:      true,
@@ -17,7 +16,7 @@ func NewTag(c client.CommandContext) *cobra.Command {
 }
 
 type Tag struct {
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (s *Tag) Run(cmd *cobra.Command, args []string) error {

@@ -3,15 +3,13 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 
 	"k8s.io/utils/strings/slices"
 )
 
-func NewContainer(c client.CommandContext) *cobra.Command {
+func NewContainer(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Container{client: c.ClientFactory}, cobra.Command{
 		Use:     "container [flags] [APP_NAME...]",
 		Aliases: []string{"containers", "c"},
@@ -29,7 +27,7 @@ type Container struct {
 	Quiet  bool   `usage:"Output only names" short:"q"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	All    bool   `usage:"Include stopped containers" short:"a"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *Container) Run(cmd *cobra.Command, args []string) error {
@@ -38,7 +36,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.Container, system.UserNamespace(), a.Quiet, a.Output)
+	out := table.NewWriter(tables.Container, a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		app, err := c.ContainerReplicaGet(cmd.Context(), args[0])

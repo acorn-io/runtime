@@ -6,14 +6,13 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/buildserver"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"inet.af/tcpproxy"
 )
 
-func NewBuildServer(c client.CommandContext) *cobra.Command {
+func NewBuildServer(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&BuildServer{}, cobra.Command{
 		Use:          "build-server [flags] DIRECTORY",
 		Hidden:       true,

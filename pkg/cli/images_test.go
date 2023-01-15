@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,7 +29,7 @@ func TestImage(t *testing.T) {
 		args           args
 		wantErr        bool
 		wantOut        string
-		commandContext client.CommandContext
+		commandContext CommandContext
 	}{
 		{
 			name: "acorn image", fields: fields{
@@ -38,7 +37,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -57,7 +56,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -76,7 +75,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -95,7 +94,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -114,7 +113,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -133,7 +132,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -151,7 +150,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -170,7 +169,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -189,7 +188,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -208,7 +207,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -227,7 +226,7 @@ func TestImage(t *testing.T) {
 				Quiet:  false,
 				Output: "",
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,

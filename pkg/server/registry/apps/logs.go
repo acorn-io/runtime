@@ -88,6 +88,8 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 		}
 		defer conn.Close()
 
+		k8schannel.AddCloseHandler(conn)
+
 		for message := range output {
 			lm := apiv1.LogMessage{
 				Line:          message.Line,

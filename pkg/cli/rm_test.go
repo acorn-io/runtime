@@ -1,14 +1,15 @@
 package cli
 
 import (
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/acorn-io/acorn/pkg/cli/testdata"
+	"github.com/acorn-io/acorn/pkg/prompt"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAppRm(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAppRm(t *testing.T) {
 		args           args
 		wantErr        bool
 		wantOut        string
-		commandContext client.CommandContext
+		commandContext CommandContext
 	}{
 		{
 			name: "does not exist default type", fields: fields{
@@ -37,7 +38,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -56,7 +57,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: true,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -75,7 +76,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -94,7 +95,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -113,7 +114,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -132,7 +133,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: true,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -151,7 +152,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -170,7 +171,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -189,7 +190,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -208,7 +209,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -227,7 +228,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -246,7 +247,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -265,7 +266,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -284,7 +285,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -303,7 +304,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -322,7 +323,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: false,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -341,7 +342,7 @@ func TestAppRm(t *testing.T) {
 				Type:  nil,
 				Force: true,
 			},
-			commandContext: client.CommandContext{
+			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
 				StdOut:        w,
 				StdErr:        w,
@@ -356,19 +357,22 @@ func TestAppRm(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		r, w, _ := os.Pipe()
-		os.Stdout = w
-		tt.args.cmd = NewRm(tt.commandContext)
-		tt.args.cmd.SetArgs(tt.args.args)
-		err := tt.args.cmd.Execute()
-		if err != nil && !tt.wantErr {
-			assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
-		} else if err != nil && tt.wantErr {
-			assert.Equal(t, tt.wantOut, err.Error())
-		} else {
-			w.Close()
-			out, _ := io.ReadAll(r)
-			assert.Equal(t, tt.wantOut, string(out))
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+			tt.args.cmd = NewRm(tt.commandContext)
+			tt.args.cmd.SetArgs(tt.args.args)
+			prompt.NoPromptRemove = true
+			err := tt.args.cmd.Execute()
+			if err != nil && !tt.wantErr {
+				assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
+			} else if err != nil && tt.wantErr {
+				assert.Equal(t, tt.wantOut, err.Error())
+			} else {
+				w.Close()
+				out, _ := io.ReadAll(r)
+				assert.Equal(t, tt.wantOut, string(out))
+			}
+		})
 	}
 }

@@ -1,20 +1,23 @@
 ---
 client:
+  cli:
+    hubServers:
+    - acorn.io
   version:
     tag: v0.0.0-dev
-namespace: {}
+project: {}
 server:
   config:
     acornDNS: null
     acornDNSEndpoint: null
     autoUpgradeInterval: null
-    builderPerNamespace: null
+    builderPerProject: null
     clusterDomains: null
     defaultPublishMode: ""
     httpEndpointPattern: null
     ingressClassName: null
     internalClusterDomain: ""
-    internalRegistryPrefix: ""
+    internalRegistryPrefix: null
     letsEncrypt: null
     letsEncryptEmail: ""
     letsEncryptTOSAgree: null
@@ -30,13 +33,13 @@ server:
     acornDNS: null
     acornDNSEndpoint: null
     autoUpgradeInterval: null
-    builderPerNamespace: null
+    builderPerProject: null
     clusterDomains: null
     defaultPublishMode: ""
     httpEndpointPattern: null
     ingressClassName: null
     internalClusterDomain: ""
-    internalRegistryPrefix: ""
+    internalRegistryPrefix: null
     letsEncrypt: null
     letsEncryptEmail: ""
     letsEncryptTOSAgree: null

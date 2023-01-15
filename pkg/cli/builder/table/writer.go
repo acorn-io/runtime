@@ -29,13 +29,9 @@ type writer struct {
 
 type FormatFunc any
 
-func NewWriter(values [][]string, namespace string, quiet bool, format string) Writer {
+func NewWriter(values [][]string, quiet bool, format string) Writer {
 	t := &writer{
 		funcMap: maps.Clone(FuncMap),
-	}
-
-	if namespace == "" {
-		t.funcMap["name"] = NamespaceName
 	}
 
 	t.Writer = tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)

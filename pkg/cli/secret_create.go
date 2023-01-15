@@ -7,12 +7,11 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/spf13/cobra"
 )
 
-func NewSecretCreate(c client.CommandContext) *cobra.Command {
+func NewSecretCreate(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&SecretCreate{client: c.ClientFactory}, cobra.Command{
 		Use: "create [flags] SECRET_NAME",
 		Example: `
@@ -35,7 +34,7 @@ type SecretCreate struct {
 	Data   []string `usage:"Secret data format key=value or @key=filename to read from file"`
 	File   string   `usage:"File to read for entire secret in cue/yaml/json format"`
 	Type   string   `usage:"Secret type"`
-	client client.ClientFactory
+	client ClientFactory
 }
 
 func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
