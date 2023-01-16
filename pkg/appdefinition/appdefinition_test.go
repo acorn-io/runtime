@@ -1470,7 +1470,7 @@ images: image: image: "test"
 	assert.Equal(t, "side-hash", appSpec.Containers["foo"].Sidecars["side"].Image)
 	assert.Equal(t, "test", appSpec.Containers["foo"].Sidecars["side"].Build.BaseImage)
 	assert.Equal(t, "bar-hash", appSpec.Containers["bar"].Image)
-	assert.Equal(t, "test", appSpec.Containers["bar"].Build.BaseImage)
+	assert.Equal(t, "bar-hash", appSpec.Containers["bar"].Build.BaseImage)
 	assert.Equal(t, "job-hash", appSpec.Jobs["job"].Image)
 	assert.Equal(t, "test", appSpec.Jobs["job"].Build.BaseImage)
 	assert.Equal(t, "image-hash", appSpec.Images["image"].Image)

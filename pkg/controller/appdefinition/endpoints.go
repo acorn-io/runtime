@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -154,6 +155,10 @@ func AppEndpointsStatus(req router.Request, _ router.Response) error {
 		}
 		eps[i] = ep
 	}
+
+	sort.Slice(eps, func(i, j int) bool {
+		return eps[i].Address < eps[j].Address
+	})
 
 	app.Status.Endpoints = eps
 	return nil
