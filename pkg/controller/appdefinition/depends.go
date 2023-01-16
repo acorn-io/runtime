@@ -33,6 +33,10 @@ type depCheckingResponse struct {
 	resp router.Response
 }
 
+func (d *depCheckingResponse) DisablePrune() {
+	d.resp.DisablePrune()
+}
+
 func (d *depCheckingResponse) RetryAfter(delay time.Duration) {
 	d.resp.RetryAfter(delay)
 }

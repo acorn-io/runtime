@@ -91,10 +91,14 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	sec.Annotations[labels.AcornDNSState] = state
-	sec.Data = map[string][]byte{"domain": []byte(domain), "token": []byte(token)}
-	if err := req.Client.Update(req.Ctx, sec); err != nil {
-		return err
+	if sec.Annotations[labels.AcornDNSState] != state ||
+		string(sec.Data["domain"]) != domain ||
+		string(sec.Data["token"]) != token {
+		sec.Annotations[labels.AcornDNSState] = state
+		sec.Data = map[string][]byte{"domain": []byte(domain), "token": []byte(token)}
+		if err := req.Client.Update(req.Ctx, sec); err != nil {
+			return err
+		}
 	}
 
 	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {

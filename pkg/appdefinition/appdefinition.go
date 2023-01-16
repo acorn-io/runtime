@@ -86,10 +86,15 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 
 func assignImage(originalImage string, build *v1.Build, image string) (string, *v1.Build) {
 	if build == nil {
-		build = &v1.Build{}
+		build = &v1.Build{
+			Context:    ".",
+			Dockerfile: "Dockerfile",
+		}
 	}
 	if build.BaseImage == "" {
 		build.BaseImage = originalImage
+	} else if build.BaseImage == originalImage {
+		build.BaseImage = image
 	}
 	return image, build
 }
