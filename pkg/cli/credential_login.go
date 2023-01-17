@@ -55,7 +55,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 && a.Password != "" {
 		// HubServer slice length is guaranteed to be >=1 by the ReadCLIConfig method
 		serverAddress = cfg.HubServers[0]
-	} else {
+	} else if len(args) > 0 {
 		serverAddress = args[0]
 	}
 
