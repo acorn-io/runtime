@@ -164,6 +164,177 @@ func TestImage(t *testing.T) {
 			wantOut: "found-image1234567\nfound-image-no-tag\nfound-image-two-tags1234567\nfound-image-two-tags1234567\n",
 		},
 		{
+			name: "acorn image testtag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"testtag"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\n",
+		},
+		{
+			name: "acorn image testtag1", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"testtag1"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag1     latest    found-image-\n",
+		},
+		{
+			name: "acorn image digest", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"lkjhgfdsa1234567890"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag1     latest    found-image-\ntesttag2     v1        found-image-\n",
+		},
+		{
+			name: "acorn image registry specific tag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"index.docker.io/subdir/test:v1"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY                    TAG       IMAGE-ID\nindex.docker.io/subdir/test   v1        registy12345\n",
+		},
+		{
+			name: "acorn image digest multi tag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"registry1234567"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY                    TAG       IMAGE-ID\nindex.docker.io/subdir/test   v1        registy12345\nindex.docker.io/subdir/test   v2        registy12345\n",
+		},
+		{
+			name: "acorn image digest multi tag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"registry1234567"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY                    TAG       IMAGE-ID\nindex.docker.io/subdir/test   v1        registy12345\nindex.docker.io/subdir/test   v2        registy12345\n",
+		},
+		{
+			name: "acorn image -c digest multi tag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"-c", "registry1234567"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY                    TAG       IMAGE-ID                  CONTAINER                      DIGEST\nindex.docker.io/subdir/test   v1        registy1234567-two-tags   test-image-running-container   test-image-running-container\n",
+		},
+		{
+			name: "acorn image -q digest multi tag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"-q", "registry1234567"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "registy1234567-two-tags\nregisty1234567-two-tags\n",
+		},
+		{
+			name: "acorn image -q -c digest multi tag", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"-q", "-c", "registry1234567"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "index.docker.io/subdir/test:v1@test-image-running-container\n",
+		},
+		{
 			name: "acorn image rm found-image1234567", fields: fields{
 				All:    false,
 				Quiet:  false,
@@ -240,20 +411,23 @@ func TestImage(t *testing.T) {
 			wantOut: "found-image-two-tags1234567\n",
 		},
 	}
+
 	for _, tt := range tests {
-		r, w, _ := os.Pipe()
-		os.Stdout = w
-		tt.args.cmd = NewImage(tt.commandContext)
-		tt.args.cmd.SetArgs(tt.args.args)
-		err := tt.args.cmd.Execute()
-		if err != nil && !tt.wantErr {
-			assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
-		} else if err != nil && tt.wantErr {
-			assert.Equal(t, tt.wantOut, err.Error())
-		} else {
-			w.Close()
-			out, _ := io.ReadAll(r)
-			assert.Equal(t, tt.wantOut, string(out))
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+			tt.args.cmd = NewImage(tt.commandContext)
+			tt.args.cmd.SetArgs(tt.args.args)
+			err := tt.args.cmd.Execute()
+			if err != nil && !tt.wantErr {
+				assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
+			} else if err != nil && tt.wantErr {
+				assert.Equal(t, tt.wantOut, err.Error())
+			} else {
+				w.Close()
+				out, _ := io.ReadAll(r)
+				assert.Equal(t, tt.wantOut, string(out))
+			}
+		})
 	}
 }
