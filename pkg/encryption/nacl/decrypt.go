@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/nacl/box"
@@ -34,18 +35,23 @@ func DecryptNamespacedData(ctx context.Context, c kclient.Reader, data []byte, n
 		return nil, err
 	}
 
+	var errs []error
 	for _, key := range keys {
 		data, err := key.Decrypt(data)
 		if err == nil {
 			return data, nil
+		} else {
+			errs = append(errs, fmt.Errorf("pubkey %s: %w", KeyBytesToB64String(key.PublicKey), err))
 		}
 	}
 
-	return nil, &ErrUnableToDecrypt{}
+	return nil, &ErrUnableToDecrypt{
+		Errs: errs,
+	}
 }
 
 func (k *NaclKey) Decrypt(encData []byte) ([]byte, error) {
-	pubKeyString := keyBytesToB64String(k.PublicKey)
+	pubKeyString := KeyBytesToB64String(k.PublicKey)
 	preppedData, err := unwrapForDecryption(encData)
 	if err != nil {
 		return nil, err

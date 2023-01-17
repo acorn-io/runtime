@@ -38,7 +38,7 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string, requir
 		} else if secret.Type == apiv1.SecretTypeCredential {
 			data, err := nacl.DecryptNamespacedDataMap(ctx, c, secret.Data, secret.Namespace)
 			if err != nil {
-				return nil, fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
+				return nil, fmt.Errorf("decrypting acorn credential %s/%s: %w", secret.Namespace, secret.Name, err)
 			}
 			secret, err := dockerconfig.FromCredentialData(data)
 			if err != nil {
@@ -51,7 +51,7 @@ func ForNamespace(ctx context.Context, c client.Reader, namespace string, requir
 	for i, secret := range result {
 		result[i].Data, err = nacl.DecryptNamespacedDataMap(ctx, c, secret.Data, secret.Namespace)
 		if err != nil {
-			return nil, fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
+			return nil, fmt.Errorf("final decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
 		}
 	}
 
