@@ -1,12 +1,18 @@
 package nacl
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/acorn-io/baaah/pkg/merr"
+)
 
 type ErrKeyNotFound struct {
 	NamespaceKeyNotFound bool
 }
 
-type ErrUnableToDecrypt struct{}
+type ErrUnableToDecrypt struct {
+	Errs []error
+}
 
 type ErrDecryptionKeyNotAvailable struct{}
 
@@ -32,6 +38,9 @@ func (k *ErrKeyNotFound) Error() string {
 }
 
 func (utd *ErrUnableToDecrypt) Error() string {
+	if utd != nil && len(utd.Errs) > 0 {
+		return "Unable to decrypt values: " + merr.NewErrors(utd.Errs...).Error()
+	}
 	return "Unable to decrypt values"
 }
 
