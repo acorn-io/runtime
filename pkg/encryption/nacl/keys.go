@@ -94,7 +94,7 @@ func GetAllNaclKeys(ctx context.Context, c kclient.Reader, namespace string) (Na
 func GetPublicKey(ctx context.Context, c kclient.Reader, namespace string) (string, error) {
 	key, err := GetPrimaryNaclKey(ctx, c, "", namespace)
 	if key != nil {
-		return keyBytesToB64String(key.PublicKey), err
+		return KeyBytesToB64String(key.PublicKey), err
 	}
 	return "", err
 }
@@ -181,7 +181,7 @@ func keyToBytes(key string) (*[32]byte, error) {
 	return returnBytes, nil
 }
 
-func keyBytesToB64String(key *[32]byte) string {
+func KeyBytesToB64String(key *[32]byte) string {
 	bytes := key[:]
 	return base64.RawURLEncoding.EncodeToString(bytes)
 }
@@ -244,7 +244,7 @@ func (k *NaclKey) toSecretData(existingData map[string][]byte) (map[string][]byt
 			}
 		}
 	}
-	stringKey := keyBytesToB64String(k.PublicKey)
+	stringKey := KeyBytesToB64String(k.PublicKey)
 	logrus.Errorf("StringKey: %s", stringKey)
 	store[stringKey] = naclStoredKey{
 		AcornNamespace:    k.AcornNamespace,
