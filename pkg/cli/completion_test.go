@@ -129,13 +129,29 @@ func TestAppsThenContainersCompletion(t *testing.T) {
 }
 
 func TestAppsCompletion(t *testing.T) {
+	var DefaultImageList = []apiv1.Image{{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+		Tags:       []string{"testtag:latest"},
+		Digest:     "1234567890asdfghkl",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-no-tag"},
+		Digest:     "lkjhgfdsa0987654321",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+		Tags:       []string{"testtag1:latest", "testtag2:v1"},
+		Digest:     "lkjhgfdsa1234567890",
+	}}
 	names := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
 	apps := make([]apiv1.App, 0, len(names))
 	for _, name := range names {
 		apps = append(apps, apiv1.App{ObjectMeta: metav1.ObjectMeta{Name: name}})
 	}
 	mockClientFactory := &testdata.MockClientFactory{
-		AppList: apps,
+		AppList:   apps,
+		ImageList: DefaultImageList,
 	}
 	cmd := new(cobra.Command)
 	cmd.SetContext(context.Background())
@@ -601,7 +617,22 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 }
 
 func TestImagesCompletion(t *testing.T) {
-	mockClientFactory := &testdata.MockClientFactory{}
+	var DefaultImageList = []apiv1.Image{{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+		Tags:       []string{"testtag:latest"},
+		Digest:     "1234567890asdfghkl",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-no-tag"},
+		Digest:     "lkjhgfdsa0987654321",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+		Tags:       []string{"testtag1:latest", "testtag2:v1"},
+		Digest:     "lkjhgfdsa1234567890",
+	}}
+	mockClientFactory := &testdata.MockClientFactory{ImageList: DefaultImageList}
 	cmd := new(cobra.Command)
 	cmd.SetContext(context.Background())
 

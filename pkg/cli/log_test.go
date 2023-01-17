@@ -109,19 +109,21 @@ func TestLog(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		r, w, _ := os.Pipe()
-		os.Stdout = w
-		tt.args.cmd = NewLogs(tt.commandContext)
-		tt.args.cmd.SetArgs(tt.args.args)
-		err := tt.args.cmd.Execute()
-		if err != nil && !tt.wantErr {
-			assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
-		} else if err != nil && tt.wantErr {
-			assert.Equal(t, tt.wantOut, err.Error())
-		} else {
-			w.Close()
-			out, _ := io.ReadAll(r)
-			assert.Equal(t, tt.wantOut, string(out))
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+			tt.args.cmd = NewLogs(tt.commandContext)
+			tt.args.cmd.SetArgs(tt.args.args)
+			err := tt.args.cmd.Execute()
+			if err != nil && !tt.wantErr {
+				assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
+			} else if err != nil && tt.wantErr {
+				assert.Equal(t, tt.wantOut, err.Error())
+			} else {
+				w.Close()
+				out, _ := io.ReadAll(r)
+				assert.Equal(t, tt.wantOut, string(out))
+			}
+		})
 	}
 }

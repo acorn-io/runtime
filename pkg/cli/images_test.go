@@ -6,12 +6,29 @@ import (
 	"strings"
 	"testing"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestImage(t *testing.T) {
+	var DefaultImageList = []apiv1.Image{{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+		Tags:       []string{"testtag:latest"},
+		Digest:     "1234567890asdfghkl",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-no-tag"},
+		Digest:     "lkjhgfdsa0987654321",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+		Tags:       []string{"testtag1:latest", "testtag2:v1"},
+		Digest:     "lkjhgfdsa1234567890",
+	}}
 	type fields struct {
 		Quiet  bool
 		Output string
@@ -38,7 +55,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -57,7 +74,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -76,7 +93,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -95,7 +112,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -114,7 +131,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -133,7 +150,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -151,7 +168,7 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
+				ClientFactory: &testdata.MockClientFactory{ImageList: DefaultImageList},
 				StdOut:        w,
 				StdErr:        w,
 				StdIn:         strings.NewReader("y\n"),
@@ -170,10 +187,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+						Tags:       []string{"testtag:latest"},
+						Digest:     "1234567890asdfghkl"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"testtag"},
@@ -189,10 +211,16 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+						Tags:       []string{"testtag1:latest", "testtag2:v1"},
+						Digest:     "lkjhgfdsa1234567890",
+					}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"testtag1"},
@@ -208,10 +236,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+						Tags:       []string{"testtag1:latest", "testtag2:v1"},
+						Digest:     "lkjhgfdsa1234567890"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"lkjhgfdsa1234567890"},
@@ -227,10 +260,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+						Digest:     "registry1234567"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"index.docker.io/subdir/test:v1"},
@@ -246,29 +284,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
-			},
-			args: args{
-				args:   []string{"registry1234567"},
-				client: &testdata.MockClient{},
-			},
-			wantErr: false,
-			wantOut: "REPOSITORY                    TAG       IMAGE-ID\nindex.docker.io/subdir/test   v1        registy12345\nindex.docker.io/subdir/test   v2        registy12345\n",
-		},
-		{
-			name: "acorn image digest multi tag", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+						Digest:     "registry1234567"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"registry1234567"},
@@ -284,10 +308,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+						Digest:     "registry1234567"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"-c", "registry1234567"},
@@ -303,10 +332,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+						Digest:     "registry1234567"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"-q", "registry1234567"},
@@ -322,10 +356,15 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{
+						TypeMeta:   metav1.TypeMeta{},
+						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+						Digest:     "registry1234567"}},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"-q", "-c", "registry1234567"},
@@ -341,10 +380,12 @@ func TestImage(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactory{
+					ImageItem: &apiv1.Image{},
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"rm", "found-image1234567"},
