@@ -8,6 +8,7 @@ import (
 	"cuelang.org/go/pkg/crypto/sha256"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
@@ -31,11 +32,19 @@ func TestGlobalEnv(t *testing.T) {
 }
 
 func TestDeploySpec(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec", DeploySpec)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/basic", DeploySpec)
+}
+
+func TestDeploySpecUserDefinedLabelsAnnotations(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels", RemoveLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
+}
+
+func TestDeploySpecIgnoreUserDefinedLabelsAnnotations(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels", RemoveLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
 func TestDeploySpecStop(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec-stop", DeploySpec)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/stop", DeploySpec)
 }
 
 func TestProbe(t *testing.T) {

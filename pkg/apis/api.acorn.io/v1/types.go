@@ -315,23 +315,24 @@ type Config struct {
 	// Do not set omitEmpty on the json fields.  Also make strings and bool a
 	// pointer unless the default value (false, "") is not a valid configuration
 
-	IngressClassName             *string        `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
-	ClusterDomains               []string       `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
-	LetsEncrypt                  *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)"`
-	LetsEncryptEmail             string         `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')"`
-	LetsEncryptTOSAgree          *bool          `json:"letsEncryptTOSAgree" name:"lets-encrypt-tos-agree" usage:"Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)"`
-	SetPodSecurityEnforceProfile *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
-	PodSecurityEnforceProfile    string         `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
-	DefaultPublishMode           v1.PublishMode `json:"defaultPublishMode" usage:"If no publish mode is set default to this value (default user)" wrangler:"nullable,options=all|none|defined"`
-	HttpEndpointPattern          *string        `json:"httpEndpointPattern" name:"http-endpoint-pattern" usage:"Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}})" wrangler:"nullable"`
-	InternalClusterDomain        string         `json:"internalClusterDomain" usage:"The Kubernetes internal cluster domain (default svc.cluster.local)" wrangler:"nullable"`
-	AcornDNS                     *string        `json:"acornDNS" name:"acorn-dns" usage:"enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)"`
-	AcornDNSEndpoint             *string        `json:"acornDNSEndpoint" name:"acorn-dns-endpoint" usage:"The URL to access the Acorn DNS service"`
-	AutoUpgradeInterval          *string        `json:"autoUpgradeInterval" name:"auto-upgrade-interval" usage:"For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)"`
-	RecordBuilds                 *bool          `json:"recordBuilds" name:"record-builds" usage:"Keep a record of each acorn build that happens"`
-	PublishBuilders              *bool          `json:"publishBuilders" name:"publish-builders" usage:"Publish the builders through ingress to so build traffic does not traverse the api-server"`
-	BuilderPerProject            *bool          `json:"builderPerProject" name:"builder-per-project" usage:"Create a dedicated builder per project"`
-	InternalRegistryPrefix       *string        `json:"internalRegistryPrefix" name:"internal-registry-prefix" usage:"The image prefix to use when pushing internal images (example ghcr.io/my-org/)"`
+	IngressClassName               *string        `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
+	ClusterDomains                 []string       `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
+	LetsEncrypt                    *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)"`
+	LetsEncryptEmail               string         `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')"`
+	LetsEncryptTOSAgree            *bool          `json:"letsEncryptTOSAgree" name:"lets-encrypt-tos-agree" usage:"Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)"`
+	SetPodSecurityEnforceProfile   *bool          `json:"setPodSecurityEnforceProfile" usage:"Set the PodSecurity profile on created namespaces (default true)"`
+	PodSecurityEnforceProfile      string         `json:"podSecurityEnforceProfile" usage:"The name of the PodSecurity profile to set (default baseline)" wrangler:"nullable"`
+	DefaultPublishMode             v1.PublishMode `json:"defaultPublishMode" usage:"If no publish mode is set default to this value (default user)" wrangler:"nullable,options=all|none|defined"`
+	HttpEndpointPattern            *string        `json:"httpEndpointPattern" name:"http-endpoint-pattern" usage:"Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}})" wrangler:"nullable"`
+	InternalClusterDomain          string         `json:"internalClusterDomain" usage:"The Kubernetes internal cluster domain (default svc.cluster.local)" wrangler:"nullable"`
+	AcornDNS                       *string        `json:"acornDNS" name:"acorn-dns" usage:"enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)"`
+	AcornDNSEndpoint               *string        `json:"acornDNSEndpoint" name:"acorn-dns-endpoint" usage:"The URL to access the Acorn DNS service"`
+	AutoUpgradeInterval            *string        `json:"autoUpgradeInterval" name:"auto-upgrade-interval" usage:"For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)"`
+	RecordBuilds                   *bool          `json:"recordBuilds" name:"record-builds" usage:"Keep a record of each acorn build that happens"`
+	PublishBuilders                *bool          `json:"publishBuilders" name:"publish-builders" usage:"Publish the builders through ingress to so build traffic does not traverse the api-server"`
+	BuilderPerProject              *bool          `json:"builderPerProject" name:"builder-per-project" usage:"Create a dedicated builder per project"`
+	InternalRegistryPrefix         *string        `json:"internalRegistryPrefix" name:"internal-registry-prefix" usage:"The image prefix to use when pushing internal images (example ghcr.io/my-org/)"`
+	IgnoreUserLabelsAndAnnotations *bool          `json:"ignoreUserLabelsAndAnnotations" name:"ignore-user-labels-and-annotations" usage:"Don't propagate user-defined labels and annotations to dependent objects"`
 }
 
 type EncryptionKey struct {
