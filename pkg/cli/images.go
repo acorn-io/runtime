@@ -53,9 +53,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if strings.Contains(image.Digest, args[0]) {
-			tagToMatch = ""
-		} else {
+		if !strings.Contains(image.Digest, args[0]) {
 			//normalize through ParseReference inorder to add :latest tag to input if necessary
 			imageParsedReference, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
 			if err != nil {
@@ -76,7 +74,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 
 	if a.Containers {
 		//only display first tag in -c <tag>
-		if image != nil && len(image.Tags) != 0 && tagToMatch == "" {
+		if image != nil && len(image.Tags) != 0 && tagToMatch == "" && len(args) != 0 {
 			args[0] = image.Tags[0]
 			tagToMatch = image.Tags[0]
 		}
@@ -181,7 +179,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 			for _, tag := range imageContainer.Tags {
 				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 				if err != nil {
-					return err
+					continue
 				}
 				if tagToMatch == imageParsedTag.Name() || tagToMatch == "" {
 					imageContainerPrint.Tag = imageParsedTag.TagStr()
