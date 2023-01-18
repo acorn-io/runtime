@@ -78,13 +78,14 @@ func toEndpoint(pattern, domain, container, appName, appNamespace string) (strin
 		App:           appName,
 		Container:     container,
 		Namespace:     appNamespace,
-		Hash:          getAppHash(container, appName, appNamespace),
+		Hash:          hash(8, strings.Join([]string{container, appName, appNamespace}, ":")),
 		ClusterDomain: strings.TrimPrefix(domain, "."),
 	}
 
 	var templateBuffer bytes.Buffer
 	t := template.Must(template.New("").Funcs(map[string]any{
-		"truncate": truncate,
+		"truncate":   truncate,
+		"hashConcat": hashConcat,
 	}).Parse(pattern))
 	if err := t.Execute(&templateBuffer, endpointOpts); err != nil {
 		return "", fmt.Errorf("%w %v: %v", ErrInvalidPattern, pattern, err)
@@ -104,13 +105,24 @@ func toEndpoint(pattern, domain, container, appName, appNamespace string) (strin
 	return templateBuffer.String(), nil
 }
 
-func getAppHash(serviceName, appName, appNamespace string) string {
-	var appInstanceIDSegment string
-	var appInstanceIDSegmentByte [32]byte
+/*
+hashConcat takes args, concatenate all the items except the last one, with a hash of
+a concatenation of all items with ":".
+*/
+func hashConcat(limit int, args ...string) string {
+	if len(args) < 2 {
+		//Todo: this is to prevent runaway behavior in case it takes less than two parameters.
+		//we don't have desired output for this but would rather return empty to prevent unexpected crash
+		return ""
+	}
+	result := strings.Join(args, ":")
 
-	appInstanceIDSegment = serviceName + ":" + appName + ":" + appNamespace
-	appInstanceIDSegmentByte = sha256.Sum256([]byte(appInstanceIDSegment))
-	return hex.EncodeToString(appInstanceIDSegmentByte[:])[:12]
+	return strings.Join(append(args[:len(args)-1], hash(limit, result)), "-")
+}
+
+func hash(limit int, s string) string {
+	resultHash := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(resultHash[:])[:limit]
 }
 
 type Target struct {

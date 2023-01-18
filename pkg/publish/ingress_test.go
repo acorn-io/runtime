@@ -30,7 +30,22 @@ func TestToEndpoint(t *testing.T) {
 			args: args{
 				domain:      "domain.on-acorn.io",
 				serviceName: "app-test",
-				pattern:     "{{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}",
+				pattern:     "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}",
+				appInstance: &v1.AppInstance{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{Name: "green-star"},
+					Spec:       v1.AppInstanceSpec{},
+					Status:     v1.AppInstanceStatus{},
+				},
+			},
+			wantEndpoint: "app-test-green-star-b19d0b34.domain.on-acorn.io",
+		},
+		{
+			name: "\"on-acorn.io no -\" pattern set with 12 characters",
+			args: args{
+				domain:      "domain.on-acorn.io",
+				serviceName: "app-test",
+				pattern:     "{{hashConcat 12 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}",
 				appInstance: &v1.AppInstance{
 					TypeMeta:   metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{Name: "green-star"},
@@ -39,6 +54,21 @@ func TestToEndpoint(t *testing.T) {
 				},
 			},
 			wantEndpoint: "app-test-green-star-b19d0b346674.domain.on-acorn.io",
+		},
+		{
+			name: "\"on-acorn.io no -\" pattern set with less than two parameters should return empty string",
+			args: args{
+				domain:      "domain.on-acorn.io",
+				serviceName: "app-test",
+				pattern:     "{{hashConcat 8 .Container | truncate}}.{{.ClusterDomain}}",
+				appInstance: &v1.AppInstance{
+					TypeMeta:   metav1.TypeMeta{},
+					ObjectMeta: metav1.ObjectMeta{Name: "green-star"},
+					Spec:       v1.AppInstanceSpec{},
+					Status:     v1.AppInstanceStatus{},
+				},
+			},
+			wantEndpoint: ".domain.on-acorn.io",
 		},
 		{
 			name: "\"custom domain\" pattern set",
@@ -90,7 +120,7 @@ func TestToEndpoint(t *testing.T) {
 			args: args{
 				domain:      "custom-domain.io",
 				serviceName: "app-test",
-				pattern:     "{{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}",
+				pattern:     "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}",
 				appInstance: &v1.AppInstance{
 					TypeMeta:   metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{Name: "green-star", Namespace: "namespace"},
@@ -98,7 +128,7 @@ func TestToEndpoint(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantEndpoint: "app-test-green-star-49eba2c97fa7.custom-domain.io",
+			wantEndpoint: "app-test-green-star-49eba2c9.custom-domain.io",
 		},
 		{
 			name: "custom pattern set",
@@ -128,7 +158,7 @@ func TestToEndpoint(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantEndpoint: "app-test-green-star-49eba2c97fa7.custom-domain.io",
+			wantEndpoint: "app-test-green-star-49eba2c9.custom-domain.io",
 		},
 		{
 			name: "bad pattern set",
@@ -151,7 +181,7 @@ func TestToEndpoint(t *testing.T) {
 			args: args{
 				domain:      "custom-domain.io",
 				serviceName: "app-name-that-is-very-long-and-should-cause-issues",
-				pattern:     "{{.Container}}-{{.App}}-{{.Hash}}-{{.Namespace}}.{{.ClusterDomain}}",
+				pattern:     "{{hashConcat 8 .Container .App .Namespace | truncate}}-{{.Namespace}}.{{.ClusterDomain}}",
 				appInstance: &v1.AppInstance{
 					TypeMeta:   metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{Name: "green-star", Namespace: "namespace"},
@@ -175,7 +205,7 @@ func TestToEndpoint(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantEndpoint: "app-name-that-is-very-long-and-should-cause-issues-green-8049ce.custom-domain.io",
+			wantEndpoint: "app-name-that-is-very-long-and-should-cause-issues-green-59d6e2.custom-domain.io",
 		},
 	}
 	for _, tt := range tests {
@@ -200,12 +230,22 @@ func TestValidateEndpointPattern(t *testing.T) {
 	}{
 		{
 			name:    "valid",
-			pattern: "{{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}}",
+			pattern: "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}",
 			wantErr: nil,
 		},
 		{
 			name:    "invalid constructed domain",
-			pattern: "{{.Container}}-{{.App}}-{{.Hash}}.$INVALID$.{{.ClusterDomain}}",
+			pattern: "{{hashConcat 8 .Container .App .Namespace | truncate}}.$INVALID$.{{.ClusterDomain}}",
+			wantErr: ErrInvalidPattern,
+		},
+		{
+			name:    "invalid parameters",
+			pattern: "{{hashConcat .Container .App .Namespace | truncate}}.$INVALID$.{{.ClusterDomain}}",
+			wantErr: ErrInvalidPattern,
+		},
+		{
+			name:    "referencing invalid variables",
+			pattern: "{{hashConcat 8 .Foo .Bar .Baz | truncate}}-{{.Namespace}}.{{.ClusterDomain}}",
 			wantErr: ErrInvalidPattern,
 		},
 		{
