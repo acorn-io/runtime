@@ -47,7 +47,7 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 	return namespace, name, nil
 }
 
-func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (string, storage.ListOptions) {
+func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	sel := opts.Predicate.Label
 	if sel == nil {
 		sel = klabels.Everything()
@@ -60,10 +60,10 @@ func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (strin
 		sel = sel.Add(*req)
 	}
 	opts.Predicate.Label = sel
-	return "", opts
+	return "", opts, nil
 }
 
-func (t *Translator) ToPublic(objs ...runtime.Object) (result []mtypes.Object) {
+func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []mtypes.Object, _ error) {
 	for _, obj := range objs {
 		for _, con := range podToContainers(obj.(*corev1.Pod)) {
 			con := con

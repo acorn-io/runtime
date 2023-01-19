@@ -21,7 +21,7 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 	return namespace, name, nil
 }
 
-func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (string, storage.ListOptions) {
+func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	sel := opts.Predicate.Label
 	if sel == nil {
 		sel = klabels.Everything()
@@ -31,10 +31,10 @@ func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (strin
 	sel = sel.Add(*req)
 
 	opts.Predicate.Label = sel
-	return namespace, opts
+	return namespace, opts, nil
 }
 
-func (t *Translator) ToPublic(obj ...runtime.Object) (result []types.Object) {
+func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range obj {
 		result = append(result, &apiv1.Project{
 			ObjectMeta: metav1.ObjectMeta{

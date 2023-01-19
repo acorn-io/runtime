@@ -25,7 +25,7 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 	return namespace, strings.ReplaceAll(normalizeDockerIO(name), ":", "-"), nil
 }
 
-func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (string, storage.ListOptions) {
+func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
 	if opts.Predicate.Label == nil {
 		opts.Predicate.Label = klabels.Everything()
 	}
@@ -34,10 +34,10 @@ func (t *Translator) ListOpts(namespace string, opts storage.ListOptions) (strin
 		labels.AcornCredential: "true",
 	}).Requirements()
 	opts.Predicate.Label = opts.Predicate.Label.Add(reqs...)
-	return namespace, opts
+	return namespace, opts, nil
 }
 
-func (t *Translator) ToPublic(objs ...runtime.Object) (result []types.Object) {
+func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range objs {
 		secret := obj.(*corev1.Secret)
 		if secret.Type != apiv1.SecretTypeCredential {
