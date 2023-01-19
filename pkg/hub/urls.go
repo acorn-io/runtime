@@ -13,12 +13,8 @@ func toDiscoverURL(address string) string {
 	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1", scheme(address), address)
 }
 
-func toAccountsURL(address string) string {
-	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1/accounts", scheme(address), address)
-}
-
-func toProjectsURL(endpointAddress string) string {
-	return fmt.Sprintf("%s/apis/api.acorn.io/v1/projects", endpointAddress)
+func toProjectMembershipURL(address string) string {
+	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1/projectmemberships", scheme(address), address)
 }
 
 func toAccountURL(address, account string) string {

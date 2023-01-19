@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/pkg/browser"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -53,24 +54,19 @@ func IsHub(ctx context.Context, address string) (bool, error) {
 	return true, cfg.Save()
 }
 
-func Projects(ctx context.Context, address, token string) (result []string, err error) {
-	accounts := &accountList{}
-	err = httpGet(ctx, toAccountsURL(address), token, accounts)
+func Projects(ctx context.Context, address, token string) ([]string, error) {
+	memberships := &membershipList{}
+	result := sets.NewString()
+	err := httpGet(ctx, toProjectMembershipURL(address), token, memberships)
 	if err != nil {
 		return nil, err
 	}
-	for _, account := range accounts.Items {
-		if account.Status.EndpointURL != "" {
-			// using account type because we just care about the name
-			projects := &accountList{}
-			if err := httpGet(ctx, toProjectsURL(account.Status.EndpointURL), token, projects); err == nil {
-				for _, project := range projects.Items {
-					result = append(result, address+"/"+account.Metadata.Name+"/"+project.Metadata.Name)
-				}
-			}
+	for _, membership := range memberships.Items {
+		if membership.AccountEndpointURL != "" {
+			result.Insert(fmt.Sprintf("%s/%s/%s", address, membership.AccountName, membership.ProjectName))
 		}
 	}
-	return result, nil
+	return result.List(), nil
 }
 
 func ProjectURLAndNamespace(ctx context.Context, project, token string) (url string, namespace string, err error) {

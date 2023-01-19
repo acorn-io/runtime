@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type tokenRequest struct {
@@ -24,13 +23,18 @@ type tokenRequestStatus struct {
 	Expired bool   `json:"expired,omitempty"`
 }
 
-type accountList struct {
-	Items []account `json:"items,omitempty"`
+type membershipList struct {
+	Items []membership `json:"items,omitempty"`
+}
+
+type membership struct {
+	AccountName        string `json:"accountName,omitempty"`
+	ProjectName        string `json:"projectName,omitempty"`
+	AccountEndpointURL string `json:"accountEndpointURL,omitempty"`
 }
 
 type account struct {
-	Metadata metav1.ObjectMeta `json:"metadata,omitempty"`
-	Status   accountStatus     `json:"status,omitempty"`
+	Status accountStatus `json:"status,omitempty"`
 }
 
 type accountStatus struct {
