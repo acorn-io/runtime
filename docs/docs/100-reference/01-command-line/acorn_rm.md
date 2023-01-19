@@ -6,7 +6,7 @@ title: "acorn rm"
 Delete an app, container, secret or volume
 
 ```
-acorn rm [flags] [APP_NAME...]
+acorn rm [flags] APP_NAME [APP_NAME...]
 ```
 
 ### Examples
