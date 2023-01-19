@@ -90,6 +90,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.InternalRegistryPrefix == nil {
 		c.InternalRegistryPrefix = new(string)
 	}
+	if c.IgnoreUserLabelsAndAnnotations == nil {
+		c.IgnoreUserLabelsAndAnnotations = new(bool)
+	}
 
 	return nil
 }
@@ -205,6 +208,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		return &mergedConfig
 	}
 
+	if newConfig.IgnoreUserLabelsAndAnnotations != nil {
+		mergedConfig.IgnoreUserLabelsAndAnnotations = newConfig.IgnoreUserLabelsAndAnnotations
+	}
 	if newConfig.IngressClassName != nil {
 		if *newConfig.IngressClassName == "" {
 			mergedConfig.IngressClassName = nil

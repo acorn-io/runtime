@@ -32,6 +32,24 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func RemoveLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
+	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
+		appInstance := req.Object.(*v1.AppInstance)
+		cfg, err := config.Get(req.Ctx, req.Client)
+		if err != nil {
+			return err
+		}
+
+		// Note that IgnoreUserLabelsAndAnnotations will not be nil here because
+		// config.Get "completes" the config object to fill in default values.
+		if *cfg.IgnoreUserLabelsAndAnnotations {
+			req.Object = labels.RemoveUserDefined(appInstance)
+		}
+
+		return h.Handle(req, resp)
+	})
+}
+
 func DeploySpec(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)

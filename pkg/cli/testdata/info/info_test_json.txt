@@ -32,7 +32,8 @@
             "recordBuilds": null,
             "publishBuilders": null,
             "builderPerProject": null,
-            "internalRegistryPrefix": null
+            "internalRegistryPrefix": null,
+            "ignoreUserLabelsAndAnnotations": null
         },
         "userConfig": {
             "ingressClassName": null,
@@ -51,7 +52,8 @@
             "recordBuilds": null,
             "publishBuilders": null,
             "builderPerProject": null,
-            "internalRegistryPrefix": null
+            "internalRegistryPrefix": null,
+            "ignoreUserLabelsAndAnnotations": null
         }
     },
     "project": {}

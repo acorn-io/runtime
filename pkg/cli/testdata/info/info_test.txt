@@ -15,6 +15,7 @@ server:
     clusterDomains: null
     defaultPublishMode: ""
     httpEndpointPattern: null
+    ignoreUserLabelsAndAnnotations: null
     ingressClassName: null
     internalClusterDomain: ""
     internalRegistryPrefix: null
@@ -37,6 +38,7 @@ server:
     clusterDomains: null
     defaultPublishMode: ""
     httpEndpointPattern: null
+    ignoreUserLabelsAndAnnotations: null
     ingressClassName: null
     internalClusterDomain: ""
     internalRegistryPrefix: null

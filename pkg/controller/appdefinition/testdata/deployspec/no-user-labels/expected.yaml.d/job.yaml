@@ -1,0 +1,38 @@
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: job-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/job-name": "job-name"
+    "acorn.io/managed": "true"
+spec:
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/job-name": "job-name"
+        "acorn.io/managed": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+    spec:
+      imagePullSecrets:
+        - name: job-name-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: job-name
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: job-name
+          image: "image-name"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+          terminationMessagePath: "/run/secrets/output"
+---

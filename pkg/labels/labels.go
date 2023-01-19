@@ -107,3 +107,37 @@ func GatherScoped(resourceName, resourceType string, globalLabels, resourceLabel
 	}
 	return ExcludeAcornKey(m)
 }
+
+func RemoveUserDefined(appInstance *v1.AppInstance) *v1.AppInstance {
+	appInstance.Spec.Labels = nil
+	appInstance.Spec.Annotations = nil
+
+	appInstance.Status.AppSpec.Labels = nil
+	appInstance.Status.AppSpec.Annotations = nil
+
+	for key, c := range appInstance.Status.AppSpec.Containers {
+		c.Labels = nil
+		c.Annotations = nil
+		appInstance.Status.AppSpec.Containers[key] = c
+	}
+
+	for key, j := range appInstance.Status.AppSpec.Jobs {
+		j.Labels = nil
+		j.Annotations = nil
+		appInstance.Status.AppSpec.Jobs[key] = j
+	}
+
+	for key, r := range appInstance.Status.AppSpec.Routers {
+		r.Labels = nil
+		r.Annotations = nil
+		appInstance.Status.AppSpec.Routers[key] = r
+	}
+
+	for key, v := range appInstance.Status.AppSpec.Volumes {
+		v.Labels = nil
+		v.Annotations = nil
+		appInstance.Status.AppSpec.Volumes[key] = v
+	}
+
+	return appInstance
+}

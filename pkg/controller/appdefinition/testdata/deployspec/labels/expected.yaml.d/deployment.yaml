@@ -1,0 +1,68 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    appSpecAnn: test-app-spec-ann
+    containerAnn: test-container-ann
+    "container-scoped-ann": test-container
+    "global-scoped-ann": test-global
+    "named-scoped-ann": test-named
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
+    appSpecLabel: test-app-spec-label
+    container-scoped-label: test-container
+    containerLabel: test-container-label
+    global-scoped-label: test-global
+    named-scoped-label: test-named
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "container-name"
+        "acorn.io/managed": "true"
+        appSpecLabel: test-app-spec-label
+        container-scoped-label: test-container
+        containerLabel: test-container-label
+        global-scoped-label: test-global
+        named-scoped-label: test-named
+      annotations:
+        acorn.io/container-spec: '{"annotations":{"containerAnn":"test-container-ann"},"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","labels":{"containerLabel":"test-container-label"},"probes":null}'
+        appSpecAnn: test-app-spec-ann
+        containerAnn: test-container-ann
+        "container-scoped-ann": test-container
+        "global-scoped-ann": test-global
+        "named-scoped-ann": test-named
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: container-name
+      hostname: container-name
+      volumes:
+        - name: foo
+          persistentVolumeClaim:
+            claimName: foo
+      imagePullSecrets:
+        - name: container-name-pull-1234567890ab
+      containers:
+        - name: container-name
+          image: "image-name"
+          volumeMounts:
+            - mountPath: "/var/tmp"
+              name: foo
+
