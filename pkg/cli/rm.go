@@ -1,22 +1,20 @@
 package cli
 
 import (
-	"errors"
-
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
 
 func NewRm(c CommandContext) *cobra.Command {
 	return cli.Command(&Rm{client: c.ClientFactory}, cobra.Command{
-		Use: "rm [flags] [APP_NAME...]",
+		Use: "rm [flags] APP_NAME [APP_NAME...]",
 		Example: `
 acorn rm APP_NAME
 acorn rm -t volume,container APP_NAME`,
 		SilenceUsage:      true,
 		Short:             "Delete an app, container, secret or volume",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
+		Args:              cobra.MinimumNArgs(1),
 	})
 }
 
@@ -40,10 +38,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if len(args) == 0 {
-		pterm.Error.Println("No AppName arg provided")
-		return errors.New("No AppName arg provided")
-	}
+
 	if a.All {
 		rmObjects = RmObjects{
 			App:    true,

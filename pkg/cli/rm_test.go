@@ -334,7 +334,7 @@ func TestAppRm(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "No AppName arg provided",
+			wantOut: "requires at least 1 arg(s), only received 0",
 		},
 		{
 			name: "no app name arg force default type", fields: fields{
@@ -353,7 +353,7 @@ func TestAppRm(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "No AppName arg provided",
+			wantOut: "requires at least 1 arg(s), only received 0",
 		},
 	}
 	for _, tt := range tests {
