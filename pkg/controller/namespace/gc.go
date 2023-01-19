@@ -17,6 +17,10 @@ func DeleteOrphaned(req router.Request, resp router.Response) error {
 	appName := req.Object.GetLabels()[labels.AcornAppName]
 	appNamespace := req.Object.GetLabels()[labels.AcornAppNamespace]
 
+	if appName == "" || appNamespace == "" {
+		return nil
+	}
+
 	err := req.Client.Get(req.Ctx, router.Key(appNamespace, appName), &v1.AppInstance{})
 	if apierror.IsNotFound(err) {
 		return req.Client.Delete(req.Ctx, ns)
