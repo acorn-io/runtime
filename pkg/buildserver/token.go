@@ -55,7 +55,7 @@ func GetToken(req *http.Request, uuid string, pubKey, privKey *[32]byte) (*Token
 		return nil, fmt.Errorf("invalid builder UID %s!=%s", result.BuilderUUID, uuid)
 	}
 
-	if time.Since(result.Time.Time) > (10 * time.Second) {
+	if time.Since(result.Time.Time) > (30 * time.Second) {
 		return nil, fmt.Errorf("expired token")
 	}
 
