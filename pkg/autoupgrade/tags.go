@@ -1,13 +1,54 @@
 package autoupgrade
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
+	imagename "github.com/google/go-containerregistry/pkg/name"
+	"github.com/sirupsen/logrus"
 	"k8s.io/utils/strings/slices"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func getTagsForImagePattern(ctx context.Context, c daemonClient, namespace, image string) (imagename.Reference, []string, error) {
+	current, err := imagename.ParseReference(image, imagename.WithDefaultRegistry(defaultNoReg))
+	if err != nil {
+		return nil, nil, fmt.Errorf("problem parsing image referece %v: %v", image, err)
+	}
+	// if the registry after being parsed is our default fake one, then this is a local image with no registry
+	hasValidRegistry := current.Context().RegistryStr() != defaultNoReg
+	var tags []string
+	var pullErr error
+	if hasValidRegistry {
+		tags, pullErr = c.listTags(ctx, namespace, image)
+	}
+	localTags, err := c.getTagsMatchingRepo(ctx, current, namespace, defaultNoReg)
+	if err != nil {
+		logrus.Errorf("Problem finding local tags matching %v: %v", image, err)
+	}
+	if len(localTags) == 0 && pullErr != nil {
+		logrus.Errorf("Couldn't find any remote tags for image %v. Error: %v", image, pullErr)
+	}
+	return current, append(tags, localTags...), nil
+}
+
+func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, namespace, image, pattern string) (string, bool, error) {
+	ref, tags, err := getTagsForImagePattern(ctx, c, namespace, strings.TrimSuffix(image, ":"+pattern))
+	if err != nil {
+		return "", false, err
+	}
+
+	newTag, err := FindLatest(imagename.DefaultTag, pattern, tags)
+	return strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/"), newTag != imagename.DefaultTag, err
+}
+
+// FindLatestTagForImageWithPattern will return the latest tag for image corresponding to the pattern.
+func FindLatestTagForImageWithPattern(ctx context.Context, c kclient.Client, namespace, image, pattern string) (string, bool, error) {
+	return findLatestTagForImageWithPattern(ctx, &client{c}, namespace, image, pattern)
+}
 
 // FindLatest returns the tag from the tags slice that sorts as the "latest" according to the supplied pattern. The supplied
 // pattern is NOT a regex. It is acorn's own custom syntax with the following characteristics:
@@ -38,7 +79,7 @@ func FindLatest(current, pattern string, tags []string) (string, error) {
 	// * denotes a part of the tag that should be parsed and sorted alphabetically.
 	// We are doing this in a loop and creating the namedMatchingGroups slice as we go so that the slice will represent
 	// the groups as they appear from left-to-right in the tag. The left most group has the most precedence and it
-	//decreases from there
+	// decreases from there
 	for strings.Contains(pattern, "#") || strings.Contains(pattern, "*") {
 		name := fmt.Sprintf("m%v", index)
 
