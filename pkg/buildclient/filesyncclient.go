@@ -33,7 +33,7 @@ func newFileSyncClient(ctx context.Context, cwd, sessionID string, messages Mess
 		return nil, err
 	}
 
-	synced, err := prepareSyncedDirs(dirs)
+	synced, err := prepareSyncedDirs(dirs, opts.DirName, opts.FollowPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func createFileMapInput(cwd string, opts *SyncOptions) (string, map[string]strin
 	}, nil
 }
 
-func prepareSyncedDirs(localDirs map[string]string) ([]filesync.SyncedDir, error) {
-	for _, d := range localDirs {
+func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPaths []string) ([]filesync.SyncedDir, error) {
+	for localDirName, d := range localDirs {
 		fi, err := os.Stat(d)
 		if os.IsNotExist(err) {
 			// don't blindly mkdirall because this could actually be a file
@@ -110,6 +110,21 @@ func prepareSyncedDirs(localDirs map[string]string) ([]filesync.SyncedDir, error
 			return nil, fmt.Errorf("could not find %s: %w", d, err)
 		} else if !fi.IsDir() {
 			return nil, fmt.Errorf("%s not a directory", d)
+		}
+		for _, dirName := range dirNames {
+			if dirName == "context" && localDirName == dirName {
+				for _, followPath := range followPaths {
+					f := filepath.Join(d, followPath)
+					if _, err := os.Stat(f); os.IsNotExist(err) {
+						err := os.MkdirAll(f, 0755)
+						if err != nil {
+							return nil, err
+						}
+					} else if err != nil {
+						return nil, err
+					}
+				}
+			}
 		}
 	}
 	resetUIDAndGID := func(p string, st *fstypes.Stat) bool {

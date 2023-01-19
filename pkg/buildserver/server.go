@@ -3,6 +3,7 @@ package buildserver
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -54,6 +55,11 @@ func (s *Server) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) serveHTTP(rw http.ResponseWriter, req *http.Request) error {
+	if strings.HasPrefix(req.URL.Path, "/ping") {
+		_, err := rw.Write([]byte("pong"))
+		return err
+	}
+
 	token, err := GetToken(req, s.uuid, s.pubKey, s.privKey)
 	if err != nil {
 		logrus.Errorf("Invalid token: %v", err)

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -50,7 +51,28 @@ func (c *client) getOrCreateBuilder(ctx context.Context, name string) (*apiv1.Bu
 		}
 	}()
 
-	return watcher.New[*apiv1.Builder](c.Client).ByObject(ctx, builder, func(builder *apiv1.Builder) (bool, error) {
+	builder, err := watcher.New[*apiv1.Builder](c.Client).ByObject(ctx, builder, func(builder *apiv1.Builder) (bool, error) {
 		return builder.Status.Ready, nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	if builder.Status.Ready && builder.Status.Endpoint != "" {
+		for i := 0; i < 5; i++ {
+			resp, err := http.Get(builder.Status.Endpoint + "/ping")
+			if err != nil {
+				logrus.Debugf("builder ping failed: %v", err)
+			} else {
+				_ = resp.Body.Close()
+				logrus.Debugf("builder status code: %d", resp.StatusCode)
+				if resp.StatusCode == http.StatusOK {
+					return builder, nil
+				}
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	return builder, nil
 }
