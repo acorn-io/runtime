@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"strings"
+	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -26,12 +27,14 @@ import (
 )
 
 // ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
-func ProvisionWildcardCert(req router.Request, domain, token string) error {
+func ProvisionWildcardCert(req router.Request, resp router.Response, domain, token string) error {
 	logrus.Debugf("Provisioning wildcard cert for %v", domain)
 	// Ensure that we have a Let's Encrypt account ready
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
-		return err
+		logrus.Errorf("failed to get/create lets-encrypt account in ProvisionWildcardCert: %v", err)
+		resp.RetryAfter(15 * time.Second)
+		return nil
 	}
 
 	wildcardDomain := fmt.Sprintf("*.%s", strings.TrimPrefix(domain, "."))
@@ -60,7 +63,9 @@ func RenewCert(req router.Request, resp router.Response) error {
 
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
-		return err
+		logrus.Errorf("failed to get/create lets-encrypt account in RenewCert: %v", err)
+		resp.RetryAfter(15 * time.Second)
+		return nil
 	}
 
 	// Early exit if existing cert is still valid
@@ -130,7 +135,9 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
-		return err
+		logrus.Errorf("failed to get/create lets-encrypt account in ProvisionCerts: %v", err)
+		resp.RetryAfter(15 * time.Second)
+		return nil
 	}
 
 	provisionedCerts := map[string]interface{}{}

@@ -102,7 +102,7 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 	}
 
 	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
-		if err := tls.ProvisionWildcardCert(req, domain, token); err != nil {
+		if err := tls.ProvisionWildcardCert(req, resp, domain, token); err != nil {
 			return err
 		}
 	}
