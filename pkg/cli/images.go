@@ -45,15 +45,22 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	var images []apiv1.Image
+	var image *apiv1.Image
+	tagToMatch := ""
+
 	if len(args) == 1 {
-		image, err := c.ImageGet(cmd.Context(), args[0])
+		image, err = c.ImageGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
-		if strings.Contains(image.Digest, args[0]) && len(image.Tags) != 0 {
-			args[0] = image.Tags[0]
+		if !strings.Contains(image.Digest, args[0]) {
+			//normalize through ParseReference inorder to add :latest tag to input if necessary
+			imageParsedReference, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
+			if err != nil {
+				return err
+			}
+			tagToMatch = imageParsedReference.Name()
 		}
-
 		images = []apiv1.Image{*image}
 
 		// If an image was provided explicitly, then display it even if it doesn't have tags
@@ -66,7 +73,13 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if a.Containers {
-		return printContainerImages(images, cmd.Context(), c, a, args)
+		//only display first tag in -c <tag>
+		if image != nil && len(image.Tags) != 0 && tagToMatch == "" && len(args) != 0 {
+			args[0] = image.Tags[0]
+			tagToMatch = image.Tags[0]
+		}
+
+		return printContainerImages(images, cmd.Context(), c, a, args, tagToMatch)
 	}
 
 	out := table.NewWriter(tables.ImageAcorn, false, a.Output)
@@ -89,26 +102,24 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			Digest: image.Digest,
 			Tag:    "",
 		}
+		if len(image.Tags) == 0 && a.All {
+			out.Write(imagePrint)
+			continue
+		}
 		for _, tag := range image.Tags {
 			imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 			if err != nil {
 				return err
 			}
-			if tag == "" && !a.All {
-				continue
-			}
-			if tag == "" {
-				out.Write(imagePrint)
-				continue
-			} else {
+			if tagToMatch == imageParsedTag.Name() || tagToMatch == "" {
 				imagePrint.Tag = imageParsedTag.TagStr()
+				if imageParsedTag.RegistryStr() != "" {
+					imagePrint.Repository = imageParsedTag.RegistryStr() + "/"
+				}
+				imagePrint.Repository += imageParsedTag.RepositoryStr()
+				out.Write(imagePrint)
+				imagePrint.Repository = ""
 			}
-
-			imagePrint.Repository = imageParsedTag.RepositoryStr()
-			out.Write(imagePrint)
-		}
-		if len(image.Tags) == 0 && a.All {
-			out.Write(imagePrint)
 		}
 	}
 
@@ -138,11 +149,7 @@ type imageContainerPrint struct {
 	ImageID   string
 }
 
-func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image, args []string) error {
-	tagToMatch := ""
-	if len(args) == 1 {
-		tagToMatch = args[0]
-	}
+func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image, args []string, tagToMatch string) error {
 	out := table.NewWriter(tables.ImageContainer, a.Quiet, a.Output)
 
 	if a.Quiet {
@@ -163,23 +170,26 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 				Digest:    imageContainer.Digest,
 				ImageID:   imageContainer.ImageID,
 			}
+			if len(imageContainer.Tags) == 0 && a.All {
+				imageContainerPrint.Tag = "<none>"
+				imageContainerPrint.Repo = "<none>"
+				out.Write(imageContainerPrint)
+				continue
+			}
 			for _, tag := range imageContainer.Tags {
 				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 				if err != nil {
 					continue
 				}
-				if tagToMatch == "" || tagToMatch == tag {
-					if a.All || tag != "" {
-						imageContainerPrint.Tag = imageParsedTag.TagStr()
-						imageContainerPrint.Repo = imageParsedTag.RepositoryStr()
-						out.Write(imageContainerPrint)
+				if tagToMatch == imageParsedTag.Name() || tagToMatch == "" {
+					imageContainerPrint.Tag = imageParsedTag.TagStr()
+					if imageParsedTag.RegistryStr() != "" {
+						imageContainerPrint.Repo = imageParsedTag.RegistryStr() + "/"
 					}
+					imageContainerPrint.Repo += imageParsedTag.RepositoryStr()
+					out.Write(imageContainerPrint)
+					imageContainerPrint.Repo = ""
 				}
-			}
-			if len(imageContainer.Tags) == 0 && a.All {
-				imageContainerPrint.Tag = "<none>"
-				imageContainerPrint.Repo = "<none>"
-				out.Write(imageContainerPrint)
 			}
 		}
 	}

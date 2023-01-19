@@ -407,6 +407,41 @@ func (m *MockClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, e
 		return &apiv1.Image{}, nil
 	case "found.image-two-tags":
 		return &apiv1.Image{}, nil
+	case "testtag":
+		return &apiv1.Image{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+			Tags:       []string{"testtag:latest"},
+			Digest:     "1234567890asdfghkl",
+		}, nil
+	case "testtag1":
+		return &apiv1.Image{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+			Tags:       []string{"testtag1:latest", "testtag2:v1"},
+			Digest:     "lkjhgfdsa1234567890",
+		}, nil
+	case "lkjhgfdsa1234567890":
+		return &apiv1.Image{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+			Tags:       []string{"testtag1:latest", "testtag2:v1"},
+			Digest:     "lkjhgfdsa1234567890",
+		}, nil
+	case "index.docker.io/subdir/test:v1":
+		return &apiv1.Image{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+			Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+			Digest:     "registry1234567",
+		}, nil
+	case "registry1234567":
+		return &apiv1.Image{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
+			Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
+			Digest:     "registry1234567",
+		}, nil
 	}
 	return nil, nil
 }
