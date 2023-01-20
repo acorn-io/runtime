@@ -17,6 +17,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func NormalizeServerAddress(address string) string {
+	if address == "docker.io" || address == "registry-1.docker.io" {
+		return "index.docker.io"
+	}
+	return address
+}
+
 func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, error) {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {

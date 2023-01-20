@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
@@ -21,7 +22,7 @@ func (s *Strategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object
 
 func (s *Strategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
 	cred := obj.(*apiv1.Credential)
-	cred.ServerAddress = normalizeDockerIO(cred.ServerAddress)
+	cred.ServerAddress = imagesystem.NormalizeServerAddress(cred.ServerAddress)
 }
 
 func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
