@@ -454,7 +454,21 @@ func (m *MockClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 	if m.Images != nil {
 		return m.Images, nil
 	}
-	return []apiv1.Image{}, nil
+	return []apiv1.Image{{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+		Tags:       []string{"testtag:latest"},
+		Digest:     "1234567890asdfghkl",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-no-tag"},
+		Digest:     "lkjhgfdsa0987654321",
+	}, {
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+		Tags:       []string{"testtag1:latest", "testtag2:v1"},
+		Digest:     "lkjhgfdsa1234567890",
+	}}, nil
 }
 
 func (m *MockClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {
