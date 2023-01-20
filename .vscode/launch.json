@@ -25,6 +25,15 @@
             "program": "${workspaceRoot}",
             "args": ["run", "${input:acornfile}"],
             "console": "integratedTerminal",
+        },
+        {
+            "name": "Install Acorn",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
+            "args": ["install", "--image", "${input:acornimage}"],
+            "console": "integratedTerminal",
         }
     ],
     "inputs": [
@@ -33,6 +42,12 @@
 			"type": "promptString",
 			"default": ".",
 			"description": "The location of the Acorn to debug with. Can be a file or image."
+		},
+        {
+			"id": "acornimage",
+			"type": "promptString",
+			"default": "ghcr.io/acorn-io/acorn:main",
+			"description": "The image of Acorn to install."
 		},
 	]
 }
