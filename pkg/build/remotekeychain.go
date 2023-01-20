@@ -1,12 +1,15 @@
 package build
 
 import (
+	"fmt"
 	"sync"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	images2 "github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
 )
 
@@ -62,6 +65,14 @@ func (r *RemoteKeyChain) Resolve(resource authn.Resource) (authenticator authn.A
 			}
 		}
 	}()
+
+	address := imagesystem.NormalizeServerAddress(resource.RegistryStr())
+	if resource.RegistryStr() != address {
+		resource, err = name.NewRegistry(address)
+		if err != nil {
+			return nil, fmt.Errorf("failed to normalize registry from %s to %s", resource.RegistryStr(), address)
+		}
+	}
 
 	sent := false
 	for {

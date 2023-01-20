@@ -10,7 +10,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	"github.com/acorn-io/acorn/pkg/condition"
-	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
@@ -126,11 +125,7 @@ func (s *Server) build(ctx context.Context, messages buildclient.Messages, token
 	if err != nil {
 		return nil, err
 	}
-	opts, err := images.GetAuthenticationRemoteOptions(ctx, s.client, token.Build.Namespace)
-	if err != nil {
-		return nil, err
-	}
-	image, err := build.Build(ctx, messages, token.PushRepo, &token.Build.Spec, keychain, opts...)
+	image, err := build.Build(ctx, messages, token.PushRepo, &token.Build.Spec, keychain)
 	if err != nil {
 		_ = s.recordBuildError(ctx, &token.Build, err)
 		return nil, err

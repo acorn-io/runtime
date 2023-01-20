@@ -6,6 +6,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	credentials2 "github.com/acorn-io/acorn/pkg/server/registry/credentials"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/docker/cli/cli/config/credentials"
@@ -42,19 +43,13 @@ func IsErrCredentialsNotFound(err error) bool {
 	return credentials3.IsErrCredentialsNotFound(err)
 }
 
-func normalizeServerAddress(address string) string {
-	if address == "docker.io" || address == "registry-1.docker.io" {
-		return "index.docker.io"
-	}
-	return address
-}
 func normalize(cred Credential) Credential {
-	cred.ServerAddress = normalizeServerAddress(cred.ServerAddress)
+	cred.ServerAddress = imagesystem.NormalizeServerAddress(cred.ServerAddress)
 	return cred
 }
 
 func (s *Store) Get(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error) {
-	serverAddress = normalizeServerAddress(serverAddress)
+	serverAddress = imagesystem.NormalizeServerAddress(serverAddress)
 	store, err := s.getStore(serverAddress)
 	if err != nil {
 		return nil, false, err

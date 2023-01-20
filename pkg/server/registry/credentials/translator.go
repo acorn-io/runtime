@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/mink/pkg/types"
 	corev1 "k8s.io/api/core/v1"
@@ -22,7 +23,7 @@ type Translator struct {
 }
 
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
-	return namespace, strings.ReplaceAll(normalizeDockerIO(name), ":", "-"), nil
+	return namespace, strings.ReplaceAll(imagesystem.NormalizeServerAddress(name), ":", "-"), nil
 }
 
 func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
@@ -108,11 +109,4 @@ func (t *Translator) NewPublicList() types.ObjectList {
 
 func (t *Translator) NewPublic() types.Object {
 	return &apiv1.Credential{}
-}
-
-func normalizeDockerIO(s string) string {
-	if s == "docker.io" {
-		return "index.docker.io"
-	}
-	return s
 }
