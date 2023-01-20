@@ -35,7 +35,8 @@
             "internalRegistryPrefix": null,
             "ignoreUserLabelsAndAnnotations": null,
             "workloadMemoryDefault": null,
-            "workloadMemoryMaximum": null
+            "workloadMemoryMaximum": null,
+            "useCustomCABundle": null
         },
         "userConfig": {
             "ingressClassName": null,
@@ -57,7 +58,8 @@
             "internalRegistryPrefix": null,
             "ignoreUserLabelsAndAnnotations": null,
             "workloadMemoryDefault": null,
-            "workloadMemoryMaximum": null
+            "workloadMemoryMaximum": null,
+            "useCustomCABundle": null
         }
     },
     "project": {}

@@ -93,6 +93,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.IgnoreUserLabelsAndAnnotations == nil {
 		c.IgnoreUserLabelsAndAnnotations = new(bool)
 	}
+	if c.UseCustomCABundle == nil {
+		c.UseCustomCABundle = new(bool)
+	}
 
 	return nil
 }
@@ -278,6 +281,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.WorkloadMemoryMaximum != nil {
 		mergedConfig.WorkloadMemoryMaximum = newConfig.WorkloadMemoryMaximum
+	}
+
+	if newConfig.UseCustomCABundle != nil {
+		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
 	}
 
 	return &mergedConfig

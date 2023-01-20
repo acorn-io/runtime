@@ -58,6 +58,7 @@ type Options struct {
 	OutputFormat       string
 	APIServerReplicas  *int
 	ControllerReplicas *int
+	UseCustomCABundle  *bool
 	Config             apiv1.Config
 	Progress           progress.Builder
 }
@@ -78,6 +79,10 @@ func (o *Options) complete() *Options {
 
 	if o.ControllerReplicas == nil {
 		o.ControllerReplicas = &[]int{1}[0]
+	}
+
+	if o.UseCustomCABundle == nil {
+		o.UseCustomCABundle = new(bool)
 	}
 
 	return o
@@ -200,7 +205,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	s.Success()
 
 	s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
-	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, apply, c); err != nil {
+	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.UseCustomCABundle, apply, c); err != nil {
 		return s.Fail(err)
 	}
 	s.Success()
@@ -389,7 +394,7 @@ func resources(image string, opts *Options) ([]kclient.Object, error) {
 	}
 	objs = append(objs, namespace...)
 
-	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas)
+	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.UseCustomCABundle)
 	if err != nil {
 		return nil, err
 	}
@@ -430,7 +435,7 @@ func printObject(image string, opts *Options) error {
 	return err
 }
 
-func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, controllerReplicas int, apply apply.Apply, c kclient.Client) error {
+func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, apply apply.Apply, c kclient.Client) error {
 	// handle upgrade from <= v0.3.x
 	if err := resetNamespace(ctx, c); err != nil {
 		return err
@@ -441,7 +446,7 @@ func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, 
 		return err
 	}
 
-	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas)
+	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas, useCustomCABundle)
 	if err != nil {
 		return err
 	}
@@ -481,7 +486,7 @@ func Namespace() ([]kclient.Object, error) {
 	return objectsFromFile("namespace.yaml")
 }
 
-func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int) ([]kclient.Object, error) {
+func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool) ([]kclient.Object, error) {
 	apiServerObjects, err := objectsFromFile("apiserver.yaml")
 	if err != nil {
 		return nil, err
@@ -502,7 +507,16 @@ func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int)
 		return nil, err
 	}
 
-	return replaceImage(runtimeImage, append(apiServerObjects, controllerObjects...))
+	var objects []kclient.Object
+	objects = append(apiServerObjects, controllerObjects...)
+	if useCustomCABundle {
+		objects, err = replaceCabundleVolumes(objects)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return replaceImage(runtimeImage, objects)
 }
 
 func replaceReplicas(replicas int, objs []kclient.Object) ([]kclient.Object, error) {
@@ -536,6 +550,41 @@ func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error)
 				}
 			}
 			if err := unstructured.SetNestedSlice(ustr.Object, containers, "spec", "template", "spec", "containers"); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return objs, nil
+}
+
+func replaceCabundleVolumes(objs []kclient.Object) ([]kclient.Object, error) {
+	for _, obj := range objs {
+		ustr := obj.(*unstructured.Unstructured)
+		if ustr.GetKind() == "Deployment" {
+			containers, _, _ := unstructured.NestedSlice(ustr.Object, "spec", "template", "spec", "containers")
+			for _, container := range containers {
+				container.(map[string]any)["volumeMounts"] = []interface{}{
+					map[string]any{
+						"name":      "cabundle",
+						"mountPath": "/etc/ssl/certs/ca-certificates.crt",
+						"subPath":   "ca-certificates.crt",
+						"readOnly":  true,
+					},
+				}
+			}
+			if err := unstructured.SetNestedSlice(ustr.Object, containers, "spec", "template", "spec", "containers"); err != nil {
+				return nil, err
+			}
+
+			volumes := []interface{}{
+				map[string]any{
+					"name": "cabundle",
+					"secret": map[string]any{
+						"secretName": "cabundle",
+					},
+				},
+			}
+			if err := unstructured.SetNestedSlice(ustr.Object, volumes, "spec", "template", "spec", "volumes"); err != nil {
 				return nil, err
 			}
 		}

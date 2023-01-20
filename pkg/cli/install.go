@@ -45,5 +45,6 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 		Config:             i.Config,
 		APIServerReplicas:  i.APIServerReplicas,
 		ControllerReplicas: i.ControllerReplicas,
+		UseCustomCABundle:  i.UseCustomCABundle,
 	})
 }
