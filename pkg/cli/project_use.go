@@ -15,9 +15,10 @@ func NewProjectUse(c CommandContext) *cobra.Command {
 		Use: "use [flags] PROJECT_NAME",
 		Example: `
 acorn project use acorn.io/my-user/acorn`,
-		SilenceUsage: true,
-		Short:        "Set current project",
-		Args:         cobra.ExactArgs(1),
+		SilenceUsage:      true,
+		Short:             "Set current project",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
 	})
 	return cmd
 }

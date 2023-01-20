@@ -19,9 +19,10 @@ func NewProject(c CommandContext) *cobra.Command {
 		Aliases: []string{"projects", "["},
 		Example: `
 acorn project`,
-		SilenceUsage: true,
-		Short:        "Manage projects",
-		Args:         cobra.MaximumNArgs(1),
+		SilenceUsage:      true,
+		Short:             "Manage projects",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
 	})
 	cmd.AddCommand(NewProjectUse(c))
 	return cmd
