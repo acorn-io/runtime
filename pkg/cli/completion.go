@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/project"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -250,6 +252,27 @@ func secretsCompletion(ctx context.Context, c client.Client, toComplete string) 
 	for _, secret := range secrets {
 		if strings.HasPrefix(secret.Name, toComplete) {
 			result = append(result, secret.Name)
+		}
+	}
+
+	return result, nil
+}
+
+func projectsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	projects, err := project.List(ctx, cfg, project.Options{})
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, project := range projects {
+		if strings.HasPrefix(project, toComplete) {
+			result = append(result, project)
 		}
 	}
 
