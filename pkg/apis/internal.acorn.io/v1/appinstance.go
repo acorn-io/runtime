@@ -73,6 +73,7 @@ type AppInstanceSpec struct {
 	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
+	Memory              Memory           `json:"memory,omitempty"`
 }
 
 func (in *AppInstanceSpec) GetAutoUpgrade() bool {

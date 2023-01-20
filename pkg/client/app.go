@@ -58,6 +58,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			AutoUpgrade:         opts.AutoUpgrade,
 			NotifyUpgrade:       opts.NotifyUpgrade,
 			AutoUpgradeInterval: opts.AutoUpgradeInterval,
+			Memory:              opts.Memory,
 		},
 	}
 }
@@ -136,6 +137,9 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 	if opts.AutoUpgradeInterval != "" {
 		app.Spec.AutoUpgradeInterval = opts.AutoUpgradeInterval
+	}
+	if len(opts.Memory) != 0 {
+		app.Spec.Memory = opts.Memory
 	}
 
 	return app, nil

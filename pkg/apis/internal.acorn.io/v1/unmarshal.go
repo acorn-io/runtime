@@ -437,6 +437,7 @@ type containerAliases struct {
 	Directories         map[string]VolumeMount `json:"directories,omitempty"`
 	DependsOn           Dependencies           `json:"dependsOn,omitempty"`
 	DependsOnUnderscore Dependencies           `json:"depends_on,omitempty"`
+	Memory              *int64                 `json:"mem,omitempty"`
 }
 
 func (c containerAliases) SetContainer(dst Container) Container {
@@ -466,6 +467,9 @@ func (c containerAliases) SetContainer(dst Container) Container {
 	}
 	if len(c.DependsOnUnderscore) > 0 {
 		dst.Dependencies = c.DependsOnUnderscore
+	}
+	if c.Memory != nil {
+		dst.Memory = c.Memory
 	}
 	return dst
 }

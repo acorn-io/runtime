@@ -273,6 +273,12 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.InternalRegistryPrefix != nil {
 		mergedConfig.InternalRegistryPrefix = newConfig.InternalRegistryPrefix
 	}
+	if newConfig.WorkloadMemoryDefault != nil {
+		mergedConfig.WorkloadMemoryDefault = newConfig.WorkloadMemoryDefault
+	}
+	if newConfig.WorkloadMemoryMaximum != nil {
+		mergedConfig.WorkloadMemoryMaximum = newConfig.WorkloadMemoryMaximum
+	}
 
 	return &mergedConfig
 }

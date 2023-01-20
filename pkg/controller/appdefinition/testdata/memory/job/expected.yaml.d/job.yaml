@@ -1,0 +1,51 @@
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/job-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/job-name": "oneimage"
+        "acorn.io/managed": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+    spec:
+      imagePullSecrets:
+        - name: oneimage-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: oneimage
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: oneimage
+          resources:
+            limits:
+              memory: 1Mi
+            requests:
+              memory: 1Mi
+          image: "image-name"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+          terminationMessagePath: "/run/secrets/output"
+        - name: left
+          image: "foo"
+          readinessProbe:
+            tcpSocket:
+              port: 91
+          ports:
+            - containerPort: 91
+              protocol: "TCP"
+          terminationMessagePath: "/run/secrets/output"

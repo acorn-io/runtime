@@ -43,6 +43,8 @@ acorn install
       --record-builds                         Keep a record of each acorn build that happens
       --set-pod-security-enforce-profile      Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                           Bypass installation checks
+  -m, --workload-memory-default string        Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default "0")
+      --workload-memory-maximum string        Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default "0")
 ```
 
 ### Options inherited from parent commands

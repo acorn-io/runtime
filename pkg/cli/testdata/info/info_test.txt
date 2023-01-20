@@ -26,6 +26,8 @@ server:
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null
+    workloadMemoryDefault: null
+    workloadMemoryMaximum: null
   controllerImage: ""
   dirty: false
   gitCommit: ""
@@ -49,5 +51,7 @@ server:
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null
+    workloadMemoryDefault: null
+    workloadMemoryMaximum: null
   version: ""
 

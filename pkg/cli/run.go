@@ -80,7 +80,7 @@ func NewRun(c CommandContext) *cobra.Command {
   acorn run myorg/hello-world:v#.#-**
 
   # NOTE: Depending on your shell, you may see errors when using '*' and '**'. Using quotes will tell the shell to ignore them so Acorn can parse them:
-  acorn run "myorg/hello-world:v#.#-**" 
+  acorn run "myorg/hello-world:v#.#-**"
 
   # Automatic upgrades can be configured explicitly via a flag.
   # In this example, the tag will always be "latest", but acorn will periodically check to see if new content has been pushed to that tag:
@@ -127,6 +127,7 @@ type RunArgs struct {
 	NotifyUpgrade   *bool    `usage:"If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it"`
 	AutoUpgrade     *bool    `usage:"Enabled automatic upgrades."`
 	Interval        string   `usage:"If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)"`
+	Memory          []string `usage:"Set memory for a workload in the format of workload=memory. Only specify an amount to set all workloads. (ex foo=512Mi or 512Mi)" short:"m"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -141,6 +142,11 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	opts.AutoUpgrade = s.AutoUpgrade
 	opts.NotifyUpgrade = s.NotifyUpgrade
 	opts.AutoUpgradeInterval = s.Interval
+
+	opts.Memory, err = v1.ParseMemory(s.Memory)
+	if err != nil {
+		return opts, err
+	}
 
 	opts.Volumes, err = v1.ParseVolumes(s.Volume, true)
 	if err != nil {

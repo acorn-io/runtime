@@ -1,0 +1,95 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
+        "service-name.acorn.io/oneimage": "true"
+        "port-number.acorn.io/81": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: oneimage
+      hostname: oneimage
+      imagePullSecrets:
+        - name: oneimage-pull-1234567890ab
+      containers:
+        - name: oneimage
+          image: "image-name"
+          ports:
+          - containerPort: 81
+            protocol: "TCP"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          resources:
+            limits:
+              memory: 1Mi
+            requests:
+              memory: 1Mi
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: twoimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "twoimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "twoimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "twoimage"
+        "acorn.io/managed": "true"
+        "service-name.acorn.io/twoimage": "true"
+        "port-number.acorn.io/81": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: twoimage
+      hostname: twoimage
+      imagePullSecrets:
+        - name: twoimage-pull-1234567890ab
+      containers:
+        - name: twoimage
+          image: "image-name"
+          ports:
+          - containerPort: 81
+            protocol: "TCP"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+
