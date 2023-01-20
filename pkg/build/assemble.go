@@ -3,6 +3,7 @@ package build
 import (
 	"context"
 	"fmt"
+	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -12,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/types"
+	"github.com/sirupsen/logrus"
 )
 
 func digestOnlyImages(data map[string]v1.ImageData) (map[string]v1.ImageData, error) {
@@ -172,13 +174,31 @@ func imagePlatform(img ggcrv1.Image) (*ggcrv1.Platform, error) {
 	}, nil
 }
 
+// retryGet will keep trying to get a digest for 5 seconds until it succeeds. This is specifically used for digests
+// we just created. For example, in ECR this call will sometimes return 404 while I assume S3 is becoming eventually
+// consistent. It is possible that you do GET and find the response and then do GET and get a 404. So just
+// keep trying until we get it.
+func retryGetImage(d name.Digest, opts []remote.Option) (result ggcrv1.Image, err error) {
+	for i := 0; i < 5; i++ {
+		result, err = remote.Image(d, opts...)
+		if err == nil {
+			return
+		} else {
+			logrus.Warnf("failed to find newly created manifest %s, retrying: %v", d.String(), err)
+		}
+		time.Sleep(time.Second)
+	}
+
+	return
+}
+
 func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, fullDigest bool, opts []remote.Option) (string, error) {
 	d, err := name.NewDigest(ref)
 	if err != nil {
 		return "", err
 	}
 
-	appImage, err := remote.Image(d, opts...)
+	appImage, err := retryGetImage(d, opts)
 	if err != nil {
 		return "", fmt.Errorf("failed to find app metadata image: %w", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -142,4 +143,29 @@ func clientProgress(ctx context.Context, streams *streams.Output) (chan *buildki
 		close(done)
 	}()
 	return ch, done
+}
+
+func PingBuilder(ctx context.Context, baseURL string) bool {
+	for i := 0; i < 5; i++ {
+		req, err := http.NewRequest(http.MethodGet, baseURL+"/ping", nil)
+		if err != nil {
+			logrus.Debugf("failed to build request for builder ping to %s: %v", baseURL+"/ping", err)
+			return false
+		}
+
+		subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		resp, err := http.DefaultClient.Do(req.WithContext(subCtx))
+		cancel()
+		if err != nil {
+			logrus.Debugf("builder ping failed: %v", err)
+		} else {
+			_ = resp.Body.Close()
+			logrus.Debugf("builder status code: %d", resp.StatusCode)
+			if resp.StatusCode == http.StatusOK {
+				return true
+			}
+		}
+		time.Sleep(time.Second)
+	}
+	return false
 }

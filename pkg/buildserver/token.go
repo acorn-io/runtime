@@ -18,7 +18,7 @@ import (
 var (
 	tokenCache = cache.NewTTLStore(func(obj interface{}) (string, error) {
 		return string(obj.([]byte)), nil
-	}, 30*time.Second)
+	}, 2*time.Minute)
 )
 
 func GetToken(req *http.Request, uuid string, pubKey, privKey *[32]byte) (*Token, error) {
@@ -55,7 +55,7 @@ func GetToken(req *http.Request, uuid string, pubKey, privKey *[32]byte) (*Token
 		return nil, fmt.Errorf("invalid builder UID %s!=%s", result.BuilderUUID, uuid)
 	}
 
-	if time.Since(result.Time.Time) > (30 * time.Second) {
+	if time.Since(result.Time.Time) > time.Minute {
 		return nil, fmt.Errorf("expired token")
 	}
 
