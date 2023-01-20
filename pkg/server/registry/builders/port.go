@@ -9,11 +9,11 @@ import (
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/buildclient"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/strategy"
-	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	registryrest "k8s.io/apiserver/pkg/registry/rest"
@@ -70,19 +70,7 @@ func (c *BuilderPort) Connect(ctx context.Context, id string, options runtime.Ob
 	builderHost := fmt.Sprintf("%s.%s.%s:8080", builder.Status.ServiceName, system.ImagesNamespace, cfg.InternalClusterDomain)
 	// if it's not ready no point in waiting, the caller should have at least waited until it was ready
 	if builder.Status.Ready {
-		for i := 0; i < 5; i++ {
-			resp, err := c.httpClient.Get("http://" + builderHost + "/ping")
-			if err != nil {
-				logrus.Debugf("builder ping failed: %v", err)
-			} else {
-				_ = resp.Body.Close()
-				logrus.Debugf("builder status code: %d", resp.StatusCode)
-				if resp.StatusCode == http.StatusOK {
-					break
-				}
-			}
-			time.Sleep(time.Second)
-		}
+		buildclient.PingBuilder(ctx, "http://"+builderHost)
 	}
 
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
