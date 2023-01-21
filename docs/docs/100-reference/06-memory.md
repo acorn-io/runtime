@@ -6,7 +6,7 @@ You can configure Acorn apps to have a set memory upon startup.
 This allows you to specify memory that an Acorn will abide by when being created. There are a number of ways to set this so that you have full control over defaults, workloads, and maximums. In order of precedence, the ways to set memory are when you:
 
 1. [Run an Acorn](../50-running/55-memory.md)
-2. [Author an Acornfile](../38-authoring/10-memory.md)
+2. [Author an Acornfile](../38-authoring/03-containers.md#memory)
 3. [Install Acorn](../30-installation/02-options.md#memory)
 
 :::note
