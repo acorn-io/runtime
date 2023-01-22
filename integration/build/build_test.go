@@ -18,7 +18,7 @@ import (
 )
 
 func TestBuildFailed(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	_, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/fail/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/fail",
 	})
@@ -26,7 +26,7 @@ func TestBuildFailed(t *testing.T) {
 }
 
 func TestBuildFailedNoImageBuild(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	_, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/no-image-build/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/no-image-build",
 	})
@@ -35,7 +35,7 @@ func TestBuildFailedNoImageBuild(t *testing.T) {
 }
 
 func TestSimpleBuild(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/simple",
 	})
@@ -49,7 +49,7 @@ func TestSimpleBuild(t *testing.T) {
 }
 
 func TestSimilarBuilds(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 
 	// This tests a scenario where two builds only differ by a single character in the Acornfile file and otherwise all
 	// the file names and sizes are the same. A caching bug caused the second build to result in the image from the first
@@ -71,7 +71,7 @@ func TestSimilarBuilds(t *testing.T) {
 }
 
 func TestJobBuild(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/jobs/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/jobs",
 	})
@@ -86,7 +86,7 @@ func TestJobBuild(t *testing.T) {
 }
 
 func TestSidecarBuild(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/sidecar/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/sidecar",
 	})
@@ -101,7 +101,7 @@ func TestSidecarBuild(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/target/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/target",
 	})
@@ -115,7 +115,7 @@ func TestTarget(t *testing.T) {
 }
 
 func TestContextDir(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/contextdir/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/contextdir",
 	})
@@ -128,7 +128,7 @@ func TestContextDir(t *testing.T) {
 }
 
 func TestSimpleTwo(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/simple-two/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/simple-two",
 	})
@@ -148,7 +148,7 @@ func TestSimpleTwo(t *testing.T) {
 }
 
 func TestBuildDefault(t *testing.T) {
-	c := helper.BuilderClient(t, system.RequireUserNamespace())
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/build-default/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/build-default",
 	})

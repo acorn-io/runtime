@@ -51,6 +51,9 @@ type CLIConfig struct {
 	ProjectAliases    map[string]string     `json:"projectAliases,omitempty"`
 	CurrentProject    string                `json:"currentProject,omitempty"`
 
+	// TestProjectURLs is used for testing to return EndpointURLs for remote projects
+	TestProjectURLs map[string]string `json:"-"`
+
 	filename string
 	auths    map[string]types.AuthConfig
 }

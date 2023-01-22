@@ -2,13 +2,19 @@ package projects
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/storage"
@@ -17,8 +23,66 @@ import (
 )
 
 type Strategy struct {
-	c    kclient.Client
-	next strategy.Lister
+	c       kclient.Client
+	creater strategy.Creater
+	lister  strategy.Lister
+	deleter strategy.Deleter
+}
+
+func (s *Strategy) Create(ctx context.Context, object types.Object) (types.Object, error) {
+	result, err := s.creater.Create(ctx, object)
+	if !apierrors.IsAlreadyExists(err) {
+		return result, err
+	}
+
+	project := object.(*apiv1.Project)
+	ns := &corev1.Namespace{}
+	getErr := s.c.Get(ctx, router.Key("", project.Name), ns)
+	if getErr == nil {
+		if ns.Labels[labels.AcornProject] != "true" {
+			qualifiedResource := schema.GroupResource{
+				Resource: "namespaces",
+			}
+			return nil, &apierrors.StatusError{
+				ErrStatus: metav1.Status{
+					Status: metav1.StatusFailure,
+					Code:   http.StatusConflict,
+					Reason: metav1.StatusReasonAlreadyExists,
+					Details: &metav1.StatusDetails{
+						Group: qualifiedResource.Group,
+						Kind:  qualifiedResource.Resource,
+						Name:  project.Name,
+					},
+					Message: fmt.Sprintf("%s %q already exists but does not contain the %s=true label",
+						qualifiedResource.String(), project.Name, labels.AcornProject),
+				},
+			}
+		}
+	}
+	return result, err
+}
+
+// Get is based on list because list will do the RBAC checks to ensure the user can access that
+// project. This also ensure that you can only delete a project that you have namespace access to
+func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+	list, err := s.List(ctx, namespace, storage.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	projects := list.(*apiv1.ProjectList)
+	for _, project := range projects.Items {
+		if project.Name == name {
+			return &project, nil
+		}
+	}
+	return nil, apierrors.NewNotFound(schema.GroupResource{
+		Group:    apiv1.SchemeGroupVersion.Group,
+		Resource: "projects",
+	}, name)
+}
+
+func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
+	return s.deleter.Delete(ctx, obj)
 }
 
 func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
@@ -90,7 +154,7 @@ func (s Strategy) List(ctx context.Context, namespace string, opts storage.ListO
 		return s.NewList(), err
 	}
 
-	list, err := s.next.List(ctx, namespace, opts)
+	list, err := s.lister.List(ctx, namespace, opts)
 	if err != nil {
 		return s.NewList(), err
 	}

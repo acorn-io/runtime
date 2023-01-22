@@ -42,8 +42,12 @@ func containerSyncLoop(ctx context.Context, client client.Client, app *apiv1.App
 func containerSync(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
 	syncLock := sync2.Mutex{}
 	syncing := map[string]bool{}
-	w := objwatcher.New[*apiv1.ContainerReplica](client.GetClient())
-	_, err := w.BySelector(ctx, app.Namespace, labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
+	wc, err := client.GetClient()
+	if err != nil {
+		return err
+	}
+	w := objwatcher.New[*apiv1.ContainerReplica](wc)
+	_, err = w.BySelector(ctx, app.Namespace, labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
 		if con.Spec.AppName == app.Name && con.Spec.JobName == "" && con.Status.Phase == corev1.PodRunning && !syncing[con.Name] {
 			if con.Spec.Init {
 				return false, nil

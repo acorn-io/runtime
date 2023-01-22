@@ -67,7 +67,7 @@ func TestVolume(t *testing.T) {
 			obj.Labels[labels.AcornManaged] == "true"
 	})
 
-	helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 }
@@ -91,7 +91,7 @@ func TestImageNameAnnotation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 
@@ -130,7 +130,7 @@ func TestSimple(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
 	})
 	assert.NotEmpty(t, app.Status.Namespace)

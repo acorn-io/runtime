@@ -35,7 +35,7 @@ func TestUpdatePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.AppImage.ID == imageID
 	})
 	assert.NotEmpty(t, app.Status.Namespace)
@@ -52,7 +52,7 @@ func TestUpdatePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.AppImage.ID == imageID2
 	})
 	assert.Equal(t, app.Status.AppImage.ID, imageID2)

@@ -81,7 +81,7 @@ func (c IgnoreUninstalled) GetNamespace() string {
 	return c.Client.GetNamespace()
 }
 
-func (c IgnoreUninstalled) GetClient() kclient.WithWatch {
+func (c IgnoreUninstalled) GetClient() (kclient.WithWatch, error) {
 	return c.Client.GetClient()
 }
 
@@ -255,8 +255,22 @@ func (c IgnoreUninstalled) SecretDelete(ctx context.Context, name string) (*apiv
 	return c.Client.SecretDelete(ctx, name)
 }
 
+func (c *IgnoreUninstalled) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
+	return c.Client.ProjectGet(ctx, name)
+}
+
 func (c *IgnoreUninstalled) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
 	return ignoreUninstalled(c.Client.ProjectList(ctx))
+}
+
+func (c *IgnoreUninstalled) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+	return promptInstall(ctx, func() (*apiv1.Project, error) {
+		return c.Client.ProjectCreate(ctx, name)
+	})
+}
+
+func (c *IgnoreUninstalled) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
+	return ignoreUninstalled(c.Client.ProjectDelete(ctx, name))
 }
 
 func (c IgnoreUninstalled) Info(ctx context.Context) (*apiv1.Info, error) {

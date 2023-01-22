@@ -69,9 +69,7 @@ func New() *cobra.Command {
 }
 
 type Acorn struct {
-	Kubeconfig  string `usage:"Explicitly use kubeconfig file, overriding current project" env:"ACORN_KUBECONFIG"`
-	Context     string `usage:"Context to use in the resolved kubeconfig file" env:"ACORN_KUBECONFIG_CONTEXT"`
-	Namespace   string `usage:"Namespace to work in resolved connection (default \"acorn\")" env:"ACORN_NAMESPACE"`
+	Kubeconfig  string `usage:"Explicitly use kubeconfig file, overriding current project"`
 	Project     string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
 	AllProjects bool   `usage:"Use all known projects" short:"A" env:"ACORN_ALL_PROJECTS"`
 	Debug       bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`

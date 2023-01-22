@@ -13,7 +13,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) getOrCreateBuilder(ctx context.Context, name string) (*apiv1.Builder, error) {
+func (c *DefaultClient) getOrCreateBuilder(ctx context.Context, name string) (*apiv1.Builder, error) {
 	builder := &apiv1.Builder{}
 	if name == "" {
 		builders := &apiv1.BuilderList{}

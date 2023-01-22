@@ -16,7 +16,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+func (c *DefaultClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	builder, err := c.AcornImageBuildGet(ctx, name)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -25,7 +25,7 @@ func (c *client) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1
 	return builder, c.Client.Delete(ctx, builder)
 }
 
-func (c *client) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
+func (c *DefaultClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	builder := &apiv1.AcornImageBuild{}
 	return builder, c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -33,7 +33,7 @@ func (c *client) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.Ac
 	}, builder)
 }
 
-func (c *client) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
+func (c *DefaultClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
 	builders := &apiv1.AcornImageBuildList{}
 	err := c.Client.List(ctx, builders, &kclient.ListOptions{
 		Namespace: c.Namespace,
@@ -41,7 +41,7 @@ func (c *client) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBui
 	return builders.Items, err
 }
 
-func (c *client) AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error) {
+func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error) {
 	opts, err := opts.complete()
 	if err != nil {
 		return nil, err

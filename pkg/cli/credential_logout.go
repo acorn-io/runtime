@@ -37,7 +37,12 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := credentials2.NewStore(client)
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return err
+	}
+
+	store, err := credentials2.NewStore(cfg, client)
 	if err != nil {
 		return err
 	}
@@ -50,7 +55,8 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfg, err := config.ReadCLIConfig()
+	// reload config
+	cfg, err = config.ReadCLIConfig()
 	if err != nil {
 		return fmt.Errorf("failed to remove server %s from CLI config: %v", args[0], err)
 	}

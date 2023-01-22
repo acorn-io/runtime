@@ -69,18 +69,15 @@ func Projects(ctx context.Context, address, token string) ([]string, error) {
 	return result.List(), nil
 }
 
-func ProjectURLAndNamespace(ctx context.Context, project, token string) (url string, namespace string, err error) {
-	address, rest, _ := strings.Cut(project, "/")
-	accountName, ns, _ := strings.Cut(rest, "/")
-
+func ProjectURL(ctx context.Context, serverAddress, accountName, token string) (url string, err error) {
 	obj := &account{}
-	if err := httpGet(ctx, toAccountURL(address, accountName), token, obj); err != nil {
-		return "", "", err
+	if err := httpGet(ctx, toAccountURL(serverAddress, accountName), token, obj); err != nil {
+		return "", err
 	}
 	if obj.Status.EndpointURL == "" {
-		return "", "", fmt.Errorf("failed to find endpoint URL for account %s, account may still be creating", accountName)
+		return "", fmt.Errorf("failed to find endpoint URL for account %s, account may still be provisioning", accountName)
 	}
-	return obj.Status.EndpointURL, ns, nil
+	return obj.Status.EndpointURL, nil
 }
 
 func Login(ctx context.Context, password, address string) (user string, pass string, err error) {

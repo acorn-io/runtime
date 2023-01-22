@@ -11,7 +11,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error) {
+func (c *DefaultClient) SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error) {
 	secret := &apiv1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -27,7 +27,7 @@ func (c *client) SecretCreate(ctx context.Context, name, secretType string, data
 	return secret, c.Client.Create(ctx, secret)
 }
 
-func (c *client) SecretGet(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (c *DefaultClient) SecretGet(ctx context.Context, name string) (*apiv1.Secret, error) {
 	secret := &apiv1.Secret{}
 	return secret, c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -35,7 +35,7 @@ func (c *client) SecretGet(ctx context.Context, name string) (*apiv1.Secret, err
 	}, secret)
 }
 
-func (c *client) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
+func (c *DefaultClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
 	result := &apiv1.Secret{}
 	err := c.RESTClient.Get().
 		Namespace(c.Namespace).
@@ -46,7 +46,7 @@ func (c *client) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, 
 	return result, err
 }
 
-func (c *client) SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error) {
+func (c *DefaultClient) SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error) {
 	secret := &apiv1.Secret{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -60,7 +60,7 @@ func (c *client) SecretUpdate(ctx context.Context, name string, data map[string]
 	return secret, c.Client.Update(ctx, secret)
 }
 
-func (c *client) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
+func (c *DefaultClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
 	result := &apiv1.SecretList{}
 	err := c.Client.List(ctx, result, &kclient.ListOptions{
 		Namespace: c.Namespace,
@@ -79,7 +79,7 @@ func (c *client) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
 	return result.Items, nil
 }
 
-func (c *client) SecretDelete(ctx context.Context, serverAddress string) (*apiv1.Secret, error) {
+func (c *DefaultClient) SecretDelete(ctx context.Context, serverAddress string) (*apiv1.Secret, error) {
 	secret, err := c.SecretGet(ctx, serverAddress)
 	if apierrors.IsNotFound(err) {
 		return nil, nil

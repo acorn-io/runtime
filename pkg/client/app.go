@@ -63,12 +63,12 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 	}
 }
 
-func (c *client) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+func (c *DefaultClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
 	app := ToApp(c.Namespace, image, opts)
 	return app, translatePermissions(c.Client.Create(ctx, app))
 }
 
-func (c *client) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (result *apiv1.App, err error) {
+func (c *DefaultClient) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (result *apiv1.App, err error) {
 	for i := 0; i < 5; i++ {
 		result, err = c.appUpdate(ctx, name, opts)
 		if apierrors.IsConflict(err) {
@@ -145,7 +145,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	return app, nil
 }
 
-func (c *client) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
 	app, err := ToAppUpdate(ctx, c, name, opts)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func translatePermissions(err error) error {
 	return err
 }
 
-func (c *client) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
+func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
 	appName, _, _ := strings.Cut(name, ".")
 
 	app, err := c.AppGet(ctx, appName)
@@ -343,7 +343,7 @@ func appScoped(scoped []v1.ScopedLabel) map[string]string {
 	return labels
 }
 
-func (c *client) AppDelete(ctx context.Context, name string) (*apiv1.App, error) {
+func (c *DefaultClient) AppDelete(ctx context.Context, name string) (*apiv1.App, error) {
 	app, err := c.AppGet(ctx, name)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -357,7 +357,7 @@ func (c *client) AppDelete(ctx context.Context, name string) (*apiv1.App, error)
 	})
 }
 
-func (c *client) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
+func (c *DefaultClient) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -370,7 +370,7 @@ func (c *client) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
 	return app, nil
 }
 
-func (c *client) AppList(ctx context.Context) ([]apiv1.App, error) {
+func (c *DefaultClient) AppList(ctx context.Context) ([]apiv1.App, error) {
 	apps := &apiv1.AppList{}
 	err := c.Client.List(ctx, apps, &kclient.ListOptions{
 		Namespace: c.Namespace,
@@ -389,7 +389,7 @@ func (c *client) AppList(ctx context.Context) ([]apiv1.App, error) {
 	return apps.Items, nil
 }
 
-func (c *client) AppStart(ctx context.Context, name string) (err error) {
+func (c *DefaultClient) AppStart(ctx context.Context, name string) (err error) {
 	for i := 0; i < 5; i++ {
 		err = c.appStart(ctx, name)
 		if apierrors.IsConflict(err) {
@@ -400,7 +400,7 @@ func (c *client) AppStart(ctx context.Context, name string) (err error) {
 	return
 }
 
-func (c *client) appStart(ctx context.Context, name string) error {
+func (c *DefaultClient) appStart(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -416,7 +416,7 @@ func (c *client) appStart(ctx context.Context, name string) error {
 	return nil
 }
 
-func (c *client) AppStop(ctx context.Context, name string) (err error) {
+func (c *DefaultClient) AppStop(ctx context.Context, name string) (err error) {
 	for i := 0; i < 5; i++ {
 		err = c.appStop(ctx, name)
 		if apierrors.IsConflict(err) {
@@ -427,7 +427,7 @@ func (c *client) AppStop(ctx context.Context, name string) (err error) {
 	return
 }
 
-func (c *client) appStop(ctx context.Context, name string) error {
+func (c *DefaultClient) appStop(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -444,7 +444,7 @@ func (c *client) appStop(ctx context.Context, name string) error {
 	}
 	return nil
 }
-func (c *client) AppConfirmUpgrade(ctx context.Context, name string) error {
+func (c *DefaultClient) AppConfirmUpgrade(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -462,7 +462,7 @@ func (c *client) AppConfirmUpgrade(ctx context.Context, name string) error {
 		Body(&apiv1.ConfirmUpgrade{}).Do(ctx).Error()
 }
 
-func (c *client) AppPullImage(ctx context.Context, name string) error {
+func (c *DefaultClient) AppPullImage(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,

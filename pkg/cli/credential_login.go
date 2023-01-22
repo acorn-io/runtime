@@ -114,7 +114,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	store, err := credentials.NewStore(client)
+	store, err := credentials.NewStore(cfg, client)
 	if err != nil {
 		return err
 	}

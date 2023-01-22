@@ -550,7 +550,7 @@ func (m *MockClient) Info(ctx context.Context) (*apiv1.Info, error) {
 
 func (m *MockClient) GetNamespace() string { return "" }
 
-func (m *MockClient) GetClient() kclient.WithWatch { return nil }
+func (m *MockClient) GetClient() (kclient.WithWatch, error) { return nil, nil }
 
 func (m *MockClient) PromptUser(s string) error {
 	return nil
@@ -586,6 +586,21 @@ func (m *MockClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
 }
 
 func (m *MockClient) GetProject() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
 	//TODO implement me
 	panic("implement me")
 }

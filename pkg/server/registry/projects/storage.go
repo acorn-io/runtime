@@ -13,11 +13,17 @@ import (
 func NewStorage(c kclient.WithWatch) rest.Storage {
 	remoteResource := remote.NewWithTranslation(&Translator{},
 		&corev1.Namespace{}, c)
+	strategy := &Strategy{
+		c:       c,
+		lister:  remoteResource,
+		creater: remoteResource,
+		deleter: remoteResource,
+	}
 	return stores.NewBuilder(c.Scheme(), &apiv1.Project{}).
-		WithList(&Strategy{
-			c:    c,
-			next: remoteResource,
-		}).
+		WithCreate(strategy).
+		WithDelete(strategy).
+		WithGet(strategy).
+		WithList(strategy).
 		WithTableConverter(tables.ProjectConverter).
 		Build()
 }

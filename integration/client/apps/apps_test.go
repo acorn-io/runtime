@@ -389,7 +389,7 @@ func TestAppLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.ContainerStatus["default"].Ready == 1
 	})
 

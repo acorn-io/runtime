@@ -38,8 +38,12 @@ func New(cfg *rest.Config) (client.WithWatch, error) {
 	if err != nil {
 		return nil, err
 	}
+	mapper, err := NewMapper(scheme.Scheme, m)
+	if err != nil {
+		return nil, err
+	}
 	return client.NewWithWatch(cfg, client.Options{
 		Scheme: scheme.Scheme,
-		Mapper: NewMapper(scheme.Scheme, m),
+		Mapper: mapper,
 	})
 }

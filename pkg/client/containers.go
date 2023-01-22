@@ -10,7 +10,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
+func (c *DefaultClient) ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
 	container := &apiv1.ContainerReplica{}
 	return container, c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      name,
@@ -18,7 +18,7 @@ func (c *client) ContainerReplicaGet(ctx context.Context, name string) (*apiv1.C
 	}, container)
 }
 
-func (c *client) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
+func (c *DefaultClient) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
 	result := &apiv1.ContainerReplicaList{}
 	err := c.Client.List(ctx, result, &kclient.ListOptions{
 		Namespace: c.Namespace,
@@ -47,7 +47,7 @@ func (c *client) ContainerReplicaList(ctx context.Context, opts *ContainerReplic
 	return result.Items, nil
 }
 
-func (c *client) ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
+func (c *DefaultClient) ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
 	container, err := c.ContainerReplicaGet(ctx, name)
 	if apierrors.IsNotFound(err) {
 		return nil, nil

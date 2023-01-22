@@ -40,7 +40,7 @@ func (a *ProjectUse) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if cfg.ProjectAliases[args[0]] == "" {
-		projects, err := project.List(cmd.Context(), cfg, a.client.Options())
+		projects, err := project.List(cmd.Context(), a.client.Options().WithCLIConfig(cfg))
 		if err != nil {
 			return err
 		}

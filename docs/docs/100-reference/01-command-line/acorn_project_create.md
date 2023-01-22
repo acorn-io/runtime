@@ -1,24 +1,30 @@
 ---
-title: "acorn volume rm"
+title: "acorn project create"
 ---
-## acorn volume rm
+## acorn project create
 
-Delete a volume
+Create new project
 
 ```
-acorn volume rm [VOLUME_NAME...] [flags]
+acorn project create [flags] PROJECT_NAME [PROJECT_NAME...]
 ```
 
 ### Examples
 
 ```
-acorn volume rm my-volume
+
+# Create a project locally
+acorn project create my-new-project
+
+# Create a project on remote service acorn.io
+acorn project create acorn.io/username/new-project
+
 ```
 
 ### Options
 
 ```
-  -h, --help   help for rm
+  -h, --help   help for create
 ```
 
 ### Options inherited from parent commands
@@ -35,5 +41,5 @@ acorn volume rm my-volume
 
 ### SEE ALSO
 
-* [acorn volume](acorn_volume.md)	 - Manage volumes
+* [acorn project](acorn_project.md)	 - Manage projects
 

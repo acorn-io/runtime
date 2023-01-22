@@ -2,6 +2,7 @@ package cli
 
 import (
 	"io"
+	"os"
 
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/project"
@@ -27,11 +28,12 @@ type CommandClientFactory struct {
 
 func (c *CommandClientFactory) Options() project.Options {
 	return project.Options{
-		Project:     c.acorn.Project,
-		Kubeconfig:  c.acorn.Kubeconfig,
-		Namespace:   c.acorn.Namespace,
-		Context:     c.acorn.Context,
-		AllProjects: c.acorn.AllProjects,
+		Project:       c.acorn.Project,
+		Kubeconfig:    c.acorn.Kubeconfig,
+		KubeconfigEnv: os.Getenv("KUBECONFIG"),
+		ContextEnv:    os.Getenv("CONTEXT"),
+		NamespaceEnv:  os.Getenv("NAMESPACE"),
+		AllProjects:   c.acorn.AllProjects,
 	}
 }
 

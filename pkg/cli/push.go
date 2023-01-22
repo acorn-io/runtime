@@ -3,6 +3,7 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/credentials"
 	"github.com/acorn-io/acorn/pkg/progressbar"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -29,7 +30,12 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	creds, err := credentials.NewStore(c)
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return err
+	}
+
+	creds, err := credentials.NewStore(cfg, c)
 	if err != nil {
 		return err
 	}

@@ -7,14 +7,34 @@ import (
 )
 
 const (
-	Admin    = "acorn:project:admin"
-	View     = "acorn:project:view"
-	ViewLogs = "acorn:project:view-logs"
-	Edit     = "acorn:project:edit"
-	Build    = "acorn:project:build"
+	Admin       = "acorn:project:admin"
+	View        = "acorn:project:view"
+	ViewLogs    = "acorn:project:view-logs"
+	Edit        = "acorn:project:edit"
+	Build       = "acorn:project:build"
+	ClusterView = "acorn:cluster:view"
+	ClusterEdit = "acorn:cluster:edit"
 )
 
 var (
+	clusterRoles = map[string][]rbacv1.PolicyRule{
+		ClusterView: {
+			{
+				Verbs: []string{"get", "list"},
+				Resources: []string{
+					"projects",
+				},
+			},
+		},
+		ClusterEdit: {
+			{
+				Verbs: []string{"create", "delete"},
+				Resources: []string{
+					"projects",
+				},
+			},
+		},
+	}
 	projectRoles = map[string][]rbacv1.PolicyRule{
 		View: {
 			{
@@ -112,6 +132,14 @@ func addAPIGroup(roles []rbacv1.ClusterRole) []rbacv1.ClusterRole {
 	return roles
 }
 
+func clusterRolesConcat(roles ...string) []rbacv1.PolicyRule {
+	var result []rbacv1.PolicyRule
+	for _, role := range roles {
+		result = append(result, clusterRoles[role]...)
+	}
+	return result
+}
+
 func concat(roles ...string) []rbacv1.PolicyRule {
 	var result []rbacv1.PolicyRule
 	for _, role := range roles {
@@ -122,6 +150,18 @@ func concat(roles ...string) []rbacv1.PolicyRule {
 
 func ClusterRoles() []rbacv1.ClusterRole {
 	return addAPIGroup([]rbacv1.ClusterRole{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: ClusterView,
+			},
+			Rules: clusterRolesConcat(ClusterView),
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: ClusterEdit,
+			},
+			Rules: clusterRolesConcat(ClusterView, ClusterEdit),
+		},
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: Admin,

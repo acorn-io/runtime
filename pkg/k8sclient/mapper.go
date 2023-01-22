@@ -5,6 +5,7 @@ import (
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/rancher/wrangler/pkg/name"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -18,7 +19,7 @@ type FastMapper struct {
 	clusterScoped  map[string]bool
 }
 
-func NewMapper(scheme *runtime.Scheme, mapper meta.RESTMapper) meta.RESTMapper {
+func NewMapper(scheme *runtime.Scheme, mapper meta.RESTMapper) (meta.RESTMapper, error) {
 	kindToResource := map[string]string{}
 	resourceToKind := map[string]string{}
 	clusterScoped := map[string]bool{}
@@ -28,6 +29,15 @@ func NewMapper(scheme *runtime.Scheme, mapper meta.RESTMapper) meta.RESTMapper {
 		resource := name.GuessPluralName(strings.ToLower(kind))
 		kindToResource[kind] = resource
 		resourceToKind[resource] = kind
+		obj, err := scheme.New(gv.WithKind(kind))
+		if err != nil {
+			return nil, err
+		}
+		if scoped, ok := obj.(strategy.NamespaceScoper); ok {
+			if !scoped.NamespaceScoped() {
+				clusterScoped[kind] = true
+			}
+		}
 	}
 
 	return &FastMapper{
@@ -35,7 +45,7 @@ func NewMapper(scheme *runtime.Scheme, mapper meta.RESTMapper) meta.RESTMapper {
 		kindToResource: kindToResource,
 		resourceToKind: resourceToKind,
 		clusterScoped:  clusterScoped,
-	}
+	}, nil
 }
 
 func (f *FastMapper) KindFor(resource schema.GroupVersionResource) (schema.GroupVersionKind, error) {
