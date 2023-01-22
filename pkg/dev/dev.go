@@ -356,8 +356,12 @@ func runOrUpdate(ctx context.Context, client client.Client, acornCue, image stri
 }
 
 func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel func()) error {
-	w := objwatcher.New[*apiv1.App](c.GetClient())
-	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+	wc, err := c.GetClient()
+	if err != nil {
+		return err
+	}
+	w := objwatcher.New[*apiv1.App](wc)
+	_, err = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
 		if !app.DeletionTimestamp.IsZero() {
 			pterm.Println(pterm.FgCyan.Sprintf("app %s deleted, exiting", app.Name))
 			cancel()
@@ -390,9 +394,13 @@ func PrintAppStatus(app *apiv1.App) {
 }
 
 func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
-	w := objwatcher.New[*apiv1.App](c.GetClient())
+	wc, err := c.GetClient()
+	if err != nil {
+		return err
+	}
+	w := objwatcher.New[*apiv1.App](wc)
 	msg, ready := "", false
-	_, err := w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+	_, err = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
 		newMsg, newReady := appStatusMessage(app)
 		logrus.Debugf("app status loop %s/%s rev=%s, generation=%d, observed=%d: newMsg=%s, newReady=%v", app.Namespace, app.Name,
 			app.ResourceVersion, app.Generation, app.Status.ObservedGeneration, newMsg, newReady)

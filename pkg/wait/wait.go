@@ -42,7 +42,11 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 }
 
 func waitForApp(ctx context.Context, c client.Client, app *apiv1.App) (*apiv1.App, error) {
-	w := objwatcher.New[*apiv1.App](c.GetClient())
+	wc, err := c.GetClient()
+	if err != nil {
+		return nil, err
+	}
+	w := objwatcher.New[*apiv1.App](wc)
 	return w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
 		if app.Status.Ready {
 			return true, nil

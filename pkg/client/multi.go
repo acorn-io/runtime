@@ -14,14 +14,14 @@ import (
 type MultiClient struct {
 	project   string
 	namespace string
-	factory   ProjectClientFactory
+	Factory   ProjectClientFactory
 }
 
 func NewMultiClient(project, namespace string, factory ProjectClientFactory) *MultiClient {
 	return &MultiClient{
 		project:   project,
 		namespace: namespace,
-		factory:   factory,
+		Factory:   factory,
 	}
 }
 
@@ -88,32 +88,32 @@ func onOne[T kclient.Object](ctx context.Context, factory ProjectClientFactory, 
 }
 
 func (m *MultiClient) AppList(ctx context.Context) ([]apiv1.App, error) {
-	return aggregate(ctx, m.factory, func(client Client) ([]apiv1.App, error) {
+	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.App, error) {
 		return client.AppList(ctx)
 	})
 }
 
 func (m *MultiClient) AppDelete(ctx context.Context, name string) (*apiv1.App, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return c.AppDelete(ctx, name)
 	})
 }
 
 func (m *MultiClient) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return c.AppGet(ctx, name)
 	})
 }
 
 func (m *MultiClient) AppStop(ctx context.Context, name string) error {
-	_, err := onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return &apiv1.App{}, c.AppStop(ctx, name)
 	})
 	return err
 }
 
 func (m *MultiClient) AppStart(ctx context.Context, name string) error {
-	_, err := onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return &apiv1.App{}, c.AppStart(ctx, name)
 	})
 	return err
@@ -124,14 +124,14 @@ func (m *MultiClient) AppRun(ctx context.Context, image string, opts *AppRunOpti
 	if opts != nil {
 		name = opts.Name
 	}
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		opts.Name = name
 		return c.AppRun(ctx, image, opts)
 	})
 }
 
 func (m *MultiClient) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return c.AppUpdate(ctx, name, opts)
 	})
 }
@@ -142,7 +142,7 @@ func (m *MultiClient) AppLog(ctx context.Context, name string, opts *LogOptions)
 		project string
 		err     error
 	)
-	_, err = onOne(ctx, m.factory, name, func(name string, c Client) (kclient.Object, error) {
+	_, err = onOne(ctx, m.Factory, name, func(name string, c Client) (kclient.Object, error) {
 		project = c.GetProject()
 		msgs, err = c.AppLog(ctx, name, opts)
 		return &apiv1.App{}, err
@@ -162,105 +162,105 @@ func (m *MultiClient) AppLog(ctx context.Context, name string, opts *LogOptions)
 }
 
 func (m *MultiClient) AppConfirmUpgrade(ctx context.Context, name string) error {
-	_, err := onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return &apiv1.App{}, c.AppConfirmUpgrade(ctx, name)
 	})
 	return err
 }
 
 func (m *MultiClient) AppPullImage(ctx context.Context, name string) error {
-	_, err := onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.App, error) {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return &apiv1.App{}, c.AppPullImage(ctx, name)
 	})
 	return err
 }
 
 func (m *MultiClient) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
-	return onOne(ctx, m.factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
+	return onOne(ctx, m.Factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
 		return c.CredentialCreate(ctx, name, username, password, skipChecks)
 	})
 }
 
 func (m *MultiClient) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
-	return aggregate(ctx, m.factory, func(client Client) ([]apiv1.Credential, error) {
+	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.Credential, error) {
 		return client.CredentialList(ctx)
 	})
 }
 
 func (m *MultiClient) CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
-	return onOne(ctx, m.factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
+	return onOne(ctx, m.Factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
 		return c.CredentialGet(ctx, name)
 	})
 }
 
 func (m *MultiClient) CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
-	return onOne(ctx, m.factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
+	return onOne(ctx, m.Factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
 		return c.CredentialUpdate(ctx, name, username, password, skipChecks)
 	})
 }
 
 func (m *MultiClient) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
-	return onOne(ctx, m.factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
+	return onOne(ctx, m.Factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
 		return c.CredentialDelete(ctx, name)
 	})
 }
 
 func (m *MultiClient) SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Secret, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Secret, error) {
 		return c.SecretCreate(ctx, name, secretType, data)
 	})
 }
 
 func (m *MultiClient) SecretList(ctx context.Context) ([]apiv1.Secret, error) {
-	return aggregate(ctx, m.factory, func(c Client) ([]apiv1.Secret, error) {
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Secret, error) {
 		return c.SecretList(ctx)
 	})
 }
 
 func (m *MultiClient) SecretGet(ctx context.Context, name string) (*apiv1.Secret, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Secret, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Secret, error) {
 		return c.SecretGet(ctx, name)
 	})
 }
 
 func (m *MultiClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Secret, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Secret, error) {
 		return c.SecretReveal(ctx, name)
 	})
 }
 
 func (m *MultiClient) SecretUpdate(ctx context.Context, name string, data map[string][]byte) (*apiv1.Secret, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Secret, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Secret, error) {
 		return c.SecretUpdate(ctx, name, data)
 	})
 }
 
 func (m *MultiClient) SecretDelete(ctx context.Context, name string) (*apiv1.Secret, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Secret, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Secret, error) {
 		return c.SecretDelete(ctx, name)
 	})
 }
 
 func (m *MultiClient) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
-	return aggregate(ctx, m.factory, func(c Client) ([]apiv1.ContainerReplica, error) {
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.ContainerReplica, error) {
 		return c.ContainerReplicaList(ctx, opts)
 	})
 }
 
 func (m *MultiClient) ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
 		return c.ContainerReplicaGet(ctx, name)
 	})
 }
 
 func (m *MultiClient) ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
 		return c.ContainerReplicaDelete(ctx, name)
 	})
 }
 
 func (m *MultiClient) ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *ContainerReplicaExecOptions) (exec *term.ExecIO, err error) {
-	_, err = onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
+	_, err = onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
 		exec, err = c.ContainerReplicaExec(ctx, name, args, tty, opts)
 		return &apiv1.ContainerReplica{}, err
 	})
@@ -268,25 +268,25 @@ func (m *MultiClient) ContainerReplicaExec(ctx context.Context, name string, arg
 }
 
 func (m *MultiClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
-	return aggregate(ctx, m.factory, func(c Client) ([]apiv1.Volume, error) {
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Volume, error) {
 		return c.VolumeList(ctx)
 	})
 }
 
 func (m *MultiClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Volume, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Volume, error) {
 		return c.VolumeGet(ctx, name)
 	})
 }
 
 func (m *MultiClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error) {
-	return onOne(ctx, m.factory, name, func(name string, c Client) (*apiv1.Volume, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Volume, error) {
 		return c.VolumeDelete(ctx, name)
 	})
 }
 
 func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 }
 
 func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +302,7 @@ func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, 
 }
 
 func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageD
 }
 
 func (m *MultiClient) ImagePush(ctx context.Context, tagName string, opts *ImagePushOptions) (result <-chan ImageProgress, err error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (m *MultiClient) ImagePush(ctx context.Context, tagName string, opts *Image
 }
 
 func (m *MultiClient) ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (result <-chan ImageProgress, err error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func (m *MultiClient) ImagePull(ctx context.Context, name string, opts *ImagePul
 }
 
 func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return err
 	}
@@ -334,7 +334,7 @@ func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
 }
 
 func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (result *ImageDetails, err error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *
 }
 
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +350,7 @@ func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*api
 }
 
 func (m *MultiClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func (m *MultiClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornIma
 }
 
 func (m *MultiClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -366,15 +366,37 @@ func (m *MultiClient) AcornImageBuildDelete(ctx context.Context, name string) (*
 }
 
 func (m *MultiClient) AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (result *v1.AppImage, err error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
 	return c.AcornImageBuild(ctx, file, opts)
 }
 
+func (m *MultiClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Project, error) {
+		return c.ProjectGet(ctx, name)
+	})
+}
+
+func (m *MultiClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	if err != nil {
+		return nil, err
+	}
+	return c.ProjectDelete(ctx, name)
+}
+
+func (m *MultiClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	if err != nil {
+		return nil, err
+	}
+	return c.ProjectCreate(ctx, name)
+}
+
 func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
-	return aggregate(ctx, m.factory, func(c Client) ([]apiv1.Project, error) {
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Project, error) {
 		projs, err := c.ProjectList(ctx)
 		for i := range projs {
 			idx := strings.LastIndex(c.GetProject(), "/")
@@ -387,7 +409,7 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 }
 
 func (m *MultiClient) Info(ctx context.Context) (*apiv1.Info, error) {
-	c, err := m.factory.ForProject(ctx, m.factory.DefaultProject())
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
@@ -402,8 +424,8 @@ func (m *MultiClient) GetNamespace() string {
 	return m.namespace
 }
 
-func (m *MultiClient) GetClient() kclient.WithWatch {
-	c, err := m.factory.ForProject(context.Background(), m.factory.DefaultProject())
+func (m *MultiClient) GetClient() (kclient.WithWatch, error) {
+	c, err := m.Factory.ForProject(context.Background(), m.Factory.DefaultProject())
 	if err != nil {
 		panic(err)
 	}

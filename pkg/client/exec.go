@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerReplica, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
+func (c *DefaultClient) execContainer(ctx context.Context, container *apiv1.ContainerReplica, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
 	req := c.RESTClient.Get().
 		Namespace(container.Namespace).
 		Resource("containerreplicas").
@@ -31,7 +31,7 @@ func (c *client) execContainer(ctx context.Context, container *apiv1.ContainerRe
 	return conn.ToExecIO(tty), nil
 }
 
-func (c *client) ContainerReplicaExec(ctx context.Context, containerName string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
+func (c *DefaultClient) ContainerReplicaExec(ctx context.Context, containerName string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
 	if containerName == "_" && opts != nil && opts.DebugImage != "" {
 		return c.execContainer(ctx, &apiv1.ContainerReplica{
 			ObjectMeta: metav1.ObjectMeta{

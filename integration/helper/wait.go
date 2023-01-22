@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	hclient "github.com/acorn-io/acorn/pkg/client"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -92,6 +93,15 @@ func Wait[T client.Object](t *testing.T, watchFunc WatchFunc, list client.Object
 		return cb(obj)
 	})
 	return last
+}
+
+func Watcher(t *testing.T, c hclient.Client) WatchFunc {
+	t.Helper()
+	wc, err := c.GetClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return wc.Watch
 }
 
 func WaitForObject[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, obj T, cb func(obj T) bool) T {

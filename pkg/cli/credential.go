@@ -3,6 +3,7 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
+	"github.com/acorn-io/acorn/pkg/config"
 	credentials2 "github.com/acorn-io/acorn/pkg/credentials"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
@@ -36,7 +37,12 @@ func (a *Credential) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	store, err := credentials2.NewStore(c)
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return err
+	}
+
+	store, err := credentials2.NewStore(cfg, c)
 	if err != nil {
 		return err
 	}

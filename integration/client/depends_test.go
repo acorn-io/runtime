@@ -53,7 +53,7 @@ func TestDependsOn(t *testing.T) {
 	jobs := map[string]int{}
 	deployments := map[string]int{}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &v1.AppList{}, app, func(app *v1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppList{}, app, func(app *v1.App) bool {
 		return app.Status.Namespace != ""
 	})
 

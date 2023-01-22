@@ -36,9 +36,13 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 
 func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range obj {
+		ns := obj.(*corev1.Namespace)
+		delete(ns.Labels, labels.AcornProject)
 		result = append(result, &apiv1.Project{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: obj.(*corev1.Namespace).Name,
+				Name:        ns.Name,
+				Labels:      ns.Labels,
+				Annotations: ns.Annotations,
 			},
 		})
 	}
@@ -46,9 +50,17 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 }
 
 func (t *Translator) FromPublic(ctx context.Context, obj runtime.Object) (types.Object, error) {
+	prj := obj.(*apiv1.Project)
+	if prj.Labels == nil {
+		prj.Labels = map[string]string{
+			labels.AcornProject: "true",
+		}
+	}
 	return &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: obj.(*apiv1.Project).Name,
+			Name:        prj.Name,
+			Labels:      prj.Labels,
+			Annotations: prj.Annotations,
 		},
 	}, nil
 }

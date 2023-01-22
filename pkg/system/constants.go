@@ -1,7 +1,5 @@
 package system
 
-import "os"
-
 const (
 	Namespace            = "acorn-system"
 	ImagesNamespace      = "acorn-image-system"
@@ -22,19 +20,3 @@ var (
 	ContainerdConfigPathName = "containerd-config-path"
 	DefaultHubAddress        = "acorn.io"
 )
-
-func UserNamespace() string {
-	ns := os.Getenv("NAMESPACE")
-	if ns != "" {
-		return ns
-	}
-	return DefaultUserNamespace
-}
-
-func RequireUserNamespace() string {
-	ns := os.Getenv("NAMESPACE")
-	if ns != "" {
-		return ns
-	}
-	return DefaultUserNamespace
-}

@@ -28,11 +28,7 @@ type Store struct {
 	c   client.Client
 }
 
-func NewStore(c client.Client) (*Store, error) {
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return nil, err
-	}
+func NewStore(cfg *config.CLIConfig, c client.Client) (*Store, error) {
 	return &Store{
 		cfg: cfg,
 		c:   c,

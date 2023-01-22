@@ -13,7 +13,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
+func (c *DefaultClient) ImageTag(ctx context.Context, imageName, tag string) error {
 	image, err := c.ImageGet(ctx, imageName)
 	if apierrors.IsNotFound(err) {
 		return err
@@ -30,7 +30,7 @@ func (c *client) ImageTag(ctx context.Context, imageName, tag string) error {
 	return err
 }
 
-func (c *client) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error) {
+func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "/", "+")
 
 	detailsResult := &apiv1.ImageDetails{}
@@ -59,7 +59,7 @@ func (c *client) ImageDetails(ctx context.Context, imageName string, opts *Image
 	}, nil
 }
 
-func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePullOptions) (<-chan ImageProgress, error) {
+func (c *DefaultClient) ImagePull(ctx context.Context, imageName string, opts *ImagePullOptions) (<-chan ImageProgress, error) {
 	body := &apiv1.ImagePull{}
 	if opts != nil {
 		body.Auth = opts.Auth
@@ -110,7 +110,7 @@ func (c *client) ImagePull(ctx context.Context, imageName string, opts *ImagePul
 	return result, nil
 }
 
-func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePushOptions) (<-chan ImageProgress, error) {
+func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *ImagePushOptions) (<-chan ImageProgress, error) {
 	body := &apiv1.ImagePush{}
 	if opts != nil {
 		body.Auth = opts.Auth
@@ -166,7 +166,7 @@ func (c *client) ImagePush(ctx context.Context, imageName string, opts *ImagePus
 	return result, nil
 }
 
-func (c *client) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
+func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
 	image, err := c.ImageGet(ctx, imageName)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -203,7 +203,7 @@ func (c *client) ImageDelete(ctx context.Context, imageName string, opts *ImageD
 	return image, c.Client.Delete(ctx, image)
 }
 
-func (c *client) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, error) {
+func (c *DefaultClient) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, error) {
 	result := &apiv1.Image{}
 	return result, c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      strings.ReplaceAll(imageName, "/", "+"),
@@ -211,7 +211,7 @@ func (c *client) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, 
 	}, result)
 }
 
-func (c *client) ImageList(ctx context.Context) ([]apiv1.Image, error) {
+func (c *DefaultClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 	result := &apiv1.ImageList{}
 	err := c.Client.List(ctx, result, &kclient.ListOptions{
 		Namespace: c.Namespace,

@@ -40,7 +40,7 @@ func TestText(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Namespace != ""
 	})
 
@@ -84,7 +84,7 @@ func TestJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Namespace != ""
 	})
 
@@ -116,7 +116,7 @@ func TestIssue552(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.Ready &&
 			app.Status.ContainerStatus["icinga2-master"].UpToDate == 1
 	})
@@ -173,7 +173,7 @@ func TestEncryptionEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c1.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c1), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Namespace != ""
 	})
 
@@ -209,7 +209,7 @@ func TestNamespacedDecryption(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c2.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c2), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Namespace != ""
 	})
 
@@ -245,7 +245,7 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app = helper.WaitForObject(t, c1.GetClient().Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c1), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
 		return obj.Status.Namespace != ""
 	})
 

@@ -1,18 +1,20 @@
 ---
-title: "acorn volume rm"
+title: "acorn project rm"
 ---
-## acorn volume rm
+## acorn project rm
 
-Delete a volume
+Deletes projects
 
 ```
-acorn volume rm [VOLUME_NAME...] [flags]
+acorn project rm [flags] PROJECT_NAME [PROJECT_NAME...]
 ```
 
 ### Examples
 
 ```
-acorn volume rm my-volume
+
+acorn project rm my-project
+
 ```
 
 ### Options
@@ -35,5 +37,5 @@ acorn volume rm my-volume
 
 ### SEE ALSO
 
-* [acorn volume](acorn_volume.md)	 - Manage volumes
+* [acorn project](acorn_project.md)	 - Manage projects
 

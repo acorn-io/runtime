@@ -10,7 +10,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
+func (c *DefaultClient) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverAddress,
@@ -24,7 +24,7 @@ func (c *client) CredentialCreate(ctx context.Context, serverAddress, username, 
 	return credential, c.Client.Create(ctx, credential)
 }
 
-func (c *client) CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
+func (c *DefaultClient) CredentialGet(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{}
 	return credential, c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      serverAddress,
@@ -32,7 +32,7 @@ func (c *client) CredentialGet(ctx context.Context, serverAddress string) (*apiv
 	}, credential)
 }
 
-func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
+func (c *DefaultClient) CredentialUpdate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
 	credential := &apiv1.Credential{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      serverAddress,
@@ -48,7 +48,7 @@ func (c *client) CredentialUpdate(ctx context.Context, serverAddress, username, 
 	return credential, c.Client.Update(ctx, credential)
 }
 
-func (c *client) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
+func (c *DefaultClient) CredentialList(ctx context.Context) ([]apiv1.Credential, error) {
 	result := &apiv1.CredentialList{}
 	err := c.Client.List(ctx, result, &kclient.ListOptions{
 		Namespace: c.Namespace,
@@ -67,7 +67,7 @@ func (c *client) CredentialList(ctx context.Context) ([]apiv1.Credential, error)
 	return result.Items, nil
 }
 
-func (c *client) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
+func (c *DefaultClient) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
 	credential, err := c.CredentialGet(ctx, serverAddress)
 	if apierrors.IsNotFound(err) {
 		return nil, nil

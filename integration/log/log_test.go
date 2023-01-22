@@ -41,7 +41,7 @@ func TestLog(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.ContainerStatus["cont1-1"].Ready == 1 &&
 			app.Status.ContainerStatus["cont1-2"].Ready == 1
 	})
@@ -86,7 +86,7 @@ func TestContainerLog(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.ContainerStatus["cont1-1"].Ready == 1 &&
 			app.Status.ContainerStatus["cont1-2"].Ready == 1
 	})
@@ -144,7 +144,7 @@ func TestSidecarContainerLog(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	app = helper.WaitForObject(t, c.GetClient().Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.ContainerStatus["cont1-1"].Ready == 1 &&
 			app.Status.ContainerStatus["cont1-2"].Ready == 1
 	})

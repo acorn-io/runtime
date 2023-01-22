@@ -25,7 +25,7 @@ type Factory struct {
 }
 
 func (f *Factory) Namespace(project, namespace string) Client {
-	return &client{
+	return &DefaultClient{
 		Project:    project,
 		Namespace:  namespace,
 		Client:     f.client,
@@ -66,7 +66,7 @@ func NewClientFactory(restConfig *rest.Config) (*Factory, error) {
 
 func New(restConfig *rest.Config, project, namespace string) (Client, error) {
 	if namespace == "" {
-		namespace = system.UserNamespace()
+		namespace = system.DefaultUserNamespace
 	}
 
 	f, err := NewClientFactory(restConfig)
@@ -225,13 +225,16 @@ type Client interface {
 	AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
 	AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error)
 
+	ProjectGet(ctx context.Context, name string) (*apiv1.Project, error)
 	ProjectList(ctx context.Context) ([]apiv1.Project, error)
+	ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error)
+	ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error)
 
 	Info(ctx context.Context) (*apiv1.Info, error)
 
 	GetProject() string
 	GetNamespace() string
-	GetClient() kclient.WithWatch
+	GetClient() (kclient.WithWatch, error)
 }
 
 type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
@@ -287,7 +290,7 @@ type ContainerReplicaListOptions struct {
 	App string `json:"app,omitempty"`
 }
 
-type client struct {
+type DefaultClient struct {
 	Project    string
 	Namespace  string
 	Client     kclient.WithWatch
@@ -296,14 +299,14 @@ type client struct {
 	Dialer     *k8schannel.Dialer
 }
 
-func (c *client) GetProject() string {
+func (c *DefaultClient) GetProject() string {
 	return c.Project
 }
 
-func (c *client) GetNamespace() string {
+func (c *DefaultClient) GetNamespace() string {
 	return c.Namespace
 }
 
-func (c *client) GetClient() kclient.WithWatch {
-	return c.Client
+func (c *DefaultClient) GetClient() (kclient.WithWatch, error) {
+	return c.Client, nil
 }
