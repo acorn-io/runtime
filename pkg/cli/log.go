@@ -14,7 +14,7 @@ func NewLogs(c CommandContext) *cobra.Command {
 	return cli.Command(logs, cobra.Command{
 		Use:               "logs [flags] APP_NAME|CONTAINER_NAME",
 		SilenceUsage:      true,
-		Short:             "Log all pods from app",
+		Short:             "Log all workloads from an app",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
