@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -63,14 +62,6 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	}
 	if c.LetsEncryptTOSAgree == nil {
 		c.LetsEncryptTOSAgree = new(bool)
-	}
-	if *c.LetsEncrypt == "enabled" {
-		if c.LetsEncryptEmail == "" {
-			return fmt.Errorf("letsencrypt email is required when Let's Encrypt is enabled")
-		}
-		if !*c.LetsEncryptTOSAgree {
-			return fmt.Errorf("letsencrypt TOS must be agreed to when Let's Encrypt is enabled")
-		}
 	}
 	if c.AutoUpgradeInterval == nil || *c.AutoUpgradeInterval == "" {
 		c.AutoUpgradeInterval = &DefaultImageCheckIntervalDefault
