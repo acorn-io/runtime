@@ -492,6 +492,10 @@ func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.
 				Tags:       []string{"testtag1:latest", "testtag2:latest"},
 			}, nil
 		}
+	case "found-image-no-tag":
+		return &apiv1.Image{}, nil
+	case "found-image1234567":
+		return &apiv1.Image{}, nil
 	}
 	return nil, nil
 }

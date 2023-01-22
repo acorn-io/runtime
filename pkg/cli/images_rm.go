@@ -22,6 +22,7 @@ func NewImageDelete(c CommandContext) *cobra.Command {
 type ImageDelete struct {
 	client ClientFactory
 	Force  bool `usage:"Force Delete" short:"f"`
+	All    bool `usage:"Delete all images" short:"a"`
 }
 
 func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
@@ -30,7 +31,22 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for _, image := range args {
+	var imageNames []string
+
+	if a.All {
+		images, err := c.ImageList(cmd.Context())
+		if err != nil {
+			return err
+		}
+
+		for _, image := range images {
+			imageNames = append(imageNames, image.Name)
+		}
+	} else {
+		imageNames = args
+	}
+
+	for _, image := range imageNames {
 		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
 
 		if err != nil {

@@ -428,6 +428,25 @@ func TestImage(t *testing.T) {
 			wantErr: false,
 			wantOut: "found-image-two-tags1234567\n",
 		},
+		{
+			name: "acorn image rm -a -f", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"rm", "-a", "-f"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "found-image1234567\nfound-image-no-tag\nfound-image-two-tags1234567\n",
+		},
 	}
 
 	for _, tt := range tests {

@@ -18,6 +18,7 @@ acorn image rm my-image
 ### Options
 
 ```
+  -a, --all     Delete all images
   -f, --force   Force Delete
   -h, --help    help for rm
 ```
@@ -25,7 +26,6 @@ acorn image rm my-image
 ### Options inherited from parent commands
 
 ```
-  -a, --all                 Include untagged images
   -A, --all-projects        Use all known projects
   -c, --containers          Show containers for images
       --debug               Enable debug logging
