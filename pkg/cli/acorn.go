@@ -64,6 +64,11 @@ func New() *cobra.Command {
 		NewVolume(cmdContext),
 		NewWait(cmdContext),
 	)
+	// This will produce an error if the project flag doesn't exist or a completion function has already
+	// been registered for this flag. Not returning the error since neither of these is likely occur.
+	if err := root.RegisterFlagCompletionFunc("project", newCompletion(cmdContext.ClientFactory, projectsCompletion).complete); err != nil {
+		root.Printf("Error registering completion function for -j flag: %v\n", err)
+	}
 	root.InitDefaultHelpCmd()
 	return root
 }
