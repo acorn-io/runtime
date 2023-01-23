@@ -52,6 +52,7 @@ var (
 	ErrInvalidAcornMemory   = errors.New("invalid memory from Acornfile")
 	ErrInvalidSetMemory     = errors.New("invalid memory set by user")
 	ErrInvalidDefaultMemory = errors.New("invalid memory default")
+	ErrInvalidWorkload      = errors.New("invalid workload name set by user")
 )
 
 func MemoryToRequirements(memSpec Memory, containerName string, container Container, specMemDefault, specMemMaximum *int64) (*corev1.ResourceRequirements, error) {
