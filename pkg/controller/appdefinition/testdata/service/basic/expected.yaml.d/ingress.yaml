@@ -9,7 +9,7 @@ metadata:
     "acorn.io/service-name": "oneimage"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"},"oneimage-app-name-a5b0aade9cb9.local.on-acorn.io":{"port":81,"service":"oneimage"}}'
+    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"},"oneimage-app-name-a5b0aade.local.on-acorn.io":{"port":81,"service":"oneimage"}}'
 spec:
   rules:
     - host: localhost
@@ -22,7 +22,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
-    - host: oneimage-app-name-a5b0aade9cb9.local.on-acorn.io
+    - host: oneimage-app-name-a5b0aade.local.on-acorn.io
       http:
         paths:
           - backend:
@@ -44,10 +44,10 @@ metadata:
     "acorn.io/service-name": "buildimage"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"buildimage-app-name-40018221221c.local.on-acorn.io":{"port":81,"service":"buildimage"}}'
+    acorn.io/targets: '{"buildimage-app-name-40018221.local.on-acorn.io":{"port":81,"service":"buildimage"}}'
 spec:
   rules:
-    - host: buildimage-app-name-40018221221c.local.on-acorn.io
+    - host: buildimage-app-name-40018221.local.on-acorn.io
       http:
         paths:
           - backend:
