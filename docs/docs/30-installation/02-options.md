@@ -31,6 +31,30 @@ Let's Encrypt integration is only useful if you are running a non-local Kubernet
 ## Endpoint domain names
 Acorn provides several installation options for controlling the domain name used to generate endpoints. These are outlined in detail on our [networking page](/running/networking#dns).
 
+## Custom CA bundle
+Acorn allows a user to provide a custom certificate authority (CA) bundle so that users can add their own private CA that acorn will trust. The most common use case is for acorn to trust an internal image registry that is signed by a private CA.
+
+To do so, you will need to go through the following steps:
+
+1. Provide your CA certificate chain in the following secret.
+
+```bash
+kubectl -n acorn-image-system create secret generic cabundle --from-file=ca-certificates.crt=/path/to/your/ca-certificates.crt
+
+kubectl -n acorn-system create secret generic cabundle --from-file=ca-certificates.crt=/path/to/your/ca-certificates.crt
+```
+
+
+:::info
+You must provide the **full** CA certificate chain as it will override existing CA certificates in acorn control plane.
+:::
+
+
+2. Install acorn with the following option
+
+```bash
+acorn install --use-custom-ca-bundle
+```
 
 ## Ingress class name
 Acorn [requires an ingress controller](/installation/installing#ingress-and-service-loadbalancers) to function properly. If your cluster has more than one ingress controller or if it has one but it isn't set as the [default](https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class), you can explicitly set the ingress class using `--ingress-class-name`.

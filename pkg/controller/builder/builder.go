@@ -44,7 +44,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 		forNamespace = builder.Namespace
 	}
 
-	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(), pubKey, privKey, builder.Status.UUID, registryDNS)
+	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(), pubKey, privKey, builder.Status.UUID, registryDNS, *cfg.UseCustomCABundle)
 
 	if *cfg.PublishBuilders {
 		ing, err := getIngress(req, name)

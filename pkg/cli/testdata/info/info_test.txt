@@ -26,6 +26,7 @@ server:
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null
+    useCustomCABundle: null
     workloadMemoryDefault: null
     workloadMemoryMaximum: null
   controllerImage: ""
@@ -51,6 +52,7 @@ server:
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null
+    useCustomCABundle: null
     workloadMemoryDefault: null
     workloadMemoryMaximum: null
   version: ""
