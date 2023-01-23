@@ -87,6 +87,12 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.HttpEndpointPattern == nil || *c.HttpEndpointPattern == "" {
 		c.HttpEndpointPattern = &DefaultHttpEndpointPattern
 	}
+	if c.WorkloadMemoryDefault == nil {
+		c.WorkloadMemoryDefault = new(int64)
+	}
+	if c.WorkloadMemoryMaximum == nil {
+		c.WorkloadMemoryMaximum = new(int64)
+	}
 	if c.InternalRegistryPrefix == nil {
 		c.InternalRegistryPrefix = new(string)
 	}
