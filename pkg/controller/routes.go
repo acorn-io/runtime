@@ -26,6 +26,10 @@ var (
 	managedSelector = klabels.SelectorFromSet(map[string]string{
 		labels.AcornManaged: "true",
 	})
+
+	projectSelector = klabels.SelectorFromSet(map[string]string{
+		labels.AcornProject: "true",
+	})
 )
 
 func routes(router *router.Router, registryTransport http.RoundTripper) {
@@ -35,6 +39,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport))
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.AddNamespace)
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
@@ -54,6 +59,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
 	router.Type(&corev1.PersistentVolume{}).Selector(managedSelector).HandlerFunc(appdefinition.ReleaseVolume)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
+	router.Type(&corev1.Namespace{}).Selector(projectSelector).HandlerFunc(namespace.LabelsAnnotations)
 	router.Type(&appsv1.DaemonSet{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&appsv1.Deployment{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Service{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)

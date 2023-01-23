@@ -338,6 +338,8 @@ type Config struct {
 	WorkloadMemoryDefault          *int64         `json:"workloadMemoryDefault" name:"workload-memory-default" quantity:"true" usage:"Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" seperators (default 0)" short:"m"`
 	WorkloadMemoryMaximum          *int64         `json:"workloadMemoryMaximum" name:"workload-memory-maximum" quantity:"true" usage:"Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" seperators (default 0)"`
 	UseCustomCABundle              *bool          `json:"useCustomCABundle" name:"use-custom-ca-bundle" usage:"Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false."`
+	AnnotationsPropagation         []string       `json:"annotationsPropagation" name:"annotations-propagation" usage:"The list of keys of annotations to propagate from acorn project to app namespaces"`
+	LabelsPropagation              []string       `json:"labelsPropagation" name:"labels-propagation" usage:"The list of keys of labels to propagate from acorn project to app namespaces"`
 }
 
 type EncryptionKey struct {

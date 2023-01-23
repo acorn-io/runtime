@@ -906,8 +906,40 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
+					"annotationsPropagation": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"labelsPropagation": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 				},
+<<<<<<< HEAD
 				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle"},
+=======
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "annotationsPropagation", "labelsPropagation"},
+>>>>>>> 85f920d (Add label and annotation propagation from project)
 			},
 		},
 	}
