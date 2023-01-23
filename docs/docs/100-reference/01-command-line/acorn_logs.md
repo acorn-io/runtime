@@ -3,7 +3,7 @@ title: "acorn logs"
 ---
 ## acorn logs
 
-Log all pods from app
+Log all workloads from an app
 
 ```
 acorn logs [flags] APP_NAME|CONTAINER_NAME

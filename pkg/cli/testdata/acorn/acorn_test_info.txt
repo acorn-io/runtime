@@ -18,7 +18,7 @@ Available Commands:
   install      Install and configure acorn in the cluster
   login        Add registry credentials
   logout       Remove registry credentials
-  logs         Log all pods from app
+  logs         Log all workloads from an app
   project      Manage projects
   pull         Pull an image from a remote registry
   push         Push an image to a remote registry
