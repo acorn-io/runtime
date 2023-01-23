@@ -44,6 +44,17 @@ Optionally, they might need access to create secrets and possibly CertManager ob
 
 Users can be given access to multiple Acorn namespaces and will then be able to switch between them from the CLI.
 
+For convenience, the following roles are created by the Acorn installation, and can be used to give users access to the resources necessary to perform the corresponding tasks:
+```shell
+acorn:cluster:edit
+acorn:cluster:view
+acorn:project:admin
+acorn:project:build
+acorn:project:edit
+acorn:project:view
+acorn:project:view-logs
+```
+
 ## Credentials
 
 Credentials refer to credentials used to pull from and/or push to OCI registries.
