@@ -58,7 +58,7 @@ When an Acorn app has published a port, it will be accessible on a unique endpoi
 
 ```shell
 NAME             IMAGE                 HEALTHY   UP-TO-DATE   CREATED     ENDPOINTS                                                                           MESSAGE
-purple-water     my-org/my-acorn:v1    1         1            50s ago     http://app-purple-water-caa5ade4be3c.local.on-acorn.io => default:8080   OK
+purple-water     my-org/my-acorn:v1    1         1            50s ago     http://app-purple-water-caa5ade4.local.on-acorn.io => default:8080   OK
 ```
 
 You have significant control over the domain name and format of your endpoints, as described below.
@@ -107,14 +107,14 @@ The endpoints generated for your Acorn apps follow this convention by default:
 Here's an example:
 
 ```
-web-purple-water-7961a9e11ea4.73fh5y.on-acorn.io
+web-purple-water-7961a9e1.73fh5y.on-acorn.io
 ```
 
 Let's break that FQDN down:
 
 - **web** is the name of the container from your Acorn app. If the container name is "*default*", it will be omitted from the FQDN.
 - **purple-water** is the generated name of your Acorn app. You can control this by supplying a name through the `--name` flag.
-- **7961a9e11ea4** is a hash created from the container name and app name together. This ensures that the url is unique and will be persistent across runs.
+- **7961a9e1** is a hash created from the container name and app name together. This ensures that the url is unique and will be persistent across runs.
 - **73fh5y.on-acorn.io** is the cluster domain generated for your cluster. You can control this as described in the previous section.
 
 To highlight the level of control this gives you, consider the following:
@@ -177,7 +177,7 @@ containers: {
 If you start this Acornfile with `acorn run` the generated output should look like
 
 ```shell
- STATUS: ENDPOINTS[http://api-wild-cloud-a6e8ab1cb5b0.local.on-acorn.io => api:80, http://auth-wild-cloud-aa56b1c98c71.local.on-acorn.io => auth:80] HEALTHY[2] UPTODATE[2] OK
+ STATUS: ENDPOINTS[http://api-wild-cloud-a6e8ab1c.local.on-acorn.io => api:80, http://auth-wild-cloud-aa56b1c9.local.on-acorn.io => auth:80] HEALTHY[2] UPTODATE[2] OK
 ```
 
 Adding in the router to the Acornfile
@@ -208,4 +208,4 @@ containers: api: {
 Results in an endpoint that now routes to both services through `/api` and `/auth`
 
 ```shell
-| STATUS: ENDPOINTS[http://api-delicate-leaf-4ceee54b0305.local.on-acorn.io => api:80, http://auth-delicate-leaf-a6e05d96a0dd.local.on-acorn.io => auth:80, http://myroute-delicate-leaf-6633a4aeebf3.local.on-acorn.io => myroute:8080] HEALTHY[2] UPTODATE[2] OK |
+| STATUS: ENDPOINTS[http://api-delicate-leaf-4ceee54b.local.on-acorn.io => api:80, http://auth-delicate-leaf-a6e05d96.local.on-acorn.io => auth:80, http://myroute-delicate-leaf-6633a4ae.local.on-acorn.io => myroute:8080] HEALTHY[2] UPTODATE[2] OK |
