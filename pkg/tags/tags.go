@@ -2,22 +2,15 @@ package tags
 
 import (
 	"context"
-	"encoding/json"
 	"regexp"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/uncached"
 	"github.com/google/go-containerregistry/pkg/name"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	ConfigMapName = "acorn-tags"
-	ConfigMapKey  = "acorn-tags"
 )
 
 var (
@@ -35,30 +28,13 @@ func IsLocalReference(image string) bool {
 	return false
 }
 
-func getConfigMap(ctx context.Context, c client.Reader, namespace string) (*corev1.ConfigMap, error) {
-	configMap := &corev1.ConfigMap{}
-	return configMap, c.Get(ctx, client.ObjectKey{
-		Name:      ConfigMapName,
-		Namespace: namespace,
-	}, configMap)
-}
-
-func Get(ctx context.Context, c client.Reader, namespace string) (map[string][]string, error) {
+func Get(ctx context.Context, c client.Reader, namespace string) (apiv1.ImageList, error) {
+	var imageList apiv1.ImageList
 	if namespace == "" {
-		return nil, nil
-	}
-	configMap, err := getConfigMap(ctx, c, namespace)
-	if apierrors.IsNotFound(err) {
-		return nil, nil
+		return imageList, nil
 	}
 
-	data := configMap.Data[ConfigMapKey]
-	if len(data) == 0 {
-		return nil, nil
-	}
-
-	result := map[string][]string{}
-	return result, json.Unmarshal([]byte(data), &result)
+	return imageList, c.List(ctx, &imageList, kclient.InNamespace(namespace))
 }
 
 // GetTagsMatchingRepository returns the tag portion of local images that match the repository in the supplied reference
@@ -71,8 +47,8 @@ func GetTagsMatchingRepository(reference name.Reference, ctx context.Context, c 
 		return nil, err
 	}
 	var result []string
-	for _, tags := range images {
-		for _, tag := range tags {
+	for _, image := range images.Items {
+		for _, tag := range image.Tags {
 			r, err := name.ParseReference(tag, name.WithDefaultRegistry(defaultReg))
 			if err != nil {
 				continue
