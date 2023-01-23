@@ -299,6 +299,11 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 
 func checkMemory(memory v1.Memory, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	validationErrors := []*field.Error{}
+	err := validateMemoryRunFlags(memory, workloads)
+	if err != nil {
+		validationErrors = append(validationErrors, err...)
+	}
+
 	for workload, container := range workloads {
 		quantity, err := v1.ValidateMemory(
 			memory, workload, container, specMemDefault, specMemMaximum)
@@ -314,6 +319,20 @@ func checkMemory(memory v1.Memory, workloads map[string]v1.Container, specMemDef
 				path = field.NewPath("config", "workloadMemoryDefault")
 			}
 			validationErrors = append(validationErrors, field.Invalid(path, quantity.String(), err.Error()))
+		}
+	}
+	return validationErrors
+}
+
+func validateMemoryRunFlags(memory v1.Memory, workloads map[string]v1.Container) []*field.Error {
+	validationErrors := []*field.Error{}
+	for key := range memory {
+		if key == "" {
+			continue
+		}
+		if _, ok := workloads[key]; !ok {
+			path := field.NewPath("spec", "memory")
+			validationErrors = append(validationErrors, field.Invalid(path, key, v1.ErrInvalidWorkload.Error()))
 		}
 	}
 	return validationErrors
