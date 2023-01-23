@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/mail"
 	"os"
+	"path/filepath"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -58,7 +59,6 @@ type Options struct {
 	OutputFormat       string
 	APIServerReplicas  *int
 	ControllerReplicas *int
-	UseCustomCABundle  *bool
 	Config             apiv1.Config
 	Progress           progress.Builder
 }
@@ -81,8 +81,8 @@ func (o *Options) complete() *Options {
 		o.ControllerReplicas = &[]int{1}[0]
 	}
 
-	if o.UseCustomCABundle == nil {
-		o.UseCustomCABundle = new(bool)
+	if o.Config.UseCustomCABundle == nil {
+		o.Config.UseCustomCABundle = new(bool)
 	}
 
 	return o
@@ -205,7 +205,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	s.Success()
 
 	s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
-	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.UseCustomCABundle, apply, c); err != nil {
+	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.Config.UseCustomCABundle, apply, c); err != nil {
 		return s.Fail(err)
 	}
 	s.Success()
@@ -394,7 +394,7 @@ func resources(image string, opts *Options) ([]kclient.Object, error) {
 	}
 	objs = append(objs, namespace...)
 
-	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.UseCustomCABundle)
+	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.Config.UseCustomCABundle)
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +510,7 @@ func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int,
 	var objects []kclient.Object
 	objects = append(apiServerObjects, controllerObjects...)
 	if useCustomCABundle {
-		objects, err = replaceCabundleVolumes(objects)
+		objects, err = replaceCABundleVolumes(objects)
 		if err != nil {
 			return nil, err
 		}
@@ -557,7 +557,7 @@ func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error)
 	return objs, nil
 }
 
-func replaceCabundleVolumes(objs []kclient.Object) ([]kclient.Object, error) {
+func replaceCABundleVolumes(objs []kclient.Object) ([]kclient.Object, error) {
 	for _, obj := range objs {
 		ustr := obj.(*unstructured.Unstructured)
 		if ustr.GetKind() == "Deployment" {
@@ -565,9 +565,9 @@ func replaceCabundleVolumes(objs []kclient.Object) ([]kclient.Object, error) {
 			for _, container := range containers {
 				container.(map[string]any)["volumeMounts"] = []interface{}{
 					map[string]any{
-						"name":      "cabundle",
-						"mountPath": "/etc/ssl/certs/ca-certificates.crt",
-						"subPath":   "ca-certificates.crt",
+						"name":      system.CustomCABundleSecretVolumeName,
+						"mountPath": filepath.Join(system.CustomCABundleDir, system.CustomCABundleCertName),
+						"subPath":   system.CustomCABundleCertName,
 						"readOnly":  true,
 					},
 				}
@@ -578,9 +578,9 @@ func replaceCabundleVolumes(objs []kclient.Object) ([]kclient.Object, error) {
 
 			volumes := []interface{}{
 				map[string]any{
-					"name": "cabundle",
+					"name": system.CustomCABundleSecretVolumeName,
 					"secret": map[string]any{
-						"secretName": "cabundle",
+						"secretName": system.CustomCABundleSecretName,
 					},
 				},
 			}

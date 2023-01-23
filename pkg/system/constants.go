@@ -10,6 +10,11 @@ const (
 	LEAccountSecretName  = "acorn-le-account"
 	DefaultUserNamespace = "acorn"
 	DNSSecretName        = "acorn-dns"
+
+	CustomCABundleSecretName = "cabundle"
+	CustomCABundleSecretVolumeName
+	CustomCABundleDir      = "/etc/ssl/certs"
+	CustomCABundleCertName = "ca-certificates.crt"
 )
 
 var (

@@ -2,6 +2,7 @@ package imagesystem
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/acorn-io/acorn/pkg/system"
 	appsv1 "k8s.io/api/apps/v1"
@@ -199,17 +200,17 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 	if useCustomCabundle {
 		for i := range deployment.Spec.Template.Spec.Containers {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      "cabundle",
-				MountPath: "/etc/ssl/certs/ca-certificates.crt",
-				SubPath:   "ca-certificates.crt",
+				Name:      system.CustomCABundleSecretVolumeName,
+				MountPath: filepath.Join(system.CustomCABundleDir, system.CustomCABundleCertName),
+				SubPath:   system.CustomCABundleCertName,
 				ReadOnly:  true,
 			})
 		}
 		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, corev1.Volume{
-			Name: "cabundle",
+			Name: system.CustomCABundleSecretVolumeName,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: "cabundle",
+					SecretName: system.CustomCABundleSecretName,
 				},
 			},
 		})
