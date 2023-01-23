@@ -228,10 +228,7 @@ func assignQuantities(app *cobra.Command, maps map[string]reflect.Value) error {
 		}
 
 		if i == "" {
-			i = "0"
-			if defValue := app.Flags().Lookup(k).DefValue; defValue != "" {
-				i = defValue
-			}
+			continue
 		}
 
 		quantity, err := v1.ParseQuantityString(i)
