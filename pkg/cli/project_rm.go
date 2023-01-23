@@ -14,9 +14,10 @@ func NewProjectRm(c CommandContext) *cobra.Command {
 		Example: `
 acorn project rm my-project
 `,
-		SilenceUsage: true,
-		Short:        "Deletes projects",
-		Args:         cobra.MinimumNArgs(1),
+		SilenceUsage:      true,
+		Short:             "Deletes projects",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
 	})
 	return cmd
 }

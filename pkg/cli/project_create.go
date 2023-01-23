@@ -18,9 +18,10 @@ acorn project create my-new-project
 # Create a project on remote service acorn.io
 acorn project create acorn.io/username/new-project
 `,
-		SilenceUsage: true,
-		Short:        "Create new project",
-		Args:         cobra.MinimumNArgs(1),
+		SilenceUsage:      true,
+		Short:             "Create new project",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
 	})
 	return cmd
 }
