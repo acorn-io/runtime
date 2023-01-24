@@ -158,18 +158,48 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	return 0, fmt.Errorf("failed to find node port for registry %s/%s", system.ImagesNamespace, system.RegistryName)
 }
 
-func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, image string) (name.Reference, error) {
-	if os.Getenv("ACORN_TEST_ALLOW_LOCALHOST_REGISTRY") != "true" && strings.HasPrefix(image, "127.") {
-		return nil, fmt.Errorf("invalid image reference %s", image)
+func IsNotInternalRepo(ctx context.Context, c client.Reader, image string) error {
+	if !strings.Contains(image, "/") {
+		return nil
 	}
+
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if *cfg.InternalRegistryPrefix != "" {
-		if strings.HasPrefix(image, *cfg.InternalRegistryPrefix) {
-			return nil, fmt.Errorf("invalid image reference prefix %s", image)
-		}
+
+	return isNotInternalRepo(*cfg.InternalRegistryPrefix, image)
+}
+
+func isNotInternalRepo(prefix, image string) error {
+	if os.Getenv("ACORN_TEST_ALLOW_LOCALHOST_REGISTRY") != "true" && IsClusterInternalRegistryAddressReference(image) {
+		return fmt.Errorf("invalid image reference %s", image)
+	}
+
+	if prefix == "" {
+		return nil
+	}
+
+	if strings.HasPrefix(image, prefix) {
+		return fmt.Errorf("invalid image reference prefix %s", image)
+	}
+
+	imageHostPort, _, _ := strings.Cut(image, "/")
+	imageHost, _, _ := strings.Cut(imageHostPort, ":")
+	prefixHostPort, _, _ := strings.Cut(prefix, "/")
+	prefixHost, _, _ := strings.Cut(prefixHostPort, ":")
+	newImage := strings.Replace(image, imageHostPort, NormalizeServerAddress(imageHost), 1)
+	newPrefix := strings.Replace(prefix, prefixHostPort, NormalizeServerAddress(prefixHost), 1)
+	if strings.HasPrefix(newImage, newPrefix) {
+		return fmt.Errorf("invalid image reference prefix %s", image)
+	}
+
+	return nil
+}
+
+func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, image string) (name.Reference, error) {
+	if err := IsNotInternalRepo(ctx, c, image); err != nil {
+		return nil, err
 	}
 	return name.ParseReference(image)
 }
