@@ -8,7 +8,6 @@ on:
   push:
     branches:
     - main
-    - prod
 
 permissions:
   contents: write
@@ -64,8 +63,8 @@ jobs:
           for i in ${IMAGES}; do
             docker push $i
           done
-          docker manifest create ghcr.io/acorn-io/acorn:${{ github.ref_name }} ${IMAGES}
-          docker manifest push ghcr.io/acorn-io/acorn:${{ github.ref_name }}
+          docker manifest create ghcr.io/acorn-io/acorn:main ${IMAGES}
+          docker manifest push ghcr.io/acorn-io/acorn:main
           docker manifest create ghcr.io/acorn-io/acorn:${VERSION} ${IMAGES}
           docker manifest push ghcr.io/acorn-io/acorn:${VERSION}
       - name: Upload to S3
