@@ -82,5 +82,11 @@ acorn install --workload-memory-maximum 1Gi
 
 This will set it so all Acorns on this cluster will be unable to install should they exceed `1Gi` of memory.
 
+## Ignoring user-defined labels and annotations
+There are situations where you may not want a user to be able to label or annotate the objects created by Acorn in the workload cluster. For such circumstances, the installation flag `--ignore-user-labels-and-annotations` exists. If this flag is passed to `acorn install`, then, except for the metadata scope, labels and annotations defined by users in their Acorns will be ignored when creating objects. No error nor warning will be produced.
+
+Note that in order to allow propagation of user-defined labels and annotations on an Acorn installation that previous disallowed it, one must pass `--ignore-user-labels-and-annotations=false` to `acorn install`.
+
+
 ## Changing install options
-If you want to change your install options after the initial installation, just rerun `acorn install` with the new options. This will update the existing install dynamically.
+If you want to change your installation options after the initial installation, just rerun `acorn install` with the new options. This will update the existing install dynamically.

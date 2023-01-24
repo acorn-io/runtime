@@ -47,3 +47,9 @@ containers:{
 In the above examples, the core Kubernetes resources created for the acorn container called "frontend" will get the labels and annotations. This includes the deployment, pods, ingress, and services.
 
 You can also specify labels and annotations from the CLI when launching an acorn via the `run` command. See [here](/running/labels) for more details.
+
+:::note
+
+If the Acorn installation has [disabled user label and annotation propagation](installation/options#ignoring-user-defined-labels-and-annotations), then, except for the metadata scope, labels and annotations will be silently ignored.
+
+:::
