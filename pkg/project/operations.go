@@ -35,7 +35,19 @@ func Remove(ctx context.Context, opts Options, name string) (*apiv1.Project, err
 	if err != nil {
 		return nil, err
 	}
-	return c.ProjectDelete(ctx, lastPart(name))
+	p, err := c.ProjectDelete(ctx, lastPart(name))
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return nil, err
+	}
+	if cfg.CurrentProject == name {
+		cfg.CurrentProject = ""
+		return p, cfg.Save()
+	}
+	return p, nil
 }
 
 func Get(ctx context.Context, opts Options, name string) (project *apiv1.Project, err error) {
