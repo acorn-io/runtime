@@ -241,7 +241,9 @@ func noConfigClient(ctx context.Context, opts Options) client.Client {
 	if err != nil {
 		return nil
 	}
-	_, err = c.Info(ctx)
+	// We use project list to test the connection because there is no assumption that any
+	// particular namespace exists
+	_, err = c.ProjectList(ctx)
 	if err != nil {
 		return nil
 	}
