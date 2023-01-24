@@ -3,6 +3,7 @@ package project
 import (
 	"context"
 	"strings"
+	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -59,6 +60,12 @@ func Get(ctx context.Context, opts Options, name string) (project *apiv1.Project
 	return c.ProjectGet(ctx, lastPart(name))
 }
 
+func timeoutProjectList(ctx context.Context, c client.Client) ([]apiv1.Project, error) {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	return c.ProjectList(ctx)
+}
+
 func List(ctx context.Context, opts Options) (result []string, err error) {
 	cfg := opts.CLIConfig
 	if cfg == nil {
@@ -74,7 +81,7 @@ func List(ctx context.Context, opts Options) (result []string, err error) {
 		if err != nil {
 			return nil, err
 		}
-		projs, err := c.ProjectList(ctx)
+		projs, err := timeoutProjectList(ctx, c)
 		if err != nil {
 			return nil, err
 		}
@@ -97,9 +104,9 @@ func List(ctx context.Context, opts Options) (result []string, err error) {
 			continue
 		}
 
-		projs, err := c.ProjectList(ctx)
+		projs, err := timeoutProjectList(ctx, c)
 		if err != nil {
-			logrus.Debugf("failed to list projects for kubeconfig [%s]: %v", kubeconfig, err)
+			logrus.Errorf("failed to list projects for kubeconfig [%s]: %v", kubeconfig, err)
 			continue
 		}
 
@@ -119,11 +126,13 @@ func List(ctx context.Context, opts Options) (result []string, err error) {
 		}
 		cred, ok, err := creds.Get(ctx, hubServer)
 		if err == nil && ok {
-			projects, err := hub.Projects(ctx, hubServer, cred.Password)
+			subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+			projects, err := hub.Projects(subCtx, hubServer, cred.Password)
+			cancel()
 			if err == nil {
 				result = append(result, projects...)
 			} else {
-				logrus.Debugf("failed to list projects in hub server %s: %v", hubServer, err)
+				logrus.Errorf("failed to list projects in hub server %s: %v", hubServer, err)
 			}
 		} else if err != nil {
 			logrus.Debugf("failed to get cred for hub server %s: %v", hubServer, err)
@@ -132,13 +141,13 @@ func List(ctx context.Context, opts Options) (result []string, err error) {
 
 	c := noConfigClient(ctx, opts)
 	if c != nil {
-		projects, err := c.ProjectList(ctx)
+		projects, err := timeoutProjectList(ctx, c)
 		if err == nil {
 			result = append(result, typed.MapSlice(projects, func(project apiv1.Project) string {
 				return project.Name
 			})...)
 		} else {
-			logrus.Debugf("failed to list projects in default k8s context: %v", err)
+			logrus.Errorf("failed to list projects in default k8s context: %v", err)
 		}
 	}
 
