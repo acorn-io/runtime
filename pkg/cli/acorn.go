@@ -81,7 +81,19 @@ type Acorn struct {
 	DebugLevel  int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
 }
 
+func setEnv(key, value string) error {
+	if value != "" && os.Getenv(key) == "" {
+		return os.Setenv(key, value)
+	}
+	return nil
+}
+
 func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
+	// If --kubeconfig is used set it to KUBECONFIG env (if env is unset) so that all
+	// kubeconfig file looks will find it
+	if err := setEnv("KUBECONFIG", a.Kubeconfig); err != nil {
+		return err
+	}
 	if !term.IsTerminal(os.Stdout) || !term.IsTerminal(os.Stderr) || os.Getenv("NO_COLOR") != "" || os.Getenv("NOCOLOR") != "" {
 		pterm.DisableStyling()
 	}
