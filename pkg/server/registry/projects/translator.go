@@ -37,6 +37,9 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range obj {
 		ns := obj.(*corev1.Namespace)
+		if !ns.DeletionTimestamp.IsZero() {
+			continue
+		}
 		delete(ns.Labels, labels.AcornProject)
 		result = append(result, &apiv1.Project{
 			ObjectMeta: metav1.ObjectMeta{
