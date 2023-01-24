@@ -30,3 +30,9 @@ Valid resource types are:
 - secrets
 
 For all resource types except metadata, you can add a name to only apply the label/annotation to the resource matching that name and scope.
+
+:::note
+
+If the Acorn installation has [disabled user label and annotation propagation](installation/options#ignoring-user-defined-labels-and-annotations), then, except for the metadata scope, labels and annotations will be silently ignored.
+
+:::
