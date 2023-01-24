@@ -28,7 +28,7 @@ acorn install
       --controller-replicas int               acorn-controller deployment replica count
       --default-publish-mode string           If no publish mode is set default to this value (default user)
   -h, --help                                  help for install
-      --http-endpoint-pattern string          Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{.Container}}-{{.App}}-{{.Hash}}.{{.ClusterDomain}})
+      --http-endpoint-pattern string          Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations    Don't propagate user-defined labels and annotations to dependent objects
       --image string                          Override the default image used for the deployment
       --ingress-class-name string             The ingress class name to assign to all created ingress resources (default '')
