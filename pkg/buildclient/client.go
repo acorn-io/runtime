@@ -5,16 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/streams"
-	"github.com/containerd/console"
 	"github.com/gorilla/websocket"
-	buildkit "github.com/moby/buildkit/client"
-	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -53,12 +49,8 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 	msgs, cancel := messages.Recv()
 	defer cancel()
 
-	var progressChan *chan *buildkit.SolveStatus
-	if streams != nil {
-		c, done := clientProgress(ctx, streams)
-		defer func() { close(c); <-done }()
-		progressChan = &c
-	}
+	progress := newClientProgress(ctx, streams)
+	defer progress.Close()
 
 	// Handle messages synchronous since new subscribers are started,
 	// and we don't want to miss a message.
@@ -80,8 +72,8 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 	messages.Start(ctx)
 
 	for msg := range msgs {
-		if msg.Status != nil && progressChan != nil {
-			*progressChan <- msg.Status
+		if msg.Status != nil {
+			progress.Display(msg)
 		} else if msg.AppImage != nil {
 			return msg.AppImage, nil
 		} else if msg.RegistryServerAddress != "" {
@@ -119,30 +111,6 @@ func lookupCred(ctx context.Context, creds CredentialLookup, serverAddress strin
 		Password: cred.Password,
 	}
 	return
-}
-
-func clientProgress(ctx context.Context, streams *streams.Output) (chan *buildkit.SolveStatus, chan struct{}) {
-	var (
-		c    console.Console
-		err  error
-		done = make(chan struct{})
-	)
-
-	if f, ok := streams.Out.(console.File); ok {
-		c, err = console.ConsoleFromFile(f)
-		if err != nil {
-			c = nil
-		}
-	}
-
-	ch := make(chan *buildkit.SolveStatus, 1)
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		_, _ = progressui.DisplaySolveStatus(ctx, "", c, streams.Err, ch)
-		close(done)
-	}()
-	return ch, done
 }
 
 func PingBuilder(ctx context.Context, baseURL string) bool {
