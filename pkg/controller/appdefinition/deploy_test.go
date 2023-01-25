@@ -36,11 +36,15 @@ func TestDeploySpec(t *testing.T) {
 }
 
 func TestDeploySpecUserDefinedLabelsAnnotations(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels", RemoveLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
 func TestDeploySpecIgnoreUserDefinedLabelsAnnotations(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels", RemoveLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
+}
+
+func TestDeploySpecFilterUserDefinedLabelsAnnotations(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/filter-user-labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
 func TestDeploySpecStop(t *testing.T) {

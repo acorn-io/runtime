@@ -1,0 +1,16 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  annotations:
+    admit.io: test-admit-app-spec-ann
+    allowed-global.io: test-global
+    allowed.io: test-allowed-app-spec-ann
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    allowed-global.io: test-global
+    allowed.io: test-allowed-app-spec-label
+    permit.io: test-permit-app-spec-label
+    "pod-security.kubernetes.io/enforce": baseline

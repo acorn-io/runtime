@@ -1,0 +1,25 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  annotations:
+    admit-scoped.io: test-volume
+    admit.io: test-admit-app-spec-ann
+    allowed-global.io: test-global
+    allowed-scoped.io: test-named
+    allowed.io: test-allowed-app-spec-ann
+  name: "foo"
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    allowed-global.io: test-global
+    allowed-scoped.io: test-volume
+    allowed.io: test-allowed-app-spec-label
+    permit-scoped.io: test-named
+    permit.io: test-permit-app-spec-label
+spec:
+  resources:
+    requests:
+      storage: 10_000_000_000
+---

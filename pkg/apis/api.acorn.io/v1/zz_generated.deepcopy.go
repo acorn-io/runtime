@@ -308,6 +308,16 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.AllowUserLabels != nil {
+		in, out := &in.AllowUserLabels, &out.AllowUserLabels
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.AllowUserAnnotations != nil {
+		in, out := &in.AllowUserAnnotations, &out.AllowUserAnnotations
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.WorkloadMemoryDefault != nil {
 		in, out := &in.WorkloadMemoryDefault, &out.WorkloadMemoryDefault
 		*out = new(int64)

@@ -6,6 +6,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -108,36 +109,67 @@ func GatherScoped(resourceName, resourceType string, globalLabels, resourceLabel
 	return ExcludeAcornKey(m)
 }
 
-func RemoveUserDefined(appInstance *v1.AppInstance) *v1.AppInstance {
-	appInstance.Spec.Labels = nil
-	appInstance.Spec.Annotations = nil
+func FilterUserDefined(appInstance *v1.AppInstance, allowedLabels, allowedAnnotations []string) *v1.AppInstance {
+	appInstance.Spec.Labels = filterScoped(appInstance.Spec.Labels, allowedLabels)
+	appInstance.Spec.Annotations = filterScoped(appInstance.Spec.Annotations, allowedAnnotations)
 
-	appInstance.Status.AppSpec.Labels = nil
-	appInstance.Status.AppSpec.Annotations = nil
+	appInstance.Status.AppSpec.Labels = filter(appInstance.Status.AppSpec.Labels, allowedLabels)
+	appInstance.Status.AppSpec.Annotations = filter(appInstance.Status.AppSpec.Annotations, allowedAnnotations)
 
 	for key, c := range appInstance.Status.AppSpec.Containers {
-		c.Labels = nil
-		c.Annotations = nil
+		c.Labels = filter(c.Labels, allowedLabels)
+		c.Annotations = filter(c.Annotations, allowedAnnotations)
 		appInstance.Status.AppSpec.Containers[key] = c
 	}
 
 	for key, j := range appInstance.Status.AppSpec.Jobs {
-		j.Labels = nil
-		j.Annotations = nil
+		j.Labels = filter(j.Labels, allowedLabels)
+		j.Annotations = filter(j.Annotations, allowedAnnotations)
 		appInstance.Status.AppSpec.Jobs[key] = j
 	}
 
 	for key, r := range appInstance.Status.AppSpec.Routers {
-		r.Labels = nil
-		r.Annotations = nil
+		r.Labels = filter(r.Labels, allowedLabels)
+		r.Annotations = filter(r.Annotations, allowedAnnotations)
 		appInstance.Status.AppSpec.Routers[key] = r
 	}
 
 	for key, v := range appInstance.Status.AppSpec.Volumes {
-		v.Labels = nil
-		v.Annotations = nil
+		v.Labels = filter(v.Labels, allowedLabels)
+		v.Annotations = filter(v.Annotations, allowedAnnotations)
 		appInstance.Status.AppSpec.Volumes[key] = v
 	}
 
 	return appInstance
+}
+
+func filterScoped(scoped []v1.ScopedLabel, allowed []string) []v1.ScopedLabel {
+	if len(allowed) == 0 {
+		// If nothing is allowed, then short-circuit
+		return nil
+	}
+
+	result := make([]v1.ScopedLabel, 0, len(allowed))
+	for _, label := range scoped {
+		if slices.Contains(allowed, label.Key) {
+			result = append(result, label)
+		}
+	}
+
+	return result
+}
+
+func filter[K comparable, V any](m map[K]V, allowed []K) map[K]V {
+	if len(allowed) == 0 {
+		// If nothing is allowed, then short-circuit
+		return nil
+	}
+
+	result := make(map[K]V, len(allowed))
+	for _, key := range allowed {
+		if val, ok := m[key]; ok {
+			result[key] = val
+		}
+	}
+	return result
 }

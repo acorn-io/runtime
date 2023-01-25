@@ -10,6 +10,8 @@ server:
   config:
     acornDNS: null
     acornDNSEndpoint: null
+    allowUserAnnotations: null
+    allowUserLabels: null
     autoUpgradeInterval: null
     builderPerProject: null
     clusterDomains: null
@@ -36,6 +38,8 @@ server:
   userConfig:
     acornDNS: null
     acornDNSEndpoint: null
+    allowUserAnnotations: null
+    allowUserLabels: null
     autoUpgradeInterval: null
     builderPerProject: null
     clusterDomains: null
