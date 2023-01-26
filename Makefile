@@ -55,3 +55,35 @@ serve-docs:
 
 gen-docs:
 	go run tools/gendocs/main.go
+
+gen-docs-version:
+	if [ -z ${version} ]; then \
+  			echo "version not set (version=x.x)"; \
+    		exit 1 \
+    	;fi
+	if [ -z ${prev-version} ]; then \
+  			echo "prev-version not set (prev-version=x.x)"; \
+    		exit 1 \
+    	;fi
+	docker run --rm --workdir=/docs -v $${PWD}/docs:/docs node:18-buster yarn docusaurus docs:version ${version}
+	awk '/versions/&& ++c == 1 {print;print "\t\t\t\"${prev-version}\": {label: \"${prev-version}\", banner: \"none\", path: \"${prev-version}\"},";next}1' ./docs/docusaurus.config.js > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
+	awk '/versions/&& ++c == 2 {print;print "\t\t\"${version}\": {label: \"${version}\", banner: \"none\", path: \"${version}\"},";next}1' ./docs/docusaurus.config.js > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
+
+deprecate-docs-version:
+	if [ -z ${version} ]; then \
+  			echo "version not set (version=x.x)"; \
+    		exit 1 \
+    	;fi
+	echo "deprecating ${version} from documentation"
+	grep -v '"${version}": {label: "${version}", banner: "none", path: "${version}"},' ./docs/docusaurus.config.js  > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
+
+remove-docs-version:
+	if [ -z ${version} ]; then \
+  			echo "version not set (version=x.x)"; \
+    		exit 1 \
+    	;fi
+	echo "removing ${version} from documentation completely"
+	-rm  "./docs/versioned_sidebars/version-${version}-sidebars.json"
+	-rm  -r ./docs/versioned_docs/version-${version}
+	jq 'del(.[] | select(. == "${version}"))' ./docs/versions.json > tmp.json && mv tmp.json ./docs/versions.json
+	grep -v '"${version}": {label: "${version}", banner: "none", path: "${version}"},' ./docs/docusaurus.config.js  > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
