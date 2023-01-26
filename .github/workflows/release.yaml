@@ -74,7 +74,7 @@ jobs:
         id: slack-success
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: '${{ secrets.SLACK_BOT_SUCCESS_CHANNEL }}'
-          slack-message: " ✅ Release passed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          channel-id: '${{ secrets.USERS_SLACK_BOT_RELEASE_CHANNEL }}'
+          slack-message: " ✅ Release ${{ github.ref_name }} is now available: ${{ github.server_url }}/${{ github.repository }}/releases/${{ github.ref_name }}"
         env:
-          SLACK_BOT_TOKEN: '${{ secrets.SLACK_BOT_TOKEN }}'
+          SLACK_BOT_TOKEN: '${{ secrets.USERS_SLACK_BOT_TOKEN }}'
