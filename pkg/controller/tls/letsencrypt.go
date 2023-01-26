@@ -527,6 +527,15 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 		return nil, err
 	}
 
+	cfg, err := config.Get(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.IngressClassName != nil && *cfg.IngressClassName != "" {
+		ing.Spec.IngressClassName = cfg.IngressClassName
+	}
+
 	if err := c.Create(ctx, svc); err != nil {
 		return nil, err
 	}
@@ -552,6 +561,9 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 		return ing.Status.LoadBalancer.Ingress != nil, nil
 	})
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("timed out waiting for ingress to be ready: %w", err)
+		}
 		return nil, err
 	}
 
