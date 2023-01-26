@@ -60,7 +60,7 @@ const config = {
         },
         items: [
           {
-            to: 'https://acorn.io',
+            to: 'https://www.acorn.io',
             label: 'Acorn Home',
             position: 'right',
             target: '_self',
