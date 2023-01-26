@@ -39,12 +39,20 @@ func TestDeploySpecUserDefinedLabelsAnnotations(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
+func TestDeploySpecUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels-namespace", AddNamespace)
+}
+
 func TestDeploySpecIgnoreUserDefinedLabelsAnnotations(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
 func TestDeploySpecFilterUserDefinedLabelsAnnotations(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/filter-user-labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
+}
+
+func TestDeploySpecIgnoreUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels-namespace", RemoveLabelsAndAnnotationsConfig(router.HandlerFunc(AddNamespace)).Handle)
 }
 
 func TestDeploySpecStop(t *testing.T) {
