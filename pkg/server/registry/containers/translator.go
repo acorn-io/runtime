@@ -70,9 +70,6 @@ func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (resu
 			result = append(result, &con)
 		}
 	}
-	if len(result) == 0 && len(objs) > 0 {
-		result = append(result, &apiv1.ContainerReplica{})
-	}
 	return
 }
 
