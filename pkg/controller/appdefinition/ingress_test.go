@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"testing"
 
+	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -66,11 +67,11 @@ func TestIngressPrefix2(t *testing.T) {
 }
 
 func TestIngressPrefix1Namespace(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-1-namespace", AddNamespace)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-1-namespace", namespace.AddNamespace)
 }
 
 func TestIngressPrefix2Namespace(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-2-namespace", AddNamespace)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-2-namespace", namespace.AddNamespace)
 }
 
 func TestIngressClusterDomainWithPort(t *testing.T) {
@@ -82,7 +83,7 @@ func TestIngressLabels(t *testing.T) {
 }
 
 func TestIngressLabelsNamespace(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/labels-namespace", AddNamespace)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/labels-namespace", namespace.AddNamespace)
 }
 
 func TestLetsEncrypt(t *testing.T) {

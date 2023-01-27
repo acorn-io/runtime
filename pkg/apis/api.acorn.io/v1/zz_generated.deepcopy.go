@@ -333,13 +333,13 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.AnnotationsPropagation != nil {
-		in, out := &in.AnnotationsPropagation, &out.AnnotationsPropagation
+	if in.PropagateProjectAnnotations != nil {
+		in, out := &in.PropagateProjectAnnotations, &out.PropagateProjectAnnotations
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.LabelsPropagation != nil {
-		in, out := &in.LabelsPropagation, &out.LabelsPropagation
+	if in.PropagateProjectLabels != nil {
+		in, out := &in.PropagateProjectLabels, &out.PropagateProjectLabels
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

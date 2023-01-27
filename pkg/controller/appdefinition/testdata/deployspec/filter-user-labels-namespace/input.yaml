@@ -1,0 +1,143 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  annotations:
+    - key: global-scoped-ann
+      value: test-global
+    - key: container-scoped-ann
+      resourceType: container
+      value: test-container
+    - key: metadata-scoped-ann
+      resourceType: metadata
+      value: test-app-ann
+    - key: named-scoped-ann
+      resourceName: container-name
+      value: test-named
+    - key: named-scoped-ann
+      resourceName: foo
+      value: test-named
+    - key: volume-scoped-ann
+      resourceType: volume
+      value: test-volume
+    - key: named-scoped-ann
+      resourceName: super-secret
+      value: test-named
+    - key: secret-scoped-ann
+      resourceType: secret
+      value: test-secret
+    - key: permit.io
+      value: test-secret
+    # These should be allowed
+    - key: allowed-global.io
+      value: test-global
+    - key: admit-scoped.io
+      resourceType: container
+      value: test-container
+    - key: allowed-scoped.io
+      resourceName: foo
+      value: test-named
+    - key: admit-scoped.io
+      resourceType: volume
+      value: test-volume
+    - key: admit-scoped.io
+      resourceType: secret
+      value: test-secret
+  image: test
+  labels:
+    - key: global-scoped-label
+      value: test-global
+    - key: container-scoped-label
+      resourceType: container
+      value: test-container
+    - key: metadata-scoped-label
+      resourceType: metadata
+      value: test-app-label
+    - key: named-scoped-label
+      resourceName: container-name
+      value: test-named
+    - key: named-scoped-label
+      resourceName: foo
+      value: test-named
+    - key: volume-scoped-label
+      resourceType: volume
+      value: test-volume
+    - key: named-scoped-label
+      resourceName: super-secret
+      value: test-named
+    - key: secret-scoped-label
+      resourceType: secret
+      value: test-secret
+    - key: admit.io
+      value: test-secret
+    # These should be allowed
+    - key: allowed-global.io
+      value: test-global
+    - key: permit-scoped.io
+      resourceType: container
+      value: test-container
+    - key: permit-scoped.io
+      resourceName: foo
+      value: test-named
+    - key: allowed-scoped.io
+      resourceType: volume
+      value: test-volume
+    - key: allowed-scoped.io
+      resourceType: secret
+      value: test-secret
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    annotations:
+      appSpecAnn: test-app-spec-ann
+      allowed.io: test-allowed-app-spec-ann
+      admit.io: test-admit-app-spec-ann
+      permit.io: test-permit-app-spec-ann
+    containers:
+      container-name:
+        annotations:
+          containerAnn: test-container-ann
+          allowed-container.io: test-allowed-container-ann
+          admit-container.io: test-admit-container-ann
+          permit-container.io: test-permit-container-ann
+        image: "image-name"
+        labels:
+          containerLabel: test-container-label
+          allowed-container.io: test-allowed-container-label
+          admit-container.io: test-admit-container-label
+          permit-container.io: test-permit-container-label
+        dirs:
+          "/var/tmp":
+            volume: foo
+    labels:
+      appSpecLabel: test-app-spec-label
+      allowed.io: test-allowed-app-spec-label
+      admit.io: test-admit-app-spec-label
+      permit.io: test-permit-app-spec-label
+    jobs:
+      job-name:
+        labels:
+          jobLabel: test-job-label
+          allowed-job.io: test-allowed-job-label
+          admit-job.io: test-admit-job-label
+          permit-job.io: test-permit-job-label
+        annotations:
+          jobAnn: test-job-ann
+          allowed-job.io: test-allowed-job-ann
+          admit-job.io: test-admit-job-ann
+          permit-job.io: test-permit-job-ann
+        ports:
+          - port: 80
+            targetPort: 81
+            protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+    volumes:
+      foo: {}

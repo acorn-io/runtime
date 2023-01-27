@@ -12,7 +12,6 @@ server:
     acornDNSEndpoint: null
     allowUserAnnotations: null
     allowUserLabels: null
-    annotationsPropagation: null
     autoUpgradeInterval: null
     builderPerProject: null
     clusterDomains: null
@@ -22,11 +21,12 @@ server:
     ingressClassName: null
     internalClusterDomain: ""
     internalRegistryPrefix: null
-    labelsPropagation: null
     letsEncrypt: null
     letsEncryptEmail: ""
     letsEncryptTOSAgree: null
     podSecurityEnforceProfile: ""
+    propagateProjectAnnotations: null
+    propagateProjectLabels: null
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null
@@ -42,7 +42,6 @@ server:
     acornDNSEndpoint: null
     allowUserAnnotations: null
     allowUserLabels: null
-    annotationsPropagation: null
     autoUpgradeInterval: null
     builderPerProject: null
     clusterDomains: null
@@ -52,11 +51,12 @@ server:
     ingressClassName: null
     internalClusterDomain: ""
     internalRegistryPrefix: null
-    labelsPropagation: null
     letsEncrypt: null
     letsEncryptEmail: ""
     letsEncryptTOSAgree: null
     podSecurityEnforceProfile: ""
+    propagateProjectAnnotations: null
+    propagateProjectLabels: null
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null

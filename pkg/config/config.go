@@ -290,12 +290,12 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
 	}
 
-	if newConfig.AnnotationsPropagation != nil {
-		mergedConfig.AnnotationsPropagation = newConfig.AnnotationsPropagation
+	if newConfig.PropagateProjectAnnotations != nil {
+		mergedConfig.PropagateProjectAnnotations = newConfig.PropagateProjectAnnotations
 	}
 
-	if newConfig.LabelsPropagation != nil {
-		mergedConfig.LabelsPropagation = newConfig.LabelsPropagation
+	if newConfig.PropagateProjectLabels != nil {
+		mergedConfig.PropagateProjectLabels = newConfig.PropagateProjectLabels
 	}
 
 	return &mergedConfig

@@ -14,7 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
-	routeUtils "github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
@@ -28,14 +28,14 @@ var (
 	})
 )
 
-func routes(router *routeUtils.Router, registryTransport http.RoundTripper) {
+func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.OnErrorHandler = appdefinition.OnError
 
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport))
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.RemoveLabelsAndAnnotationsConfig(routeUtils.HandlerFunc(appdefinition.AddNamespace)).Handle)
+	router.Type(&v1.AppInstance{}).Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)

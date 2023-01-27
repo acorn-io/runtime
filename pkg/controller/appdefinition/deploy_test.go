@@ -7,6 +7,7 @@ import (
 
 	"cuelang.org/go/pkg/crypto/sha256"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/router/tester"
@@ -40,19 +41,23 @@ func TestDeploySpecUserDefinedLabelsAnnotations(t *testing.T) {
 }
 
 func TestDeploySpecUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels-namespace", AddNamespace)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/labels-namespace", namespace.AddNamespace)
 }
 
 func TestDeploySpecIgnoreUserDefinedLabelsAnnotations(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
+func TestDeploySpecIgnoreUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels-namespace", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(namespace.AddNamespace)).Handle)
+}
+
 func TestDeploySpecFilterUserDefinedLabelsAnnotations(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/filter-user-labels", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(DeploySpec)).Handle)
 }
 
-func TestDeploySpecIgnoreUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/no-user-labels-namespace", RemoveLabelsAndAnnotationsConfig(router.HandlerFunc(AddNamespace)).Handle)
+func TestDeploySpecFilterUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/filter-user-labels-namespace", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(namespace.AddNamespace)).Handle)
 }
 
 func TestDeploySpecStop(t *testing.T) {

@@ -39,8 +39,8 @@
             "workloadMemoryDefault": null,
             "workloadMemoryMaximum": null,
             "useCustomCABundle": null,
-            "annotationsPropagation": null,
-            "labelsPropagation": null
+            "propagateProjectAnnotations": null,
+            "propagateProjectLabels": null
         },
         "userConfig": {
             "ingressClassName": null,
@@ -66,8 +66,8 @@
             "workloadMemoryDefault": null,
             "workloadMemoryMaximum": null,
             "useCustomCABundle": null,
-            "annotationsPropagation": null,
-            "labelsPropagation": null
+            "propagateProjectAnnotations": null,
+            "propagateProjectLabels": null
         }
     },
     "project": {}
