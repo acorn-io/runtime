@@ -1,11 +1,13 @@
 package appdefinition
 
 import (
+	"testing"
+
+	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/networking/v1"
-	"testing"
 
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router/tester"
@@ -56,12 +58,34 @@ func TestIngressPrefix(t *testing.T) {
 	assert.True(t, cmp.Equal(resp.Collected[index1], resp2.Collected[index2]))
 }
 
+func TestIngressPrefix1(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-1", DeploySpec)
+}
+
+func TestIngressPrefix2(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-2", DeploySpec)
+}
+
+func TestIngressPrefix1Namespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-1-namespace", namespace.AddNamespace)
+}
+
+func TestIngressPrefix2Namespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/prefix/prefix-2-namespace", namespace.AddNamespace)
+}
+
 func TestIngressClusterDomainWithPort(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/clusterdomainport", DeploySpec)
 }
+
 func TestIngressLabels(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/labels", DeploySpec)
 }
+
+func TestIngressLabelsNamespace(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/labels-namespace", namespace.AddNamespace)
+}
+
 func TestLetsEncrypt(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/letsencrypt", DeploySpec)
 }

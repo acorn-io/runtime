@@ -1,0 +1,22 @@
+apiVersion: v1
+data:
+  config: '{"propagateProjectAnnotations":["foo"], "propagateProjectLabels":["bar"]}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    foo: foo1
+  labels:
+    acorn.io/project: "true"
+    bar: bar1
+  name: acorn
+spec:
+  finalizers:
+    - kubernetes
+status:
+  phase: Active

@@ -1,0 +1,21 @@
+apiVersion: v1
+data:
+  config: '{"ignoreUserLabelsAndAnnotations":true, "allowUserLabels":["allowed.io","permit.io","allowed-global.io","permit-global.io","allowed-scoped.io","permit-scoped.io","allowed-job.io","permit-container.io"],"allowUserAnnotations":["allowed.io","admit.io","allowed-global.io","admit-global.io","allowed-scoped.io","admit-scoped.io","allowed-container.io","admit-job.io"]}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    acorn.io/project: "true"
+  name: app-namespace
+spec:
+  finalizers:
+    - kubernetes
+status:
+  phase: Active

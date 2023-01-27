@@ -1,0 +1,9 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "acorn"
+    "acorn.io/app-name": "default"
+    "acorn.io/managed": "true"
+    "pod-security.kubernetes.io/enforce": baseline

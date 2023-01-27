@@ -25,6 +25,8 @@ server:
     letsEncryptEmail: ""
     letsEncryptTOSAgree: null
     podSecurityEnforceProfile: ""
+    propagateProjectAnnotations: null
+    propagateProjectLabels: null
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null
@@ -53,6 +55,8 @@ server:
     letsEncryptEmail: ""
     letsEncryptTOSAgree: null
     podSecurityEnforceProfile: ""
+    propagateProjectAnnotations: null
+    propagateProjectLabels: null
     publishBuilders: null
     recordBuilds: null
     setPodSecurityEnforceProfile: null

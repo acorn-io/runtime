@@ -5,5 +5,3 @@ kind: ConfigMap
 metadata:
   name: acorn-config
   namespace: acorn-system
-
----

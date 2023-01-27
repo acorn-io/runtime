@@ -224,7 +224,7 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 			mergedConfig.IngressClassName = newConfig.IngressClassName
 		}
 	}
-	if newConfig.SetPodSecurityEnforceProfile == nil {
+	if newConfig.SetPodSecurityEnforceProfile != nil {
 		mergedConfig.SetPodSecurityEnforceProfile = newConfig.SetPodSecurityEnforceProfile
 	}
 	if newConfig.PodSecurityEnforceProfile != "" {
@@ -288,6 +288,14 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.UseCustomCABundle != nil {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
+	}
+
+	if newConfig.PropagateProjectAnnotations != nil {
+		mergedConfig.PropagateProjectAnnotations = newConfig.PropagateProjectAnnotations
+	}
+
+	if newConfig.PropagateProjectLabels != nil {
+		mergedConfig.PropagateProjectLabels = newConfig.PropagateProjectLabels
 	}
 
 	return &mergedConfig
