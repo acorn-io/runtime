@@ -1,0 +1,55 @@
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: job-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/job-name": "job-name"
+    "acorn.io/managed": "true"
+    allowed-job.io: test-allowed-job-label
+    allowed.io: test-allowed-app-spec-label
+    permit.io: test-permit-app-spec-label
+    allowed-global.io: test-global
+  annotations:
+    admit-job.io: test-admit-job-ann
+    allowed-global.io: test-global
+    allowed.io: test-allowed-app-spec-ann
+    admit.io: test-admit-app-spec-ann
+spec:
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/job-name": "job-name"
+        "acorn.io/managed": "true"
+        allowed-job.io: test-allowed-job-label
+        allowed-global.io: test-global
+        permit.io: test-permit-app-spec-label
+        allowed.io: test-allowed-app-spec-label
+      annotations:
+        acorn.io/container-spec: '{"annotations":{"admit-job.io":"test-admit-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"allowed-job.io":"test-allowed-job-label"},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        admit-job.io: test-admit-job-ann
+        allowed.io: test-allowed-app-spec-ann
+        admit.io: test-admit-app-spec-ann
+        allowed-global.io: test-global
+    spec:
+      imagePullSecrets:
+        - name: job-name-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: job-name
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: job-name
+          image: "image-name"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          ports:
+            - containerPort: 81
+              protocol: "TCP"
+          terminationMessagePath: "/run/secrets/output"
+---

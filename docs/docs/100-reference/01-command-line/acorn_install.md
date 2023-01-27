@@ -21,6 +21,8 @@ acorn install
 ```
       --acorn-dns string                      enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)
       --acorn-dns-endpoint string             The URL to access the Acorn DNS service
+      --allow-user-annotations strings        Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
+      --allow-user-labels strings             Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --api-server-replicas int               acorn-api deployment replica count
       --auto-upgrade-interval string          For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
       --builder-per-project                   Create a dedicated builder per project

@@ -37,7 +37,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
-	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.RemoveLabelsAndAnnotationsConfig)
+	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
 	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.CreateSecrets)
 	appRouter.HandlerFunc(appdefinition.AppStatus)

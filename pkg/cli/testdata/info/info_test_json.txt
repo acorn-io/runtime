@@ -34,6 +34,8 @@
             "builderPerProject": null,
             "internalRegistryPrefix": null,
             "ignoreUserLabelsAndAnnotations": null,
+            "allowUserLabels": null,
+            "allowUserAnnotations": null,
             "workloadMemoryDefault": null,
             "workloadMemoryMaximum": null,
             "useCustomCABundle": null
@@ -57,6 +59,8 @@
             "builderPerProject": null,
             "internalRegistryPrefix": null,
             "ignoreUserLabelsAndAnnotations": null,
+            "allowUserLabels": null,
+            "allowUserAnnotations": null,
             "workloadMemoryDefault": null,
             "workloadMemoryMaximum": null,
             "useCustomCABundle": null

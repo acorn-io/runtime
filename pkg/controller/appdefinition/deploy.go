@@ -32,7 +32,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func RemoveLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
+func FilterLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		cfg, err := config.Get(req.Ctx, req.Client)
@@ -43,7 +43,7 @@ func RemoveLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
 		// Note that IgnoreUserLabelsAndAnnotations will not be nil here because
 		// config.Get "completes" the config object to fill in default values.
 		if *cfg.IgnoreUserLabelsAndAnnotations {
-			req.Object = labels.RemoveUserDefined(appInstance)
+			req.Object = labels.FilterUserDefined(appInstance, cfg.AllowUserLabels, cfg.AllowUserAnnotations)
 		}
 
 		return h.Handle(req, resp)

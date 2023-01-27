@@ -130,7 +130,7 @@ func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Read
 	}
 
 	// Acorn DNS should be used if it is explicitly "enabled" or if it is in "auto" mode and the user hasn't set a
-	//cluster domain and the cluster doesn't qualify for using the localhost wildcard domain
+	// cluster domain and the cluster doesn't qualify for using the localhost wildcard domain
 	if shouldLookupAcornDNSDomain {
 		dnsSecret := &corev1.Secret{}
 		err = getter.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
@@ -210,6 +210,12 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.IgnoreUserLabelsAndAnnotations != nil {
 		mergedConfig.IgnoreUserLabelsAndAnnotations = newConfig.IgnoreUserLabelsAndAnnotations
+	}
+	if newConfig.AllowUserAnnotations != nil {
+		mergedConfig.AllowUserAnnotations = newConfig.AllowUserAnnotations
+	}
+	if newConfig.AllowUserLabels != nil {
+		mergedConfig.AllowUserLabels = newConfig.AllowUserLabels
 	}
 	if newConfig.IngressClassName != nil {
 		if *newConfig.IngressClassName == "" {

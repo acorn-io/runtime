@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  config: '{"ingressClassName":null,"clusterDomains":null,"letsEncrypt":null,"letsEncryptEmail":"","letsEncryptTOSAgree":null,"setPodSecurityEnforceProfile":null,"podSecurityEnforceProfile":"","defaultPublishMode":"","httpEndpointPattern":null,"internalClusterDomain":"","acornDNS":null,"acornDNSEndpoint":null,"autoUpgradeInterval":null,"recordBuilds":null,"publishBuilders":null,"builderPerProject":null,"internalRegistryPrefix":null,"ignoreUserLabelsAndAnnotations":false}'
+  config: '{"ignoreUserLabelsAndAnnotations":false,"allowUserLabels":["allowed.io","permit.io","allowed-global.io","permit-global.io","allowed-scoped.io","permit-scoped.io","allowed-job.io","permit-container.io"],"allowUserAnnotations":["allowed.io","admit.io","allowed-global.io","admit-global.io","allowed-scoped.io","admit-scoped.io","allowed-container.io","admit-job.io"]}'
 kind: ConfigMap
 metadata:
   name: acorn-config
