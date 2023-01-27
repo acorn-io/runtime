@@ -14,6 +14,12 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+var (
+	ignoreLocalFiles = map[string]bool{
+		".dockerignore": true,
+	}
+)
+
 type fileSyncClient struct {
 	sessionID string
 	messages  Messages
@@ -114,6 +120,9 @@ func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPat
 		for _, dirName := range dirNames {
 			if dirName == "context" && localDirName == dirName {
 				for _, followPath := range followPaths {
+					if ignoreLocalFiles[followPath] {
+						continue
+					}
 					f := filepath.Join(d, followPath)
 					if _, err := os.Stat(f); os.IsNotExist(err) {
 						err := os.MkdirAll(f, 0755)
