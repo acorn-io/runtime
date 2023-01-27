@@ -7,7 +7,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/mink/pkg/types"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/selection"
@@ -42,10 +41,9 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 		}
 		delete(ns.Labels, labels.AcornProject)
 		result = append(result, &apiv1.Project{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        ns.Name,
-				Labels:      ns.Labels,
-				Annotations: ns.Annotations,
+			ObjectMeta: ns.ObjectMeta,
+			Status: apiv1.ProjectStatus{
+				Namespace: ns.Name,
 			},
 		})
 	}
@@ -60,11 +58,7 @@ func (t *Translator) FromPublic(ctx context.Context, obj runtime.Object) (types.
 		}
 	}
 	return &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        prj.Name,
-			Labels:      prj.Labels,
-			Annotations: prj.Annotations,
-		},
+		ObjectMeta: prj.ObjectMeta,
 	}, nil
 }
 

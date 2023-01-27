@@ -23,6 +23,7 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 		WithCreate(strategy).
 		WithDelete(strategy).
 		WithGet(strategy).
+		// Watch is not enabled because the dynamic privileges can do weird things...
 		WithList(strategy).
 		WithTableConverter(tables.ProjectConverter).
 		Build()
