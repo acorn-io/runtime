@@ -2746,6 +2746,12 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref common
 							Format: "int64",
 						},
 					},
+					"recorded": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"buildURL": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
