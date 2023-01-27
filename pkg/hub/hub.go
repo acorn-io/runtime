@@ -16,12 +16,7 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func IsHub(ctx context.Context, address string) (bool, error) {
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return false, err
-	}
-
+func IsHub(cfg *config.CLIConfig, address string) (bool, error) {
 	if slices.Contains(cfg.HubServers, address) {
 		return true, nil
 	}

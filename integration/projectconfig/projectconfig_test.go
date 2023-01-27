@@ -24,6 +24,7 @@ func TestCLIConfig(t *testing.T) {
 	})
 	xdg.Home = d
 	testAPIKubeconfig := testRestConfig(t, "testhost", "")
+	testAPIKubeconfig2 := testRestConfig(t, "testhost2", "")
 	tests := []struct {
 		name               string
 		opt                project.Options
@@ -145,6 +146,40 @@ func TestCLIConfig(t *testing.T) {
 			wantProject:        "example.com/foo/bar",
 			wantNamespace:      "bar",
 			wantToken:          "pass",
+		},
+		{
+			name: "Use alias",
+			opt: project.Options{
+				KubeconfigEnv: testAPIKubeconfig,
+				Project:       "foo",
+				CLIConfig: &config.CLIConfig{
+					ProjectAliases: map[string]string{
+						"foo": "kubeconf/ns2,example.com/acct/prj1,defns",
+					},
+					Kubeconfigs: map[string]string{
+						"kubeconf": testAPIKubeconfig2,
+					},
+					Auths: map[string]config.AuthConfig{
+						"example.com": {
+							Password: "pass",
+						},
+					},
+					TestProjectURLs: map[string]string{
+						"example.com/acct": "https://endpoint.example.com",
+					},
+				},
+			},
+			assert: func(t *testing.T, c client.Client) {
+				t.Helper()
+				clients, err := c.(*client.MultiClient).Factory.List(context.Background())
+				if err != nil {
+					t.Fatal(err)
+				}
+				assert.Len(t, clients, 3)
+			},
+			wantRestConfigHost: "testhost2",
+			wantProject:        "kubeconf/ns2,example.com/acct/prj1,defns",
+			wantNamespace:      "ns2",
 		},
 	}
 

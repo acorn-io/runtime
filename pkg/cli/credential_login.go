@@ -87,7 +87,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	isHub, err := hub.IsHub(cmd.Context(), serverAddress)
+	isHub, err := hub.IsHub(cfg, serverAddress)
 	if err != nil {
 		return err
 	}

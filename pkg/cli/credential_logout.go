@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
 	credentials2 "github.com/acorn-io/acorn/pkg/credentials"
 	"github.com/spf13/cobra"
+	"k8s.io/utils/strings/slices"
 )
 
 func NewCredentialLogout(root bool, c CommandContext) *cobra.Command {
@@ -32,14 +34,22 @@ type CredentialLogout struct {
 }
 
 func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
-	client, err := a.client.CreateDefault()
+	cfg, err := config.ReadCLIConfig()
 	if err != nil {
 		return err
 	}
 
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return err
+	var client client.Client
+	if slices.Contains(cfg.HubServers, args[0]) {
+		// force local storage for known hub addresses
+		a.LocalStorage = true
+	}
+
+	if !a.LocalStorage {
+		client, err = a.client.CreateDefault()
+		if err != nil {
+			return err
+		}
 	}
 
 	store, err := credentials2.NewStore(cfg, client)
