@@ -93,10 +93,12 @@ func invokeStartSyncForPath(ctx context.Context, client client.Client, con *apiv
 		if err == nil {
 			exclude = lines
 		} else {
-			return nil, nil, err
+			logrus.Warnf("failed to read %s for syncing: %v", filepath.Join(cwd, ".dockerignore"), err)
+			exclude = nil
 		}
 	} else if !os.IsNotExist(err) {
-		return nil, nil, err
+		logrus.Warnf("failed to open %s for syncing: %v", filepath.Join(cwd, ".dockerignore"), err)
+		exclude = nil
 	}
 	s, err := sync.NewSync(ctx, source, sync.Options{
 		DownstreamDisabled: !bidirectional,
