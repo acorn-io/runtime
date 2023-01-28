@@ -101,7 +101,6 @@ type BuilderInstanceStatus struct {
 	Endpoint           string `json:"endpoint,omitempty"`
 	PublicKey          string `json:"publicKey,omitempty"`
 	ServiceName        string `json:"serviceName,omitempty"`
-	Placement          string `json:"placement,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

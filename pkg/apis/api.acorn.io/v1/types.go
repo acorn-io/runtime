@@ -360,6 +360,12 @@ type InfoList struct {
 type Project struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Status            ProjectStatus `json:"status,omitempty"`
+}
+
+type ProjectStatus struct {
+	Placement string `json:"placement,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 func (in *Project) NamespaceScoped() bool {

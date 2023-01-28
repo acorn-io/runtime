@@ -48,6 +48,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.LogOptions":                         schema_pkg_apis_apiacornio_v1_LogOptions(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project":                            schema_pkg_apis_apiacornio_v1_Project(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectList":                        schema_pkg_apis_apiacornio_v1_ProjectList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectStatus":                      schema_pkg_apis_apiacornio_v1_ProjectStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth":                       schema_pkg_apis_apiacornio_v1_RegistryAuth(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Secret":                             schema_pkg_apis_apiacornio_v1_Secret(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.SecretList":                         schema_pkg_apis_apiacornio_v1_SecretList(ref),
@@ -2144,11 +2145,17 @@ func schema_pkg_apis_apiacornio_v1_Project(ref common.ReferenceCallback) common.
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectStatus"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2197,6 +2204,30 @@ func schema_pkg_apis_apiacornio_v1_ProjectList(ref common.ReferenceCallback) com
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_ProjectStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"placement": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -3337,12 +3368,6 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							},
 						},
 					},
-					"placement": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 				},
 			},
 		},
@@ -3677,12 +3702,6 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref common.Referen
 						},
 					},
 					"serviceName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"placement": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

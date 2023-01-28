@@ -161,7 +161,6 @@ type AppInstanceStatus struct {
 	AppSpec                AppSpec                    `json:"appSpec,omitempty"`
 	Conditions             []Condition                `json:"conditions,omitempty"`
 	Endpoints              []Endpoint                 `json:"endpoints,omitempty"`
-	Placement              string                     `json:"placement,omitempty"`
 }
 
 type Endpoint struct {
