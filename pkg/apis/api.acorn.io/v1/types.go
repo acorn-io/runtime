@@ -315,6 +315,9 @@ type Config struct {
 	// Do not set omitEmpty on the json fields.  Also make strings and bool a
 	// pointer unless the default value (false, "") is not a valid configuration
 
+	// For repeatable flags, ensure the struct and json fields are plural and the flag name is singular.
+	// See ClusterDomains as an example.
+
 	IngressClassName               *string        `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
 	ClusterDomains                 []string       `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
 	LetsEncrypt                    *string        `json:"letsEncrypt" name:"lets-encrypt" usage:"enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)"`
@@ -333,8 +336,8 @@ type Config struct {
 	BuilderPerProject              *bool          `json:"builderPerProject" name:"builder-per-project" usage:"Create a dedicated builder per project"`
 	InternalRegistryPrefix         *string        `json:"internalRegistryPrefix" name:"internal-registry-prefix" usage:"The image prefix to use when pushing internal images (example ghcr.io/my-org/)"`
 	IgnoreUserLabelsAndAnnotations *bool          `json:"ignoreUserLabelsAndAnnotations" name:"ignore-user-labels-and-annotations" usage:"Don't propagate user-defined labels and annotations to dependent objects"`
-	AllowUserLabels                []string       `json:"allowUserLabels" name:"allow-user-labels" usage:"Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true"`
-	AllowUserAnnotations           []string       `json:"allowUserAnnotations" name:"allow-user-annotations" usage:"Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true"`
+	AllowUserLabels                []string       `json:"allowUserLabels" name:"allow-user-label" usage:"Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true"`
+	AllowUserAnnotations           []string       `json:"allowUserAnnotations" name:"allow-user-annotation" usage:"Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true"`
 	WorkloadMemoryDefault          *int64         `json:"workloadMemoryDefault" name:"workload-memory-default" quantity:"true" usage:"Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" seperators (default 0)" short:"m"`
 	WorkloadMemoryMaximum          *int64         `json:"workloadMemoryMaximum" name:"workload-memory-maximum" quantity:"true" usage:"Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" seperators (default 0)"`
 	UseCustomCABundle              *bool          `json:"useCustomCABundle" name:"use-custom-ca-bundle" usage:"Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false."`
