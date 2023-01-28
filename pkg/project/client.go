@@ -105,11 +105,6 @@ func lookup(ctx context.Context, opts Options) (client.Client, error) {
 		err error
 	)
 
-	// Reset all env vars that might impact kubeconfig loading behavior
-	os.Setenv("KUBECONFIG", "")
-	os.Setenv("NAMESPACE", "")
-	os.Setenv("CONTEXT", "")
-
 	if cfg == nil {
 		cfg, err = config.ReadCLIConfig()
 		if err != nil {
