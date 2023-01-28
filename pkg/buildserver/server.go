@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/k8schannel"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +24,7 @@ import (
 type Server struct {
 	uuid            string
 	namespace       string
-	client          kclient.Client
+	client          kclient.WithWatch
 	pubKey, privKey *[32]byte
 }
 
@@ -34,7 +35,7 @@ type Token struct {
 	PushRepo    string                     `json:"pushRepo,omitempty"`
 }
 
-func NewServer(uuid, namespace string, pubKey, privKey [32]byte, client kclient.Client) *Server {
+func NewServer(uuid, namespace string, pubKey, privKey [32]byte, client kclient.WithWatch) *Server {
 	return &Server{
 		uuid:      uuid,
 		namespace: namespace,
@@ -195,5 +196,12 @@ func (s *Server) recordBuild(ctx context.Context, recordRepo string, build *v1.A
 	condition.Setter(recordedBuild, nil, v1.AcornImageBuildInstanceConditionBuild).Success()
 	recordedBuild.Status.AppImage = *image
 	recordedBuild.Status.ObservedGeneration = build.Generation
-	return s.client.Status().Update(ctx, recordedBuild)
+	if err := s.client.Status().Update(ctx, recordedBuild); err != nil {
+		return err
+	}
+	logrus.Infof("Waiting for build %s/%s to be recorded", recordedBuild.Name, recordedBuild.Namespace)
+	_, err = watcher.New[*v1.AcornImageBuildInstance](s.client).ByObject(ctx, recordedBuild, func(obj *v1.AcornImageBuildInstance) (bool, error) {
+		return obj.Status.Recorded, nil
+	})
+	return err
 }

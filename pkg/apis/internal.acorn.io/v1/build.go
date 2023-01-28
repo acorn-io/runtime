@@ -65,6 +65,7 @@ type AcornImageBuildInstanceSpec struct {
 
 type AcornImageBuildInstanceStatus struct {
 	ObservedGeneration int64       `json:"observedGeneration,omitempty"`
+	Recorded           bool        `json:"recorded,omitempty"`
 	BuildURL           string      `json:"buildURL,omitempty"`
 	Token              string      `json:"token,omitempty"`
 	AppImage           AppImage    `json:"appImage,omitempty"`

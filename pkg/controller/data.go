@@ -52,7 +52,7 @@ func (c *Controller) initData(ctx context.Context) error {
 				Resources: []string{"imageinstances"},
 			},
 			{
-				Verbs:     []string{"get"},
+				Verbs:     []string{"get", "list", "watch"},
 				APIGroups: []string{v1.SchemeGroupVersion.Group},
 				Resources: []string{"acornimagebuildinstances"},
 			},

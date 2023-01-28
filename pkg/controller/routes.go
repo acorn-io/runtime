@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
 	"github.com/acorn-io/acorn/pkg/controller/builder"
 	"github.com/acorn-io/acorn/pkg/controller/config"
@@ -49,6 +50,8 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(appdefinition.UpdateGeneration)
 
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
+
+	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
