@@ -22,7 +22,7 @@ import (
 var (
 	csvSplit              = regexp.MustCompile(`\s*,\s*`)
 	ErrNoCurrentProject   = errors.New("current project is not set")
-	ErrNoKubernetesConfig = errors.New("no kubeconfig file found try adding one at $HOME/.kube/config")
+	ErrNoKubernetesConfig = errors.New("no kubeconfig file found try creating one at $HOME/.kube/config")
 	NoProjectMessageNoHub = "\n" +
 		"\nA valid Acorn client configuration can not be found." +
 		"\n" +
@@ -250,7 +250,7 @@ func noConfigClient(ctx context.Context, opts Options) client.Client {
 	return c
 }
 
-func ParseProject(project string) (server, account, namespace string, err error) {
+func ParseProject(project string, kubeconfigs map[string]string) (server, account, namespace string, err error) {
 	parts := strings.Split(project, "/")
 	if len(parts) == 0 || len(parts) > 3 {
 		return "", "", "", fmt.Errorf("invalid project name [%s]: must contain zero, one or two slashes [/]", project)
@@ -260,10 +260,19 @@ func ParseProject(project string) (server, account, namespace string, err error)
 		if strings.Contains(parts[0], ".") {
 			return "", "", "", fmt.Errorf("invalid project name [%s]: can not contain \".\"", project)
 		}
+		if strings.Contains(parts[0], ":") {
+			return "", "", "", fmt.Errorf("invalid project name [%s]: can not contain \":\"", project)
+		}
 		return "", "", parts[0], nil
 	case 2:
 		if strings.Contains(parts[0], ".") {
 			return "", "", "", fmt.Errorf("invalid project name [%s]: part before / can not contain \".\" unless there are three parts (ex: acorn.io/account/name)", project)
+		}
+		if strings.Contains(parts[0], ":") {
+			return "", "", "", fmt.Errorf("invalid project name [%s]: part before / can not contain \":\" unless there are three parts (ex: acorn.io/account/name)", project)
+		}
+		if kubeconfig := kubeconfigs[parts[0]]; kubeconfig != "" {
+			return "", parts[0], parts[1], nil
 		}
 		return system.DefaultHubAddress, parts[0], parts[1], nil
 	case 3:
@@ -273,14 +282,24 @@ func ParseProject(project string) (server, account, namespace string, err error)
 }
 
 func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project string) (client.Client, error) {
-	server, account, namespace, err := ParseProject(project)
+	server, account, namespace, err := ParseProject(project, cfg.Kubeconfigs)
 	if err != nil {
 		return nil, err
 	}
 
-	// at this point namespace is guaranteed to be != ""
-
 	if server == "" {
+		if account != "" {
+			if kubeconfig := cfg.Kubeconfigs[account]; kubeconfig == "" {
+				return nil, fmt.Errorf("failed to find kubeconfig for %s", account)
+			} else {
+				config, err := restconfig.FromFile(kubeconfig, opts.ContextEnv)
+				if err != nil {
+					return nil, err
+				}
+				return client.New(config, project, namespace)
+			}
+		}
+
 		cfgFile, ok := lookupKubeconfig(opts)
 		if !ok {
 			return nil, ErrNoKubernetesConfig
@@ -290,14 +309,6 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 			return nil, err
 		}
 		return client.New(c, project, namespace)
-	}
-
-	if kubeconfig := cfg.Kubeconfigs[server]; kubeconfig != "" {
-		config, err := restconfig.FromFile(kubeconfig, opts.ContextEnv)
-		if err != nil {
-			return nil, err
-		}
-		return client.New(config, project, namespace)
 	}
 
 	credStore, err := credentials.NewStore(cfg, nil)
