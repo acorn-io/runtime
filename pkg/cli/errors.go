@@ -2,11 +2,8 @@ package cli
 
 import (
 	"context"
-	"fmt"
 	"os"
 
-	"github.com/acorn-io/acorn/pkg/project"
-	"github.com/pkg/errors"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -17,10 +14,7 @@ import (
 func RunAndHandleError(ctx context.Context, cmd *cobra.Command) {
 	cmd.SilenceErrors = true
 	err := cmd.ExecuteContext(ctx)
-	if !pterm.RawOutput && errors.Is(err, project.ErrNoCurrentProject) {
-		fmt.Println(project.NoProjectMessageNoHub)
-		os.Exit(1)
-	} else if err != nil {
+	if err != nil {
 		pterm.Error.Println(err)
 		os.Exit(1)
 	}

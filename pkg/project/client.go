@@ -21,7 +21,6 @@ import (
 
 var (
 	csvSplit              = regexp.MustCompile(`\s*,\s*`)
-	ErrNoCurrentProject   = errors.New("current project is not set")
 	ErrNoKubernetesConfig = errors.New("no kubeconfig file found try creating one at $HOME/.kube/config")
 	NoProjectMessageNoHub = "\n" +
 		"\nA valid Acorn client configuration can not be found." +
@@ -58,15 +57,7 @@ func (o Options) WithCLIConfig(cfg *config.CLIConfig) Options {
 }
 
 func Client(ctx context.Context, opts Options) (client.Client, error) {
-	c, err := lookup(ctx, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	if c == nil {
-		return nil, ErrNoCurrentProject
-	}
-	return c, nil
+	return lookup(ctx, opts)
 }
 
 func localProjectToNamespace(project string) (string, error) {
@@ -124,9 +115,9 @@ func lookup(ctx context.Context, opts Options) (client.Client, error) {
 		return nil, err
 	}
 	if len(projects) == 0 {
-		c := noConfigClient(ctx, opts)
-		if c == nil {
-			return nil, nil
+		c, err := noConfigClient(ctx, opts)
+		if err != nil {
+			return nil, err
 		}
 		defaultProject := c.GetProject()
 		if opts.AllProjects {
@@ -189,11 +180,6 @@ func (p *projectClientFactory) DefaultProject() string {
 	return p.defaultProject
 }
 
-func lookupKubeconfigIgnoreNotFound(opts Options) string {
-	result, _ := lookupKubeconfig(opts)
-	return result
-}
-
 func lookupKubeconfig(opts Options) (string, bool) {
 	if opts.Kubeconfig != "" {
 		return opts.Kubeconfig, true
@@ -231,18 +217,12 @@ func clientFromFile(kubeconfig string, opts Options) (client.Client, error) {
 
 // noConfigClient will try to find acorn locally installed in a local k8s, if it fails in anyway,
 // ignore it and continue
-func noConfigClient(ctx context.Context, opts Options) client.Client {
-	c, err := clientFromFile(lookupKubeconfigIgnoreNotFound(opts), opts)
-	if err != nil {
-		return nil
+func noConfigClient(ctx context.Context, opts Options) (client.Client, error) {
+	result, found := lookupKubeconfig(opts)
+	if !found {
+		return nil, ErrNoKubernetesConfig
 	}
-	// We use project list to test the connection because there is no assumption that any
-	// particular namespace exists
-	_, err = c.ProjectList(ctx)
-	if err != nil {
-		return nil
-	}
-	return c
+	return clientFromFile(result, opts)
 }
 
 func ParseProject(project string, kubeconfigs map[string]string) (server, account, namespace string, err error) {

@@ -139,8 +139,8 @@ func List(ctx context.Context, opts Options) (result []string, err error) {
 		}
 	}
 
-	c := noConfigClient(ctx, opts)
-	if c != nil {
+	c, err := noConfigClient(ctx, opts)
+	if err == nil && c != nil {
 		projects, err := timeoutProjectList(ctx, c)
 		if err == nil {
 			result = append(result, typed.MapSlice(projects, func(project apiv1.Project) string {

@@ -22,9 +22,13 @@ func TestCLIConfig(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll(d)
 	})
+
 	xdg.Home = d
 	testAPIKubeconfig := testRestConfig(t, "testhost", "")
 	testAPIKubeconfig2 := testRestConfig(t, "testhost2", "")
+	testAPIKubeconfigEnv := testRestConfig(t, "testenv", "")
+	os.Setenv("KUBECONFIG", testAPIKubeconfigEnv)
+
 	tests := []struct {
 		name               string
 		opt                project.Options
@@ -36,6 +40,19 @@ func TestCLIConfig(t *testing.T) {
 		wantError          bool
 		wantErr            error
 	}{
+		{
+			name: "Only KUBECONFIG is set",
+			opt: project.Options{
+				KubeconfigEnv: os.Getenv("KUBECONFIG"),
+			},
+			wantNamespace:      "acorn",
+			wantRestConfigHost: "testenv",
+			assert: func(t *testing.T, c client.Client) {
+				t.Helper()
+				// Make sure it's not unset
+				assert.Equal(t, testAPIKubeconfigEnv, os.Getenv("KUBECONFIG"))
+			},
+		},
 		{
 			name: "User passes --kubeconfig",
 			opt: project.Options{
@@ -117,7 +134,7 @@ func TestCLIConfig(t *testing.T) {
 		{
 			name:      "No config",
 			wantError: true,
-			wantErr:   project.ErrNoCurrentProject,
+			wantErr:   project.ErrNoKubernetesConfig,
 		},
 		{
 			name: "No config, but user requested project",
