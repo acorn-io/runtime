@@ -14,6 +14,7 @@ type clientProgressStatus struct {
 	streams        *streams.Output
 	currentSession string
 	progressChan   chan *buildkit.SolveStatus
+	doneChan       chan struct{}
 	ctx            context.Context
 }
 
@@ -32,6 +33,7 @@ func (c *clientProgressStatus) Display(msg *Message) {
 		logrus.Debugf("Switching from status session %s => %s", c.currentSession, msg.StatusSessionID)
 		c.Close()
 		c.progressChan = make(chan *buildkit.SolveStatus, 1)
+		c.doneChan = make(chan struct{})
 		c.currentSession = msg.StatusSessionID
 		go c.display(c.progressChan)
 	}
@@ -42,6 +44,7 @@ func (c *clientProgressStatus) Close() {
 	if c.progressChan != nil {
 		close(c.progressChan)
 		c.progressChan = nil
+		<-c.doneChan
 	}
 }
 
@@ -59,4 +62,5 @@ func (c *clientProgressStatus) display(ch chan *buildkit.SolveStatus) {
 	}
 
 	_, _ = progressui.DisplaySolveStatus(c.ctx, "", con, c.streams.Err, ch)
+	close(c.doneChan)
 }
