@@ -30,11 +30,11 @@ acorn images`,
 }
 
 type Image struct {
-	All        bool   `usage:"Include untagged images" short:"a"`
-	Quiet      bool   `usage:"Output only names" short:"q"`
-	NoTrunc    bool   `usage:"Don't truncate IDs"`
-	Output     string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	Containers bool   `usage:"Show containers for images" short:"c"`
+	All        bool   `usage:"Include untagged images" short:"a" local:"true"`
+	Quiet      bool   `usage:"Output only names" short:"q" local:"true"`
+	NoTrunc    bool   `usage:"Don't truncate IDs" local:"true"`
+	Output     string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o" local:"true"`
+	Containers bool   `usage:"Show containers for images" short:"c" local:"true"`
 	client     ClientFactory
 }
 
