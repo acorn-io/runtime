@@ -63,6 +63,9 @@ rules:
       - roles
       - clusterrolebindings
       - rolebindings
+  - verbs: ["*"]
+    apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
 
 ---
 kind: ClusterRoleBinding
