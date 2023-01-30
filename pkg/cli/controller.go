@@ -17,11 +17,12 @@ func NewController(c CommandContext) *cobra.Command {
 }
 
 type Controller struct {
-	client ClientFactory
+	client  ClientFactory
+	DevMode bool `usage:"disable controller leader election"`
 }
 
-func (s *Controller) Run(cmd *cobra.Command, args []string) error {
-	c, err := controller.New()
+func (s *Controller) Run(cmd *cobra.Command, _ []string) error {
+	c, err := controller.New(s.DevMode)
 	if err != nil {
 		return err
 	}
