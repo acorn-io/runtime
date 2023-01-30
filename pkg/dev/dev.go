@@ -249,17 +249,19 @@ func getPathHash(acornCue string) string {
 	return hex.EncodeToString(sum[:])[:12]
 }
 
-func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image string, opts *Options) error {
-	if app.Spec.Stop != nil && *app.Spec.Stop {
-		err := c.AppStart(ctx, app.Name)
-		if err != nil {
-			return err
+func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image string, opts *Options) (err error) {
+	defer func() {
+		if err == nil && app.Spec.Stop != nil && *app.Spec.Stop {
+			err = c.AppStart(ctx, app.Name)
 		}
-	}
+	}()
+	// It is possible the the current app.spec.image points to something that is missing, so we need to ensure
+	// we update the app.spec.image before we touch anything else, like app.Spec.Stop.  That is why start is in
+	// the defer above
 	update := opts.Run.ToUpdate()
 	update.Image = image
 	logrus.Infof("Updating app [%s] to image [%s]", app.Name, image)
-	_, err := rulerequest.PromptUpdate(ctx, c, opts.Dangerous, app.Name, update)
+	app, err = rulerequest.PromptUpdate(ctx, c, opts.Dangerous, app.Name, update)
 	return err
 }
 
