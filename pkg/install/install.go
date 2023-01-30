@@ -37,6 +37,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -151,6 +152,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
+	if err = validateMemoryArgs(*finalConfForValidation.WorkloadMemoryDefault, *finalConfForValidation.WorkloadMemoryMaximum); err != nil {
+		return err
+	}
+
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
 		return printObject(image, opts)
@@ -250,6 +255,23 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	pterm.Success.Println("Installation done")
+	return nil
+}
+
+func validateMemoryArgs(defaultMemory int64, maximumMemory int64) error {
+	// if default is set to unlimited memory (0) and max memory is not default will be set to maximum
+	if defaultMemory == 0 && maximumMemory != 0 {
+		pterm.Info.Println("workload-memory-default is being set to workload-memory-maximum. If this is not intended please specify workload-memory-default to non-zero value")
+		return nil
+	}
+	// if max memory is not set to unlimited default must be smaller than maximum
+	if maximumMemory != 0 && defaultMemory > maximumMemory {
+		defaultQuantity := resource.NewQuantity(defaultMemory, resource.BinarySI).String()
+		maximumQuantity := resource.NewQuantity(maximumMemory, resource.BinarySI).String()
+
+		return fmt.Errorf("invalid memory args: workload-memory-default set to %s which exceeds the workload-memory-maximum of %s",
+			defaultQuantity, maximumQuantity)
+	}
 	return nil
 }
 
