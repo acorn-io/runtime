@@ -8,7 +8,6 @@
 #### Proposed Changes
 _Describe the big picture of your changes here to communicate to the maintainers why we should accept this pull request_
 
-
 #### User-Facing Change? ####
 _Does this PR introduce a user-facing change in functionality, the API or the CLI?_
 
