@@ -100,11 +100,11 @@ When the user runs the built Acorn image, they can reference this port by name `
 
 As an author, there are three scopes used to define the port's **default** access behavior: `internal`, `expose`, and `publish`. These settings can be changed at runtime by the operator.
 
-| Scope | Accessibility |
-| ------| --------------|
-| `internal`| Containers within the Acorn image (default)|
-| `expose` | Containers running across the cluster |
-| `publish` | Accessible outside the cluster by consumers |
+| Scope | Accessibility                                       |
+| ------|-----------------------------------------------------|
+| `internal`| Containers defined within the Acorn image (default) |
+| `expose` | Containers running across the cluster               |
+| `publish` | Accessible outside the cluster by consumers         |
 
 ```acorn
 containers: {
@@ -137,7 +137,7 @@ containers: {
 }
 ```
 
-This Acornfile defines two containers, one called `my-webapp` and the other `database`. The `my-webapp` container is exposing port 8080 outside of the cluster and port 5001 to apps running on the cluster. When launching this Acorn the port can be published outside the cluster or accessed by linked Acorns.
+This Acornfile defines two containers, one called `my-webapp` and the other `database`. The `my-webapp` container is exposing port 8080 outside of the cluster and port 5001 to apps running on the cluster. When launching this Acorn the port can be published outside the cluster and accessed by linked Acorns.
 
 In the database container, we are using the `ports` parameter because only the my-webapp container will communicate with the database.
 
