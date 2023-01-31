@@ -126,7 +126,7 @@ Acorn can publish your applications as publicly accessible endpoints.
 For this to work, your Kubernetes cluster must have an [ingress controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for HTTP endpoints and means for fulfilling [services of type LoadBalancer](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) for non-HTTP endpoints, such as TCP endpoints.
 
 :::info
-When running on Google Kubenertes Engine, it is necassary to toggle on [--publish-builders](../100-reference/01-command-line/acorn_install.md#options). This makes the builders for Acorn available through ingress which is necassary for the GKE runtime.
+When running on Google Kubenertes Engine, it is necessary to toggle on [--publish-builders](../100-reference/01-command-line/acorn_install.md#options). This makes the builders for Acorn available through ingress which is necassary for the GKE runtime.
 :::
 
 #### Storage
