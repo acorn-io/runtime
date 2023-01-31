@@ -211,12 +211,20 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.IgnoreUserLabelsAndAnnotations != nil {
 		mergedConfig.IgnoreUserLabelsAndAnnotations = newConfig.IgnoreUserLabelsAndAnnotations
 	}
-	if newConfig.AllowUserAnnotations != nil {
+
+	// This is to provide a way to reset value to empty if user passes --flag "" as empty string
+	if len(newConfig.AllowUserAnnotations) > 0 && newConfig.AllowUserAnnotations[0] == "" {
+		mergedConfig.AllowUserAnnotations = nil
+	} else if len(newConfig.AllowUserAnnotations) > 0 {
 		mergedConfig.AllowUserAnnotations = newConfig.AllowUserAnnotations
 	}
-	if newConfig.AllowUserLabels != nil {
+
+	if len(newConfig.AllowUserLabels) > 0 && newConfig.AllowUserLabels[0] == "" {
+		mergedConfig.AllowUserLabels = nil
+	} else if len(newConfig.AllowUserLabels) > 0 {
 		mergedConfig.AllowUserLabels = newConfig.AllowUserLabels
 	}
+
 	if newConfig.IngressClassName != nil {
 		if *newConfig.IngressClassName == "" {
 			mergedConfig.IngressClassName = nil
@@ -290,11 +298,15 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
 	}
 
-	if newConfig.PropagateProjectAnnotations != nil {
+	if len(newConfig.PropagateProjectAnnotations) > 0 && newConfig.PropagateProjectAnnotations[0] == "" {
+		mergedConfig.PropagateProjectAnnotations = nil
+	} else if len(newConfig.PropagateProjectAnnotations) > 0 {
 		mergedConfig.PropagateProjectAnnotations = newConfig.PropagateProjectAnnotations
 	}
 
-	if newConfig.PropagateProjectLabels != nil {
+	if len(newConfig.PropagateProjectLabels) > 0 && newConfig.PropagateProjectLabels[0] == "" {
+		mergedConfig.PropagateProjectLabels = nil
+	} else if len(newConfig.PropagateProjectLabels) > 0 {
 		mergedConfig.PropagateProjectLabels = newConfig.PropagateProjectLabels
 	}
 
