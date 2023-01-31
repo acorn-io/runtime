@@ -135,3 +135,4 @@ Next you can learn more about what you can do with Acorn in the [getting started
 * [Getting Started](/getting-started)
 * [Authoring Acornfiles](/authoring/overview)
 * [Running Acorn Apps](/running/args-and-secrets)
+* [Join our Slack channel](https://slack.acorn.io)
