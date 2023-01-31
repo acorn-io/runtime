@@ -92,3 +92,9 @@ Note that in order to allow propagation of user-defined labels and annotations o
 
 ## Changing install options
 If you want to change your installation options after the initial installation, just rerun `acorn install` with the new options. This will update the existing install dynamically.
+
+For strings array flags, you can reset the slice to empty by pass empty string "". For example:
+
+```bash
+acorn install --propagate-project-annotation ""
+```
