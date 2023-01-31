@@ -433,9 +433,7 @@ func (c *DefaultClient) appStop(ctx context.Context, name string) error {
 		Name:      name,
 		Namespace: c.Namespace,
 	}, app)
-	if apierrors.IsNotFound(err) {
-		return nil
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 	if app.Spec.Stop == nil || !*app.Spec.Stop {
