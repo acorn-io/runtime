@@ -10,7 +10,7 @@ _Describe the big picture of your changes here to communicate to the maintainers
 
 
 #### User-Facing Change? ####
-_Does this PR introduce a user-facing change either in the API or CLI or in functionality?
+_Does this PR introduce a user-facing change in functionality, the API or the CLI?_
 
 _How will this change affect upgrades?_
 
