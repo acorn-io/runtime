@@ -25,16 +25,11 @@ acorn image rm my-image
 ### Options inherited from parent commands
 
 ```
-  -a, --all                 Include untagged images
   -A, --all-projects        Use all known projects
-  -c, --containers          Show containers for images
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
       --kubeconfig string   Explicitly use kubeconfig file, overriding current project
-      --no-trunc            Don't truncate IDs
-  -o, --output string       Output format (json, yaml, {{gotemplate}})
   -j, --project string      Project to work in
-  -q, --quiet               Output only names
 ```
 
 ### SEE ALSO
