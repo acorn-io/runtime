@@ -4,7 +4,7 @@ title: Secrets
 
 Secrets are used to provide data that is considered sensitive like passwords, keys, and other sensitive information. Acorn provides multiple secret types, and makes it easy to create closed loop systems where information can be kept within the defined Acorn.
 
-To learn how to use secrets while deploying an Acorn image see [Args and Secrets](../running/args-and-secrets)
+To learn how to use secrets while deploying an Acorn image see [Args and Secrets](50-running/01-args-and-secrets.md)
 
 ## Using secrets in an Acornfile
 
@@ -76,7 +76,7 @@ secrets: {
 }
 ```
 
-The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitute the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by [binding a pre-existing secret](../running/args-and-secrets#binding-a-secret-at-runtime).
+The above example has a container that will use the `website-conf` secret to create a config file. Before rendering the config file, Acorn will substitute the `basic-auth-string` into the template. This technique makes it possible for the user to pass in the sensitive `basic-auth-string` at runtime by [binding a pre-existing secret](50-running/01-args-and-secrets.md#binding-a-secret-at-runtime).
 
 ### Populating a directory with files
 
@@ -162,7 +162,7 @@ secrets: {
 }
 ```
 
-In the above example the secret renders a template secret with one key called "password.txt", consuming the token from the secret named "token." See [advanced topics](./advanced) for other uses for the template secret type.
+In the above example the secret renders a template secret with one key called "password.txt", consuming the token from the secret named "token." See [advanced topics](30-advanced.md) for other uses for the template secret type.
 
 ### Token secrets
 
@@ -189,7 +189,7 @@ The `token` field in the data object is optional and needs to be left the defaul
 
 ### Generated secrets
 
-Generated secrets allow storing sensitive data output from a [job](./jobs).
+Generated secrets allow storing sensitive data output from a [job](06-jobs.md).
 
 ```acorn
 containers: {

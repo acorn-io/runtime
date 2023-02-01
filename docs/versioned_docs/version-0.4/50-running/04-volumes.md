@@ -12,7 +12,7 @@ acorn run [IMAGE] --help
 Volumes: my-data
 ```
 
-The `Volumes` line shows the volumes that will be created as part of the Acorn app deployment. Unless otherwise [specified in the Acorn image](../authoring/volumes), each volume will be created using the following default values:
+The `Volumes` line shows the volumes that will be created as part of the Acorn app deployment. Unless otherwise [specified in the Acorn image](38-authoring/04-volumes.md), each volume will be created using the following default values:
 
 |Field       |Default Value|
 |----------- | -----|

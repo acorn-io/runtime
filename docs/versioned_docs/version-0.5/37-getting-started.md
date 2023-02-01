@@ -12,7 +12,7 @@ The app will interact with Redis and Postgres, which both will be packaged along
 To run this example, you will need to have the Acorn CLI installed and administrative access to a Kubernetes cluster.
 Here you can find some documentation on how to get there:
 
-- [Acorn CLI](./installation/installing)
+- [Acorn CLI](30-installation/01-installing.md)
 - Access to a Kubernetes cluster through `kubectl` from your CLI. Some great options for local development are [Rancher Desktop](https://docs.rancherdesktop.io/getting-started/installation), [K3s](https://rancher.com/docs/k3s/latest/en/quick-start/), [k3d](https://k3d.io/v5.4.4/#installation), or [Docker Desktop](https://www.docker.com/get-started/). It also works with any other Kubernetes distribution, for example a managed instance hosted in a major cloud provider or a cluster provided by your work environment.
 
 ## Step 1. Prepare the cluster
@@ -23,7 +23,7 @@ Installing the Acorn server-side components into your cluster is as easy as runn
 acorn install
 ```
 
-> Note: Installing Acorn into a Kubernetes cluster requires cluster-admin privileges. Please see our [architecture overview](./architecture/ten-thousand-foot-view) to learn what components will be deployed.
+> Note: Installing Acorn into a Kubernetes cluster requires cluster-admin privileges. Please see our [architecture overview](60-architecture/01-ten-thousand-foot-view.md) to learn what components will be deployed.
 
 ## Step 2. Create your app
 
@@ -406,7 +406,7 @@ acorn rm awesome-acorn
 
 ## What's next?
 
-- [Explore all the other awesome Acorn commands](./reference/command-line/acorn)
-- [Read through the Acornfile reference](./reference/acornfile)
-- [Have a look what makes up Acorn](./architecture/ten-thousand-foot-view)
+- [Explore all the other awesome Acorn commands](100-reference/01-command-line/acorn.md)
+- [Read through the Acornfile reference](100-reference/03-acornfile.md)
+- [Have a look what makes up Acorn](60-architecture/01-ten-thousand-foot-view.md)
 - [Try some of our other example Acorns](https://github.com/acorn-io/examples)

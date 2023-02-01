@@ -4,7 +4,7 @@ title: Memory
 Setting `memory` via `acorn run` has the highest order of precedence. When setting this, you operate under the `--memory` flag (`-m` for short).
 
 :::note
-Check out the [memory reference documentation](../100-reference/06-memory.md) for more information.
+Check out the [memory reference documentation](100-reference/06-memory.md) for more information.
 :::
 
 ### --memory

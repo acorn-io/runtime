@@ -35,7 +35,7 @@ Now when `acorn build .` or `acorn run -i .` is run, the `my-app` container will
 
 ### Customized build behavior
 
-Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](./args-and-profiles) to see how to customize these values at build and runtime.
+Acorn provides options to customize the building of OCI images. If the Dockerfile is not in the root directory of the `context` you can specify the location using the `dockerfile` parameter. If the image is a multi-stage build, the desired target can be specified. See [args and profiles](07-args-and-profiles.md) to see how to customize these values at build and runtime.
 
 ```acorn
 containers: {
@@ -159,7 +159,7 @@ containers: {
 }
 ```
 
-The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable set by a [secret](./secrets) in the Acornfile. The `DATABASE_NAME` is set to a static value, and the `USER_SET_VALUE` is defined by a user [arg](./args-and-profiles). When launched the container can access these environment variables as needed.
+The above example has a `db` container with the `MYSQL_ROOT_PASSWORD` variable set by a [secret](05-secrets.md) in the Acornfile. The `DATABASE_NAME` is set to a static value, and the `USER_SET_VALUE` is defined by a user [arg](07-args-and-profiles.md). When launched the container can access these environment variables as needed.
 
 ## Files
 
@@ -342,5 +342,5 @@ The second sidecar above is a service that runs alongside the primary frontend c
 
 ## Additional Reading
 
-* [Acorn Security Considerations](/architecture/security-considerations)
-* [Acornfile reference](/reference/acornfile)
+* [Acorn Security Considerations](60-architecture/02-security-considerations.md)
+* [Acornfile reference](100-reference/03-acornfile.md)

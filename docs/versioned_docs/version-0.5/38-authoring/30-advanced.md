@@ -164,4 +164,4 @@ if !args.dev {
 }
 ```
 
-In the above example when the `args.dev` variable is not set, all containers would have [probes](./containers#probes) assigned. In the case of the `db` container it would have a metrics port defined. The field's name is assigned to the `Name` variable if the regex matches `db`, the `Name` variable can then be referenced in the template.
+In the above example when the `args.dev` variable is not set, all containers would have [probes](38-authoring/03-containers.md#probes) assigned. In the case of the `db` container it would have a metrics port defined. The field's name is assigned to the `Name` variable if the regex matches `db`, the `Name` variable can then be referenced in the template.

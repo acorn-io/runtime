@@ -25,7 +25,7 @@ acorn install --lets-encrypt enabled --lets-encrypt-tos-agree=true --lets-encryp
 ```
 
 :::note
-This feature currently only secures acorn-generated endpoints. If you are configuring custom endpoints for your acorn apps, see our [section on configuring TLS Certificates](/running/certificates). 
+This feature currently only secures acorn-generated endpoints. If you are configuring custom endpoints for your acorn apps, see our [section on configuring TLS Certificates](50-running/03-certificates.md). 
 :::
 
 :::info
@@ -33,11 +33,11 @@ Let's Encrypt integration is only useful if you are running a non-local Kubernet
 :::
 
 ## Endpoint domain names
-Acorn provides several installation options for controlling the domain name used to generate endpoints. These are outlined in detail on our [networking page](../running/networking#dns).
+Acorn provides several installation options for controlling the domain name used to generate endpoints. These are outlined in detail on our [networking page](50-running/02-networking.md#dns).
 
 
 ## Ingress class name
-Acorn [requires an ingress controller](./installing#ingress-and-service-loadbalancers) to function properly. If your cluster has more than one ingress controller or if it has one but it isn't set as the [default](https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class), you can explicitly set the ingress class using `--ingress-class-name`.
+Acorn [requires an ingress controller](01-installing.md#ingress-and-service-loadbalancers) to function properly. If your cluster has more than one ingress controller or if it has one but it isn't set as the [default](https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class), you can explicitly set the ingress class using `--ingress-class-name`.
 
 ## Changing install options
 If you want to change your install options after the initial installation, just rerun `acorn install` with the new options. This will update the existing install dynamically.

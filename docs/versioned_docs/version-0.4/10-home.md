@@ -14,7 +14,7 @@ Acorn is a work in progress.  Features will evolve over time and there may be br
 
 Acorn is an application packaging and deployment framework that simplifies running apps on Kubernetes. Acorn is able to package up all of an application's Docker images, configuration, and deployment specifications into a single Acorn image artifact. This artifact is publishable to any OCI container registry allowing it to be deployed on any dev, test, or production Kubernetes.  The portability of Acorn images enables developers to develop applications locally and move to production without having to switch tools or technology stacks.
 
-Developers create Acorn images by describing the application configuration in an [Acornfile](./0.4/authoring/overview). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
+Developers create Acorn images by describing the application configuration in an [Acornfile](38-authoring/00-overview.md). The Acornfile describes the whole application without all of the boilerplate of Kubernetes YAML files. The Acorn CLI is used to build, deploy, and operate Acorn images on any Kubernetes cluster.
 
 ### Acorn Workflow
 
@@ -68,7 +68,7 @@ brew install acorn-io/cli/acorn
 acorn -v
 ```
 
-For Windows and binary installs see the [installation docs](./0.4/installation/installing#binary-install).
+For Windows and binary installs see the [installation docs](30-installation/01-installing.md#binary-install).
 
 ### Initialize Acorn on Kubernetes cluster
 
@@ -79,7 +79,7 @@ acorn install
 ```
 
 :::note
-Acorn has a handful of installation requirements. If you're installing to your desktop Kubernetes cluster, you likely meet the requirements. If you're installing into a remote cluster, please review the detailed [installation instructions](./0.4/installation/installing).
+Acorn has a handful of installation requirements. If you're installing to your desktop Kubernetes cluster, you likely meet the requirements. If you're installing into a remote cluster, please review the detailed [installation instructions](30-installation/01-installing.md).
 :::
 
 You will only need to do this once per cluster.
@@ -127,11 +127,11 @@ acorn apps small-butterfly
 
 In Chrome or Firefox browsers you can now open the URL listed under the endpoints column to see our app.
 
-Next you can learn more about what you can do with Acorn in the [getting started](./0.4/getting-started) guide.
+Next you can learn more about what you can do with Acorn in the [getting started](37-getting-started.md) guide.
 
 ## Next steps
 
-* [Installation](./0.4/installation/installing)
-* [Getting Started](./0.4/getting-started)
-* [Authoring Acornfiles](./0.4/authoring/overview)
-* [Running Acorn Apps](./0.4/running/args-and-secrets)
+* [Installation](30-installation/01-installing.md)
+* [Getting Started](37-getting-started.md)
+* [Authoring Acornfiles](38-authoring/00-overview.md)
+* [Running Acorn Apps](50-running/01-args-and-secrets.md)

@@ -9,7 +9,7 @@ To install Acorn, you will need the Acorn CLI and a Kubernetes cluster. Follow o
 acorn install
 ```
 
-In many cases, the default installation options for Acorn are sufficient, but there are a number of options you can use to customize Acorn. See our [Installation Options](./options) page for more details.
+In many cases, the default installation options for Acorn are sufficient, but there are a number of options you can use to customize Acorn. See our [Installation Options](02-options.md) page for more details.
 
 ## Acorn CLI
 
@@ -112,7 +112,7 @@ Acorn can install onto any type of Kubernetes cluster capable of running normal 
 
 ### Privileges
 
-You must have cluster admin privileges to install Acorn. See our [RBAC documentation](../architecture/security-considerations#rbac) for more details.
+You must have cluster admin privileges to install Acorn. See our [RBAC documentation](60-architecture/02-security-considerations.md#rbac) for more details.
 
 ### Ingress and Service LoadBalancers
 

@@ -2,7 +2,7 @@
 title: Labels and Annotations
 ---
 
-As mentioned in the [authoring section](../authoring/labels), you can add labels and annotations to your Acorns that will then be propogated down to the core Kubernetes resources created by Acorn. Authors of Acorn images can add these directly to the Acornfile, but users can also add them at runtime.
+As mentioned in the [authoring section](38-authoring/20-labels.md), you can add labels and annotations to your Acorns that will then be propogated down to the core Kubernetes resources created by Acorn. Authors of Acorn images can add these directly to the Acornfile, but users can also add them at runtime.
 
 The flags for adding labels and annotations allow you to specify the resource type and name you are targeting. This is best explained through examples:
 
@@ -33,6 +33,6 @@ For all resource types except metadata, you can add a name to only apply the lab
 
 :::note
 
-If the Acorn installation has [disabled user label and annotation propagation](installation/options#ignoring-user-defined-labels-and-annotations), then, except for the metadata scope, labels and annotations will be silently ignored.
+If the Acorn installation has [disabled user label and annotation propagation](30-installation/02-options.md#ignoring-user-defined-labels-and-annotations), then, except for the metadata scope, labels and annotations will be silently ignored.
 
 :::

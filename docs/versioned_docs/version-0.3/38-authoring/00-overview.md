@@ -363,7 +363,7 @@ containers: {
 }
 ```
 
-See the [function libarary](/reference/functions#ifelse) for more information.
+See the [function library](../reference/functions#ifelse) for more information.
 
 ## For loops
 
@@ -432,4 +432,4 @@ localData: {
 
 ## Function Library
 
-Acorn includes a built-in library of functions to perform common operations.  See the [function libary](/reference/functions) for more information.
+Acorn includes a built-in library of functions to perform common operations.  See the [function library](../reference/functions) for more information.

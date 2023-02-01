@@ -9,7 +9,7 @@ To install Acorn, you will need the Acorn CLI and a Kubernetes cluster. Follow o
 acorn install
 ```
 
-In many cases, the default installation options for Acorn are sufficient, but there are a number of options you can use to customize Acorn. See our [Installation Options](/installation/options) page for more details.
+In many cases, the default installation options for Acorn are sufficient, but there are a number of options you can use to customize Acorn. See our [Installation Options](30-installation/02-options.md) page for more details.
 
 ## Acorn CLI
 
@@ -117,7 +117,7 @@ Acorn requires Kubernetes 1.23 or greater.
 
 #### Privileges
 
-You must have cluster admin privileges to install Acorn. See our [RBAC documentation](/architecture/security-considerations#rbac) for more details.
+You must have cluster admin privileges to install Acorn. See our [RBAC documentation](60-architecture/02-security-considerations.md#rbac) for more details.
 
 #### Ingress and Service LoadBalancers
 
@@ -126,7 +126,7 @@ Acorn can publish your applications as publicly accessible endpoints.
 For this to work, your Kubernetes cluster must have an [ingress controller](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for HTTP endpoints and means for fulfilling [services of type LoadBalancer](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) for non-HTTP endpoints, such as TCP endpoints.
 
 :::info
-When running on Google Kubenertes Engine, it is necessary to toggle on [--publish-builders](../100-reference/01-command-line/acorn_install.md#options). This makes the builders for Acorn available through ingress which is necassary for the GKE runtime.
+When running on Google Kubenertes Engine, it is necessary to toggle on [--publish-builders](100-reference/01-command-line/acorn_install.md#options). This makes the builders for Acorn available through ingress which is necessary for the GKE runtime.
 :::
 
 #### Storage

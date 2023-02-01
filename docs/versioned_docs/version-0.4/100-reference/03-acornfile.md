@@ -615,7 +615,7 @@ secrets: "my-secret": {
 
 ### type
 The common pattern in Acorn is for secrets to be generated if not supplied. `type`
-specifies how the secret can be generated. Refer to [the secrets documentation](../38-authoring/05-secrets.md) for
+specifies how the secret can be generated. Refer to [the secrets documentation](38-authoring/05-secrets.md) for
 descriptions of the different secret types and how they are used.
 
 ```acorn
@@ -627,7 +627,7 @@ secrets: "a-token": {
 
 ### params
 `params` are used to configure the behavior of the secrets generation for different types.
-Refer to [the secrets documentation](../38-authoring/05-secrets.md) for
+Refer to [the secrets documentation](38-authoring/05-secrets.md) for
 descriptions of the different secret types and how their parameters.
 ```acorn
 secrets: "my-token": {
@@ -640,7 +640,7 @@ secrets: "my-token": {
 ```
 ### data
 `data` defines the keys and non-senstive values that will be used by the secret.
-Refer to [the secrets documentation](../38-authoring/05-secrets.md) for
+Refer to [the secrets documentation](38-authoring/05-secrets.md) for
 descriptions of the different secret types and how to use data keys and values.
 
 ```acorn

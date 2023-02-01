@@ -74,7 +74,7 @@ When this Acorn runs it will use the values in the `my-predefined-creds` secret.
 
 Encrypted secrets provide a way to pass sensitive information to Acorn apps through public channels. To accomplish this, Acorn uses a [libsodium sealed box](https://libsodium.gitbook.io/doc/public-key_cryptography/sealed_boxes) that is encrypted with the Acorn namespace's public key. This data can only be decrypted by Acorn in the intended namespace. For convenience data can be encrypted with multiple Acorn namespace public keys and put into the same data field. At runtime Acorn will try to decrypt the data with its own key pair. Once decrypted inside the namespace the values are stored in regular Kubernetes secrets for the app to consume. The primary use for encrypted secrets is to provide a mechanism to pass the data through untrusted systems like pipelines and command lines.
 
-The [encryption reference section](/reference/encryption) explains how to use the Acorn public key to encrypt secrets in other languages.
+The [encryption reference section](100-reference/07-encryption.md) explains how to use the Acorn public key to encrypt secrets in other languages.
 
 ### Encrypting
 
