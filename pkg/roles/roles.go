@@ -178,7 +178,7 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: ViewLogs,
 			},
-			Rules: projectRoles[ViewLogs],
+			Rules: concat(View, ViewLogs),
 		},
 		{
 			ObjectMeta: metav1.ObjectMeta{
