@@ -71,11 +71,3 @@ jobs:
           slack-message: "❌ Main-Mac-Release failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      - name: report success to slack
-        id: slack-success
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          channel-id: '${{ secrets.SLACK_BOT_SUCCESS_CHANNEL }}'
-          slack-message: " ✅ Main-Mac-Release passed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        env:
-          SLACK_BOT_TOKEN: '${{ secrets.SLACK_BOT_TOKEN }}'
