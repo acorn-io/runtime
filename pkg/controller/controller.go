@@ -33,15 +33,8 @@ type Controller struct {
 	apply  apply.Apply
 }
 
-func New(devMode bool) (*Controller, error) {
-	routerOpts, err := baaah.DefaultOptions("acorn-controller", scheme.Scheme)
-	if err != nil {
-		return nil, err
-	}
-	if devMode {
-		routerOpts.ElectionConfig.TTL = time.Hour
-	}
-	router, err := baaah.NewRouter("acorn-controller", scheme.Scheme, routerOpts)
+func New() (*Controller, error) {
+	router, err := baaah.DefaultRouter("acorn-controller", scheme.Scheme)
 	if err != nil {
 		return nil, err
 	}
