@@ -103,6 +103,7 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
   -u, --update                    Update the app if it already exists
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
       --wait                      Wait for app to become ready before command exiting (default true)
+      --workload-class strings    Set workloadclass for a workload in the format of workload=workloadclass. Specify a single workloadclass to set all workloads. (ex foo=example-class or example-class)
 ```
 
 ### Options inherited from parent commands

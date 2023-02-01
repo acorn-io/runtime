@@ -332,6 +332,20 @@ func (d *DeferredClient) ProjectDelete(ctx context.Context, name string) (*apiv1
 	return d.Client.ProjectDelete(ctx, name)
 }
 
+func (d *DeferredClient) WorkloadClassGet(ctx context.Context, name string) (*apiv1.WorkloadClass, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.WorkloadClassGet(ctx, name)
+}
+
+func (d *DeferredClient) WorkloadClassList(ctx context.Context) ([]apiv1.WorkloadClass, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.WorkloadClassList(ctx)
+}
+
 func (d *DeferredClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	if err := d.create(); err != nil {
 		return nil, err

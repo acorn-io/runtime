@@ -55,6 +55,7 @@ var (
 				Verbs: []string{"get", "list"},
 				Resources: []string{
 					"volumeclasses",
+					"workloadclasses",
 				},
 			},
 			{
@@ -139,6 +140,8 @@ var (
 				Resources: []string{
 					"projectvolumeclasses",
 					"clustervolumeclasses",
+					"projectworkloadclasses",
+					"clusterworkloadclasses",
 				},
 				APIGroups: []string{admin_acorn_io.Group},
 			},

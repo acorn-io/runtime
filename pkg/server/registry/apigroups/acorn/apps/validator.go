@@ -8,6 +8,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
 	apiv1config "github.com/acorn-io/acorn/pkg/config"
@@ -75,7 +76,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
-		errs := checkMemory(params.Spec.Memory, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
+		errs := s.checkScheduling(ctx, params, *apiv1cfg, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
 		if len(errs) != 0 {
 			result = append(result, errs...)
 			return
@@ -309,7 +310,11 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 	return merr.NewErrors(errs...)
 }
 
-func checkMemory(memory v1.Memory, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
+func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, cfg apiv1.Config, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
+	var (
+		memory        = params.Spec.Memory
+		workloadClass = params.Spec.WorkloadClass
+	)
 	validationErrors := []*field.Error{}
 	err := validateMemoryRunFlags(memory, workloads)
 	if err != nil {
@@ -317,7 +322,26 @@ func checkMemory(memory v1.Memory, workloads map[string]v1.Container, specMemDef
 	}
 
 	for workload, container := range workloads {
-		quantity, err := v1.ValidateMemory(
+		wc, err := adminv1.GetClassForWorkload(ctx, s.client, workloadClass, container, workload, params.Namespace)
+		if err != nil {
+			validationErrors = append(validationErrors, field.Invalid(field.NewPath("workloadclass"), "", err.Error()))
+		}
+
+		if wc != nil {
+			// Parse the memory
+			wcMemory, err := adminv1.ParseWorkloadClassMemory(wc.Memory)
+			if err != nil {
+				if errors.Is(err, adminv1.ErrInvalidClass) {
+					validationErrors = append(validationErrors, field.Invalid(field.NewPath("spec", "memory"), wc.Memory, err.Error()))
+				}
+			}
+
+			memDefault := wcMemory.Def.Value()
+			specMemDefault = &memDefault
+		}
+
+		// Validate memory
+		memQuantity, err := v1.ValidateMemory(
 			memory, workload, container, specMemDefault, specMemMaximum)
 
 		// Evaluate what caused the error if one exists
@@ -330,13 +354,29 @@ func checkMemory(memory v1.Memory, workloads map[string]v1.Container, specMemDef
 			} else if errors.Is(err, v1.ErrInvalidDefaultMemory) {
 				path = field.NewPath("config", "workloadMemoryDefault")
 			}
-			validationErrors = append(validationErrors, field.Invalid(path, quantity.String(), err.Error()))
+			validationErrors = append(validationErrors, field.Invalid(path, memQuantity.String(), err.Error()))
+		}
+
+		// Need a WorkloadClass to validate it
+		if wc == nil {
+			continue
+		}
+
+		err = adminv1.ValidateWorkloadClass(*wc, memQuantity, specMemDefault)
+		if err != nil {
+			if errors.Is(err, adminv1.ErrInvalidClass) {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("workloadclass"), wc.Name, err.Error()))
+			} else if errors.Is(err, adminv1.ErrInvalidMemoryForClass) {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("memory"), memQuantity.String(), err.Error()))
+			} else {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("unknown"), "", err.Error()))
+			}
 		}
 	}
 	return validationErrors
 }
 
-func validateMemoryRunFlags(memory v1.Memory, workloads map[string]v1.Container) []*field.Error {
+func validateMemoryRunFlags(memory v1.MemoryMap, workloads map[string]v1.Container) []*field.Error {
 	validationErrors := []*field.Error{}
 	for key := range memory {
 		if key == "" {

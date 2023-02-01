@@ -24,7 +24,10 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ProjectVolumeClassList{},
 		&ClusterVolumeClass{},
 		&ClusterVolumeClassList{},
-	)
+		&ClusterWorkloadClass{},
+		&ClusterWorkloadClassList{},
+		&ProjectWorkloadClass{},
+		&ProjectWorkloadClassList{})
 
 	// Add common types
 	scheme.AddKnownTypes(schemeGroupVersion, &metav1.Status{})

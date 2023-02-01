@@ -110,6 +110,15 @@ var (
 	}
 	BuilderConverter = MustConverter(Builder)
 
+	WorkloadClass = [][]string{
+		{"Name", "Name"},
+		{"Default", "{{ boolToStar .Default }}"},
+		{"Memory Range", "{{ memoryToRange .Memory }}"},
+		{"Memort Default", "{{ defaultMemory .Memory }}"},
+		{"Description", "Description"},
+	}
+	WorkloadClassConverter = MustConverter(WorkloadClass)
+
 	Build = [][]string{
 		{"Name", "Name"},
 		{"Image", "Status.AppImage.ID"},

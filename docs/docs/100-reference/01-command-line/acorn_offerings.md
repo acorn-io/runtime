@@ -38,4 +38,5 @@ acorn offerings
 
 * [acorn](acorn.md)	 - 
 * [acorn offerings volumeclasses](acorn_offerings_volumeclasses.md)	 - List available volume classes
+* [acorn offerings workloadclasses](acorn_offerings_workloadclasses.md)	 - List available WorkloadClasses
 

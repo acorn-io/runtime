@@ -1,0 +1,44 @@
+---
+kind: ProjectWorkloadClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: sample-workload-class
+  namespace: app-namespace
+description: Simple description for a simple WorkloadClass
+cpuScaler: 0.25
+default: true
+memory:
+  min: 1Mi # 1Mi
+  max: 2Mi # 2Mi
+  default: 1Mi # 1Mi
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: foo
+          operator: In
+          values:
+          - bar
+---
+kind: ProjectWorkloadClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: sample-workload-class-other
+  namespace: app-namespace
+description: Simple description for a simple WorkloadClass
+cpuScaler: 0.25
+default: true
+memory:
+  min: 1Mi # 1Mi
+  max: 2Mi # 2Mi
+  default: 1Mi # 1Mi
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: foo
+          operator: In
+          values:
+          - bar

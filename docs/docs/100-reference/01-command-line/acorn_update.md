@@ -35,6 +35,7 @@ acorn update [flags] APP_NAME [deploy flags]
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
       --target-namespace string   The name of the namespace to be created and deleted for the application resources
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
+      --workload-class strings    Set workloadclass for a workload in the format of workload=workloadclass. Specify a single workloadclass to set all workloads. (ex foo=example-class or example-class)
 ```
 
 ### Options inherited from parent commands

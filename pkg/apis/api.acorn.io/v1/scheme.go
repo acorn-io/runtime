@@ -53,6 +53,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ProjectList{},
 		&AcornImageBuild{},
 		&AcornImageBuildList{},
+		&WorkloadClass{},
+		&WorkloadClassList{},
 	)
 
 	// Add common types

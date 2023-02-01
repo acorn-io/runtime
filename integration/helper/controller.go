@@ -50,7 +50,7 @@ func EnsureCRDs(t *testing.T) {
 	t.Helper()
 
 	ctx := GetCTX(t)
-	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
+	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion, adminv1.SchemeGroupVersion); err != nil {
 		t.Fatal(err)
 	}
 	if err := crds.Create(ctx, scheme.Scheme, adminv1.SchemeGroupVersion); err != nil {

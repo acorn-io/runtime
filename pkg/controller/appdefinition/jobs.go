@@ -47,10 +47,7 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 }
 
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container) (kclient.Object, error) {
-	containers, initContainers, err := toContainers(req, appInstance, tag, name, container)
-	if err != nil {
-		return nil, err
-	}
+	containers, initContainers := toContainers(req, appInstance, tag, name, container)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
 	if err != nil {
@@ -75,6 +72,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Annotations: labels.Merge(podAnnotations(appInstance, name, container), baseAnnotations),
 			},
 			Spec: corev1.PodSpec{
+				Affinity:                      appInstance.Status.Scheduling[name].Affinity,
+				Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
 				TerminationGracePeriodSeconds: &[]int64{5}[0],
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				EnableServiceLinks:            new(bool),

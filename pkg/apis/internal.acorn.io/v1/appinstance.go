@@ -3,6 +3,7 @@
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -11,6 +12,7 @@ type AppInstanceCondition string
 var (
 	AppInstanceConditionDefined    = "defined"
 	AppInstanceConditionDefaults   = "defaults"
+	AppInstanceConditionScheduling = "scheduling"
 	AppInstanceConditionNamespace  = "namespace"
 	AppInstanceConditionParsed     = "parsed"
 	AppInstanceConditionController = "controller"
@@ -75,7 +77,8 @@ type AppInstanceSpec struct {
 	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
-	Memory              Memory           `json:"memory,omitempty"`
+	WorkloadClass       WorkloadClassMap `json:"workloadClass,omitempty"`
+	Memory              MemoryMap        `json:"memory,omitempty"`
 }
 
 func (in *AppInstanceSpec) GetAutoUpgrade() bool {
@@ -161,6 +164,7 @@ type AppInstanceStatus struct {
 	AvailableAppImage      string                     `json:"availableAppImage,omitempty"`
 	ConfirmUpgradeAppImage string                     `json:"confirmUpgradeAppImage,omitempty"`
 	AppSpec                AppSpec                    `json:"appSpec,omitempty"`
+	Scheduling             map[string]Scheduling      `json:"scheduling,omitempty"`
 	Conditions             []Condition                `json:"conditions,omitempty"`
 	Endpoints              []Endpoint                 `json:"endpoints,omitempty"`
 	Defaults               Defaults                   `json:"defaults,omitempty"`
@@ -168,12 +172,19 @@ type AppInstanceStatus struct {
 
 type Defaults struct {
 	Volumes map[string]VolumeDefault `json:"volumes,omitempty"`
+	Memory  map[string]*int64        `json:"memory,omitempty"`
 }
 
 type VolumeDefault struct {
 	Class       string      `json:"class,omitempty"`
 	Size        Quantity    `json:"size,omitempty"`
 	AccessModes AccessModes `json:"accessModes,omitempty"`
+}
+
+type Scheduling struct {
+	Requirements corev1.ResourceRequirements `json:"requirements,omitempty"`
+	Affinity     *corev1.Affinity            `json:"affinity,omitempty"`
+	Tolerations  []corev1.Toleration         `json:"tolerations,omitempty"`
 }
 
 type Endpoint struct {

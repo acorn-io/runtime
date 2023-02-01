@@ -95,7 +95,8 @@ type AppUpdateOptions struct {
 	AutoUpgrade         *bool
 	NotifyUpgrade       *bool
 	AutoUpgradeInterval string
-	Memory              v1.Memory
+	Memory              v1.MemoryMap
+	WorkloadClass       v1.WorkloadClassMap
 }
 
 type LogOptions apiv1.LogOptions
@@ -118,7 +119,8 @@ type AppRunOptions struct {
 	AutoUpgrade         *bool
 	NotifyUpgrade       *bool
 	AutoUpgradeInterval string
-	Memory              v1.Memory
+	Memory              v1.MemoryMap
+	WorkloadClass       v1.WorkloadClassMap
 }
 
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {
@@ -140,6 +142,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		NotifyUpgrade:       a.NotifyUpgrade,
 		AutoUpgradeInterval: a.AutoUpgradeInterval,
 		Memory:              a.Memory,
+		WorkloadClass:       a.WorkloadClass,
 	}
 }
 
@@ -162,6 +165,7 @@ func (a AppUpdateOptions) ToRun() AppRunOptions {
 		NotifyUpgrade:       a.NotifyUpgrade,
 		AutoUpgradeInterval: a.AutoUpgradeInterval,
 		Memory:              a.Memory,
+		WorkloadClass:       a.WorkloadClass,
 	}
 }
 
@@ -234,6 +238,9 @@ type Client interface {
 	VolumeClassGet(ctx context.Context, name string) (*apiv1.VolumeClass, error)
 
 	Info(ctx context.Context) ([]apiv1.Info, error)
+
+	WorkloadClassList(ctx context.Context) ([]apiv1.WorkloadClass, error)
+	WorkloadClassGet(ctx context.Context, name string) (*apiv1.WorkloadClass, error)
 
 	GetProject() string
 	GetNamespace() string

@@ -300,6 +300,23 @@ func volumeClassCompletion(ctx context.Context, c client.Client, toComplete stri
 	return result, nil
 }
 
+func workloadClassCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	workloadClasses, err := c.WorkloadClassList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+
+	for _, volumeClass := range workloadClasses {
+		if strings.HasPrefix(volumeClass.Name, toComplete) {
+			result = append(result, volumeClass.Name)
+		}
+	}
+
+	return result, nil
+}
+
 func volumeFlagClassCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
 	matches := volumeClassVolumeFlagRegex.FindAllStringSubmatch(toComplete, 1)
 	if len(matches) == 0 {
@@ -309,6 +326,29 @@ func volumeFlagClassCompletion(ctx context.Context, c client.Client, toComplete 
 	// If the regexp matches, then this is a flag completion of the form `-v foo:size=5G,class=..` and toComplete should be what follows `class=`
 	actualToComplete := matches[0][1]
 	result, err := volumeClassCompletion(ctx, c, actualToComplete)
+
+	// Trim the actualToComplete from the end so that we can append below to get the full completion.
+	toComplete = strings.TrimSuffix(toComplete, actualToComplete)
+
+	// Add the rest of the toComplete flag to the completion.
+	for i := range result {
+		result[i] = toComplete + result[i]
+	}
+
+	return result, err
+}
+
+func workloadClassFlagCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	var (
+		workloadClassFlagCompletion = regexp.MustCompile("^.*[,|=]([^,]*)$")
+		actualToComplete            = toComplete
+	)
+
+	if matches := workloadClassFlagCompletion.FindAllStringSubmatch(toComplete, 1); matches != nil {
+		actualToComplete = matches[0][1]
+	}
+
+	result, err := workloadClassCompletion(ctx, c, actualToComplete)
 
 	// Trim the actualToComplete from the end so that we can append below to get the full completion.
 	toComplete = strings.TrimSuffix(toComplete, actualToComplete)

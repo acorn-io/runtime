@@ -342,7 +342,7 @@ The second sidecar above is a service that runs alongside the primary frontend c
 
 ## Memory
 
-There are times that you want to define the amount of memory that an Acorn will use for resource management purposes. This can be defined by the `memory` property and is settable for all `workloads` (`containers` and `jobs`). Check out the [memory reference documentation](100-reference/06-memory.md) for more information on ways to set memory.
+There are times that you want to define the amount of memory that an Acorn will use for resource management purposes. This can be defined by the `memory` property and is settable for all `workloads` (`containers` and `jobs`). Check out the [memory reference documentation](../reference/scheduling#memory) for more information on ways to set memory.
 
 ```acorn
 containers: {
@@ -360,6 +360,28 @@ containers: {
 :::tip
 The `memory` property can be abbreviated to `mem` in the file.
 :::
+
+## Workload Classes
+
+When you want to specify what type of architecture your Acorn's workload will run on, you use Workload Classes. You can set the class of a workload by defining by the `class` property that is settable for all `workloads` (`containers` and `jobs`). Check out the [scheduling documemtation](100-reference/06-scheduling.md#workload-classes) for more information.
+
+```acorn
+containers: {
+    nginx: {
+        class: "sample-workload-class"
+        image: "nginx"
+        ports: publish: "80/http"
+        files: {
+            "/usr/share/nginx/html/index.html": "<h1>My first Acorn!</h1>"
+        }
+    }
+}
+```
+
+:::tip
+The `memory` property can be abbreviated to `mem` in the file.
+:::
+
 
 ## Additional Reading
 

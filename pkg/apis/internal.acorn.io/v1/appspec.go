@@ -286,22 +286,23 @@ type Dependencies []Dependency
 type ScopedLabels []ScopedLabel
 
 type Container struct {
-	Labels       map[string]string      `json:"labels,omitempty"`
-	Annotations  map[string]string      `json:"annotations,omitempty"`
-	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
-	Files        Files                  `json:"files,omitempty"`
-	Image        string                 `json:"image,omitempty"`
-	Build        *Build                 `json:"build,omitempty"`
-	Command      CommandSlice           `json:"command,omitempty"`
-	Interactive  bool                   `json:"interactive,omitempty"`
-	Entrypoint   CommandSlice           `json:"entrypoint,omitempty"`
-	Environment  EnvVars                `json:"environment,omitempty"`
-	WorkingDir   string                 `json:"workingDir,omitempty"`
-	Ports        Ports                  `json:"ports,omitempty"`
-	Probes       Probes                 `json:"probes"` // Don't omitempty so that nil vs empty is recorded
-	Dependencies Dependencies           `json:"dependencies,omitempty"`
-	Permissions  *Permissions           `json:"permissions,omitempty"`
-	Memory       *int64                 `json:"memory,omitempty"`
+	Labels        map[string]string      `json:"labels,omitempty"`
+	Annotations   map[string]string      `json:"annotations,omitempty"`
+	Dirs          map[string]VolumeMount `json:"dirs,omitempty"`
+	Files         Files                  `json:"files,omitempty"`
+	Image         string                 `json:"image,omitempty"`
+	Build         *Build                 `json:"build,omitempty"`
+	Command       CommandSlice           `json:"command,omitempty"`
+	Interactive   bool                   `json:"interactive,omitempty"`
+	Entrypoint    CommandSlice           `json:"entrypoint,omitempty"`
+	Environment   EnvVars                `json:"environment,omitempty"`
+	WorkingDir    string                 `json:"workingDir,omitempty"`
+	Ports         Ports                  `json:"ports,omitempty"`
+	Probes        Probes                 `json:"probes"` // Don't omitempty so that nil vs empty is recorded
+	Dependencies  Dependencies           `json:"dependencies,omitempty"`
+	Permissions   *Permissions           `json:"permissions,omitempty"`
+	WorkloadClass *string                `json:"class,omitempty"`
+	Memory        *int64                 `json:"memory,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
@@ -365,4 +366,8 @@ type VolumeRequest struct {
 	AccessModes AccessModes       `json:"accessModes,omitempty"`
 }
 
-type Memory map[string]*int64
+// Workload to its memory
+type MemoryMap map[string]*int64
+
+// Workload to its class
+type WorkloadClassMap map[string]string
