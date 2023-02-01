@@ -8,7 +8,7 @@ FROM rancher/klipper-lb:v0.4.0 AS klipper-lb
 FROM public.ecr.aws/docker/library/golang:1.19-alpine AS helper
 WORKDIR /usr/src
 RUN apk -U add curl
-RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v5.18.5.tar.gz | tar xvzf - --strip-components=1
+RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v5.18.5.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/acorn-helper -ldflags "-s -w" ./helper
 
 FROM public.ecr.aws/docker/library/golang:1.19 AS build
