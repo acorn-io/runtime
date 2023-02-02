@@ -54,10 +54,6 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      versions: {
-		"0.5": {label: "0.5", banner: "none", path: "0.5"},
-        "0.4": {label: "0.4", banner: "none", path: "0.4"},
-      },
       navbar: {
         title: 'Docs',
         style: 'dark',
