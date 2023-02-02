@@ -55,3 +55,38 @@ serve-docs:
 
 gen-docs:
 	go run tools/gendocs/main.go
+
+#cut a new version for release with items in docs/docs
+gen-docs-release:
+	if [ -z ${version} ]; then \
+  			echo "version not set (version=x.x)"; \
+    		exit 1 \
+    	;fi
+	if [ -z ${prev-version} ]; then \
+  			echo "prev-version not set (prev-version=x.x)"; \
+    		exit 1 \
+    	;fi
+	make gen-docs
+	docker run --rm --workdir=/docs -v $${PWD}/docs:/docs node:18-buster yarn docusaurus docs:version ${version}
+	awk '/versions/&& ++c == 1 {print;print "\t\t\t\"${prev-version}\": {label: \"${prev-version}\", banner: \"none\", path: \"${prev-version}\"},";next}1' ./docs/docusaurus.config.js > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
+
+#depreceate a specific docs version (will still be included within docs dropdown)
+deprecate-docs-version:
+	if [ -z ${version} ]; then \
+  			echo "version not set (version=x.x)"; \
+    		exit 1 \
+    	;fi
+	echo "deprecating ${version} from documentation"
+	grep -v '"${version}": {label: "${version}", banner: "none", path: "${version}"},' ./docs/docusaurus.config.js  > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
+
+#completly remove doc version from docs site
+remove-docs-version:
+	if [ -z ${version} ]; then \
+  			echo "version not set (version=x.x)"; \
+    		exit 1 \
+    	;fi
+	echo "removing ${version} from documentation completely"
+	-rm  "./docs/versioned_sidebars/version-${version}-sidebars.json"
+	-rm  -r ./docs/versioned_docs/version-${version}
+	jq 'del(.[] | select(. == "${version}"))' ./docs/versions.json > tmp.json && mv tmp.json ./docs/versions.json
+	grep -v '"${version}": {label: "${version}", banner: "none", path: "${version}"},' ./docs/docusaurus.config.js  > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js

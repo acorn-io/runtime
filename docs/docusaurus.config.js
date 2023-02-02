@@ -29,6 +29,9 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          versions: {
+            "0.4": {label: "0.4", banner: "none", path: "0.4"},
+          },
           routeBasePath: '/', // Serve the docs at the site's root
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
@@ -70,6 +73,11 @@ const config = {
             label: 'GitHub',
             position: 'right',
           },
+          {
+            type: 'docsVersionDropdown',
+            position: 'left',
+            dropdownActiveClassDisabled: true,
+          },
         ],
       },
       footer: {
@@ -99,9 +107,8 @@ const config = {
         appId: '7QCEFR54LA',
         apiKey: '0091e059262804a95d3253d28bc90eeb',
         indexName: 'acorn-io',
-
       }
-    }),
+    })
 };
 
 module.exports = config;
