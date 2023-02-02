@@ -2,9 +2,11 @@ package imagedetails
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -17,6 +19,17 @@ import (
 func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
+
+	if tagPattern, isPattern := autoupgrade.AutoUpgradePattern(imageName); isPattern {
+		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, namespace, imageName, tagPattern); err != nil {
+			return nil, err
+		} else if !found {
+			return nil, fmt.Errorf("unable to find an image for %v matching pattern %v", imageName, tagPattern)
+		} else {
+			imageName = latestImage
+			name = strings.ReplaceAll(imageName, "/", "+")
+		}
+	}
 
 	image := &apiv1.Image{}
 	err := c.Get(ctx, router.Key(namespace, name), image)

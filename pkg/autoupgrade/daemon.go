@@ -2,16 +2,11 @@ package autoupgrade
 
 import (
 	"context"
-	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/autoupgrade/validate"
 	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/images"
-	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
@@ -20,12 +15,7 @@ import (
 
 const defaultNoReg = "xxx-no-reg"
 
-var (
-	syncQueue       = make(chan struct{}, 1)
-	ticker          *time.Ticker
-	currentInterval string
-	m               sync.Mutex
-)
+var syncQueue = make(chan struct{}, 1)
 
 // Sync tells the daemon to trigger the image syncing logic
 func Sync() {
@@ -41,238 +31,174 @@ func Sync() {
 }
 
 type daemon struct {
-	client             kclient.Client
-	appKeysToNextCheck map[kclient.ObjectKey]nextCheckDetails
+	client           daemonClient
+	appKeysPrevCheck map[kclient.ObjectKey]time.Time
 }
 
-// StartSync launches starts the daemon. It watches for new sync events coming and ensures a sync is triggered
+func newDaemon(c kclient.Client) *daemon {
+	return &daemon{
+		client:           &client{client: c},
+		appKeysPrevCheck: make(map[kclient.ObjectKey]time.Time),
+	}
+}
+
+// StartSync starts the daemon. It watches for new sync events coming and ensures a sync is triggered
 // periodically.
-func StartSync(ctx context.Context, client kclient.Client) error {
-	cfg, err := config.Get(ctx, client)
-	if err != nil {
-		return err
-	}
-
-	dd, err := time.ParseDuration(*cfg.AutoUpgradeInterval)
-	if err != nil {
-		return fmt.Errorf("failed to parse image check interval %v: %w", cfg.AutoUpgradeInterval, err)
-	}
-
-	m.Lock()
-	ticker = time.NewTicker(dd)
-	currentInterval = *cfg.AutoUpgradeInterval
-	m.Unlock()
-
-	// Sync() will be called from controllers when necessary, but this also ensures it will be called periodically, in
-	// case nothing has happened in a controller to trigger it. The ticker is based on cfg.AutoUpgradeInterval, which can
-	// be dynamically updated by the config handler in this package.
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				Sync()
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	d := &daemon{
-		client:             client,
-		appKeysToNextCheck: map[kclient.ObjectKey]nextCheckDetails{},
-	}
+func StartSync(ctx context.Context, client kclient.Client) {
+	d := newDaemon(client)
 
 	// Trigger one sync upon startup of the daemon
-	err = d.sync(ctx)
+	nextWait, err := d.sync(ctx, time.Now())
 	if err != nil {
 		logrus.Errorf("Encountered error syncing auto-upgrade apps: %v", err)
 	}
 
-	// Ranging over this channel allows us to receive periodic and on-demand sync events
-	for {
-		select {
-		case <-syncQueue:
-			err = d.sync(ctx)
-			if err != nil {
-				logrus.Errorf("Encountered error syncing auto-upgrade apps: %v", err)
-			}
+	go func() {
+		timer := time.NewTimer(nextWait)
+		// Receive periodic and on-demand sync events
+		for {
+			select {
+			case <-timer.C:
+				Sync()
+			case <-syncQueue:
+				if !timer.Stop() {
+					// Ensure the timer's channel is drained, but don't block if it is empty.
+					// Reset should only be called on stopped timer whose channel is drained.
+					select {
+					case <-timer.C:
+					default:
+					}
+				}
+				nextWait, err = d.sync(ctx, time.Now())
+				if err != nil {
+					logrus.Errorf("Encountered error syncing auto-upgrade apps: %v", err)
+				}
 
-			//This, in combination with the select statement in Sync() limits us to a max of one run of d.sync() per second
-			time.Sleep(time.Second * 1)
-		case <-ctx.Done():
-			logrus.Infof("Exiting auto-upgrade daemon")
-			return nil
+				timer.Reset(nextWait)
+				// This, in combination with the select statement in Sync() limits us to a max of one run of d.sync() per second
+				time.Sleep(time.Second)
+			case <-ctx.Done():
+				logrus.Infof("Exiting auto-upgrade daemon")
+				return
+			}
 		}
-	}
+	}()
 }
 
-func (d *daemon) sync(ctx context.Context) error {
+func (d *daemon) sync(ctx context.Context, now time.Time) (time.Duration, error) {
 	logrus.Debugf("Performing auto-upgrade sync")
-	cfg, err := config.Get(ctx, d.client)
+	defaultNextCheckInterval, _ := time.ParseDuration(config.DefaultImageCheckIntervalDefault)
+	cfg, err := d.client.getConfig(ctx)
 	if err != nil {
-		return err
+		return defaultNextCheckInterval, err
 	}
 
-	defaultNextCheckInterval, err := time.ParseDuration(*cfg.AutoUpgradeInterval)
-	if err != nil {
-		return err
+	// cfg.AutoUpgradeInterval will never be nil here because config.Get will set a default.
+	if cfgNextCheckInterval, err := time.ParseDuration(*cfg.AutoUpgradeInterval); err != nil {
+		logrus.Warnf("Error parsing auto-upgrade interval in config %s is invalid, using default of %s: %v", *cfg.AutoUpgradeInterval, config.DefaultImageCheckIntervalDefault, err)
+	} else {
+		defaultNextCheckInterval = cfgNextCheckInterval
 	}
-	defaultNextCheck := time.Now().Add(defaultNextCheckInterval)
 
 	// Look for any new apps that we need to add to our map
-	var appInstances v1.AppInstanceList
-	err = d.client.List(ctx, &appInstances)
+	appInstances, err := d.client.listAppInstances(ctx)
 	if err != nil {
-		return err
+		return defaultNextCheckInterval, err
 	}
 
 	// This loop does two things:
 	// 1. Builds a general purpose map (apps) of all returned apps for use throughout the function
-	// 2. Add any NEW apps with autoUpgrade turned on to the d.appKeysToNextCheck map with a next check time in the past
+	// 2. Add any NEW apps with autoUpgrade turned on to the d.appKeysPrevCheck map with a next check time in the past
 	//    to ensure they'll be checked this sync
 	apps := map[kclient.ObjectKey]v1.AppInstance{}
-	for _, app := range appInstances.Items {
+	for _, app := range appInstances {
 		key := router.Key(app.Namespace, app.Name)
 		apps[key] = app
 
 		if _, ok := Mode(app.Spec); ok {
-			if _, ok := d.appKeysToNextCheck[key]; !ok {
-				// If it's not in the map yet, we should check it on this run, so set the "next check" to a time in the past
-				d.appKeysToNextCheck[key] = nextCheckDetails{time: time.Now().Add(-time.Second), appSpecificInterval: ""}
+			if _, ok := d.appKeysPrevCheck[key]; !ok {
+				// If it's not in the map yet, we should check it on this run, so set the "previous check" to a time in the past
+				d.appKeysPrevCheck[key] = time.Time{}
 			}
 		}
 	}
 
-	// This loop iterates over d.appKeysToNextCheck (which represents all the apps that have autoUpgrade turned on) and does the following:
-	// 1. If the app no longer exists in the general apps map, remove it, because it must no longer exist
-	// 2. Checks to see if the app has a specific interval set. If it does, and that isn't the interval used on the last run, recalculate the "next check" time
-	// 3. If the app no longer has autoUpgrade turned on, remove it from appKeytsToNextCheck. It must have been turned off since last run
-	for k, nextCheck := range d.appKeysToNextCheck {
-		app, ok := apps[k]
-		if !ok {
-			delete(d.appKeysToNextCheck, k)
+	d.refreshImages(ctx, apps, d.determineAppsToRefresh(apps, defaultNextCheckInterval, now), now)
+
+	nearestNextCheck := now.Add(defaultNextCheckInterval)
+	for appKey, prevCheck := range d.appKeysPrevCheck {
+		nextCheck, err := calcNextCheck(defaultNextCheckInterval, prevCheck, apps[appKey])
+		if err == nil && nextCheck.Before(nearestNextCheck) {
+			nearestNextCheck = nextCheck
+		}
+	}
+
+	return time.Until(nearestNextCheck), nil
+}
+
+// determineAppsToRefresh relies on the fact that d.appKeysPrevCheck is now fully up-to-date. It will iterate over it,
+// calculate the next update time, and compare it to the current time. If its next update time is before Now, then it is
+// time to check the app. The refresh map is used to group apps by their image. Checking for new versions of an image is
+// relatively expensive because it has to go out to an external registry. So, if many apps are using the same image, we
+// just want to pull the tags for that image once. The namespace is in the key because pull credentials are namespace specific.
+func (d *daemon) determineAppsToRefresh(apps map[kclient.ObjectKey]v1.AppInstance, defaultNextCheckInterval time.Duration, updateTime time.Time) map[imageAndNamespaceKey][]kclient.ObjectKey {
+	imagesToRefresh := map[imageAndNamespaceKey][]kclient.ObjectKey{}
+	for appKey, prevCheckTime := range d.appKeysPrevCheck {
+		app, appExists := apps[appKey]
+		if _, ok := Mode(app.Spec); !appExists || !ok {
+			// App doesn't exist or no longer has auto-upgrade enabled. Remove it
+			delete(d.appKeysPrevCheck, appKey)
 			continue
 		}
 
-		if _, ok := Mode(app.Spec); ok {
-			// Note: if we're using the default interval, nextCheck.appSpecificInterval is ""
-			if nextCheck.appSpecificInterval != app.Spec.AutoUpgradeInterval {
-				next, interval, err := calcNextCheck(defaultNextCheck, app)
-				if err != nil {
-					logrus.Errorf("Problem calculating next check time for app %v: %v", app.Name, err)
-					continue
-				}
-				d.appKeysToNextCheck[k] = nextCheckDetails{time: next, appSpecificInterval: interval}
-			}
-		} else {
-			// App no longer has auto-upgrade enabled. Remove it
-			delete(d.appKeysToNextCheck, k)
-		}
-	}
-
-	// d.appKeysToNextCheck is now fully up-to-date. This loop iterates over it and compares each app's nextCheck time
-	// to the current time. If it's nextCheck is before Now, then it is time to check the app.
-	// The refresh map is used to group apps by their image. Checking for new versions of an image is relatively expensive
-	// because it has to go out to an external registry. So, if many apps are using the same image, we just want to pull
-	// the tags for that image once.  The namespace is in the key because pull credentials are namespace specific.
-	refresh := map[imageAndNamespaceKey][]kclient.ObjectKey{}
-	now := time.Now()
-	for appKey, nextCheck := range d.appKeysToNextCheck {
-		app, ok := apps[appKey]
-		if !ok {
+		nextCheck, err := calcNextCheck(defaultNextCheckInterval, prevCheckTime, app)
+		if err != nil {
+			logrus.Errorf("Problem calculating next check time for app %v: %v", app.Name, err)
 			continue
 		}
 
 		// If next check time is before now, app is due for a check
-		if nextCheck.time.Before(now) {
+		if nextCheck.Before(updateTime) {
 			img := app.Status.AppImage.Name
 			if img == "" {
 				img = removeTagPattern(app.Spec.Image)
 			}
 			imageKey := imageAndNamespaceKey{image: img, namespace: app.Namespace}
-			appKeys := refresh[imageKey]
-			refresh[imageKey] = append(appKeys, appKey)
+			imagesToRefresh[imageKey] = append(imagesToRefresh[imageKey], appKey)
 
 		}
 	}
 
-	// This loop iterates over the refresh map and looks for new versions of image being used for each app.
-	// If it determines a newer version of an image is available for an app, it will update the app with that information
-	// which will trigger the appInstance handlers to pick up the change and deploy the new version of the app
-	for imageKey, appsForImage := range refresh {
+	return imagesToRefresh
+}
+
+// refreshImages iterates over the imagesToRefresh map and looks for new versions of image being used for each app.
+// If it determines a newer version of an image is available for an app, it will update the app with that information
+// which will trigger the appInstance handlers to pick up the change and deploy the new version of the app
+func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v1.AppInstance, imagesToRefresh map[imageAndNamespaceKey][]kclient.ObjectKey, updateTime time.Time) {
+	for imageKey, appsForImage := range imagesToRefresh {
 		current, err := imagename.ParseReference(imageKey.image, imagename.WithDefaultRegistry(defaultNoReg))
 		if err != nil {
 			logrus.Errorf("Problem parsing image referece %v: %v", imageKey.image, err)
 			continue
 		}
-		// if the registry after being parsed is our default fake one, then this is a local image with no registry
-		hasValidRegistry := current.Context().RegistryStr() != defaultNoReg
-		var tags []string
-		var pullErr error
-		if hasValidRegistry {
-			_, tags, pullErr = images.ListTags(ctx, d.client, imageKey.namespace, imageKey.image)
-		}
-		localTags, err := tags2.GetTagsMatchingRepository(current, ctx, d.client, "acorn", defaultNoReg)
-		if err != nil {
-			// We aren't doing a continue here because this just means there was a parsing error with the local images
-			// configMap. We should still see if the image can be updated via digest or if there are non-local images
-			logrus.Errorf("Problem finding local tags matching %v: %v", imageKey.image, err)
-		}
-		if len(localTags) == 0 && pullErr != nil {
-			// We aren't doing a continue here because it is still possible we can find a new version via digest
-			logrus.Errorf("Couldn't find any remote tags for image %v. Error: %v", imageKey.image, pullErr)
-		}
-		tags = append(tags, localTags...)
 
 		for _, appKey := range appsForImage {
-			app, ok := apps[appKey]
-			if !ok {
-				continue
-			}
-
-			var updated bool
+			app := apps[appKey]
+			var (
+				updated      bool
+				newTag       string
+				digest       string
+				nextAppImage string
+			)
 
 			// If we have autoUpgradeTagPattern, we need to use it to compare the current tag against all the tags
 			tagPattern, isPattern := AutoUpgradePattern(app.Spec.Image)
 			if isPattern {
-				var newTag string
-				newTag, err = FindLatest(current.Identifier(), tagPattern, tags)
+				nextAppImage, updated, err = findLatestTagForImageWithPattern(ctx, d.client, imageKey.namespace, imageKey.image, tagPattern)
 				if err != nil {
 					logrus.Errorf("Problem finding latest tag for app %v: %v", appKey, err)
 					continue
-				}
-
-				if newTag != current.Identifier() {
-					updated = true
-					mode, _ := Mode(app.Spec)
-					t := current.Context().Tag(newTag).Name()
-					// If the registry is our fake default, remove it from the constructed reference
-					t = strings.TrimPrefix(t, defaultNoReg+"/")
-					switch mode {
-					case "enabled":
-						if app.Status.AvailableAppImage == t {
-							continue
-						}
-						app.Status.AvailableAppImage = t
-						app.Status.ConfirmUpgradeAppImage = ""
-					case "notify":
-						if app.Status.ConfirmUpgradeAppImage == t {
-							continue
-						}
-						app.Status.ConfirmUpgradeAppImage = t
-						app.Status.AvailableAppImage = ""
-					default:
-						logrus.Warnf("Unrecognized auto-upgrade mode %v for %v", mode, app.Name)
-						continue
-
-					}
-					logrus.Infof("Triggering an auto-upprade of app %v because a new tag was found matching pattern %v. New tag: %v",
-						appKey, tagPattern, newTag)
-
-					if err := d.client.Status().Update(ctx, &app); err != nil {
-						logrus.Errorf("Problem updating %v: %v", appKey, err)
-						continue
-					}
 				}
 			}
 
@@ -282,84 +208,72 @@ func (d *daemon) sync(ctx context.Context) error {
 			// In either case, we also want to check to see if new content was pushed to the current tag
 			// This satisfies the usecase of autoUpgrade with an app's tag is something static, like "latest"
 			if !updated {
-				var digest string
+				nextAppImage = imageKey.image
 				var pullErr error
-				if hasValidRegistry {
-					digest, pullErr = images.ImageDigest(ctx, d.client, app.Namespace, imageKey.image)
+				if current.Context().RegistryStr() != defaultNoReg {
+					digest, pullErr = d.client.imageDigest(ctx, app.Namespace, imageKey.image)
 				}
 				// Whether or not we got a digest from a remote registry, check to see if there is a version of this tag locally
-				if localDigest, ok, _ := tags2.ResolveLocal(ctx, d.client, app.Namespace, imageKey.image); ok && localDigest != "" {
+				if localDigest, ok, _ := d.client.resolveLocalTag(ctx, app.Namespace, imageKey.image); ok && localDigest != "" {
 					digest = localDigest
 				}
 				if digest == "" && pullErr != nil {
 					logrus.Errorf("Problem getting updated digest for image %v from remote. Error: %v", imageKey.image, pullErr)
 				}
-				if strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
-					mode, _ := Mode(app.Spec)
-					switch mode {
-					case "enabled":
-						if app.Status.AvailableAppImage == imageKey.image {
-							continue
-						}
-						app.Status.AvailableAppImage = imageKey.image
-						app.Status.ConfirmUpgradeAppImage = ""
-					case "notify":
-						if app.Status.ConfirmUpgradeAppImage == imageKey.image {
-							continue
-						}
-						app.Status.ConfirmUpgradeAppImage = imageKey.image
-						app.Status.AvailableAppImage = ""
-					default:
-						logrus.Warnf("Unrecognized auto-upgrade mode %v for %v", mode, app.Name)
+			}
+
+			if updated || strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
+				mode, _ := Mode(app.Spec)
+				switch mode {
+				case "enabled":
+					if app.Status.AvailableAppImage == nextAppImage {
 						continue
 					}
+					app.Status.AvailableAppImage = nextAppImage
+					app.Status.ConfirmUpgradeAppImage = ""
+				case "notify":
+					if app.Status.ConfirmUpgradeAppImage == nextAppImage {
+						continue
+					}
+					app.Status.ConfirmUpgradeAppImage = nextAppImage
+					app.Status.AvailableAppImage = ""
+				default:
+					logrus.Warnf("Unrecognized auto-upgrade mode %v for %v", mode, app.Name)
+					continue
+				}
+				if updated {
+					logrus.Infof("Triggering an auto-upprade of app %v because a new tag was found matching pattern %v. New tag: %v",
+						appKey, tagPattern, newTag)
+				} else {
 					logrus.Infof("Triggering an auto-upprade of app %v because a new digest [%v] was detected for image %v",
 						appKey, digest, imageKey.image)
-					if err := d.client.Status().Update(ctx, &app); err != nil {
-						logrus.Errorf("Problem updating %v: %v", appKey, err)
-						continue
-					}
+				}
+				if err := d.client.updateAppStatus(ctx, &app); err != nil {
+					logrus.Errorf("Problem updating %v: %v", appKey, err)
+					continue
 				}
 			}
 
-			// This app was checked on this run, so update the nextCheck time for this app
-			nextCheckTime, interval, err := calcNextCheck(defaultNextCheck, app)
-			if err != nil {
-				logrus.Errorf("Problem calculating next check time for app %v: %v", app.Name, err)
-				continue
-			}
-			d.appKeysToNextCheck[appKey] = nextCheckDetails{time: nextCheckTime, appSpecificInterval: interval}
+			// This app was checked on this run, so update the prevCheckTime time for this app
+			d.appKeysPrevCheck[appKey] = updateTime
 		}
 	}
-
-	nearestNextCheck := defaultNextCheck
-	for _, nextCheck := range d.appKeysToNextCheck {
-		if nextCheck.time.After(now) && nextCheck.time.Before(nearestNextCheck) {
-			nearestNextCheck = nextCheck.time
-		}
-	}
-
-	if defaultNextCheck.After(nearestNextCheck) {
-		go func() {
-			// Schedule the next sync for the next nearest interval
-			logrus.Debugf("Next auto-upgrade sync scheduled for: %v", nearestNextCheck)
-			time.Sleep(time.Until(nearestNextCheck))
-			Sync()
-		}()
-	}
-
-	return nil
 }
 
-func calcNextCheck(defaultNextCheck time.Time, app v1.AppInstance) (time.Time, string, error) {
+func calcNextCheck(defaultInterval time.Duration, lastUpdate time.Time, app v1.AppInstance) (time.Time, error) {
+	if app.CreationTimestamp.After(lastUpdate) {
+		// If the app was created after the last update time, then the app was deleted and recreated between sync runs.
+		// Return a "zero" time to ensure the app gets refreshed now.
+		return time.Time{}, nil
+	}
 	if app.Spec.AutoUpgradeInterval != "" {
 		nextCheckInterval, err := time.ParseDuration(app.Spec.AutoUpgradeInterval)
 		if err != nil {
-			return time.Time{}, "", err
+			return time.Time{}, err
 		}
-		return time.Now().Add(nextCheckInterval), app.Spec.AutoUpgradeInterval, nil
+		defaultInterval = nextCheckInterval
 	}
-	return defaultNextCheck, "", nil
+	return lastUpdate.Add(defaultInterval), nil
 }
 
 func removeTagPattern(image string) string {
@@ -404,33 +318,4 @@ func Mode(appSpec v1.AppInstanceSpec) (string, bool) {
 type imageAndNamespaceKey struct {
 	image     string
 	namespace string
-}
-
-type nextCheckDetails struct {
-	time                time.Time
-	appSpecificInterval string
-}
-
-func UpdateInterval(newInterval string) error {
-	m.Lock()
-	defer m.Unlock()
-
-	if ticker == nil {
-		return fmt.Errorf("interval not yet initialized")
-	}
-	if currentInterval == newInterval {
-		return nil
-	}
-	newDur, err := validate.AutoUpgradeInterval(newInterval)
-	if err != nil {
-		return err
-	}
-
-	logrus.Infof("Updating auto-upgrade sync interval to %v", newInterval)
-	currentInterval = newInterval
-	ticker.Reset(newDur)
-	Sync()
-
-	return nil
-
 }

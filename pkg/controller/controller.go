@@ -16,7 +16,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -91,10 +90,7 @@ func (c *Controller) Start(ctx context.Context) error {
 		dnsInit := dns.NewDaemon(c.Router.Backend())
 		go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriodHours)
 
-		err := autoupgrade.StartSync(ctx, c.Router.Backend())
-		if err != nil {
-			logrus.Errorf("auto-upgrade daemon exited with error: %v", err)
-		}
+		autoupgrade.StartSync(ctx, c.Router.Backend())
 	}()
 
 	return c.Router.Start(ctx)
