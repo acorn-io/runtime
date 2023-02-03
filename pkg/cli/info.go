@@ -43,10 +43,7 @@ type InfoCLIResponse struct {
 		Version bversion.Version  `json:"version,omitempty"`
 		CLI     *config.CLIConfig `json:"cli,omitempty"`
 	} `json:"client,omitempty"`
-	Server  []apiv1.InfoSpec `json:"server,omitempty"`
-	Project struct {
-		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
-	} `json:"project,omitempty"`
+	Projects []apiv1.InfoSpec `json:"projects,omitempty"`
 }
 
 func (s *Info) Run(cmd *cobra.Command, args []string) error {
@@ -66,20 +63,12 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		logrus.Errorf("failed to read CLI config: %v", err)
 		cfg = nil
 	}
-	var publicKeys []apiv1.EncryptionKey
 	var infoSpecs []apiv1.InfoSpec
 
 	// Format data from info response into slice of InfoSpecs and slice of all public keys
 	for _, subInfo := range info {
 		infoSpecs = append(infoSpecs, subInfo.Spec)
-		for _, publicKey := range subInfo.Spec.PublicKeys {
-			publicKeys = append(publicKeys, publicKey)
-		}
 	}
-
-	ns := struct {
-		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
-	}{PublicKeys: publicKeys}
 
 	out := table.NewWriter(tables.Info, false, s.Output)
 	out.Write(InfoCLIResponse{
@@ -90,8 +79,7 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 			Version: version.Get(),
 			CLI:     cfg.Sanitize(),
 		},
-		Server:  infoSpecs,
-		Project: ns,
+		Projects: infoSpecs,
 	})
 	return out.Err()
 }
