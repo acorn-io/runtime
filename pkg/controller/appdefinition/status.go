@@ -79,7 +79,8 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		app.Status.Condition(v1.AppInstanceConditionSecrets).Success &&
 		app.Status.Condition(v1.AppInstanceConditionPulled).Success &&
 		app.Status.Condition(v1.AppInstanceConditionController).Success &&
-		app.Status.Condition(v1.AppInstanceConditionDefined).Success
+		app.Status.Condition(v1.AppInstanceConditionDefined).Success &&
+		app.Status.Condition(v1.AppInstanceConditionVolumes).Success
 	return nil
 }
 
@@ -159,6 +160,46 @@ func JobStatus(req router.Request, resp router.Response) error {
 	}
 
 	resp.Objects(app)
+	return nil
+}
+
+func VolumeStatus(req router.Request, resp router.Response) error {
+	var (
+		app  = req.Object.(*v1.AppInstance)
+		cond = condition.Setter(app, resp, v1.AppInstanceConditionVolumes)
+		pvcs = new(corev1.PersistentVolumeClaimList)
+
+		messages []string
+	)
+
+	if err := req.List(pvcs, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged: "true",
+			labels.AcornAppName: app.Name,
+		}),
+	}); err != nil {
+		return err
+	}
+
+	sort.Slice(pvcs.Items, func(i, j int) bool {
+		return pvcs.Items[i].CreationTimestamp.Before(&pvcs.Items[j].CreationTimestamp)
+	})
+
+	for _, pvc := range pvcs.Items {
+		switch pvc.Status.Phase {
+		case corev1.ClaimBound:
+			// No message if the PVC is in phase bound.
+		default:
+			messages = append(messages, fmt.Sprintf("waiting for volume %s to provision and bind", pvc.Labels[labels.AcornVolumeName]))
+		}
+	}
+
+	if len(messages) > 0 {
+		cond.Unknown(strings.Join(messages, "; "))
+	} else {
+		cond.Success()
+	}
 	return nil
 }
 

@@ -51,6 +51,7 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
+    "acorn.io/volume-name": "foo"
 spec:
   volumeName: "existing-foo"
   resources:

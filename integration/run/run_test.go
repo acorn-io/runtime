@@ -40,7 +40,8 @@ func TestVolume(t *testing.T) {
 	pv := helper.Wait(t, kclient.Watch, &corev1.PersistentVolumeList{}, func(obj *corev1.PersistentVolume) bool {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
-			obj.Labels[labels.AcornManaged] == "true"
+			obj.Labels[labels.AcornManaged] == "true" &&
+			obj.Labels[labels.AcornVolumeName] == "external"
 	})
 
 	_, err = c.AppDelete(ctx, app.Name)
@@ -64,11 +65,13 @@ func TestVolume(t *testing.T) {
 		return obj.Status.Phase == corev1.VolumeBound &&
 			obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
-			obj.Labels[labels.AcornManaged] == "true"
+			obj.Labels[labels.AcornManaged] == "true" &&
+			obj.Labels[labels.AcornVolumeName] == "external-bind"
 	})
 
 	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+			obj.Status.Condition(v1.AppInstanceConditionVolumes).Success
 	})
 }
 

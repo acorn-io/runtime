@@ -156,6 +156,7 @@ func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.V
 		labels.AcornAppName:      appInstance.Name,
 		labels.AcornAppNamespace: appInstance.Namespace,
 		labels.AcornManaged:      "true",
+		labels.AcornVolumeName:   volume,
 	}
 	return labels.Merge(labelMap, labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Labels,
 		volumeRequest.Labels, appInstance.Spec.Labels))

@@ -19,6 +19,7 @@ var (
 	AppInstanceConditionJobs       = "jobs"
 	AppInstanceConditionReady      = "Ready"
 	AppInstanceConditionUpgrade    = "upgrade"
+	AppInstanceConditionVolumes    = "volumes"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

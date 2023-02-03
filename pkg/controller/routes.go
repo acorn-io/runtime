@@ -45,6 +45,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(appdefinition.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
 	appRouter.HandlerFunc(appdefinition.JobStatus)
+	appRouter.HandlerFunc(appdefinition.VolumeStatus)
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.CLIStatus)
 	appRouter.HandlerFunc(appdefinition.UpdateGeneration)
