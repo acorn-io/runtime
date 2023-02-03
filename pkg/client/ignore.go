@@ -273,8 +273,8 @@ func (c *IgnoreUninstalled) ProjectDelete(ctx context.Context, name string) (*ap
 	return ignoreUninstalled(c.Client.ProjectDelete(ctx, name))
 }
 
-func (c IgnoreUninstalled) Info(ctx context.Context) (*apiv1.Info, error) {
-	return promptInstall(ctx, func() (*apiv1.Info, error) {
+func (c IgnoreUninstalled) Info(ctx context.Context) ([]apiv1.Info, error) {
+	return promptInstall(ctx, func() ([]apiv1.Info, error) {
 		return c.Client.Info(ctx)
 	})
 }

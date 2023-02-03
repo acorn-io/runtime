@@ -230,7 +230,7 @@ type Client interface {
 	ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error)
 	ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error)
 
-	Info(ctx context.Context) (*apiv1.Info, error)
+	Info(ctx context.Context) ([]apiv1.Info, error)
 
 	GetProject() string
 	GetNamespace() string

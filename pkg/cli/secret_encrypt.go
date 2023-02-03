@@ -74,12 +74,14 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 	args = append(args, plaintext)
 
 	if len(e.PublicKey) == 0 {
-		info, err := c.Info(cmd.Context())
+		fullInfo, err := c.Info(cmd.Context())
 		if err != nil {
 			return err
 		}
-		for _, key := range info.Spec.PublicKeys {
-			e.PublicKey = append(e.PublicKey, key.KeyID)
+		for _, info := range fullInfo {
+			for _, key := range info.Spec.PublicKeys {
+				e.PublicKey = append(e.PublicKey, key.KeyID)
+			}
 		}
 	}
 

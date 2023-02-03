@@ -577,11 +577,12 @@ func (m *MockClient) BuilderRegistryDialer(ctx context.Context) (func(ctx contex
 	return nil, nil
 }
 
-func (m *MockClient) Info(ctx context.Context) (*apiv1.Info, error) {
-	return &apiv1.Info{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
-		Spec:       apiv1.InfoSpec{},
+func (m *MockClient) Info(ctx context.Context) ([]apiv1.Info, error) {
+	return []apiv1.Info{
+		{TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{},
+			Spec:       apiv1.InfoSpec{},
+		},
 	}, nil
 }
 

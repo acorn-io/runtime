@@ -12,13 +12,15 @@ func EncryptData(t *testing.T, client client.Client, keys []string, data string)
 	var pubKeys []string
 
 	if keys == nil {
-		info, err := client.Info(GetCTX(t))
+		fullInfo, err := client.Info(GetCTX(t))
 		if err != nil {
 			t.Fatal(err)
 			return ""
 		}
-		for _, key := range info.Spec.PublicKeys {
-			pubKeys = append(pubKeys, key.KeyID)
+		for _, info := range fullInfo {
+			for _, key := range info.Spec.PublicKeys {
+				pubKeys = append(pubKeys, key.KeyID)
+			}
 		}
 	} else {
 		pubKeys = keys
@@ -43,13 +45,15 @@ func GetEncryptionKeys(t *testing.T, clients []client.Client) []string {
 	var pubKeys []string
 
 	for _, client := range clients {
-		info, err := client.Info(GetCTX(t))
+		fullInfo, err := client.Info(GetCTX(t))
 		if err != nil {
 			t.Fatal(err)
 			return nil
 		}
-		for _, key := range info.Spec.PublicKeys {
-			pubKeys = append(pubKeys, key.KeyID)
+		for _, info := range fullInfo {
+			for _, key := range info.Spec.PublicKeys {
+				pubKeys = append(pubKeys, key.KeyID)
+			}
 		}
 	}
 

@@ -38,12 +38,24 @@ type ClientServerVersion struct {
 	} `json:"project,omitempty"`
 }
 
+type InfoCLIResponse struct {
+	Client struct {
+		Version bversion.Version  `json:"version,omitempty"`
+		CLI     *config.CLIConfig `json:"cli,omitempty"`
+	} `json:"client,omitempty"`
+	Server  []apiv1.InfoSpec `json:"server,omitempty"`
+	Project struct {
+		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
+	} `json:"project,omitempty"`
+}
+
 func (s *Info) Run(cmd *cobra.Command, args []string) error {
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
+	// todo: return type inforesponse, so get multiple project info.
 	info, err := c.Info(cmd.Context())
 	if err != nil {
 		return err
@@ -54,16 +66,23 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		logrus.Errorf("failed to read CLI config: %v", err)
 		cfg = nil
 	}
+	var publicKeys []apiv1.EncryptionKey
+	var infoSpecs []apiv1.InfoSpec
 
-	//Formatting...
+	// Format data from info response into slice of InfoSpecs and slice of all public keys
+	for _, subInfo := range info {
+		infoSpecs = append(infoSpecs, subInfo.Spec)
+		for _, publicKey := range subInfo.Spec.PublicKeys {
+			publicKeys = append(publicKeys, publicKey)
+		}
+	}
+
 	ns := struct {
 		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
-	}{PublicKeys: info.Spec.PublicKeys}
-
-	info.Spec.PublicKeys = []apiv1.EncryptionKey{}
+	}{PublicKeys: publicKeys}
 
 	out := table.NewWriter(tables.Info, false, s.Output)
-	out.Write(ClientServerVersion{
+	out.Write(InfoCLIResponse{
 		Client: struct {
 			Version bversion.Version  `json:"version,omitempty"`
 			CLI     *config.CLIConfig `json:"cli,omitempty"`
@@ -71,7 +90,7 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 			Version: version.Get(),
 			CLI:     cfg.Sanitize(),
 		},
-		Server:  info.Spec,
+		Server:  infoSpecs,
 		Project: ns,
 	})
 	return out.Err()

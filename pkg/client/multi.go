@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"cuelang.org/go/cue/errors"
 	"reflect"
 	"strings"
 
@@ -442,12 +443,33 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 	})
 }
 
-func (m *MultiClient) Info(ctx context.Context) (*apiv1.Info, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+//type Project struct {
+//	metav1.TypeMeta   `json:",inline"`
+//	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+//	Status            ProjectStatus `json:"status,omitempty"`
+//}
+
+// TODO (Jacob)
+func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
+	var projectsInfo []apiv1.Info
+	projects, err := m.ProjectList(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.Info(ctx)
+	for _, project := range projects {
+		c, err := m.Factory.ForProject(ctx, project.Name)
+		if err != nil {
+			return nil, err
+		}
+		subprojectInfo, err := c.Info(ctx)
+		if len(subprojectInfo) == 1 {
+			projectsInfo = append(projectsInfo, subprojectInfo[0])
+		} else {
+			return nil, errors.New("this is bad")
+		}
+
+	}
+	return projectsInfo, nil
 }
 
 func (m *MultiClient) GetProject() string {
