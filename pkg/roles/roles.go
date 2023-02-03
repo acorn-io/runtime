@@ -82,6 +82,13 @@ var (
 				},
 			},
 			{
+				Verbs: []string{"update"},
+				Resources: []string{
+					"images/details",
+					"apps/pullimage",
+				},
+			},
+			{
 				Verbs: []string{"create"},
 				Resources: []string{
 					"images/tag",
