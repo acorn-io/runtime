@@ -176,7 +176,7 @@ outer:
 	for _, depName := range deps {
 		for _, link := range d.app.Spec.Links {
 			if link.Target == depName {
-				return true
+				continue outer
 			}
 		}
 		for _, depCheck := range []depCheck{d.isDepReady, d.isJobReady, d.isCronJobReady} {
