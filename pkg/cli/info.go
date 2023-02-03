@@ -27,23 +27,12 @@ type Info struct {
 	client ClientFactory
 }
 
-type ClientServerVersion struct {
-	Client struct {
-		Version bversion.Version  `json:"version,omitempty"`
-		CLI     *config.CLIConfig `json:"cli,omitempty"`
-	} `json:"client,omitempty"`
-	Server  apiv1.InfoSpec `json:"server,omitempty"`
-	Project struct {
-		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
-	} `json:"project,omitempty"`
-}
-
 type InfoCLIResponse struct {
 	Client struct {
 		Version bversion.Version  `json:"version,omitempty"`
 		CLI     *config.CLIConfig `json:"cli,omitempty"`
 	} `json:"client,omitempty"`
-	Projects []apiv1.InfoSpec `json:"projects,omitempty"`
+	Projects map[string]apiv1.InfoSpec `json:"projects,omitempty"`
 }
 
 func (s *Info) Run(cmd *cobra.Command, args []string) error {
@@ -52,22 +41,22 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// todo: return type inforesponse, so get multiple project info.
 	info, err := c.Info(cmd.Context())
 	if err != nil {
 		return err
 	}
 
+	// Testing/mocking ReadCLIConfig() is difficult. Any better way to test?
 	cfg, err := config.ReadCLIConfig()
 	if err != nil {
 		logrus.Errorf("failed to read CLI config: %v", err)
 		cfg = nil
 	}
-	var infoSpecs []apiv1.InfoSpec
+	projectInfo := make(map[string]apiv1.InfoSpec)
 
-	// Format data from info response into slice of InfoSpecs and slice of all public keys
+	// Format data from info response into map of project name to info response
 	for _, subInfo := range info {
-		infoSpecs = append(infoSpecs, subInfo.Spec)
+		projectInfo[subInfo.Name] = subInfo.Spec
 	}
 
 	out := table.NewWriter(tables.Info, false, s.Output)
@@ -79,7 +68,7 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 			Version: version.Get(),
 			CLI:     cfg.Sanitize(),
 		},
-		Projects: infoSpecs,
+		Projects: projectInfo,
 	})
 	return out.Err()
 }

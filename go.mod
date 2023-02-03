@@ -26,6 +26,7 @@ require (
 	github.com/docker/cli v20.10.21+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-acme/lego/v4 v4.9.1
+	github.com/golang/mock v1.4.4
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.12.1
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20221213180026-23d895d08035

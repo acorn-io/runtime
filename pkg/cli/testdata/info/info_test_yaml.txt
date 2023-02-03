@@ -1,12 +1,13 @@
 ---
 client:
   cli:
+
     hubServers:
     - acorn.io
   version:
     tag: v0.0.0-dev
 projects:
-  NameOne:
+  "":
     config:
       acornDNS: null
       acornDNSEndpoint: null
@@ -64,4 +65,3 @@ projects:
       workloadMemoryDefault: null
       workloadMemoryMaximum: null
     version: ""
-

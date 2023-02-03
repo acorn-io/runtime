@@ -43,6 +43,7 @@ func (a *AuthConfig) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+//go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=../mocks/mock_cliconfig.go -package=mocks github.com/acorn-io/acorn/pkg/config CLIConfig
 type CLIConfig struct {
 	Auths             map[string]AuthConfig `json:"auths,omitempty"`
 	CredentialsStore  string                `json:"credsStore,omitempty"`

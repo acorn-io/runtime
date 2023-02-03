@@ -64,4 +64,62 @@ projects:
       workloadMemoryDefault: null
       workloadMemoryMaximum: null
     version: ""
+  NameTwo:
+    config:
+      acornDNS: null
+      acornDNSEndpoint: null
+      allowUserAnnotations: null
+      allowUserLabels: null
+      autoUpgradeInterval: null
+      builderPerProject: null
+      clusterDomains: null
+      defaultPublishMode: ""
+      httpEndpointPattern: null
+      ignoreUserLabelsAndAnnotations: null
+      ingressClassName: null
+      internalClusterDomain: ""
+      internalRegistryPrefix: null
+      letsEncrypt: null
+      letsEncryptEmail: ""
+      letsEncryptTOSAgree: null
+      podSecurityEnforceProfile: ""
+      propagateProjectAnnotations: null
+      propagateProjectLabels: null
+      publishBuilders: null
+      recordBuilds: null
+      setPodSecurityEnforceProfile: null
+      useCustomCABundle: null
+      workloadMemoryDefault: null
+      workloadMemoryMaximum: null
+    controllerImage: ""
+    dirty: false
+    gitCommit: ""
+    tag: TwoTag
+    userConfig:
+      acornDNS: null
+      acornDNSEndpoint: null
+      allowUserAnnotations: null
+      allowUserLabels: null
+      autoUpgradeInterval: null
+      builderPerProject: null
+      clusterDomains: null
+      defaultPublishMode: ""
+      httpEndpointPattern: null
+      ignoreUserLabelsAndAnnotations: null
+      ingressClassName: null
+      internalClusterDomain: ""
+      internalRegistryPrefix: null
+      letsEncrypt: null
+      letsEncryptEmail: ""
+      letsEncryptTOSAgree: null
+      podSecurityEnforceProfile: ""
+      propagateProjectAnnotations: null
+      propagateProjectLabels: null
+      publishBuilders: null
+      recordBuilds: null
+      setPodSecurityEnforceProfile: null
+      useCustomCABundle: null
+      workloadMemoryDefault: null
+      workloadMemoryMaximum: null
+    version: ""
 

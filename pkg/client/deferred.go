@@ -332,7 +332,6 @@ func (d *DeferredClient) ProjectDelete(ctx context.Context, name string) (*apiv1
 	return d.Client.ProjectDelete(ctx, name)
 }
 
-// TODO (Jacob)
 func (d *DeferredClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	if err := d.create(); err != nil {
 		return nil, err

@@ -14,6 +14,18 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type MockClientFactoryManual struct {
+	Client client.Client
+}
+
+func (dc *MockClientFactoryManual) Options() project.Options {
+	return project.Options{}
+}
+
+func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
+	return dc.Client, nil
+}
+
 type MockClientFactory struct {
 	AppList        []apiv1.App
 	AppItem        *apiv1.App
@@ -579,7 +591,8 @@ func (m *MockClient) BuilderRegistryDialer(ctx context.Context) (func(ctx contex
 
 func (m *MockClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	return []apiv1.Info{
-		{TypeMeta: metav1.TypeMeta{},
+		{
+			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec:       apiv1.InfoSpec{},
 		},

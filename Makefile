@@ -4,6 +4,9 @@ build:
 generate:
 	go generate
 
+mocks:
+	${GOPATH}/bin/mockgen --build_flags=--mod=mod -destination=pkg/mocks/mock_client.go -package=mocks github.com/acorn-io/acorn/pkg/client Client,ProjectClientFactory
+
 image:
 	docker build .
 

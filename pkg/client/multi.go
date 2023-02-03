@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"cuelang.org/go/cue/errors"
 	"reflect"
 	"strings"
 
@@ -443,31 +442,34 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 	})
 }
 
-//type Project struct {
-//	metav1.TypeMeta   `json:",inline"`
-//	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-//	Status            ProjectStatus `json:"status,omitempty"`
-//}
-
-// TODO (Jacob)
 func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	var projectsInfo []apiv1.Info
+	// Can this be refactored into a call to aggregate?
 	projects, err := m.ProjectList(ctx)
 	if err != nil {
 		return nil, err
 	}
+	var subprojectInfo []apiv1.Info
+	// For each project after listing them all, call info on each and populate projectsInfo slice
 	for _, project := range projects {
 		c, err := m.Factory.ForProject(ctx, project.Name)
 		if err != nil {
 			return nil, err
 		}
-		subprojectInfo, err := c.Info(ctx)
-		if len(subprojectInfo) == 1 {
-			projectsInfo = append(projectsInfo, subprojectInfo[0])
-		} else {
-			return nil, errors.New("this is bad")
+		subprojectInfo, err = c.Info(ctx)
+		if err != nil {
+			return nil, err
 		}
+		// subprojectInfo should be len=1, potentially 0 if the project can't list zero
+		for _, infos := range subprojectInfo {
+			infos.Name = project.Name
+			projectsInfo = append(projectsInfo, infos)
+		}
+		// Two local projects may point to the same cluster.
+		// For each project, if it's just a local project, it should be the same
+		// Would be nice to refactor again and only keep unique project data seperated.
 
+		// If it's pointing to the hub, some logic in the hub on how to fetch the info and return it to users.
 	}
 	return projectsInfo, nil
 }

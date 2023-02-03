@@ -15,9 +15,5 @@ func (c *DefaultClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	var infoList []apiv1.Info
-	for _, subInfo := range result.Items {
-		infoList = append(infoList, subInfo)
-	}
-	return infoList, nil
+	return result.Items, nil
 }
