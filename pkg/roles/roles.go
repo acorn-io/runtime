@@ -51,7 +51,7 @@ var (
 				},
 			},
 			{
-				Verbs: []string{"get"},
+				Verbs: []string{"get", "create"},
 				Resources: []string{
 					"images/details",
 				},
@@ -76,9 +76,14 @@ var (
 				Verbs: []string{"create", "update", "delete", "patch"},
 				Resources: []string{
 					"apps",
-					"images",
 					"credentials",
 					"secrets",
+				},
+			},
+			{
+				Verbs: []string{"update", "delete", "patch"},
+				Resources: []string{
+					"images",
 				},
 			},
 			{
@@ -86,6 +91,7 @@ var (
 				Resources: []string{
 					"images/tag",
 					"apps/confirmupgrade",
+					"apps/pullimage",
 				},
 			},
 			{
