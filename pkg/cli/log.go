@@ -12,10 +12,10 @@ import (
 func NewLogs(c CommandContext) *cobra.Command {
 	logs := &Logs{client: c.ClientFactory}
 	return cli.Command(logs, cobra.Command{
-		Use:               "logs [flags] APP_NAME|CONTAINER_NAME",
+		Use:               "logs [flags] [APP_NAME|CONTAINER_NAME]",
 		SilenceUsage:      true,
 		Short:             "Log all workloads from an app",
-		Args:              cobra.ExactArgs(1),
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 
@@ -33,6 +33,15 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	if len(args) == 0 {
+		app, _, err := appAndArgs(cmd.Context(), c, nil)
+		if err != nil {
+			return err
+		}
+		args = []string{app}
+	}
+
 	var tailLines *int64
 	if s.Tail < 0 {
 		err := fmt.Errorf("Tail: Invalid value: %d: must be greater than or equal to 0", s.Tail)

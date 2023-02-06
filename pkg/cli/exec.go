@@ -43,7 +43,7 @@ type Exec struct {
 	client      ClientFactory
 }
 
-func (s *Exec) appAndArgs(ctx context.Context, c client.Client, args []string) (string, []string, error) {
+func appAndArgs(ctx context.Context, c client.Client, args []string) (string, []string, error) {
 	if len(args) > 0 {
 		return args[0], args[1:], nil
 	}
@@ -161,11 +161,7 @@ func (s *Exec) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if s.DebugImage != "" && len(args) == 0 {
-		return s.execContainer(ctx, c, "_", nil)
-	}
-
-	name, args, err := s.appAndArgs(ctx, c, args)
+	name, args, err := appAndArgs(ctx, c, args)
 	if err != nil {
 		return err
 	}
