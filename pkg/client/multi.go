@@ -47,12 +47,12 @@ func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 		if err != nil {
 			return nil, err
 		}
-		for _, item := range items {
+		for i := range items {
 			if client.GetProject() != factory.DefaultProject() {
-				p := (V)(&item)
+				p := (V)(&items[i])
 				p.SetName(client.GetProject() + "/" + p.GetName())
 			}
-			result = append(result, item)
+			result = append(result, items[i])
 		}
 	}
 	return result, nil
@@ -60,6 +60,34 @@ func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 
 func isNil(obj kclient.Object) bool {
 	return obj == nil || reflect.ValueOf(obj).IsNil()
+}
+
+func onOneList[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectClientFactory, name string, cb func(name string, client Client) ([]T, error)) ([]T, error) {
+	var (
+		result      []T
+		projectName = ""
+	)
+	i := strings.LastIndex(name, "/")
+	if i != -1 {
+		projectName = name[0:i]
+		name = name[i+1:]
+	}
+	client, err := factory.ForProject(ctx, projectName)
+	if err != nil {
+		return result, err
+	}
+
+	result, err = cb(name, client)
+	if err != nil {
+		return result, err
+	}
+	for i := range result {
+		obj := (V)(&result[i])
+		if client.GetProject() != factory.DefaultProject() {
+			obj.SetName(client.GetProject() + "/" + obj.GetName())
+		}
+	}
+	return result, nil
 }
 
 func onOne[T kclient.Object](ctx context.Context, factory ProjectClientFactory, name string, cb func(name string, client Client) (T, error)) (T, error) {
@@ -242,6 +270,12 @@ func (m *MultiClient) SecretDelete(ctx context.Context, name string) (*apiv1.Sec
 }
 
 func (m *MultiClient) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
+	if opts != nil && opts.App != "" {
+		return onOneList(ctx, m.Factory, opts.App, func(name string, c Client) ([]apiv1.ContainerReplica, error) {
+			opts.App = name
+			return c.ContainerReplicaList(ctx, opts)
+		})
+	}
 	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.ContainerReplica, error) {
 		return c.ContainerReplicaList(ctx, opts)
 	})
