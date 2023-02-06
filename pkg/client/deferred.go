@@ -63,7 +63,7 @@ func (d *DeferredClient) AppStart(ctx context.Context, name string) error {
 	if err := d.create(); err != nil {
 		return err
 	}
-	return d.Client.AppStop(ctx, name)
+	return d.Client.AppStart(ctx, name)
 }
 
 func (d *DeferredClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
