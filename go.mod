@@ -18,7 +18,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20220717003025-bc8cb1214693
 	github.com/acorn-io/baaah v0.0.0-20230201185337-4e2dc0c8952e
-	github.com/acorn-io/mink v0.0.0-20230119012606-799c4d32d238
+	github.com/acorn-io/mink v0.0.0-20230206230657-e1bd552f1bd4
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/adrg/xdg v0.4.0
 	github.com/containerd/console v1.0.3

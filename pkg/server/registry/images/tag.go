@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
+	"github.com/acorn-io/mink/pkg/validator"
 	"github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -17,6 +18,7 @@ import (
 
 func NewTagStorage(c client.WithWatch) rest.Storage {
 	return stores.NewBuilder(c.Scheme(), &apiv1.ImageTag{}).
+		WithValidateName(validator.NoValidation).
 		WithCreate(&TagStrategy{
 			client: c,
 		}).Build()
