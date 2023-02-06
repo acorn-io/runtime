@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/imagedetails"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
+	"github.com/acorn-io/mink/pkg/validator"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -20,6 +21,7 @@ func NewImageDetails(c client.WithWatch, transport http.RoundTripper) rest.Stora
 		remoteOpt: remote.WithTransport(transport),
 	}
 	return stores.NewBuilder(c.Scheme(), &apiv1.ImageDetails{}).
+		WithValidateName(validator.NoValidation).
 		WithGet(strategy).
 		WithCreate(strategy).
 		Build()
