@@ -1,0 +1,26 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      oneimage:
+        scale: 3
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+      buildimage:
+        scale: 7
+        image: "sha256:build-image"
+        build:
+          dockerfile: "custom-dockerfile"
+          context: "."

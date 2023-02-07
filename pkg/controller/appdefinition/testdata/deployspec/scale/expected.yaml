@@ -9,7 +9,7 @@ metadata:
     "acorn.io/container-name": "oneimage"
     "acorn.io/managed": "true"
 spec:
-  replicas: 0
+  replicas: 3
   selector:
     matchLabels:
       "acorn.io/app-namespace": "app-namespace"
@@ -24,12 +24,11 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","probes":null}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","probes":null,"scale":3}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
       serviceAccountName: oneimage
-      hostname: oneimage
       imagePullSecrets:
         - name: oneimage-pull-1234567890ab
       containers:
@@ -66,7 +65,7 @@ metadata:
     "acorn.io/container-name": "buildimage"
     "acorn.io/managed": "true"
 spec:
-  replicas: 0
+  replicas: 7
   selector:
     matchLabels:
       "acorn.io/app-namespace": "app-namespace"
@@ -81,11 +80,10 @@ spec:
         "acorn.io/container-name": "buildimage"
         "acorn.io/managed": "true"
       annotations:
-        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","probes":null}'
+        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","probes":null,"scale":7}'
     spec:
       terminationGracePeriodSeconds: 5
       enableServiceLinks: false
-      hostname: buildimage
       serviceAccountName: buildimage
       imagePullSecrets:
         - name: buildimage-pull-1234567890ab
@@ -110,7 +108,7 @@ spec:
       "acorn.io/app-name": "app-name"
       "acorn.io/container-name": "buildimage"
       "acorn.io/managed": "true"
-  maxUnavailable: 1
+  maxUnavailable: 3
 ---
 kind: Secret
 apiVersion: v1
@@ -143,7 +141,6 @@ metadata:
   namespace: app-namespace
   uid: 1234567890abcdef
 spec:
-  stop: true
   image: test
 status:
   namespace: app-created-namespace
@@ -152,11 +149,13 @@ status:
   appSpec:
     containers:
       oneimage:
+        scale: 3
         image: "image-name"
         build:
           dockerfile: "Dockerfile"
           context: "."
       buildimage:
+        scale: 7
         image: "sha256:build-image"
         build:
           dockerfile: "custom-dockerfile"

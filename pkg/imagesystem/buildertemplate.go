@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -197,6 +198,17 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 		},
 	}
 
+	pdb := &policyv1.PodDisruptionBudget{
+		ObjectMeta: deployment.ObjectMeta,
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: deployment.Spec.Selector,
+			MaxUnavailable: &intstr.IntOrString{
+				Type:   intstr.String,
+				StrVal: "25%",
+			},
+		},
+	}
+
 	if useCustomCabundle {
 		for i := range deployment.Spec.Template.Spec.Containers {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
@@ -215,5 +227,5 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 			},
 		})
 	}
-	return []client.Object{secret, service, deployment}
+	return []client.Object{secret, service, deployment, pdb}
 }

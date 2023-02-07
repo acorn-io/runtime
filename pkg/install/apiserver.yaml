@@ -53,3 +53,14 @@ spec:
           securityContext:
             runAsUser: 1000
       serviceAccountName: acorn-system
+---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: acorn-api
+  namespace: acorn-system
+spec:
+  maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: acorn-api

@@ -4,6 +4,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,92 +38,103 @@ func registryService(namespace string) []client.Object {
 }
 
 func registryDeployment(namespace, registryImage string) []client.Object {
-	return []client.Object{
-		&appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      system.RegistryName,
-				Namespace: namespace,
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      system.RegistryName,
+			Namespace: namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &[]int32{1}[0],
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": system.RegistryName,
+				},
 			},
-			Spec: appsv1.DeploymentSpec{
-				Selector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
 						"app": system.RegistryName,
 					},
 				},
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{
-							"app": system.RegistryName,
+				Spec: corev1.PodSpec{
+					EnableServiceLinks: new(bool),
+					Containers: []corev1.Container{
+						{
+							Name: "registry",
+							Env: []corev1.EnvVar{
+								{
+									Name:  "REGISTRY_STORAGE_DELETE_ENABLED",
+									Value: "true",
+								},
+							},
+							Image:   registryImage,
+							Command: []string{"/usr/local/bin/registry", "serve", "/etc/docker/registry/config.yml"},
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											IntVal: int32(system.RegistryPort),
+										},
+									},
+								},
+								InitialDelaySeconds: 15,
+								TimeoutSeconds:      1,
+								PeriodSeconds:       20,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									TCPSocket: &corev1.TCPSocketAction{
+										Port: intstr.IntOrString{
+											IntVal: int32(system.RegistryPort),
+										},
+									},
+								},
+								InitialDelaySeconds: 2,
+								TimeoutSeconds:      1,
+								PeriodSeconds:       5,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+							},
+							SecurityContext: &corev1.SecurityContext{
+								RunAsUser:                &[]int64{1000}[0],
+								RunAsNonRoot:             &[]bool{true}[0],
+								ReadOnlyRootFilesystem:   &[]bool{true}[0],
+								AllowPrivilegeEscalation: new(bool),
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "registry",
+									MountPath: "/var/lib/registry",
+								},
+							},
 						},
 					},
-					Spec: corev1.PodSpec{
-						EnableServiceLinks: new(bool),
-						Containers: []corev1.Container{
-							{
-								Name: "registry",
-								Env: []corev1.EnvVar{
-									{
-										Name:  "REGISTRY_STORAGE_DELETE_ENABLED",
-										Value: "true",
-									},
-								},
-								Image:   registryImage,
-								Command: []string{"/usr/local/bin/registry", "serve", "/etc/docker/registry/config.yml"},
-								LivenessProbe: &corev1.Probe{
-									ProbeHandler: corev1.ProbeHandler{
-										TCPSocket: &corev1.TCPSocketAction{
-											Port: intstr.IntOrString{
-												IntVal: int32(system.RegistryPort),
-											},
-										},
-									},
-									InitialDelaySeconds: 15,
-									TimeoutSeconds:      1,
-									PeriodSeconds:       20,
-									SuccessThreshold:    1,
-									FailureThreshold:    3,
-								},
-								ReadinessProbe: &corev1.Probe{
-									ProbeHandler: corev1.ProbeHandler{
-										TCPSocket: &corev1.TCPSocketAction{
-											Port: intstr.IntOrString{
-												IntVal: int32(system.RegistryPort),
-											},
-										},
-									},
-									InitialDelaySeconds: 2,
-									TimeoutSeconds:      1,
-									PeriodSeconds:       5,
-									SuccessThreshold:    1,
-									FailureThreshold:    3,
-								},
-								SecurityContext: &corev1.SecurityContext{
-									RunAsUser:                &[]int64{1000}[0],
-									RunAsNonRoot:             &[]bool{true}[0],
-									ReadOnlyRootFilesystem:   &[]bool{true}[0],
-									AllowPrivilegeEscalation: new(bool),
-								},
-								VolumeMounts: []corev1.VolumeMount{
-									{
-										Name:      "registry",
-										MountPath: "/var/lib/registry",
-									},
-								},
+					Volumes: []corev1.Volume{
+						{
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
 							},
-						},
-						Volumes: []corev1.Volume{
-							{
-								VolumeSource: corev1.VolumeSource{
-									EmptyDir: &corev1.EmptyDirVolumeSource{},
-								},
-								Name: "registry",
-							},
+							Name: "registry",
 						},
 					},
 				},
 			},
 		},
 	}
+	pdb := &policyv1.PodDisruptionBudget{
+		ObjectMeta: deployment.ObjectMeta,
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			Selector: deployment.Spec.Selector,
+			MaxUnavailable: &intstr.IntOrString{
+				Type:   intstr.String,
+				StrVal: "25%",
+			},
+		},
+	}
+
+	return []client.Object{deployment, pdb}
 }
 
 func containerdConfigPathDaemonSet(namespace, image, registryServiceNodePort string) []client.Object {
