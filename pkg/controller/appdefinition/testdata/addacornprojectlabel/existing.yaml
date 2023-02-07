@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+spec:
+  finalizers:
+    - kubernetes
+---
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: test
+  uid: 1234567890abcdef
+---

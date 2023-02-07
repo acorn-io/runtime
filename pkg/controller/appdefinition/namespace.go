@@ -10,6 +10,7 @@ import (
 	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func AssignNamespace(req router.Request, resp router.Response) (err error) {
@@ -81,4 +82,25 @@ func RequireNamespace(h router.Handler) router.Handler {
 		}
 		return h.Handle(req, resp)
 	})
+}
+
+func AddAcornProjectLabel(req router.Request, resp router.Response) error {
+	app := req.Object.(*v1.AppInstance)
+	var projectNamespace corev1.Namespace
+
+	if err := req.Client.Get(req.Ctx, kclient.ObjectKey{
+		Name: app.Namespace,
+	}, &projectNamespace); err != nil {
+		return err
+	}
+	if projectNamespace.Labels == nil {
+		projectNamespace.Labels = map[string]string{}
+	}
+	if projectNamespace.Labels[labels.AcornProject] != "true" {
+		projectNamespace.Labels[labels.AcornProject] = "true"
+		if err := req.Client.Update(req.Ctx, &projectNamespace); err != nil {
+			return err
+		}
+	}
+	return nil
 }

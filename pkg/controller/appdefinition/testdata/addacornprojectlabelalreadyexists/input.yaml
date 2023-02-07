@@ -1,0 +1,6 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: test
+  uid: 1234567890abcdef
