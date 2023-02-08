@@ -129,9 +129,14 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		return nil, err
 	}
 
-	repo, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, namespace)
+	repo, externalRepo, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, namespace)
 	if err != nil {
 		return nil, err
+	}
+
+	recordRepo := ""
+	if externalRepo {
+		recordRepo = repo.String()
 	}
 
 	progress := make(chan ggcrv1.Update)
@@ -162,6 +167,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 					Name:      hash.Hex,
 					Namespace: namespace,
 				},
+				Repo:   recordRepo,
 				Digest: hash.String(),
 			}
 			if err := i.client.Create(ctx, img); err != nil && !apierror.IsAlreadyExists(err) {

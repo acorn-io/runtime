@@ -151,7 +151,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		return nil, nil, err
 	}
 
-	repo, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, image.Namespace)
+	repo, _, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, image.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}
