@@ -13,6 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,12 +30,20 @@ type TagStrategy struct {
 }
 
 func (t *TagStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
-	opts := obj.(*apiv1.ImageTag)
+	var (
+		opts  = obj.(*apiv1.ImageTag)
+		image *v1.ImageInstance
+		err   error
+	)
 
-	image, err := t.ImageTag(ctx, obj.GetNamespace(), obj.GetName(), opts.Tag)
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		image, err = t.ImageTag(ctx, obj.GetNamespace(), obj.GetName(), opts.Tag)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
+
 	return &apiv1.ImageTag{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      image.Name,
