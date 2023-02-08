@@ -24,21 +24,23 @@ func NormalizeServerAddress(address string) string {
 	return address
 }
 
-func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, error) {
+func GetInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, bool, error) {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
-		return name.Repository{}, err
+		return name.Repository{}, false, err
 	}
 	if *cfg.InternalRegistryPrefix != "" {
-		return name.NewRepository(*cfg.InternalRegistryPrefix + namespace)
+		n, err := name.NewRepository(*cfg.InternalRegistryPrefix + namespace)
+		return n, true, err
 	}
 
 	dns, err := GetClusterInternalRegistryDNSName(ctx, c)
 	if err != nil {
-		return name.Repository{}, err
+		return name.Repository{}, false, err
 	}
 
-	return name.NewRepository(fmt.Sprintf("%s:%d/acorn/%s", dns, system.RegistryPort, namespace))
+	n, err := name.NewRepository(fmt.Sprintf("%s:%d/acorn/%s", dns, system.RegistryPort, namespace))
+	return n, false, err
 }
 
 func GetRuntimePullableInternalRepoForNamespace(ctx context.Context, c client.Reader, namespace string) (name.Repository, error) {
@@ -92,7 +94,7 @@ func GetInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, name
 	} else if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	} else {
-		repo, err = GetInternalRepoForNamespace(ctx, c, namespace)
+		repo, _, err = GetInternalRepoForNamespace(ctx, c, namespace)
 		if err != nil {
 			return nil, err
 		}
