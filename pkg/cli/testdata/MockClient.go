@@ -27,6 +27,8 @@ type MockClientFactory struct {
 	SecretItem     *apiv1.Secret
 	ImageList      []apiv1.Image
 	ImageItem      *apiv1.Image
+	ProjectList    []apiv1.Project
+	ProjectItem    *apiv1.Project
 }
 
 func (dc *MockClientFactory) Options() project.Options {
@@ -41,12 +43,14 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		Volumes:        dc.VolumeList,
 		Secrets:        dc.SecretList,
 		Images:         dc.ImageList,
+		Projects:       dc.ProjectList,
 		AppItem:        dc.AppItem,
 		ContainerItem:  dc.ContainerItem,
 		CredentialItem: dc.CredentialItem,
 		VolumeItem:     dc.VolumeItem,
 		SecretItem:     dc.SecretItem,
 		ImageItem:      dc.ImageItem,
+		ProjectItem:    dc.ProjectItem,
 	}, nil
 }
 
@@ -63,6 +67,8 @@ type MockClient struct {
 	SecretItem     *apiv1.Secret
 	Images         []apiv1.Image
 	ImageItem      *apiv1.Image
+	Projects       []apiv1.Project
+	ProjectItem    *apiv1.Project
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -612,18 +618,27 @@ func (m *MockClient) AcornImageBuild(ctx context.Context, file string, opts *cli
 }
 
 func (m *MockClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
-	//TODO implement me
-	panic("implement me")
+	if m.Projects != nil {
+		return m.Projects, nil
+	}
+	return []apiv1.Project{{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "project"},
+	}}, nil
 }
 
 func (m *MockClient) GetProject() string {
-	//TODO implement me
-	panic("implement me")
+	if m.ProjectItem != nil {
+		return m.ProjectItem.Name
+	}
+	return ""
 }
 
 func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
-	//TODO implement me
-	panic("implement me")
+	if m.ProjectItem != nil {
+		return m.ProjectItem, nil
+	}
+	return nil, nil
 }
 
 func (m *MockClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
