@@ -59,8 +59,25 @@ spec:
             tcpSocket:
               port: 1234
               host: 1.1.1.1
-
-
+---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%
 ---
 kind: Service
 apiVersion: v1
@@ -203,7 +220,25 @@ spec:
           ports:
             - containerPort: 81
               protocol: "TCP"
-
+---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: nodefault
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "nodefault"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "nodefault"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%
 ---
 kind: Service
 apiVersion: v1

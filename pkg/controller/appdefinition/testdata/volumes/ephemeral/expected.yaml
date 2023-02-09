@@ -42,6 +42,25 @@ spec:
             - mountPath: "/var/tmp"
               name: foo
 ---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%
+---
 kind: Secret
 apiVersion: v1
 metadata:

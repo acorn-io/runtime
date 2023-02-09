@@ -66,6 +66,9 @@ rules:
   - verbs: ["*"]
     apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
+  - verbs: ["*"]
+    apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
 
 ---
 kind: ClusterRoleBinding

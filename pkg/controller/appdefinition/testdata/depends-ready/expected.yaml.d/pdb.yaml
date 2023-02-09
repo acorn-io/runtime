@@ -1,0 +1,41 @@
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
+  annotations:
+    acorn.io/dep-names: db
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%
+---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: web
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "web"
+    "acorn.io/managed": "true"
+  annotations:
+    acorn.io/dep-names: container-name
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "web"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%

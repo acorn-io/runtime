@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/expose"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -151,6 +152,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 				Annotations: deploymentAnnotations,
 			},
 		},
+		expose.ToPodDisruptionBudget(dep),
 	}, nil
 }
 

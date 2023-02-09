@@ -1,0 +1,29 @@
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  annotations:
+    appSpecAnn: test-app-spec-ann
+    containerAnn: test-container-ann
+    "container-scoped-ann": test-container
+    "global-scoped-ann": test-global
+    "named-scoped-ann": test-named
+  name: container-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "container-name"
+    "acorn.io/managed": "true"
+    appSpecLabel: test-app-spec-label
+    container-scoped-label: test-container
+    containerLabel: test-container-label
+    global-scoped-label: test-global
+    named-scoped-label: test-named
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "container-name"
+      "acorn.io/managed": "true"
+  maxUnavailable: 1

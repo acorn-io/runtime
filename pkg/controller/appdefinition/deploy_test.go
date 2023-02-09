@@ -60,6 +60,10 @@ func TestDeploySpecFilterUserDefinedLabelsAnnotationsNamespace(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/filter-user-labels-namespace", FilterLabelsAndAnnotationsConfig(router.HandlerFunc(namespace.AddNamespace)).Handle)
 }
 
+func TestDeploySpecScale(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/scale", DeploySpec)
+}
+
 func TestDeploySpecStop(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/stop", DeploySpec)
 }

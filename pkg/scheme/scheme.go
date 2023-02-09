@@ -10,6 +10,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -31,6 +32,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, acornapiv1.AddToScheme(scheme))
 	errs = append(errs, corev1.AddToScheme(scheme))
 	errs = append(errs, appsv1.AddToScheme(scheme))
+	errs = append(errs, policyv1.AddToScheme(scheme))
 	errs = append(errs, batchv1.AddToScheme(scheme))
 	errs = append(errs, networkingv1.AddToScheme(scheme))
 	errs = append(errs, storagev1.AddToScheme(scheme))
