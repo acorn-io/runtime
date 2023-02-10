@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/acorn-io/acorn/pkg/client"
@@ -12,7 +13,16 @@ import (
 	"github.com/acorn-io/acorn/pkg/project"
 	"github.com/adrg/xdg"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/client-go/tools/clientcmd"
 )
+
+func TestSlashBreaksList(t *testing.T) {
+	p, _, err := project.List(context.Background(), project.Options{
+		Project: "acorn.io/fake/fake",
+	})
+	assert.Nil(t, err)
+	assert.True(t, len(p) > 0)
+}
 
 func TestCLIConfig(t *testing.T) {
 	d, err := os.MkdirTemp("", "acorn-test-home")
@@ -26,12 +36,13 @@ func TestCLIConfig(t *testing.T) {
 	xdg.Home = d
 	testAPIKubeconfig := testRestConfig(t, "testhost", "")
 	testAPIKubeconfig2 := testRestConfig(t, "testhost2", "")
-	testAPIKubeconfigEnv := testRestConfig(t, "testenv", "")
-	os.Setenv("KUBECONFIG", testAPIKubeconfigEnv)
+	//testAPIKubeconfigEnv := testRestConfig(t, "testenv", "")
 
 	tests := []struct {
 		name               string
 		opt                project.Options
+		kubeconfigEnv      string
+		homeEnv            string
 		wantProject        string
 		wantNamespace      string
 		wantRestConfigHost string
@@ -41,17 +52,15 @@ func TestCLIConfig(t *testing.T) {
 		wantErr            error
 	}{
 		{
-			name: "Only KUBECONFIG is set",
+			name: "User set multiple files in kubeconfig env",
+			kubeconfigEnv: fmt.Sprintf("%s%s%s", testAPIKubeconfig,
+				[]byte{filepath.ListSeparator},
+				testAPIKubeconfig2),
 			opt: project.Options{
-				KubeconfigEnv: os.Getenv("KUBECONFIG"),
+				ContextEnv: "testhost2",
 			},
 			wantNamespace:      "acorn",
-			wantRestConfigHost: "testenv",
-			assert: func(t *testing.T, c client.Client) {
-				t.Helper()
-				// Make sure it's not unset
-				assert.Equal(t, testAPIKubeconfigEnv, os.Getenv("KUBECONFIG"))
-			},
+			wantRestConfigHost: "testhost2",
 		},
 		{
 			name: "User passes --kubeconfig",
@@ -62,23 +71,12 @@ func TestCLIConfig(t *testing.T) {
 			wantRestConfigHost: "testhost",
 		},
 		{
-			name: "User set KUBECONFIG",
-			opt: project.Options{
-				KubeconfigEnv: testAPIKubeconfig,
-				CLIConfig: &config.CLIConfig{
-					CurrentProject: "asdf",
-				},
-			},
-			wantNamespace:      "asdf",
-			wantRestConfigHost: "testhost",
-		},
-		{
-			name: "User passes --kubeconfig with namespace set in it",
+			name: "User passes --kubeconfig with namespace set in it, we ignore it",
 			opt: project.Options{
 				Kubeconfig: testRestConfig(t, "testhost", "testnamespace"),
 			},
 			wantRestConfigHost: "testhost",
-			wantNamespace:      "testnamespace",
+			wantNamespace:      "acorn",
 		},
 		{
 			name: "User passes --kubeconfig with --project set",
@@ -134,15 +132,15 @@ func TestCLIConfig(t *testing.T) {
 		{
 			name:      "No config",
 			wantError: true,
-			wantErr:   project.ErrNoKubernetesConfig,
+			homeEnv:   "garbage",
 		},
 		{
 			name: "No config, but user requested project",
 			opt: project.Options{
 				Project: "something",
 			},
-			wantError: true,
-			wantErr:   project.ErrNoKubernetesConfig,
+			kubeconfigEnv: testAPIKubeconfig,
+			wantNamespace: "something",
 		},
 		{
 			name: "User set hub reference",
@@ -165,10 +163,10 @@ func TestCLIConfig(t *testing.T) {
 			wantToken:          "pass",
 		},
 		{
-			name: "Use alias",
+			name:          "Use alias",
+			kubeconfigEnv: testAPIKubeconfig,
 			opt: project.Options{
-				KubeconfigEnv: testAPIKubeconfig,
-				Project:       "foo",
+				Project: "foo",
 				CLIConfig: &config.CLIConfig{
 					ProjectAliases: map[string]string{
 						"foo": "kubeconf/ns2,example.com/acct/prj1,defns",
@@ -202,8 +200,20 @@ func TestCLIConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			oldHome := os.Getenv("HOME")
+			oldRecommendHomeFile := clientcmd.RecommendedHomeFile
+			if test.kubeconfigEnv != "" {
+				os.Setenv("KUBECONFIG", test.kubeconfigEnv)
+			}
+			if test.homeEnv != "" {
+				os.Setenv("HOME", test.homeEnv)
+				clientcmd.RecommendedHomeFile = filepath.Join(test.homeEnv, ".kube", "config")
+			}
 			c, err := testCLIConfig(t, test.opt)
 			assert.Equal(t, test.wantError, err != nil, "should have error")
+			os.Setenv("KUBECONFIG", "")
+			os.Setenv("HOME", oldHome)
+			clientcmd.RecommendedHomeFile = oldRecommendHomeFile
 			if test.wantErr != nil {
 				assert.Equal(t, test.wantErr, err)
 			}
@@ -269,7 +279,7 @@ func testRestConfig(t *testing.T, host, namespace string) string {
 	})
 
 	filename := filepath.Join(tempDir, "kubeconfig.yaml")
-	err = os.WriteFile(filename, []byte(fmt.Sprintf(`
+	err = os.WriteFile(filename, []byte(strings.ReplaceAll(fmt.Sprintf(`
 apiVersion: v1
 clusters:
 - cluster:
@@ -288,7 +298,7 @@ users:
 - name: testingDefault
   user:
     token: ""
-`, host, namespace)), 0644)
+`, host, namespace), "testingDefault", "\""+host+"\"")), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

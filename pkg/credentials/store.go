@@ -28,6 +28,10 @@ type Store struct {
 	c   client.Client
 }
 
+func NewLocalOnlyStore(cfg *config.CLIConfig) (*Store, error) {
+	return NewStore(cfg, nil)
+}
+
 func NewStore(cfg *config.CLIConfig, c client.Client) (*Store, error) {
 	return &Store{
 		cfg: cfg,

@@ -1,14 +1,13 @@
 package cli
 
 import (
-	"fmt"
-
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/project"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
@@ -37,9 +36,8 @@ type Project struct {
 }
 
 type projectEntry struct {
-	Name        string `json:"name,omitempty"`
-	Default     bool   `json:"default,omitempty"`
-	Description string `json:"description,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Default bool   `json:"default,omitempty"`
 }
 
 func (a *Project) Run(cmd *cobra.Command, args []string) error {
@@ -56,7 +54,7 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 		}
 		projectNames = append(projectNames, args[0])
 	} else {
-		projects, err := project.List(cmd.Context(), a.client.Options().WithCLIConfig(cfg))
+		projects, warnings, err := project.List(cmd.Context(), a.client.Options().WithCLIConfig(cfg))
 		if err != nil {
 			return err
 		}
@@ -68,6 +66,9 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 					projectNames = append(projectNames, arg)
 				}
 			}
+		}
+		for _, env := range typed.SortedKeys(warnings) {
+			logrus.Warnf("Could not list projects from [%s]: %v", env, warnings[env])
 		}
 	}
 
@@ -83,14 +84,6 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 		out.Write(projectEntry{
 			Name:    project,
 			Default: defaultProject == project,
-		})
-	}
-
-	for _, entry := range typed.Sorted(cfg.ProjectAliases) {
-		out.Write(projectEntry{
-			Name:        entry.Key,
-			Default:     defaultProject == entry.Value,
-			Description: fmt.Sprintf("alias to %s", entry.Value),
 		})
 	}
 

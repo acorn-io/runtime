@@ -113,7 +113,6 @@ var (
 	ProjectClient = [][]string{
 		{"Name", "Name"},
 		{"Default", "{{ boolToStar .Default }}"},
-		{"Description", "Description"},
 	}
 
 	RuleRequests = [][]string{

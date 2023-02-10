@@ -120,16 +120,12 @@ func Login(ctx context.Context, password, address string) (user string, pass str
 }
 
 func DefaultProject(ctx context.Context, address, user, token string) (string, error) {
-	desiredDefault := address + "/" + user + "/acorn"
 	projects, err := Projects(ctx, address, token)
 	if err != nil {
 		return "", err
 	}
 	if len(projects) == 0 {
 		return "", err
-	}
-	if slices.Contains(projects, desiredDefault) {
-		return desiredDefault, nil
 	}
 	return projects[0], nil
 }

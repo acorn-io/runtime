@@ -7,7 +7,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/project"
 	"github.com/spf13/cobra"
-	"k8s.io/utils/strings/slices"
 )
 
 func NewProjectUse(c CommandContext) *cobra.Command {
@@ -33,21 +32,15 @@ func (a *ProjectUse) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// They want to clear the default, ok....
+	// They want to clear the default
 	if args[0] == "" {
 		cfg.CurrentProject = ""
 		return cfg.Save()
 	}
 
-	if cfg.ProjectAliases[args[0]] == "" {
-		projects, err := project.List(cmd.Context(), a.client.Options().WithCLIConfig(cfg))
-		if err != nil {
-			return err
-		}
-
-		if !slices.Contains(projects, args[0]) {
-			return fmt.Errorf("failed to find project %s, use \"acorn projects\" to list valid project names", args[0])
-		}
+	_, err = project.Get(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
+	if err != nil {
+		return fmt.Errorf("failed to find project %s, use \"acorn projects\" to list valid project names: %w", args[0], err)
 	}
 
 	cfg.CurrentProject = args[0]
