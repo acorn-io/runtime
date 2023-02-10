@@ -277,6 +277,16 @@ func TestSecretImageReference(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/secret-image", CreateSecrets)
 }
 
+func TestSecretEncrypted(t *testing.T) {
+	resp := tester.DefaultTest(t, scheme.Scheme, "testdata/secret-encrypted", CreateSecrets)
+	secret := resp.Client.Created[0].(*corev1.Secret)
+	assert.Equal(t, "foo-", secret.GenerateName)
+	assert.Equal(t, "app-namespace", secret.Namespace)
+	assert.Equal(t, "ACORNENC:eyJzNmc2QWx2V05ER09MUnVkMWo2eVdoNHVUQndVU2NPa0ZJLUluYktYTXpvIjoiaTZ"+
+		"DTl96TnpYM2wxYTVMaEdKTXpLalZnNlhPV2NZM0NYc21lQ2JETTNHWENySzBnSzVMdTg3bE45OGszcUdReGd6V1JSUHMifQ",
+		string(secret.Data["key"]))
+}
+
 func TestSecretLabelsAnnotations(t *testing.T) {
 	h := tester.Harness{
 		Scheme: scheme.Scheme,

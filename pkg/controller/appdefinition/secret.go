@@ -318,13 +318,19 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 	return updateOrCreate(req, existing, secret)
 }
 
-func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (*corev1.Secret, error) {
-	var err error
-
-	secret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, secret.Data, secret.Namespace)
-	if err != nil {
-		return nil, fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
-	}
+func updateOrCreate(req router.Request, existing, secret *corev1.Secret) (result *corev1.Secret, err error) {
+	defer func() {
+		if err != nil || result == nil {
+			return
+		}
+		// The result secret should be decrypted, but the written secret in the app namespace should be encrypted
+		// if the source data was encrypted
+		result = result.DeepCopy()
+		result.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, result.Data, result.Namespace)
+		if err != nil {
+			err = fmt.Errorf("decrypting %s/%s: %w", secret.Namespace, secret.Name, err)
+		}
+	}()
 
 	if existing == nil {
 		return secret, req.Client.Create(req.Ctx, secret)
