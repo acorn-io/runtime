@@ -264,7 +264,7 @@ func projectsCompletion(ctx context.Context, c client.Client, toComplete string)
 		return nil, err
 	}
 
-	projects, err := project.List(ctx, project.Options{
+	projects, _, err := project.List(ctx, project.Options{
 		CLIConfig: cfg,
 	})
 	if err != nil {

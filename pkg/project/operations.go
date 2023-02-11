@@ -2,7 +2,9 @@ package project
 
 import (
 	"context"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -10,7 +12,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/credentials"
 	"github.com/acorn-io/acorn/pkg/hub"
-	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 )
@@ -66,90 +67,104 @@ func timeoutProjectList(ctx context.Context, c client.Client) ([]apiv1.Project, 
 	return c.ProjectList(ctx)
 }
 
-func List(ctx context.Context, opts Options) (result []string, err error) {
-	cfg := opts.CLIConfig
+func listLocalKubeconfig(ctx context.Context, wg *sync.WaitGroup, result chan<- listResult, opts Options) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		c, err := clientFromFile(opts.Kubeconfig, "", opts.ContextEnv)
+		if err != nil {
+			logrus.Debugf("local kubeconfig client ignored file=[%s] context=[%s]: %v", opts.Kubeconfig, opts.ContextEnv, err)
+			// just ignore invalid clients
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		projects, err := timeoutProjectList(ctx, c)
+		cancel()
+		result <- listResult{
+			source: "local kubeconfig",
+			err:    err,
+			projects: typed.MapSlice(projects, func(project apiv1.Project) string {
+				return project.Name
+			}),
+		}
+	}()
+}
+
+type listResult struct {
+	err      error
+	source   string
+	projects []string
+}
+
+func listHubServers(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
+	for _, hubServer := range cfg.HubServers {
+		// copy for usage in goroutine
+		hubServer := hubServer
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			var projects []string
+			cred, ok, err := creds.Get(ctx, hubServer)
+			if err == nil && ok {
+				subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+				projects, err = hub.Projects(subCtx, hubServer, cred.Password)
+				cancel()
+			}
+			result <- listResult{
+				source:   hubServer,
+				err:      err,
+				projects: projects,
+			}
+		}()
+	}
+}
+
+func List(ctx context.Context, opts Options) (projects []string, warnings map[string]error, err error) {
+	var (
+		cfg = opts.CLIConfig
+		// if the user sets --kubeconfig we only consider kubeconfig and no other source for listing
+		onlyListLocalKubeconfig = opts.Kubeconfig != ""
+	)
+
 	if cfg == nil {
 		cfg, err = config.ReadCLIConfig()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	// if the user sets --kubeconfig we only consider kubeconfig and nothing else
-	if opts.Kubeconfig != "" {
-		c, err := clientFromFile(opts.Kubeconfig, opts)
-		if err != nil {
-			return nil, err
-		}
-		projs, err := timeoutProjectList(ctx, c)
-		if err != nil {
-			return nil, err
-		}
-		return typed.MapSlice(projs, func(project apiv1.Project) string {
-			return project.Name
-		}), nil
-	}
-
-	for _, key := range typed.SortedKeys(cfg.Kubeconfigs) {
-		kubeconfig := cfg.Kubeconfigs[key]
-		cfg, err := restconfig.FromFile(kubeconfig, opts.ContextEnv)
-		if err != nil {
-			logrus.Debugf("failed to load kubeconfig [%s]: %v", kubeconfig, err)
-			continue
-		}
-
-		c, err := client.New(cfg, "", "")
-		if err != nil {
-			logrus.Debugf("failed to build client for kubeconfig [%s]: %v", kubeconfig, err)
-			continue
-		}
-
-		projs, err := timeoutProjectList(ctx, c)
-		if err != nil {
-			logrus.Errorf("failed to list projects for kubeconfig [%s]: %v", kubeconfig, err)
-			continue
-		}
-
-		result = append(result, typed.MapSlice(projs, func(project apiv1.Project) string {
-			return key + "/" + project.Name
-		})...)
-	}
-
-	creds, err := credentials.NewStore(cfg, nil)
+	creds, err := credentials.NewLocalOnlyStore(cfg)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	for _, hubServer := range cfg.HubServers {
-		if _, ok := cfg.Kubeconfigs[hubServer]; ok {
-			continue
-		}
-		cred, ok, err := creds.Get(ctx, hubServer)
-		if err == nil && ok {
-			subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-			projects, err := hub.Projects(subCtx, hubServer, cred.Password)
-			cancel()
-			if err == nil {
-				result = append(result, projects...)
-			} else {
-				logrus.Errorf("failed to list projects in hub server %s: %v", hubServer, err)
-			}
-		} else if err != nil {
-			logrus.Debugf("failed to get cred for hub server %s: %v", hubServer, err)
-		}
+	var (
+		wg     sync.WaitGroup
+		result = make(chan listResult)
+	)
+	warnings = map[string]error{}
+
+	listLocalKubeconfig(ctx, &wg, result, opts)
+	if !onlyListLocalKubeconfig {
+		listHubServers(ctx, &wg, creds, cfg, result)
 	}
 
-	c, err := noConfigClient(ctx, opts)
-	if err == nil && c != nil {
-		projects, err := timeoutProjectList(ctx, c)
-		if err == nil {
-			result = append(result, typed.MapSlice(projects, func(project apiv1.Project) string {
-				return project.Name
-			})...)
-		} else {
-			logrus.Errorf("failed to list projects in default k8s context: %v", err)
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
+
+	for listResult := range result {
+		if listResult.err != nil {
+			warnings[listResult.source] = listResult.err
 		}
+		projects = append(projects, listResult.projects...)
 	}
 
-	return
+	sort.Strings(projects)
+	return projects, warnings, nil
 }

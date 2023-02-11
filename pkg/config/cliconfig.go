@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/adrg/xdg"
@@ -54,8 +55,9 @@ type CLIConfig struct {
 	// TestProjectURLs is used for testing to return EndpointURLs for remote projects
 	TestProjectURLs map[string]string `json:"-"`
 
-	filename string
-	auths    map[string]types.AuthConfig
+	filename  string
+	auths     map[string]types.AuthConfig
+	authsLock *sync.Mutex
 }
 
 func (c *CLIConfig) Sanitize() *CLIConfig {
@@ -73,6 +75,11 @@ func (c *CLIConfig) Sanitize() *CLIConfig {
 }
 
 func (c *CLIConfig) Save() error {
+	if c.authsLock != nil {
+		c.authsLock.Lock()
+		defer c.authsLock.Unlock()
+	}
+
 	if c.auths != nil {
 		c.Auths = map[string]AuthConfig{}
 		for k, v := range c.auths {
@@ -88,6 +95,11 @@ func (c *CLIConfig) Save() error {
 }
 
 func (c *CLIConfig) GetAuthConfigs() map[string]types.AuthConfig {
+	if c.authsLock != nil {
+		c.authsLock.Lock()
+		defer c.authsLock.Unlock()
+	}
+
 	if c.auths == nil {
 		c.auths = map[string]types.AuthConfig{}
 		for k, v := range c.Auths {
@@ -115,7 +127,9 @@ func ReadCLIConfig() (*CLIConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := &CLIConfig{}
+	result := &CLIConfig{
+		authsLock: &sync.Mutex{},
+	}
 	if err := yaml.Unmarshal(data, result); err != nil {
 		return nil, err
 	}

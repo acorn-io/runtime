@@ -28,12 +28,10 @@ type CommandClientFactory struct {
 
 func (c *CommandClientFactory) Options() project.Options {
 	return project.Options{
-		Project:       c.acorn.Project,
-		Kubeconfig:    c.acorn.Kubeconfig,
-		KubeconfigEnv: os.Getenv("KUBECONFIG"),
-		ContextEnv:    os.Getenv("CONTEXT"),
-		NamespaceEnv:  os.Getenv("NAMESPACE"),
-		AllProjects:   c.acorn.AllProjects,
+		Project:     c.acorn.Project,
+		Kubeconfig:  c.acorn.Kubeconfig,
+		ContextEnv:  os.Getenv("CONTEXT"),
+		AllProjects: c.acorn.AllProjects,
 	}
 }
 
