@@ -1,0 +1,124 @@
+// protoc -I . remote.proto  --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative
+syntax = "proto3";
+
+option go_package = "github.com/loft-sh/devspace/helper/remote";
+
+package remote;
+
+service Tunnel {
+    rpc InitTunnel (stream SocketDataRequest) returns (stream SocketDataResponse) {}
+    rpc Ping (Empty) returns (Empty) {}
+}
+
+enum LogLevel {
+    INFO = 0;
+    VERBOSE = 1;
+    DEBUG = 2;
+    WARNING = 3;
+    ERROR = 4;
+}
+
+enum TunnelScheme {
+    TCP = 0;
+    UDP = 1;
+}
+
+message LogMessage {
+    LogLevel logLevel = 1;
+    string message = 2;
+}
+
+message SocketDataRequest {
+    int32 port = 1;
+    string requestId = 2;
+    LogLevel logLevel = 3;
+    TunnelScheme scheme = 4;
+    bytes data = 5;
+    bool shouldClose = 6;
+}
+
+message SocketDataResponse {
+    bool hasErr = 1;
+    LogMessage logMessage = 2;
+    string requestId = 3;
+    bytes data = 4;
+    bool shouldClose = 5;
+}
+
+service Downstream {
+    rpc Download (stream Paths) returns (stream Chunk) {}
+    rpc Changes (Empty) returns (stream ChangeChunk) {}
+    rpc ChangesCount (Empty) returns (ChangeAmount) {}
+    rpc Ping (Empty) returns (Empty) {}
+}
+
+service Upstream {
+    rpc Checksums (TouchPaths) returns (PathsChecksum) {}
+    rpc Upload (stream Chunk) returns (Empty) {}
+    rpc RestartContainer (Empty) returns (Empty) {}
+    rpc Remove (stream Paths) returns (Empty) {}
+    rpc Execute (Command) returns (Empty) {}
+    rpc Ping (Empty) returns (Empty) {}
+}
+
+message TouchPaths {
+    repeated TouchPath Paths = 1;
+}
+
+message TouchPath {
+    string Path = 1;
+    int64 MtimeUnix = 2;
+    uint32 Mode = 3;
+}
+
+message Command {
+    string Cmd = 1;
+    repeated string Args = 2;
+    bool Once = 3;
+}
+
+message PathsChecksum {
+    repeated uint32 Checksums = 1;
+}
+
+message Watch {
+    string Path = 1;
+    repeated string Exclude = 2;
+}
+
+enum ChangeType {
+    CHANGE = 0;
+    DELETE = 1;
+}
+
+message ChangeAmount {
+    int64 Amount = 1;
+}
+
+message ChangeChunk {
+    repeated Change changes = 1;
+}
+
+message Change {
+    ChangeType ChangeType = 1;
+    string Path = 2;
+    int64 MtimeUnix = 3;
+    int64 MtimeUnixNano = 4;
+    int64 Size = 5;
+    uint32 Mode = 6;
+    bool IsDir = 7;
+}
+
+message Paths {
+    repeated string Paths = 1;
+} 
+
+message Chunk {
+    bytes Content = 1;
+} 
+
+message Empty {
+
+}
+
+
