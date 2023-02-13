@@ -43,6 +43,7 @@ func TestCLIConfig(t *testing.T) {
 		opt                project.Options
 		kubeconfigEnv      string
 		homeEnv            string
+		noEnv              bool
 		wantProject        string
 		wantNamespace      string
 		wantRestConfigHost string
@@ -130,9 +131,11 @@ func TestCLIConfig(t *testing.T) {
 			wantNamespace: "projectnamespace",
 		},
 		{
-			name:      "No config",
-			wantError: true,
-			homeEnv:   "garbage",
+			name:          "No config",
+			wantError:     true,
+			noEnv:         true,
+			kubeconfigEnv: "garbage",
+			homeEnv:       "garbage",
 		},
 		{
 			name: "No config, but user requested project",
@@ -200,8 +203,16 @@ func TestCLIConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			oldEnv := os.Environ()
 			oldHome := os.Getenv("HOME")
+			oldKubeconfig := os.Getenv("KUBECONFIG")
 			oldRecommendHomeFile := clientcmd.RecommendedHomeFile
+			if test.noEnv {
+				for _, env := range oldEnv {
+					k, _, _ := strings.Cut(env, "=")
+					os.Setenv(k, "")
+				}
+			}
 			if test.kubeconfigEnv != "" {
 				os.Setenv("KUBECONFIG", test.kubeconfigEnv)
 			}
@@ -211,7 +222,11 @@ func TestCLIConfig(t *testing.T) {
 			}
 			c, err := testCLIConfig(t, test.opt)
 			assert.Equal(t, test.wantError, err != nil, "should have error")
-			os.Setenv("KUBECONFIG", "")
+			for _, env := range oldEnv {
+				k, v, _ := strings.Cut(env, "=")
+				os.Setenv(k, v)
+			}
+			os.Setenv("KUBECONFIG", oldKubeconfig)
 			os.Setenv("HOME", oldHome)
 			clientcmd.RecommendedHomeFile = oldRecommendHomeFile
 			if test.wantErr != nil {
