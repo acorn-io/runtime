@@ -26,6 +26,7 @@ func ClientConfigFromFile(file, context string) clientcmd.ClientConfig {
 		&clientcmd.ConfigOverrides{
 			CurrentContext: context,
 		})
+	fmt.Println(os.Environ())
 	raw, err := cfg.RawConfig()
 	if err != nil {
 		fmt.Println("err!: ", err)

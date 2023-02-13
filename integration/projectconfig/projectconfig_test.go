@@ -203,6 +203,7 @@ func TestCLIConfig(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			oldHome := os.Getenv("HOME")
+			oldKubeconfig := os.Getenv("KUBECONFIG")
 			oldRecommendHomeFile := clientcmd.RecommendedHomeFile
 			if test.kubeconfigEnv != "" {
 				os.Setenv("KUBECONFIG", test.kubeconfigEnv)
@@ -213,7 +214,7 @@ func TestCLIConfig(t *testing.T) {
 			}
 			c, err := testCLIConfig(t, test.opt)
 			assert.Equal(t, test.wantError, err != nil, "should have error")
-			os.Setenv("KUBECONFIG", "")
+			os.Setenv("KUBECONFIG", oldKubeconfig)
 			os.Setenv("HOME", oldHome)
 			clientcmd.RecommendedHomeFile = oldRecommendHomeFile
 			if test.wantErr != nil {
