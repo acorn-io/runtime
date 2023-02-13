@@ -36,6 +36,7 @@ func TestCLIConfig(t *testing.T) {
 	xdg.Home = d
 	testAPIKubeconfig := testRestConfig(t, "testhost", "")
 	testAPIKubeconfig2 := testRestConfig(t, "testhost2", "")
+	os.Setenv("CONTEXT", "")
 	//testAPIKubeconfigEnv := testRestConfig(t, "testenv", "")
 
 	tests := []struct {
