@@ -2,19 +2,15 @@ package appdefinition
 
 import (
 	"archive/tar"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
 	"sort"
-	"strings"
 
-	cue2 "cuelang.org/go/cue"
-	"cuelang.org/go/cue/ast"
-	cue_mod "github.com/acorn-io/acorn/cue.mod"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/cue"
-	"github.com/acorn-io/acorn/schema"
+	"github.com/acorn-io/aml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,19 +19,13 @@ const (
 	ImageDataFile = "images.json"
 	VCSDataFile   = "vcs.json"
 	BuildDataFile = "build.json"
-	Schema        = "github.com/acorn-io/acorn/schema/v1"
-	AppType       = "#App"
 )
 
-var Defaults = []byte(`
-
-args: dev: bool | *false
-profiles: dev: dev: bool | *true
-`)
-
 type AppDefinition struct {
-	ctx        *cue.Context
+	data       []byte
 	imageDatas []v1.ImagesData
+	args       map[string]any
+	profiles   []string
 }
 
 func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
@@ -48,36 +38,26 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 	return appDef, err
 }
 
-func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
-	return &AppDefinition{
-		ctx:        a.ctx,
-		imageDatas: append(a.imageDatas, imageData),
+func (a *AppDefinition) clone() AppDefinition {
+	return AppDefinition{
+		data:       a.data,
+		imageDatas: a.imageDatas,
+		args:       a.args,
+		profiles:   a.profiles,
 	}
 }
 
+func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
+	result := a.clone()
+	result.imageDatas = append(result.imageDatas, imageData)
+	return &result
+}
+
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
-	files := []cue.File{
-		{
-			Name: AcornCueFile + ".cue",
-			Data: append(data, Defaults...),
-			Parser: func(name string, src any) (*ast.File, error) {
-				return parseFile(AcornCueFile, src)
-			},
-		},
-	}
-	ctx := cue.NewContext().
-		WithNestedFS("schema", schema.Files).
-		WithNestedFS("cue.mod", cue_mod.Files)
-	ctx = ctx.WithFiles(files...)
-	ctx = ctx.WithSchema(Schema, AppType)
-	_, err := ctx.Value()
-	if err != nil {
-		return nil, err
-	}
 	appDef := &AppDefinition{
-		ctx: ctx,
+		data: data,
 	}
-	_, err = appDef.AppSpec()
+	_, err := appDef.AppSpec()
 	if err != nil {
 		return nil, err
 	}
@@ -99,64 +79,13 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
-func (a *AppDefinition) getArgsForProfile(args map[string]any, profiles []string) (map[string]any, error) {
-	val, err := a.ctx.Value()
-	if err != nil {
-		return nil, err
-	}
-	for _, profile := range profiles {
-		optional := false
-		if strings.HasSuffix(profile, "?") {
-			optional = true
-			profile = profile[:len(profile)-1]
-		}
-		path := cue2.ParsePath(fmt.Sprintf("profiles[\"%s\"]", profile))
-		pValue := val.LookupPath(path)
-		if !pValue.Exists() {
-			if !optional {
-				return nil, fmt.Errorf("failed to find profile %s", profile)
-			}
-			continue
-		}
-
-		if args == nil {
-			args = map[string]any{}
-		}
-
-		inValue, err := a.ctx.Encode(args)
-		if err != nil {
-			return nil, err
-		}
-
-		newArgs := map[string]any{}
-		err = pValue.Unify(*inValue).Decode(&newArgs)
-		if err != nil {
-			return nil, cue.WrapErr(err)
-		}
-		args = newArgs
-	}
-
-	return args, nil
-}
-
 func (a *AppDefinition) WithArgs(args map[string]any, profiles []string) (*AppDefinition, map[string]any, error) {
-	args, err := a.getArgsForProfile(args, profiles)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(args) == 0 {
-		return a, args, nil
-	}
-	data, err := json.Marshal(map[string]any{
-		"args": args,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	return &AppDefinition{
-		ctx:        a.ctx.WithFile("args.cue", data),
-		imageDatas: a.imageDatas,
-	}, args, nil
+	result := a.clone()
+	result.args = args
+	result.profiles = profiles
+
+	args, err := result.newDecoder().ComputedArgs()
+	return &result, args, err
 }
 
 func (a *AppDefinition) YAML() (string, error) {
@@ -173,35 +102,24 @@ func (a *AppDefinition) YAML() (string, error) {
 }
 
 func (a *AppDefinition) JSON() (string, error) {
-	app, err := a.ctx.Value()
-	if err != nil {
+	appSpec := &v1.AppSpec{}
+	if err := a.newDecoder().Decode(&appSpec); err != nil {
 		return "", err
 	}
-	data, err := json.MarshalIndent(app, "", "  ")
-	return string(data), err
+	app, err := json.MarshalIndent(appSpec, "", "  ")
+	return string(app), err
+}
+
+func (a *AppDefinition) newDecoder() *aml.Decoder {
+	return aml.NewDecoder(bytes.NewReader(a.data), aml.Options{
+		Args:     a.args,
+		Profiles: a.profiles,
+	})
 }
 
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
-	app, err := a.ctx.Value()
-	if err != nil {
-		return nil, err
-	}
-
-	objs := map[string]any{}
-	for _, key := range []string{"containers", "jobs", "acorns", "secrets", "volumes", "images", "routers", "labels", "annotations"} {
-		v := app.LookupPath(cue2.ParsePath(key))
-		if v.Exists() {
-			objs[key] = v
-		}
-	}
-
-	newApp, err := a.ctx.Encode(objs)
-	if err != nil {
-		return nil, err
-	}
-
 	spec := &v1.AppSpec{}
-	if err := a.ctx.Decode(newApp, spec); err != nil {
+	if err := a.newDecoder().Decode(spec); err != nil {
 		return nil, err
 	}
 
@@ -279,13 +197,8 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 }
 
 func (a *AppDefinition) BuilderSpec() (*v1.BuilderSpec, error) {
-	app, err := a.ctx.Value()
-	if err != nil {
-		return nil, err
-	}
-
 	spec := &v1.BuilderSpec{}
-	return spec, a.ctx.Decode(app, spec)
+	return spec, a.newDecoder().Decode(spec)
 }
 
 func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {

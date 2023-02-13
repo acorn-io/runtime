@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/cue"
+	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/spf13/pflag"
 )
@@ -75,14 +75,8 @@ func (f *Flags) Parse(args []string) (map[string]any, error) {
 			result[name] = value
 		} else if strings.HasPrefix(value, "@") {
 			fName := value[1:]
-			data, err := cue.ReadCUE(fName)
-			if err != nil {
-				return nil, err
-			}
-			if !strings.HasSuffix(fName, ".cue") {
-				fName += ".cue"
-			}
-			val, err := cue.NewContext().WithFile(fName, data).Value()
+			val := map[string]any{}
+			err := cue.UnmarshalFile(fName, &val)
 			if err != nil {
 				return nil, err
 			}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unsafe"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/aml"
 	"github.com/rancher/wrangler/pkg/signals"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -231,7 +231,7 @@ func assignQuantities(app *cobra.Command, maps map[string]reflect.Value) error {
 			continue
 		}
 
-		quantity, err := v1.ParseQuantityString(i)
+		quantity, err := aml.ParseInt(i)
 		if err != nil {
 			return err
 		}

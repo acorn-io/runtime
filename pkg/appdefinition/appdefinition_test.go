@@ -1899,23 +1899,6 @@ let foo = std.toyaml({})
 	assert.Contains(t, err.Error(), "invalid reference to std.toyaml, closest matches [toYAML fromYAML trim]")
 }
 
-func TestStd(t *testing.T) {
-	data, err := os.ReadFile("std_test.cue")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	def, err := NewAppDefinition(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = def.AppSpec()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestArgsTopCondition(t *testing.T) {
 	data := `
 let foo = true
