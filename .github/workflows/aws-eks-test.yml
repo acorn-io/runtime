@@ -26,6 +26,7 @@ jobs:
         with:
           go-version: "1.19"
       - run: make setup-ci-env
+      - run: make build
       - run: sudo install -o root -g root -m 0755 ./bin/acorn /usr/local/bin/acorn
 
       - name: configure AWS credentials
