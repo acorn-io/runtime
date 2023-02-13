@@ -65,7 +65,8 @@ func GetHeadersFor(cfg *rest.Config) (http.Header, error) {
 		return nil, err
 	}
 	_, err = rt.RoundTrip(&http.Request{
-		URL: &url.URL{},
+		Header: http.Header{},
+		URL:    &url.URL{},
 	})
 	return headerCapture.headers, err
 }
