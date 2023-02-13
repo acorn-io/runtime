@@ -130,9 +130,10 @@ func TestCLIConfig(t *testing.T) {
 			wantNamespace: "projectnamespace",
 		},
 		{
-			name:      "No config",
-			wantError: true,
-			homeEnv:   "garbage",
+			name:          "No config",
+			wantError:     true,
+			kubeconfigEnv: "garbage",
+			homeEnv:       "garbage",
 		},
 		{
 			name: "No config, but user requested project",
