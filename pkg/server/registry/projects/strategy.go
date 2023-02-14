@@ -39,6 +39,7 @@ func (s *Strategy) Create(ctx context.Context, object types.Object) (types.Objec
 	ns := &corev1.Namespace{}
 	getErr := s.c.Get(ctx, router.Key("", project.Name), ns)
 	if getErr == nil {
+		// Project is just a labeled namespace
 		if ns.Labels[labels.AcornProject] != "true" {
 			qualifiedResource := schema.GroupResource{
 				Resource: "namespaces",

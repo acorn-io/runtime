@@ -13,7 +13,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
-	_ "github.com/golang/mock/mockgen/model"
 	"k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -179,7 +178,6 @@ type ImageDetails struct {
 	ParseError string        `json:"parseError,omitempty"`
 }
 
-//go:generate $GOPATH/bin/mockgen --build_flags=--mod=mod -destination=../mocks/mock_client.go -package=mocks github.com/acorn-io/acorn/pkg/client Client,ProjectClientFactory
 type Client interface {
 	AppList(ctx context.Context) ([]apiv1.App, error)
 	AppDelete(ctx context.Context, name string) (*apiv1.App, error)

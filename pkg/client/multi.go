@@ -37,6 +37,10 @@ type ObjectPointer[T any] interface {
 }
 
 func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
+	return aggregateOptionalNaming[T, V](ctx, true, factory, cb)
+}
+
+func aggregateOptionalNaming[T any, V ObjectPointer[T]](ctx context.Context, appendProjectName bool, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
 	var result []T
 	clients, err := factory.List(ctx)
 	if err != nil {
@@ -48,7 +52,7 @@ func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 			return nil, err
 		}
 		for i := range items {
-			if client.GetProject() != factory.DefaultProject() {
+			if appendProjectName && client.GetProject() != factory.DefaultProject() {
 				p := (V)(&items[i])
 				p.SetName(client.GetProject() + "/" + p.GetName())
 			}
@@ -443,35 +447,16 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 }
 
 func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
-	var projectsInfo []apiv1.Info
-	// Can this be refactored into a call to aggregate?
-	projects, err := m.ProjectList(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var subprojectInfo []apiv1.Info
-	// For each project after listing them all, call info on each and populate projectsInfo slice
-	for _, project := range projects {
-		c, err := m.Factory.ForProject(ctx, project.Name)
-		if err != nil {
-			return nil, err
+	return aggregateOptionalNaming(ctx, false, m.Factory, func(c Client) ([]apiv1.Info, error) {
+		infos, err := c.Info(ctx)
+		// Get project name from client and set to info object's namespace.
+		for i := range infos {
+			namespace := c.GetNamespace()
+			infos[i].Namespace = namespace
+			infos[i].Name = namespace
 		}
-		subprojectInfo, err = c.Info(ctx)
-		if err != nil {
-			return nil, err
-		}
-		// subprojectInfo should be len=1, potentially 0 if the project can't list zero
-		for _, infos := range subprojectInfo {
-			infos.Name = project.Name
-			projectsInfo = append(projectsInfo, infos)
-		}
-		// Two local projects may point to the same cluster.
-		// For each project, if it's just a local project, it should be the same
-		// Would be nice to refactor again and only keep unique project data seperated.
-
-		// If it's pointing to the hub, some logic in the hub on how to fetch the info and return it to users.
-	}
-	return projectsInfo, nil
+		return infos, err
+	})
 }
 
 func (m *MultiClient) GetProject() string {
