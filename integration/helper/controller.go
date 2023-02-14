@@ -12,6 +12,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/controller"
 	"github.com/acorn-io/acorn/pkg/crds"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
@@ -84,6 +85,7 @@ func BuilderClient(t *testing.T, namespace string) client.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return c
 }
 
@@ -213,6 +215,20 @@ func StartController(t *testing.T) {
 		c, err := controller.New()
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		cfg, err := config.Get(ctx, c.Router.Backend())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if *cfg.BuilderPerProject {
+			err = config.Set(ctx, c.Router.Backend(), &apiv1.Config{
+				BuilderPerProject: new(bool),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		if err := c.Start(context.Background()); err != nil {

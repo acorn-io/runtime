@@ -8,7 +8,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/buildclient"
-	"github.com/acorn-io/acorn/pkg/cue"
+	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

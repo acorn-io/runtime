@@ -3,10 +3,9 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
-	"cuelang.org/go/cue/literal"
+	"github.com/acorn-io/aml"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	corev1 "k8s.io/api/core/v1"
@@ -23,7 +22,7 @@ func ParseMemory(s []string) (Memory, error) {
 			workload = ""
 		}
 
-		quantity, err := ParseQuantityString(memBytes)
+		quantity, err := aml.ParseInt(memBytes)
 		if err != nil {
 			return Memory{}, err
 		}
@@ -31,21 +30,6 @@ func ParseMemory(s []string) (Memory, error) {
 		result[workload] = &quantity
 	}
 	return result, nil
-}
-
-func ParseQuantityString(memory string) (int64, error) {
-	numInfo := literal.NumInfo{}
-	err := literal.ParseNum(memory, &numInfo)
-	if err != nil {
-		return -1, err
-	}
-
-	quantity, err := strconv.ParseInt(numInfo.String(), 10, 64)
-	if err != nil {
-		return -1, err
-	}
-
-	return quantity, nil
 }
 
 var (

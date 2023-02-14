@@ -10,8 +10,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/cue"
 	"github.com/acorn-io/acorn/pkg/flagparams"
+	"github.com/acorn-io/aml/pkg/cue"
 	"golang.org/x/exp/maps"
 )
 
