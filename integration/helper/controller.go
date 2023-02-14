@@ -11,6 +11,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/controller"
@@ -50,6 +51,9 @@ func EnsureCRDs(t *testing.T) {
 
 	ctx := GetCTX(t)
 	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
+		t.Fatal(err)
+	}
+	if err := crds.Create(ctx, scheme.Scheme, adminv1.SchemeGroupVersion); err != nil {
 		t.Fatal(err)
 	}
 	c, err := hclient.Default()

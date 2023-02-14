@@ -1,0 +1,37 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  volumes:
+    - target: foo
+      class: test-volume-class
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      container-name:
+        image: "image-name"
+        dirs:
+          "/var/tmp":
+            volume: foo
+    volumes:
+      foo:
+        class: default-test-volume-class
+  defaults:
+    volumes:
+      foo:
+        accessModes:
+          - readWriteOnce
+        size: 5Gi
+  observedGeneration: 1
+  conditions:
+   -  reason: Success
+      status: "True"
+      success: true
+      type: defaults

@@ -108,6 +108,8 @@ const sidebars = {
           "reference/command-line/acorn_login",
           "reference/command-line/acorn_logout",
           "reference/command-line/acorn_logs",
+          "reference/command-line/acorn_offerings",
+          "reference/command-line/acorn_offerings_volumeclasses",
           "reference/command-line/acorn_project",
           "reference/command-line/acorn_project_create",
           "reference/command-line/acorn_project_rm",
@@ -130,6 +132,13 @@ const sidebars = {
           "reference/command-line/acorn_volume",
           "reference/command-line/acorn_volume_rm",
           "reference/command-line/acorn_wait"
+        ]
+      },
+      {
+        "type": "category",
+        "label": "Administration",
+        "items": [
+            "reference/admin/volumeclasses"
         ]
       },
       "reference/acornfile",

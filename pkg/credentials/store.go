@@ -7,7 +7,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
-	credentials2 "github.com/acorn-io/acorn/pkg/server/registry/credentials"
+	credentials2 "github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/credentials"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/docker/cli/cli/config/credentials"
 	"github.com/docker/cli/cli/config/types"

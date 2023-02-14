@@ -41,7 +41,8 @@
                 "workloadMemoryMaximum": null,
                 "useCustomCABundle": null,
                 "propagateProjectAnnotations": null,
-                "propagateProjectLabels": null
+                "propagateProjectLabels": null,
+                "manageVolumeClasses": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -68,7 +69,8 @@
                 "workloadMemoryMaximum": null,
                 "useCustomCABundle": null,
                 "propagateProjectAnnotations": null,
-                "propagateProjectLabels": null
+                "propagateProjectLabels": null,
+                "manageVolumeClasses": null
             }
         }
     }

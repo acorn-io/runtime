@@ -5,6 +5,7 @@ import (
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/crds"
@@ -67,6 +68,9 @@ func New() (*Controller, error) {
 
 func (c *Controller) Start(ctx context.Context) error {
 	if err := crds.Create(ctx, c.Scheme, v1.SchemeGroupVersion); err != nil {
+		return err
+	}
+	if err := crds.Create(ctx, c.Scheme, adminv1.SchemeGroupVersion); err != nil {
 		return err
 	}
 	if err := c.initData(ctx); err != nil {

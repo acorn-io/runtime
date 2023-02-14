@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -25,8 +26,25 @@ import (
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+func CheckStatus(h router.Handler) router.Handler {
+	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
+		appInstance := req.Object.(*v1.AppInstance)
+		conditionsToCheck := []string{v1.AppInstanceConditionDefaults}
+
+		for _, cond := range conditionsToCheck {
+			if !appInstance.Status.Condition(cond).Success {
+				resp.DisablePrune()
+				return nil
+			}
+		}
+
+		return h.Handle(req, resp)
+	})
+}
 
 func ReadyStatus(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
@@ -79,7 +97,8 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		app.Status.Condition(v1.AppInstanceConditionSecrets).Success &&
 		app.Status.Condition(v1.AppInstanceConditionPulled).Success &&
 		app.Status.Condition(v1.AppInstanceConditionController).Success &&
-		app.Status.Condition(v1.AppInstanceConditionDefined).Success
+		app.Status.Condition(v1.AppInstanceConditionDefined).Success &&
+		app.Status.Condition(v1.AppInstanceConditionVolumes).Success
 	return nil
 }
 
@@ -159,6 +178,59 @@ func JobStatus(req router.Request, resp router.Response) error {
 	}
 
 	resp.Objects(app)
+	return nil
+}
+
+func VolumeStatus(req router.Request, resp router.Response) error {
+	var (
+		app  = req.Object.(*v1.AppInstance)
+		cond = condition.Setter(app, resp, v1.AppInstanceConditionVolumes)
+		pvcs = new(corev1.PersistentVolumeClaimList)
+
+		messages, errMessages []string
+	)
+
+	if err := req.List(pvcs, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged: "true",
+			labels.AcornAppName: app.Name,
+		}),
+	}); err != nil {
+		return err
+	} else if len(pvcs.Items) == 0 {
+		cond.Success()
+		return nil
+	}
+
+	storageClassNames, err := volume.GetVolumeClassNames(req.Ctx, req.Client, app.Namespace, true)
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(pvcs.Items, func(i, j int) bool {
+		return pvcs.Items[i].CreationTimestamp.Before(&pvcs.Items[j].CreationTimestamp)
+	})
+
+	for _, pvc := range pvcs.Items {
+		switch pvc.Status.Phase {
+		case corev1.ClaimBound:
+			// No message if the PVC is in phase bound.
+		default:
+			if pvc.Spec.StorageClassName != nil && *pvc.Spec.StorageClassName != "" && !slices.Contains(storageClassNames, *pvc.Spec.StorageClassName) {
+				errMessages = append(errMessages, fmt.Sprintf("volume class %s for volume %s doesn't exist", *pvc.Spec.StorageClassName, pvc.Labels[labels.AcornVolumeName]))
+			}
+			messages = append(messages, fmt.Sprintf("waiting for volume %s to provision and bind", pvc.Labels[labels.AcornVolumeName]))
+		}
+	}
+
+	if len(errMessages) > 0 {
+		cond.Error(fmt.Errorf(strings.Join(errMessages, "; ")))
+	} else if len(messages) > 0 {
+		cond.Unknown(strings.Join(messages, "; "))
+	} else {
+		cond.Success()
+	}
 	return nil
 }
 

@@ -19,7 +19,8 @@ APPS:
             "imageData": {},
             "vcs": {}
         },
-        "appSpec": {}
+        "appSpec": {},
+        "defaults": {}
     }
 }
 

@@ -97,13 +97,11 @@ func TestVolumeLabelsAnnotations(t *testing.T) {
 						Annotations: map[string]string{
 							"vol1fromacornfilea": "val",
 						},
-						Class:       "default",
 						AccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
 					},
 					"volume2": {
 						Labels:      nil,
 						Annotations: nil,
-						Class:       "default",
 						AccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
 					},
 				},

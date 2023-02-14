@@ -1,6 +1,7 @@
 package roles
 
 import (
+	admin_acorn_io "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
 	api_acorn_io "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -48,6 +49,12 @@ var (
 					"containerreplicas",
 					"credentials",
 					"secrets",
+				},
+			},
+			{
+				Verbs: []string{"get", "list"},
+				Resources: []string{
+					"volumeclasses",
 				},
 			},
 			{
@@ -126,13 +133,25 @@ var (
 				},
 			},
 		},
+		Admin: {
+			{
+				Verbs: []string{"*"},
+				Resources: []string{
+					"projectvolumeclasses",
+					"clustervolumeclasses",
+				},
+				APIGroups: []string{admin_acorn_io.Group},
+			},
+		},
 	}
 )
 
 func addAPIGroup(roles []rbacv1.ClusterRole) []rbacv1.ClusterRole {
 	for i := range roles {
 		for j := range roles[i].Rules {
-			roles[i].Rules[j].APIGroups = []string{api_acorn_io.Group}
+			if len(roles[i].Rules[j].APIGroups) == 0 {
+				roles[i].Rules[j].APIGroups = []string{api_acorn_io.Group}
+			}
 		}
 	}
 	return roles

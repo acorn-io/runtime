@@ -10,7 +10,9 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/client/term"
 	"github.com/acorn-io/acorn/pkg/project"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -27,20 +29,22 @@ func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
 }
 
 type MockClientFactory struct {
-	AppList        []apiv1.App
-	AppItem        *apiv1.App
-	ContainerList  []apiv1.ContainerReplica
-	ContainerItem  *apiv1.ContainerReplica
-	CredentialList []apiv1.Credential
-	CredentialItem *apiv1.Credential
-	VolumeList     []apiv1.Volume
-	VolumeItem     *apiv1.Volume
-	SecretList     []apiv1.Secret
-	SecretItem     *apiv1.Secret
-	ImageList      []apiv1.Image
-	ImageItem      *apiv1.Image
-	ProjectList    []apiv1.Project
-	ProjectItem    *apiv1.Project
+	AppList         []apiv1.App
+	AppItem         *apiv1.App
+	ContainerList   []apiv1.ContainerReplica
+	ContainerItem   *apiv1.ContainerReplica
+	CredentialList  []apiv1.Credential
+	CredentialItem  *apiv1.Credential
+	VolumeList      []apiv1.Volume
+	VolumeItem      *apiv1.Volume
+	SecretList      []apiv1.Secret
+	SecretItem      *apiv1.Secret
+	ImageList       []apiv1.Image
+	ImageItem       *apiv1.Image
+	ProjectList     []apiv1.Project
+	ProjectItem     *apiv1.Project
+	VolumeClassList []apiv1.VolumeClass
+	VolumeClassItem *apiv1.VolumeClass
 }
 
 func (dc *MockClientFactory) Options() project.Options {
@@ -49,38 +53,42 @@ func (dc *MockClientFactory) Options() project.Options {
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 	return &MockClient{
-		Apps:           dc.AppList,
-		Containers:     dc.ContainerList,
-		Credentials:    dc.CredentialList,
-		Volumes:        dc.VolumeList,
-		Secrets:        dc.SecretList,
-		Images:         dc.ImageList,
-		Projects:       dc.ProjectList,
-		AppItem:        dc.AppItem,
-		ContainerItem:  dc.ContainerItem,
-		CredentialItem: dc.CredentialItem,
-		VolumeItem:     dc.VolumeItem,
-		SecretItem:     dc.SecretItem,
-		ImageItem:      dc.ImageItem,
-		ProjectItem:    dc.ProjectItem,
+		Apps:            dc.AppList,
+		Containers:      dc.ContainerList,
+		Credentials:     dc.CredentialList,
+		Volumes:         dc.VolumeList,
+		Secrets:         dc.SecretList,
+		Images:          dc.ImageList,
+		Projects:        dc.ProjectList,
+		VolumeClasses:   dc.VolumeClassList,
+		AppItem:         dc.AppItem,
+		ContainerItem:   dc.ContainerItem,
+		CredentialItem:  dc.CredentialItem,
+		VolumeItem:      dc.VolumeItem,
+		SecretItem:      dc.SecretItem,
+		ImageItem:       dc.ImageItem,
+		ProjectItem:     dc.ProjectItem,
+		VolumeClassItem: dc.VolumeClassItem,
 	}, nil
 }
 
 type MockClient struct {
-	Apps           []apiv1.App
-	AppItem        *apiv1.App
-	Containers     []apiv1.ContainerReplica
-	ContainerItem  *apiv1.ContainerReplica
-	Credentials    []apiv1.Credential
-	CredentialItem *apiv1.Credential
-	Volumes        []apiv1.Volume
-	VolumeItem     *apiv1.Volume
-	Secrets        []apiv1.Secret
-	SecretItem     *apiv1.Secret
-	Images         []apiv1.Image
-	ImageItem      *apiv1.Image
-	Projects       []apiv1.Project
-	ProjectItem    *apiv1.Project
+	Apps            []apiv1.App
+	AppItem         *apiv1.App
+	Containers      []apiv1.ContainerReplica
+	ContainerItem   *apiv1.ContainerReplica
+	Credentials     []apiv1.Credential
+	CredentialItem  *apiv1.Credential
+	Volumes         []apiv1.Volume
+	VolumeItem      *apiv1.Volume
+	Secrets         []apiv1.Secret
+	SecretItem      *apiv1.Secret
+	Images          []apiv1.Image
+	ImageItem       *apiv1.Image
+	Projects        []apiv1.Project
+	ProjectItem     *apiv1.Project
+	VolumeClasses   []apiv1.VolumeClass
+	VolumeClassItem *apiv1.VolumeClass
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -612,22 +620,22 @@ func (m *MockClient) AppConfirmUpgrade(ctx context.Context, name string) error {
 }
 
 func (m *MockClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m *MockClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m *MockClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m *MockClient) AcornImageBuild(ctx context.Context, file string, opts *client.AcornImageBuildOptions) (*v1.AppImage, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
@@ -656,11 +664,32 @@ func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Projec
 }
 
 func (m *MockClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m *MockClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
+}
+
+func (m *MockClient) VolumeClassList(context.Context) ([]apiv1.VolumeClass, error) {
+	return m.VolumeClasses, nil
+}
+
+func (m *MockClient) VolumeClassGet(_ context.Context, name string) (*apiv1.VolumeClass, error) {
+	if m.VolumeClassItem != nil {
+		return m.VolumeClassItem, nil
+	}
+
+	for _, s := range m.VolumeClasses {
+		if s.Name == name {
+			return &s, nil
+		}
+	}
+
+	return nil, apierrors.NewNotFound(schema.GroupResource{
+		Group:    "api.acorn.io",
+		Resource: "volumeclasses",
+	}, name)
 }

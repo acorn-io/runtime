@@ -40,6 +40,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&LogOptions{},
 		&Volume{},
 		&VolumeList{},
+		&VolumeClass{},
+		&VolumeClassList{},
 		&Credential{},
 		&CredentialList{},
 		&ContainerReplica{},

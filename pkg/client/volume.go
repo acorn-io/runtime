@@ -50,3 +50,28 @@ func (c *DefaultClient) VolumeDelete(ctx context.Context, name string) (*apiv1.V
 		},
 	})
 }
+
+func (c *DefaultClient) VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error) {
+	volumeClasses := new(apiv1.VolumeClassList)
+	err := c.Client.List(ctx, volumeClasses, &kclient.ListOptions{Namespace: c.Namespace})
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(volumeClasses.Items, func(i, j int) bool {
+		if volumeClasses.Items[i].CreationTimestamp.Time == volumeClasses.Items[j].CreationTimestamp.Time {
+			return volumeClasses.Items[i].Name < volumeClasses.Items[j].Name
+		}
+		return volumeClasses.Items[i].CreationTimestamp.After(volumeClasses.Items[j].CreationTimestamp.Time)
+	})
+
+	return volumeClasses.Items, nil
+}
+
+func (c *DefaultClient) VolumeClassGet(ctx context.Context, name string) (*apiv1.VolumeClass, error) {
+	storage := new(apiv1.VolumeClass)
+	return storage, c.Client.Get(ctx, kclient.ObjectKey{
+		Namespace: c.Namespace,
+		Name:      name,
+	}, storage)
+}

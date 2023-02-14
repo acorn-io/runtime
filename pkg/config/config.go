@@ -90,6 +90,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.IgnoreUserLabelsAndAnnotations == nil {
 		c.IgnoreUserLabelsAndAnnotations = new(bool)
 	}
+	if c.ManageVolumeClasses == nil {
+		c.ManageVolumeClasses = new(bool)
+	}
 	if c.UseCustomCABundle == nil {
 		c.UseCustomCABundle = new(bool)
 	}
@@ -210,6 +213,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.IgnoreUserLabelsAndAnnotations != nil {
 		mergedConfig.IgnoreUserLabelsAndAnnotations = newConfig.IgnoreUserLabelsAndAnnotations
+	}
+
+	if newConfig.ManageVolumeClasses != nil {
+		mergedConfig.ManageVolumeClasses = newConfig.ManageVolumeClasses
 	}
 
 	// This is to provide a way to reset value to empty if user passes --flag "" as empty string
@@ -337,16 +344,25 @@ func Incomplete(ctx context.Context, getter kclient.Reader) (*apiv1.Config, erro
 		return nil, err
 	}
 
-	config := &apiv1.Config{}
+	return unmarshal(cm)
+}
+
+func UnmarshalAndComplete(ctx context.Context, cm *corev1.ConfigMap, getter kclient.Reader) (*apiv1.Config, error) {
+	config, err := unmarshal(cm)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, complete(ctx, config, getter)
+}
+
+func unmarshal(cm *corev1.ConfigMap) (*apiv1.Config, error) {
+	config := new(apiv1.Config)
 	if len(cm.Data["config"]) == 0 {
 		return config, nil
 	}
 
-	if err := json.Unmarshal([]byte(cm.Data["config"]), config); err != nil {
-		return nil, err
-	}
-
-	return config, nil
+	return config, json.Unmarshal([]byte(cm.Data["config"]), config)
 }
 
 func AsConfigMap(cfg *apiv1.Config) (*corev1.ConfigMap, error) {
