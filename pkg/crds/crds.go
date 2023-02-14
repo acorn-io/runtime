@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/rancher/wrangler/pkg/crd"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,10 +24,15 @@ func Create(ctx context.Context, scheme *runtime.Scheme, gvs ...schema.GroupVers
 			_, isObj := obj.(kclient.Object)
 			_, isListObj := obj.(kclient.ObjectList)
 			if isObj && !isListObj {
+				var nonNamespaced bool
+				if o, ok := obj.(strategy.NamespaceScoper); ok {
+					nonNamespaced = !o.NamespaceScoped()
+				}
 				wranglerCRDs = append(wranglerCRDs, crd.CRD{
 					GVK:          gvk,
 					SchemaObject: obj,
 					Status:       true,
+					NonNamespace: nonNamespaced,
 				}.WithColumnsFromStruct(obj))
 			}
 		}

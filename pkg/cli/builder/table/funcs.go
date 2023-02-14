@@ -34,6 +34,7 @@ var (
 		"trunc":         Trunc,
 		"alias":         Noop,
 		"appGeneration": AppGeneration,
+		"displayRange":  DisplayRange,
 	}
 )
 
@@ -174,6 +175,21 @@ func BoolToStar(obj any) (string, error) {
 		return "*", nil
 	}
 	return "", nil
+}
+
+func DisplayRange(minVal, maxVal any) (string, error) {
+	min, max := fmt.Sprintf("%v", minVal), fmt.Sprintf("%v", maxVal)
+	if max == "" {
+		max = "Unrestricted"
+	}
+	if min == "" {
+		if max == "Unrestricted" {
+			return max, nil
+		}
+		min = "5M"
+	}
+
+	return fmt.Sprintf("%s-%s", min, max), nil
 }
 
 func AppGeneration(app apiv1.App, msg string) string {

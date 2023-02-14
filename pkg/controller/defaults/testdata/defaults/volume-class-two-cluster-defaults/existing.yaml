@@ -1,0 +1,28 @@
+---
+kind: ProjectVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: test-volume-class
+  namespace: app-namespace
+description: Just a simple test volume class
+default: true
+storageClassName: test-storage-class
+size:
+  min: 1Gi
+  max: 10Gi
+  default: 2Gi
+allowedAccessModes: ["readWriteOnce"]
+---
+kind: ProjectVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: test-volume-class-1
+  namespace: app-namespace
+description: Just a simple test volume class
+default: true
+storageClassName: test-storage-class
+size:
+  min: 1Gi
+  max: 10Gi
+  default: 2Gi
+allowedAccessModes: ["readWriteOnce"]

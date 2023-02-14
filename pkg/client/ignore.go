@@ -278,3 +278,11 @@ func (c IgnoreUninstalled) Info(ctx context.Context) ([]apiv1.Info, error) {
 		return c.Client.Info(ctx)
 	})
 }
+
+func (c IgnoreUninstalled) VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error) {
+	return ignoreUninstalled(c.Client.VolumeClassList(ctx))
+}
+
+func (c IgnoreUninstalled) VolumeClassGet(ctx context.Context, name string) (*apiv1.VolumeClass, error) {
+	return c.Client.VolumeClassGet(ctx, name)
+}

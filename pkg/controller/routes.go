@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
 	"github.com/acorn-io/acorn/pkg/controller/builder"
 	"github.com/acorn-io/acorn/pkg/controller/config"
+	"github.com/acorn-io/acorn/pkg/controller/defaults"
 	"github.com/acorn-io/acorn/pkg/controller/gc"
 	"github.com/acorn-io/acorn/pkg/controller/ingress"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
@@ -15,11 +16,13 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 )
 
@@ -40,15 +43,19 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
+	appRouter.HandlerFunc(defaults.CalculateDefaults)
+	appRouter = appRouter.Middleware(appdefinition.CheckStatus)
 	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.CreateSecrets)
 	appRouter.HandlerFunc(appdefinition.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
 	appRouter.HandlerFunc(appdefinition.JobStatus)
+	appRouter.HandlerFunc(appdefinition.VolumeStatus)
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
-	appRouter.HandlerFunc(appdefinition.CLIStatus)
 	appRouter.HandlerFunc(appdefinition.UpdateGeneration)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
+
+	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.CLIStatus)
 
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
 
@@ -64,8 +71,12 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&corev1.Service{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
-	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).Handler(config.NewDNSConfigHandler())
-	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).HandlerFunc(builder.DeployRegistry)
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
-	router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName).HandlerFunc(config.HandleAutoUpgradeInterval)
+	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
+
+	configRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName)
+	configRouter.Handler(config.NewDNSConfigHandler())
+	configRouter.HandlerFunc(builder.DeployRegistry)
+	configRouter.HandlerFunc(config.HandleAutoUpgradeInterval)
+	configRouter.HandlerFunc(volume.CreateEphemeralVolumeClass)
 }

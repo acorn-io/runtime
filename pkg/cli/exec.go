@@ -28,7 +28,7 @@ func NewExec(c CommandContext) *cobra.Command {
 
 	// This will produce an error if the container flag doesn't exist or a completion function has already
 	// been registered for this flag. Not returning the error since neither of these is likely occur.
-	if err := cmd.RegisterFlagCompletionFunc("container", newCompletion(c.ClientFactory, acornContainerCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete); err != nil {
+	if err := cmd.RegisterFlagCompletionFunc("container", newCompletion(c.ClientFactory, acornContainerCompletion).complete); err != nil {
 		cmd.Printf("Error registering completion function for -c flag: %v\n", err)
 	}
 

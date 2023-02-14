@@ -900,3 +900,144 @@ func TestSecretsCompletion(t *testing.T) {
 		})
 	}
 }
+
+func TestVolumeClassCompletion(t *testing.T) {
+	names := []string{"ephemeral", "efficient", "magic", "test", "too-fast"}
+	storages := make([]apiv1.VolumeClass, 0, len(names))
+	for _, name := range names {
+		storages = append(storages, apiv1.VolumeClass{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		VolumeClassList: storages,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Nothing to complete, return all",
+			wantNames:     names,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with t",
+			toComplete:    "t",
+			wantNames:     []string{"test", "too-fast"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with e includes ephemeral",
+			toComplete:    "e",
+			wantNames:     []string{"ephemeral", "efficient"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with t, but test already in args",
+			toComplete:    "t",
+			args:          []string{"test"},
+			wantNames:     []string{"too-fast"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with m, but all m's in args",
+			toComplete:    "m",
+			args:          []string{"magic"},
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete test, only test returned",
+			toComplete:    "test",
+			wantNames:     []string{"test"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete empty, but all names already in args",
+			args:          names,
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete something that doesn't exist",
+			toComplete:    "hello",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, volumeClassCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "volumeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "volumeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}
+
+func TestVolumeClassFlagCompletion(t *testing.T) {
+	names := []string{"ephemeral", "efficient", "magic", "test", "too-fast"}
+	storages := make([]apiv1.VolumeClass, 0, len(names))
+	for _, name := range names {
+		storages = append(storages, apiv1.VolumeClass{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		VolumeClassList: storages,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Complete the volume tag with t",
+			toComplete:    "foo:bar,size=5G,class=t",
+			wantNames:     []string{"foo:bar,size=5G,class=test", "foo:bar,size=5G,class=too-fast"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete the volume tag with e includes ephemeral",
+			toComplete:    "bar,size=5G,class=e",
+			wantNames:     []string{"bar,size=5G,class=ephemeral", "bar,size=5G,class=efficient"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete the volume tag with test",
+			toComplete:    "test,size=5G,class=test",
+			wantNames:     []string{"test,size=5G,class=test"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Don't complete the volume tag because not currently completing class portion",
+			toComplete:    "size=",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Don't complete the volume tag because already there",
+			toComplete:    "class=local-path,size=",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, volumeFlagClassCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "volumeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "volumeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}

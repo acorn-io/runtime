@@ -35,7 +35,7 @@ type configHandler struct {
 // store in a secret.
 // If it is disabled, it ensures existing records for the domain have been purged from the AcornDNS service.
 func (h *configHandler) Handle(req router.Request, resp router.Response) error {
-	cfg, err := config.Get(req.Ctx, req.Client)
+	cfg, err := config.UnmarshalAndComplete(req.Ctx, req.Object.(*corev1.ConfigMap), req.Client)
 	if err != nil {
 		return err
 	}

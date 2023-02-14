@@ -13,6 +13,7 @@ import (
 	apiv1config "github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
+	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -56,7 +57,13 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			}
 		}
 
-		workloadsFromImage, err := s.getWorkloads(ctx, image, params)
+		imageDetails, err := s.getImageDetails(ctx, params, image)
+		if err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			return
+		}
+
+		workloadsFromImage, err := s.getWorkloads(imageDetails)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 			return
@@ -74,7 +81,12 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
-		permsFromImage, err := s.getPermissions(ctx, image, params)
+		if err := volume.ValidateVolumeClasses(ctx, s.client, params.Namespace, params.Spec, imageDetails.AppSpec); err != nil {
+			result = append(result, err)
+			return
+		}
+
+		permsFromImage, err := s.getPermissions(imageDetails)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
 			return
@@ -338,40 +350,14 @@ func validateMemoryRunFlags(memory v1.Memory, workloads map[string]v1.Container)
 	return validationErrors
 }
 
-func (s *Validator) getPermissions(ctx context.Context, image string, app *apiv1.App) (result []v1.Permissions, _ error) {
-	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
-		&client.ImageDetailsOptions{
-			Profiles:   app.Spec.Profiles,
-			DeployArgs: app.Spec.DeployArgs})
-
-	if err != nil {
-		return result, err
-	}
-
-	if details.ParseError != "" {
-		return result, errors.New(details.ParseError)
-	}
-
+func (s *Validator) getPermissions(details *client.ImageDetails) (result []v1.Permissions, _ error) {
 	result = append(result, buildPermissionsFrom(details.AppSpec.Containers)...)
 	result = append(result, buildPermissionsFrom(details.AppSpec.Jobs)...)
 
 	return result, nil
 }
 
-func (s *Validator) getWorkloads(ctx context.Context, image string, app *apiv1.App) (map[string]v1.Container, error) {
-	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
-		&client.ImageDetailsOptions{
-			Profiles:   app.Spec.Profiles,
-			DeployArgs: app.Spec.DeployArgs})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if details.ParseError != "" {
-		return nil, errors.New(details.ParseError)
-	}
-
+func (s *Validator) getWorkloads(details *client.ImageDetails) (map[string]v1.Container, error) {
 	result := make(map[string]v1.Container, len(details.AppSpec.Containers)+len(details.AppSpec.Jobs))
 	for workload, container := range details.AppSpec.Containers {
 		result[workload] = container
@@ -419,4 +405,20 @@ func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image stri
 		return strings.TrimPrefix(localImage.Digest, "sha256:"), true, nil
 	}
 	return image, false, nil
+}
+
+func (s *Validator) getImageDetails(ctx context.Context, app *apiv1.App, image string) (*client.ImageDetails, error) {
+	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
+		&client.ImageDetailsOptions{
+			Profiles:   app.Spec.Profiles,
+			DeployArgs: app.Spec.DeployArgs})
+	if err != nil {
+		return nil, err
+	}
+
+	if details.ParseError != "" {
+		return nil, fmt.Errorf(details.ParseError)
+	}
+
+	return details, nil
 }

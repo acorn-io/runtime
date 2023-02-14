@@ -74,7 +74,7 @@ func baseResources(ctx context.Context, c kclient.Client) (resources []kclient.O
 	}
 
 	for _, crd := range crds.Items {
-		if strings.HasSuffix(crd.Name, ".internal.acorn.io") {
+		if strings.HasSuffix(crd.Name, ".internal.acorn.io") || strings.HasSuffix(crd.Name, ".internal.admin.acorn.io") {
 			c := crd
 			resources = append(resources, &c)
 		}

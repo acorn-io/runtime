@@ -19,7 +19,7 @@ func ParseVolumes(args []string, binding bool) (result []VolumeBinding, _ error)
 		volName = strings.TrimSpace(volName)
 		existing = strings.TrimSpace(existing)
 		if volName == "" {
-			return nil, fmt.Errorf("invalid endpoint binding [%s] must not have zero length value", arg)
+			return nil, fmt.Errorf("invalid volume name binding: [%s] must not have zero length value", arg)
 		}
 		volumeBinding := VolumeBinding{
 			Volume: existing,

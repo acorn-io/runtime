@@ -10,6 +10,7 @@ type AppInstanceCondition string
 
 var (
 	AppInstanceConditionDefined    = "defined"
+	AppInstanceConditionDefaults   = "defaults"
 	AppInstanceConditionNamespace  = "namespace"
 	AppInstanceConditionParsed     = "parsed"
 	AppInstanceConditionController = "controller"
@@ -19,6 +20,7 @@ var (
 	AppInstanceConditionJobs       = "jobs"
 	AppInstanceConditionReady      = "Ready"
 	AppInstanceConditionUpgrade    = "upgrade"
+	AppInstanceConditionVolumes    = "volumes"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -161,6 +163,17 @@ type AppInstanceStatus struct {
 	AppSpec                AppSpec                    `json:"appSpec,omitempty"`
 	Conditions             []Condition                `json:"conditions,omitempty"`
 	Endpoints              []Endpoint                 `json:"endpoints,omitempty"`
+	Defaults               Defaults                   `json:"defaults,omitempty"`
+}
+
+type Defaults struct {
+	Volumes map[string]VolumeDefault `json:"volumes,omitempty"`
+}
+
+type VolumeDefault struct {
+	Class       string      `json:"class,omitempty"`
+	Size        Quantity    `json:"size,omitempty"`
+	AccessModes AccessModes `json:"accessModes,omitempty"`
 }
 
 type Endpoint struct {
