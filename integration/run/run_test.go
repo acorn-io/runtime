@@ -43,6 +43,12 @@ func TestVolume(t *testing.T) {
 			obj.Labels[labels.AcornManaged] == "true"
 	})
 
+	app, err = c.AppGet(ctx, app.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.EqualValues(t, "1G", app.Status.AppSpec.Volumes["my-data"].Size, "volume my-data has size different than expected")
+
 	_, err = c.AppDelete(ctx, app.Name)
 	if err != nil {
 		t.Fatal(err)
