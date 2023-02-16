@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/acorn/pkg/tolerations"
 	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
@@ -156,6 +157,12 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 						"-f",
 						"/dev/null",
 					},
+				},
+			},
+			Tolerations: []corev1.Toleration{
+				{
+					Key:      tolerations.WorkloadTolerationKey,
+					Operator: corev1.TolerationOpExists,
 				},
 			},
 		},

@@ -15,6 +15,11 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+  scheduling:
+    oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
   appSpec:
     containers:
       oneimage:

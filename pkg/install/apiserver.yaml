@@ -67,6 +67,9 @@ spec:
           securityContext:
             runAsUser: 1000
       serviceAccountName: acorn-system
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: "Exists"
 ---
 kind: PodDisruptionBudget
 apiVersion: policy/v1
@@ -78,3 +81,4 @@ spec:
   selector:
     matchLabels:
       app: acorn-api
+

@@ -21,6 +21,9 @@ status:
           memory: 2Mi
       computeClass: ""
     oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

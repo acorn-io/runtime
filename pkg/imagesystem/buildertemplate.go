@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/acorn/pkg/tolerations"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -191,6 +192,12 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							VolumeSource: corev1.VolumeSource{
 								EmptyDir: &corev1.EmptyDirVolumeSource{},
 							},
+						},
+					},
+					Tolerations: []corev1.Toleration{
+						{
+							Key:      tolerations.WorkloadTolerationKey,
+							Operator: corev1.TolerationOpExists,
 						},
 					},
 				},

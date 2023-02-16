@@ -18,6 +18,9 @@ status:
         requests:
           memory: 1Mi
     oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       requirements: {}
   namespace: app-created-namespace
   appImage:
