@@ -17,7 +17,7 @@ setup-ci-image:
 validate:
 	golangci-lint run
 
-validate-ci:
+validate-ci: setup-ci-env
 	go generate
 	go mod tidy
 	go run tools/gendocs/main.go
@@ -35,7 +35,10 @@ goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist
 
 setup-ci-env:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.49.0
+	if ! command -v golangci-lint &> /dev/null; then \
+  		echo "Could not find golangci-lint, installing."; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.51.1; \
+	fi
 	go install github.com/golang/mock/mockgen
 
 
