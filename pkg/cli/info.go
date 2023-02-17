@@ -27,15 +27,12 @@ type Info struct {
 	client ClientFactory
 }
 
-type ClientServerVersion struct {
+type InfoCLIResponse struct {
 	Client struct {
 		Version bversion.Version  `json:"version,omitempty"`
 		CLI     *config.CLIConfig `json:"cli,omitempty"`
 	} `json:"client,omitempty"`
-	Server  apiv1.InfoSpec `json:"server,omitempty"`
-	Project struct {
-		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
-	} `json:"project,omitempty"`
+	Projects map[string]apiv1.InfoSpec `json:"projects,omitempty"`
 }
 
 func (s *Info) Run(cmd *cobra.Command, args []string) error {
@@ -49,21 +46,21 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Testing/mocking ReadCLIConfig() is difficult. Any better way to test?
 	cfg, err := config.ReadCLIConfig()
 	if err != nil {
 		logrus.Errorf("failed to read CLI config: %v", err)
 		cfg = nil
 	}
+	projectInfo := make(map[string]apiv1.InfoSpec)
 
-	//Formatting...
-	ns := struct {
-		PublicKeys []apiv1.EncryptionKey `json:"publicKeys,omitempty"`
-	}{PublicKeys: info.Spec.PublicKeys}
-
-	info.Spec.PublicKeys = []apiv1.EncryptionKey{}
+	// Format data from info response into map of project name to info response
+	for _, subInfo := range info {
+		projectInfo[subInfo.Name] = subInfo.Spec
+	}
 
 	out := table.NewWriter(tables.Info, false, s.Output)
-	out.Write(ClientServerVersion{
+	out.Write(InfoCLIResponse{
 		Client: struct {
 			Version bversion.Version  `json:"version,omitempty"`
 			CLI     *config.CLIConfig `json:"cli,omitempty"`
@@ -71,8 +68,7 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 			Version: version.Get(),
 			CLI:     cfg.Sanitize(),
 		},
-		Server:  info.Spec,
-		Project: ns,
+		Projects: projectInfo,
 	})
 	return out.Err()
 }

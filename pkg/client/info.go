@@ -7,7 +7,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (c *DefaultClient) Info(ctx context.Context) (*apiv1.Info, error) {
+func (c *DefaultClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	result := &apiv1.InfoList{}
 	err := c.Client.List(ctx, result, &kclient.ListOptions{
 		Namespace: c.Namespace,
@@ -15,6 +15,5 @@ func (c *DefaultClient) Info(ctx context.Context) (*apiv1.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return &result.Items[0], nil
+	return result.Items, nil
 }

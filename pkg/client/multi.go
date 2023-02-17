@@ -37,6 +37,10 @@ type ObjectPointer[T any] interface {
 }
 
 func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
+	return aggregateOptionalNaming[T, V](ctx, true, factory, cb)
+}
+
+func aggregateOptionalNaming[T any, V ObjectPointer[T]](ctx context.Context, appendProjectName bool, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
 	var result []T
 	clients, err := factory.List(ctx)
 	if err != nil {
@@ -48,7 +52,7 @@ func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 			return nil, err
 		}
 		for i := range items {
-			if client.GetProject() != factory.DefaultProject() {
+			if appendProjectName && client.GetProject() != factory.DefaultProject() {
 				p := (V)(&items[i])
 				p.SetName(client.GetProject() + "/" + p.GetName())
 			}
@@ -442,12 +446,17 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 	})
 }
 
-func (m *MultiClient) Info(ctx context.Context) (*apiv1.Info, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
-	if err != nil {
-		return nil, err
-	}
-	return c.Info(ctx)
+func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
+	return aggregateOptionalNaming(ctx, false, m.Factory, func(c Client) ([]apiv1.Info, error) {
+		infos, err := c.Info(ctx)
+		// Get project name from client and set to info object's namespace.
+		for i := range infos {
+			namespace := c.GetNamespace()
+			infos[i].Namespace = namespace
+			infos[i].Name = namespace
+		}
+		return infos, err
+	})
 }
 
 func (m *MultiClient) GetProject() string {

@@ -4,6 +4,9 @@ build:
 generate:
 	go generate
 
+mocks:
+	${GOPATH}/bin/mockgen --build_flags=--mod=mod -destination=pkg/mocks/mock_client.go -package=mocks github.com/acorn-io/acorn/pkg/client Client,ProjectClientFactory
+
 image:
 	docker build .
 
@@ -33,6 +36,8 @@ goreleaser:
 
 setup-ci-env:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.49.0
+	go install github.com/golang/mock/mockgen
+
 
 # This will initialize the node_modules needed to run the docs dev server. Run this before running serve-docs
 init-docs:
