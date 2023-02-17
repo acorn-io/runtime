@@ -41,8 +41,27 @@ func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, names
 		return "", false, err
 	}
 
-	newTag, err := FindLatest(imagename.DefaultTag, pattern, tags)
-	return strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/"), newTag != imagename.DefaultTag, err
+	newTag := imagename.DefaultTag
+	newImage := strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/")
+	for len(tags) > 0 {
+		nTag, err := FindLatest(imagename.DefaultTag, pattern, tags)
+		if err != nil || nTag == imagename.DefaultTag {
+			// resorting to default tag, so stop trying (we don't want to loop forever)
+			break
+		}
+		img := strings.TrimPrefix(ref.Context().Tag(nTag).Name(), defaultNoReg+"/")
+		if err := c.checkImageAllowed(ctx, namespace, img); err != nil {
+			// remove the tag from the list and try again
+			tags = slices.Filter(nil, tags, func(tag string) bool { return tag != nTag })
+		} else {
+			// found a valid tag that is allowed by all rules, so use it
+			newTag = nTag
+			newImage = img
+			break
+		}
+	}
+
+	return newImage, newTag != imagename.DefaultTag, err
 }
 
 // FindLatestTagForImageWithPattern will return the latest tag for image corresponding to the pattern.

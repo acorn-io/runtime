@@ -1,0 +1,1 @@
+{"critical":{"identity":{"docker-reference":"harbor.thklein.dev/public/random"},"image":{"docker-manifest-digest":"sha256:245864d0312e7e33201eff111cfc071727f4eaa9edd10a395c367077e200cad2"},"type":"cosign container image signature"},"optional":{"tag":"notok"}}

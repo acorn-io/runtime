@@ -893,3 +893,33 @@ func (mr *MockProjectClientFactoryMockRecorder) List(arg0 interface{}) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockProjectClientFactory)(nil).List), arg0)
 }
+
+// ImageAllowRulesGet mocks base method
+func (m *MockClient) ImageAllowRulesGet(arg0 context.Context, arg1 string) (*v1.ImageAllowRules, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImageAllowRulesGet", arg0, arg1)
+	ret0, _ := ret[0].(*v1.ImageAllowRules)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImageAllowRulesGet indicates an expected call of ImageAllowRulesGet
+func (mr *MockClientMockRecorder) ImageAllowRulesGet(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageAllowRulesGet", reflect.TypeOf((*MockClient)(nil).ImageAllowRulesGet), arg0, arg1)
+}
+
+// ImageAllowRulesList mocks base method
+func (m *MockClient) ImageAllowRulesList(arg0 context.Context) ([]v1.ImageAllowRules, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImageAllowRulesList", arg0)
+	ret0, _ := ret[0].([]v1.ImageAllowRules)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImageAllowRulesList indicates an expected call of ImageAllowRulesList
+func (mr *MockClientMockRecorder) ImageAllowRulesList(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageAllowRulesList", reflect.TypeOf((*MockClient)(nil).ImageAllowRulesList), arg0)
+}

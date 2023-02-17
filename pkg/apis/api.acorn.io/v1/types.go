@@ -460,3 +460,15 @@ type RegionList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Region `json:"items"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ImageAllowRules v1.ImageAllowRulesInstance
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ImageAllowRulesList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ImageAllowRules `json:"items"`
+}

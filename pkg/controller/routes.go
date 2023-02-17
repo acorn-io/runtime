@@ -41,7 +41,8 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.OnErrorHandler = appdefinition.OnError
 
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport))
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.CheckImageAllowedHandler(registryTransport))
+	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.PullAppImage(registryTransport))
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)

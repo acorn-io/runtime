@@ -63,6 +63,10 @@ func (m *mockDaemonClient) resolveLocalTag(context.Context, string, string) (str
 	return m.resolvedLocalTag, m.localTagFound, nil
 }
 
+func (m *mockDaemonClient) checkImageAllowed(context.Context, string, string) error {
+	return nil // TODO: use some switch to mock an error e.g. based on mockDaemonClient.imageDenyList
+}
+
 func TestDetermineAppsToRefresh(t *testing.T) {
 	defaultNextCheckInterval := time.Minute
 	now := time.Now()

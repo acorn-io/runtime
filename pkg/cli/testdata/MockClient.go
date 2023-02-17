@@ -747,3 +747,13 @@ func (m *MockClient) RegionGet(_ context.Context, name string) (*apiv1.Region, e
 		Resource: "regions",
 	}, name)
 }
+
+func (m *MockClient) ImageAllowRulesGet(ctx context.Context, name string) (*apiv1.ImageAllowRules, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) ImageAllowRulesList(ctx context.Context) ([]apiv1.ImageAllowRules, error) {
+	// TODO implement me
+	panic("implement me")
+}

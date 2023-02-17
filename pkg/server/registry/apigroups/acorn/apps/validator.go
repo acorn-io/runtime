@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
 	apiv1config "github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
@@ -73,6 +74,19 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		if err = s.validateRegion(ctx, params); err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "region"), params.Spec.Region, err.Error()))
 			return
+		}
+
+		disableCheckImageAllowRules := false
+		if params.Spec.Stop != nil && *params.Spec.Stop {
+			// app was stopped, so we don't need to check image allow rules (this could prevent stopping an app if the image allow rules changed)
+			disableCheckImageAllowRules = true
+		}
+
+		if !disableCheckImageAllowRules {
+			if err := s.checkImageAllowed(ctx, params.Namespace, params.Spec.Image); err != nil {
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, fmt.Sprintf("disallowed by imageAllowRules: %s", err.Error())))
+				return
+			}
 		}
 
 		workloadsFromImage, err := s.getWorkloads(imageDetails)
@@ -503,4 +517,8 @@ func (s *Validator) getImageDetails(ctx context.Context, app *apiv1.App, image s
 	}
 
 	return details, nil
+}
+
+func (s *Validator) checkImageAllowed(ctx context.Context, namespace, image string) error {
+	return imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image)
 }
