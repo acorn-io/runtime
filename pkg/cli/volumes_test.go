@@ -48,7 +48,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME           APP-NAME   BOUND-VOLUME   CAPACITY   STATUS    ACCESS-MODES   CREATED\nfound.volume   found      found.volume   <nil>                               292y ago\n",
+			wantOut: "NAME           APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.volume   found      found.volume   <nil>                                              292y ago\n",
 		},
 		{
 			name: "acorn volume -o json", fields: fields{
@@ -105,7 +105,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME           APP-NAME   BOUND-VOLUME   CAPACITY   STATUS    ACCESS-MODES   CREATED\nfound.volume   found      found.volume   <nil>                               292y ago\n",
+			wantOut: "NAME           APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.volume   found      found.volume   <nil>                                              292y ago\n",
 		},
 		{
 			name: "acorn volume dne", fields: fields{
