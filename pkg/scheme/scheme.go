@@ -14,7 +14,9 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	apiregistrationv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
@@ -28,6 +30,7 @@ var (
 
 func AddToScheme(scheme *runtime.Scheme) error {
 	var errs []error
+	metav1.AddToGroupVersion(scheme, schema.GroupVersion{Version: "v1"})
 	errs = append(errs, acornv1.AddToScheme(scheme))
 	errs = append(errs, acornapiv1.AddToScheme(scheme))
 	errs = append(errs, corev1.AddToScheme(scheme))
