@@ -23,6 +23,7 @@ var (
 		{"App-Name", "Status.AppName"},
 		{"Bound-Volume", "Status.VolumeName"},
 		{"Capacity", "Spec.Capacity"},
+		{"Volume-Class", "Spec.Class"},
 		{"Status", "Status.Status"},
 		{"Access-Modes", "Status.Columns.AccessModes"},
 		{"Created", "{{ago .CreationTimestamp}}"},
