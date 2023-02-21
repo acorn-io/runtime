@@ -19,7 +19,7 @@ func TestDefaultClientInfoOneNamespace(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.NamedTempProject(t, kclient, "test1-project1")
+	ns := helper.TempProject(t, kclient)
 
 	c, err := client.New(restConfig, ns.Name, ns.Name)
 	if err != nil {
@@ -73,8 +73,8 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 
 	// interface directly with k8 client to create projects
 	kclient := helper.MustReturn(kclient.Default)
-	helper.NamedTempProject(t, kclient, "test3-project1")
-	helper.NamedTempProject(t, kclient, "test3-project2")
+	ns1 := helper.TempProject(t, kclient)
+	ns2 := helper.TempProject(t, kclient)
 	time.Sleep(time.Millisecond * 100)
 
 	// Create multiclient to test commands off of
@@ -83,15 +83,14 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	projectNames := []string{ns1.Name, ns2.Name}
+
 	infos, err := mc.Info(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// This will not pass if the local k8 cluster has any additional namespaces.
-	assert.Lenf(t, infos, 3, "Multiclient didn't find 3 info responses, found %i.", len(infos))
-	expectedProjects := []string{"test3-project1", "test3-project2", "acorn"}
-	for _, subInfo := range infos {
-		assert.Contains(t, expectedProjects, subInfo.ObjectMeta.Namespace)
-	}
+	// check that projectNames is a subset of Info's projects
+	subset := helper.Subset[string, v1.Info, string](t, projectNames, infos, func(ele string) string { return ele }, func(info v1.Info) string { return info.Namespace })
+	assert.Truef(t, subset, "%+v is not a subset of %+v", projectNames, infos)
 }
