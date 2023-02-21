@@ -257,13 +257,15 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 					// ignore error
 					continue
 				}
-				vSize, err := resource.ParseQuantity((string)(v.Size))
-				if err != nil {
-					// ignore error
-					continue
-				}
-				if existingSize.Cmp(vSize) < 0 {
-					existing.Size = v.Size
+				if v.Size != "" {
+					vSize, err := resource.ParseQuantity((string)(v.Size))
+					if err != nil {
+						// ignore error
+						continue
+					}
+					if existingSize.Cmp(vSize) < 0 {
+						existing.Size = v.Size
+					}
 				}
 				for _, accessMode := range v.AccessModes {
 					found := false
@@ -282,6 +284,9 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 				})
 				app.Volumes[mount.Volume] = existing
 			} else {
+				if v.Size == "" {
+					v.Size = DefaultSizeQuantity
+				}
 				app.Volumes[mount.Volume] = VolumeRequest{
 					Size:        v.Size,
 					AccessModes: v.AccessModes,
@@ -1098,8 +1103,6 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 		if result.Volume == "" {
 			result.Volume = anonName
 		}
-	} else if result.Size == "" {
-		result.Size = DefaultSizeQuantity
 	}
 
 	for _, accessMode := range u.Query()["accessMode"] {

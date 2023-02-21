@@ -3,5 +3,12 @@ containers: {
 		build: "."
 		dirs: "/test": "./files"
 		dirs: "/external": "external"
+		dirs: "/tmp": "volume://my-data"
+	}
+}
+
+volumes: {
+	"my-data": {
+		size: "1G"
 	}
 }
