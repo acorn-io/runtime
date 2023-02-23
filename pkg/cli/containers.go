@@ -3,6 +3,7 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 
@@ -39,11 +40,23 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Container, a.Quiet, a.Output)
 
 	if len(args) == 1 {
-		app, err := c.ContainerReplicaGet(cmd.Context(), args[0])
+		app, err := c.AppGet(cmd.Context(), args[0])
 		if err != nil {
-			return err
+			// see if it's the name of a container instead
+			container, err := c.ContainerReplicaGet(cmd.Context(), args[0])
+			if err != nil {
+				return err
+			}
+			out.Write(container)
+		} else {
+			containers, err := c.ContainerReplicaList(cmd.Context(), &client.ContainerReplicaListOptions{App: app.Name})
+			if err != nil {
+				return err
+			}
+			for _, container := range containers {
+				out.Write(container)
+			}
 		}
-		out.Write(app)
 		return out.Err()
 	}
 
