@@ -299,7 +299,7 @@ containers: {
                 }
             },
             {
-                "type: "startup"
+                type: "startup"
                 failureThreshold: 10
                 periodSeconds: 6
                 tcp:{
