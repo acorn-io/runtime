@@ -6,7 +6,7 @@ title: "acorn container"
 Manage containers
 
 ```
-acorn container [flags] [APP_NAME...]
+acorn container [flags] [APP_NAME | CONTAINER_NAME...]
 ```
 
 ### Examples
