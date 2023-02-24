@@ -12,7 +12,7 @@ import (
 
 func NewContainer(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Container{client: c.ClientFactory}, cobra.Command{
-		Use:     "container [flags] [APP_NAME | CONTAINER_NAME...]",
+		Use:     "container [flags] [APP_NAME|CONTAINER_NAME...]",
 		Aliases: []string{"containers", "c"},
 		Example: `
 acorn containers`,
