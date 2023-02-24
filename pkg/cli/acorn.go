@@ -130,7 +130,7 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		_, err = project.Get(cmd.Context(), clientFactory.Options().WithCLIConfig(cfg), a.Project)
+		err = project.Exists(cmd.Context(), clientFactory.Options().WithCLIConfig(cfg), a.Project)
 		if err != nil {
 			return err
 		}
