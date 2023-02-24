@@ -48,7 +48,7 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 
 	var projectNames []string
 	if len(args) == 1 {
-		_, err := project.Get(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
+		err := project.Exists(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
 		if err != nil {
 			return err
 		}
