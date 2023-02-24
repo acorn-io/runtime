@@ -30,14 +30,26 @@ var (
 	}
 	VolumeConverter = MustConverter(Volume)
 
-	//Used for acorn image related printing
+	VolumeClass = [][]string{
+		{"Name", "{{ . | name }}"},
+		{"Default", "{{ boolToStar .Default }}"},
+		{"Inactive", "{{ boolToStar .Inactive }}"},
+		{"Storage-Class", "{{ .StorageClassName }}"},
+		{"Size-Range", "{{ displayRange .Size.Min .Size.Max }}"},
+		{"Default-Size", "{{ .Size.Default }}"},
+		{"Access-Modes", "{{ pointer .AllowedAccessModes }}"},
+		{"Description", "{{ .Description }}"},
+	}
+	VolumeClassConverter = MustConverter(VolumeClass)
+
+	// Used for acorn image related printing
 	ImageAcorn = [][]string{
 		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
 		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
 		{"Image-ID", "{{trunc .Name}}"},
 	}
 
-	//Used for kubectl image related printing
+	// Used for kubectl image related printing
 	Image = [][]string{
 		{"Image-ID", "{{trunc .Name}}"},
 		{"Tags", "{{if .Tags}}{{else}}<none>{{end}}{{range $index, $v := .Tags}}{{if $index}},{{end}}{{if eq $v \"\"}}<none>{{else}}{{$v}}{{end}}{{end}}"},

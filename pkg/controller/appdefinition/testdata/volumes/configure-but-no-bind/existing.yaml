@@ -1,0 +1,11 @@
+---
+kind: ClusterVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: cli-class
+description: Just a simple cli volume class
+storageClassName: cli-class
+size:
+  min: 1Gi
+  max: 10Gi
+  default: 3Gi

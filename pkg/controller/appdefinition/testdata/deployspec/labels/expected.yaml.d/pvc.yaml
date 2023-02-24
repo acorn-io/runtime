@@ -12,6 +12,7 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
+    "acorn.io/volume-name": "foo"
     appSpecLabel: test-app-spec-label
     global-scoped-label: test-global
     named-scoped-label: test-named

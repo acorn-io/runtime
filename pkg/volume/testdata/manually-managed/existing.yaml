@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  config: '{"manageVolumeClasses":true}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+---

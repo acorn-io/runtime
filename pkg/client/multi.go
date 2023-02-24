@@ -411,6 +411,18 @@ func (m *MultiClient) AcornImageBuild(ctx context.Context, file string, opts *Ac
 	return c.AcornImageBuild(ctx, file, opts)
 }
 
+func (m *MultiClient) VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error) {
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.VolumeClass, error) {
+		return c.VolumeClassList(ctx)
+	})
+}
+
+func (m *MultiClient) VolumeClassGet(ctx context.Context, name string) (*apiv1.VolumeClass, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.VolumeClass, error) {
+		return c.VolumeClassGet(ctx, name)
+	})
+}
+
 func (m *MultiClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
 	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Project, error) {
 		return c.ProjectGet(ctx, name)

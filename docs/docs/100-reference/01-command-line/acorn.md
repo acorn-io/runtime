@@ -39,6 +39,7 @@ acorn [flags]
 * [acorn login](acorn_login.md)	 - Add registry credentials
 * [acorn logout](acorn_logout.md)	 - Remove registry credentials
 * [acorn logs](acorn_logs.md)	 - Log all workloads from an app
+* [acorn offerings](acorn_offerings.md)	 - Show infrastructure offerings
 * [acorn project](acorn_project.md)	 - Manage projects
 * [acorn pull](acorn_pull.md)	 - Pull an image from a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry

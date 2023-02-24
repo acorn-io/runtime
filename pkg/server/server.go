@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	adminapi "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	openapi2 "github.com/acorn-io/acorn/pkg/openapi"
@@ -89,6 +90,7 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 		}
 		aggr := clientaggregator.New(c)
 		aggr.AddGroup(api.Group, localClient)
+		aggr.AddGroup(adminapi.Group, localClient)
 		c = aggr
 	}
 
@@ -97,7 +99,7 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 		return err
 	}
 
-	if err := server.InstallAPIGroup(apiGroups); err != nil {
+	if err := server.InstallAPIGroups(apiGroups...); err != nil {
 		return err
 	}
 

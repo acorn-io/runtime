@@ -339,6 +339,20 @@ func (d *DeferredClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	return d.Client.Info(ctx)
 }
 
+func (d *DeferredClient) VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.VolumeClassList(ctx)
+}
+
+func (d *DeferredClient) VolumeClassGet(ctx context.Context, name string) (*apiv1.VolumeClass, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.VolumeClassGet(ctx, name)
+}
+
 func (d *DeferredClient) GetProject() string {
 	return d.Project
 }

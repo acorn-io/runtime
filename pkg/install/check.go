@@ -29,6 +29,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
+	"k8s.io/kubectl/pkg/util/storage"
 )
 
 // CheckResult describes the results of a check, making it human-readable
@@ -534,7 +535,7 @@ func CheckDefaultStorageClass(ctx context.Context, opts CheckOptions) CheckResul
 	defaultSc := ""
 	for _, sc := range scs.Items {
 		for k, v := range sc.Annotations {
-			if k == "storageclass.kubernetes.io/is-default-class" && v == "true" {
+			if k == storage.IsDefaultStorageClassAnnotation && v == "true" {
 				defaultSc = sc.Name
 				break
 			}

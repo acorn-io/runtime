@@ -53,6 +53,7 @@ func New() *cobra.Command {
 		NewLogs(cmdContext),
 		NewCredentialLogin(true, cmdContext),
 		NewCredentialLogout(true, cmdContext),
+		NewOfferings(cmdContext),
 		NewProject(cmdContext),
 		NewPull(cmdContext),
 		NewPush(cmdContext),

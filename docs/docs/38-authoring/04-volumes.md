@@ -21,7 +21,7 @@ volumes: {
 // ...
 ```
 
-In the above example, there is a `my-data` volume defined and mounted into the `my-app` container at the `/data` path. The volume will create a 10G volume using the `default` storage class defined in the cluster. The default volume type will be created as a `ReadWriteOnce` volume and consumable by multiple containers on a single host.
+In the above example, there is a `my-data` volume defined and mounted into the `my-app` container at the `/data` path. The volume using the `default` volume class defined in the cluster. If the `default` volume class does not have a default size set, then the volume will be created a size of 10G. The default volume type will be created as a `ReadWriteOnce` volume and consumable by multiple containers on a single host.
 
 A volume has the following fields that can be customized, here is the above volume defined with all of the fields.
 
@@ -34,6 +34,8 @@ volumes: {
     }
 }
 ```
+
+The volume class used may have restrictions on the size of volumes created or the access modes available. If your volume uses a class that is not available or uses class settings that violate its rules, then your app will build but will not run. A descriptive error will be produced to explain any failures.
 
 ## Volumes with subpaths
 

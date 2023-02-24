@@ -1,8 +1,10 @@
 package scheme
 
 import (
+	acornadminapiv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
 	acornapiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	acornv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	acornadminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/schemes"
 	appsv1 "k8s.io/api/apps/v1"
@@ -33,6 +35,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	metav1.AddToGroupVersion(scheme, schema.GroupVersion{Version: "v1"})
 	errs = append(errs, acornv1.AddToScheme(scheme))
 	errs = append(errs, acornapiv1.AddToScheme(scheme))
+	errs = append(errs, acornadminv1.AddToScheme(scheme))
+	errs = append(errs, acornadminapiv1.AddToScheme(scheme))
 	errs = append(errs, corev1.AddToScheme(scheme))
 	errs = append(errs, appsv1.AddToScheme(scheme))
 	errs = append(errs, policyv1.AddToScheme(scheme))

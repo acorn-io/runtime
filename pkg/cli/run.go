@@ -91,6 +91,12 @@ func NewRun(c CommandContext) *cobra.Command {
   # To proceed with an upgrade you've been notified of:
   acorn update --confirm-upgrade myapp
 `})
+
+	// This will produce an error if the volume flag doesn't exist or a completion function has already
+	// been registered for this flag. Not returning the error since neither of these is likely occur.
+	if err := cmd.RegisterFlagCompletionFunc("volume", newCompletion(c.ClientFactory, volumeFlagClassCompletion).complete); err != nil {
+		cmd.Printf("Error registering completion function for -v flag: %v\n", err)
+	}
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
 	return cmd

@@ -19,6 +19,7 @@ Available Commands:
   login        Add registry credentials
   logout       Remove registry credentials
   logs         Log all workloads from an app
+  offerings    Show infrastructure offerings
   project      Manage projects
   pull         Pull an image from a remote registry
   push         Push an image to a remote registry

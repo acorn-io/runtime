@@ -2,6 +2,7 @@ package v1
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -344,6 +345,7 @@ type Config struct {
 	UseCustomCABundle              *bool          `json:"useCustomCABundle" name:"use-custom-ca-bundle" usage:"Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false."`
 	PropagateProjectAnnotations    []string       `json:"propagateProjectAnnotations" name:"propagate-project-annotation" usage:"The list of keys of annotations to propagate from acorn project to app namespaces"`
 	PropagateProjectLabels         []string       `json:"propagateProjectLabels" name:"propagate-project-label" usage:"The list of keys of labels to propagate from acorn project to app namespaces"`
+	ManageVolumeClasses            *bool          `json:"manageVolumeClasses" name:"manage-volume-classes" usage:"Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes"`
 }
 
 type EncryptionKey struct {
@@ -406,4 +408,16 @@ type AcornImageBuildList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AcornImageBuild `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type VolumeClass adminv1.ProjectVolumeClassInstance
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type VolumeClassList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []VolumeClass `json:"items"`
 }

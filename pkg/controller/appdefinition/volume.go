@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/baaah/pkg/uncached"
@@ -81,30 +82,33 @@ func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 	}
 }
 
-func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Volumes) {
-		volume, volumeRequest := entry.Key, entry.Value
+func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, err error) {
+	volumeClasses, err := volume.GetVolumeClasses(req.Ctx, req.Client, appInstance.Namespace)
+	if err != nil {
+		return nil, err
+	}
 
-		var (
-			accessModes         = translateAccessModes(volumeRequest.AccessModes)
-			volumeBinding, bind = isBind(appInstance, volume)
-			class               *string
-		)
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Volumes) {
+		vol, volumeRequest := entry.Key, entry.Value
+
+		var volumeBinding, bind = isBind(appInstance, vol)
 
 		if volumeRequest.Class == v1.VolumeRequestTypeEphemeral && !bind {
 			continue
 		}
 
+		volumeRequest = volume.CopyVolumeDefaults(volumeRequest, volumeBinding, appInstance.Status.Defaults.Volumes[vol])
+
 		pvc := corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      volume,
+				Name:      vol,
 				Namespace: appInstance.Status.Namespace,
-				Labels:    volumeLabels(appInstance, volume, volumeRequest),
-				Annotations: labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Annotations,
+				Labels:    volumeLabels(appInstance, vol, volumeRequest),
+				Annotations: labels.GatherScoped(vol, v1.LabelTypeVolume, appInstance.Status.AppSpec.Annotations,
 					volumeRequest.Annotations, appInstance.Spec.Annotations),
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				AccessModes: accessModes,
+				AccessModes: translateAccessModes(volumeRequest.AccessModes),
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{},
 				},
@@ -112,16 +116,32 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		}
 
 		if bind {
-			pvc.Name = bindName(volume)
+			pvc.Name = bindName(vol)
 			pvc.Spec.VolumeName = volumeBinding.Volume
 			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MinSize
+
+			if volumeBinding.Class != "" {
+				// Specifically allowing volume classes that are inactive.
+				if volClass, ok := volumeClasses[volumeBinding.Class]; !ok {
+					return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeBinding.Class)
+				} else {
+					pvc.Spec.StorageClassName = &volClass.StorageClassName
+				}
+			}
+
+			if volumeBinding.Size != "" {
+				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeBinding.Size)
+			}
 		} else {
 			if volumeRequest.Class != "" {
-				class = &volumeRequest.Class
+				// Specifically allowing volume classes that are inactive.
+				if volClass, ok := volumeClasses[volumeRequest.Class]; !ok && volumeBinding.Class == "" {
+					return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeRequest.Class)
+				} else {
+					pvc.Spec.StorageClassName = &volClass.StorageClassName
+				}
 			}
-			pvc.Spec.StorageClassName = class
-
-			pvName, err := lookupExistingPV(req, appInstance, volume)
+			pvName, err := lookupExistingPV(req, appInstance, vol)
 			if err != nil {
 				return nil, err
 			}
@@ -134,18 +154,6 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			}
 		}
 
-		if len(volumeBinding.AccessModes) > 0 {
-			pvc.Spec.AccessModes = translateAccessModes(volumeBinding.AccessModes)
-		}
-
-		if volumeBinding.Class != "" {
-			pvc.Spec.StorageClassName = &volumeBinding.Class
-		}
-
-		if volumeBinding.Size != "" {
-			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeBinding.Size)
-		}
-
 		result = append(result, &pvc)
 	}
 	return
@@ -156,6 +164,7 @@ func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.V
 		labels.AcornAppName:      appInstance.Name,
 		labels.AcornAppNamespace: appInstance.Namespace,
 		labels.AcornManaged:      "true",
+		labels.AcornVolumeName:   volume,
 	}
 	return labels.Merge(labelMap, labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Labels,
 		volumeRequest.Labels, appInstance.Spec.Labels))

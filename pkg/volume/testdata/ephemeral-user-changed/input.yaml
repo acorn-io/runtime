@@ -1,0 +1,8 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+  uid: 1234567890abcdef
+data:
+  config: '{"manageVolumeClasses": false}'

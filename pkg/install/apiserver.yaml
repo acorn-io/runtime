@@ -12,7 +12,21 @@ spec:
     port: 7443
   groupPriorityMinimum: 2000
   versionPriority: 10
-
+---
+kind: APIService
+apiVersion: apiregistration.k8s.io/v1
+metadata:
+  name: v1.admin.acorn.io
+spec:
+  insecureSkipTLSVerify: true
+  version: v1
+  group: admin.acorn.io
+  service:
+    namespace: acorn-system
+    name: acorn-api
+    port: 7443
+  groupPriorityMinimum: 2000
+  versionPriority: 10
 ---
 kind: Service
 apiVersion: v1

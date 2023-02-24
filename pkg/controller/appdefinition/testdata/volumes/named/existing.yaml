@@ -1,0 +1,13 @@
+---
+kind: ClusterVolumeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: custom-class
+description: Just a simple test volume class
+default: true
+storageClassName: custom-class
+size:
+  min: 1Gi
+  max: 10Gi
+  default: 3Gi
+allowedAccessModes: ["readWriteOnce"]

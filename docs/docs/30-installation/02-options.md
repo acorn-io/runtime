@@ -89,6 +89,10 @@ If this is too restrictive, and you would like to allow certain user-defined lab
 
 Note that in order to allow propagation of user-defined labels and annotations on an Acorn installation that previous disallowed it, one must pass `--ignore-user-labels-and-annotations=false` to `acorn install`.
 
+## Manually managing volume classes
+The default installation of Acorn will automatically create and sync any storage classes in the cluster to volume classes. That means that when a storage class is created or deleted, the corresponding volume class will also be created or deleted. Additionally, the default storage class in the cluster will also become the default volume class. An admin could edit these generated volume classes to set the fields on them (like min/max/default size) and those updates will be maintained. These generated volume classes will be available to every user in the cluster.
+
+If an admin would rather manually manage the volume classes and not have these generated ones, then the `--manage-volume-classes` installation flag is available. The generated volume classes are not generated if this flag is used, and are deleted when the flag is set on an existing Acorn installation. If the flag is again switched off with `--manage-volume-classes=false`, then the volume classes will be generated again.
 
 ## Changing install options
 If you want to change your installation options after the initial installation, just rerun `acorn install` with the new options. This will update the existing install dynamically.
