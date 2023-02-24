@@ -38,7 +38,7 @@ func (a *ProjectUse) Run(cmd *cobra.Command, args []string) error {
 		return cfg.Save()
 	}
 
-	_, err = project.Get(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
+	err = project.Exists(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
 	if err != nil {
 		return fmt.Errorf("failed to find project %s, use \"acorn projects\" to list valid project names: %w", args[0], err)
 	}

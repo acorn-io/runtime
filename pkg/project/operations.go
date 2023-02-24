@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/hub"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 func lastPart(s string) string {
@@ -52,13 +53,27 @@ func Remove(ctx context.Context, opts Options, name string) (*apiv1.Project, err
 	return p, nil
 }
 
-func Get(ctx context.Context, opts Options, name string) (project *apiv1.Project, err error) {
+func Exists(ctx context.Context, opts Options, name string) error {
 	opts.Project = name
 	c, err := Client(ctx, opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return c.ProjectGet(ctx, lastPart(name))
+	eg := errgroup.Group{}
+	for _, projectName := range strings.Split(c.GetProject(), ",") {
+		// local copy
+		opts := opts
+		opts.Project = projectName
+		eg.Go(func() error {
+			c, err = Client(ctx, opts)
+			if err != nil {
+				return err
+			}
+			_, err := c.ProjectGet(ctx, lastPart(opts.Project))
+			return err
+		})
+	}
+	return eg.Wait()
 }
 
 func timeoutProjectList(ctx context.Context, c client.Client) ([]apiv1.Project, error) {
