@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
 	"github.com/spf13/cobra"
@@ -21,22 +22,31 @@ import (
 var (
 	// create test data
 	mockContainer1 = &apiv1.ContainerReplica{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "found.container1"},
-		Spec:       apiv1.ContainerReplicaSpec{AppName: "found"},
-		Status:     apiv1.ContainerReplicaStatus{},
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "found.container1",
+			CreationTimestamp: metav1.NewTime(time.Now().AddDate(-10, 0, 0)),
+		},
+		Spec:   apiv1.ContainerReplicaSpec{AppName: "found"},
+		Status: apiv1.ContainerReplicaStatus{},
 	}
 	mockContainer2 = &apiv1.ContainerReplica{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "found.container2"},
-		Spec:       apiv1.ContainerReplicaSpec{AppName: "found"},
-		Status:     apiv1.ContainerReplicaStatus{},
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "found.container2",
+			CreationTimestamp: metav1.NewTime(time.Now().AddDate(-10, 0, 0)),
+		},
+		Spec:   apiv1.ContainerReplicaSpec{AppName: "found"},
+		Status: apiv1.ContainerReplicaStatus{},
 	}
 	mockApp = &apiv1.App{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "found"},
-		Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
-		Status:     v1.AppInstanceStatus{Ready: true},
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "found",
+			CreationTimestamp: metav1.NewTime(time.Now().AddDate(-10, 0, 0)),
+		},
+		Spec:   v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
+		Status: v1.AppInstanceStatus{Ready: true},
 	}
 )
 
@@ -99,7 +109,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container1                                 0              292y ago   \nfound.container2                                 0              292y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                                 0              10y ago   \n",
 		},
 		{
 			name: "acorn container found.container1", fields: fields{
@@ -120,7 +130,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container1                                 0              292y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
 		},
 		{
 			name: "acorn container found", fields: fields{
@@ -141,7 +151,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container1                                 0              292y ago   \nfound.container2                                 0              292y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                                 0              10y ago   \n",
 		},
 		{
 			name: "acorn container kill found.container1", fields: fields{
