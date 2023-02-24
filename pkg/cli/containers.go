@@ -1,17 +1,18 @@
 package cli
 
 import (
+	"context"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
+	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
-
 	"k8s.io/utils/strings/slices"
 )
 
 func NewContainer(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Container{client: c.ClientFactory}, cobra.Command{
-		Use:     "container [flags] [APP_NAME...]",
+		Use:     "container [flags] [APP_NAME|CONTAINER_NAME...]",
 		Aliases: []string{"containers", "c"},
 		Example: `
 acorn containers`,
@@ -38,29 +39,52 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 
 	out := table.NewWriter(tables.Container, a.Quiet, a.Output)
 
-	if len(args) == 1 {
-		app, err := c.ContainerReplicaGet(cmd.Context(), args[0])
+	switch len(args) {
+	case 0:
+		// No app or container name supplied, list all containers
+		if err := printContainerReplicas(cmd.Context(), c, nil, a.All, &out); err != nil {
+			return err
+		}
+	case 1:
+		// One app or container name supplied, only list matches
+		app, err := c.AppGet(cmd.Context(), args[0])
+		if err != nil {
+			// See if it's the name of a container instead
+			container, err := c.ContainerReplicaGet(cmd.Context(), args[0])
+			if err != nil {
+				return err
+			}
+			out.Write(container)
+		} else {
+			if err := printContainerReplicas(cmd.Context(), c, &client.ContainerReplicaListOptions{App: app.Name}, a.All, &out); err != nil {
+				return err
+			}
+		}
+	default:
+		// More than one name supplied, iterate through containers and list any that match
+		containers, err := c.ContainerReplicaList(cmd.Context(), nil)
 		if err != nil {
 			return err
 		}
-		out.Write(app)
-		return out.Err()
-	}
-
-	containers, err := c.ContainerReplicaList(cmd.Context(), nil)
-	if err != nil {
-		return err
-	}
-
-	for _, container := range containers {
-		if len(args) > 0 {
+		for _, container := range containers {
 			if slices.Contains(args, container.Name) {
 				out.Write(container)
 			}
-		} else if a.All || container.Status.Columns.State != "stopped" {
-			out.Write(container)
 		}
 	}
 
 	return out.Err()
+}
+
+func printContainerReplicas(ctx context.Context, c client.Client, opts *client.ContainerReplicaListOptions, all bool, out *table.Writer) error {
+	cs, err := c.ContainerReplicaList(ctx, opts)
+	if err != nil {
+		return err
+	}
+	for _, c := range cs {
+		if all || c.Status.Columns.State != "stopped" {
+			(*out).Write(c)
+		}
+	}
+	return nil
 }
