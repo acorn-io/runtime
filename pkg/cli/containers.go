@@ -1,12 +1,12 @@
 package cli
 
 import (
+	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
-
 	"k8s.io/utils/strings/slices"
 )
 
@@ -39,7 +39,14 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 
 	out := table.NewWriter(tables.Container, a.Quiet, a.Output)
 
-	if len(args) == 1 {
+	switch len(args) {
+	case 0:
+		containers, err := c.ContainerReplicaList(cmd.Context(), nil)
+		if err != nil {
+			return err
+		}
+		printContainerReplicas(containers, a.All, &out)
+	case 1:
 		app, err := c.AppGet(cmd.Context(), args[0])
 		if err != nil {
 			// see if it's the name of a container instead
@@ -53,29 +60,27 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			for _, container := range containers {
-				if a.All || container.Status.Columns.State != "stopped" {
-					out.Write(container)
-				}
-			}
+			printContainerReplicas(containers, a.All, &out)
 		}
-		return out.Err()
-	}
-
-	containers, err := c.ContainerReplicaList(cmd.Context(), nil)
-	if err != nil {
-		return err
-	}
-
-	for _, container := range containers {
-		if len(args) > 0 {
+	default:
+		containers, err := c.ContainerReplicaList(cmd.Context(), nil)
+		if err != nil {
+			return err
+		}
+		for _, container := range containers {
 			if slices.Contains(args, container.Name) {
 				out.Write(container)
 			}
-		} else if a.All || container.Status.Columns.State != "stopped" {
-			out.Write(container)
 		}
 	}
 
 	return out.Err()
+}
+
+func printContainerReplicas(cs []v1.ContainerReplica, all bool, out *table.Writer) {
+	for _, c := range cs {
+		if all || c.Status.Columns.State != "stopped" {
+			(*out).Write(c)
+		}
+	}
 }
