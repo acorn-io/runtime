@@ -1,7 +1,7 @@
 package cli
 
 import (
-	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"context"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -41,11 +41,9 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 
 	switch len(args) {
 	case 0:
-		containers, err := c.ContainerReplicaList(cmd.Context(), nil)
-		if err != nil {
+		if err := printContainerReplicas(cmd.Context(), c, nil, a.All, &out); err != nil {
 			return err
 		}
-		printContainerReplicas(containers, a.All, &out)
 	case 1:
 		app, err := c.AppGet(cmd.Context(), args[0])
 		if err != nil {
@@ -56,11 +54,9 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 			}
 			out.Write(container)
 		} else {
-			containers, err := c.ContainerReplicaList(cmd.Context(), &client.ContainerReplicaListOptions{App: app.Name})
-			if err != nil {
+			if err := printContainerReplicas(cmd.Context(), c, &client.ContainerReplicaListOptions{App: app.Name}, a.All, &out); err != nil {
 				return err
 			}
-			printContainerReplicas(containers, a.All, &out)
 		}
 	default:
 		containers, err := c.ContainerReplicaList(cmd.Context(), nil)
@@ -77,10 +73,15 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 	return out.Err()
 }
 
-func printContainerReplicas(cs []v1.ContainerReplica, all bool, out *table.Writer) {
+func printContainerReplicas(ctx context.Context, c client.Client, opts *client.ContainerReplicaListOptions, all bool, out *table.Writer) error {
+	cs, err := c.ContainerReplicaList(ctx, opts)
+	if err != nil {
+		return err
+	}
 	for _, c := range cs {
 		if all || c.Status.Columns.State != "stopped" {
 			(*out).Write(c)
 		}
 	}
+	return nil
 }
