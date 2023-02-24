@@ -77,7 +77,7 @@ type AppInstanceSpec struct {
 	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
-	WorkloadClass       WorkloadClassMap `json:"workloadClass,omitempty"`
+	ComputeClass        ComputeClassMap  `json:"computeClass,omitempty"`
 	Memory              MemoryMap        `json:"memory,omitempty"`
 }
 

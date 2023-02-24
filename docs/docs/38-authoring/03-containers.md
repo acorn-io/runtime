@@ -361,14 +361,14 @@ containers: {
 The `memory` property can be abbreviated to `mem` in the file.
 :::
 
-## Workload Classes
+## Compute Classes
 
-When you want to specify what type of architecture your Acorn's workload will run on, you use Workload Classes. You can set the class of a workload by defining by the `class` property that is settable for all `workloads` (`containers` and `jobs`). Check out the [scheduling documemtation](100-reference/06-scheduling.md#workload-classes) for more information.
+When you want to specify what type of architecture your Acorn's workload will run on, you use Compute Classes. You can set the class of a workload by defining by the `class` property that is settable for all `workloads` (`containers` and `jobs`). Check out the [scheduling documemtation](100-reference/06-scheduling.md#compute-classes) for more information.
 
 ```acorn
 containers: {
     nginx: {
-        class: "sample-workload-class"
+        class: "sample-compute-class"
         image: "nginx"
         ports: publish: "80/http"
         files: {

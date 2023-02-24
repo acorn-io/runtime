@@ -7,28 +7,28 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ClusterWorkloadClass v1.ClusterWorkloadClassInstance
+type ClusterComputeClass v1.ClusterComputeClassInstance
 
-func (in *ClusterWorkloadClass) NamespaceScoped() bool {
+func (in *ClusterComputeClass) NamespaceScoped() bool {
 	return false
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ClusterWorkloadClassList struct {
+type ClusterComputeClassList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ClusterWorkloadClass `json:"items"`
+	Items           []ClusterComputeClass `json:"items"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ProjectWorkloadClass v1.ProjectWorkloadClassInstance
+type ProjectComputeClass v1.ProjectComputeClassInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ProjectWorkloadClassList struct {
+type ProjectComputeClassList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ProjectWorkloadClass `json:"items"`
+	Items           []ProjectComputeClass `json:"items"`
 }

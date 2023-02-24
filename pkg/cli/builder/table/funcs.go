@@ -201,9 +201,9 @@ func DisplayRange(minVal, maxVal any) (string, error) {
 }
 
 func DefaultMemory(obj any) (string, error) {
-	b, ok := obj.(adminv1.WorkloadClassMemory)
+	b, ok := obj.(adminv1.ComputeClassMemory)
 	if !ok {
-		return "", fmt.Errorf("object passed is not a WorkloadClassMemory struct")
+		return "", fmt.Errorf("object passed is not a ComputeClassMemory struct")
 	}
 
 	result := b.Default
@@ -217,9 +217,9 @@ func DefaultMemory(obj any) (string, error) {
 }
 
 func MemoryToRange(obj any) (string, error) {
-	b, ok := obj.(adminv1.WorkloadClassMemory)
+	b, ok := obj.(adminv1.ComputeClassMemory)
 	if !ok {
-		return "", fmt.Errorf("object passed is not a WorkloadClassMemory struct")
+		return "", fmt.Errorf("object passed is not a ComputeClassMemory struct")
 	}
 
 	min := b.Min

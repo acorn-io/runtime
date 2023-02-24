@@ -300,15 +300,15 @@ func volumeClassCompletion(ctx context.Context, c client.Client, toComplete stri
 	return result, nil
 }
 
-func workloadClassCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
-	workloadClasses, err := c.WorkloadClassList(ctx)
+func computeClassCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	computeClasses, err := c.ComputeClassList(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	var result []string
 
-	for _, volumeClass := range workloadClasses {
+	for _, volumeClass := range computeClasses {
 		if strings.HasPrefix(volumeClass.Name, toComplete) {
 			result = append(result, volumeClass.Name)
 		}
@@ -338,17 +338,17 @@ func volumeFlagClassCompletion(ctx context.Context, c client.Client, toComplete 
 	return result, err
 }
 
-func workloadClassFlagCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+func computeClassFlagCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
 	var (
-		workloadClassFlagCompletion = regexp.MustCompile("^.*[,|=]([^,]*)$")
-		actualToComplete            = toComplete
+		computeClassFlagCompletion = regexp.MustCompile("^.*[,|=]([^,]*)$")
+		actualToComplete           = toComplete
 	)
 
-	if matches := workloadClassFlagCompletion.FindAllStringSubmatch(toComplete, 1); matches != nil {
+	if matches := computeClassFlagCompletion.FindAllStringSubmatch(toComplete, 1); matches != nil {
 		actualToComplete = matches[0][1]
 	}
 
-	result, err := workloadClassCompletion(ctx, c, actualToComplete)
+	result, err := computeClassCompletion(ctx, c, actualToComplete)
 
 	// Trim the actualToComplete from the end so that we can append below to get the full completion.
 	toComplete = strings.TrimSuffix(toComplete, actualToComplete)

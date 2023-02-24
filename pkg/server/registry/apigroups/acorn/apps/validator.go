@@ -312,8 +312,8 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 
 func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, cfg apiv1.Config, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	var (
-		memory        = params.Spec.Memory
-		workloadClass = params.Spec.WorkloadClass
+		memory       = params.Spec.Memory
+		computeClass = params.Spec.ComputeClass
 	)
 	validationErrors := []*field.Error{}
 	err := validateMemoryRunFlags(memory, workloads)
@@ -322,14 +322,14 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, cfg 
 	}
 
 	for workload, container := range workloads {
-		wc, err := adminv1.GetClassForWorkload(ctx, s.client, workloadClass, container, workload, params.Namespace)
+		wc, err := adminv1.GetClassForWorkload(ctx, s.client, computeClass, container, workload, params.Namespace)
 		if err != nil {
-			validationErrors = append(validationErrors, field.Invalid(field.NewPath("workloadclass"), "", err.Error()))
+			validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", err.Error()))
 		}
 
 		if wc != nil {
 			// Parse the memory
-			wcMemory, err := adminv1.ParseWorkloadClassMemory(wc.Memory)
+			wcMemory, err := adminv1.ParseComputeClassMemory(wc.Memory)
 			if err != nil {
 				if errors.Is(err, adminv1.ErrInvalidClass) {
 					validationErrors = append(validationErrors, field.Invalid(field.NewPath("spec", "memory"), wc.Memory, err.Error()))
@@ -357,15 +357,15 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, cfg 
 			validationErrors = append(validationErrors, field.Invalid(path, memQuantity.String(), err.Error()))
 		}
 
-		// Need a WorkloadClass to validate it
+		// Need a ComputeClass to validate it
 		if wc == nil {
 			continue
 		}
 
-		err = adminv1.ValidateWorkloadClass(*wc, memQuantity, specMemDefault)
+		err = adminv1.ValidateComputeClass(*wc, memQuantity, specMemDefault)
 		if err != nil {
 			if errors.Is(err, adminv1.ErrInvalidClass) {
-				validationErrors = append(validationErrors, field.Invalid(field.NewPath("workloadclass"), wc.Name, err.Error()))
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), wc.Name, err.Error()))
 			} else if errors.Is(err, adminv1.ErrInvalidMemoryForClass) {
 				validationErrors = append(validationErrors, field.Invalid(field.NewPath("memory"), memQuantity.String(), err.Error()))
 			} else {

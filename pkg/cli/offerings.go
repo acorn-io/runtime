@@ -14,7 +14,7 @@ acorn offerings`,
 		Short: "Show infrastructure offerings",
 	})
 	cmd.AddCommand(NewVolumeClasses(c))
-	cmd.AddCommand(NewWorkloadClasses(c))
+	cmd.AddCommand(NewComputeClasses(c))
 	return cmd
 }
 

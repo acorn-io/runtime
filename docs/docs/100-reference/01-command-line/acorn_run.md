@@ -82,6 +82,7 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
       --annotation strings        Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)
       --auto-upgrade              Enabled automatic upgrades.
   -b, --bidirectional-sync        In interactive mode download changes in addition to uploading
+      --compute-class strings     Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)
   -i, --dev                       Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
   -e, --env strings               Environment variables to set on running containers
       --expose strings            In cluster expose ports of an application (format [public:]private) (ex 81:80)
@@ -103,7 +104,6 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
   -u, --update                    Update the app if it already exists
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
       --wait                      Wait for app to become ready before command exiting (default true)
-      --workload-class strings    Set workloadclass for a workload in the format of workload=workloadclass. Specify a single workloadclass to set all workloads. (ex foo=example-class or example-class)
 ```
 
 ### Options inherited from parent commands

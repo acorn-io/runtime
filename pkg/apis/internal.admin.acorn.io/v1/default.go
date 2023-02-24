@@ -8,71 +8,71 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getCurrentClusterWorkloadClassDefault(ctx context.Context, c client.Client) (*ClusterWorkloadClassInstance, error) {
-	clusterWorkloadClasses := ClusterWorkloadClassInstanceList{}
-	if err := c.List(ctx, &clusterWorkloadClasses, &client.ListOptions{}); err != nil {
+func getCurrentClusterComputeClassDefault(ctx context.Context, c client.Client) (*ClusterComputeClassInstance, error) {
+	clusterComputeClasses := ClusterComputeClassInstanceList{}
+	if err := c.List(ctx, &clusterComputeClasses, &client.ListOptions{}); err != nil {
 		return nil, err
 	}
 
-	sort.Slice(clusterWorkloadClasses.Items, func(i, j int) bool {
-		return clusterWorkloadClasses.Items[i].Name < clusterWorkloadClasses.Items[j].Name
+	sort.Slice(clusterComputeClasses.Items, func(i, j int) bool {
+		return clusterComputeClasses.Items[i].Name < clusterComputeClasses.Items[j].Name
 	})
 
-	var defaultCWC *ClusterWorkloadClassInstance
-	for _, clusterWorkloadClass := range clusterWorkloadClasses.Items {
-		if clusterWorkloadClass.Default {
-			if defaultCWC != nil {
+	var defaultCCC *ClusterComputeClassInstance
+	for _, clusterComputeClass := range clusterComputeClasses.Items {
+		if clusterComputeClass.Default {
+			if defaultCCC != nil {
 				return nil, fmt.Errorf(
-					"cannot establish defaults because two default workloadclasses exist: %v and %v",
-					defaultCWC.Name, clusterWorkloadClass.Name)
+					"cannot establish defaults because two default computeclasses exist: %v and %v",
+					defaultCCC.Name, clusterComputeClass.Name)
 			}
-			t := clusterWorkloadClass // Create a new variable that isn't being iterated on to get a pointer
-			defaultCWC = &t
+			t := clusterComputeClass // Create a new variable that isn't being iterated on to get a pointer
+			defaultCCC = &t
 		}
 	}
 
-	return defaultCWC, nil
+	return defaultCCC, nil
 }
 
-func getCurrentProjectWorkloadClassDefault(ctx context.Context, c client.Client, namespace string) (*ProjectWorkloadClassInstance, error) {
-	projectWorkloadClasses := ProjectWorkloadClassInstanceList{}
-	if err := c.List(ctx, &projectWorkloadClasses, &client.ListOptions{Namespace: namespace}); err != nil {
+func getCurrentProjectComputeClassDefault(ctx context.Context, c client.Client, namespace string) (*ProjectComputeClassInstance, error) {
+	projectComputeClasses := ProjectComputeClassInstanceList{}
+	if err := c.List(ctx, &projectComputeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, err
 	}
 
-	sort.Slice(projectWorkloadClasses.Items, func(i, j int) bool {
-		return projectWorkloadClasses.Items[i].Name < projectWorkloadClasses.Items[j].Name
+	sort.Slice(projectComputeClasses.Items, func(i, j int) bool {
+		return projectComputeClasses.Items[i].Name < projectComputeClasses.Items[j].Name
 	})
 
-	var defaultPWC *ProjectWorkloadClassInstance
-	for _, projectWorkloadClass := range projectWorkloadClasses.Items {
-		if projectWorkloadClass.Default {
-			if defaultPWC != nil {
+	var defaultPCC *ProjectComputeClassInstance
+	for _, projectComputeClass := range projectComputeClasses.Items {
+		if projectComputeClass.Default {
+			if defaultPCC != nil {
 				return nil, fmt.Errorf(
-					"cannot establish defaults because two default workloadclasses exist: %v and %v",
-					defaultPWC.Name, projectWorkloadClass.Name)
+					"cannot establish defaults because two default computeclasses exist: %v and %v",
+					defaultPCC.Name, projectComputeClass.Name)
 			}
-			t := projectWorkloadClass // Create a new variable that isn't being iterated on to get a pointer
-			defaultPWC = &t
+			t := projectComputeClass // Create a new variable that isn't being iterated on to get a pointer
+			defaultPCC = &t
 		}
 	}
 
-	return defaultPWC, nil
+	return defaultPCC, nil
 }
 
-func GetDefaultWorkloadClass(ctx context.Context, c client.Client, namespace string) (string, error) {
-	pwc, err := getCurrentProjectWorkloadClassDefault(ctx, c, namespace)
+func GetDefaultComputeClass(ctx context.Context, c client.Client, namespace string) (string, error) {
+	pcc, err := getCurrentProjectComputeClassDefault(ctx, c, namespace)
 	if err != nil {
 		return "", err
-	} else if pwc != nil {
-		return pwc.Name, nil
+	} else if pcc != nil {
+		return pcc.Name, nil
 	}
 
-	cwc, err := getCurrentClusterWorkloadClassDefault(ctx, c)
+	ccc, err := getCurrentClusterComputeClassDefault(ctx, c)
 	if err != nil {
 		return "", err
-	} else if cwc != nil {
-		return cwc.Name, nil
+	} else if ccc != nil {
+		return ccc.Name, nil
 	}
 	return "", nil
 }

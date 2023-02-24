@@ -8,8 +8,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-// defaultMemory calculates the default that should be used and considers the defaults from the Config, WorkloadClass, and
-// runtime WorkloadClass
+// defaultMemory calculates the default that should be used and considers the defaults from the Config, ComputeClass, and
+// runtime ComputeClass
 func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.AppInstance) error {
 	if appInstance.Status.Defaults.Memory == nil {
 		appInstance.Status.Defaults.Memory = v1.MemoryMap{}
@@ -19,17 +19,17 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 		defaultWC string
 		err       error
 	)
-	if value, ok := appInstance.Spec.WorkloadClass[""]; ok {
+	if value, ok := appInstance.Spec.ComputeClass[""]; ok {
 		defaultWC = value
 	} else {
-		defaultWC, err = adminv1.GetDefaultWorkloadClass(req.Ctx, req.Client, appInstance.Namespace)
+		defaultWC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace)
 		if err != nil {
 			return err
 		}
 	}
 
 	appInstance.Status.Defaults.Memory[""] = cfg.WorkloadMemoryDefault
-	wc, err := adminv1.GetAsProjectWorkloadClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultWC)
+	wc, err := adminv1.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultWC)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err
@@ -37,7 +37,7 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	}
 
 	if wc != nil {
-		parsedMemory, err := adminv1.ParseWorkloadClassMemory(wc.Memory)
+		parsedMemory, err := adminv1.ParseComputeClassMemory(wc.Memory)
 		if err != nil {
 			return err
 		}
@@ -59,13 +59,13 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 func addWorkloadMemoryDefault(req router.Request, appInstance *v1.AppInstance, configDefault *int64, containers map[string]v1.Container) error {
 	for name, container := range containers {
 		memory := configDefault
-		workloadClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.WorkloadClass, container, name, appInstance.Namespace)
-		if workloadClass == nil && err != nil {
+		computeClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClass, container, name, appInstance.Namespace)
+		if computeClass == nil && err != nil {
 			return err
 		}
 
-		if workloadClass != nil {
-			parsedMemory, err := adminv1.ParseWorkloadClassMemory(workloadClass.Memory)
+		if computeClass != nil {
+			parsedMemory, err := adminv1.ParseComputeClassMemory(computeClass.Memory)
 			if err != nil {
 				return err
 			}

@@ -14,6 +14,7 @@ acorn update [flags] APP_NAME [deploy flags]
 ```
       --annotation strings        Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)
       --auto-upgrade              Enabled automatic upgrades.
+      --compute-class strings     Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)
       --confirm-upgrade           When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade.
   -e, --env strings               Environment variables to set on running containers
       --expose strings            In cluster expose ports of an application (format [public:]private) (ex 81:80)
@@ -35,7 +36,6 @@ acorn update [flags] APP_NAME [deploy flags]
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
       --target-namespace string   The name of the namespace to be created and deleted for the application resources
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
-      --workload-class strings    Set workloadclass for a workload in the format of workload=workloadclass. Specify a single workloadclass to set all workloads. (ex foo=example-class or example-class)
 ```
 
 ### Options inherited from parent commands

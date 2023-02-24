@@ -9,23 +9,23 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ClusterWorkloadClassInstance ProjectWorkloadClassInstance
+type ClusterComputeClassInstance ProjectComputeClassInstance
 
-func (in *ClusterWorkloadClassInstance) NamespaceScoped() bool {
+func (in *ClusterComputeClassInstance) NamespaceScoped() bool {
 	return false
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ClusterWorkloadClassInstanceList struct {
+type ClusterComputeClassInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ClusterWorkloadClassInstance `json:"items"`
+	Items           []ClusterComputeClassInstance `json:"items"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ProjectWorkloadClassInstance struct {
+type ProjectComputeClassInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 	Description       string              `json:"description,omitempty"`
@@ -33,18 +33,18 @@ type ProjectWorkloadClassInstance struct {
 	Default           bool                `json:"default"`
 	Affinity          *corev1.Affinity    `json:"affinity,omitempty"`
 	Tolerations       []corev1.Toleration `json:"tolerations,omitempty"`
-	Memory            WorkloadClassMemory `json:"memory,omitempty"`
+	Memory            ComputeClassMemory  `json:"memory,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ProjectWorkloadClassInstanceList struct {
+type ProjectComputeClassInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ProjectWorkloadClassInstance `json:"items"`
+	Items           []ProjectComputeClassInstance `json:"items"`
 }
 
-type WorkloadClassMemory struct {
+type ComputeClassMemory struct {
 	Min     string   `json:"min,omitempty"`
 	Max     string   `json:"max,omitempty"`
 	Default string   `json:"default,omitempty"`

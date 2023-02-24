@@ -45,8 +45,8 @@ func TestMemorySameGeneration(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/same-generation", Calculate)
 }
 
-func TestTwoCWCDefaultsShouldError(t *testing.T) {
-	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/memory/two-cwc-defaults-should-error")
+func TestTwoCCCDefaultsShouldError(t *testing.T) {
+	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/memory/two-ccc-defaults-should-error")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,8 +59,8 @@ func TestTwoCWCDefaultsShouldError(t *testing.T) {
 	assert.True(t, resp.NoPrune, "NoPrune should be true when error occurs")
 }
 
-func TestTwoPWCDefaultsShouldError(t *testing.T) {
-	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/memory/two-pwc-defaults-should-error")
+func TestTwoPCCDefaultsShouldError(t *testing.T) {
+	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/memory/two-pcc-defaults-should-error")
 	if err != nil {
 		t.Fatal(err)
 	}

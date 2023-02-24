@@ -46,25 +46,25 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 			tolerations []corev1.Toleration
 		)
 
-		workloadClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.WorkloadClass, container, name, appInstance.Namespace)
-		if workloadClass == nil && err != nil {
+		computeClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClass, container, name, appInstance.Namespace)
+		if computeClass == nil && err != nil {
 			return err
 		}
 
-		requirements, err := ResourceRequirements(req, appInstance, name, container, workloadClass)
+		requirements, err := ResourceRequirements(req, appInstance, name, container, computeClass)
 		if err != nil {
 			return err
 		}
 
 		for sidecarName, sidecarContainer := range container.Sidecars {
-			sidecarRequirements, err := ResourceRequirements(req, appInstance, sidecarName, sidecarContainer, workloadClass)
+			sidecarRequirements, err := ResourceRequirements(req, appInstance, sidecarName, sidecarContainer, computeClass)
 			if err != nil {
 				return err
 			}
 			appInstance.Status.Scheduling[sidecarName] = v1.Scheduling{Requirements: *sidecarRequirements}
 		}
 
-		affinity, tolerations, err = Nodes(req, name, container, appInstance, workloadClass)
+		affinity, tolerations, err = Nodes(req, name, container, appInstance, computeClass)
 		if err != nil {
 			return err
 		}
@@ -78,18 +78,18 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 	return nil
 }
 
-// Add edits the provided PodTemplateSpec to have the applied configuration for the WorkloadClass and Memory values
-func Nodes(req router.Request, name string, container v1.Container, app *v1.AppInstance, workloadClass *adminv1.ProjectWorkloadClassInstance) (*corev1.Affinity, []corev1.Toleration, error) {
-	if workloadClass != nil {
-		// Return any custom affinities and tolerations from the WorkloadClass
-		return workloadClass.Affinity, workloadClass.Tolerations, nil
+// Add edits the provided PodTemplateSpec to have the applied configuration for the ComputeClass and Memory values
+func Nodes(req router.Request, name string, container v1.Container, app *v1.AppInstance, computeClass *adminv1.ProjectComputeClassInstance) (*corev1.Affinity, []corev1.Toleration, error) {
+	if computeClass != nil {
+		// Return any custom affinities and tolerations from the ComputeClass
+		return computeClass.Affinity, computeClass.Tolerations, nil
 	}
 
 	return nil, nil, nil
 }
 
 // ResourceRequirements determines the cpu and memory amount to be set for the limits/requests of the Pod
-func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName string, container v1.Container, workloadClass *adminv1.ProjectWorkloadClassInstance) (*corev1.ResourceRequirements, error) {
+func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName string, container v1.Container, computeClass *adminv1.ProjectComputeClassInstance) (*corev1.ResourceRequirements, error) {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return nil, err
@@ -105,8 +105,8 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	}
 
 	memMax := cfg.WorkloadMemoryMaximum
-	if workloadClass != nil {
-		maxQuantity, err := resource.ParseQuantity(workloadClass.Memory.Max)
+	if computeClass != nil {
+		maxQuantity, err := resource.ParseQuantity(computeClass.Memory.Max)
 		if err != nil {
 			return nil, err
 		}
@@ -123,8 +123,8 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 		requirements.Limits[corev1.ResourceMemory] = memoryQuantity
 	}
 
-	if workloadClass != nil {
-		cpuQuantity, err := adminv1.CalculateCPU(*workloadClass, memDefault, memoryQuantity)
+	if computeClass != nil {
+		cpuQuantity, err := adminv1.CalculateCPU(*computeClass, memDefault, memoryQuantity)
 		if err != nil {
 			return nil, err
 		}

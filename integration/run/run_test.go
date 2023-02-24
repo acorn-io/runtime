@@ -612,7 +612,7 @@ func TestDeployParam(t *testing.T) {
 	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
 }
 
-func TestDefaultClusterWorkloadClass(t *testing.T) {
+func TestDefaultClusterComputeClass(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
@@ -624,22 +624,22 @@ func TestDefaultClusterWorkloadClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	workloadClass := adminv1.ClusterWorkloadClassInstance{
+	computeClass := adminv1.ClusterComputeClassInstance{
 		ObjectMeta: metav1.ObjectMeta{Name: "acorn-test-custom"},
 		Default:    true,
 		CPUScaler:  0.25,
-		Memory: adminv1.WorkloadClassMemory{
+		Memory: adminv1.ComputeClassMemory{
 			Default: "512Mi",
 			Max:     "1Gi",
 			Min:     "512Mi",
 		},
 	}
-	if err := kclient.Create(ctx, &workloadClass); err != nil {
+	if err := kclient.Create(ctx, &computeClass); err != nil {
 		t.Fatal(err)
 	}
 
 	defer func() {
-		if err := kclient.Delete(context.Background(), &workloadClass); err != nil && !apierrors.IsNotFound(err) {
+		if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -674,7 +674,7 @@ func TestDefaultClusterWorkloadClass(t *testing.T) {
 	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
 }
 
-func TestDefaultProjectWorkloadClass(t *testing.T) {
+func TestDefaultProjectComputeClass(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
@@ -686,25 +686,25 @@ func TestDefaultProjectWorkloadClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	workloadClass := adminv1.ProjectWorkloadClassInstance{
+	computeClass := adminv1.ProjectComputeClassInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-custom",
 			Namespace: c.GetNamespace(),
 		},
 		Default:   true,
 		CPUScaler: 0.25,
-		Memory: adminv1.WorkloadClassMemory{
+		Memory: adminv1.ComputeClassMemory{
 			Default: "512Mi",
 			Max:     "1Gi",
 			Min:     "512Mi",
 		},
 	}
-	if err := kclient.Create(ctx, &workloadClass); err != nil {
+	if err := kclient.Create(ctx, &computeClass); err != nil {
 		t.Fatal(err)
 	}
 
 	defer func() {
-		if err := kclient.Delete(context.Background(), &workloadClass); err != nil && !apierrors.IsNotFound(err) {
+		if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
 			t.Fatal(err)
 		}
 	}()
@@ -739,7 +739,7 @@ func TestDefaultProjectWorkloadClass(t *testing.T) {
 	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
 }
 
-func TestWorkloadClass(t *testing.T) {
+func TestComputeClass(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
@@ -751,24 +751,24 @@ func TestWorkloadClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	workloadClass := adminv1.ProjectWorkloadClassInstance{
+	computeClass := adminv1.ProjectComputeClassInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-custom",
 			Namespace: c.GetNamespace(),
 		},
 		CPUScaler: 0.25,
-		Memory: adminv1.WorkloadClassMemory{
+		Memory: adminv1.ComputeClassMemory{
 			Default: "512Mi",
 			Max:     "1Gi",
 			Min:     "512Mi",
 		},
 	}
-	if err := kclient.Create(ctx, &workloadClass); err != nil {
+	if err := kclient.Create(ctx, &computeClass); err != nil {
 		t.Fatal(err)
 	}
 
-	image, err := c.AcornImageBuild(ctx, "./testdata/workloadclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/workloadclass",
+	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/computeclass",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -809,22 +809,22 @@ func TestUnrestrictedDefaultGetsMaximum(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	workloadClass := adminv1.ProjectWorkloadClassInstance{
+	computeClass := adminv1.ProjectComputeClassInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-custom",
 			Namespace: c.GetNamespace(),
 		},
 		CPUScaler: 0.25,
-		Memory: adminv1.WorkloadClassMemory{
+		Memory: adminv1.ComputeClassMemory{
 			Max: "1Gi",
 		},
 	}
-	if err := kclient.Create(ctx, &workloadClass); err != nil {
+	if err := kclient.Create(ctx, &computeClass); err != nil {
 		t.Fatal(err)
 	}
 
-	image, err := c.AcornImageBuild(ctx, "./testdata/workloadclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/workloadclass",
+	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/computeclass",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -865,23 +865,23 @@ func TestUnrestrictedDefaultGetsMaximumWithMinimum(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	workloadClass := adminv1.ProjectWorkloadClassInstance{
+	computeClass := adminv1.ProjectComputeClassInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-custom",
 			Namespace: c.GetNamespace(),
 		},
 		CPUScaler: 0.25,
-		Memory: adminv1.WorkloadClassMemory{
+		Memory: adminv1.ComputeClassMemory{
 			Min: "512Mi",
 			Max: "1Gi",
 		},
 	}
-	if err := kclient.Create(ctx, &workloadClass); err != nil {
+	if err := kclient.Create(ctx, &computeClass); err != nil {
 		t.Fatal(err)
 	}
 
-	image, err := c.AcornImageBuild(ctx, "./testdata/workloadclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/workloadclass",
+	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/computeclass",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -910,7 +910,7 @@ func TestUnrestrictedDefaultGetsMaximumWithMinimum(t *testing.T) {
 	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
 }
 
-func TestNonExistantWorkloadClass(t *testing.T) {
+func TestNonExistantComputeClass(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
@@ -921,9 +921,9 @@ func TestNonExistantWorkloadClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	// Create acorn and intentionall do not create the WorkloadClass it references
-	image, err := c.AcornImageBuild(ctx, "./testdata/workloadclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/workloadclass",
+	// Create acorn and intentionall do not create the ComputeClass it references
+	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/computeclass",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -931,11 +931,11 @@ func TestNonExistantWorkloadClass(t *testing.T) {
 
 	_, err = c.AppRun(ctx, image.ID, nil)
 	if err == nil {
-		t.Fatal("expected an error to occur when creating an acorn that references a non-existant WorkloadClass")
+		t.Fatal("expected an error to occur when creating an acorn that references a non-existant ComputeClass")
 	}
 }
 
-func TestCreateWorkloadClass(t *testing.T) {
+func TestCreateComputeClass(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
@@ -949,62 +949,62 @@ func TestCreateWorkloadClass(t *testing.T) {
 
 	checks := []struct {
 		name      string
-		memory    adminv1.WorkloadClassMemory
+		memory    adminv1.ComputeClassMemory
 		cpuScaler float64
 		fail      bool
 	}{
 		{
 			name: "invalid-memory-default",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Default: "invalid",
 			},
 			fail: true,
 		},
 		{
 			name: "invalid-memory-min",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Min: "invalid",
 			},
 			fail: true,
 		},
 		{
 			name: "invalid-memory-max",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Max: "invalid",
 			},
 			fail: true,
 		},
 		{
 			name: "invalid-memory-values",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Values: []string{"invalid"},
 			},
 			fail: true,
 		},
 		{
 			name: "valid-only-max",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Max: "512Mi",
 			},
 			fail: false,
 		},
 		{
 			name: "valid-only-min",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Min: "512Mi",
 			},
 			fail: false,
 		},
 		{
 			name: "valid-only-default",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Default: "512Mi",
 			},
 			fail: false,
 		},
 		{
 			name: "invalid-default-less-than-min",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Default: "128Mi",
 				Min:     "512Mi",
 			},
@@ -1012,7 +1012,7 @@ func TestCreateWorkloadClass(t *testing.T) {
 		},
 		{
 			name: "invalid-default-greater-than-max",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Default: "1Gi",
 				Max:     "512Mi",
 			},
@@ -1020,7 +1020,7 @@ func TestCreateWorkloadClass(t *testing.T) {
 		},
 		{
 			name: "invalid-min-max-swapped",
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Min: "1Gi",
 				Max: "512Mi",
 			},
@@ -1029,7 +1029,7 @@ func TestCreateWorkloadClass(t *testing.T) {
 		{
 			name:      "valid-full",
 			cpuScaler: 0.25,
-			memory: adminv1.WorkloadClassMemory{
+			memory: adminv1.ComputeClassMemory{
 				Default: "512Mi",
 				Max:     "2Gi",
 				Min:     "128Mi",
@@ -1043,8 +1043,8 @@ func TestCreateWorkloadClass(t *testing.T) {
 
 	for _, tt := range checks {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a non-instanced WorkloadClass to trigger Mink valdiation
-			workloadClass := adminapiv1.ProjectWorkloadClass{
+			// Create a non-instanced ComputeClass to trigger Mink valdiation
+			computeClass := adminapiv1.ProjectComputeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: "acorn-test-custom",
 					Namespace:    c.GetNamespace(),
@@ -1054,15 +1054,15 @@ func TestCreateWorkloadClass(t *testing.T) {
 			}
 
 			// TODO - dry run
-			err = kclient.Create(ctx, &workloadClass)
+			err = kclient.Create(ctx, &computeClass)
 			if err != nil && !tt.fail {
 				t.Fatal("did not expect creation to fail:", err)
 			} else if err == nil && tt.fail {
-				if err := kclient.Delete(context.Background(), &workloadClass); err != nil && !apierrors.IsNotFound(err) {
+				if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
 					t.Fatal("failed to cleanup test:", err)
 				}
 				if tt.fail {
-					t.Fatal("expected an error to occur when creating an invalid WorkloadClass but did not receive one")
+					t.Fatal("expected an error to occur when creating an invalid ComputeClass but did not receive one")
 				}
 			}
 

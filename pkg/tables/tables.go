@@ -110,14 +110,14 @@ var (
 	}
 	BuilderConverter = MustConverter(Builder)
 
-	WorkloadClass = [][]string{
+	ComputeClass = [][]string{
 		{"Name", "Name"},
 		{"Default", "{{ boolToStar .Default }}"},
 		{"Memory Range", "{{ memoryToRange .Memory }}"},
 		{"Memort Default", "{{ defaultMemory .Memory }}"},
 		{"Description", "Description"},
 	}
-	WorkloadClassConverter = MustConverter(WorkloadClass)
+	ComputeClassConverter = MustConverter(ComputeClass)
 
 	Build = [][]string{
 		{"Name", "Name"},

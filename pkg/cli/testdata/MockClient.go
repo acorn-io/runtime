@@ -29,24 +29,24 @@ func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
 }
 
 type MockClientFactory struct {
-	AppList           []apiv1.App
-	AppItem           *apiv1.App
-	ContainerList     []apiv1.ContainerReplica
-	ContainerItem     *apiv1.ContainerReplica
-	CredentialList    []apiv1.Credential
-	CredentialItem    *apiv1.Credential
-	VolumeList        []apiv1.Volume
-	VolumeItem        *apiv1.Volume
-	SecretList        []apiv1.Secret
-	SecretItem        *apiv1.Secret
-	ImageList         []apiv1.Image
-	ImageItem         *apiv1.Image
-	ProjectList       []apiv1.Project
-	ProjectItem       *apiv1.Project
-	VolumeClassList   []apiv1.VolumeClass
-	VolumeClassItem   *apiv1.VolumeClass
-	WorkloadClassList []apiv1.WorkloadClass
-	WorkloadClassItem *apiv1.WorkloadClass
+	AppList          []apiv1.App
+	AppItem          *apiv1.App
+	ContainerList    []apiv1.ContainerReplica
+	ContainerItem    *apiv1.ContainerReplica
+	CredentialList   []apiv1.Credential
+	CredentialItem   *apiv1.Credential
+	VolumeList       []apiv1.Volume
+	VolumeItem       *apiv1.Volume
+	SecretList       []apiv1.Secret
+	SecretItem       *apiv1.Secret
+	ImageList        []apiv1.Image
+	ImageItem        *apiv1.Image
+	ProjectList      []apiv1.Project
+	ProjectItem      *apiv1.Project
+	VolumeClassList  []apiv1.VolumeClass
+	VolumeClassItem  *apiv1.VolumeClass
+	ComputeClassList []apiv1.ComputeClass
+	ComputeClassItem *apiv1.ComputeClass
 }
 
 func (dc *MockClientFactory) Options() project.Options {
@@ -55,46 +55,46 @@ func (dc *MockClientFactory) Options() project.Options {
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 	return &MockClient{
-		Apps:              dc.AppList,
-		Containers:        dc.ContainerList,
-		Credentials:       dc.CredentialList,
-		Volumes:           dc.VolumeList,
-		Secrets:           dc.SecretList,
-		Images:            dc.ImageList,
-		Projects:          dc.ProjectList,
-		VolumeClasses:     dc.VolumeClassList,
-		AppItem:           dc.AppItem,
-		ContainerItem:     dc.ContainerItem,
-		CredentialItem:    dc.CredentialItem,
-		VolumeItem:        dc.VolumeItem,
-		SecretItem:        dc.SecretItem,
-		ImageItem:         dc.ImageItem,
-		ProjectItem:       dc.ProjectItem,
-		VolumeClassItem:   dc.VolumeClassItem,
-		WorkloadClasses:   dc.WorkloadClassList,
-		WorkloadClassItem: dc.WorkloadClassItem,
+		Apps:             dc.AppList,
+		Containers:       dc.ContainerList,
+		Credentials:      dc.CredentialList,
+		Volumes:          dc.VolumeList,
+		Secrets:          dc.SecretList,
+		Images:           dc.ImageList,
+		Projects:         dc.ProjectList,
+		VolumeClasses:    dc.VolumeClassList,
+		AppItem:          dc.AppItem,
+		ContainerItem:    dc.ContainerItem,
+		CredentialItem:   dc.CredentialItem,
+		VolumeItem:       dc.VolumeItem,
+		SecretItem:       dc.SecretItem,
+		ImageItem:        dc.ImageItem,
+		ProjectItem:      dc.ProjectItem,
+		VolumeClassItem:  dc.VolumeClassItem,
+		ComputeClasses:   dc.ComputeClassList,
+		ComputeClassItem: dc.ComputeClassItem,
 	}, nil
 }
 
 type MockClient struct {
-	Apps              []apiv1.App
-	AppItem           *apiv1.App
-	Containers        []apiv1.ContainerReplica
-	ContainerItem     *apiv1.ContainerReplica
-	Credentials       []apiv1.Credential
-	CredentialItem    *apiv1.Credential
-	Volumes           []apiv1.Volume
-	VolumeItem        *apiv1.Volume
-	Secrets           []apiv1.Secret
-	SecretItem        *apiv1.Secret
-	Images            []apiv1.Image
-	ImageItem         *apiv1.Image
-	Projects          []apiv1.Project
-	ProjectItem       *apiv1.Project
-	VolumeClasses     []apiv1.VolumeClass
-	VolumeClassItem   *apiv1.VolumeClass
-	WorkloadClasses   []apiv1.WorkloadClass
-	WorkloadClassItem *apiv1.WorkloadClass
+	Apps             []apiv1.App
+	AppItem          *apiv1.App
+	Containers       []apiv1.ContainerReplica
+	ContainerItem    *apiv1.ContainerReplica
+	Credentials      []apiv1.Credential
+	CredentialItem   *apiv1.Credential
+	Volumes          []apiv1.Volume
+	VolumeItem       *apiv1.Volume
+	Secrets          []apiv1.Secret
+	SecretItem       *apiv1.Secret
+	Images           []apiv1.Image
+	ImageItem        *apiv1.Image
+	Projects         []apiv1.Project
+	ProjectItem      *apiv1.Project
+	VolumeClasses    []apiv1.VolumeClass
+	VolumeClassItem  *apiv1.VolumeClass
+	ComputeClasses   []apiv1.ComputeClass
+	ComputeClassItem *apiv1.ComputeClass
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -655,16 +655,16 @@ func (m *MockClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
 	}}, nil
 }
 
-func (m *MockClient) WorkloadClassList(_ context.Context) ([]apiv1.WorkloadClass, error) {
-	return m.WorkloadClasses, nil
+func (m *MockClient) ComputeClassList(_ context.Context) ([]apiv1.ComputeClass, error) {
+	return m.ComputeClasses, nil
 }
 
-func (m *MockClient) WorkloadClassGet(_ context.Context, name string) (*apiv1.WorkloadClass, error) {
-	if m.WorkloadClassItem != nil {
-		return m.WorkloadClassItem, nil
+func (m *MockClient) ComputeClassGet(_ context.Context, name string) (*apiv1.ComputeClass, error) {
+	if m.ComputeClassItem != nil {
+		return m.ComputeClassItem, nil
 	}
 
-	for _, s := range m.WorkloadClasses {
+	for _, s := range m.ComputeClasses {
 		if s.Name == name {
 			return &s, nil
 		}
@@ -672,7 +672,7 @@ func (m *MockClient) WorkloadClassGet(_ context.Context, name string) (*apiv1.Wo
 
 	return nil, apierrors.NewNotFound(schema.GroupResource{
 		Group:    "api.acorn.io",
-		Resource: "workloadclasses",
+		Resource: "computeclasses",
 	}, name)
 }
 

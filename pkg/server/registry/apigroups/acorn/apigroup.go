@@ -17,7 +17,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/volumes"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/volumes/class"
-	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin/workloadclass"
+	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin/computeclass"
 	"github.com/acorn-io/mink/pkg/serializer"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -85,7 +85,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"secrets":                secrets.NewStorage(c),
 		"secrets/reveal":         secrets.NewReveal(c),
 		"infos":                  info.NewStorage(c),
-		"workloadclasses":        workloadclass.NewAggregateStorage(c),
+		"computeclasses":         computeclass.NewAggregateStorage(c),
 	}
 
 	return stores, nil

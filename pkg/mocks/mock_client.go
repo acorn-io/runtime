@@ -244,6 +244,36 @@ func (mr *MockClientMockRecorder) AppUpdate(arg0, arg1, arg2 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppUpdate", reflect.TypeOf((*MockClient)(nil).AppUpdate), arg0, arg1, arg2)
 }
 
+// ComputeClassGet mocks base method
+func (m *MockClient) ComputeClassGet(arg0 context.Context, arg1 string) (*v1.ComputeClass, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ComputeClassGet", arg0, arg1)
+	ret0, _ := ret[0].(*v1.ComputeClass)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ComputeClassGet indicates an expected call of ComputeClassGet
+func (mr *MockClientMockRecorder) ComputeClassGet(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeClassGet", reflect.TypeOf((*MockClient)(nil).ComputeClassGet), arg0, arg1)
+}
+
+// ComputeClassList mocks base method
+func (m *MockClient) ComputeClassList(arg0 context.Context) ([]v1.ComputeClass, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ComputeClassList", arg0)
+	ret0, _ := ret[0].([]v1.ComputeClass)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ComputeClassList indicates an expected call of ComputeClassList
+func (mr *MockClientMockRecorder) ComputeClassList(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeClassList", reflect.TypeOf((*MockClient)(nil).ComputeClassList), arg0)
+}
+
 // ContainerReplicaDelete mocks base method
 func (m *MockClient) ContainerReplicaDelete(arg0 context.Context, arg1 string) (*v1.ContainerReplica, error) {
 	m.ctrl.T.Helper()
@@ -764,36 +794,6 @@ func (m *MockClient) VolumeList(arg0 context.Context) ([]v1.Volume, error) {
 func (mr *MockClientMockRecorder) VolumeList(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeList", reflect.TypeOf((*MockClient)(nil).VolumeList), arg0)
-}
-
-// WorkloadClassGet mocks base method
-func (m *MockClient) WorkloadClassGet(arg0 context.Context, arg1 string) (*v1.WorkloadClass, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WorkloadClassGet", arg0, arg1)
-	ret0, _ := ret[0].(*v1.WorkloadClass)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// WorkloadClassGet indicates an expected call of WorkloadClassGet
-func (mr *MockClientMockRecorder) WorkloadClassGet(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WorkloadClassGet", reflect.TypeOf((*MockClient)(nil).WorkloadClassGet), arg0, arg1)
-}
-
-// WorkloadClassList mocks base method
-func (m *MockClient) WorkloadClassList(arg0 context.Context) ([]v1.WorkloadClass, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WorkloadClassList", arg0)
-	ret0, _ := ret[0].([]v1.WorkloadClass)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// WorkloadClassList indicates an expected call of WorkloadClassList
-func (mr *MockClientMockRecorder) WorkloadClassList(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WorkloadClassList", reflect.TypeOf((*MockClient)(nil).WorkloadClassList), arg0)
 }
 
 // MockProjectClientFactory is a mock of ProjectClientFactory interface

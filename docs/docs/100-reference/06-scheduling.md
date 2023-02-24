@@ -45,10 +45,10 @@ When the `foo` Acorn gets provisioned, all of its containers will have their mem
 This same interaction will occur if the `--workload-memory-default` is set to 0 (which it is by default)
 :::
 
-## Workload Classes
-You can configure Acorn apps to have a set workload class upon startup.
+## Compute Classes
+You can configure Acorn apps to have a set compute class upon startup.
 
-Setting a workload class allows you to define what the infrastructure providing your Acorn workloads should look like. Things that workload classes control include:
+Setting a compute class allows you to define what the infrastructure providing your Acorn workloads should look like. Things that workload classes control include:
 
 - What OS/Architecure your workloads will run on
 - How much memory is minimal, maximal, default and allowed
@@ -58,24 +58,24 @@ Setting a workload class allows you to define what the infrastructure providing 
 You are not able to set vCPUs directly. This is an intentional abstraction and instead vCPUs are calculated off of the amount of memory for a workload.
 :::
 
-### Using a Workload Class
+### Using a Compute Class
 You can see the workload classes available in your current project using the CLI. 
 
 ```console
-$ acorn offerings workloadclasses
+$ acorn offerings computeclasses
 NAME          DEFAULT   MEMORY RANGE      MEMORT DEFAULT   DESCRIPTION         
-default       *         512Mi-1Gi         1Gi              Default WorkloadClass
-non-default             0-1Gi             512Mi            Non-default WorkloadClass
-unrestricted            Unrestricted      512Mi            Unrestricted WorkloadClass
-specific                128Mi,512Mi,1Gi   128Mi            Specific WorkloadClass
+default       *         512Mi-1Gi         1Gi              Default ComputeClass
+non-default             0-1Gi             512Mi            Non-default ComputeClass
+unrestricted            Unrestricted      512Mi            Unrestricted ComputeClass
+specific                128Mi,512Mi,1Gi   128Mi            Specific ComputeClass
 ```
 
 Breaking this down, `MEMORY_DEFAULT` tells us what memory we will get if we don't specify any. `MEMORY_RANGE` tells us what memory values are available to use. If it is a range, specified with a `-` then you can use any value in that range. If it has specific values, denoted by commands, then you can only use those values.
 
-Specify workloads classes can be done in the Acornfile (using the `class` property for containers) or at runtime (using the `--workload-class` flag). 
+Specify workloads classes can be done in the Acornfile (using the `class` property for containers) or at runtime (using the `--compute-class` flag). 
 
-If you do not specify a workload class, the default workload class for the project will be used. If there is no default for the project, the default for the cluster will be used. Finally, if there is no cluster default then no workload class will be used. Depending on the workload class that is used, the memory that you specify may be in contention with its requirements. Should they happen Acorn will provide a descriptive error message to ammend any issues.
+If you do not specify a compute class, the default compute class for the project will be used. If there is no default for the project, the default for the cluster will be used. Finally, if there is no cluster default then no compute class will be used. Depending on the compute class that is used, the memory that you specify may be in contention with its requirements. Should they happen Acorn will provide a descriptive error message to ammend any issues.
 
 :::note
-Looking to manage a workload class? This should only be done if you are (or are in communication with) an administrator of Acorn. You can read more information about managing workload classes [here](./02-admin/03-workloadclasses.md)
+Looking to manage a compute class? This should only be done if you are (or are in communication with) an administrator of Acorn. You can read more information about managing workload classes [here](./02-admin/03-computeclasses.md)
 :::

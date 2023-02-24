@@ -114,7 +114,7 @@ const sidebars = {
           "reference/command-line/acorn_project_create",
           "reference/command-line/acorn_project_rm",
           "reference/command-line/acorn_offerings",
-          "reference/command-line/acorn_offerings_workloadclasses",
+          "reference/command-line/acorn_offerings_computeclasses",
           "reference/command-line/acorn_project_use",
           "reference/command-line/acorn_pull",
           "reference/command-line/acorn_push",
@@ -141,7 +141,7 @@ const sidebars = {
         "label": "Administration",
         "items": [
             "reference/admin/volumeclasses",
-            "reference/admin/workloadclasses"
+            "reference/admin/computeclasses"
         ]
       },
       "reference/acornfile",

@@ -458,15 +458,15 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 	})
 }
 
-func (m *MultiClient) WorkloadClassGet(ctx context.Context, name string) (*apiv1.WorkloadClass, error) {
-	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.WorkloadClass, error) {
-		return c.WorkloadClassGet(ctx, name)
+func (m *MultiClient) ComputeClassGet(ctx context.Context, name string) (*apiv1.ComputeClass, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.ComputeClass, error) {
+		return c.ComputeClassGet(ctx, name)
 	})
 }
 
-func (m *MultiClient) WorkloadClassList(ctx context.Context) ([]apiv1.WorkloadClass, error) {
-	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.WorkloadClass, error) {
-		return client.WorkloadClassList(ctx)
+func (m *MultiClient) ComputeClassList(ctx context.Context) ([]apiv1.ComputeClass, error) {
+	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.ComputeClass, error) {
+		return client.ComputeClassList(ctx)
 	})
 }
 
