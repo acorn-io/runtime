@@ -12,7 +12,7 @@ import (
 
 func NewContainer(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Container{client: c.ClientFactory}, cobra.Command{
-		Use:     "container [flags] [APP_NAME|CONTAINER_NAME...]",
+		Use:     "container [flags] [APP_NAME | CONTAINER_NAME...]",
 		Aliases: []string{"containers", "c"},
 		Example: `
 acorn containers`,
@@ -54,7 +54,9 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			for _, container := range containers {
-				out.Write(container)
+				if a.All || container.Status.Columns.State != "stopped" {
+					out.Write(container)
+				}
 			}
 		}
 		return out.Err()

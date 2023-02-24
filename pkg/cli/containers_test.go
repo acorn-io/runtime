@@ -36,8 +36,12 @@ var (
 			Name:              "found.container2",
 			CreationTimestamp: metav1.NewTime(time.Now().AddDate(-10, 0, 0)),
 		},
-		Spec:   apiv1.ContainerReplicaSpec{AppName: "found"},
-		Status: apiv1.ContainerReplicaStatus{},
+		Spec: apiv1.ContainerReplicaSpec{AppName: "found"},
+		Status: apiv1.ContainerReplicaStatus{
+			Columns: apiv1.ContainerReplicaColumns{
+				State: "stopped",
+			},
+		},
 	}
 	mockApp = &apiv1.App{
 		TypeMeta: metav1.TypeMeta{},
@@ -109,7 +113,28 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                                 0              10y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
+		},
+		{
+			name: "acorn container -a", fields: fields{
+				All:    true,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"-a"},
+				client: mClient,
+			},
+			wantErr: false,
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                       stopped   0              10y ago   \n",
 		},
 		{
 			name: "acorn container found.container1", fields: fields{
@@ -151,7 +176,28 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                                 0              10y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
+		},
+		{
+			name: "acorn container found -a", fields: fields{
+				All:    true,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"-a", "--", "found"},
+				client: mClient,
+			},
+			wantErr: false,
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                       stopped   0              10y ago   \n",
 		},
 		{
 			name: "acorn container kill found.container1", fields: fields{
