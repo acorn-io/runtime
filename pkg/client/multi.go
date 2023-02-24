@@ -449,11 +449,11 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	return aggregateOptionalNaming(ctx, false, m.Factory, func(c Client) ([]apiv1.Info, error) {
 		infos, err := c.Info(ctx)
-		// Get project name from client and set to info object's namespace.
+		namespace := c.GetNamespace()
+		name := c.GetProject()
 		for i := range infos {
-			namespace := c.GetNamespace()
 			infos[i].Namespace = namespace
-			infos[i].Name = namespace
+			infos[i].Name = name
 		}
 		return infos, err
 	})
