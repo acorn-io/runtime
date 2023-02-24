@@ -41,13 +41,15 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 
 	switch len(args) {
 	case 0:
+		// No app or container name supplied, list all containers
 		if err := printContainerReplicas(cmd.Context(), c, nil, a.All, &out); err != nil {
 			return err
 		}
 	case 1:
+		// One app or container name supplied, only list matches
 		app, err := c.AppGet(cmd.Context(), args[0])
 		if err != nil {
-			// see if it's the name of a container instead
+			// See if it's the name of a container instead
 			container, err := c.ContainerReplicaGet(cmd.Context(), args[0])
 			if err != nil {
 				return err
@@ -59,6 +61,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 			}
 		}
 	default:
+		// More than one name supplied, iterate through containers and list any that match
 		containers, err := c.ContainerReplicaList(cmd.Context(), nil)
 		if err != nil {
 			return err
