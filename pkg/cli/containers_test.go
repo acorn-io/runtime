@@ -1,7 +1,14 @@
 package cli
 
 import (
+	"fmt"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/mocks"
+	"github.com/golang/mock/gomock"
 	"io"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"strings"
 	"testing"
@@ -11,7 +18,49 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// create test data
+	mockContainer1 = &apiv1.ContainerReplica{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found.container1"},
+		Spec:       apiv1.ContainerReplicaSpec{AppName: "found"},
+		Status:     apiv1.ContainerReplicaStatus{},
+	}
+	mockContainer2 = &apiv1.ContainerReplica{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found.container2"},
+		Spec:       apiv1.ContainerReplicaSpec{AppName: "found"},
+		Status:     apiv1.ContainerReplicaStatus{},
+	}
+	mockApp = &apiv1.App{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found"},
+		Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
+		Status:     v1.AppInstanceStatus{Ready: true},
+	}
+)
+
 func TestContainer(t *testing.T) {
+	// create mock client and declare all expected function calls
+	ctrl := gomock.NewController(t)
+	mClient := mocks.NewMockClient(ctrl)
+	mClient.EXPECT().ContainerReplicaGet(gomock.Any(), "found.container1").
+		Return(mockContainer1, nil).AnyTimes()
+	mClient.EXPECT().ContainerReplicaGet(gomock.Any(), "found.container2").
+		Return(mockContainer2, nil).AnyTimes()
+	mClient.EXPECT().ContainerReplicaGet(gomock.Any(), "dne").
+		Return(nil, fmt.Errorf("error: container dne does not exist")).AnyTimes()
+	mClient.EXPECT().ContainerReplicaList(gomock.Any(), nil).
+		Return([]apiv1.ContainerReplica{*mockContainer1, *mockContainer2}, nil).AnyTimes()
+	mClient.EXPECT().ContainerReplicaList(gomock.Any(), &client.ContainerReplicaListOptions{App: "found"}).
+		Return([]apiv1.ContainerReplica{*mockContainer1, *mockContainer2}, nil).AnyTimes()
+	mClient.EXPECT().ContainerReplicaDelete(gomock.Any(), "found.container1").
+		Return(mockContainer1, nil).AnyTimes()
+	mClient.EXPECT().ContainerReplicaDelete(gomock.Any(), "dne").
+		Return(nil, fmt.Errorf("error: No such container: dne"))
+	mClient.EXPECT().AppGet(gomock.Any(), "found").Return(mockApp, nil).AnyTimes()
+	mClient.EXPECT().AppGet(gomock.Any(), gomock.Not("found")).Return(nil, fmt.Errorf("app not found"))
+
 	type fields struct {
 		Quiet  bool
 		Output string
@@ -20,7 +69,7 @@ func TestContainer(t *testing.T) {
 	type args struct {
 		cmd    *cobra.Command
 		args   []string
-		client *testdata.MockClient
+		client *mocks.MockClient
 	}
 	var _, w, _ = os.Pipe()
 	tests := []struct {
@@ -38,36 +87,40 @@ func TestContainer(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{},
-				client: &testdata.MockClient{},
+				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME              APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container                                 0              292y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container1                                 0              292y ago   \nfound.container2                                 0              292y ago   \n",
 		},
 		{
-			name: "acorn container found.container", fields: fields{
+			name: "acorn container found.container1", fields: fields{
 				All:    false,
 				Quiet:  false,
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"--", "found.container"},
-				client: &testdata.MockClient{},
+				args:   []string{"--", "found.container1"},
+				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME              APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container                                 0              292y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container1                                 0              292y ago   \n",
 		},
 		{
 			name: "acorn container found", fields: fields{
@@ -76,36 +129,40 @@ func TestContainer(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"--", "found"},
-				client: &testdata.MockClient{},
+				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME              APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container                                 0              292y ago   \n",
+			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE\nfound.container1                                 0              292y ago   \nfound.container2                                 0              292y ago   \n",
 		},
 		{
-			name: "acorn container kill found", fields: fields{
+			name: "acorn container kill found.container1", fields: fields{
 				All:    false,
 				Quiet:  false,
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"kill", "found.container"},
-				client: &testdata.MockClient{},
+				args:   []string{"kill", "found.container1"},
+				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "found.container\n",
+			wantOut: "found.container1\n",
 		},
 		{
 			name: "acorn container kill dne", fields: fields{
@@ -114,17 +171,19 @@ func TestContainer(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader("y\n"),
+				ClientFactory: &testdata.MockClientFactoryManual{
+					Client: mClient,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
 				args:   []string{"kill", "dne"},
-				client: &testdata.MockClient{},
+				client: mClient,
 			},
 			wantErr: true,
-			wantOut: "Error: No such container: dne\n",
+			wantOut: "deleting dne: error: No such container: dne",
 		},
 	}
 	for _, tt := range tests {
