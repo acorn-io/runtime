@@ -20,6 +20,8 @@ metadata:
     permit-scoped.io: test-named
     permit.io: test-permit-app-spec-label
 spec:
+  accessModes:
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10_000_000_000

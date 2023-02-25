@@ -122,7 +122,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
-		StorageClassName: storageClasses.Items[0].Name,
+		StorageClassName: getStorageClassName(t, storageClasses),
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -176,14 +176,10 @@ func TestVolumeBoundBadClass(t *testing.T) {
 	if err := kclient.List(ctx, storageClasses); err != nil {
 		t.Fatal(err)
 	}
-	var storageClassName string
-	if len(storageClasses.Items) != 0 {
-		storageClassName = storageClasses.Items[0].Name
-	}
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
-		StorageClassName: storageClassName,
+		StorageClassName: getStorageClassName(t, storageClasses),
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -349,7 +345,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
-		StorageClassName: storageClasses.Items[0].Name,
+		StorageClassName: getStorageClassName(t, storageClasses),
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -412,8 +408,14 @@ func TestClusterVolumeClass(t *testing.T) {
 	}
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
-		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
-		StorageClassName: storageClasses.Items[0].Name,
+		ObjectMeta:         metav1.ObjectMeta{Name: "acorn-test-custom"},
+		StorageClassName:   getStorageClassName(t, storageClasses),
+		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+		Size: adminv1.VolumeClassSize{
+			Default: v1.Quantity("5G"),
+			Min:     v1.Quantity("1G"),
+			Max:     v1.Quantity("9G"),
+		},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -436,17 +438,77 @@ func TestClusterVolumeClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeList), func(obj *corev1.PersistentVolume) bool {
+	pv := helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeList), func(obj *corev1.PersistentVolume) bool {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
 			obj.Labels[labels.AcornVolumeName] == "my-data"
 	})
 
+	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"}, pv.Spec.AccessModes)
+	assert.Equal(t, "5G", pv.Spec.Capacity.Storage().String())
+
 	helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 			obj.Status.Condition(v1.AppInstanceConditionVolumes).Success
 	})
+}
+
+func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	c, _ := helper.ClientAndNamespace(t)
+
+	storageClasses := new(storagev1.StorageClassList)
+	err := kclient.List(ctx, storageClasses)
+	if err != nil || len(storageClasses.Items) == 0 {
+		t.Skip("No storage classes, so skipping ClusterVolumeClassValuesInAcornfile")
+		return
+	}
+
+	volumeClass := adminapiv1.ClusterVolumeClass{
+		ObjectMeta:         metav1.ObjectMeta{Name: "acorn-test-custom"},
+		StorageClassName:   getStorageClassName(t, storageClasses),
+		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce, v1.AccessModeReadWriteMany},
+		Size: adminv1.VolumeClassSize{
+			Default: v1.Quantity("5G"),
+			Min:     v1.Quantity("1G"),
+			Max:     v1.Quantity("9G"),
+		},
+	}
+	if err = kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/cluster-volume-class-with-values/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/cluster-volume-class-with-values",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pvc := helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeClaimList), func(obj *corev1.PersistentVolumeClaim) bool {
+		return obj.Labels[labels.AcornAppName] == app.Name &&
+			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
+			obj.Labels[labels.AcornManaged] == "true" &&
+			obj.Labels[labels.AcornVolumeName] == "my-data"
+	})
+
+	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteMany"}, pvc.Spec.AccessModes)
+	assert.Equal(t, "3G", pvc.Spec.Resources.Requests.Storage().String())
+	// Depending on the storage class available, readWriteMany may not be supported. Don't wait for the app to deploy successfully because it may not.
 }
 
 func TestProjectVolumeClass(t *testing.T) {
@@ -459,13 +521,19 @@ func TestProjectVolumeClass(t *testing.T) {
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
 	if err != nil || len(storageClasses.Items) == 0 {
-		t.Skip("No storage classes, so skipping ClusterVolumeClass")
+		t.Skip("No storage classes, so skipping ProjectVolumeClass")
 		return
 	}
 
 	volumeClass := adminapiv1.ProjectVolumeClass{
-		ObjectMeta:       metav1.ObjectMeta{Namespace: c.GetNamespace(), Name: "acorn-test-custom"},
-		StorageClassName: storageClasses.Items[0].Name,
+		ObjectMeta:         metav1.ObjectMeta{Namespace: c.GetNamespace(), Name: "acorn-test-custom"},
+		StorageClassName:   getStorageClassName(t, storageClasses),
+		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+		Size: adminv1.VolumeClassSize{
+			Default: v1.Quantity("2G"),
+			Min:     v1.Quantity("1G"),
+			Max:     v1.Quantity("3G"),
+		},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -488,17 +556,187 @@ func TestProjectVolumeClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeList), func(obj *corev1.PersistentVolume) bool {
+	pv := helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeList), func(obj *corev1.PersistentVolume) bool {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
 			obj.Labels[labels.AcornVolumeName] == "my-data"
 	})
 
+	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"}, pv.Spec.AccessModes)
+	assert.Equal(t, "2G", pv.Spec.Capacity.Storage().String())
+
 	helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
 		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 			obj.Status.Condition(v1.AppInstanceConditionVolumes).Success
 	})
+}
+
+func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	c, _ := helper.ClientAndNamespace(t)
+
+	storageClasses := new(storagev1.StorageClassList)
+	err := kclient.List(ctx, storageClasses)
+	if err != nil || len(storageClasses.Items) == 0 {
+		t.Skip("No storage classes, so skipping ProjectVolumeClassDefaultSizeValidation")
+		return
+	}
+
+	volumeClass := adminapiv1.ProjectVolumeClass{
+		ObjectMeta:         metav1.ObjectMeta{Namespace: c.GetNamespace(), Name: "acorn-test-custom"},
+		StorageClassName:   getStorageClassName(t, storageClasses),
+		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+		Size: adminv1.VolumeClassSize{
+			Default: v1.Quantity("5G"),
+			Min:     v1.Quantity("1G"),
+			Max:     v1.Quantity("9G"),
+		},
+		Default: true,
+	}
+	if err = kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/no-class-with-values/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/no-class-with-values",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pv := helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeList), func(obj *corev1.PersistentVolume) bool {
+		return obj.Labels[labels.AcornAppName] == app.Name &&
+			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
+			obj.Labels[labels.AcornManaged] == "true" &&
+			obj.Labels[labels.AcornVolumeName] == "my-data"
+	})
+
+	assert.Equal(t, storageClasses.Items[0].Name, pv.Spec.StorageClassName)
+	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"}, pv.Spec.AccessModes)
+	assert.Equal(t, "6G", pv.Spec.Capacity.Storage().String())
+
+	helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+			obj.Status.Condition(v1.AppInstanceConditionVolumes).Success
+	})
+}
+
+func TestProjectVolumeClassDefaultSizeBadValidation(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	c, _ := helper.ClientAndNamespace(t)
+
+	storageClasses := new(storagev1.StorageClassList)
+	err := kclient.List(ctx, storageClasses)
+	if err != nil || len(storageClasses.Items) == 0 {
+		t.Skip("No storage classes, so skipping ProjectVolumeClassDefaultSizeBadValidation")
+		return
+	}
+
+	volumeClass := adminapiv1.ProjectVolumeClass{
+		ObjectMeta:         metav1.ObjectMeta{Namespace: c.GetNamespace(), Name: "acorn-test-custom"},
+		StorageClassName:   getStorageClassName(t, storageClasses),
+		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
+		Size: adminv1.VolumeClassSize{
+			Default: v1.Quantity("4G"),
+			Min:     v1.Quantity("1G"),
+			Max:     v1.Quantity("5G"),
+		},
+		Default: true,
+	}
+	if err = kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/no-class-with-values/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/no-class-with-values",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.AppRun(ctx, image.ID, nil)
+	if err == nil {
+		t.Fatal("expected app with size too large for volume class to error on run")
+	}
+}
+
+func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	c, _ := helper.ClientAndNamespace(t)
+
+	storageClasses := new(storagev1.StorageClassList)
+	err := kclient.List(ctx, storageClasses)
+	if err != nil || len(storageClasses.Items) == 0 {
+		t.Skip("No storage classes, so skipping ProjectVolumeClassValuesInAcornfile")
+		return
+	}
+
+	volumeClass := adminapiv1.ProjectVolumeClass{
+		ObjectMeta:         metav1.ObjectMeta{Namespace: c.GetNamespace(), Name: "acorn-test-custom"},
+		StorageClassName:   getStorageClassName(t, storageClasses),
+		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce, v1.AccessModeReadWriteMany},
+		Size: adminv1.VolumeClassSize{
+			Default: v1.Quantity("5G"),
+			Min:     v1.Quantity("2G"),
+			Max:     v1.Quantity("6G"),
+		},
+	}
+	if err = kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/cluster-volume-class-with-values/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/cluster-volume-class-with-values",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pvc := helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeClaimList), func(obj *corev1.PersistentVolumeClaim) bool {
+		return obj.Labels[labels.AcornAppName] == app.Name &&
+			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
+			obj.Labels[labels.AcornManaged] == "true" &&
+			obj.Labels[labels.AcornVolumeName] == "my-data"
+	})
+
+	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteMany"}, pvc.Spec.AccessModes)
+	assert.Equal(t, "3G", pvc.Spec.Resources.Requests.Storage().String())
+	// Depending on the storage class available, readWriteMany may not be supported. Don't wait for the app to deploy successfully because it may not.
 }
 
 func TestImageNameAnnotation(t *testing.T) {
@@ -1069,4 +1307,21 @@ func TestCreateComputeClass(t *testing.T) {
 		})
 	}
 
+}
+
+func getStorageClassName(t *testing.T, storageClasses *storagev1.StorageClassList) string {
+	t.Helper()
+	if len(storageClasses.Items) == 0 {
+		return ""
+	}
+
+	storageClassName := storageClasses.Items[0].Name
+	// Use local-=path if it exists
+	for _, sc := range storageClasses.Items {
+		if sc.Name == "local-path" {
+			storageClassName = sc.Name
+			break
+		}
+	}
+	return storageClassName
 }

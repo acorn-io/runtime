@@ -1,0 +1,13 @@
+containers: {
+	simple: {
+		build: "."
+		dirs: "/data": "volume://my-data"
+	}
+}
+
+volumes: {
+	"my-data": {
+		size: 6G
+		accessModes: "readWriteOnce"
+	}
+}

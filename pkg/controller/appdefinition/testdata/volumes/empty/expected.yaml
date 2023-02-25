@@ -75,6 +75,8 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/volume-name": "foo"
 spec:
+  accessModes:
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10G
