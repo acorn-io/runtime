@@ -155,7 +155,7 @@ func ValidateVolumeClasses(ctx context.Context, c client.Client, namespace strin
 			if volClass.Size.Min != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Min)) < 0 {
 				return field.Invalid(field.NewPath("spec", "volumes", name, "size"), q.String(), fmt.Sprintf("less than volume class %s minimum of %v", calculatedVolumeRequest.Class, volClass.Size.Min))
 			}
-			if volClass.Size.Min != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Max)) > 0 {
+			if volClass.Size.Max != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Max)) > 0 {
 				return field.Invalid(field.NewPath("spec", "volumes", name, "size"), q.String(), fmt.Sprintf("greater than volume class %s maximum of %v", calculatedVolumeRequest.Class, volClass.Size.Max))
 			}
 		}

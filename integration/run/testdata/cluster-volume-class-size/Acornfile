@@ -1,0 +1,13 @@
+containers: {
+	simple: {
+		build: "."
+		dirs: "/data": "volume://my-data"
+	}
+}
+
+volumes: {
+	"my-data": {
+		class: "acorn-test-custom"
+		size: 15G
+	}
+}

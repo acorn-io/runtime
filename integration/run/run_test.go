@@ -448,6 +448,64 @@ func TestClusterVolumeClass(t *testing.T) {
 	})
 }
 
+func TestClusterVolumeClassSizeRestriction(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	c, _ := helper.ClientAndNamespace(t)
+
+	storageClasses := new(storagev1.StorageClassList)
+	err := kclient.List(ctx, storageClasses)
+	if err != nil || len(storageClasses.Items) == 0 {
+		t.Skip("No storage classes, so skipping ClusterVolumeClass")
+		return
+	}
+
+	volumeClass := adminapiv1.ClusterVolumeClass{
+		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
+		StorageClassName: storageClasses.Items[0].Name,
+		Size: adminv1.VolumeClassSize{
+			Min: "1G",
+			Max: "20G",
+		},
+	}
+	if err = kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/cluster-volume-class-size/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/cluster-volume-class-size",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pv := helper.Wait(t, kclient.Watch, new(corev1.PersistentVolumeList), func(obj *corev1.PersistentVolume) bool {
+		return obj.Labels[labels.AcornAppName] == app.Name &&
+			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
+			obj.Labels[labels.AcornManaged] == "true" &&
+			obj.Labels[labels.AcornVolumeName] == "my-data"
+	})
+
+	assert.Equal(t, "15G", pv.Spec.Capacity.Storage().String())
+
+	helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+			obj.Status.Condition(v1.AppInstanceConditionVolumes).Success
+	})
+}
+
 func TestProjectVolumeClass(t *testing.T) {
 	helper.StartController(t)
 
