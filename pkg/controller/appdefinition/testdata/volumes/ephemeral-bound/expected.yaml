@@ -72,6 +72,8 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/volume-name": "foo"
 spec:
+  accessModes:
+    - ReadWriteOnce
   volumeName: "existing-foo"
   resources:
     requests:

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/typed"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,19 +15,15 @@ func addVolumeClassDefaults(ctx context.Context, c kclient.Client, app *v1.AppIn
 		return nil
 	}
 
-	volumeClasses, err := volume.GetVolumeClasses(ctx, c, app.Namespace)
+	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClasses(ctx, c, app.Namespace)
 	if err != nil {
 		return err
 	}
 
-	var defaultVolumeClass adminv1.ProjectVolumeClassInstance
 	for _, entry := range typed.Sorted(volumeClasses) {
 		vc := entry.Value
-		if vc.Default && !vc.Inactive {
-			if defaultVolumeClass.Default {
-				return fmt.Errorf("cannot establish defaults because two defaults volume classes exist: %s and %s", defaultVolumeClass.Name, vc.Name)
-			}
-			defaultVolumeClass = vc
+		if vc.Default && vc.Name != defaultVolumeClass.Name {
+			return fmt.Errorf("cannot establish defaults because two defaults volume classes exist: %s and %s", defaultVolumeClass.Name, vc.Name)
 		}
 	}
 
@@ -43,7 +38,7 @@ func addVolumeClassDefaults(ctx context.Context, c kclient.Client, app *v1.AppIn
 	for name, vol := range app.Status.AppSpec.Volumes {
 		var volDefaults v1.VolumeDefault
 		vol = volume.CopyVolumeDefaults(vol, volumeBindings[name], volDefaults)
-		if vol.Class == "" {
+		if vol.Class == "" && defaultVolumeClass != nil {
 			volDefaults.Class = defaultVolumeClass.Name
 			vol.Class = volDefaults.Class
 		}

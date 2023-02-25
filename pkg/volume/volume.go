@@ -59,7 +59,7 @@ func CreateEphemeralVolumeClass(req router.Request, resp router.Response) error 
 }
 
 func GetVolumeClassNames(ctx context.Context, c client.Client, namespace string, storageClassNames bool) ([]string, error) {
-	volumeClasses, err := GetVolumeClasses(ctx, c, namespace)
+	volumeClasses, _, err := GetVolumeClasses(ctx, c, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -69,22 +69,35 @@ func GetVolumeClassNames(ctx context.Context, c client.Client, namespace string,
 
 // GetVolumeClasses returns an array of all project and cluster volume classes available in the namespace. If a project
 // volume class is set to default, this ensures that no cluster volume classes are default to avoid conflicts.
-func GetVolumeClasses(ctx context.Context, c client.Client, namespace string) (map[string]adminv1.ProjectVolumeClassInstance, error) {
+// The class determined to be default, if it exists, is also returned.
+func GetVolumeClasses(ctx context.Context, c client.Client, namespace string) (map[string]adminv1.ProjectVolumeClassInstance, *adminv1.ProjectVolumeClassInstance, error) {
 	volumeClasses := new(adminv1.ProjectVolumeClassInstanceList)
 	if err := c.List(ctx, volumeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
+	var defaultVolumeClass *adminv1.ProjectVolumeClassInstance
 	var projectDefaultFound bool
 	projectClassesSeen := make(map[string]struct{}, len(volumeClasses.Items))
-	for _, vc := range volumeClasses.Items {
-		projectDefaultFound = projectDefaultFound || vc.Default
+	for i, vc := range volumeClasses.Items {
+		if vc.Default {
+			if !vc.Inactive {
+				projectDefaultFound = true
+				// Ordering of the default volume class name ensure our error messages don't flop.
+				if defaultVolumeClass == nil || vc.Name < defaultVolumeClass.Name {
+					defaultVolumeClass = vc.DeepCopy()
+				}
+			} else {
+				vc.Default = false
+				volumeClasses.Items[i] = vc
+			}
+		}
 		projectClassesSeen[vc.Name] = struct{}{}
 	}
 
 	clusterVolumeClasses := new(adminv1.ClusterVolumeClassInstanceList)
 	if err := c.List(ctx, clusterVolumeClasses); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, cvc := range clusterVolumeClasses.Items {
@@ -92,13 +105,22 @@ func GetVolumeClasses(ctx context.Context, c client.Client, namespace string) (m
 			// Project volume class with the same name exists, skipping cluster volume class
 			continue
 		}
-		cvc.Default = !projectDefaultFound && cvc.Default
+		if cvc.Default {
+			// Ordering of the default volume class name ensure our error messages don't flop.
+			if !cvc.Inactive && (defaultVolumeClass == nil || cvc.Name < defaultVolumeClass.Name) {
+				defaultVolumeClass = (*adminv1.ProjectVolumeClassInstance)(cvc.DeepCopy())
+			} else if cvc.Inactive || projectDefaultFound {
+				cvc.Default = false
+			}
+		}
 		volumeClasses.Items = append(volumeClasses.Items, adminv1.ProjectVolumeClassInstance(cvc))
 	}
 
 	return SliceToMap(volumeClasses.Items, func(obj adminv1.ProjectVolumeClassInstance) string {
-		return obj.Name
-	}), nil
+			return obj.Name
+		}),
+		defaultVolumeClass,
+		nil
 }
 
 func SliceToMap[T any, K comparable](s []T, keyFunc func(obj T) K) map[K]T {
@@ -127,7 +149,7 @@ func ValidateVolumeClasses(ctx context.Context, c client.Client, namespace strin
 		return nil
 	}
 
-	volumeClasses, err := GetVolumeClasses(ctx, c, namespace)
+	volumeClasses, defaultVolumeClass, err := GetVolumeClasses(ctx, c, namespace)
 	if err != nil {
 		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, err.Error())
 	}
@@ -139,15 +161,22 @@ func ValidateVolumeClasses(ctx context.Context, c client.Client, namespace strin
 		}
 		volumeBindings[vol.Target] = vol
 	}
+
+	var (
+		volClass adminv1.ProjectVolumeClassInstance
+		ok       bool
+	)
 	for name, vol := range appSpec.Volumes {
 		calculatedVolumeRequest := CopyVolumeDefaults(vol, volumeBindings[name], v1.VolumeDefault{})
-		if calculatedVolumeRequest.Class == "" {
-			continue
-		}
-
-		volClass, ok := volumeClasses[calculatedVolumeRequest.Class]
-		if !ok || volClass.Inactive {
-			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
+		if calculatedVolumeRequest.Class != "" {
+			volClass, ok = volumeClasses[calculatedVolumeRequest.Class]
+			if !ok || volClass.Inactive {
+				return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
+			}
+		} else if defaultVolumeClass != nil {
+			volClass = *defaultVolumeClass
+		} else {
+			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("no volume class found for %s", name))
 		}
 
 		if calculatedVolumeRequest.Size != "" {
@@ -155,7 +184,7 @@ func ValidateVolumeClasses(ctx context.Context, c client.Client, namespace strin
 			if volClass.Size.Min != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Min)) < 0 {
 				return field.Invalid(field.NewPath("spec", "volumes", name, "size"), q.String(), fmt.Sprintf("less than volume class %s minimum of %v", calculatedVolumeRequest.Class, volClass.Size.Min))
 			}
-			if volClass.Size.Min != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Max)) > 0 {
+			if volClass.Size.Max != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Max)) > 0 {
 				return field.Invalid(field.NewPath("spec", "volumes", name, "size"), q.String(), fmt.Sprintf("greater than volume class %s maximum of %v", calculatedVolumeRequest.Class, volClass.Size.Max))
 			}
 		}
