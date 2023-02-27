@@ -466,7 +466,7 @@ containers: {
 ```
 
 ### class
-`class` allows you to specify what compute class the container should run on. If left unspecified, it will be defaulted to the project-level default. If there is no project-level default it will use the cluster-level default. If there is no cluster-level default the no compute class will be used. See the [reference documentation](06-compute-resources.md#compute-classes) for more information.
+`class` allows you to specify what compute class the container should run on. If left unspecified, it will be defaulted to the project-level default. If there is no project-level default it will use the cluster-level default. If there is no cluster-level default then no compute class will be used. See the [reference documentation](06-compute-resources.md#compute-classes) for more information.
 
 ```acorn
 containers: {
