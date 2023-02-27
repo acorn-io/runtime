@@ -94,6 +94,7 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 
 	cond.Success()
 	app.Status.Ready = ready && app.Status.AppImage.ID != "" &&
+		app.Generation == app.Status.ObservedGeneration &&
 		app.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 		app.Status.Condition(v1.AppInstanceConditionContainers).Success &&
 		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&
@@ -191,9 +192,24 @@ func VolumeStatus(req router.Request, resp router.Response) error {
 		pvcs = new(corev1.PersistentVolumeClaimList)
 
 		messages, errMessages []string
+		err                   error
 	)
 
-	if err := req.List(pvcs, &kclient.ListOptions{
+	defer func() {
+		if err != nil {
+			cond.Error(err)
+			return
+		}
+		if len(errMessages) > 0 {
+			cond.Error(fmt.Errorf(strings.Join(errMessages, "; ")))
+		} else if len(messages) > 0 {
+			cond.Unknown(strings.Join(messages, "; "))
+		} else {
+			cond.Success()
+		}
+	}()
+
+	if err = req.List(pvcs, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
 		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged: "true",
@@ -202,7 +218,6 @@ func VolumeStatus(req router.Request, resp router.Response) error {
 	}); err != nil {
 		return err
 	} else if len(pvcs.Items) == 0 {
-		cond.Success()
 		return nil
 	}
 
@@ -216,6 +231,10 @@ func VolumeStatus(req router.Request, resp router.Response) error {
 	})
 
 	for _, pvc := range pvcs.Items {
+		if pvc.Annotations[labels.AcornAppGeneration] != strconv.Itoa(int(app.Generation)) {
+			messages = append(messages, fmt.Sprintf("volume %s is not ready", pvc.Name))
+		}
+
 		switch pvc.Status.Phase {
 		case corev1.ClaimBound:
 			// No message if the PVC is in phase bound.
@@ -227,13 +246,7 @@ func VolumeStatus(req router.Request, resp router.Response) error {
 		}
 	}
 
-	if len(errMessages) > 0 {
-		cond.Error(fmt.Errorf(strings.Join(errMessages, "; ")))
-	} else if len(messages) > 0 {
-		cond.Unknown(strings.Join(messages, "; "))
-	} else {
-		cond.Success()
-	}
+	resp.Objects(app)
 	return nil
 }
 

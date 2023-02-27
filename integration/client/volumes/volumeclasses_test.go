@@ -384,7 +384,7 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, ns := helper.ClientAndNamespace(t)
+	_, ns := helper.ClientAndNamespace(t)
 
 	clusterVolumeClass := adminv1.ClusterVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
@@ -403,23 +403,9 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 		}
 	}()
 
-	// Get VolumeClasses and ensure there is a default
-	volumeClassList, err := c.VolumeClassList(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var foundDefault bool
-	for _, vc := range volumeClassList {
-		if vc.Default {
-			clusterVolumeClass = adminv1.ClusterVolumeClass(vc)
-			foundDefault = true
-		}
-	}
-
-	if !foundDefault {
-		t.Fatal("no default cluster volume class found")
-	}
+	helper.Wait(t, kclient.Watch, new(adminv1.ClusterVolumeClassList), func(obj *adminv1.ClusterVolumeClass) bool {
+		return obj.Default
+	})
 
 	projectVolumeClass := adminv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
@@ -437,17 +423,9 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 		}
 	}()
 
-	// Get VolumeClasses and ensure default is true
-	volumeClassList, err = c.VolumeClassList(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, vc := range volumeClassList {
-		if vc.Default && vc.Name != clusterVolumeClass.Name && vc.Namespace != clusterVolumeClass.Namespace {
-			return
-		}
-	}
-
-	t.Fatal("project default not found")
+	helper.Wait(t, kclient.Watch, new(adminv1.ProjectVolumeClassList), func(obj *adminv1.ProjectVolumeClass) bool {
+		return obj.Name == "acorn-test-project-default" &&
+			obj.Namespace == ns.Name &&
+			obj.Default
+	})
 }
