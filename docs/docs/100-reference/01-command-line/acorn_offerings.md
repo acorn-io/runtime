@@ -37,5 +37,6 @@ acorn offerings
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
+* [acorn offerings computeclasses](acorn_offerings_computeclasses.md)	 - List available ComputeClasses
 * [acorn offerings volumeclasses](acorn_offerings_volumeclasses.md)	 - List available volume classes
 

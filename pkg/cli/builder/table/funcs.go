@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +37,8 @@ var (
 		"alias":         Noop,
 		"appGeneration": AppGeneration,
 		"displayRange":  DisplayRange,
+		"memoryToRange": MemoryToRange,
+		"defaultMemory": DefaultMemory,
 	}
 )
 
@@ -59,6 +63,10 @@ func Trunc(s string) string {
 
 func ToArray(s []string) (string, error) {
 	return strings.Join(s, ", "), nil
+}
+
+func ToArrayNoSpace(s []string) (string, error) {
+	return strings.Join(s, ","), nil
 }
 
 func ToArrayFirst(s []string) (string, error) {
@@ -190,6 +198,66 @@ func DisplayRange(minVal, maxVal any) (string, error) {
 	}
 
 	return fmt.Sprintf("%s-%s", min, max), nil
+}
+
+func DefaultMemory(obj any) (string, error) {
+	b, ok := obj.(adminv1.ComputeClassMemory)
+	if !ok {
+		return "", fmt.Errorf("object passed is not a ComputeClassMemory struct")
+	}
+
+	result := b.Default
+	if b.Default == "0" || b.Default == "" {
+		result = b.Max
+		if result == "0" || result == "" {
+			result = "Unrestricted"
+		}
+	}
+	return result, nil
+}
+
+func MemoryToRange(obj any) (string, error) {
+	b, ok := obj.(adminv1.ComputeClassMemory)
+	if !ok {
+		return "", fmt.Errorf("object passed is not a ComputeClassMemory struct")
+	}
+
+	min := b.Min
+	if min == "" {
+		min = "0"
+	}
+
+	max := b.Max
+	if max == "" || max == "0" {
+		max = "Unrestricted"
+	}
+
+	def := b.Default
+	if def == "" {
+		def = "Unrestricted"
+	}
+
+	if len(b.Values) != 0 {
+		uniques, values := map[string]struct{}{}, []string{}
+		for _, value := range append(b.Values, max, min, def) {
+			if value == "Unrestricted" {
+				value = "0"
+			}
+			if _, exists := uniques[value]; exists || value == "" {
+				continue
+			}
+			uniques[value] = struct{}{}
+			values = append(values, value)
+		}
+		sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
+		return strings.Join(values, ","), nil
+	}
+
+	if max == "Unrestricted" && min == "0" {
+		return "Unrestricted", nil
+	}
+
+	return fmt.Sprintf("%v-%v", min, max), nil
 }
 
 func AppGeneration(app apiv1.App, msg string) string {

@@ -458,6 +458,18 @@ func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) 
 	})
 }
 
+func (m *MultiClient) ComputeClassGet(ctx context.Context, name string) (*apiv1.ComputeClass, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.ComputeClass, error) {
+		return c.ComputeClassGet(ctx, name)
+	})
+}
+
+func (m *MultiClient) ComputeClassList(ctx context.Context) ([]apiv1.ComputeClass, error) {
+	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.ComputeClass, error) {
+		return client.ComputeClassList(ctx)
+	})
+}
+
 func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	return aggregateOptionalNaming(ctx, false, m.Factory, func(c Client) ([]apiv1.Info, error) {
 		infos, err := c.Info(ctx)

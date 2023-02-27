@@ -450,13 +450,28 @@ containers: web: {
 ```
 
 ### memory
-`memory` allows you to specify how much memory the container should run with. It can be abreviated to `mem`. If 
-left unspecified, it will be defaulted to the installation default (see the [reference documentation for memory](06-memory.md)
-for more information).
+`memory` allows you to specify how much memory the container should run with. It can be abreviated to `mem`. If left unspecified, it will be defaulted to the installation default (see the [reference documentation for memory](06-compute-resources.md#memory) for more information).
 
 ```acorn
 containers: {
     nginx: {
+        image: "nginx"
+        ports: publish: "80/http"
+        files: {
+            "/usr/share/nginx/html/index.html": "<h1>My first Acorn!</h1>"
+        }
+        memory: 512Mi
+    }
+}
+```
+
+### class
+`class` allows you to specify what compute class the container should run on. If left unspecified, it will be defaulted to the project-level default. If there is no project-level default it will use the cluster-level default. If there is no cluster-level default the no compute class will be used. See the [reference documentation](06-compute-resources.md#compute-classes) for more information.
+
+```acorn
+containers: {
+    nginx: {
+		class: "sample-compute-class"
         image: "nginx"
         ports: publish: "80/http"
         files: {

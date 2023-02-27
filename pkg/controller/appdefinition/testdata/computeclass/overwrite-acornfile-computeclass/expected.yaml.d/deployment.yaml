@@ -1,0 +1,74 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
+        "service-name.acorn.io/oneimage": "true"
+        "port-number.acorn.io/81": "true"
+        "port-number.acorn.io/91": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"class":"sample-compute-class-01","image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: oneimage
+      hostname: oneimage
+      imagePullSecrets:
+        - name: oneimage-pull-1234567890ab
+      containers:
+        - name: oneimage
+          image: "image-name"
+          ports:
+          - containerPort: 81
+            protocol: "TCP"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+          resources:
+            limits:
+              memory: 1Mi
+            requests:
+              cpu: 1m
+              memory: 1Mi
+        - name: left
+          image: "foo"
+          ports:
+          - containerPort: 91
+            protocol: "TCP"
+          readinessProbe:
+            tcpSocket:
+              port: 91
+          resources:
+            limits:
+              memory: 1Mi
+            requests:
+              cpu: 1m
+              memory: 1Mi
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: foo
+                operator: In
+                values:
+                - bar

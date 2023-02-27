@@ -4,6 +4,7 @@ import (
 	adminapi "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
 	v1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin/computeclass"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin/volumeclass"
 	"github.com/acorn-io/mink/pkg/serializer"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,8 +17,10 @@ import (
 
 func Stores(c kclient.WithWatch) (map[string]rest.Storage, error) {
 	return map[string]rest.Storage{
-		"clustervolumeclasses": volumeclass.NewClusterStorage(c),
-		"projectvolumeclasses": volumeclass.NewProjectStorage(c),
+		"clustercomputeclasses": computeclass.NewClusterStorage(c),
+		"projectcomputeclasses": computeclass.NewProjectStorage(c),
+		"clustervolumeclasses":  volumeclass.NewClusterStorage(c),
+		"projectvolumeclasses":  volumeclass.NewProjectStorage(c),
 	}, nil
 }
 

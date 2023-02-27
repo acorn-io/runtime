@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/ingress"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
+	"github.com/acorn-io/acorn/pkg/controller/scheduling"
 	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -43,7 +44,8 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
-	appRouter.HandlerFunc(defaults.CalculateDefaults)
+	appRouter.HandlerFunc(defaults.Calculate)
+	appRouter.HandlerFunc(scheduling.Calculate)
 	appRouter = appRouter.Middleware(appdefinition.CheckStatus)
 	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.CreateSecrets)

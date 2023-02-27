@@ -259,7 +259,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 }
 
 func validateMemoryArgs(defaultMemory int64, maximumMemory int64) error {
-	// if default is set to unlimited memory (0) and max memory is not default will be set to maximum
+	// if default is set to unrestricted memory (0) and max memory is not default will be set to maximum
 	if defaultMemory == 0 && maximumMemory != 0 {
 		pterm.Info.Println("workload-memory-default is being set to workload-memory-maximum. If this is not intended please specify workload-memory-default to non-zero value")
 		return nil

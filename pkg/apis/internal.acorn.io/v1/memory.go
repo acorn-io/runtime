@@ -7,12 +7,10 @@ import (
 
 	"github.com/acorn-io/aml"
 	"k8s.io/apimachinery/pkg/api/resource"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
-func ParseMemory(s []string) (Memory, error) {
-	result := Memory{}
+func ParseMemory(s []string) (MemoryMap, error) {
+	result := MemoryMap{}
 	for _, s := range s {
 		workload, memBytes, specific := strings.Cut(s, "=")
 
@@ -24,7 +22,7 @@ func ParseMemory(s []string) (Memory, error) {
 
 		quantity, err := aml.ParseInt(memBytes)
 		if err != nil {
-			return Memory{}, err
+			return MemoryMap{}, err
 		}
 
 		result[workload] = &quantity
@@ -39,22 +37,7 @@ var (
 	ErrInvalidWorkload      = errors.New("workload name set by user does not exist")
 )
 
-func MemoryToRequirements(memSpec Memory, containerName string, container Container, specMemDefault, specMemMaximum *int64) (*corev1.ResourceRequirements, error) {
-	var resources *corev1.ResourceRequirements
-	quantity, err := ValidateMemory(memSpec, containerName, container, specMemDefault, specMemMaximum)
-	if err != nil {
-		return nil, err
-	}
-
-	if quantity.Value() != 0 {
-		resources = &corev1.ResourceRequirements{
-			Limits:   corev1.ResourceList{corev1.ResourceMemory: quantity},
-			Requests: corev1.ResourceList{corev1.ResourceMemory: quantity}}
-	}
-	return resources, nil
-}
-
-func ValidateMemory(memSpec Memory, containerName string, container Container, specMemDefault, specMemMaximum *int64) (resource.Quantity, error) {
+func ValidateMemory(memSpec MemoryMap, containerName string, container Container, specMemDefault, specMemMaximum *int64) (resource.Quantity, error) {
 	var memMaximum, memDefault int64
 	if specMemDefault != nil {
 		memDefault = *specMemDefault
@@ -78,7 +61,7 @@ func ValidateMemory(memSpec Memory, containerName string, container Container, s
 		memBytes = *container.Memory
 	}
 
-	// For maximum memory, 0 is equivalent to "unlimited"
+	// For maximum memory, 0 is equivalent to "unrestricted"
 	var err error
 	if memMaximum != 0 {
 		var (

@@ -20,7 +20,10 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ProjectVolumeClassInstanceList{},
 		&ClusterVolumeClassInstance{},
 		&ClusterVolumeClassInstanceList{},
-	)
+		&ClusterComputeClassInstance{},
+		&ClusterComputeClassInstanceList{},
+		&ProjectComputeClassInstance{},
+		&ProjectComputeClassInstanceList{})
 
 	// Add common types
 	scheme.AddKnownTypes(SchemeGroupVersion, &metav1.Status{})
