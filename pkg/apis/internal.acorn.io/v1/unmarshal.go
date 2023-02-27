@@ -135,22 +135,23 @@ func (in *Dependencies) UnmarshalJSON(data []byte) error {
 }
 
 func (in *Quantity) UnmarshalJSON(data []byte) error {
+	var (
+		s   string
+		err error
+	)
 	if !isString(data) {
-		var s int
-		if err := json.Unmarshal(data, &s); err != nil {
+		var d int
+		if err = json.Unmarshal(data, &d); err != nil {
 			return err
 		}
-		if s < 1000000 {
-			*in = (Quantity)(fmt.Sprintf("%dG", s))
-		} else {
-			*in = (Quantity)(fmt.Sprintf("%d", s))
+		s = fmt.Sprintf("%d", d)
+	} else {
+		s, err = parseString(data)
+		if err != nil {
+			return err
 		}
-		return nil
 	}
-	s, err := parseString(data)
-	if err != nil {
-		return err
-	}
+
 	q, err := ParseQuantity(s)
 	if err != nil {
 		return err
@@ -294,10 +295,7 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 				}
 			}
 		} else if _, ok := app.Volumes[mount.Volume]; !ok {
-			app.Volumes[mount.Volume] = VolumeRequest{
-				Size:        DefaultSizeQuantity,
-				AccessModes: []AccessMode{AccessModeReadWriteOnce},
-			}
+			app.Volumes[mount.Volume] = VolumeRequest{}
 		}
 	}
 	return nil
@@ -1113,10 +1111,6 @@ func parseVolumeDefinition(anonName, s string) (VolumeBinding, error) {
 		result.AccessModes = append(result.AccessModes, AccessMode(accessMode))
 	}
 
-	if len(result.AccessModes) == 0 {
-		result.AccessModes = AccessModes{AccessModeReadWriteOnce}
-	}
-
 	return result, nil
 }
 
@@ -1156,9 +1150,12 @@ func ParseQuantity(s string) (Quantity, error) {
 	if s == "" {
 		return "", nil
 	}
-	_, err := strconv.Atoi(s)
+	d, err := strconv.Atoi(s)
 	if err == nil {
-		return (Quantity)(s + "G"), nil
+		if d < 1000000 {
+			s += "G"
+		}
+		return Quantity(s), nil
 	}
 
 	_, err = resource.ParseQuantity(s)
@@ -1166,7 +1163,7 @@ func ParseQuantity(s string) (Quantity, error) {
 		return "", err
 	}
 
-	return (Quantity)(s), nil
+	return Quantity(s), nil
 }
 
 func ParseNameValues(fillEnv bool, s ...string) (result []NameValue) {

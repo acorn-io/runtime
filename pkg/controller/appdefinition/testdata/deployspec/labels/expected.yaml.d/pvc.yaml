@@ -18,6 +18,8 @@ metadata:
     named-scoped-label: test-named
     volume-scoped-label: test-volume
 spec:
+  accessModes:
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10_000_000_000

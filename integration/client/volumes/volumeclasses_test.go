@@ -423,7 +423,7 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 
 	projectVolumeClass := adminv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-test-default",
+			Name:      "acorn-test-project-default",
 			Namespace: ns.Name,
 		},
 		Default: true,

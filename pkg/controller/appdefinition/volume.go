@@ -34,12 +34,17 @@ func addPVCs(req router.Request, appInstance *v1.AppInstance, resp router.Respon
 	return nil
 }
 
-func translateAccessModes(accessModes []v1.AccessMode) (result []corev1.PersistentVolumeAccessMode) {
+func translateAccessModes(accessModes []v1.AccessMode) []corev1.PersistentVolumeAccessMode {
+	if len(accessModes) == 0 {
+		return []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
+	}
+
+	result := make([]corev1.PersistentVolumeAccessMode, 0, len(accessModes))
 	for _, accessMode := range accessModes {
 		newMode := strings.ToUpper(string(accessMode[0:1])) + string(accessMode[1:])
 		result = append(result, corev1.PersistentVolumeAccessMode(newMode))
 	}
-	return
+	return result
 }
 
 func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeName string) (string, error) {
@@ -83,7 +88,7 @@ func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 }
 
 func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, err error) {
-	volumeClasses, err := volume.GetVolumeClasses(req.Ctx, req.Client, appInstance.Namespace)
+	volumeClasses, _, err := volume.GetVolumeClasses(req.Ctx, req.Client, appInstance.Namespace)
 	if err != nil {
 		return nil, err
 	}

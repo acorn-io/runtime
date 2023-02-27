@@ -1,8 +1,9 @@
 ---
-kind: ClusterVolumeClassInstance
+kind: ProjectVolumeClassInstance
 apiVersion: internal.admin.acorn.io/v1
 metadata:
   name: test-volume-class
+  namespace: app-namespace
 description: Just a simple test volume class
 default: true
 storageClassName: test-storage-class
@@ -12,10 +13,11 @@ size:
   default: 2Gi
 allowedAccessModes: ["readWriteOnce"]
 ---
-kind: ClusterVolumeClassInstance
+kind: ProjectVolumeClassInstance
 apiVersion: internal.admin.acorn.io/v1
 metadata:
   name: test-volume-class-1
+  namespace: app-namespace
 description: Just a simple test volume class
 default: true
 storageClassName: test-storage-class
