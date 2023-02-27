@@ -60,7 +60,7 @@ const sidebars = {
       "running/upgrades",
       "running/auto-upgrades",
       "running/namespaces-and-service-accounts",
-      "running/scheduling",
+      "running/compute-resources",
       "running/projects"
     ],
     "collapsed": true
@@ -146,7 +146,7 @@ const sidebars = {
       },
       "reference/acornfile",
       "reference/functions",
-      "reference/scheduling",
+      "reference/compute-resources",
       "reference/encryption"
     ],
     "collapsed": true

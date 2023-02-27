@@ -47,7 +47,7 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 		)
 
 		computeClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClass, container, name, appInstance.Namespace)
-		if computeClass == nil && err != nil {
+		if err != nil {
 			return err
 		}
 

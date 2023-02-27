@@ -13,7 +13,7 @@ apiVersion: admin.acorn.io/v1
 default: true # If no class is given for a workload, the default is chosen. Only one default per project.
 description: A short description of the compute class
 metadata:
-  name: compute-class-name
+  name: workload-class-name
   namespace: project-namespace
 memory:
   min: 1Gi

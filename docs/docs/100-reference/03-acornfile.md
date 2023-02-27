@@ -450,7 +450,7 @@ containers: web: {
 ```
 
 ### memory
-`memory` allows you to specify how much memory the container should run with. It can be abreviated to `mem`. If left unspecified, it will be defaulted to the installation default (see the [reference documentation for memory](06-scheduling.md#memory) for more information).
+`memory` allows you to specify how much memory the container should run with. It can be abreviated to `mem`. If left unspecified, it will be defaulted to the installation default (see the [reference documentation for memory](06-compute-resources.md#memory) for more information).
 
 ```acorn
 containers: {
@@ -466,7 +466,7 @@ containers: {
 ```
 
 ### class
-`class` allows you to specify what compute class the container should run on. If left unspecified, it will be defaulted to project-level default. If there is no project-level default it will use the cluster-level default. See the [reference documentation](./06-scheduling.md#compute-classes) for more information.
+`class` allows you to specify what compute class the container should run on. If left unspecified, it will be defaulted to the project-level default. If there is no project-level default it will use the cluster-level default. If there is no cluster-level default the no compute class will be used. See the [reference documentation](06-compute-resources.md#compute-classes) for more information.
 
 ```acorn
 containers: {

@@ -342,7 +342,7 @@ The second sidecar above is a service that runs alongside the primary frontend c
 
 ## Memory
 
-There are times that you want to define the amount of memory that an Acorn will use for resource management purposes. This can be defined by the `memory` property and is settable for all `workloads` (`containers` and `jobs`). Check out the [memory reference documentation](../reference/scheduling#memory) for more information on ways to set memory.
+There are times that you want to define the amount of memory that an Acorn will use for resource management purposes. This can be defined by the `memory` property and is settable for all `workloads` (`containers` and `jobs`). Check out the [memory reference documentation](100-reference/06-compute-resources.md#memory) for more information on ways to set memory.
 
 ```acorn
 containers: {
@@ -363,7 +363,7 @@ The `memory` property can be abbreviated to `mem` in the file.
 
 ## Compute Classes
 
-When you want to specify what type of architecture your Acorn's workload will run on, you use Compute Classes. You can set the class of a workload by defining by the `class` property that is settable for all `workloads` (`containers` and `jobs`). Check out the [scheduling documemtation](100-reference/06-scheduling.md#compute-classes) for more information.
+When you want to specify what type of architecture your Acorn's workload will run on, you use Compute Classes. You can set the class of a workload by defining by the `class` property that is settable for all `workloads` (`containers` and `jobs`). Check out the [compute class documemtation](100-reference/06-compute-resources.md#compute-classes) for more information.
 
 ```acorn
 containers: {

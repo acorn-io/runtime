@@ -16,20 +16,20 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	}
 
 	var (
-		defaultWC string
+		defaultCC string
 		err       error
 	)
 	if value, ok := appInstance.Spec.ComputeClass[""]; ok {
-		defaultWC = value
+		defaultCC = value
 	} else {
-		defaultWC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace)
+		defaultCC, err = adminv1.GetDefaultComputeClass(req.Ctx, req.Client, appInstance.Namespace)
 		if err != nil {
 			return err
 		}
 	}
 
 	appInstance.Status.Defaults.Memory[""] = cfg.WorkloadMemoryDefault
-	wc, err := adminv1.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultWC)
+	wc, err := adminv1.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultCC)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err
@@ -60,7 +60,7 @@ func addWorkloadMemoryDefault(req router.Request, appInstance *v1.AppInstance, c
 	for name, container := range containers {
 		memory := configDefault
 		computeClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClass, container, name, appInstance.Namespace)
-		if computeClass == nil && err != nil {
+		if err != nil {
 			return err
 		}
 

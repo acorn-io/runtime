@@ -10,7 +10,7 @@ import (
 
 func NewComputeClasses(c CommandContext) *cobra.Command {
 	return cli.Command(&ComputeClass{client: c.ClientFactory}, cobra.Command{
-		Use:     "computeclasses [flags] [APP_NAME...]",
+		Use:     "computeclasses [flags] [COMPUTECLASS_NAME...]",
 		Aliases: []string{"computeclass", "wc", "workload"},
 		Example: `
 acorn computeclasses`,

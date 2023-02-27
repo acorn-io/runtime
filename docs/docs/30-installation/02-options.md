@@ -62,7 +62,7 @@ Acorn [requires an ingress controller](30-installation/01-installing.md#ingress-
 ## Memory
 There are two `install` flags for interacting memory: `--workload-memory-default` and `--workload-memory-maximum`. Their values can both be viewed by running `acorn info`.
 
-Check out the [memory reference documentation](../reference/scheduling#memory) for more information.
+Check out the [memory reference documentation](100-reference/06-compute-resources.md#memory) for more information.
 
 ### --workload-memory-default
 This flag is responsible for setting the memory amount that will get defaulted to should no other value be found.

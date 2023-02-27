@@ -6,7 +6,7 @@ title: "acorn offerings computeclasses"
 List available ComputeClasses
 
 ```
-acorn offerings computeclasses [flags] [APP_NAME...]
+acorn offerings computeclasses [flags] [COMPUTECLASS_NAME...]
 ```
 
 ### Examples

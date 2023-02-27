@@ -1,12 +1,12 @@
 ---
-title: Scheduling
+title: Compute resources
 ---
 
 ## Memory
 Setting `memory` via `acorn run` has the highest order of precedence. When setting this, you operate under the `--memory` flag (`-m` for short).
 
 :::note
-Check out the [memory reference documentation](../reference/scheduling#memory) for more information.
+Check out the [memory reference documentation](100-reference/06-compute-resources.md#memory) for more information.
 :::
 
 ### --memory
@@ -36,7 +36,7 @@ This sets all workloads in the `foo` acorn to have `256Mi` of memory except for 
 To set a compute class at run time, you can utilize the `--compute-class` flag.
 
 :::note
-Check out the [compute class reference documentation](100-reference/06-scheduling.md#scheduling) for more information about how workload classes work.
+Check out the [compute class reference documentation](100-reference/06-compute-resources.md#compute-classes) for more information about how workload classes work.
 :::
 
 When setting this value, you have two options - globally or per workload and you can do a combination of both. When setting the memory globally for that Acorn, you just define the compute class you would like to set.
