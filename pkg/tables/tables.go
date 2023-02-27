@@ -110,6 +110,15 @@ var (
 	}
 	BuilderConverter = MustConverter(Builder)
 
+	ComputeClass = [][]string{
+		{"Name", "Name"},
+		{"Default", "{{ boolToStar .Default }}"},
+		{"Memory Range", "{{ memoryToRange .Memory }}"},
+		{"Memort Default", "{{ defaultMemory .Memory }}"},
+		{"Description", "Description"},
+	}
+	ComputeClassConverter = MustConverter(ComputeClass)
+
 	Build = [][]string{
 		{"Name", "Name"},
 		{"Image", "Status.AppImage.ID"},

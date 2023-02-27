@@ -23,6 +23,7 @@ func Create(ctx context.Context, scheme *runtime.Scheme, gvs ...schema.GroupVers
 			}
 			_, isObj := obj.(kclient.Object)
 			_, isListObj := obj.(kclient.ObjectList)
+
 			if isObj && !isListObj {
 				var nonNamespaced bool
 				if o, ok := obj.(strategy.NamespaceScoper); ok {

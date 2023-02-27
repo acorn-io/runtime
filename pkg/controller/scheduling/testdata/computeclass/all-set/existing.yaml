@@ -1,0 +1,20 @@
+---
+kind: ClusterComputeClassInstance
+apiVersion: internal.admin.acorn.io/v1
+metadata:
+  name: sample-compute-class
+description: Simple description for a simple ComputeClass
+cpuScaler: 0.25
+memory:
+  min: 1Mi
+  max: 2Mi
+  default: 1Mi
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: foo
+          operator: In
+          values:
+          - bar

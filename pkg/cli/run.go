@@ -97,6 +97,11 @@ func NewRun(c CommandContext) *cobra.Command {
 	if err := cmd.RegisterFlagCompletionFunc("volume", newCompletion(c.ClientFactory, volumeFlagClassCompletion).complete); err != nil {
 		cmd.Printf("Error registering completion function for -v flag: %v\n", err)
 	}
+	// This will produce an error if the computeclass flag doesn't exist or a completion function has already
+	// been registered for this flag. Not returning the error since neither of these is likely occur.
+	if err := cmd.RegisterFlagCompletionFunc("compute-class", newCompletion(c.ClientFactory, computeClassFlagCompletion).complete); err != nil {
+		cmd.Printf("Error registering completion function for --compute-class flag: %v\n", err)
+	}
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
 	return cmd
@@ -134,6 +139,7 @@ type RunArgs struct {
 	AutoUpgrade     *bool    `usage:"Enabled automatic upgrades."`
 	Interval        string   `usage:"If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)"`
 	Memory          []string `usage:"Set memory for a workload in the format of workload=memory. Only specify an amount to set all workloads. (ex foo=512Mi or 512Mi)" short:"m"`
+	ComputeClass    []string `usage:"Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)"`
 }
 
 func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
@@ -150,6 +156,11 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	opts.AutoUpgradeInterval = s.Interval
 
 	opts.Memory, err = v1.ParseMemory(s.Memory)
+	if err != nil {
+		return opts, err
+	}
+
+	opts.ComputeClass, err = v1.ParseComputeClass(s.ComputeClass)
 	if err != nil {
 		return opts, err
 	}

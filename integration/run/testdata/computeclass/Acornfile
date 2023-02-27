@@ -1,0 +1,6 @@
+containers: {
+	simple: {
+		class: "acorn-test-custom"
+		build: "."
+	}
+}

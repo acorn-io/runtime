@@ -300,7 +300,6 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.WorkloadMemoryMaximum != nil {
 		mergedConfig.WorkloadMemoryMaximum = newConfig.WorkloadMemoryMaximum
 	}
-
 	if newConfig.UseCustomCABundle != nil {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
 	}

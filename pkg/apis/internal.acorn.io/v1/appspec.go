@@ -301,6 +301,7 @@ type Container struct {
 	Probes       Probes                 `json:"probes"` // Don't omitempty so that nil vs empty is recorded
 	Dependencies Dependencies           `json:"dependencies,omitempty"`
 	Permissions  *Permissions           `json:"permissions,omitempty"`
+	ComputeClass *string                `json:"class,omitempty"`
 	Memory       *int64                 `json:"memory,omitempty"`
 
 	// Scale is only available on containers, not sidecars or jobs
@@ -365,4 +366,8 @@ type VolumeRequest struct {
 	AccessModes AccessModes       `json:"accessModes,omitempty"`
 }
 
-type Memory map[string]*int64
+// Workload to its memory
+type MemoryMap map[string]*int64
+
+// Workload to its class
+type ComputeClassMap map[string]string

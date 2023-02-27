@@ -1041,3 +1041,120 @@ func TestVolumeClassFlagCompletion(t *testing.T) {
 		})
 	}
 }
+
+func TestComputeClassCompletion(t *testing.T) {
+	names := []string{"default", "foo", "bar", "baz", "zap"}
+	storages := make([]apiv1.ComputeClass, 0, len(names))
+	for _, name := range names {
+		storages = append(storages, apiv1.ComputeClass{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		ComputeClassList: storages,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Nothing to complete, return all",
+			wantNames:     names,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with b",
+			toComplete:    "b",
+			wantNames:     []string{"bar", "baz"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with b, but bar already in args",
+			toComplete:    "b",
+			args:          []string{"bar"},
+			wantNames:     []string{"baz"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete starting with b, but all b's in args",
+			toComplete:    "m",
+			args:          []string{"bar", "baz"},
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete bar, only test returned",
+			toComplete:    "bar",
+			wantNames:     []string{"bar"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete empty, but all names already in args",
+			args:          names,
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete something that doesn't exist",
+			toComplete:    "hello",
+			wantNames:     nil,
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, computeClassCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "computeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "computeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}
+
+func TestComputeClassFlagCompletion(t *testing.T) {
+	names := []string{"default", "foo", "bar", "baz", "zap"}
+	storages := make([]apiv1.ComputeClass, 0, len(names))
+	for _, name := range names {
+		storages = append(storages, apiv1.ComputeClass{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+	mockClientFactory := &testdata.MockClientFactory{
+		ComputeClassList: storages,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Complete the compute-class tag with b",
+			toComplete:    "workload=b",
+			wantNames:     []string{"workload=bar", "workload=baz"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Complete the compute-class tag with bar set and b",
+			toComplete:    "bar,class=b",
+			wantNames:     []string{"bar,class=bar", "bar,class=baz"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, computeClassFlagCompletion)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "computeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "computeClassCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}

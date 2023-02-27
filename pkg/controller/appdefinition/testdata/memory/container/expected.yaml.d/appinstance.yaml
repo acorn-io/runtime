@@ -9,6 +9,21 @@ spec:
   memory:
     oneimage: 1048576 # 1Mi
 status:
+  observedGeneration: 1
+  defaults:
+    memory:
+      "": 0
+      left: 0
+      oneimage: 0
+  scheduling:
+    oneimage:
+      requirements:
+        limits:
+          memory: 1Mi
+        requests:
+          memory: 1Mi
+    left:
+      requirements: {}
   namespace: app-created-namespace
   appImage:
     id: test
@@ -31,6 +46,14 @@ status:
           dockerfile: "Dockerfile"
           context: "."
   conditions:
+    - type: scheduling
+      reason: Success
+      status: "True"
+      success: true 
+    - type: defaults
+      reason: Success
+      status: "True"
+      success: true    
     - type: defined
       reason: Success
       status: "True"
