@@ -36,18 +36,17 @@ func message(app *v1.AppInstance) string {
 		}
 	}
 
-	if buf.Len() == 0 {
-		if app.Status.ConfirmUpgradeAppImage != "" {
-			return "Upgrade available: " + app.Status.ConfirmUpgradeAppImage
-		}
-
-		if app.Status.Ready {
-			return "OK"
-		} else {
-			return "pending"
-		}
+	if buf.Len() != 0 {
+		return buf.String()
 	}
-	return buf.String()
+	if app.Status.ConfirmUpgradeAppImage != "" {
+		return "Upgrade available: " + app.Status.ConfirmUpgradeAppImage
+	}
+
+	if app.Status.Ready {
+		return "OK"
+	}
+	return "pending"
 }
 
 func uptodate(app *v1.AppInstance) string {

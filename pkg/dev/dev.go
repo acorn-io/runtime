@@ -379,11 +379,17 @@ func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel 
 }
 
 func appStatusMessage(app *apiv1.App) (string, bool) {
+	ready := app.Status.Ready && app.Generation == app.Status.ObservedGeneration
+	msg := app.Status.Columns.Message
+	if !ready && msg == "OK" {
+		// This is really only needed on the first run, before the controller runs
+		msg = "pending"
+	}
 	return fmt.Sprintf("STATUS: ENDPOINTS[%s] HEALTHY[%s] UPTODATE[%s] %s",
 		app.Status.Columns.Endpoints,
 		app.Status.Columns.Healthy,
 		app.Status.Columns.UpToDate,
-		app.Status.Columns.Message), app.Status.Ready
+		msg), ready
 }
 
 func PrintAppStatus(app *apiv1.App) {
@@ -410,6 +416,8 @@ func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
 			PrintAppStatus(app)
 		}
 		msg, ready = newMsg, newReady
+
+		// Return false because the context will be canceled when this check should stop.
 		return false, nil
 	})
 	return err
