@@ -1,6 +1,9 @@
 build:
 	CGO_ENABLED=0 go build -o bin/acorn -ldflags "-s -w" .
 
+tidy:
+	go mod tidy
+
 generate:
 	go generate
 
@@ -14,13 +17,21 @@ setup-ci-image:
 	docker build -t acorn:v-ci .
 	docker save acorn:v-ci | docker exec -i $$(docker ps | grep k3s | awk '{print $$1}') ctr --address /run/k3s/containerd/containerd.sock images import -
 
-validate:
+GOLANGCI_LINT_VERSION ?= v1.51.1
+setup-env: 
+	if ! command -v golangci-lint &> /dev/null; then \
+  		echo "Could not find golangci-lint, installing version $(GOLANGCI_LINT_VERSION)."; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin $(GOLANGCI_LINT_VERSION); \
+	fi
+
+lint: setup-env
 	golangci-lint run
 
-validate-ci: setup-ci-env
-	go generate
-	go mod tidy
-	go run tools/gendocs/main.go
+# Run all validators
+validate: validate-code validate-docs
+
+# Runs linters and validates that all generated code is committed.
+validate-code: tidy generate lint gen-docs
 	if [ -n "$$(git status --porcelain)" ]; then \
 		git status --porcelain; \
 		echo "Encountered dirty repo!"; \
@@ -33,13 +44,6 @@ test:
 
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist
-
-setup-ci-env:
-	if ! command -v golangci-lint &> /dev/null; then \
-  		echo "Could not find golangci-lint, installing."; \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.51.1; \
-	fi
-
 
 # This will initialize the node_modules needed to run the docs dev server. Run this before running serve-docs
 init-docs:
@@ -77,7 +81,7 @@ gen-docs-release:
 	docker run --rm --workdir=/docs -v $${PWD}/docs:/docs node:18-buster yarn docusaurus docs:version ${version}
 	awk '/versions/&& ++c == 1 {print;print "\t\t\t\"${prev-version}\": {label: \"${prev-version}\", banner: \"none\", path: \"${prev-version}\"},";next}1' ./docs/docusaurus.config.js > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
 
-#depreceate a specific docs version (will still be included within docs dropdown)
+# Deprecate a specific docs version (will still be included within docs dropdown)
 deprecate-docs-version:
 	if [ -z ${version} ]; then \
   			echo "version not set (version=x.x)"; \
@@ -86,7 +90,7 @@ deprecate-docs-version:
 	echo "deprecating ${version} from documentation"
 	grep -v '"${version}": {label: "${version}", banner: "none", path: "${version}"},' ./docs/docusaurus.config.js  > tmp.config.js && mv tmp.config.js ./docs/docusaurus.config.js
 
-#completly remove doc version from docs site
+# Completely remove doc version from docs site
 remove-docs-version:
 	if [ -z ${version} ]; then \
   			echo "version not set (version=x.x)"; \

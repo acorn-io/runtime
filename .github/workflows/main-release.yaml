@@ -45,7 +45,7 @@ jobs:
           echo "${COSIGN_KEY}" > "$GITHUB_WORKSPACE/cosign.key"
         env:
           COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
-      - run: make validate-ci
+      - run: make validate-code
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
