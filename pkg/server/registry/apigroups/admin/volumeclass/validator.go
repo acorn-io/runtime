@@ -52,11 +52,12 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 }
 
 func (s *ProjectValidator) ValidateUpdate(ctx context.Context, newObj, oldObj runtime.Object) field.ErrorList {
-	if newObj.(*adminv1.ProjectVolumeClass).Default != oldObj.(*adminv1.ProjectVolumeClass).Default {
-		return s.Validate(ctx, newObj)
+	newStorageClassName := newObj.(*adminv1.ProjectVolumeClass).StorageClassName
+	if newStorageClassName != oldObj.(*adminv1.ProjectVolumeClass).StorageClassName {
+		return []*field.Error{field.Invalid(field.NewPath("storageClassName"), newStorageClassName, "storageClassName cannot be changed")}
 	}
 
-	return nil
+	return s.Validate(ctx, newObj)
 }
 
 type ClusterValidator struct {
@@ -92,7 +93,11 @@ func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (re
 	return
 }
 
-func (s *ClusterValidator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object) field.ErrorList {
+func (s *ClusterValidator) ValidateUpdate(ctx context.Context, newObj, oldObj runtime.Object) field.ErrorList {
+	newStorageClassName := newObj.(*adminv1.ClusterVolumeClass).StorageClassName
+	if newStorageClassName != oldObj.(*adminv1.ClusterVolumeClass).StorageClassName {
+		return []*field.Error{field.Invalid(field.NewPath("storageClassName"), newStorageClassName, "storageClassName cannot be changed")}
+	}
 	return s.Validate(ctx, newObj)
 }
 
