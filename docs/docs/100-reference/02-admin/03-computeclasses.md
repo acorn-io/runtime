@@ -1,7 +1,7 @@
 ---
 title: Compute Classes
 ---
-Workload classes are a way of defining scheduling for the applications running on Acorn. They allow you to define Affinities, Tolerations, and Resource Requirements for the Pods that applications will run on.
+Compute classes are a way of defining scheduling for the applications running on Acorn. They allow you to define Affinities, Tolerations, and Resource Requirements for the Pods that applications will run on.
 
 ## Project Compute Classes
 A Project Compute Class is associated to a single project. Any apps in that project will have access to the compute class and its configurations. Project Compute Classes in different projects won't interfere with each other, so you can have a Project Compute Class in different projects with the same name and different parameters.
