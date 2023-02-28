@@ -41,7 +41,7 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 	return "", opts, nil
 }
 
-func pvToVolume(pv corev1.PersistentVolume) *apiv1.Volume {
+func (t *Translator) pvToVolume(ctx context.Context, pv corev1.PersistentVolume) *apiv1.Volume {
 	var (
 		accessModes      []v1.AccessMode
 		shortAccessModes []string
@@ -84,13 +84,20 @@ func pvToVolume(pv corev1.PersistentVolume) *apiv1.Volume {
 		vol.Status.Status += "/deleted"
 	}
 
+	if _, ok := pv.Labels[labels.AcornVolumeClass]; !ok && pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Name != "" {
+		pvc := new(corev1.PersistentVolumeClaim)
+		if err := t.c.Get(ctx, ktypes.NamespacedName{Namespace: pv.Spec.ClaimRef.Namespace, Name: pv.Spec.ClaimRef.Name}, pvc); err == nil {
+			pv.Labels[labels.AcornVolumeClass] = pvc.Labels[labels.AcornVolumeClass]
+		}
+	}
+
 	return vol
 }
 
 func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range objs {
 		pv := obj.(*corev1.PersistentVolume)
-		result = append(result, pvToVolume(*pv))
+		result = append(result, t.pvToVolume(ctx, *pv))
 	}
 	return
 }

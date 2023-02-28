@@ -26,6 +26,7 @@ func MarkAndSave(req router.Request, resp router.Response) error {
 	if pv.Labels[labels.AcornAppName] != pvc.Labels[labels.AcornAppName] ||
 		pv.Labels[labels.AcornAppNamespace] != pvc.Labels[labels.AcornAppNamespace] ||
 		pv.Labels[labels.AcornVolumeName] != pvc.Name ||
+		pv.Labels[labels.AcornVolumeClass] != pvc.Labels[labels.AcornVolumeClass] ||
 		pv.Labels[labels.AcornManaged] != "true" ||
 		pv.Spec.PersistentVolumeReclaimPolicy != corev1.PersistentVolumeReclaimRetain {
 		if pv.Labels == nil {
@@ -33,6 +34,7 @@ func MarkAndSave(req router.Request, resp router.Response) error {
 		}
 
 		pv.Labels[labels.AcornVolumeName] = pvc.Name
+		pv.Labels[labels.AcornVolumeClass] = pvc.Labels[labels.AcornVolumeClass]
 		pv.Labels[labels.AcornAppName] = pvc.Labels[labels.AcornAppName]
 		pv.Labels[labels.AcornAppNamespace] = pvc.Labels[labels.AcornAppNamespace]
 		pv.Labels[labels.AcornManaged] = "true"
