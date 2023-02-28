@@ -42,35 +42,7 @@ func (s *ProjectValidator) Validate(ctx context.Context, obj runtime.Object) (re
 		return append(result, field.Invalid(field.NewPath("spec", "memory"), wc.Memory, err.Error()))
 	}
 
-	min, max, def := v1.Quantity(wc.Memory.Min), v1.Quantity(wc.Memory.Max), v1.Quantity(wc.Memory.Default)
-	// Ensure the min, max, and default make sense.
-	if compareQuantities(min, max) > 0 && min != "0" && max != "0" {
-		result = append(result, field.Invalid(field.NewPath("spec", "memory", "min"), min, "minimum memory should be at most the maximum memory"))
-	}
-	if compareQuantities(min, def) > 0 {
-		result = append(result, field.Invalid(field.NewPath("spec", "memory", "default"), def, "default memory should be at least the minimum memory"))
-	}
-	if compareQuantities(def, max) > 0 && max != "0" {
-		result = append(result, field.Invalid(field.NewPath("spec", "memory", "default"), def, "default memory should be at most the maximum memory"))
-	}
-
-	for i, value := range wc.Memory.Values {
-		valueAsQuantity := v1.Quantity(value)
-		if compareQuantities(min, valueAsQuantity) > 0 && value != "0" {
-			result = append(result, field.Invalid(
-				field.NewPath("spec", "memory", "values", fmt.Sprint(i)),
-				value,
-				"allowed value should be at least minimum memory"))
-		}
-		if compareQuantities(valueAsQuantity, max) > 0 {
-			result = append(result, field.Invalid(
-				field.NewPath("spec", "memory", "values", fmt.Sprint(i)),
-				value,
-				"allowed value should be at most maximum memory"))
-		}
-	}
-
-	return result
+	return append(result, validateMemorySpec(wc.Memory)...)
 }
 
 func (s *ProjectValidator) ValidateUpdate(ctx context.Context, newObj, oldObj runtime.Object) field.ErrorList {
@@ -107,35 +79,53 @@ func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (re
 		return append(result, field.Invalid(field.NewPath("spec.memory"), wc.Memory, err.Error()))
 	}
 
-	min, max, def := v1.Quantity(wc.Memory.Min), v1.Quantity(wc.Memory.Max), v1.Quantity(wc.Memory.Default)
+	return append(result, validateMemorySpec(wc.Memory)...)
+}
+
+func validateMemorySpec(memory admininternalv1.ComputeClassMemory) field.ErrorList {
+	errors := field.ErrorList{}
+	if len(memory.Values) != 0 {
+		if memory.Max != "" {
+			errors = append(errors, field.Invalid(field.NewPath("spec", "memory", "max"), memory.Max, "cannot set maximum memory with values specified"))
+		}
+		if memory.Min != "" {
+			errors = append(errors, field.Invalid(field.NewPath("spec", "memory", "min"), memory.Min, "cannot set minimum memory with values specified"))
+		}
+	}
+
+	min, max, def := v1.Quantity(memory.Min), v1.Quantity(memory.Max), v1.Quantity(memory.Default)
 	// Ensure the min, max, and default make sense.
 	if compareQuantities(min, max) > 0 && (min != "0" || max != "0") {
-		result = append(result, field.Invalid(field.NewPath("spec", "memory", "min"), min, "minimum memory should be at most the maximum memory"))
+		errors = append(errors, field.Invalid(field.NewPath("spec", "memory", "min"), min, "minimum memory should be at most the maximum memory"))
 	}
 	if compareQuantities(min, def) > 0 {
-		result = append(result, field.Invalid(field.NewPath("spec", "memory", "default"), def, "default memory should be at least the minimum memory"))
+		errors = append(errors, field.Invalid(field.NewPath("spec", "memory", "default"), def, "default memory should be at least the minimum memory"))
 	}
 	if compareQuantities(def, max) > 0 && max != "0" {
-		result = append(result, field.Invalid(field.NewPath("spec", "memory", "default"), def, "default memory should be at most the maximum memory"))
+		errors = append(errors, field.Invalid(field.NewPath("spec", "memory", "default"), def, "default memory should be at most the maximum memory"))
 	}
 
-	for i, value := range wc.Memory.Values {
+	if len(memory.Values) == 0 {
+		return errors
+	}
+
+	memoryIncluded := false
+	for _, value := range memory.Values {
 		valueAsQuantity := v1.Quantity(value)
-		if compareQuantities(min, valueAsQuantity) > 0 && value != "0" {
-			result = append(result, field.Invalid(
-				field.NewPath("spec", "memory", "values", fmt.Sprint(i)),
-				value,
-				"allowed value should be at least minimum memory"))
-		}
-		if compareQuantities(valueAsQuantity, max) > 0 {
-			result = append(result, field.Invalid(
-				field.NewPath("spec", "memory", "values", fmt.Sprint(i)),
-				value,
-				"allowed value should be at most maximum memory"))
+
+		if compareQuantities(valueAsQuantity, def) == 0 {
+			memoryIncluded = true
 		}
 	}
 
-	return result
+	if !memoryIncluded {
+		errors = append(errors,
+			field.Invalid(
+				field.NewPath("spec", "memory", "default"), def,
+				fmt.Sprintf("default memory is not included in values. current values: %v", memory.Values)),
+		)
+	}
+	return errors
 }
 
 func (s *ClusterValidator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object) field.ErrorList {

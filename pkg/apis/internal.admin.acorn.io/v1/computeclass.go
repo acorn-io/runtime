@@ -125,10 +125,7 @@ func memoryInValues(parsedMemory memoryQuantities, memory resource.Quantity) boo
 			return true
 		}
 	}
-	return value == parsedMemory.Def.Value() ||
-		value == parsedMemory.Max.Value() ||
-		value == parsedMemory.Min.Value() ||
-		len(parsedMemory.Values) == 0
+	return len(parsedMemory.Values) == 0
 }
 
 // GetClassForWorkload determines what ComputeClass should be used for the given appInstance, container and
