@@ -429,3 +429,200 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 			obj.Default
 	})
 }
+
+func TestProjectVolumeClassUpdateValidation(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	volumeClass := adminv1.ProjectVolumeClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "acorn-test-default",
+			Namespace: ns.Name,
+		},
+		Default: true,
+	}
+	if err := kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	tests := []struct {
+		name        string
+		volumeClass adminv1.ProjectVolumeClass
+		wantError   bool
+	}{
+		{
+			name: "Can change default",
+			volumeClass: adminv1.ProjectVolumeClass{
+				Default: false,
+			},
+		},
+		{
+			name: "Can update size constraints",
+			volumeClass: adminv1.ProjectVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "5G",
+					Min:     "2G",
+					Max:     "20G",
+				},
+			},
+		},
+		{
+			name:      "Can't update default size too small",
+			wantError: true,
+			volumeClass: adminv1.ProjectVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "5G",
+					Min:     "10G",
+					Max:     "20G",
+				},
+			},
+		},
+		{
+			name:      "Can't update default size too large",
+			wantError: true,
+			volumeClass: adminv1.ProjectVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "50G",
+					Min:     "10G",
+					Max:     "20G",
+				},
+			},
+		},
+		{
+			name:      "Can't update min/max size flipped",
+			wantError: true,
+			volumeClass: adminv1.ProjectVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "5G",
+					Min:     "20G",
+					Max:     "10G",
+				},
+			},
+		},
+		{
+			name:      "Can't update storage class name",
+			wantError: true,
+			volumeClass: adminv1.ProjectVolumeClass{
+				StorageClassName: "new-storage-class",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := kclient.Get(ctx, client.ObjectKey{Namespace: volumeClass.Namespace, Name: volumeClass.Name}, &volumeClass); err != nil {
+				t.Fatal(err)
+			}
+			tt.volumeClass.ObjectMeta = volumeClass.ObjectMeta
+			if err := kclient.Update(ctx, &tt.volumeClass); !tt.wantError && err != nil {
+				t.Fatal(err)
+			} else if tt.wantError && err == nil {
+				t.Fatal("expected error for test case")
+			}
+		})
+	}
+}
+
+func TestClusterVolumeClassUpdateValidation(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	className := "acorn-test-default"
+	volumeClass := adminv1.ClusterVolumeClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      className,
+			Namespace: ns.Name,
+		},
+	}
+	if err := kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	tests := []struct {
+		name        string
+		volumeClass adminv1.ClusterVolumeClass
+		wantError   bool
+	}{
+		// Not testing changing default here because it is tested elsewhere
+		{
+			name: "Can update size constraints",
+			volumeClass: adminv1.ClusterVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "5G",
+					Min:     "2G",
+					Max:     "20G",
+				},
+			},
+		},
+		{
+			name:      "Can't update default size too small",
+			wantError: true,
+			volumeClass: adminv1.ClusterVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "5G",
+					Min:     "10G",
+					Max:     "20G",
+				},
+			},
+		},
+		{
+			name:      "Can't update default size too large",
+			wantError: true,
+			volumeClass: adminv1.ClusterVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "50G",
+					Min:     "10G",
+					Max:     "20G",
+				},
+			},
+		},
+		{
+			name:      "Can't update min/max size flipped",
+			wantError: true,
+			volumeClass: adminv1.ClusterVolumeClass{
+				Size: v1.VolumeClassSize{
+					Default: "5G",
+					Min:     "20G",
+					Max:     "10G",
+				},
+			},
+		},
+		{
+			name:      "Can't update storage class name",
+			wantError: true,
+			volumeClass: adminv1.ClusterVolumeClass{
+				StorageClassName: "new-storage-class",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := kclient.Get(ctx, client.ObjectKey{Namespace: volumeClass.Namespace, Name: volumeClass.Name}, &volumeClass); err != nil {
+				t.Fatal(err)
+			}
+			tt.volumeClass.ObjectMeta = volumeClass.ObjectMeta
+			if err := kclient.Update(ctx, &tt.volumeClass); !tt.wantError && err != nil {
+				t.Fatal(err)
+			} else if tt.wantError && err == nil {
+				t.Fatal("expected error for test case")
+			}
+		})
+	}
+}
