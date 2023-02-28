@@ -56,12 +56,12 @@ func ParseComputeClassMemory(memory ComputeClassMemory) (memoryQuantities, error
 	quantities.Def = &defInt
 
 	quantities.Values = make([]*resource.Quantity, len(memory.Values))
-	for _, value := range memory.Values {
+	for i, value := range memory.Values {
 		valueInt, err := parseQuantity(value)
 		if err != nil {
 			return memoryQuantities{}, err
 		}
-		quantities.Values = append(quantities.Values, &valueInt)
+		quantities.Values[i] = &valueInt
 	}
 
 	return quantities, nil
@@ -121,7 +121,7 @@ func ValidateComputeClass(wc ProjectComputeClassInstance, memory resource.Quanti
 func memoryInValues(parsedMemory memoryQuantities, memory resource.Quantity) bool {
 	value := memory.Value()
 	for _, allowedMemory := range parsedMemory.Values {
-		if value == allowedMemory.Value() {
+		if allowedMemory != nil && value == allowedMemory.Value() {
 			return true
 		}
 	}
