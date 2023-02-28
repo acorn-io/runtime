@@ -10,7 +10,7 @@ Check out the [memory reference documentation](100-reference/06-compute-resource
 :::
 
 ### --memory
-When setting this value, you have two options - globally or per workload and you can do a combination of both. When setting the memory globally for that Acorn, you just define the memory you would like to set.
+When setting this value, you have two options - globally or per workload and you can do a combination of both. When setting the memory globally for the Acorn, you provide the memory you would like to set.
 
 ```console
 acorn run -m 512Mi foo
@@ -41,21 +41,21 @@ Check out the [compute class reference documentation](100-reference/06-compute-r
 
 ### --compute-class
 
-When setting this compute classes, you have two options - globally or per workload and you can do a combination of both. When setting the memory globally for that Acorn, you just define the compute class you would like to set.
+When setting compute classes, you have two options - globally or per workload, and you can do a combination of both. When setting the compute class globally for the Acorn, you provide the compute class you would like to set. Any classes defined for a specific container or job will overwrite the global value.
 
 ```console
 acorn run --compute-class sample foo
 ```
-
-:::tip
-This flag comes with auto completions! Hit tab to see workload classes that can be used.
-:::
 
 This will set all workloads in the `foo` acorn to use the `sample` compute class. Adjacently, you can set the memory of each individual workload in the Acorn using a `workload=class` pattern. 
 
 ```console
 acorn run --compute-class nginx=sample foo
 ```
+
+:::tip
+This flag comes with auto completions! Hit tab to see compute classes that can be used.
+:::
 
 This will only update Acorn's `nginx` workload to use the `sample` compute class.
 

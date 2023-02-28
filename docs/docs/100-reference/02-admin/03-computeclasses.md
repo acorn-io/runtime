@@ -19,15 +19,15 @@ memory:
   min: 1Gi
   max: 2Gi
   default: 1Gi # This default overrides the install-wide memory default
-  values: # Specific values that are only allowed to be used. Automatically includes the max, min and default.
+  values: # Specific values that are only allowed to be used. Default must be included in these values and max/min cannot be set.
   - 1.5Gi
 cpuScaler: 1 # This is used as a ratio of how many VCPUs to schedule per Gibibyte of memory. In this case it is 1 to 1.
-tolerations: # The toleration fields for Pods
+tolerations: # The same toleration fields for Pods
   - key: "foo"
     operator: "Equal"
     value: "bar"
     effect: "NoSchedule"
-affinity: # The affinity fields for Pods
+affinity: # The same affinity fields for Pods
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
@@ -38,7 +38,7 @@ affinity: # The affinity fields for Pods
             - bar
 ```
 
-If `memory.min`, `memory.max`, `affinity`, and `tolerations` are not given, then there are no scheduling rules for workloads using the compute class. 
+If `memory.min`, `memory.max`, `memory.values`, `affinity`, and `tolerations` are not given, then there are no scheduling rules for workloads using the compute class. 
 
 ## Cluster Compute Classes
 Cluster Compute Classes are exactly the same as Project Compute Classes except that they are not namespaced. This means that Cluster Woerkload Classes are available to every app running in your cluster.
