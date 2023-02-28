@@ -72,13 +72,13 @@ specific                128Mi,512Mi,1Gi   128Mi            Specific ComputeClass
 
 Breaking this down:
 
-- `DEFAULT` says if a ComputeClass is the default and will be used if no ComputeClass is defined.
-- `MEMORY_DEFAULT` tells us what memory we will get if we don't specify any. 
-- `MEMORY_RANGE` tells us what memory values are available to use and can take two forms.
-    1. `-` denotes a range and any value within it can be used
+- `DEFAULT` indicates whether a ComputeClass is the default and will be used if no ComputeClass is defined.
+- `MEMORY_DEFAULT` indicates the memory that will be requested for a workload if none is specified.
+- `MEMORY_RANGE` indicates what memory values are available to use, and can take two forms.
+    1. `-` denotes a range and any value within it can be specified.
     2. `,` denotes specific values that are the only ones allowed.
 
-Specifying compute classes can be done in the Acornfile (using the `class` property for containers) or at runtime (using the `--compute-class` flag). If you do not specify a compute class, the default compute class for the project will be used. If there is no default for the project, the default for the cluster will be used. Finally, if there is no cluster default then no compute class will be used. Depending on the compute class that is used, the memory that you specify may be in contention with its requirements. Should that happen Acorn will provide a descriptive error message to ammend any issues.
+Specifying compute classes can be done in the Acornfile (using the [class property](03-acornfile.md#class) for containers) or at runtime (using the [--compute-class flag](50-running/55-compute-resources.md#compute-class)). If you do not specify a compute class, the default compute class for the project will be used. If there is no default for the project, the default for the cluster will be used. Finally, if there is no cluster default then no compute class will be used. Depending on the compute class that is used, the memory that you specify may be in contention with its requirements. Should that happen Acorn will provide a descriptive error message to ammend any issues.
 
 :::note
 Looking to manage a compute class? This should only be done if you are (or are in communication with) an administrator of Acorn. You can read more information about managing compute classes [here](02-admin/03-computeclasses.md)
