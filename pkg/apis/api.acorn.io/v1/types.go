@@ -133,10 +133,11 @@ type LogMessage struct {
 type LogOptions struct {
 	metav1.TypeMeta `json:",inline"`
 
-	Tail             *int64 `json:"tailLines,omitempty"`
-	Follow           bool   `json:"follow,omitempty"`
-	ContainerReplica string `json:"containerReplica,omitempty"`
-	Since            string `json:"since,omitempty"`
+	Tail                   *int64 `json:"tailLines,omitempty"`
+	Follow                 bool   `json:"follow,omitempty"`
+	ContainerReplica       string `json:"containerReplica,omitempty"`
+	Since                  string `json:"since,omitempty"`
+	IncludeProxyContainers bool   `json:"includeProxyContainers,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

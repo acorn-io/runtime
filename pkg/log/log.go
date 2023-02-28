@@ -66,12 +66,13 @@ type Message struct {
 }
 
 type Options struct {
-	RestConfig       *rest.Config
-	Client           client.WithWatch
-	PodClient        v12.PodsGetter
-	Tail             *int64
-	Follow           bool
-	ContainerReplica string
+	RestConfig             *rest.Config
+	Client                 client.WithWatch
+	PodClient              v12.PodsGetter
+	Tail                   *int64
+	Follow                 bool
+	ContainerReplica       string
+	IncludeProxyContainers bool
 }
 
 func (o *Options) restConfig() (*rest.Config, error) {
@@ -384,7 +385,9 @@ func matchesPod(pod *corev1.Pod, options *Options) bool {
 }
 
 func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Options) bool {
-	if options == nil || options.ContainerReplica == "" {
+	if options != nil && !options.IncludeProxyContainers && (container.Name == "linkerd-proxy" || container.Name == "linkerd-init") {
+		return false
+	} else if options == nil || options.ContainerReplica == "" {
 		return true
 	}
 	parts := strings.SplitN(options.ContainerReplica, ".", 3)
