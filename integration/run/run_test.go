@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -22,6 +23,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestVolume(t *testing.T) {
@@ -850,7 +852,7 @@ func TestDeployParam(t *testing.T) {
 	assert.Equal(t, "5", appInstance.Status.AppSpec.Containers["foo"].Environment[0].Value)
 }
 
-func TestDefaultClusterComputeClass(t *testing.T) {
+func TestUsingComputeClasses(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
@@ -862,318 +864,181 @@ func TestDefaultClusterComputeClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	computeClass := adminv1.ClusterComputeClassInstance{
-		ObjectMeta: metav1.ObjectMeta{Name: "acorn-test-custom"},
-		Default:    true,
-		CPUScaler:  0.25,
-		Memory: adminv1.ComputeClassMemory{
-			Default: "512Mi",
-			Max:     "1Gi",
-			Min:     "512Mi",
+	checks := []struct {
+		name              string
+		noComputeClass    bool
+		testDataDirectory string
+		computeClass      adminv1.ProjectComputeClassInstance
+		expected          map[string]v1.Scheduling
+		waitFor           func(obj *apiv1.App) bool
+		fail              bool
+	}{
+		{
+			name:              "valid",
+			testDataDirectory: "./testdata/computeclass",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Min: "512Mi",
+					Max: "1Gi",
+				},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				Requirements: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("1Gi")},
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+						corev1.ResourceCPU:    resource.MustParse("250m"),
+					},
+				}},
+			},
+			waitFor: func(obj *apiv1.App) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+		{
+			name:              "unrestricted default gets maximum",
+			testDataDirectory: "./testdata/computeclass",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Max: "1Gi",
+				},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				Requirements: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("1Gi")},
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+						corev1.ResourceCPU:    resource.MustParse("250m"),
+					},
+				}},
+			},
+			waitFor: func(obj *apiv1.App) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+		{
+			name:              "with values",
+			testDataDirectory: "./testdata/computeclass",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Default: "512Mi",
+					Values: []string{
+						"1G",
+						"2G",
+					},
+				},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				Requirements: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("512Mi")},
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("512Mi"),
+						corev1.ResourceCPU:    resource.MustParse("125m"),
+					},
+				}},
+			},
+			waitFor: func(obj *apiv1.App) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+		{
+			name:              "default",
+			testDataDirectory: "./testdata/simple",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				Default:   true,
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Default: "512Mi",
+					Max:     "1Gi",
+					Min:     "512Mi",
+				},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				Requirements: corev1.ResourceRequirements{
+					Limits: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("512Mi")},
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("512Mi"),
+						corev1.ResourceCPU:    resource.MustParse("125m"),
+					},
+				}},
+			},
+			waitFor: func(obj *apiv1.App) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+		{
+			name:              "does not exist",
+			noComputeClass:    true,
+			testDataDirectory: "./testdata/computeclass",
+			fail:              true,
 		},
 	}
-	if err := kclient.Create(ctx, &computeClass); err != nil {
-		t.Fatal(err)
-	}
 
-	defer func() {
-		if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
-			t.Fatal(err)
+	for _, tt := range checks {
+		asClusterComputeClass := adminv1.ClusterComputeClassInstance(tt.computeClass)
+		for kind, computeClass := range map[string]runtimeclient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
+			t.Run(fmt.Sprintf("%v_%v", kind, tt.name), func(t *testing.T) {
+				if !tt.noComputeClass {
+					if err := kclient.Create(ctx, computeClass); err != nil {
+						t.Fatal(err)
+					}
+					t.Cleanup(func() {
+						if err = kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
+							t.Fatal(err)
+						}
+					})
+				}
+
+				image, err := c.AcornImageBuild(ctx, tt.testDataDirectory+"/Acornfile", &client.AcornImageBuildOptions{
+					Cwd: tt.testDataDirectory,
+				})
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				app, err := c.AppRun(ctx, image.ID, nil)
+				if err != nil {
+					if tt.fail {
+						return
+					}
+					t.Fatal(err)
+				}
+
+				app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, tt.waitFor)
+				assert.EqualValues(t, app.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
+			})
 		}
-	}()
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/simple",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-			obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
-	})
-
-	expected := map[string]v1.Scheduling{"simple": {
-		Requirements: corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("512Mi")},
-			Requests: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("512Mi"),
-				corev1.ResourceCPU:    resource.MustParse("125m"),
-			},
-		}}}
-
-	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
-}
-
-func TestDefaultProjectComputeClass(t *testing.T) {
-	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := helper.GetCTX(t)
-
-	computeClass := adminv1.ProjectComputeClassInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-test-custom",
-			Namespace: c.GetNamespace(),
-		},
-		Default:   true,
-		CPUScaler: 0.25,
-		Memory: adminv1.ComputeClassMemory{
-			Default: "512Mi",
-			Max:     "1Gi",
-			Min:     "512Mi",
-		},
-	}
-	if err := kclient.Create(ctx, &computeClass); err != nil {
-		t.Fatal(err)
-	}
-
-	defer func() {
-		if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
-			t.Fatal(err)
-		}
-	}()
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/simple",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-			obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
-	})
-
-	expected := map[string]v1.Scheduling{"simple": {
-		Requirements: corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("512Mi")},
-			Requests: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("512Mi"),
-				corev1.ResourceCPU:    resource.MustParse("125m"),
-			},
-		}}}
-
-	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
-}
-
-func TestComputeClass(t *testing.T) {
-	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := helper.GetCTX(t)
-
-	computeClass := adminv1.ProjectComputeClassInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-test-custom",
-			Namespace: c.GetNamespace(),
-		},
-		CPUScaler: 0.25,
-		Memory: adminv1.ComputeClassMemory{
-			Default: "512Mi",
-			Max:     "1Gi",
-			Min:     "512Mi",
-		},
-	}
-	if err := kclient.Create(ctx, &computeClass); err != nil {
-		t.Fatal(err)
-	}
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/computeclass",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-			obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
-	})
-
-	expected := map[string]v1.Scheduling{"simple": {
-		Requirements: corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("512Mi")},
-			Requests: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("512Mi"),
-				corev1.ResourceCPU:    resource.MustParse("125m"),
-			},
-		}}}
-
-	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
-}
-
-func TestUnrestrictedDefaultGetsMaximum(t *testing.T) {
-	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := helper.GetCTX(t)
-
-	computeClass := adminv1.ProjectComputeClassInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-test-custom",
-			Namespace: c.GetNamespace(),
-		},
-		CPUScaler: 0.25,
-		Memory: adminv1.ComputeClassMemory{
-			Max: "1Gi",
-		},
-	}
-	if err := kclient.Create(ctx, &computeClass); err != nil {
-		t.Fatal(err)
-	}
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/computeclass",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-			obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
-	})
-
-	expected := map[string]v1.Scheduling{"simple": {
-		Requirements: corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("1Gi")},
-			Requests: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("1Gi"),
-				corev1.ResourceCPU:    resource.MustParse("250m"),
-			},
-		}}}
-
-	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
-}
-
-func TestUnrestrictedDefaultGetsMaximumWithMinimum(t *testing.T) {
-	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := helper.GetCTX(t)
-
-	computeClass := adminv1.ProjectComputeClassInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "acorn-test-custom",
-			Namespace: c.GetNamespace(),
-		},
-		CPUScaler: 0.25,
-		Memory: adminv1.ComputeClassMemory{
-			Min: "512Mi",
-			Max: "1Gi",
-		},
-	}
-	if err := kclient.Create(ctx, &computeClass); err != nil {
-		t.Fatal(err)
-	}
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/computeclass",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-			obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
-	})
-
-	expected := map[string]v1.Scheduling{"simple": {
-		Requirements: corev1.ResourceRequirements{
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("1Gi")},
-			Requests: corev1.ResourceList{
-				corev1.ResourceMemory: resource.MustParse("1Gi"),
-				corev1.ResourceCPU:    resource.MustParse("250m"),
-			},
-		}}}
-
-	assert.EqualValues(t, app.Status.Scheduling, expected, "generated scheduling rules are incorrect")
-}
-
-func TestNonExistantComputeClass(t *testing.T) {
-	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	c, err := client.New(cfg, "", ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := helper.GetCTX(t)
-
-	// Create acorn and intentionall do not create the ComputeClass it references
-	image, err := c.AcornImageBuild(ctx, "./testdata/computeclass/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/computeclass",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = c.AppRun(ctx, image.ID, nil)
-	if err == nil {
-		t.Fatal("expected an error to occur when creating an acorn that references a non-existant ComputeClass")
 	}
 }
 
-func TestCreateComputeClass(t *testing.T) {
+func TestCreatingComputeClasses(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))

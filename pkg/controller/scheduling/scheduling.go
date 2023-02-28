@@ -106,11 +106,14 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 
 	memMax := cfg.WorkloadMemoryMaximum
 	if computeClass != nil {
-		maxQuantity, err := resource.ParseQuantity(computeClass.Memory.Max)
-		if err != nil {
-			return nil, err
+		memMax = new(int64)
+		if computeClass.Memory.Max != "" && computeClass.Memory.Max != "0" {
+			maxQuantity, err := resource.ParseQuantity(computeClass.Memory.Max)
+			if err != nil {
+				return nil, err
+			}
+			memMax = &[]int64{maxQuantity.Value()}[0]
 		}
-		memMax = &[]int64{maxQuantity.Value()}[0]
 	}
 
 	memoryQuantity, err := v1.ValidateMemory(app.Spec.Memory, containerName, container, memDefault, memMax)

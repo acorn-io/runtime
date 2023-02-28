@@ -114,7 +114,7 @@ var (
 		{"Name", "Name"},
 		{"Default", "{{ boolToStar .Default }}"},
 		{"Memory Range", "{{ memoryToRange .Memory }}"},
-		{"Memort Default", "{{ defaultMemory .Memory }}"},
+		{"Memory Default", "{{ defaultMemory .Memory }}"},
 		{"Description", "Description"},
 	}
 	ComputeClassConverter = MustConverter(ComputeClass)
