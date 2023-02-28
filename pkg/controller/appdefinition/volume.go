@@ -120,6 +120,10 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			},
 		}
 
+		if appInstance.Generation > 0 {
+			pvc.Annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
+		}
+
 		if bind {
 			pvc.Name = bindName(vol)
 			pvc.Spec.VolumeName = volumeBinding.Volume

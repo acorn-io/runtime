@@ -48,7 +48,7 @@ func waitForApp(ctx context.Context, c client.Client, app *apiv1.App) (*apiv1.Ap
 	}
 	w := objwatcher.New[*apiv1.App](wc)
 	return w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-		if app.Status.Ready {
+		if app.Status.Ready && app.Generation == app.Status.ObservedGeneration {
 			return true, nil
 		}
 		for name, job := range app.Status.JobsStatus {
