@@ -2,15 +2,15 @@ package log
 
 import (
 	"context"
-	"sort"
-	"strings"
-	"testing"
-
 	"github.com/acorn-io/acorn/integration/helper"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"sort"
+	"strings"
+	"testing"
 )
 
 const sampleLog = `line 1-1
@@ -33,7 +33,20 @@ func TestLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(context.Background(), image.ID, nil)
+	app, err := c.AppRun(context.Background(), image.ID, &client.AppRunOptions{
+		/* When running this test with the acorn-linkerd-plugin installed, the app inits too quickly, and
+		   the acorn controller does not have enough time to propagate the injection annotation to the
+		   test namespace before the app is created, so linkerd does not end up injecting the sidecar.
+		   For this reason, we add the annotation here so that it will be placed directly on the app's
+		   pods, and the linkerd sidecars will be injected. In clusters without linkerd installed,
+		   this annotation will have zero effect. */
+		Annotations: []v1.ScopedLabel{
+			{
+				Key:   "linkerd.io/inject",
+				Value: "enabled",
+			},
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
