@@ -131,6 +131,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 					return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeBinding.Class)
 				} else {
 					pvc.Spec.StorageClassName = &volClass.StorageClassName
+					pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 				}
 			}
 
@@ -144,6 +145,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 					return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeRequest.Class)
 				} else {
 					pvc.Spec.StorageClassName = &volClass.StorageClassName
+					pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 				}
 			}
 			pvName, err := lookupExistingPV(req, appInstance, vol)

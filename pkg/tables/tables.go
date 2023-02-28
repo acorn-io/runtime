@@ -1,5 +1,11 @@
 package tables
 
+import (
+	"fmt"
+
+	"github.com/acorn-io/acorn/pkg/labels"
+)
+
 var (
 	CheckResult = [][]string{
 		{"Name", "Name"},
@@ -23,7 +29,7 @@ var (
 		{"App-Name", "Status.AppName"},
 		{"Bound-Volume", "Status.VolumeName"},
 		{"Capacity", "Spec.Capacity"},
-		{"Volume-Class", "Spec.Class"},
+		{"Volume-Class", fmt.Sprintf("{{ index .Labels %q }}", labels.AcornVolumeClass)},
 		{"Status", "Status.Status"},
 		{"Access-Modes", "Status.Columns.AccessModes"},
 		{"Created", "{{ago .CreationTimestamp}}"},

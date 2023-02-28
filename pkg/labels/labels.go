@@ -21,6 +21,7 @@ const (
 	AcornDepNames                = Prefix + "dep-names"
 	AcornAppUID                  = Prefix + "app-uid"
 	AcornVolumeName              = Prefix + "volume-name"
+	AcornVolumeClass             = Prefix + "volume-class"
 	AcornSecretName              = Prefix + "secret-name"
 	AcornSecretGenerated         = Prefix + "secret-generated"
 	AcornContainerName           = Prefix + "container-name"
