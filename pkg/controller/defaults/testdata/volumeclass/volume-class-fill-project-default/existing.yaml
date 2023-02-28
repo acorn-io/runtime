@@ -2,7 +2,7 @@
 kind: ClusterVolumeClassInstance
 apiVersion: internal.admin.acorn.io/v1
 metadata:
-  name: test-volume-class
+  name: test-cluster-volume-class
 description: Just a simple test volume class
 default: true
 storageClassName: test-storage-class

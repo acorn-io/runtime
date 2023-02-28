@@ -106,11 +106,11 @@ func GetVolumeClasses(ctx context.Context, c client.Client, namespace string) (m
 			continue
 		}
 		if cvc.Default {
-			// Ordering of the default volume class name ensure our error messages don't flop.
-			if !cvc.Inactive && (defaultVolumeClass == nil || cvc.Name < defaultVolumeClass.Name) {
-				defaultVolumeClass = (*adminv1.ProjectVolumeClassInstance)(cvc.DeepCopy())
-			} else if cvc.Inactive || projectDefaultFound {
+			if projectDefaultFound || cvc.Inactive {
 				cvc.Default = false
+			} else if defaultVolumeClass == nil || cvc.Name < defaultVolumeClass.Name {
+				// Ordering of the default volume class name ensure our error messages don't flop.
+				defaultVolumeClass = (*adminv1.ProjectVolumeClassInstance)(cvc.DeepCopy())
 			}
 		}
 		volumeClasses.Items = append(volumeClasses.Items, adminv1.ProjectVolumeClassInstance(cvc))
