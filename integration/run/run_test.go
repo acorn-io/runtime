@@ -158,7 +158,8 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
 	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
@@ -374,7 +375,8 @@ func TestVolumeClassRemoved(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
 	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
@@ -444,7 +446,8 @@ func TestClusterVolumeClass(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
 	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"}, pv.Spec.AccessModes)
@@ -505,7 +508,8 @@ func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
 	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteMany"}, pvc.Spec.AccessModes)
@@ -562,7 +566,8 @@ func TestProjectVolumeClass(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
 	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"}, pv.Spec.AccessModes)
@@ -588,9 +593,11 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 		return
 	}
 
+	storageClassName := getStorageClassName(t, storageClasses)
+
 	volumeClass := adminapiv1.ProjectVolumeClass{
 		ObjectMeta:         metav1.ObjectMeta{Namespace: c.GetNamespace(), Name: "acorn-test-custom"},
-		StorageClassName:   getStorageClassName(t, storageClasses),
+		StorageClassName:   storageClassName,
 		AllowedAccessModes: []v1.AccessMode{v1.AccessModeReadWriteOnce},
 		Size: adminv1.VolumeClassSize{
 			Default: v1.Quantity("5G"),
@@ -624,10 +631,11 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
-	assert.Equal(t, storageClasses.Items[0].Name, pv.Spec.StorageClassName)
+	assert.Equal(t, storageClassName, pv.Spec.StorageClassName)
 	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteOnce"}, pv.Spec.AccessModes)
 	assert.Equal(t, "6G", pv.Spec.Capacity.Storage().String())
 
@@ -733,7 +741,8 @@ func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
 		return obj.Labels[labels.AcornAppName] == app.Name &&
 			obj.Labels[labels.AcornAppNamespace] == app.Namespace &&
 			obj.Labels[labels.AcornManaged] == "true" &&
-			obj.Labels[labels.AcornVolumeName] == "my-data"
+			obj.Labels[labels.AcornVolumeName] == "my-data" &&
+			obj.Labels[labels.AcornVolumeClass] == volumeClass.Name
 	})
 
 	assert.Equal(t, []corev1.PersistentVolumeAccessMode{"ReadWriteMany"}, pvc.Spec.AccessModes)

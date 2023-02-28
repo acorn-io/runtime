@@ -5,13 +5,18 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestVolume(t *testing.T) {
+	tenYearsAgo := time.Now().AddDate(-10, 0, 0)
 	type fields struct {
 		Quiet  bool
 		Output string
@@ -163,6 +168,32 @@ func TestVolume(t *testing.T) {
 			},
 			wantErr: true,
 			wantOut: "Error: No such volume: dne\n",
+		},
+		{
+			name: "acorn volume", fields: fields{},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{
+					VolumeList: []apiv1.Volume{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								CreationTimestamp: metav1.NewTime(tenYearsAgo),
+								Name:              "my-volume",
+								Labels: map[string]string{
+									labels.AcornVolumeClass: "my-class",
+								},
+							},
+						},
+					},
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader(""),
+			},
+			args: args{
+				args:   []string{},
+				client: &testdata.MockClient{},
+			},
+			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nmy-volume                             <nil>      my-class                                10y ago\n",
 		},
 	}
 	for _, tt := range tests {
