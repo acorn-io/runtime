@@ -949,20 +949,20 @@ func TestUsingComputeClasses(t *testing.T) {
 				},
 				CPUScaler: 0.25,
 				Memory: adminv1.ComputeClassMemory{
-					Default: "512Mi",
+					Default: "1Gi",
 					Values: []string{
-						"1G",
-						"2G",
+						"1Gi",
+						"2Gi",
 					},
 				},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
 					Limits: corev1.ResourceList{
-						corev1.ResourceMemory: resource.MustParse("512Mi")},
+						corev1.ResourceMemory: resource.MustParse("1Gi")},
 					Requests: corev1.ResourceList{
-						corev1.ResourceMemory: resource.MustParse("512Mi"),
-						corev1.ResourceCPU:    resource.MustParse("125m"),
+						corev1.ResourceMemory: resource.MustParse("1Gi"),
+						corev1.ResourceCPU:    resource.MustParse("250m"),
 					},
 				}},
 			},
@@ -1066,6 +1066,38 @@ func TestCreatingComputeClasses(t *testing.T) {
 		fail      bool
 	}{
 		{
+			name: "valid-only-max",
+			memory: adminv1.ComputeClassMemory{
+				Max: "512Mi",
+			},
+			fail: false,
+		},
+		{
+			name: "valid-only-min",
+			memory: adminv1.ComputeClassMemory{
+				Min: "512Mi",
+			},
+			fail: false,
+		},
+		{
+			name: "valid-only-default",
+			memory: adminv1.ComputeClassMemory{
+				Default: "512Mi",
+			},
+			fail: false,
+		},
+		{
+			name:      "valid-values",
+			cpuScaler: 0.25,
+			memory: adminv1.ComputeClassMemory{
+				Default: "1Gi",
+				Values:  []string{"1Gi", "2Gi"},
+			},
+		},
+		{
+			name: "valid-empty",
+		},
+		{
 			name: "invalid-memory-default",
 			memory: adminv1.ComputeClassMemory{
 				Default: "invalid",
@@ -1094,27 +1126,6 @@ func TestCreatingComputeClasses(t *testing.T) {
 			fail: true,
 		},
 		{
-			name: "valid-only-max",
-			memory: adminv1.ComputeClassMemory{
-				Max: "512Mi",
-			},
-			fail: false,
-		},
-		{
-			name: "valid-only-min",
-			memory: adminv1.ComputeClassMemory{
-				Min: "512Mi",
-			},
-			fail: false,
-		},
-		{
-			name: "valid-only-default",
-			memory: adminv1.ComputeClassMemory{
-				Default: "512Mi",
-			},
-			fail: false,
-		},
-		{
 			name: "invalid-default-less-than-min",
 			memory: adminv1.ComputeClassMemory{
 				Default: "128Mi",
@@ -1139,17 +1150,21 @@ func TestCreatingComputeClasses(t *testing.T) {
 			fail: true,
 		},
 		{
-			name:      "valid-full",
-			cpuScaler: 0.25,
+			name: "invalid-default-for-values",
 			memory: adminv1.ComputeClassMemory{
-				Default: "512Mi",
-				Max:     "2Gi",
-				Min:     "128Mi",
-				Values:  []string{"1Gi", "2Gi"},
+				Default: "128Mi",
+				Values:  []string{"512Mi"},
 			},
+			fail: true,
 		},
 		{
-			name: "valid-empty",
+			name: "invalid-min-max-set-with-values",
+			memory: adminv1.ComputeClassMemory{
+				Min:    "512Mi",
+				Max:    "4Gi",
+				Values: []string{"2Gi", "3Gi"},
+			},
+			fail: true,
 		},
 	}
 
@@ -1169,7 +1184,7 @@ func TestCreatingComputeClasses(t *testing.T) {
 			err = kclient.Create(ctx, &computeClass)
 			if err != nil && !tt.fail {
 				t.Fatal("did not expect creation to fail:", err)
-			} else if err == nil && tt.fail {
+			} else if err == nil {
 				if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
 					t.Fatal("failed to cleanup test:", err)
 				}

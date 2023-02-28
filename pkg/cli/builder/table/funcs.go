@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 	"time"
 
@@ -232,25 +231,8 @@ func MemoryToRange(obj any) (string, error) {
 		max = "Unrestricted"
 	}
 
-	def := b.Default
-	if def == "" {
-		def = "Unrestricted"
-	}
-
 	if len(b.Values) != 0 {
-		uniques, values := map[string]struct{}{}, []string{}
-		for _, value := range append(b.Values, max, min, def) {
-			if value == "Unrestricted" {
-				value = "0"
-			}
-			if _, exists := uniques[value]; exists || value == "" {
-				continue
-			}
-			uniques[value] = struct{}{}
-			values = append(values, value)
-		}
-		sort.Slice(values, func(i, j int) bool { return values[i] < values[j] })
-		return strings.Join(values, ","), nil
+		return strings.Join(b.Values, ","), nil
 	}
 
 	if max == "Unrestricted" && min == "0" {
