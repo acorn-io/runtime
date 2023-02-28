@@ -22,11 +22,10 @@ func NewLogs(c CommandContext) *cobra.Command {
 }
 
 type Logs struct {
-	Follow                 bool   `short:"f" usage:"Follow log output"`
-	Since                  string `short:"s" usage:"Show logs since timestamp (e.g. 42m for 42 minutes)"`
-	Tail                   int64  `short:"n" usage:"Number of lines in log output"`
-	IncludeProxyContainers bool   `usage:"Also display logs from Linkerd proxy containers"`
-	client                 ClientFactory
+	Follow bool   `short:"f" usage:"Follow log output"`
+	Since  string `short:"s" usage:"Show logs since timestamp (e.g. 42m for 42 minutes)"`
+	Tail   int64  `short:"n" usage:"Number of lines in log output"`
+	client ClientFactory
 }
 
 func (s *Logs) Run(cmd *cobra.Command, args []string) error {
@@ -53,9 +52,8 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 		tailLines = &s.Tail
 	}
 	return log.Output(cmd.Context(), c, args[0], &client.LogOptions{
-		Follow:                 s.Follow,
-		Tail:                   tailLines,
-		Since:                  s.Since,
-		IncludeProxyContainers: s.IncludeProxyContainers,
+		Follow: s.Follow,
+		Tail:   tailLines,
+		Since:  s.Since,
 	})
 }

@@ -3,14 +3,18 @@ package log
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
+	"k8s.io/utils/strings/slices"
 	"strings"
 	"sync"
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	applabels "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/restconfig"
@@ -66,13 +70,12 @@ type Message struct {
 }
 
 type Options struct {
-	RestConfig             *rest.Config
-	Client                 client.WithWatch
-	PodClient              v12.PodsGetter
-	Tail                   *int64
-	Follow                 bool
-	ContainerReplica       string
-	IncludeProxyContainers bool
+	RestConfig       *rest.Config
+	Client           client.WithWatch
+	PodClient        v12.PodsGetter
+	Tail             *int64
+	Follow           bool
+	ContainerReplica string
 }
 
 func (o *Options) restConfig() (*rest.Config, error) {
@@ -385,18 +388,45 @@ func matchesPod(pod *corev1.Pod, options *Options) bool {
 }
 
 func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Options) bool {
-	if options != nil && !options.IncludeProxyContainers && (container.Name == "linkerd-proxy" || container.Name == "linkerd-init") {
+	if options != nil && options.ContainerReplica != "" {
+		parts := strings.SplitN(options.ContainerReplica, ".", 3)
+		if len(parts) == 3 {
+			return pod.Name == parts[1] && container.Name == parts[2]
+		} else if len(parts) == 2 {
+			if pod.Labels[applabels.AcornContainerName] != "" {
+				return pod.Name == parts[1] && container.Name == pod.Labels[applabels.AcornContainerName]
+			} else {
+				return pod.Name == parts[1] && container.Name == pod.Labels[applabels.AcornJobName]
+			}
+		}
+	}
+
+	var validContainerNames []string
+	if pod.Labels[applabels.AcornContainerName] != "" {
+		validContainerNames = append(validContainerNames, pod.Labels[applabels.AcornContainerName])
+	}
+	if pod.Labels[applabels.AcornJobName] != "" {
+		validContainerNames = append(validContainerNames, pod.Labels[applabels.AcornJobName])
+	}
+
+	containerSpecData := []byte(pod.Annotations[applabels.AcornContainerSpec])
+	if len(containerSpecData) == 0 {
 		return false
-	} else if options == nil || options.ContainerReplica == "" {
-		return true
 	}
-	parts := strings.SplitN(options.ContainerReplica, ".", 3)
-	if len(parts) == 3 {
-		return pod.Name == parts[1] && container.Name == parts[2]
-	} else if len(parts) == 2 {
-		return pod.Name == parts[1] && container.Name == pod.Labels[applabels.AcornContainerName]
+
+	containerSpec := &internalv1.Container{}
+	err := json.Unmarshal(containerSpecData, containerSpec)
+	if err != nil {
+		logrus.Errorf("failed to unmarshal container spec for %s/%s: %s",
+			pod.Namespace, pod.Name, containerSpecData)
+		return false
 	}
-	return false
+
+	for sidecarName := range containerSpec.Sidecars {
+		validContainerNames = append(validContainerNames, sidecarName)
+	}
+
+	return slices.Contains(validContainerNames, container.Name)
 }
 
 func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Options) error {

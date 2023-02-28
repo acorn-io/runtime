@@ -67,12 +67,11 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 	go func() {
 		defer close(output)
 		err := log.App(ctx, app, output, &log.Options{
-			Client:                 i.client,
-			PodClient:              i.k8s.CoreV1(),
-			Tail:                   opts.Tail,
-			Follow:                 opts.Follow,
-			ContainerReplica:       opts.ContainerReplica,
-			IncludeProxyContainers: opts.IncludeProxyContainers,
+			Client:           i.client,
+			PodClient:        i.k8s.CoreV1(),
+			Tail:             opts.Tail,
+			Follow:           opts.Follow,
+			ContainerReplica: opts.ContainerReplica,
 		})
 		if err != nil {
 			output <- log.Message{
