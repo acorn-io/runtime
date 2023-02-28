@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
 	apiv1config "github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/volume"
@@ -43,6 +44,11 @@ func NewValidator(client kclient.Client, clientFactory *client.Factory) *Validat
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.App)
+
+	if err := imagesystem.IsNotInternalRepo(ctx, s.client, params.Spec.Image); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+		return
+	}
 
 	if _, isPattern := autoupgrade.AutoUpgradePattern(params.Spec.Image); !isPattern {
 		image, local, err := s.resolveLocalImage(ctx, params.Namespace, params.Spec.Image)

@@ -87,11 +87,11 @@ func Usage(app *v1.AppSpec) func() {
 		var ports []string
 		for containerName, container := range app.Containers {
 			for _, port := range container.Ports {
-				ports = append(ports, port.Complete(containerName).String())
+				ports = append(ports, port.Complete().FormatString(containerName))
 			}
 			for _, sidecar := range container.Sidecars {
 				for _, port := range sidecar.Ports {
-					ports = append(ports, port.Complete(containerName).String())
+					ports = append(ports, port.Complete().FormatString(containerName))
 				}
 			}
 		}

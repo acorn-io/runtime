@@ -20,6 +20,7 @@ var (
 	AppInstanceConditionSecrets    = "secrets"
 	AppInstanceConditionContainers = "containers"
 	AppInstanceConditionJobs       = "jobs"
+	AppInstanceConditionAcorns     = "acorns"
 	AppInstanceConditionReady      = "Ready"
 	AppInstanceConditionUpgrade    = "upgrade"
 	AppInstanceConditionVolumes    = "volumes"
@@ -71,7 +72,7 @@ type AppInstanceSpec struct {
 	PublishMode         PublishMode      `json:"publishMode,omitempty"`
 	TargetNamespace     string           `json:"targetNamespace,omitempty"`
 	Links               []ServiceBinding `json:"services,omitempty"`
-	Ports               []PortBinding    `json:"ports,omitempty"`
+	Publish             []PortBinding    `json:"ports,omitempty"`
 	DeployArgs          GenericMap       `json:"deployArgs,omitempty"`
 	Permissions         []Permissions    `json:"permissions,omitempty"`
 	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
@@ -79,6 +80,10 @@ type AppInstanceSpec struct {
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
 	ComputeClass        ComputeClassMap  `json:"computeClass,omitempty"`
 	Memory              MemoryMap        `json:"memory,omitempty"`
+}
+
+func (in *AppInstanceSpec) GetStopped() bool {
+	return in.Stop != nil && *in.Stop
 }
 
 func (in *AppInstanceSpec) GetAutoUpgrade() bool {
@@ -109,10 +114,14 @@ func (in *AppInstanceSpec) GetProfiles() []string {
 	return in.Profiles
 }
 
+type ServiceBindings []ServiceBinding
+
 type ServiceBinding struct {
 	Target  string `json:"target,omitempty"`
 	Service string `json:"service,omitempty"`
 }
+
+type SecretBindings []SecretBinding
 
 type SecretBinding struct {
 	Secret string `json:"secret,omitempty"`
@@ -120,6 +129,8 @@ type SecretBinding struct {
 }
 
 type Quantity string
+
+type VolumeBindings []VolumeBinding
 
 type VolumeBinding struct {
 	Volume      string      `json:"volume,omitempty"`
@@ -157,6 +168,7 @@ type AppInstanceStatus struct {
 	Columns                AppColumns                 `json:"columns,omitempty"`
 	ContainerStatus        map[string]ContainerStatus `json:"containerStatus,omitempty"`
 	JobsStatus             map[string]JobStatus       `json:"jobsStatus,omitempty"`
+	AcornStatus            map[string]AcornStatus     `json:"acornStatus,omitempty"`
 	Ready                  bool                       `json:"ready,omitempty"`
 	Stopped                bool                       `json:"stopped,omitempty"`
 	Namespace              string                     `json:"namespace,omitempty"`
@@ -185,6 +197,14 @@ type Scheduling struct {
 	Requirements corev1.ResourceRequirements `json:"requirements,omitempty"`
 	Affinity     *corev1.Affinity            `json:"affinity,omitempty"`
 	Tolerations  []corev1.Toleration         `json:"tolerations,omitempty"`
+}
+
+type AcornStatus struct {
+	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
+	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
+	AcornStatus     map[string]AcornStatus     `json:"acornStatus,omitempty"`
+	Stopped         bool                       `json:"stopped,omitempty"`
+	Ready           bool                       `json:"ready,omitempty"`
 }
 
 type Endpoint struct {

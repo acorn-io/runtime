@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
@@ -35,9 +34,6 @@ var (
 )
 
 func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
-	if len(c.DefaultPublishMode) == 0 {
-		c.DefaultPublishMode = v1.PublishModeDefined
-	}
 	if c.SetPodSecurityEnforceProfile == nil {
 		c.SetPodSecurityEnforceProfile = &[]bool{true}[0]
 	}
@@ -257,9 +253,6 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 			}
 		}
 		mergedConfig.ClusterDomains = newConfig.ClusterDomains
-	}
-	if len(newConfig.DefaultPublishMode) > 0 {
-		mergedConfig.DefaultPublishMode = newConfig.DefaultPublishMode
 	}
 	if newConfig.HttpEndpointPattern != nil {
 		mergedConfig.HttpEndpointPattern = newConfig.HttpEndpointPattern

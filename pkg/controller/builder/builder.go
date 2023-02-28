@@ -4,7 +4,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
-	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -47,11 +46,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(), pubKey, privKey, builder.Status.UUID, registryDNS, *cfg.UseCustomCABundle)
 
 	if *cfg.PublishBuilders {
-		ing, err := getIngress(req, name)
-		if err != nil {
-			return "", "", nil, err
-		}
-		objs = append(objs, ing...)
+		objs = append(objs, getIngress(name))
 	}
 
 	if *cfg.BuilderPerProject {
@@ -117,28 +112,23 @@ func DeployBuilder(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func getIngress(req router.Request, name string) ([]kclient.Object, error) {
-	return publish.Ingress(req, &v1.AppInstance{
+func getIngress(name string) *v1.ServiceInstance {
+	return &v1.ServiceInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: system.ImagesNamespace,
 		},
-		Spec: v1.AppInstanceSpec{},
-		Status: v1.AppInstanceStatus{
-			Namespace: system.ImagesNamespace,
-			AppSpec: v1.AppSpec{
-				Containers: map[string]v1.Container{
-					name: {
-						Ports: v1.Ports{
-							{
-								Port:     8080,
-								Protocol: v1.ProtocolHTTP,
-								Publish:  true,
-							},
-						},
-					},
+		Spec: v1.ServiceInstanceSpec{
+			ContainerLabels: map[string]string{
+				"app": name,
+			},
+			Ports: []v1.PortDef{
+				{
+					Port:     8080,
+					Protocol: v1.ProtocolHTTP,
+					Publish:  true,
 				},
 			},
 		},
-	})
+	}
 }

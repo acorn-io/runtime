@@ -7,8 +7,6 @@ metadata:
 spec:
   image: test
   services:
-    - target: acrn
-      service: acrn-link
     - target: con
       service: con-link
 status:
@@ -16,9 +14,6 @@ status:
   appImage:
     id: test
   appSpec:
-    acorns:
-      acrn:
-        image: "acorn"
     containers:
       con:
         image: "image-name"

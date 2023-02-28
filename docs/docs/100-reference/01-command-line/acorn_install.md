@@ -28,7 +28,6 @@ acorn install
       --builder-per-project                    Create a dedicated builder per project
       --cluster-domain strings                 The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int                acorn-controller deployment replica count
-      --default-publish-mode string            If no publish mode is set default to this value (default user)
   -h, --help                                   help for install
       --http-endpoint-pattern string           Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations     Don't propagate user-defined labels and annotations to dependent objects

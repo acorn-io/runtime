@@ -16,8 +16,8 @@ replace (
 require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20230314004906-0ab14d921cd1
-	github.com/acorn-io/baaah v0.0.0-20230210045136-282f5388cca5
+	github.com/acorn-io/aml v0.0.0-20230315031235-8213111daae3
+	github.com/acorn-io/baaah v0.0.0-20230314011022-8b20d035baa2
 	github.com/acorn-io/mink v0.0.0-20230301161548-f627747b4106
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/adrg/xdg v0.4.0
@@ -35,6 +35,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98
 	github.com/moby/buildkit v0.10.6
+	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0-rc2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
@@ -155,7 +156,6 @@ require (
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/otiai10/copy v1.7.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect

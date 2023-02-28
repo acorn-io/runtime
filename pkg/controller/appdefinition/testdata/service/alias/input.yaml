@@ -23,10 +23,6 @@ spec:
     key: "both"
     value: "con2val"
   image: test
-  ports:
-  - targetServiceName: svc1
-    serviceName: localhost
-    publish: true
 status:
   namespace: app-created-namespace
   appImage:
@@ -43,14 +39,12 @@ status:
             targetPort: 81
             publish: true
             protocol: http
-            serviceName: svc1
           - port: 80
             targetPort: 81
             protocol: http
           - port: 90
             targetPort: 91
             protocol: tcp
-            serviceName: svc1
       con2:
         annotations:
           "con2": "value"
@@ -61,14 +55,12 @@ status:
           targetPort: 81
           publish: true
           protocol: http
-          serviceName: svc1
         - port: 80
           targetPort: 81
           protocol: tcp
         - port: 90
           targetPort: 91
           protocol: tcp
-          serviceName: svc1
       con3:
         image: "foo"
         ports:
@@ -76,7 +68,6 @@ status:
           targetPort: 101
           publish: true
           protocol: udp
-          serviceName: svc2
         - port: 100
           targetPort: 101
           protocol: udp

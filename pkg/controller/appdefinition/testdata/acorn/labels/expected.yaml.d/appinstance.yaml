@@ -1,0 +1,220 @@
+# This AppInstance is created from the nested Acorn. It should have some metadata.labels and metadata.annotations from
+# the "outer" appInstance and some from the "inner" acorn's definition
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name-acorn-name-1234567890ab
+  namespace: app-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/acorn-name": "acorn-name"
+    "acorn.io/managed": "true"
+    "acorn.io/parent-acorn-name": "app-name"
+    "global": "value"
+    "global2": "value"
+    "nestedglobal": "value"
+    "allacorns": "value"
+    "override1": "outervalue"
+  annotations:
+    "globala": "value"
+    "global2a": "value"
+    "allacornsa": "value"
+    "override2": "outervalue"
+spec:
+  # The labels and annotations in this spec should be a combination of the "inner" acorn's definition and the outer
+  # appInstance's scoped label and annotations.
+  labels:
+  - resourceType: ""
+    resourceName: ""
+    key: "nestedglobal"
+    value: "value"
+  - resourceType: "container"
+    resourceName: ""
+    key: "nestedallcontainers"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "nestedcontainer1"
+    key: "nestedcontainer1"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "inboth"
+    key: "inboth"
+    value: "innervalue"
+  - resourceType: "metadata"
+    resourceName: ""
+    key: "override1"
+    value: "innervalue"
+  - resourceType: ""
+    resourceName: ""
+    key: "global"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacorns"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn2"
+    key: "bad1"
+    value: "value"
+  - resourceType: "container"
+    resourceName: ""
+    key: "bad2"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "inboth"
+    key: "inboth"
+    value: "outervalue"
+  - resourceType: ""
+    resourceName: ""
+    key: "override1"
+    value: "outervalue"
+  annotations:
+  - resourceType: ""
+    resourceName: ""
+    key: "globala"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacornsa"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1a"
+    value: "value"
+  - resourceType: ""
+    resourceName: ""
+    key: "override2"
+    value: "innervalue"
+  - resourceType: ""
+    resourceName: ""
+    key: "globala"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacornsa"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1a"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "override2"
+    value: "outervalue"
+  image: foo
+---
+# This is the "outer" AppInstance. It should appear the same as input, except for a success condition
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  labels:
+  - resourceType: ""
+    resourceName: ""
+    key: "global"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacorns"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn2"
+    key: "bad1"
+    value: "value"
+  - resourceType: "container"
+    resourceName: ""
+    key: "bad2"
+    value: "value"
+  - resourceType: "container"
+    resourceName: "inboth"
+    key: "inboth"
+    value: "outervalue"
+  - resourceType: ""
+    resourceName: ""
+    key: "override1"
+    value: "outervalue"
+  annotations:
+  - resourceType: ""
+    resourceName: ""
+    key: "globala"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "allacornsa"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: "acorn1"
+    key: "acorn1a"
+    value: "value"
+  - resourceType: "acorn"
+    resourceName: ""
+    key: "override2"
+    value: "outervalue"
+  image: test
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: foo
+  appSpec:
+    labels:
+      global2: "value"
+    annotations:
+      global2a: "value"
+    acorns:
+      acorn-name:
+        labels:
+        - resourceType: ""
+          resourceName: ""
+          key: "nestedglobal"
+          value: "value"
+        - resourceType: "container"
+          resourceName: ""
+          key: "nestedallcontainers"
+          value: "value"
+        - resourceType: "container"
+          resourceName: "nestedcontainer1"
+          key: "nestedcontainer1"
+          value: "value"
+        - resourceType: "container"
+          resourceName: "inboth"
+          key: "inboth"
+          value: "innervalue"
+        - resourceType: "metadata"
+          resourceName: ""
+          key: "override1"
+          value: "innervalue"
+        annotations:
+        - resourceType: ""
+          resourceName: ""
+          key: "globala"
+          value: "value"
+        - resourceType: "acorn"
+          resourceName: ""
+          key: "allacornsa"
+          value: "value"
+        - resourceType: "acorn"
+          resourceName: "acorn1"
+          key: "acorn1a"
+          value: "value"
+        - resourceType: ""
+          resourceName: ""
+          key: "override2"
+          value: "innervalue"
+        image: foo
+  conditions:
+  - reason: Success
+    status: "True"
+    success: true
+    type: defined

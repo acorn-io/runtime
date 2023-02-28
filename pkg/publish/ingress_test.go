@@ -210,13 +210,13 @@ func TestToEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEndpoint, err := toEndpoint(tt.args.pattern, tt.args.domain, tt.args.serviceName, tt.args.appInstance.GetName(), tt.args.appInstance.GetNamespace())
+			gotEndpoint, err := toHTTPEndpointHostname(tt.args.pattern, tt.args.domain, tt.args.serviceName, tt.args.appInstance.GetName(), tt.args.appInstance.GetNamespace())
 			if !errors.Is(err, tt.wantErr) {
-				t.Fatalf("toEndpoint() error = %v, want %v", err, tt.wantErr)
+				t.Fatalf("toHTTPEndpointHostname() error = %v, want %v", err, tt.wantErr)
 			}
 
 			if gotEndpoint != tt.wantEndpoint {
-				t.Errorf("toEndpoint() = %v, want %v", gotEndpoint, tt.wantEndpoint)
+				t.Errorf("toHTTPEndpointHostname() = %v, want %v", gotEndpoint, tt.wantEndpoint)
 			}
 		})
 	}
@@ -258,7 +258,7 @@ func TestValidateEndpointPattern(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateEndpointPattern(tt.pattern)
 			if !errors.Is(err, tt.wantErr) {
-				t.Fatalf("toEndpoint() error = %v, want %v", err, tt.wantErr)
+				t.Fatalf("toHTTPEndpointHostname() error = %v, want %v", err, tt.wantErr)
 			}
 		})
 	}

@@ -23,10 +23,6 @@ spec:
     key: "both"
     value: "con2val"
   image: test
-  ports:
-  - targetServiceName: svc1
-    serviceName: localhost
-    publish: true
 status:
   namespace: app-created-namespace
   appImage:

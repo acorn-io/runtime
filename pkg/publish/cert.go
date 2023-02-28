@@ -6,13 +6,17 @@ import (
 	"fmt"
 	"sort"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,34 +33,33 @@ func (cert *TLSCert) certForThisDomain(name string) bool {
 	return false
 }
 
-func convertTLSSecretToTLSCert(secret corev1.Secret) (*TLSCert, error) {
-	cert := &TLSCert{}
-
+func convertTLSSecretToTLSCert(secret corev1.Secret) (cert TLSCert, _ error) {
 	tlsPEM, ok := secret.Data["tls.crt"]
 	if !ok {
-		return nil, fmt.Errorf("key tls.crt not found in secret %s", secret.Name)
+		return cert, fmt.Errorf("key tls.crt not found in secret %s", secret.Name)
 	}
 
 	tlsCertBytes, _ := pem.Decode(tlsPEM)
 	if tlsCertBytes == nil {
-		return nil, fmt.Errorf("failed to parse Cert PEM stored in secret %s", secret.Name)
+		return cert, fmt.Errorf("failed to parse Cert PEM stored in secret %s", secret.Name)
 	}
 
 	tlsDataObj, err := x509.ParseCertificate(tlsCertBytes.Bytes)
 	if err != nil {
-		return nil, err
+		return cert, err
 	}
 
 	cert.SecretName = secret.Name
 	cert.SecretNamespace = secret.Namespace
 	cert.Certificate = *tlsDataObj
 
-	return cert, nil
+	return
 }
 
-func getCerts(req router.Request, namespace string) ([]*TLSCert, error) {
+// getCerts looks for Secrets in the app namespace that contain TLS certs
+func getCerts(req router.Request, namespace string) ([]TLSCert, error) {
 	var (
-		result  []*TLSCert
+		result  []TLSCert
 		secrets corev1.SecretList
 	)
 
@@ -95,11 +98,58 @@ func getCerts(req router.Request, namespace string) ([]*TLSCert, error) {
 	return result, nil
 }
 
-func filterCertsForPublishedHosts(rules []networkingv1.IngressRule, certs []*TLSCert) (filteredCerts []TLSCert) {
+func copySecretsForCerts(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance, filteredTLSCerts []TLSCert) (objs []client.Object, resultTLSCert []TLSCert, _ error) {
+	for _, tlsCert := range filteredTLSCerts {
+		originalSecret := &corev1.Secret{}
+
+		err := req.Get(originalSecret, tlsCert.SecretNamespace, tlsCert.SecretName)
+		if err != nil {
+			return nil, nil, err
+		}
+		secretName := name.SafeConcatName(tlsCert.SecretName, svc.Name, string(originalSecret.UID)[:12])
+		objs = append(objs, &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:        secretName,
+				Namespace:   app.Status.Namespace,
+				Labels:      labels.Merge(originalSecret.Labels, labels.Managed(app)),
+				Annotations: originalSecret.Annotations,
+			},
+			Type: corev1.SecretTypeTLS,
+			Data: originalSecret.Data,
+		})
+
+		//Override the secret name to the copied name
+		tlsCert.SecretName = secretName
+		tlsCert.SecretNamespace = app.Status.Namespace
+		resultTLSCert = append(resultTLSCert, tlsCert)
+	}
+
+	return
+}
+
+func setupCertsForRules(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance, rules []networkingv1.IngressRule) ([]client.Object, []networkingv1.IngressTLS, error) {
+	tlsCerts, err := getCerts(req, app.Namespace)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tlsCerts = getCertsMatchingRules(rules, tlsCerts)
+	secrets, tlsCerts, err := copySecretsForCerts(req, app, svc, tlsCerts)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ingressTLS := getCertsForPublishedHosts(rules, tlsCerts)
+	ingressTLS = setupCertManager(svc.Name, svc.Spec.Annotations, rules, ingressTLS)
+
+	return secrets, ingressTLS, nil
+}
+
+func getCertsMatchingRules(rules []networkingv1.IngressRule, certs []TLSCert) (filteredCerts []TLSCert) {
 	for _, rule := range rules {
 		for _, cert := range certs {
 			if cert.certForThisDomain(rule.Host) {
-				filteredCerts = append(filteredCerts, *cert)
+				filteredCerts = append(filteredCerts, cert)
 				break
 			}
 		}

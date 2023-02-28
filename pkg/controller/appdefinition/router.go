@@ -7,13 +7,12 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/expose"
+	"github.com/acorn-io/acorn/pkg/pdb"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
-	"golang.org/x/exp/maps"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +50,6 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 	podLabels := routerLabels(appInstance, router, routerName)
 	deploymentLabels := routerLabels(appInstance, router, routerName)
 	matchLabels := routerSelectorMatchLabels(appInstance, routerName)
-	maps.Copy(podLabels, ports.ToRouterLabels(appInstance, routerName))
 
 	deploymentAnnotations := routerAnnotations(appInstance, router, routerName)
 
@@ -152,7 +150,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 				Annotations: deploymentAnnotations,
 			},
 		},
-		expose.ToPodDisruptionBudget(dep),
+		pdb.ToPodDisruptionBudget(dep),
 	}, nil
 }
 

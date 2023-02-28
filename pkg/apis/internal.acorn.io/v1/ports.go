@@ -37,7 +37,18 @@ func parseNum(str string) (int32, bool, error) {
 	return int32(i), true, nil
 }
 
-func parseSingle(str string) (int32, error) {
+func parsePortBindingSingle(str string) (string, int32, error) {
+	i, err := strconv.Atoi(str)
+	if err != nil {
+		if !nameRegexp.MatchString(str) {
+			return "", 0, fmt.Errorf("string [%s] does not match %s", str, nameRegexp)
+		}
+		return str, 0, nil
+	}
+	return "", int32(i), nil
+}
+
+func parsePortSingle(str string) (int32, error) {
 	i, err := strconv.Atoi(str)
 	if err != nil {
 		return 0, fmt.Errorf("invalid port syntax [%s]: %w", str, err)
@@ -45,41 +56,33 @@ func parseSingle(str string) (int32, error) {
 	return int32(i), nil
 }
 
-func parseQuad(expose bool, left, leftMiddle, rightMiddle, right string) (PortBinding, error) {
-	if !expose {
-		return PortBinding{}, fmt.Errorf("invalid [%s:%s:%s:%s]: (service:port:service:port) syntax"+
-			" is only valid for expose", left, leftMiddle, rightMiddle, right)
-	}
+func parsePortTriplet(left, middle, right string) (PortDef, error) {
 	_, leftIsNum, err := parseNum(left)
 	if err != nil {
-		return PortBinding{}, err
+		return PortDef{}, err
 	}
-	leftMiddleNum, leftMiddleIsNum, err := parseNum(leftMiddle)
+	middleNum, middleIsNum, err := parseNum(middle)
 	if err != nil {
-		return PortBinding{}, err
-	}
-	_, rightMiddleIsNum, err := parseNum(rightMiddle)
-	if err != nil {
-		return PortBinding{}, err
+		return PortDef{}, err
 	}
 	rightNum, rightIsNum, err := parseNum(right)
 	if err != nil {
-		return PortBinding{}, err
+		return PortDef{}, err
 	}
 
-	if !leftIsNum && leftMiddleIsNum && !rightMiddleIsNum && rightIsNum {
-		return PortBinding{
-			ServiceName:       left,
-			Port:              leftMiddleNum,
-			TargetPort:        rightNum,
-			TargetServiceName: rightMiddle,
+	if !leftIsNum && middleIsNum && rightIsNum {
+		// hostname:81:80
+		return PortDef{
+			Port:       middleNum,
+			TargetPort: rightNum,
+			Hostname:   left,
+			Protocol:   ProtocolHTTP,
 		}, nil
 	}
-	return PortBinding{}, fmt.Errorf("invalid [%s:%s:%s:%s]: must be (service:port:service:port)",
-		left, leftMiddle, rightMiddle, right)
+	return PortDef{}, fmt.Errorf("invalid binding [%s:%s:%s] must be [hostname:port:port]", left, middle, right)
 }
 
-func parseTriplet(left, middle, right string) (PortBinding, error) {
+func parsePortBindingTriplet(left, middle, right string) (PortBinding, error) {
 	leftNum, leftIsNum, err := parseNum(left)
 	if err != nil {
 		return PortBinding{}, err
@@ -103,15 +106,16 @@ func parseTriplet(left, middle, right string) (PortBinding, error) {
 	} else if !leftIsNum && !middleIsNum && rightIsNum {
 		// example.com:service:80
 		return PortBinding{
-			ServiceName:       left,
+			Hostname:          left,
+			Protocol:          ProtocolHTTP,
 			TargetPort:        rightNum,
 			TargetServiceName: middle,
 		}, nil
 	}
-	return PortBinding{}, fmt.Errorf("invalid binding [%s:%s:%s] must be service:port:targetPort or domain:service:targetPort", left, middle, right)
+	return PortBinding{}, fmt.Errorf("invalid binding [%s:%s:%s] must be [hostname:service:port] or [port:service:port]", left, middle, right)
 }
 
-func parseTuple(binding bool, left, right string) (PortBinding, error) {
+func parsePortBindingTuple(left, right string) (PortBinding, error) {
 	leftNum, leftIsNum, err := parseNum(left)
 	if err != nil {
 		return PortBinding{}, err
@@ -128,48 +132,101 @@ func parseTuple(binding bool, left, right string) (PortBinding, error) {
 			TargetPort: rightNum,
 		}, nil
 	} else if !leftIsNum && rightIsNum {
-		// service:80 format
-		if binding {
-			return PortBinding{
-				TargetPort:        rightNum,
-				TargetServiceName: left,
-			}, nil
-		} else {
-			return PortBinding{
-				ServiceName: left,
-				TargetPort:  rightNum,
-			}, nil
-		}
+		// example.com:80 format
+		return PortBinding{
+			Hostname:   left,
+			TargetPort: rightNum,
+		}, nil
 	} else if leftIsNum && !rightIsNum {
 		// 80:service format
-		return PortBinding{}, fmt.Errorf("invalidate port binding [%s:%s] can not be number:string format", left, right)
+		return PortBinding{
+			Port:              leftNum,
+			TargetServiceName: right,
+		}, nil
+	} else {
+		// hostname:service
+		return PortBinding{
+			Hostname:          left,
+			TargetServiceName: right,
+		}, nil
 	}
-	// example.com:name
-	return PortBinding{
-		ServiceName:       left,
-		TargetServiceName: right,
-		Protocol:          ProtocolHTTP,
-	}, nil
+}
+
+func parsePortTuple(left, right string) (PortDef, error) {
+	leftNum, leftIsNum, err := parseNum(left)
+	if err != nil {
+		return PortDef{}, err
+	}
+	rightNum, rightIsNum, err := parseNum(right)
+	if err != nil {
+		return PortDef{}, err
+	}
+
+	if leftIsNum && rightIsNum {
+		// 81:80 format
+		return PortDef{
+			Port:       leftNum,
+			TargetPort: rightNum,
+		}, nil
+	} else if !leftIsNum && rightIsNum {
+		// example.com:80 format
+		if !strings.Contains(left, ".") {
+			return PortDef{}, fmt.Errorf("[%s] is not a valid hostname to publish, missing \".\"", left)
+		}
+		return PortDef{
+			Hostname:   left,
+			TargetPort: rightNum,
+			Protocol:   ProtocolHTTP,
+		}, nil
+	}
+
+	return PortDef{}, fmt.Errorf("invalidate port [%s:%s] must be [hostname:port] or [port:port] format", left, right)
 }
 
 func ParsePorts(args []string) (result []PortDef, _ error) {
-	pbs, err := parseBindings(false, false, args)
-	if err != nil {
-		return nil, err
-	}
-	for _, pb := range pbs {
-		pb.Expose = false
-		pb.Publish = false
-		result = append(result, (PortDef)(pb.Complete("")))
+	for _, arg := range args {
+		var (
+			port PortDef
+			err  error
+		)
+
+		arg, proto, _ := strings.Cut(arg, "/")
+		parts := strings.Split(arg, ":")
+
+		switch len(parts) {
+		case 1:
+			port.TargetPort, err = parsePortSingle(parts[0])
+			if err != nil {
+				return nil, err
+			}
+		case 2:
+			port, err = parsePortTuple(parts[0], parts[1])
+			if err != nil {
+				return nil, err
+			}
+		case 3:
+			port, err = parsePortTriplet(parts[0], parts[1], parts[2])
+			if err != nil {
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("invalid syntax [%s] too many colon separated parts", arg)
+		}
+
+		if p, ok := validProto(proto); !ok {
+			return nil, fmt.Errorf("invalid protocol [%s]", p)
+		} else if port.Protocol != "" && p != "" && port.Protocol != p {
+			return nil, fmt.Errorf("inferred protocol [%s] does not match requested protocol [%s]", port.Protocol, p)
+		} else if port.Protocol == "" {
+			port.Protocol = p
+		}
+
+		result = append(result, port)
 	}
 	return
 }
 
-func ParsePortBindings(publish bool, args []string) (result []PortBinding, _ error) {
-	return parseBindings(true, publish, args)
-}
-
-func parseBindings(isBinding, publish bool, args []string) (result []PortBinding, _ error) {
+func ParsePortBindings(args []string) (result []PortBinding, _ error) {
 	for _, arg := range args {
 		var (
 			binding PortBinding
@@ -181,27 +238,22 @@ func parseBindings(isBinding, publish bool, args []string) (result []PortBinding
 
 		switch len(parts) {
 		case 1:
-			binding.TargetPort, err = parseSingle(parts[0])
+			binding.TargetServiceName, binding.TargetPort, err = parsePortBindingSingle(parts[0])
 			if err != nil {
 				return nil, err
 			}
 		case 2:
-			binding, err = parseTuple(isBinding, parts[0], parts[1])
+			binding, err = parsePortBindingTuple(parts[0], parts[1])
 			if err != nil {
 				return nil, err
 			}
 		case 3:
-			binding, err = parseTriplet(parts[0], parts[1], parts[2])
-			if err != nil {
-				return nil, err
-			}
-		case 4:
-			binding, err = parseQuad(!publish, parts[0], parts[1], parts[2], parts[3])
+			binding, err = parsePortBindingTriplet(parts[0], parts[1], parts[2])
 			if err != nil {
 				return nil, err
 			}
 		default:
-			return nil, fmt.Errorf("invalid syntax [%s] too many colon separated parts", arg)
+			return nil, fmt.Errorf("invalid syntax [%s] too many colon separated parts, only 0-2 colons allowed got [%d]", arg, len(parts)-1)
 		}
 
 		if p, ok := validProto(proto); !ok {
@@ -211,9 +263,6 @@ func parseBindings(isBinding, publish bool, args []string) (result []PortBinding
 		} else if binding.Protocol == "" {
 			binding.Protocol = p
 		}
-
-		binding.Publish = publish
-		binding.Expose = !publish
 
 		result = append(result, binding)
 	}

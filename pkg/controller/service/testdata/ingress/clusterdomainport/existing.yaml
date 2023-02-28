@@ -1,0 +1,33 @@
+apiVersion: v1
+data:
+  config: '{"clusterDomains":[".local.on-acorn.io:8081"],"httpEndpointPattern":"{{.Container}}.{{.App}}.{{.Namespace}}.{{.ClusterDomain}}"}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+
+---
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      oneimage:
+        ports:
+        - port: 80
+          targetPort: 81
+          publish: true
+          protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."

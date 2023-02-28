@@ -27,14 +27,10 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "con1"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "port-number.acorn.io/91": "true"
-        "service-name.acorn.io/con1": "true"
-        "service-name.acorn.io/svc1": "true"
         "con1key": "value"
         "both": "con1val"
       annotations:
-        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         "con1": "value"
         "both": "con1val"
     spec:
@@ -85,14 +81,10 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "con2"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "port-number.acorn.io/91": "true"
-        "service-name.acorn.io/con2": "true"
-        "service-name.acorn.io/svc1": "true"
         "con2key": "value"
         "both": "con2val"
       annotations:
-        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"serviceName":"svc1","targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","serviceName":"svc1","targetPort":91}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         "con2": "value"
         "both": "con2val"
     spec:
@@ -138,11 +130,8 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "con3"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/101": "true"
-        "service-name.acorn.io/con3": "true"
-        "service-name.acorn.io/svc2": "true"
       annotations:
-        acorn.io/container-spec: '{"image":"foo","ports":[{"port":100,"protocol":"udp","publish":true,"serviceName":"svc2","targetPort":101},{"port":100,"protocol":"udp","targetPort":101}],"probes":null}'
+        acorn.io/container-spec: '{"image":"foo","ports":[{"port":100,"protocol":"udp","publish":true,"targetPort":101},{"port":100,"protocol":"udp","targetPort":101}],"probes":null}'
     spec:
       hostname: con3
       terminationGracePeriodSeconds: 5

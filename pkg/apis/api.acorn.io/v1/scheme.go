@@ -49,6 +49,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ContainerReplicaExecOptions{},
 		&Secret{},
 		&SecretList{},
+		&Service{},
+		&ServiceList{},
 		&Project{},
 		&ProjectList{},
 		&AcornImageBuild{},

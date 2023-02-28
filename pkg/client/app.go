@@ -47,7 +47,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Volumes:             opts.Volumes,
 			Secrets:             opts.Secrets,
 			Links:               opts.Links,
-			Ports:               opts.Ports,
+			Publish:             opts.Publish,
 			Profiles:            opts.Profiles,
 			DevMode:             opts.DevMode,
 			Permissions:         opts.Permissions,
@@ -110,7 +110,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	app.Spec.Volumes = mergeVolumes(app.Spec.Volumes, opts.Volumes)
 	app.Spec.Secrets = mergeSecrets(app.Spec.Secrets, opts.Secrets)
 	app.Spec.Links = mergeServices(app.Spec.Links, opts.Links)
-	app.Spec.Ports = mergePorts(app.Spec.Ports, opts.Ports)
+	app.Spec.Publish = mergePorts(app.Spec.Publish, opts.Publish)
 	app.Spec.Environment = mergeEnv(app.Spec.Environment, opts.Env)
 	app.Spec.Labels = mergeLabels(app.Spec.Labels, opts.Labels)
 	app.Spec.Annotations = mergeLabels(app.Spec.Annotations, opts.Annotations)

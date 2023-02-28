@@ -83,7 +83,7 @@ type AppUpdateOptions struct {
 	Volumes             []v1.VolumeBinding
 	Secrets             []v1.SecretBinding
 	Links               []v1.ServiceBinding
-	Ports               []v1.PortBinding
+	Publish             []v1.PortBinding
 	Env                 []v1.NameValue
 	Profiles            []string
 	Permissions         []v1.Permissions
@@ -109,7 +109,7 @@ type AppRunOptions struct {
 	Volumes             []v1.VolumeBinding
 	Secrets             []v1.SecretBinding
 	Links               []v1.ServiceBinding
-	Ports               []v1.PortBinding
+	Publish             []v1.PortBinding
 	Env                 []v1.NameValue
 	Profiles            []string
 	TargetNamespace     string
@@ -131,7 +131,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		Volumes:             a.Volumes,
 		Secrets:             a.Secrets,
 		Links:               a.Links,
-		Ports:               a.Ports,
+		Publish:             a.Publish,
 		DeployArgs:          a.DeployArgs,
 		DevMode:             a.DevMode,
 		Profiles:            a.Profiles,
@@ -154,7 +154,7 @@ func (a AppUpdateOptions) ToRun() AppRunOptions {
 		Volumes:             a.Volumes,
 		Secrets:             a.Secrets,
 		Links:               a.Links,
-		Ports:               a.Ports,
+		Publish:             a.Publish,
 		DeployArgs:          a.DeployArgs,
 		DevMode:             a.DevMode,
 		Profiles:            a.Profiles,
@@ -255,7 +255,6 @@ type AcornImageBuildOptions struct {
 	Cwd         string
 	Platforms   []v1.Platform
 	Args        map[string]any
-	Profiles    []string
 	Streams     *streams.Output
 }
 

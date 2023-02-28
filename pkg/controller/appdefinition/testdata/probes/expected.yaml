@@ -22,8 +22,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/oneimage": "true"
       annotations:
         acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
     spec:
@@ -79,8 +77,8 @@ spec:
       "acorn.io/managed": "true"
   maxUnavailable: 25%
 ---
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: oneimage
   namespace: app-created-namespace
@@ -88,22 +86,21 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
-    "acorn.io/service-name": "oneimage"
     "acorn.io/container-name": "oneimage"
 spec:
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/container-name": "oneimage"
   type: ClusterIP
+  container: oneimage
   ports:
     - port: 80
       targetPort: 81
-      protocol: "TCP"
+      protocol: http
       appProtocol: "HTTP"
       name: "80"
-  selector:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "service-name.acorn.io/oneimage": "true"
-    "port-number.acorn.io/81": "true"
-    "acorn.io/managed": "true"
 
 ---
 kind: Secret
@@ -203,8 +200,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "nodefault"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/nodefault": "true"
       annotations:
         acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":[]}'
     spec:
@@ -240,8 +235,8 @@ spec:
       "acorn.io/managed": "true"
   maxUnavailable: 25%
 ---
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: nodefault
   namespace: app-created-namespace
@@ -249,19 +244,17 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
-    "acorn.io/service-name": "nodefault"
     "acorn.io/container-name": "nodefault"
 spec:
-  type: ClusterIP
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/container-name": "nodefault"
+  container: nodefault
   ports:
     - port: 80
       targetPort: 81
-      protocol: "TCP"
+      protocol: http
       appProtocol: "HTTP"
       name: "80"
-  selector:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "service-name.acorn.io/nodefault": "true"
-    "port-number.acorn.io/81": "true"
-    "acorn.io/managed": "true"

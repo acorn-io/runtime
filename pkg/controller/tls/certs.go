@@ -156,15 +156,15 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 		appInstance.Status.Endpoints[i] = ep
 	}
 
-	for _, pb := range appInstance.Spec.Ports {
-		if _, ok := provisionedCerts[pb.ServiceName]; ok {
+	for _, pb := range appInstance.Spec.Publish {
+		if _, ok := provisionedCerts[pb.Hostname]; ok {
 			continue
 		}
-		if err := prov(req, leUser, pb.ServiceName, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
+		if err := prov(req, leUser, pb.Hostname, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
 			errs = append(errs, err)
 			continue
 		}
-		provisionedCerts[pb.ServiceName] = nil
+		provisionedCerts[pb.Hostname] = nil
 	}
 
 	return utilerrors.NewAggregate(errs)
@@ -172,7 +172,7 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 
 func prov(req router.Request, leUser *LEUser, domain, appname, segment, namespace string) error {
 	if domain == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, domain)) > 0 || strings.HasSuffix(domain, "on-acorn.io") {
-		logrus.Warnf("Skipping cert provisioning for %s", domain)
+		logrus.Debugf("Skipping cert provisioning for %s", domain)
 		return nil
 	}
 	secretName := name.Limit(appname+"-tls-"+domain, 63-len(segment)-1) + "-" + segment

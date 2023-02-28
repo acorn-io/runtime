@@ -127,7 +127,6 @@ type RunArgs struct {
 	Link            []string `usage:"Link external app as a service in the current app (format app-name:container-name)"`
 	PublishAll      *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
 	Publish         []string `usage:"Publish port of application (format [public:]private) (ex 81:80)" short:"p"`
-	Expose          []string `usage:"In cluster expose ports of an application (format [public:]private) (ex 81:80)"`
 	Profile         []string `usage:"Profile to assign default values"`
 	Env             []string `usage:"Environment variables to set on running containers" short:"e"`
 	Label           []string `usage:"Add labels to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)" short:"l"`
@@ -192,16 +191,10 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 		return opts, err
 	}
 
-	opts.Ports, err = v1.ParsePortBindings(true, s.Publish)
+	opts.Publish, err = v1.ParsePortBindings(s.Publish)
 	if err != nil {
 		return opts, err
 	}
-
-	expose, err := v1.ParsePortBindings(false, s.Expose)
-	if err != nil {
-		return opts, err
-	}
-	opts.Ports = append(opts.Ports, expose...)
 
 	if s.PublishAll != nil && *s.PublishAll {
 		opts.PublishMode = v1.PublishModeAll
@@ -223,16 +216,15 @@ func isDirectory(cwd string) (bool, error) {
 	return true, nil
 }
 
-func buildImage(ctx context.Context, c client.Client, file, cwd string, args, profiles []string) (string, error) {
+func buildImage(ctx context.Context, c client.Client, file, cwd string, args []string) (string, error) {
 	params, err := build.ParseParams(file, cwd, args)
 	if err != nil {
 		return "", err
 	}
 
 	image, err := c.AcornImageBuild(ctx, file, &client.AcornImageBuildOptions{
-		Cwd:      cwd,
-		Args:     params,
-		Profiles: profiles,
+		Cwd:  cwd,
+		Args: params,
 	})
 	if err != nil {
 		return "", err
@@ -297,8 +289,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return dev.Dev(cmd.Context(), c, s.File, &dev.Options{
 			Args: args,
 			Build: client.AcornImageBuildOptions{
-				Cwd:      cwd,
-				Profiles: opts.Profiles,
+				Cwd: cwd,
 			},
 			Run:               opts,
 			Dangerous:         s.Dangerous,
@@ -312,7 +303,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 
 	image := cwd
 	if isDir {
-		image, err = buildImage(cmd.Context(), c, s.File, cwd, args, s.Profile)
+		image, err = buildImage(cmd.Context(), c, s.File, cwd, args)
 		if err == pflag.ErrHelp {
 			return nil
 		} else if err != nil {

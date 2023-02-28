@@ -17,6 +17,7 @@ type ImagesData struct {
 	Containers map[string]ContainerData `json:"containers,omitempty"`
 	Jobs       map[string]ContainerData `json:"jobs,omitempty"`
 	Images     map[string]ImageData     `json:"images,omitempty"`
+	Acorns     map[string]ImageData     `json:"acorns,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

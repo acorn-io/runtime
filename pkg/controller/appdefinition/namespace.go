@@ -2,6 +2,7 @@ package appdefinition
 
 import (
 	"fmt"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
@@ -29,7 +30,8 @@ func AssignNamespace(req router.Request, resp router.Response) (err error) {
 	}
 
 	if appInstance.Spec.TargetNamespace == "" {
-		appInstance.Status.Namespace = name.SafeConcatName(appInstance.Name, appInstance.ShortID())
+		parts := strings.Split(appInstance.Name, ".")
+		appInstance.Status.Namespace = name.SafeConcatName(parts[len(parts)-1], appInstance.ShortID())
 	} else {
 		appInstance.Status.Namespace = appInstance.Spec.TargetNamespace
 	}

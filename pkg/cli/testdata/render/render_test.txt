@@ -4,7 +4,6 @@
       "image": "nginx",
       "ports": [
         {
-          "port": 80,
           "protocol": "http",
           "publish": true,
           "targetPort": 80

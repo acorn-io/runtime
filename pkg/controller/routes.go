@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
 	"github.com/acorn-io/acorn/pkg/controller/scheduling"
+	"github.com/acorn-io/acorn/pkg/controller/service"
 	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -53,6 +54,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
 	appRouter.HandlerFunc(appdefinition.JobStatus)
 	appRouter.HandlerFunc(appdefinition.VolumeStatus)
+	appRouter.HandlerFunc(appdefinition.AcornStatus)
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.NetworkPolicy)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
@@ -60,10 +62,13 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 
 	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.CLIStatus)
 
+	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
+
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
 
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
+	router.Type(&v1.ServiceInstance{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)

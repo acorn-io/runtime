@@ -8,15 +8,22 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/buildclient"
+	images2 "github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/authn"
+	imagename "github.com/google/go-containerregistry/pkg/name"
+	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/uuid"
+	client2 "github.com/moby/buildkit/client"
+	"github.com/opencontainers/go-digest"
 )
 
 func FindAcornCue(cwd string) string {
@@ -47,16 +54,52 @@ func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
 	return appdefinition.NewAppDefinition(fileData)
 }
 
-func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts *v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
-	keychain = NewRemoteKeyChain(messages, keychain)
-	remoteOpts = append(remoteOpts, remote.WithAuthFromKeychain(keychain), remote.WithContext(ctx))
+type buildContext struct {
+	ctx           context.Context
+	cwd           string
+	acornfilePath string
+	pushRepo      string
+	opts          v1.AcornImageBuildInstanceSpec
+	keychain      authn.Keychain
+	remoteOpts    []remote.Option
+	messages      buildclient.Messages
+}
 
-	appDefinition, err := appdefinition.NewAppDefinition([]byte(opts.Acornfile))
+func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+	buildContext := &buildContext{
+		ctx:        ctx,
+		cwd:        "",
+		pushRepo:   pushRepo,
+		opts:       opts,
+		keychain:   NewRemoteKeyChain(messages, keychain),
+		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(keychain), remote.WithContext(ctx)),
+		messages:   messages,
+	}
+
+	return build(buildContext)
+}
+
+func build(ctx *buildContext) (*v1.AppImage, error) {
+	var (
+		acornfileData []byte
+		err           error
+	)
+
+	if ctx.acornfilePath == "" {
+		acornfileData = []byte(ctx.opts.Acornfile)
+	} else {
+		acornfileData, err = getAcornfile(ctx, ctx.acornfilePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	appDefinition, err := appdefinition.NewAppDefinition(acornfileData)
 	if err != nil {
 		return nil, err
 	}
 
-	appDefinition, buildArgs, err := appDefinition.WithArgs(opts.Args, append([]string{"build?"}, opts.Profiles...))
+	appDefinition, buildArgs, err := appDefinition.WithArgs(ctx.opts.Args, []string{"build?"})
 	if err != nil {
 		return nil, err
 	}
@@ -65,23 +108,19 @@ func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, 
 	if err != nil {
 		return nil, err
 	}
-	buildSpec.Platforms = opts.Platforms
 
-	imageData, err := FromSpec(ctx, pushRepo, *buildSpec, messages, keychain, remoteOpts)
+	imageData, err := fromSpec(ctx, *buildSpec)
 	appImage := &v1.AppImage{
-		Acornfile: opts.Acornfile,
+		Acornfile: string(acornfileData),
 		ImageData: imageData,
 		BuildArgs: buildArgs,
-		VCS:       opts.VCS,
+		VCS:       ctx.opts.VCS,
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := FromAppImage(ctx, pushRepo, appImage, messages, &AppImageOptions{
-		Keychain:      keychain,
-		RemoteOptions: remoteOpts,
-	})
+	id, err := fromAppImage(ctx, appImage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize app image: %w", err)
 	}
@@ -91,7 +130,7 @@ func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, 
 	return appImage, nil
 }
 
-func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, containers map[string]v1.ContainerImageBuilderSpec, keychain authn.Keychain, opts []remote.Option) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
@@ -108,7 +147,7 @@ func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCach
 			}
 		}
 
-		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *container.Build, messages, keychain, opts)
+		id, err := fromBuild(ctx, buildCache, *container.Build)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +176,7 @@ func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCach
 				}
 			}
 
-			id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *sidecar.Build, messages, keychain, opts)
+			id, err := fromBuild(ctx, buildCache, *sidecar.Build)
 			if err != nil {
 				return nil, err
 			}
@@ -150,7 +189,43 @@ func buildContainers(ctx context.Context, pushRepo string, buildCache *buildCach
 	return result, nil
 }
 
-func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, messages buildclient.Messages, images map[string]v1.ImageBuilderSpec, keychain authn.Keychain, opts []remote.Option) (map[string]v1.ImageData, error) {
+func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
+	result := map[string]v1.ImageData{}
+
+	for _, entry := range typed.Sorted(acorns) {
+		key, acornImage := entry.Key, entry.Value
+		if acornImage.Image != "" {
+			id, err := pullImage(ctx, acornImage.Image)
+			if err != nil {
+				return nil, err
+			}
+			result[key] = v1.ImageData{
+				Image: id,
+			}
+		} else if acornImage.Build != nil {
+			newCtx := *ctx
+			newCtx.opts.Args = acornImage.Build.BuildArgs
+			newCtx.opts.Acornfile = ""
+			newCtx.acornfilePath = acornImage.Build.Acornfile
+			newCtx.cwd = filepath.Join(newCtx.cwd, acornImage.Build.Context)
+			appImage, err := build(&newCtx)
+			if err != nil {
+				return nil, err
+			}
+			repo, err := imagename.NewRepository(ctx.pushRepo)
+			if err != nil {
+				return nil, err
+			}
+			result[key] = v1.ImageData{
+				Image: repo.Digest(appImage.Digest).String(),
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func buildImages(ctx *buildContext, buildCache *buildCache, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(images) {
@@ -161,7 +236,7 @@ func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, p
 			}
 		}
 
-		id, err := fromBuild(ctx, pushRepo, buildCache, platforms, *image.Build, messages, keychain, opts)
+		id, err := fromBuild(ctx, buildCache, *image.Build)
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +249,7 @@ func buildImages(ctx context.Context, pushRepo string, buildCache *buildCache, p
 	return result, nil
 }
 
-func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (v1.ImagesData, error) {
+func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
 	var (
 		err  error
 		data = v1.ImagesData{
@@ -184,17 +259,22 @@ func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, message
 
 	buildCache := &buildCache{}
 
-	data.Containers, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Containers, keychain, opts)
+	data.Containers, err = buildContainers(ctx, buildCache, spec.Containers)
 	if err != nil {
 		return data, err
 	}
 
-	data.Jobs, err = buildContainers(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Jobs, keychain, opts)
+	data.Jobs, err = buildContainers(ctx, buildCache, spec.Jobs)
 	if err != nil {
 		return data, err
 	}
 
-	data.Images, err = buildImages(ctx, pushRepo, buildCache, spec.Platforms, messages, spec.Images, keychain, opts)
+	data.Images, err = buildImages(ctx, buildCache, spec.Images)
+	if err != nil {
+		return data, err
+	}
+
+	data.Acorns, err = buildAcorns(ctx, spec.Acorns)
 	if err != nil {
 		return data, err
 	}
@@ -202,15 +282,150 @@ func FromSpec(ctx context.Context, pushRepo string, spec v1.BuilderSpec, message
 	return data, nil
 }
 
-func fromBuild(ctx context.Context, pushRepo string, buildCache *buildCache, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (id string, err error) {
-	id, err = buildCache.Get(build, platforms)
+func pullImage(ctx *buildContext, image string) (id string, err error) {
+	ref, err := images2.ParseReferenceNoDefault(image)
+	if err != nil {
+		return "", err
+	}
+
+	index, err := remote.Index(ref, ctx.remoteOpts...)
+	if err != nil {
+		return "", err
+	}
+
+	digest, err := index.Digest()
+	if err != nil {
+		return "", err
+	}
+
+	pushTarget, err := imagename.ParseReference(ctx.pushRepo)
+	if err != nil {
+		return "", err
+	}
+
+	progress := make(chan ggcrv1.Update)
+	defer progressClose(progress)
+	go func() {
+		printImageProgress(ctx, digest.String(), image, progress)
+	}()
+
+	pushRef := pushTarget.Context().Tag(digest.Hex)
+	if err := remote.WriteIndex(pushRef, index, append(ctx.remoteOpts, remote.WithProgress(progress))...); err != nil {
+		return "", err
+	}
+
+	return pushTarget.Context().Digest(digest.String()).String(), nil
+}
+
+func progressClose(progress chan ggcrv1.Update) {
+	select {
+	case <-progress:
+	default:
+		close(progress)
+	}
+}
+
+func printImageProgress(ctx *buildContext, id, name string, progress chan ggcrv1.Update) {
+	var (
+		vertex    *client2.Vertex
+		sessionid = uuid.New().String()
+		total     int64
+	)
+
+	defer func() {
+		if vertex != nil && vertex.Completed == nil {
+			now := time.Now()
+			vertex.Completed = &now
+
+			_ = ctx.messages.Send(&buildclient.Message{
+				StatusSessionID: sessionid,
+				Status: &client2.SolveStatus{
+					Statuses: []*client2.VertexStatus{
+						{
+							ID:        "pulling image",
+							Vertex:    vertex.Digest,
+							Name:      vertex.Name,
+							Total:     total,
+							Current:   total,
+							Timestamp: time.Now(),
+							Started:   vertex.Started,
+							Completed: vertex.Completed,
+						},
+					},
+					Vertexes: []*client2.Vertex{
+						vertex,
+					},
+				},
+			})
+
+			_ = ctx.messages.Send(&buildclient.Message{
+				StatusSessionID: sessionid,
+				Status: &client2.SolveStatus{
+					Vertexes: []*client2.Vertex{
+						vertex,
+					},
+				},
+			})
+		}
+	}()
+
+	for update := range progress {
+		if vertex == nil {
+			now := time.Now()
+			vertex = &client2.Vertex{
+				Digest:  digest.Digest(id),
+				Name:    name,
+				Started: &now,
+			}
+		}
+
+		if update.Error != nil {
+			now := time.Now()
+			vertex.Error = update.Error.Error()
+			vertex.Completed = &now
+			_ = ctx.messages.Send(&buildclient.Message{
+				StatusSessionID: sessionid,
+				Status: &client2.SolveStatus{
+					Vertexes: []*client2.Vertex{
+						vertex,
+					},
+				},
+			})
+		} else if update.Total > 0 {
+			total = update.Total
+			_ = ctx.messages.Send(&buildclient.Message{
+				StatusSessionID: sessionid,
+				Status: &client2.SolveStatus{
+					Statuses: []*client2.VertexStatus{
+						{
+							ID:        "pulling image",
+							Vertex:    vertex.Digest,
+							Name:      vertex.Name,
+							Total:     update.Total,
+							Current:   update.Complete,
+							Timestamp: time.Now(),
+							Started:   vertex.Started,
+							Completed: vertex.Completed,
+						},
+					},
+					Vertexes: []*client2.Vertex{
+						vertex,
+					},
+				},
+			})
+		}
+	}
+}
+
+func fromBuild(ctx *buildContext, buildCache *buildCache, build v1.Build) (id string, err error) {
+	id, err = buildCache.Get(build, ctx.opts.Platforms)
 	if err != nil || id != "" {
 		return id, err
 	}
 
 	defer func() {
 		if err == nil && id != "" {
-			buildCache.Store(build, platforms, id)
+			buildCache.Store(build, ctx.opts.Platforms, id)
 		}
 	}()
 
@@ -223,22 +438,22 @@ func fromBuild(ctx context.Context, pushRepo string, buildCache *buildCache, pla
 	}
 
 	if build.BaseImage != "" || len(build.ContextDirs) > 0 {
-		return buildWithContext(ctx, pushRepo, platforms, build, messages, keychain, opts)
+		return buildWithContext(ctx, build)
 	}
 
-	return buildImageAndManifest(ctx, pushRepo, platforms, build, messages, keychain, opts)
+	return buildImageAndManifest(ctx, build)
 }
 
-func buildImageNoManifest(ctx context.Context, pushRepo string, cwd string, build v1.Build, messages buildclient.Messages, keychain authn.Keychain) (string, error) {
-	_, ids, err := buildkit.Build(ctx, pushRepo, cwd, nil, build, messages, keychain)
+func buildImageNoManifest(ctx *buildContext, cwd string, build v1.Build) (string, error) {
+	_, ids, err := buildkit.Build(ctx.ctx, ctx.pushRepo, true, cwd, nil, build, ctx.messages, ctx.keychain)
 	if err != nil {
 		return "", err
 	}
 	return ids[0], nil
 }
 
-func buildImageAndManifest(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (string, error) {
-	platforms, ids, err := buildkit.Build(ctx, pushRepo, "", platforms, build, messages, keychain)
+func buildImageAndManifest(ctx *buildContext, build v1.Build) (string, error) {
+	platforms, ids, err := buildkit.Build(ctx.ctx, ctx.pushRepo, false, ctx.cwd, ctx.opts.Platforms, build, ctx.messages, ctx.keychain)
 	if err != nil {
 		return "", err
 	}
@@ -247,27 +462,27 @@ func buildImageAndManifest(ctx context.Context, pushRepo string, platforms []v1.
 		return ids[0], nil
 	}
 
-	return createManifest(ids, platforms, opts)
+	return createManifest(ids, platforms, ctx.remoteOpts)
 }
 
-func buildWithContext(ctx context.Context, pushRepo string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain, opts []remote.Option) (string, error) {
+func buildWithContext(ctx *buildContext, build v1.Build) (string, error) {
 	var (
 		baseImage = build.BaseImage
 	)
 
 	if baseImage == "" {
-		newImage, err := buildImageAndManifest(ctx, pushRepo, platforms, build.BaseBuild(), messages, keychain, opts)
+		newImage, err := buildImageAndManifest(ctx, build.BaseBuild())
 		if err != nil {
 			return "", err
 		}
 		baseImage = newImage
 	}
 
-	return buildImageAndManifest(ctx, pushRepo, platforms, v1.Build{
+	return buildImageAndManifest(ctx, v1.Build{
 		Context:            ".",
 		Dockerfile:         "Dockerfile",
 		DockerfileContents: toContextCopyDockerFile(baseImage, build.ContextDirs),
-	}, messages, keychain, opts)
+	})
 }
 
 func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) string {
@@ -284,6 +499,32 @@ func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) st
 		buf.WriteString("\"\n")
 	}
 	return buf.String()
+}
+
+func getAcornfile(ctx *buildContext, path string) ([]byte, error) {
+	msg, cancel := ctx.messages.Recv()
+	defer cancel()
+
+	timeoutCtx, timeoutCancel := context.WithTimeout(ctx.ctx, 5*time.Second)
+	defer timeoutCancel()
+
+	err := ctx.messages.Send(&buildclient.Message{
+		Acornfile: path,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		select {
+		case <-timeoutCtx.Done():
+			return nil, fmt.Errorf("timeout waiting for acornfile [%s]", path)
+		case resp := <-msg:
+			if resp.Acornfile == path && resp.Packet != nil {
+				return resp.Packet.Data, nil
+			}
+		}
+	}
 }
 
 type buildCache struct {

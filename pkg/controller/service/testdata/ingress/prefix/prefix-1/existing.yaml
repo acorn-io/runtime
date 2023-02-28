@@ -1,0 +1,63 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+  labels:
+    "acorn.io/root-namespace": "app-namespace"
+spec:
+  image: test
+  labels:
+    - resourceType: ""
+      resourceName: ""
+      key: "globall1"
+      value: "value"
+    - resourceType: "container"
+      resourceName: ""
+      key: "allconsl1"
+      value: "value"
+    - resourceType: "container"
+      resourceName: "con1"
+      key: "conl1"
+      value: "value"
+  annotations:
+    - resourceType: ""
+      resourceName: ""
+      key: "globala1"
+      value: "value"
+    - resourceType: "container"
+      resourceName: ""
+      key: "allconsa1"
+      value: "value"
+    - resourceType: "container"
+      resourceName: "con1"
+      key: "cona1"
+      value: "value"
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    labels:
+      globall2: "value"
+    annotations:
+      globala2: "value"
+    containers:
+      con1:
+        labels:
+          conl3: value
+        annotations:
+          cona3: value
+        ports:
+          - port: 80
+            targetPort: 81
+            publish: true
+            protocol: http
+        image: "test"
+  conditions:
+    - type: defined
+      reason: Success
+      status: "True"
+      success: true
+---

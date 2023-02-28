@@ -26,12 +26,14 @@ type Message struct {
 	//         StatusSessionID - Status message
 	//         AppImage - Build done, result
 	//         Error - Build failed, error
+	//         Acornfile - Request/Response for Acornfile lookup
 	//         RegistryServerAddress - Server requesting a registry credential, or Client responding
 
 	FileSessionID         string       `json:"fileSessionID,omitempty"`
 	StatusSessionID       string       `json:"statusSessionID,omitempty"`
 	AppImage              *v1.AppImage `json:"appImage,omitempty"`
 	Error                 string       `json:"error,omitempty"`
+	Acornfile             string       `json:"acornfile,omitempty"`
 	RegistryServerAddress string       `json:"registryServerAddress,omitempty"`
 
 	// The below fields are additional metadata for each one of the above messages types

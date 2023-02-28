@@ -1,52 +1,5 @@
-kind: Service
-apiVersion: v1
-metadata:
-  name: app-name-app-namespace-app-name-1234567890ab
-  namespace: acorn-system
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-    acorn.io/service-name: app-name
-spec:
-  type: ClusterIP
-  ports:
-    - appProtocol: HTTP
-      name: "80"
-      port: 80
-      protocol: TCP
-      targetPort: 80
-  selector:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/service-name: app-name
-    acorn.io/managed: "true"
----
-
-kind: Service
-apiVersion: v1
-metadata:
-  name: app-name
-  namespace: app-namespace
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-    acorn.io/service-name: app-name
-spec:
-  type: ExternalName
-  externalName: app-name-app-namespace-app-name-1234567890ab.acorn-system.svc.cluster.local
-  ports:
-  - appProtocol: HTTP
-    name: "80"
-    port: 80
-    protocol: TCP
-    targetPort: 80
-
----
-
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: router-name
   namespace: app-created-namespace
@@ -54,18 +7,22 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
-    acorn.io/service-name: router-name
+    acorn.io/router-name: router-name
 spec:
-  ports:
-  - appProtocol: HTTP
-    name: "80"
-    port: 80
-    protocol: TCP
-    targetPort: 8080
-  selector:
+  default: true
+  labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
-    port-number.acorn.io/8080: "true"
-    service-name.acorn.io/router-name: "true"
-  type: ClusterIP
+    acorn.io/router-name: router-name
+  ports:
+  - name: "80"
+    port: 80
+    publish: true
+    protocol: http
+    targetPort: 8080
+  containerLabels:
+    acorn.io/app-name: app-name
+    acorn.io/router-name: router-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"

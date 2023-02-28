@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/acorn-io/aml"
 	"github.com/google/shlex"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -160,6 +161,34 @@ func (in *Quantity) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (in *MemoryMap) UnmarshalJSON(data []byte) error {
+	if isObject(data) {
+		return json.Unmarshal(data, (*map[string]*int64)(in))
+	}
+	i, err := aml.ParseInt(string(data))
+	if err != nil {
+		return err
+	}
+	*in = MemoryMap{
+		"": &i,
+	}
+	return nil
+}
+
+func (in *ServiceBindings) UnmarshalJSON(data []byte) error {
+	if isArray(data) {
+		return json.Unmarshal(data, (*[]ServiceBinding)(in))
+	}
+
+	var serviceBinding ServiceBinding
+	if err := json.Unmarshal(data, &serviceBinding); err != nil {
+		return err
+	}
+
+	*in = append(*in, serviceBinding)
+	return nil
+}
+
 func (in *ServiceBinding) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
 		type serviceBinding ServiceBinding
@@ -179,6 +208,20 @@ func (in *ServiceBinding) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (in *SecretBindings) UnmarshalJSON(data []byte) error {
+	if isArray(data) {
+		return json.Unmarshal(data, (*[]SecretBinding)(in))
+	}
+
+	var secretBinding SecretBinding
+	if err := json.Unmarshal(data, &secretBinding); err != nil {
+		return err
+	}
+
+	*in = append(*in, secretBinding)
+	return nil
+}
+
 func (in *SecretBinding) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
 		type secretBinding SecretBinding
@@ -194,6 +237,20 @@ func (in *SecretBinding) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*in = result[0]
+	return nil
+}
+
+func (in *VolumeBindings) UnmarshalJSON(data []byte) error {
+	if isArray(data) {
+		return json.Unmarshal(data, (*[]VolumeBinding)(in))
+	}
+
+	var volumeBinding VolumeBinding
+	if err := json.Unmarshal(data, &volumeBinding); err != nil {
+		return err
+	}
+
+	*in = append(*in, volumeBinding)
 	return nil
 }
 
@@ -303,25 +360,9 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 
 func checkForDuplicateNames(in *AppSpec) error {
 	names := map[string]string{}
-	for name, c := range in.Containers {
-		for _, port := range c.Ports {
-			if port.ServiceName != "" && port.ServiceName != name {
-				if err := addName(names, port.ServiceName, "port"); err != nil {
-					return err
-				}
-			}
-		}
+	for name := range in.Containers {
 		if err := addName(names, name, "container"); err != nil {
 			return err
-		}
-		for _, sidecar := range c.Sidecars {
-			for _, port := range sidecar.Ports {
-				if port.ServiceName != "" && port.ServiceName != name {
-					if err := addName(names, port.ServiceName, "port"); err != nil {
-						return err
-					}
-				}
-			}
 		}
 	}
 	for name := range in.Jobs {
@@ -331,6 +372,16 @@ func checkForDuplicateNames(in *AppSpec) error {
 	}
 	for name := range in.Routers {
 		if err := addName(names, name, "router"); err != nil {
+			return err
+		}
+	}
+	for name := range in.Acorns {
+		if err := addName(names, name, "acorn"); err != nil {
+			return err
+		}
+	}
+	for name := range in.Services {
+		if err := addName(names, name, "service"); err != nil {
 			return err
 		}
 	}
@@ -344,6 +395,24 @@ func addImpliedResources(in *AppSpec) error {
 	}
 	if in.Secrets == nil {
 		in.Secrets = map[string]Secret{}
+	}
+
+	for _, a := range in.Acorns {
+		for _, volumeBinding := range a.Volumes {
+			if _, ok := in.Volumes[volumeBinding.Volume]; !ok {
+				in.Volumes[volumeBinding.Volume] = VolumeRequest{
+					Size:        volumeBinding.Size,
+					AccessModes: volumeBinding.AccessModes,
+				}
+			}
+		}
+		for _, secretBinding := range a.Secrets {
+			if _, ok := in.Secrets[secretBinding.Secret]; !ok {
+				in.Secrets[secretBinding.Secret] = Secret{
+					Type: "opaque",
+				}
+			}
+		}
 	}
 
 	for containerName, c := range in.Containers {
@@ -418,6 +487,50 @@ func (in *ContainerImageBuilderSpec) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (in *PortBinding) UnmarshalJSON(data []byte) error {
+	defer func() {
+		if in.ZZ_ServiceName != "" && in.Hostname == "" {
+			in.Hostname = in.ZZ_ServiceName
+		}
+	}()
+
+	if isObject(data) {
+		type portBinding PortBinding
+		return json.Unmarshal(data, (*portBinding)(in))
+	} else if !isString(data) {
+		i, err := strconv.Atoi(string(data))
+		if err != nil {
+			return fmt.Errorf("parsing [%s]: %w", data, err)
+		}
+		in.TargetPort = int32(i)
+		return nil
+	}
+
+	s, err := parseString(data)
+	if err != nil {
+		return err
+	}
+	portBinding, err := ParsePortBindings([]string{s})
+	if err != nil {
+		return err
+	}
+	*in = portBinding[0]
+	return nil
+}
+
+func (in *PortBindings) UnmarshalJSON(data []byte) error {
+	if isArray(data) {
+		return json.Unmarshal(data, (*[]PortBinding)(in))
+	}
+
+	var portBinding PortBinding
+	if err := json.Unmarshal(data, &portBinding); err != nil {
+		return err
+	}
+	*in = append(*in, portBinding)
+	return nil
+}
+
 func (in *AccessModes) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
 		return json.Unmarshal(data, (*[]AccessMode)(in))
@@ -428,6 +541,21 @@ func (in *AccessModes) UnmarshalJSON(data []byte) error {
 	}
 	*in = append(*in, mode)
 	return nil
+}
+
+type acornAliases struct {
+	Env NameValues `json:"env,omitempty"`
+	Mem MemoryMap  `json:"mem,omitempty"`
+}
+
+func (a acornAliases) SetAcorn(dst Acorn) Acorn {
+	if len(a.Env) > 0 {
+		dst.Environment = append(dst.Environment, a.Env...)
+	}
+	if len(a.Mem) > 0 {
+		dst.Memory = a.Mem
+	}
+	return dst
 }
 
 type containerAliases struct {
@@ -499,6 +627,23 @@ func adjustBuildForContextDirs(c Container) *Build {
 	build.BaseImage = c.Image
 	build.ContextDirs = dirs
 	return build
+}
+
+func (in *Acorn) UnmarshalJSON(data []byte) error {
+	var a Acorn
+	type acorn Acorn
+	if err := json.Unmarshal(data, (*acorn)(&a)); err != nil {
+		return err
+	}
+
+	var alias acornAliases
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+
+	a = alias.SetAcorn(a)
+	*in = a
+	return nil
 }
 
 func (in *Container) UnmarshalJSON(data []byte) error {
@@ -636,11 +781,11 @@ func (in *Ports) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(data, &ports); err != nil {
 			return err
 		}
-		for _, port := range ports["expose"] {
-			port.Expose = true
-			*in = append(*in, port)
-		}
+		*in = append(*in, ports["expose"]...)
 		*in = append(*in, ports["internal"]...)
+		for i := range *in {
+			(*in)[i].Publish = false
+		}
 		for _, port := range ports["publish"] {
 			port.Publish = true
 			*in = append(*in, port)
@@ -954,6 +1099,20 @@ func (in *CommandSlice) UnmarshalJSON(data []byte) error {
 
 	type commandSlice CommandSlice
 	return json.Unmarshal(data, (*commandSlice)(in))
+}
+
+func (in *AcornBuild) UnmarshalJSON(data []byte) error {
+	if isString(data) {
+		s, err := parseString(data)
+		if err != nil {
+			return err
+		}
+		in.Context = s
+		in.Acornfile = filepath.Join(s, "Acornfile")
+		return nil
+	}
+	type acornBuild AcornBuild
+	return json.Unmarshal(data, (*acornBuild)(in))
 }
 
 func (in *Build) UnmarshalJSON(data []byte) error {

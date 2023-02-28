@@ -17,7 +17,6 @@ acorn update [flags] APP_NAME [deploy flags]
       --compute-class strings     Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)
       --confirm-upgrade           When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade.
   -e, --env strings               Environment variables to set on running containers
-      --expose strings            In cluster expose ports of an application (format [public:]private) (ex 81:80)
   -f, --file string               Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                      help for update
       --image string              

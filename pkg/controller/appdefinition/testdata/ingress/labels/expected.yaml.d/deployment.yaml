@@ -34,8 +34,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "con1"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/con1": "true"
         "allconsl1": "value"
         "conl1": "value"
         "conl3": "value"

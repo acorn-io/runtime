@@ -15,7 +15,6 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      defaultPublishMode: ""
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -46,7 +45,6 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      defaultPublishMode: ""
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -75,7 +73,6 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      defaultPublishMode: ""
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -106,7 +103,6 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      defaultPublishMode: ""
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null

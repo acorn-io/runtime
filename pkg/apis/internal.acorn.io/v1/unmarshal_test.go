@@ -8,17 +8,13 @@ import (
 )
 
 func TestParseHostnameBinding(t *testing.T) {
-	f, err := ParsePortBindings(true, []string{"example.com:service"})
+	p, err := ParsePortBindings([]string{"example.com:service"})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	assert.Equal(t, PortBinding{
-		Protocol:          ProtocolHTTP,
-		Publish:           true,
-		ServiceName:       "example.com",
-		TargetServiceName: "service",
-	}, f[0])
+	assert.Equal(t, "example.com", p[0].Hostname)
+	assert.Equal(t, "service", p[0].TargetServiceName)
+	assert.Equal(t, int32(0), p[0].TargetPort)
 }
 
 func TestParseEnv(t *testing.T) {

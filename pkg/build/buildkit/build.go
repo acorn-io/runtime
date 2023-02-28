@@ -16,7 +16,7 @@ import (
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-func Build(ctx context.Context, pushRepo, cwd string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain) ([]v1.Platform, []string, error) {
+func Build(ctx context.Context, pushRepo string, local bool, cwd string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain) ([]v1.Platform, []string, error) {
 	bkc, err := buildkit.New(ctx, "")
 	if err != nil {
 		return nil, nil, err
@@ -71,14 +71,17 @@ func Build(ctx context.Context, pushRepo, cwd string, platforms []v1.Platform, b
 			},
 		}
 
-		if cwd == "" {
-			options.Session = append(options.Session,
-				buildclient.NewFileServer(messages, build.Context, build.Dockerfile, build.DockerfileContents))
-		} else {
+		if local {
 			options.LocalDirs = map[string]string{
 				"context":    filepath.Join(cwd, build.Context),
 				"dockerfile": filepath.Dir(filepath.Join(cwd, build.Dockerfile)),
 			}
+		} else {
+			options.Session = append(options.Session,
+				buildclient.NewFileServer(messages,
+					filepath.Join(cwd, build.Context),
+					filepath.Join(cwd, build.Dockerfile),
+					build.DockerfileContents))
 		}
 
 		for key, value := range build.BuildArgs {
