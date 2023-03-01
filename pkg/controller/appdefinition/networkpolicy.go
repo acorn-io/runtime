@@ -26,19 +26,15 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: labels.Managed(app),
 			},
-			Ingress: []networkingv1.NetworkPolicyIngressRule{
-				{
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							NamespaceSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									labels.AcornAppNamespace: appNamespace,
-								},
-							},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{{
+				From: []networkingv1.NetworkPolicyPeer{{
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							labels.AcornAppNamespace: appNamespace,
 						},
-					},
+					}},
 				},
-			},
+			}},
 			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},
 	})
@@ -59,22 +55,16 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 								labels.AcornContainerName: containerName,
 							},
 						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{
-							{
-								From: []networkingv1.NetworkPolicyPeer{
-									{
-										PodSelector:       &metav1.LabelSelector{},
-										NamespaceSelector: &metav1.LabelSelector{},
-									},
-								},
-								Ports: []networkingv1.NetworkPolicyPort{
-									{
-										Port: &intstr.IntOrString{
-											IntVal: port.Port,
-										},
-									},
-								},
-							},
+						Ingress: []networkingv1.NetworkPolicyIngressRule{{
+							From: []networkingv1.NetworkPolicyPeer{{
+								PodSelector:       &metav1.LabelSelector{},
+								NamespaceSelector: &metav1.LabelSelector{},
+							}},
+							Ports: []networkingv1.NetworkPolicyPort{{
+								Port: &intstr.IntOrString{
+									IntVal: port.Port,
+								}},
+							}},
 						},
 						PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 					},
