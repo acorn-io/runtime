@@ -12,6 +12,7 @@ Available Commands:
   container    Manage containers
   credential   Manage registry credentials
   exec         Run a command in a container
+  fmt          Format an Acornfile
   help         Help about any command
   image        Manage images
   info         Info about acorn installation

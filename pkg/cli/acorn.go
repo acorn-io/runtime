@@ -46,6 +46,7 @@ func New() *cobra.Command {
 		NewCredential(cmdContext),
 		NewRender(cmdContext),
 		NewExec(cmdContext),
+		NewFmt(cmdContext),
 		NewImage(cmdContext),
 		NewInstall(cmdContext),
 		NewOfferings(cmdContext),
