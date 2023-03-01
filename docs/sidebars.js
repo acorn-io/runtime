@@ -69,7 +69,8 @@ const sidebars = {
     "type": "category",
     "label": "Integrations",
     "items": [
-      "integrations/github-actions"
+      "integrations/github-actions",
+      "integrations/linkerd"
     ],
     "collapsed": true
   },
