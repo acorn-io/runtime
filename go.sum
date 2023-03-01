@@ -160,8 +160,6 @@ github.com/acorn-io/aml v0.0.0-20230428030628-bf98aa39a36a h1:yI6MDJU3pcbieiqvNC
 github.com/acorn-io/aml v0.0.0-20230428030628-bf98aa39a36a/go.mod h1:UEx5RRLFjryCEHN2pM59+d8A0mPJ3VAxggJOTzPymwg=
 github.com/acorn-io/apiserver v0.25.2-ot-2 h1:drxKtiHh2dGnKlhVYxgPCKkFXRvMFxdflCZ5fHpVp8E=
 github.com/acorn-io/apiserver v0.25.2-ot-2/go.mod h1:qRxmYneSxb8B1FYvgQf6mPeWuwugIzYKN3TeMmL4FVo=
-github.com/acorn-io/baaah v0.0.0-20230428031609-d553bca0d3d8 h1:8DA+z4B0aC+u4x1H+3vlgQHytVlyxlkNdS1aMYE/Y+A=
-github.com/acorn-io/baaah v0.0.0-20230428031609-d553bca0d3d8/go.mod h1:yE5MQ1xi7osIDHNnBdmdTHmtnBbYxHQgQfXm/q2bbkU=
 github.com/acorn-io/component-base v0.25.2-ot-1 h1:xinqJUNbpW2/zsvm8mDv6Q7riLhvXup9x7Kz9eIPM1M=
 github.com/acorn-io/component-base v0.25.2-ot-1/go.mod h1:/5qYr5BXGNPs+cRd6+WL1NfOYtzOstJlm1CMK06cm7s=
 github.com/acorn-io/etcd/client/pkg/v3 v3.6.0-ot-1 h1:u2g5S6DbDNyueFeRSAVIBGMrkyLlcBLhTmH8l0a/4DM=
@@ -820,6 +818,8 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/inconshreveable/mousetrap v1.0.1 h1:U3uMjPSQEBMNp1lFxmllqCPM6P5u/Xq7Pgzkat/bFNc=
 github.com/inconshreveable/mousetrap v1.0.1/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
+github.com/jacobdonenfeld/acorn-baaah v0.0.0-20230502024523-a31acc2b00c4 h1:r96rVSLPRapTVXoeQ0lvMgztMaBTKRQYYoVhONiBSWU=
+github.com/jacobdonenfeld/acorn-baaah v0.0.0-20230502024523-a31acc2b00c4/go.mod h1:iVyy+x5QXfMs1J3wMpS02FiC/ygaVEFT1Mi3Pf6YYYs=
 github.com/jarcoal/httpmock v1.0.5/go.mod h1:ATjnClrvW/3tijVmpL/va5Z3aAyGvqU3gCT8nX0Txik=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=

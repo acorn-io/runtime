@@ -20,6 +20,8 @@ var (
 type WatchFunc func(ctx context.Context, obj client.ObjectList, opts ...client.ListOption) (watch.Interface, error)
 type watchFunc func() (watch.Interface, error)
 
+// doWatch watches for changes in a Kubernetes API resource and checks if the object satisfies a condition specified
+// in the cb function over either context's deadline, or 1 minute if not set.
 func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) bool {
 	t.Helper()
 
@@ -70,6 +72,9 @@ func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) 
 	}
 }
 
+// retryWatch repeatedly uses watchFunc handler to call cb until the function
+// returns true. or the function errored other than a conflict, it results in a
+// fatal cb is the callback to confirm the object exists.
 func retryWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) {
 	t.Helper()
 
@@ -80,6 +85,8 @@ func retryWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj 
 	}
 }
 
+// Wait waits for a specific object to appear in a Kubernetes API server and returns the last object of type T
+// and populates client.ObjectList pointer
 func Wait[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, cb func(obj T) bool) T {
 	t.Helper()
 
@@ -111,6 +118,7 @@ func WaitForObject[T client.Object](t *testing.T, watchFunc WatchFunc, list clie
 	}
 
 	var last T
+	// keep calling watch function
 	retryWatch(t, func() (watch.Interface, error) {
 		ctx := GetCTX(t)
 		return watchFunc(ctx, list, &client.ListOptions{

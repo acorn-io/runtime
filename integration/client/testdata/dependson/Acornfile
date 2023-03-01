@@ -20,10 +20,10 @@ jobs: {
 	job1: {
 		image:"ghcr.io/acorn-io/images-mirror/busybox:latest"
 		command: "/bin/true"
-		dependsOn: "job2"
 	}
 	job2: {
 		image:"ghcr.io/acorn-io/images-mirror/busybox:latest"
 		command: "/bin/true"
+		dependsOn: "job1"
 	}
 }

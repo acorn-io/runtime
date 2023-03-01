@@ -11,7 +11,7 @@ metadata:
   name: acorn-controller
   namespace: acorn-system
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: acorn-controller
@@ -27,6 +27,12 @@ spec:
             - controller
           securityContext:
             runAsUser: 1000
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
       serviceAccountName: acorn-system
       tolerations:
         - key: node-role.kubernetes.io/control-plane

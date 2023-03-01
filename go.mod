@@ -4,6 +4,8 @@ go 1.20
 
 replace (
 	cloud.google.com/go v0.93.3 => cloud.google.com/go v0.100.2
+	// TODO: Remove the below
+	github.com/acorn-io/baaah => github.com/jacobdonenfeld/acorn-baaah v0.0.0-20230502024523-a31acc2b00c4
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/lasso => github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf

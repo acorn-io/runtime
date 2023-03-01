@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"strconv"
 	"testing"
 
@@ -40,7 +39,7 @@ func toRevision(t *testing.T, obj kclient.Object) int {
 }
 
 func TestDependsOn(t *testing.T) {
-	ctx := context.Background()
+	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndNamespace(t)
 	k8sclient := helper.MustReturn(k8sclient.Default)
 	image := depImage(t, c)
@@ -53,6 +52,7 @@ func TestDependsOn(t *testing.T) {
 	jobs := map[string]int{}
 	deployments := map[string]int{}
 
+	// first wait for app to exist
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &v1.AppList{}, app, func(app *v1.App) bool {
 		return app.Status.Namespace != ""
 	})
@@ -95,7 +95,7 @@ func TestDependsOn(t *testing.T) {
 
 	_ = eg.Wait()
 
-	assert.Less(t, jobs["job2"], jobs["job1"])
+	assert.Less(t, jobs["job1"], jobs["job2"])
 	assert.Less(t, jobs["job1"], deployments["one"])
 	assert.Less(t, jobs["job2"], deployments["one"])
 	assert.Less(t, deployments["one"], deployments["two"])
