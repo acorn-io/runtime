@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"strconv"
+	"strings"
 )
 
 func NetworkPolicy(req router.Request, resp router.Response) error {
@@ -44,34 +45,50 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 	for containerName, container := range app.Status.AppSpec.Containers {
 		for _, port := range container.Ports {
 			if port.Publish {
-				resp.Objects(&networkingv1.NetworkPolicy{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("%s-%s-%s", app.Name, containerName, strconv.Itoa(int(port.Port))),
-						Namespace: podNamespace,
-					},
-					Spec: networkingv1.NetworkPolicySpec{
-						PodSelector: metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								labels.AcornContainerName: containerName,
-							},
-						},
-						Ingress: []networkingv1.NetworkPolicyIngressRule{{
-							From: []networkingv1.NetworkPolicyPeer{{
-								PodSelector:       &metav1.LabelSelector{},
-								NamespaceSelector: &metav1.LabelSelector{},
-							}},
-							Ports: []networkingv1.NetworkPolicyPort{{
-								Port: &intstr.IntOrString{
-									IntVal: port.Port,
-								}},
-							}},
-						},
-						PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
-					},
-				})
+				resp.Objects(buildNetPolForPublishedPort(
+					fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
+					podNamespace, containerName, port.Port))
+			}
+		}
+		// create policies for the sidecars as well
+		for sidecarName, sidecar := range container.Sidecars {
+			for _, port := range sidecar.Ports {
+				if port.Publish {
+					resp.Objects(buildNetPolForPublishedPort(
+						fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
+						podNamespace, containerName, port.Port))
+				}
 			}
 		}
 	}
 
 	return nil
+}
+
+func buildNetPolForPublishedPort(name, namespace, containerName string, port int32) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					labels.AcornContainerName: containerName,
+				},
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{{
+				From: []networkingv1.NetworkPolicyPeer{{
+					PodSelector:       &metav1.LabelSelector{},
+					NamespaceSelector: &metav1.LabelSelector{},
+				}},
+				Ports: []networkingv1.NetworkPolicyPort{{
+					Port: &intstr.IntOrString{
+						IntVal: port,
+					}},
+				}},
+			},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+		},
+	}
 }
