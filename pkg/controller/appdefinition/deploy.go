@@ -664,7 +664,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
 			result = append(result, toPermissions(perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)...)
 		}
-		result = append(result, dep, sa, expose.ToPodDisruptionBudget(dep))
+		result = append(result, sa, dep, expose.ToPodDisruptionBudget(dep))
 	}
 	return result, nil
 }

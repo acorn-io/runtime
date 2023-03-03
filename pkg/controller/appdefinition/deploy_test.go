@@ -95,7 +95,7 @@ func TestEntrypointCommand(t *testing.T) {
 				},
 			},
 		},
-	}, testTag, nil)[0].(*appsv1.Deployment)
+	}, testTag, nil)[1].(*appsv1.Deployment)
 	assert.Equal(t, []string{"hi", "bye"}, dep.Spec.Template.Spec.Containers[0].Command)
 	assert.Equal(t, []string{"hi2", "bye2"}, dep.Spec.Template.Spec.Containers[0].Args)
 }
@@ -119,7 +119,7 @@ func TestEnvironment(t *testing.T) {
 				},
 			},
 		},
-	}, testTag, nil)[0].(*appsv1.Deployment)
+	}, testTag, nil)[1].(*appsv1.Deployment)
 	assert.Equal(t, []corev1.EnvVar{
 		{
 			Name:  "hi",
@@ -143,7 +143,7 @@ func TestWorkdir(t *testing.T) {
 				},
 			},
 		},
-	}, testTag, nil)[0].(*appsv1.Deployment)
+	}, testTag, nil)[1].(*appsv1.Deployment)
 	assert.Equal(t, "something", dep.Spec.Template.Spec.Containers[0].WorkingDir)
 }
 
@@ -158,7 +158,7 @@ func TestInteractive(t *testing.T) {
 				},
 			},
 		},
-	}, testTag, nil)[0].(*appsv1.Deployment)
+	}, testTag, nil)[1].(*appsv1.Deployment)
 	assert.True(t, dep.Spec.Template.Spec.Containers[0].TTY)
 	assert.True(t, dep.Spec.Template.Spec.Containers[0].Stdin)
 }
@@ -183,7 +183,7 @@ func TestSidecar(t *testing.T) {
 				},
 			},
 		},
-	}, testTag, nil)[0].(*appsv1.Deployment)
+	}, testTag, nil)[1].(*appsv1.Deployment)
 	assert.Equal(t, "sidecar", dep.Spec.Template.Spec.InitContainers[0].Image)
 	assert.Equal(t, "sidecar2", dep.Spec.Template.Spec.Containers[1].Image)
 }
@@ -217,7 +217,7 @@ func TestPorts(t *testing.T) {
 				},
 			},
 		},
-	}, testTag, nil)[0].(*appsv1.Deployment)
+	}, testTag, nil)[1].(*appsv1.Deployment)
 	assert.Equal(t, int32(81), dep.Spec.Template.Spec.Containers[0].Ports[0].ContainerPort)
 	assert.Equal(t, corev1.ProtocolTCP, dep.Spec.Template.Spec.Containers[0].Ports[0].Protocol)
 	assert.Equal(t, int32(91), dep.Spec.Template.Spec.Containers[1].Ports[0].ContainerPort)
@@ -273,7 +273,7 @@ func TestFiles(t *testing.T) {
 		},
 	}
 
-	dep := ToDeploymentsTest(t, app, testTag, nil)[0].(*appsv1.Deployment)
+	dep := ToDeploymentsTest(t, app, testTag, nil)[1].(*appsv1.Deployment)
 
 	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
 	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
