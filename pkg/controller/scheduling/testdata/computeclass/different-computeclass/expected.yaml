@@ -13,6 +13,9 @@ status:
   observedGeneration: 1
   scheduling:
     oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -29,6 +32,9 @@ status:
           cpu: 1m
           memory: 2Mi
     twoimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

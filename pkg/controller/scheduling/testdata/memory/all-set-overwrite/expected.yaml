@@ -18,6 +18,9 @@ status:
       oneimage: 0
   scheduling:
     oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       requirements:
         limits:
           memory: 2Mi

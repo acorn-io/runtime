@@ -6,25 +6,13 @@ metadata:
   uid: 1234567890abcdef
 spec:
   image: test
-  memory:
-    oneimage: 1048576 # 1Mi
 status:
   observedGeneration: 1
-  defaults:
-    memory:
-      "": 0
-      left: 0
-      oneimage: 0
   scheduling:
     oneimage:
       tolerations:
-        - key: taints.acorn.io/workload
-          operator: "Exists"
-      requirements:
-        limits:
-          memory: 1Mi
-        requests:
-          memory: 1Mi
+      - key: taints.acorn.io/workload
+        operator: "Exists"
     left:
       requirements: {}
   namespace: app-created-namespace
@@ -48,9 +36,8 @@ status:
         build:
           dockerfile: "Dockerfile"
           context: "."
-        memory: 2097152 # 2Mi
   conditions:
     - type: scheduling
       reason: Success
       status: "True"
-      success: true    
+      success: true

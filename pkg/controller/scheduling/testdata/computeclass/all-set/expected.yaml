@@ -15,6 +15,9 @@ status:
       oneimage: 1048576 # 1Mi
   scheduling:
     oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

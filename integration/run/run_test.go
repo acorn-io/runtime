@@ -17,6 +17,7 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/run"
+	"github.com/acorn-io/acorn/pkg/tolerations"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -904,6 +905,12 @@ func TestUsingComputeClasses(t *testing.T) {
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 						corev1.ResourceCPU:    resource.MustParse("250m"),
 					},
+				},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
+					},
 				}},
 			},
 			waitFor: func(obj *apiv1.App) bool {
@@ -932,8 +939,13 @@ func TestUsingComputeClasses(t *testing.T) {
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 						corev1.ResourceCPU:    resource.MustParse("250m"),
 					},
-				}},
-			},
+				},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
+					},
+				}}},
 			waitFor: func(obj *apiv1.App) bool {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
@@ -963,6 +975,12 @@ func TestUsingComputeClasses(t *testing.T) {
 					Requests: corev1.ResourceList{
 						corev1.ResourceMemory: resource.MustParse("1Gi"),
 						corev1.ResourceCPU:    resource.MustParse("250m"),
+					},
+				},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
 					},
 				}},
 			},
@@ -994,6 +1012,12 @@ func TestUsingComputeClasses(t *testing.T) {
 					Requests: corev1.ResourceList{
 						corev1.ResourceMemory: resource.MustParse("512Mi"),
 						corev1.ResourceCPU:    resource.MustParse("125m"),
+					},
+				},
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
 					},
 				}},
 			},

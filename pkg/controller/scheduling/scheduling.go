@@ -3,6 +3,7 @@ package scheduling
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
+	tl "github.com/acorn-io/acorn/pkg/tolerations"
 
 	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -68,6 +69,13 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 		if err != nil {
 			return err
 		}
+
+		// Add default toleration to taints.acorn.io/workload. This is so that when worker nodes are tainted
+		// with taints.acorn.io/workload, user app can still tolerate.
+		tolerations = append(tolerations, corev1.Toleration{
+			Key:      tl.WorkloadTolerationKey,
+			Operator: corev1.TolerationOpExists,
+		})
 
 		appInstance.Status.Scheduling[name] = v1.Scheduling{
 			Requirements: *requirements,

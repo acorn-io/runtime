@@ -17,6 +17,9 @@ status:
           cpu: 1m
           memory: 1Mi
     oneimage:
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
