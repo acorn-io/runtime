@@ -33,7 +33,7 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if perms := v1.FindPermission(job.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
 			result = append(result, toPermissions(perms, job.GetLabels(), job.GetAnnotations(), appInstance)...)
 		}
-		result = append(result, job, sa)
+		result = append(result, sa, job)
 	}
 	return result, nil
 }
