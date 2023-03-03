@@ -1319,6 +1319,9 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 		Name:            "bar",
 		TargetNamespace: proj2.Namespace,
 	})
+	if err != nil {
+		t.Fatal("error while running app:", err)
+	}
 
 	// wait for both apps to be ready
 	helper.WaitForObject(t, helper.Watcher(t, proj1Client), &apiv1.AppList{}, fooApp, func(obj *apiv1.App) bool {
