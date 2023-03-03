@@ -16,6 +16,7 @@ projects:
       builderPerProject: null
       clusterDomains: null
       defaultPublishMode: ""
+      disableNetworkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -47,6 +48,7 @@ projects:
       builderPerProject: null
       clusterDomains: null
       defaultPublishMode: ""
+      disableNetworkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
