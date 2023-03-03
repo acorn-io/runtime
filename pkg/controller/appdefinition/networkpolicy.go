@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"fmt"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -13,6 +14,13 @@ import (
 )
 
 func NetworkPolicy(req router.Request, resp router.Response) error {
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	} else if *cfg.DisableNetworkPolicies {
+		return nil
+	}
+
 	app := req.Object.(*v1.AppInstance)
 	appNamespace := app.ObjectMeta.Namespace // this is where the AppInstance lives
 	podNamespace := app.Status.Namespace     // this is where the app is actually running

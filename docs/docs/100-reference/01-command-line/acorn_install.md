@@ -29,6 +29,7 @@ acorn install
       --cluster-domain strings                 The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int                acorn-controller deployment replica count
       --default-publish-mode string            If no publish mode is set default to this value (default user)
+      --disable-network-policies               Disable the creation Kubernetes NetworkPolicies which block cross-project network traffic (default false)
   -h, --help                                   help for install
       --http-endpoint-pattern string           Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations     Don't propagate user-defined labels and annotations to dependent objects
@@ -49,8 +50,8 @@ acorn install
       --set-pod-security-enforce-profile       Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                            Bypass installation checks
       --use-custom-ca-bundle                   Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false.
-  -m, --workload-memory-default string         Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default 0)
-      --workload-memory-maximum string         Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default 0)
+  -m, --workload-memory-default string         Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" separators (default 0)
+      --workload-memory-maximum string         Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" separators (default 0)
 ```
 
 ### Options inherited from parent commands
