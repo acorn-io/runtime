@@ -48,11 +48,11 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 		},
 	})
 
-	// next, create NetworkPolicies for each container in the app that has a published port (ingress)
-	// these policies allow ingress from anywhere, so that all services within and without the cluster can connect
+	// next, create NetworkPolicies for each container in the app that has a published or exposed port
+	// these policies allow ingress from anywhere
 	for containerName, container := range app.Status.AppSpec.Containers {
 		for _, port := range container.Ports {
-			if port.Publish {
+			if port.Publish || port.Expose {
 				resp.Objects(buildNetPolForPublishedPort(
 					fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
 					podNamespace, containerName, port.Port))
@@ -61,7 +61,7 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 		// create policies for the sidecars as well
 		for sidecarName, sidecar := range container.Sidecars {
 			for _, port := range sidecar.Ports {
-				if port.Publish {
+				if port.Publish || port.Expose {
 					resp.Objects(buildNetPolForPublishedPort(
 						fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
 						podNamespace, containerName, port.Port))
