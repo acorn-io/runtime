@@ -52,3 +52,6 @@ spec:
       - configMap:
           name: router-name-5f5b2f6b
         name: conf
+      tolerations:
+        - key: taints.acorn.io/workload
+          operator: "Exists"
