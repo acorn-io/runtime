@@ -9,7 +9,6 @@ import (
 	hclient "github.com/acorn-io/acorn/pkg/client"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -125,7 +124,7 @@ func WaitForObject[T client.Object](t *testing.T, watchFunc WatchFunc, list clie
 	return last
 }
 
-func EnsureDoesNotExist(ctx context.Context, getter func() (runtime.Object, error)) error {
+func EnsureDoesNotExist(ctx context.Context, getter func() (client.Object, error)) error {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(WatchTimeoutSeconds)*time.Second)
