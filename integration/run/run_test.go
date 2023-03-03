@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/restconfig"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"strings"
 	"testing"
 
@@ -1249,6 +1252,179 @@ func TestCreatingComputeClasses(t *testing.T) {
 		})
 	}
 
+}
+
+func TestCrossProjectNetworkConnection(t *testing.T) {
+	helper.StartController(t)
+
+	rc, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		t.Fatal("error while getting rest config:", err)
+	}
+	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndNamespace(t)
+	kc := helper.MustReturn(kclient.Default)
+
+	// create two separate projects in which to run two Nginx apps
+	proj1, err := c.ProjectCreate(ctx, "proj1")
+	if err != nil {
+		t.Fatal("error while creating project:", err)
+	}
+	proj1Client, err := client.New(rc, proj1.Name, proj1.Status.Namespace)
+	if err != nil {
+		t.Fatal("error creating client for proj1:", err)
+	}
+
+	proj2, err := c.ProjectCreate(ctx, "proj2")
+	if err != nil {
+		t.Fatal("error while creating project:", err)
+	}
+	proj2Client, err := client.New(rc, proj2.Name, proj2.Status.Namespace)
+	if err != nil {
+		t.Fatal("error creating client for proj2:", err)
+	}
+
+	t.Cleanup(func() {
+		// clean up projects
+		_, err := proj1Client.ProjectDelete(ctx, "proj1")
+		if err != nil {
+			t.Log("failed to delete project 'proj1':", err)
+		}
+		_, err = proj2Client.ProjectDelete(ctx, "proj2")
+		if err != nil {
+			t.Log("failed to delete project 'proj2':", err)
+		}
+	})
+
+	// create both apps, one in proj1 and the other in proj2
+	// app "foo" in proj1 does not publish any ports
+	// app "bar" in proj2 publishes port 80
+	fooImage, err := proj1Client.AcornImageBuild(ctx, "testdata/networkpolicy/Acornfile", nil)
+	if err != nil {
+		t.Fatal("error while building image:", err)
+	}
+	fooApp, err := proj1Client.AppRun(ctx, fooImage.ID, &client.AppRunOptions{
+		Name:            "foo",
+		TargetNamespace: proj1.Namespace,
+	})
+	if err != nil {
+		t.Fatal("error while running app:", err)
+	}
+
+	barImage, err := proj2Client.AcornImageBuild(ctx, "testdata/networkpolicy/publish.Acornfile", nil)
+	if err != nil {
+		t.Fatal("error while building image:", err)
+	}
+	barApp, err := proj2Client.AppRun(ctx, barImage.ID, &client.AppRunOptions{
+		Name:            "bar",
+		TargetNamespace: proj2.Namespace,
+	})
+
+	// wait for both apps to be ready
+	helper.WaitForObject(t, helper.Watcher(t, proj1Client), &apiv1.AppList{}, fooApp, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionReady).Success
+	})
+	helper.WaitForObject(t, helper.Watcher(t, proj2Client), &apiv1.AppList{}, barApp, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionReady).Success
+	})
+
+	// determine pod IPs so we can test network connections
+	fooIP := getPodIPFromAppName(t, ctx, &kc, fooApp.Name, fooApp.Status.Namespace)
+	barIP := getPodIPFromAppName(t, ctx, &kc, barApp.Name, barApp.Status.Namespace)
+
+	// build an Acorn that just runs a job with the official curl container
+	curlImage1, err := proj1Client.AcornImageBuild(ctx, "testdata/networkpolicy/curl.Acornfile", nil)
+	if err != nil {
+		t.Fatal("error while building image:", err)
+	}
+	curlImage2, err := proj2Client.AcornImageBuild(ctx, "testdata/networkpolicy/curl.Acornfile", nil)
+	if err != nil {
+		t.Fatal("error while building image:", err)
+	}
+
+	checks := []struct {
+		name          string
+		client        client.Client
+		podIP         string
+		imageID       string
+		expectFailure bool
+	}{
+		{
+			name:          "curl-foo-proj1",
+			client:        proj1Client,
+			podIP:         fooIP,
+			imageID:       curlImage1.ID,
+			expectFailure: false,
+		},
+		{
+			name:          "curl-bar-proj1",
+			client:        proj1Client,
+			podIP:         barIP,
+			imageID:       curlImage1.ID,
+			expectFailure: false,
+		},
+		{
+			name:          "curl-foo-proj2",
+			client:        proj2Client,
+			podIP:         fooIP,
+			imageID:       curlImage2.ID,
+			expectFailure: true,
+		},
+		{
+			name:          "curl-bar-proj2",
+			client:        proj2Client,
+			podIP:         barIP,
+			imageID:       curlImage2.ID,
+			expectFailure: false,
+		},
+	}
+	for _, check := range checks {
+		t.Run(check.name, func(t *testing.T) {
+			// run curl to test the connection
+			app, err := check.client.AppRun(ctx, check.imageID, &client.AppRunOptions{
+				Name: check.name,
+				DeployArgs: map[string]any{
+					"address": check.podIP,
+				},
+			})
+			if err != nil {
+				t.Fatal("error while running app:", err)
+			}
+
+			appInstance := helper.WaitForObject(t, helper.Watcher(t, check.client), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+				return obj.Status.JobsStatus["curl"].Failed || obj.Status.JobsStatus["curl"].Succeed
+			})
+
+			if check.expectFailure {
+				assert.Equal(t, true, appInstance.Status.JobsStatus["curl"].Failed)
+			} else {
+				assert.Equal(t, true, appInstance.Status.JobsStatus["curl"].Succeed)
+			}
+		})
+	}
+}
+
+func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *runtimeclient.WithWatch, appName, namespace string) string {
+	t.Helper()
+	var podList corev1.PodList
+	selector, err := k8slabels.Parse(fmt.Sprintf("%s=%s", labels.AcornAppName, appName))
+	if err != nil {
+		t.Fatal("error creating k8s label selector:", err)
+	}
+
+	podIP := ""
+	for podIP == "" {
+		err = (*kc).List(ctx, &podList, &kclient.ListOptions{
+			LabelSelector: selector,
+			Namespace:     namespace,
+		})
+		if err != nil {
+			t.Fatal("error creating k8s label selector:", err)
+		}
+		podIP = podList.Items[0].Status.PodIP
+	}
+
+	return podIP
 }
 
 func getStorageClassName(t *testing.T, storageClasses *storagev1.StorageClassList) string {
