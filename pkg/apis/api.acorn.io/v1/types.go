@@ -340,12 +340,13 @@ type Config struct {
 	IgnoreUserLabelsAndAnnotations *bool          `json:"ignoreUserLabelsAndAnnotations" name:"ignore-user-labels-and-annotations" usage:"Don't propagate user-defined labels and annotations to dependent objects"`
 	AllowUserLabels                []string       `json:"allowUserLabels" name:"allow-user-label" usage:"Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true"`
 	AllowUserAnnotations           []string       `json:"allowUserAnnotations" name:"allow-user-annotation" usage:"Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true"`
-	WorkloadMemoryDefault          *int64         `json:"workloadMemoryDefault" name:"workload-memory-default" quantity:"true" usage:"Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" seperators (default 0)" short:"m"`
-	WorkloadMemoryMaximum          *int64         `json:"workloadMemoryMaximum" name:"workload-memory-maximum" quantity:"true" usage:"Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" seperators (default 0)"`
+	WorkloadMemoryDefault          *int64         `json:"workloadMemoryDefault" name:"workload-memory-default" quantity:"true" usage:"Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" separators (default 0)" short:"m"`
+	WorkloadMemoryMaximum          *int64         `json:"workloadMemoryMaximum" name:"workload-memory-maximum" quantity:"true" usage:"Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and \".\" and \"_\" separators (default 0)"`
 	UseCustomCABundle              *bool          `json:"useCustomCABundle" name:"use-custom-ca-bundle" usage:"Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false."`
 	PropagateProjectAnnotations    []string       `json:"propagateProjectAnnotations" name:"propagate-project-annotation" usage:"The list of keys of annotations to propagate from acorn project to app namespaces"`
 	PropagateProjectLabels         []string       `json:"propagateProjectLabels" name:"propagate-project-label" usage:"The list of keys of labels to propagate from acorn project to app namespaces"`
 	ManageVolumeClasses            *bool          `json:"manageVolumeClasses" name:"manage-volume-classes" usage:"Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes"`
+	DisableNetworkPolicies         *bool          `json:"disableNetworkPolicies" name:"disable-network-policies" usage:"Disable the creation Kubernetes NetworkPolicies which block cross-project network traffic (default false)"`
 }
 
 type EncryptionKey struct {
