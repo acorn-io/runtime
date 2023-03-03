@@ -1409,12 +1409,12 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 
 func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *runtimeclient.WithWatch, appName, namespace string) string {
 	t.Helper()
-	var podList corev1.PodList
 	selector, err := k8slabels.Parse(fmt.Sprintf("%s=%s", labels.AcornAppName, appName))
 	if err != nil {
 		t.Fatal("error creating k8s label selector:", err)
 	}
 
+	var podList corev1.PodList
 	podIP := ""
 	for podIP == "" {
 		err = (*kc).List(ctx, &podList, &kclient.ListOptions{
@@ -1422,7 +1422,7 @@ func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *runtimeclient.Wi
 			Namespace:     namespace,
 		})
 		if err != nil {
-			t.Fatal("error creating k8s label selector:", err)
+			t.Fatal("error listing pods:", err)
 		}
 		podIP = podList.Items[0].Status.PodIP
 	}
