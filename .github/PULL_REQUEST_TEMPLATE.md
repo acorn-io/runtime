@@ -5,4 +5,5 @@
 - [ ] Commits follow [contributing guidance](https://github.com/acorn-io/acorn/blob/main/CONTRIBUTING.md#commits)
 - [ ] Automated tests added to cover the changes. If tests couldn't be added, an explanation is provided in the Verification and Testing section
 - [ ] Changes to user-facing functionality, API, CLI, and upgrade impacts are clearly called out in PR description
+- [ ] PR has at least two approvals before merging
 
