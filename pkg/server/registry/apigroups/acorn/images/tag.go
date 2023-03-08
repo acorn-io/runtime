@@ -2,6 +2,8 @@ package images
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -71,24 +73,29 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	if err != nil {
 		return nil, err
 	}
-	res, err := normalizeTags(image.Tags)
+
+	res, err := normalizeTags(image.Tags, false)
 	if err != nil {
 		return nil, err
 	}
 	set := sets.NewString(res...)
 
-	imageParsedTag, err := name.NewTag(tagToAdd, name.WithDefaultRegistry(""))
+	imageRef, err := name.ParseReference(tagToAdd)
 	if err != nil {
 		return nil, err
 	}
-	set.Insert(imageParsedTag.Name())
+	if strings.HasPrefix(imageRef.Identifier(), "sha256:") {
+		set.Insert(fmt.Sprintf("%s/%s", imageRef.Context().RegistryStr(), imageRef.Context().RepositoryStr()))
+	} else {
+		set.Insert(imageRef.Name())
+	}
 
 	hasChanged := false
 	for _, img := range imageList.Items {
 		if img.Name == image.Name {
 			continue
 		}
-		res, err = normalizeTags(img.Tags)
+		res, err = normalizeTags(img.Tags, false)
 		if err != nil {
 			return nil, err
 		}
@@ -111,14 +118,25 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	return image, t.client.Update(ctx, image)
 }
 
-func normalizeTags(tags []string) ([]string, error) {
+func normalizeTags(tags []string, implicitLatestTag bool) ([]string, error) {
 	var result []string
 	for _, tag := range tags {
-		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+		nameOpts := []name.Option{
+			name.WithDefaultRegistry(""),
+		}
+		if !implicitLatestTag {
+			nameOpts = append(nameOpts, name.WithDefaultTag(""))
+		}
+
+		imageParsedTag, err := name.NewTag(tag, nameOpts...)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, imageParsedTag.Name())
+		if imageParsedTag.TagStr() == "" {
+			result = append(result, fmt.Sprintf("%s/%s", imageParsedTag.RegistryStr(), imageParsedTag.RepositoryStr()))
+		} else {
+			result = append(result, imageParsedTag.Name())
+		}
 	}
 	return result, nil
 }

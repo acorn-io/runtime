@@ -114,6 +114,8 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		return nil, err
 	}
 
+	logrus.Infof("Pulling %s (%#v)", pullTag.String(), pullTag)
+
 	opts, err := images.GetAuthenticationRemoteOptionsWithLocalAuth(ctx, pullTag.Context(), auth, i.client, namespace, i.transportOpt)
 	if err != nil {
 		return nil, err

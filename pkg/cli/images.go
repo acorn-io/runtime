@@ -98,27 +98,46 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 
 	for _, image := range images {
 		imagePrint := imagePrint{
-			Name:   image.ObjectMeta.Name,
-			Digest: image.Digest,
-			Tag:    "",
+			Name:       image.ObjectMeta.Name,
+			Digest:     image.Digest,
+			Tag:        "",
+			Repository: "",
 		}
 		if len(image.Tags) == 0 && a.All {
 			out.Write(imagePrint)
 			continue
 		}
 		for _, tag := range image.Tags {
-			imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+			imageRef, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 			if err != nil {
 				return err
 			}
-			if tagToMatch == imageParsedTag.Name() || tagToMatch == "" {
-				imagePrint.Tag = imageParsedTag.TagStr()
-				if imageParsedTag.RegistryStr() != "" {
-					imagePrint.Repository = imageParsedTag.RegistryStr() + "/"
+
+			if imageRef.Context().RegistryStr() != "" {
+				imagePrint.Repository = imageRef.Context().RegistryStr() + "/"
+			}
+			imagePrint.Repository += imageRef.Context().RepositoryStr()
+
+			// untagged repository reference, which is NOT considered :latest
+			if imageRef.Identifier() == "" {
+				if a.All { // FIXME: this is always true if an image is specified, so we need a differentiation if it was set by --all or by image argument
+					out.Write(imagePrint)
 				}
-				imagePrint.Repository += imageParsedTag.RepositoryStr()
+				continue
+			}
+
+			var ntag name.Tag
+			ntag, err = name.NewTag(imageRef.Name(), name.WithDefaultRegistry(""))
+			if err != nil {
+				if !a.All {
+					// not a real tag (e.g. SHA), skip
+					continue
+				}
+			}
+
+			if tagToMatch == ntag.Name() || tagToMatch == "" {
+				imagePrint.Tag = ntag.TagStr()
 				out.Write(imagePrint)
-				imagePrint.Repository = ""
 			}
 		}
 	}
