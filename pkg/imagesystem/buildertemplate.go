@@ -25,9 +25,9 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 				{
 					Name:     system.BuildKitName,
 					Protocol: corev1.ProtocolTCP,
-					Port:     int32(system.BuildkitPort),
+					Port:     system.BuildkitPort,
 					TargetPort: intstr.IntOrString{
-						IntVal: int32(system.BuildkitPort),
+						IntVal: system.BuildkitPort,
 					},
 				},
 			},
@@ -109,7 +109,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							},
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: int32(system.BuildkitPort),
+									ContainerPort: system.BuildkitPort,
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
@@ -164,10 +164,9 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							},
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
-									TCPSocket: &corev1.TCPSocketAction{
-										Port: intstr.IntOrString{
-											IntVal: int32(system.BuildkitPort),
-										},
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/ping",
+										Port: intstr.IntOrString{IntVal: system.BuildkitPort},
 									},
 								},
 								InitialDelaySeconds: 2,
@@ -175,7 +174,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							},
 							Ports: []corev1.ContainerPort{
 								{
-									ContainerPort: int32(system.BuildkitPort),
+									ContainerPort: system.BuildkitPort,
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
