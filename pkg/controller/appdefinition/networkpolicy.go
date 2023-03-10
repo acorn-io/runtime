@@ -48,23 +48,34 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 		},
 	})
 
-	// next, create NetworkPolicies for each container in the app that has a published or exposed port
+	conf, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return err
+	}
+	var ingressNamespace string
+	if conf.IngressControllerNamespace != nil {
+		ingressNamespace = *conf.IngressControllerNamespace
+	} else {
+		ingressNamespace = ""
+	}
+
+	// next, create NetworkPolicies for each container in the app that has a published port
 	// these policies allow ingress from anywhere
 	for containerName, container := range app.Status.AppSpec.Containers {
 		for _, port := range container.Ports {
-			if port.Publish || port.Expose {
+			if port.Publish {
 				resp.Objects(buildNetPolForPublishedPort(
 					fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
-					podNamespace, containerName, port.Port))
+					podNamespace, ingressNamespace, containerName, port.Port))
 			}
 		}
 		// create policies for the sidecars as well
 		for sidecarName, sidecar := range container.Sidecars {
 			for _, port := range sidecar.Ports {
-				if port.Publish || port.Expose {
+				if port.Publish {
 					resp.Objects(buildNetPolForPublishedPort(
 						fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
-						podNamespace, containerName, port.Port))
+						podNamespace, ingressNamespace, containerName, port.Port))
 				}
 			}
 		}
@@ -73,7 +84,16 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func buildNetPolForPublishedPort(name, namespace, containerName string, port int32) *networkingv1.NetworkPolicy {
+func buildNetPolForPublishedPort(name, namespace, ingressNamespace, containerName string, port int32) *networkingv1.NetworkPolicy {
+	var namespaceSelector metav1.LabelSelector
+	if ingressNamespace != "" {
+		namespaceSelector = metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"kubernetes.io/metadata.name": ingressNamespace,
+			},
+		}
+	}
+
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -88,7 +108,7 @@ func buildNetPolForPublishedPort(name, namespace, containerName string, port int
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
 				From: []networkingv1.NetworkPolicyPeer{{
 					PodSelector:       &metav1.LabelSelector{},
-					NamespaceSelector: &metav1.LabelSelector{},
+					NamespaceSelector: &namespaceSelector,
 				}},
 				Ports: []networkingv1.NetworkPolicyPort{{
 					Port: &intstr.IntOrString{

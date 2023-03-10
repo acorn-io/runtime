@@ -99,6 +99,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.DisableNetworkPolicies == nil {
 		c.DisableNetworkPolicies = new(bool)
 	}
+	if c.IngressControllerNamespace == nil {
+		c.IngressControllerNamespace = new(string)
+	}
 
 	return nil
 }
@@ -321,6 +324,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.DisableNetworkPolicies != nil {
 		mergedConfig.DisableNetworkPolicies = newConfig.DisableNetworkPolicies
+	}
+
+	if newConfig.IngressControllerNamespace != nil {
+		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
 	}
 
 	return &mergedConfig
