@@ -1591,8 +1591,14 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
+					"nodeCidr": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "disableNetworkPolicies", "ingressControllerNamespace"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "defaultPublishMode", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "disableNetworkPolicies", "ingressControllerNamespace", "nodeCidr"},
 			},
 		},
 	}
