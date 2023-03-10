@@ -26,6 +26,7 @@ projects:
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
+      nodeCIDR: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -57,6 +58,7 @@ projects:
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
+      nodeCIDR: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
