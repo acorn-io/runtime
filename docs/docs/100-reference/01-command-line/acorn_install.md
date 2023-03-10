@@ -35,6 +35,7 @@ acorn install
       --ignore-user-labels-and-annotations     Don't propagate user-defined labels and annotations to dependent objects
       --image string                           Override the default image used for the deployment
       --ingress-class-name string              The ingress class name to assign to all created ingress resources (default '')
+      --ingress-controller-namespace string    The name of the namespace where the ingress controller runs
       --internal-cluster-domain string         The Kubernetes internal cluster domain (default svc.cluster.local)
       --internal-registry-prefix string        The image prefix to use when pushing internal images (example ghcr.io/my-org/)
       --lets-encrypt string                    enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)
