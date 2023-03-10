@@ -91,7 +91,7 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 							podNamespace, ingressNamespace, containerName, port.Port))
 					} else {
 						resp.Objects(buildNetPolForOtherPublishedPort(
-							fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
+							fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
 							podNamespace, nodeCIDR, containerName, port.Port))
 					}
 				}

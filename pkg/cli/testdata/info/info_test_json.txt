@@ -44,7 +44,8 @@
                 "propagateProjectLabels": null,
                 "manageVolumeClasses": null,
                 "disableNetworkPolicies": null,
-                "ingressControllerNamespace": null
+                "ingressControllerNamespace": null,
+                "nodeCIDR": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -74,7 +75,8 @@
                 "propagateProjectLabels": null,
                 "manageVolumeClasses": null,
                 "disableNetworkPolicies": null,
-                "ingressControllerNamespace": null
+                "ingressControllerNamespace": null,
+                "nodeCIDR": null
             }
         }
     }
