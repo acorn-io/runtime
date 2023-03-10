@@ -48,15 +48,21 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 		},
 	})
 
+	// get needed configuration information
 	conf, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
 	}
-	var ingressNamespace string
+	var ingressNamespace, nodeCIDR string
 	if conf.IngressControllerNamespace != nil {
 		ingressNamespace = *conf.IngressControllerNamespace
 	} else {
 		ingressNamespace = ""
+	}
+	if conf.NodeCIDR != nil && *conf.NodeCIDR != "" {
+		nodeCIDR = *conf.NodeCIDR
+	} else {
+		nodeCIDR = "0.0.0.0/0"
 	}
 
 	// next, create NetworkPolicies for each container in the app that has a published port
@@ -64,18 +70,30 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 	for containerName, container := range app.Status.AppSpec.Containers {
 		for _, port := range container.Ports {
 			if port.Publish {
-				resp.Objects(buildNetPolForPublishedPort(
-					fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
-					podNamespace, ingressNamespace, containerName, port.Port))
+				if port.Protocol == v1.ProtocolHTTP {
+					resp.Objects(buildNetPolForHTTPPublishedPort(
+						fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
+						podNamespace, ingressNamespace, containerName, port.Port))
+				} else {
+					resp.Objects(buildNetPolForOtherPublishedPort(
+						fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
+						podNamespace, nodeCIDR, containerName, port.Port))
+				}
 			}
 		}
 		// create policies for the sidecars as well
 		for sidecarName, sidecar := range container.Sidecars {
 			for _, port := range sidecar.Ports {
 				if port.Publish {
-					resp.Objects(buildNetPolForPublishedPort(
-						fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
-						podNamespace, ingressNamespace, containerName, port.Port))
+					if port.Protocol == v1.ProtocolHTTP {
+						resp.Objects(buildNetPolForHTTPPublishedPort(
+							fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
+							podNamespace, ingressNamespace, containerName, port.Port))
+					} else {
+						resp.Objects(buildNetPolForOtherPublishedPort(
+							fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
+							podNamespace, nodeCIDR, containerName, port.Port))
+					}
 				}
 			}
 		}
@@ -84,7 +102,7 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func buildNetPolForPublishedPort(name, namespace, ingressNamespace, containerName string, port int32) *networkingv1.NetworkPolicy {
+func buildNetPolForHTTPPublishedPort(name, namespace, ingressNamespace, containerName string, port int32) *networkingv1.NetworkPolicy {
 	var namespaceSelector metav1.LabelSelector
 	if ingressNamespace != "" {
 		namespaceSelector = metav1.LabelSelector{
@@ -109,6 +127,35 @@ func buildNetPolForPublishedPort(name, namespace, ingressNamespace, containerNam
 				From: []networkingv1.NetworkPolicyPeer{{
 					PodSelector:       &metav1.LabelSelector{},
 					NamespaceSelector: &namespaceSelector,
+				}},
+				Ports: []networkingv1.NetworkPolicyPort{{
+					Port: &intstr.IntOrString{
+						IntVal: port,
+					}},
+				}},
+			},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+		},
+	}
+}
+
+func buildNetPolForOtherPublishedPort(name, namespace, nodeCIDR, containerName string, port int32) *networkingv1.NetworkPolicy {
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					labels.AcornContainerName: containerName,
+				},
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{{
+				From: []networkingv1.NetworkPolicyPeer{{
+					IPBlock: &networkingv1.IPBlock{
+						CIDR: nodeCIDR,
+					},
 				}},
 				Ports: []networkingv1.NetworkPolicyPort{{
 					Port: &intstr.IntOrString{
