@@ -16,12 +16,12 @@ const (
 )
 
 var (
-	RegistryName             = "registry"
-	RegistryPort             = 5000
-	BuildKitName             = "buildkitd"
-	ControllerName           = "acorn-controller"
-	APIServerName            = "acorn-api"
-	BuildkitPort             = 8080
-	ContainerdConfigPathName = "containerd-config-path"
-	DefaultHubAddress        = "acorn.io"
+	RegistryName                   = "registry"
+	RegistryPort                   = 5000
+	BuildKitName                   = "buildkitd"
+	ControllerName                 = "acorn-controller"
+	APIServerName                  = "acorn-api"
+	BuildkitPort             int32 = 8080
+	ContainerdConfigPathName       = "containerd-config-path"
+	DefaultHubAddress              = "acorn.io"
 )
