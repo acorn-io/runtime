@@ -146,6 +146,13 @@ func buildNetPolForOtherPublishedPort(name, namespace, podCIDR, containerName st
 	// but it allows traffic coming from klipper pods in kube-system (which might be doing the load balancing),
 	// and from nodes or load balancers that are from a cloud provider.
 
+	ipBlock := networkingv1.IPBlock{
+		CIDR: "0.0.0.0/0",
+	}
+	if podCIDR != "0.0.0.0/0" {
+		ipBlock.Except = []string{podCIDR}
+	}
+
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -160,10 +167,7 @@ func buildNetPolForOtherPublishedPort(name, namespace, podCIDR, containerName st
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
 				From: []networkingv1.NetworkPolicyPeer{
 					{
-						IPBlock: &networkingv1.IPBlock{
-							CIDR:   "0.0.0.0/0",
-							Except: []string{podCIDR},
-						},
+						IPBlock: &ipBlock,
 					},
 					{
 						NamespaceSelector: &metav1.LabelSelector{
