@@ -34,7 +34,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98
-	github.com/moby/buildkit v0.10.6
+	github.com/moby/buildkit v0.11.4
 	github.com/opencontainers/image-spec v1.1.0-rc2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
