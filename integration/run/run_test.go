@@ -18,13 +18,14 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/tolerations"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
+	crClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestVolume(t *testing.T) {
@@ -919,7 +920,7 @@ func TestUsingComputeClasses(t *testing.T) {
 			},
 		},
 		{
-			name:              "unrestricted default gets maximum",
+			name:              "unrestricted-default-gets-maximum",
 			testDataDirectory: "./testdata/computeclass",
 			computeClass: adminv1.ProjectComputeClassInstance{
 				ObjectMeta: metav1.ObjectMeta{
@@ -952,7 +953,7 @@ func TestUsingComputeClasses(t *testing.T) {
 			},
 		},
 		{
-			name:              "with values",
+			name:              "with-values",
 			testDataDirectory: "./testdata/computeclass",
 			computeClass: adminv1.ProjectComputeClassInstance{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1027,7 +1028,7 @@ func TestUsingComputeClasses(t *testing.T) {
 			},
 		},
 		{
-			name:              "does not exist",
+			name:              "does-not-exist",
 			noComputeClass:    true,
 			testDataDirectory: "./testdata/computeclass",
 			fail:              true,
@@ -1036,14 +1037,26 @@ func TestUsingComputeClasses(t *testing.T) {
 
 	for _, tt := range checks {
 		asClusterComputeClass := adminv1.ClusterComputeClassInstance(tt.computeClass)
-		for kind, computeClass := range map[string]runtimeclient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
-			t.Run(fmt.Sprintf("%v_%v", kind, tt.name), func(t *testing.T) {
+		// Perform the same test cases on both Project and Cluster ComputeClasses
+		for kind, computeClass := range map[string]crClient.Object{"projectcomputeclass": &tt.computeClass, "clustercomputeclass": &asClusterComputeClass} {
+			testcase := fmt.Sprintf("%v-%v", kind, tt.name)
+			t.Run(testcase, func(t *testing.T) {
 				if !tt.noComputeClass {
 					if err := kclient.Create(ctx, computeClass); err != nil {
 						t.Fatal(err)
 					}
+
+					// Clean-up and gurantee the computeclass doesn't exist after this test run
 					t.Cleanup(func() {
 						if err = kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
+							t.Fatal(err)
+						}
+						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+							lookingFor := computeClass
+							err := kclient.Get(ctx, router.Key(computeClass.GetNamespace(), computeClass.GetName()), lookingFor)
+							return lookingFor, err
+						})
+						if err != nil {
 							t.Fatal(err)
 						}
 					})
@@ -1056,13 +1069,29 @@ func TestUsingComputeClasses(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				app, err := c.AppRun(ctx, image.ID, nil)
+				// Assign a name for the test case so no collisions occur
+				app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{Name: testcase})
 				if err != nil {
 					if tt.fail {
 						return
 					}
 					t.Fatal(err)
 				}
+
+				// Clean-up and gurantee the app doesn't exist after this test run
+				t.Cleanup(func() {
+					if err = kclient.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
+						t.Fatal(err)
+					}
+					err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+						lookingFor := app
+						err := kclient.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
+						return lookingFor, err
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				})
 
 				app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, tt.waitFor)
 				assert.EqualValues(t, app.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
