@@ -1407,7 +1407,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	}
 }
 
-func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *runtimeclient.WithWatch, appName, namespace string) string {
+func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *crClient.WithWatch, appName, namespace string) string {
 	t.Helper()
 	selector, err := k8slabels.Parse(fmt.Sprintf("%s=%s", labels.AcornAppName, appName))
 	if err != nil {

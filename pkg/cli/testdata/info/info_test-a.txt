@@ -27,7 +27,7 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      nodeCIDR: null
+      podCIDR: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -61,7 +61,7 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      nodeCIDR: null
+      podCIDR: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -93,7 +93,7 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      nodeCIDR: null
+      podCIDR: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -127,7 +127,7 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      nodeCIDR: null
+      podCIDR: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
