@@ -416,8 +416,8 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.NodeCIDR != nil {
-		in, out := &in.NodeCIDR, &out.NodeCIDR
+	if in.PodCIDR != nil {
+		in, out := &in.PodCIDR, &out.PodCIDR
 		*out = new(string)
 		**out = **in
 	}

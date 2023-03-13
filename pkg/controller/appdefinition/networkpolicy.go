@@ -53,16 +53,16 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 	if err != nil {
 		return err
 	}
-	var ingressNamespace, nodeCIDR string
+	var ingressNamespace, podCIDR string
 	if conf.IngressControllerNamespace != nil {
 		ingressNamespace = *conf.IngressControllerNamespace
 	} else {
 		ingressNamespace = ""
 	}
-	if conf.NodeCIDR != nil && *conf.NodeCIDR != "" {
-		nodeCIDR = *conf.NodeCIDR
+	if conf.PodCIDR != nil && *conf.PodCIDR != "" {
+		podCIDR = *conf.PodCIDR
 	} else {
-		nodeCIDR = "0.0.0.0/0"
+		podCIDR = "0.0.0.0/0"
 	}
 
 	// next, create NetworkPolicies for each container in the app that has a published port
@@ -77,7 +77,7 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 				} else {
 					resp.Objects(buildNetPolForOtherPublishedPort(
 						fmt.Sprintf("%s-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strconv.Itoa(int(port.Port))),
-						podNamespace, nodeCIDR, containerName, port.Port))
+						podNamespace, podCIDR, containerName, port.Port))
 				}
 			}
 		}
@@ -92,7 +92,7 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 					} else {
 						resp.Objects(buildNetPolForOtherPublishedPort(
 							fmt.Sprintf("%s-%s-sidecar-%s-%s", strings.ToLower(app.Name), strings.ToLower(containerName), strings.ToLower(sidecarName), strconv.Itoa(int(port.Port))),
-							podNamespace, nodeCIDR, containerName, port.Port))
+							podNamespace, podCIDR, containerName, port.Port))
 					}
 				}
 			}
@@ -139,7 +139,13 @@ func buildNetPolForHTTPPublishedPort(name, namespace, ingressNamespace, containe
 	}
 }
 
-func buildNetPolForOtherPublishedPort(name, namespace, nodeCIDR, containerName string, port int32) *networkingv1.NetworkPolicy {
+func buildNetPolForOtherPublishedPort(name, namespace, podCIDR, containerName string, port int32) *networkingv1.NetworkPolicy {
+	// For now, we lock down published TCP/UDP ports by allowing access from all pods in kube-system
+	// and all IP addresses that aren't part of the pod CIDR.
+	// This blocks traffic coming from pods from other projects (since their IPs are in the pod CIDR),
+	// but it allows traffic coming from klipper pods in kube-system (which might be doing the load balancing),
+	// and from nodes or load balancers that are from a cloud provider.
+
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -152,11 +158,22 @@ func buildNetPolForOtherPublishedPort(name, namespace, nodeCIDR, containerName s
 				},
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
-				From: []networkingv1.NetworkPolicyPeer{{
-					IPBlock: &networkingv1.IPBlock{
-						CIDR: nodeCIDR,
+				From: []networkingv1.NetworkPolicyPeer{
+					{
+						IPBlock: &networkingv1.IPBlock{
+							CIDR:   "0.0.0.0/0",
+							Except: []string{podCIDR},
+						},
 					},
-				}},
+					{
+						NamespaceSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"kubernetes.io/metadata.name": "kube-system",
+							},
+						},
+						PodSelector: &metav1.LabelSelector{},
+					},
+				},
 				Ports: []networkingv1.NetworkPolicyPort{{
 					Port: &intstr.IntOrString{
 						IntVal: port,
