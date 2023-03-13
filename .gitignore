@@ -10,7 +10,7 @@
 /cosign.key
 /releases
 /pkg/ui/server/static/dashboard
-
+/vendor
 apiserver.local.config
 /.envrc
 **/.DS_Store

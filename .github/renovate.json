@@ -3,6 +3,9 @@
         "config:base"
     ],
     "postUpdateOptions": ["gomodTidy"],
+    "vulnerabilityAlerts": {
+        "labels": ["security"]
+    },
     "packageRules": [
         {
             "matchPackagePatterns": [
@@ -14,6 +17,7 @@
     ],
     "regexManagers": [
         {
+            "description": "Match go versions in github workflows",
             "fileMatch": [
                 "^.github/workflows/.*"
             ],
