@@ -29,14 +29,14 @@ func TestNetworkPolicyWithIngressNamespace(t *testing.T) {
 	})
 }
 
-func TestNetworkPolicyWithNodeCIDR(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/nodecidr", func(req router.Request, resp router.Response) error {
+func TestNetworkPolicyWithPodCIDR(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/podcidr", func(req router.Request, resp router.Response) error {
 		conf, err := config.Get(req.Ctx, req.Client)
 		if err != nil {
 			return err
 		}
 
-		conf.NodeCIDR = toStringPointer("10.2.0.1/24")
+		conf.PodCIDR = toStringPointer("10.2.0.0/24")
 		err = config.Set(req.Ctx, req.Client, conf)
 		if err != nil {
 			return err

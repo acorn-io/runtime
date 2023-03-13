@@ -27,7 +27,12 @@ spec:
   ingress:
     - from:
         - ipBlock:
-            cidr: "10.2.0.1/24"
+            cidr: "0.0.0.0/0"
+            except: ["10.2.0.0/24"]
+        - namespaceSelector:
+            matchLabels:
+              "kubernetes.io/metadata.name": "kube-system"
+          podSelector: {}
       ports:
         - port: 80
   podSelector:
@@ -45,7 +50,12 @@ spec:
   ingress:
     - from:
         - ipBlock:
-            cidr: "10.2.0.1/24"
+            cidr: "0.0.0.0/0"
+            except: [ "10.2.0.0/24" ]
+        - namespaceSelector:
+            matchLabels:
+              "kubernetes.io/metadata.name": "kube-system"
+          podSelector: { }
       ports:
         - port: 10000
   podSelector:
