@@ -42,8 +42,8 @@ acorn install
       --lets-encrypt-email string              Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')
       --lets-encrypt-tos-agree                 Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)
       --manage-volume-classes                  Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes
-      --node-cidr string                       The IP address range for nodes in the cluster, in CIDR format
   -o, --output string                          Output manifests instead of applying them (json, yaml)
+      --pod-cidr string                        The IP address range for pods in the cluster, in CIDR format
       --pod-security-enforce-profile string    The name of the PodSecurity profile to set (default baseline)
       --propagate-project-annotation strings   The list of keys of annotations to propagate from acorn project to app namespaces
       --propagate-project-label strings        The list of keys of labels to propagate from acorn project to app namespaces
