@@ -5,7 +5,7 @@ containers: {
 		}
         dirs: "/var/lib/www": "./files"
 	}
-	fromImage: {
+	fromimage: {
         image: "nginx"
         dirs: "/var/lib/www": "./files"
 	}

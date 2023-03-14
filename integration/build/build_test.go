@@ -124,7 +124,7 @@ func TestContextDir(t *testing.T) {
 	}
 	assert.Len(t, image.ImageData.Containers, 2)
 	assert.True(t, len(image.ImageData.Containers["simple"].Image) > 0)
-	assert.True(t, len(image.ImageData.Containers["fromImage"].Image) > 0)
+	assert.True(t, len(image.ImageData.Containers["fromimage"].Image) > 0)
 }
 
 func TestSimpleTwo(t *testing.T) {
