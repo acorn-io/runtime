@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config: '{"ingressControllerNamespace":"nginx"}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system

@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config: '{"podCIDR":"10.2.0.0/24"}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system

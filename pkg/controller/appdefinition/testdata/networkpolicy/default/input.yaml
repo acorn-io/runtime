@@ -30,3 +30,12 @@ status:
           - port: 8080
             protocol: http
         image: "image-name"
+    jobs:
+      myJob:
+        ports:
+          - port: 9999
+            protocol: tcp
+            publish: true
+          - port: 7890
+            protocol: http
+        image: "image-name"

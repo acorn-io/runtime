@@ -347,8 +347,8 @@ type Config struct {
 	PropagateProjectLabels         []string       `json:"propagateProjectLabels" name:"propagate-project-label" usage:"The list of keys of labels to propagate from acorn project to app namespaces"`
 	ManageVolumeClasses            *bool          `json:"manageVolumeClasses" name:"manage-volume-classes" usage:"Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes"`
 	DisableNetworkPolicies         *bool          `json:"disableNetworkPolicies" name:"disable-network-policies" usage:"Disable the creation Kubernetes NetworkPolicies which block cross-project network traffic (default false)"`
-	IngressControllerNamespace     *string        `json:"ingressControllerNamespace" name:"ingress-controller-namespace" usage:"The name of the namespace where the ingress controller runs"`
-	PodCIDR                        *string        `json:"podCIDR" name:"pod-cidr" usage:"The IP address range for pods in the cluster, in CIDR format"`
+	IngressControllerNamespace     *string        `json:"ingressControllerNamespace" name:"ingress-controller-namespace" usage:"The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies."`
+	PodCIDR                        *string        `json:"podCIDR" name:"pod-cidr" usage:"The IP address range for pods in the cluster, in CIDR format - used to secure published TCP/UDP ports with NetworkPolicies"`
 }
 
 type EncryptionKey struct {

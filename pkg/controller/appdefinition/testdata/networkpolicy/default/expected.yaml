@@ -27,7 +27,6 @@ spec:
   ingress:
     - from:
         - namespaceSelector: {}
-          podSelector: {}
       ports:
         - port: 80
   podSelector:
@@ -45,11 +44,31 @@ spec:
   ingress:
     - from:
         - namespaceSelector: {}
-          podSelector: {}
       ports:
         - port: 10000
   podSelector:
     matchLabels:
       acorn.io/container-name: containerTwo
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-name-myjob-9999
+  namespace: app-created-namespace
+spec:
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: "0.0.0.0/0"
+        - namespaceSelector:
+            matchLabels:
+              "kubernetes.io/metadata.name": kube-system
+      ports:
+        - port: 9999
+  podSelector:
+    matchLabels:
+      acorn.io/container-name: "myJob"
   policyTypes:
     - Ingress

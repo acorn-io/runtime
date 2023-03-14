@@ -29,7 +29,6 @@ spec:
         - namespaceSelector:
             matchLabels:
               "kubernetes.io/metadata.name": "nginx"
-          podSelector: {}
       ports:
         - port: 80
   podSelector:
@@ -49,7 +48,6 @@ spec:
         - namespaceSelector:
             matchLabels:
               "kubernetes.io/metadata.name": "nginx"
-          podSelector: {}
       ports:
         - port: 10000
   podSelector:
