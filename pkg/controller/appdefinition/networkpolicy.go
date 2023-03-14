@@ -9,7 +9,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"regexp"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -51,8 +51,10 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 
 	ingressNamespace := *cfg.IngressControllerNamespace
 	podCIDR := *cfg.PodCIDR
+	// make sure the podCIDR is valid
 	if podCIDR != "" {
-		if err = validateCIDR(podCIDR); err != nil {
+		_, _, err = net.ParseCIDR(podCIDR)
+		if err != nil {
 			return err
 		}
 	}
@@ -182,43 +184,4 @@ func buildNetPolForOtherPublishedPort(name, namespace, podCIDR, containerName st
 			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},
 	}
-}
-
-func validateCIDR(cidr string) error {
-	fmtString := "ERROR: configured Pod CIDR '%s' is not valid"
-
-	// check with regex to make sure it is in the right format:
-	regex := regexp.MustCompile(`^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$`)
-	if !regex.MatchString(cidr) {
-		return fmt.Errorf(fmtString, cidr)
-	}
-
-	// verify that each number is within the proper range (0-255 for the IP part, and 0-32 for the subnet part)
-	pieces := strings.Split(cidr, "/")
-	// check the length to be extra safe in case there is some edge case that is incorrect but matches the regex
-	if len(pieces) != 2 {
-		return fmt.Errorf(fmtString+" (SHOULD NOT HAPPEN)", cidr)
-	}
-	address := pieces[0]
-	subnet := pieces[1]
-
-	for _, segment := range strings.Split(address, ".") {
-		segmentInt, err := strconv.Atoi(segment)
-		if err != nil {
-			return fmt.Errorf(fmtString+" (SHOULD NOT HAPPEN)", cidr)
-		}
-		if segmentInt < 0 || segmentInt > 255 {
-			return fmt.Errorf(fmtString, cidr)
-		}
-	}
-
-	subnetInt, err := strconv.Atoi(subnet)
-	if err != nil {
-		return fmt.Errorf(fmtString+" (SHOULD NOT HAPPEN)", cidr)
-	}
-	if subnetInt < 0 || subnetInt > 32 {
-		return fmt.Errorf(fmtString, cidr)
-	}
-
-	return nil
 }
