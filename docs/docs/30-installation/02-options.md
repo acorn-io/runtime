@@ -99,7 +99,7 @@ By default, Acorn will automatically create and manage Kubernetes [NetworkPolici
 
 Containers and jobs that publish ports will be able to receive traffic from anywhere (inside and outside the cluster) to that port. To lock this down better (and allow traffic coming from the outside, but not other Acorn projects on the inside of the cluster), specify two additional parameters during installation:
 
-- `--pod-cidrs`: the IP address ranges for all pods in the Kubernetes cluster, in CIDR format
+- `--pod-cidr`: the IP address range for all pods in the Kubernetes cluster, in CIDR format (can be repeated multiple times for multiple CIDR blocks)
 - `--ingress-controller-namespace`: the Kubernetes namespace where the ingress controller is deployed
 
 ## Changing install options
