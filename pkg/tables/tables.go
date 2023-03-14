@@ -51,7 +51,7 @@ var (
 
 	// Used for acorn image related printing
 	ImageAcorn = [][]string{
-		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
+		{"Repository", "{{if and (not .Repository) (not .Project) }}<none>{{ else if and (not .Project) .Repository }}{{ .Repository }}{{ else if and (not .Repository) .Project }}{{ .Project }}{{ else }}{{ .Project }} : {{ .Repository }}{{ end }}"},
 		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
 		{"Image-ID", "{{trunc .Name}}"},
 	}
@@ -64,7 +64,7 @@ var (
 	ImageConverter = MustConverter(Image)
 
 	ImageContainer = [][]string{
-		{"Repository", "{{ .Repo }}"},
+		{"Repository", "{{if and (not .Repository) (not .Project) }}<none>{{ else if and (not .Project) .Repository }}{{ .Repository }}{{ else if and (not .Repository) .Project }}{{ .Project }}{{ else }}{{ .Project }} : {{ .Repository }}{{ end }}"},
 		{"Tag", "{{ .Tag }}"},
 		{"Image-ID", "{{trunc .ImageID }}"},
 		{"Container", "{{ .Container}}"},

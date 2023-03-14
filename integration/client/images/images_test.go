@@ -2,6 +2,8 @@ package images
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/project"
 	"strings"
 	"testing"
 
@@ -408,4 +410,88 @@ func TestImageBadTag(t *testing.T) {
 
 	err = c.ImageTag(ctx, image.Name, "foo@@:badtag")
 	assert.Equal(t, "could not parse reference: foo@@:badtag", err.Error())
+}
+
+func TestImageList(t *testing.T) {
+	helper.StartController(t)
+	registry, close := helper.StartRegistry(t)
+	defer close()
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns1 := helper.TempNamespace(t, kclient)
+
+	c1, err := client.New(restConfig, "", ns1.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id1 := client2.NewImage(t, ns1.Name)
+
+	remoteTagName1 := registry + "/test:ci1"
+
+	err = c1.ImageTag(ctx, id1, remoteTagName1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progress, err := c1.ImagePush(ctx, remoteTagName1, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for update := range progress {
+		if update.Error != "" {
+			t.Fatal(update.Error)
+		}
+	}
+
+	ns2 := helper.TempNamespace(t, kclient)
+
+	c2, err := client.New(restConfig, "", ns2.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id2 := client2.NewImage(t, ns2.Name)
+
+	remoteTagName2 := registry + "/test:ci2"
+
+	err = c2.ImageTag(ctx, id2, remoteTagName2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	progress, err = c2.ImagePush(ctx, remoteTagName2, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for update := range progress {
+		if update.Error != "" {
+			t.Fatal(update.Error)
+		}
+	}
+
+	// Check individual client image list
+	list, err := c1.ImageList(ctx)
+	assert.NoError(t, err)
+	assert.Len(t, list, 1)
+
+	cliConfig, err := config.ReadCLIConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create multiclient to test commands off of
+	mc, err := project.Client(ctx, project.Options{AllProjects: true, CLIConfig: cliConfig})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Test multiclient image list
+	multilist, err := mc.ImageList(ctx)
+	assert.NoError(t, err)
+	assert.Len(t, multilist, 2)
+
 }

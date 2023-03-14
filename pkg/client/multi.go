@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -324,11 +325,18 @@ func (m *MultiClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Vol
 }
 
 func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
-	if err != nil {
-		return nil, err
-	}
-	return c.ImageList(ctx)
+	fmt.Printf("CALL TO MULTI")
+	return aggregateOptionalNaming(ctx, false, m.Factory, func(c Client) ([]apiv1.Image, error) {
+		imageList, err := c.ImageList(ctx)
+		if err != nil {
+			return nil, err
+		}
+		projectName := c.GetProject()
+		for i := range imageList {
+			imageList[i].Project = projectName
+		}
+		return imageList, nil
+	})
 }
 
 func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {

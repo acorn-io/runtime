@@ -178,8 +178,8 @@ func (s *Server) recordBuild(ctx context.Context, recordRepo string, build *v1.A
 			Name:      image.ID,
 			Namespace: build.Namespace,
 		},
-		Repo:   recordRepo,
-		Digest: image.Digest,
+		Repository: recordRepo,
+		Digest:     image.Digest,
 	})
 	if err != nil {
 		return err

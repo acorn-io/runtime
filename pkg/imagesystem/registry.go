@@ -65,8 +65,8 @@ func GetRuntimePullableInternalRepoForNamespaceAndID(ctx context.Context, c clie
 		repo name.Repository
 	)
 	image := &v1.ImageInstance{}
-	if err := c.Get(ctx, router.Key(namespace, imageID), image); err == nil && image.Repo != "" {
-		repo, err = name.NewRepository(image.Repo)
+	if err := c.Get(ctx, router.Key(namespace, imageID), image); err == nil && image.Repository != "" {
+		repo, err = name.NewRepository(image.Repository)
 		if err != nil {
 			return nil, err
 		}
@@ -86,8 +86,8 @@ func GetInternalRepoForNamespaceAndID(ctx context.Context, c client.Reader, name
 		repo name.Repository
 	)
 	image := &v1.ImageInstance{}
-	if err := c.Get(ctx, router.Key(namespace, imageID), image); err == nil && image.Repo != "" {
-		repo, err = name.NewRepository(image.Repo)
+	if err := c.Get(ctx, router.Key(namespace, imageID), image); err == nil && image.Repository != "" {
+		repo, err = name.NewRepository(image.Repository)
 		if err != nil {
 			return nil, err
 		}

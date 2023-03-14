@@ -18,7 +18,7 @@ import (
 	testcontrollerclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func createMockedDefaultClient(t *testing.T, projectName string, namespace string) (client.DefaultClient, v12.InfoList, error) {
+func createMockedDefaultClientInfoLister(t *testing.T, projectName string, namespace string) (client.DefaultClient, v12.InfoList, error) {
 	t.Helper()
 	ns := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -77,7 +77,7 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 func TestDefaultClientInfo(t *testing.T) {
 	ctx := context.Background()
 
-	defaultClient, infoListObj, err := createMockedDefaultClient(t, "test1", "test1")
+	defaultClient, infoListObj, err := createMockedDefaultClientInfoLister(t, "test1", "test1")
 	assert.NoError(t, err)
 
 	infoResp, err := defaultClient.Info(ctx)
@@ -91,10 +91,10 @@ func TestMultiClientInfo(t *testing.T) {
 	ctx := context.Background()
 	// Make two k8 clients and two default clients
 
-	defaultClient1, infoListObj1, err := createMockedDefaultClient(t, "test1", "test1")
+	defaultClient1, infoListObj1, err := createMockedDefaultClientInfoLister(t, "test1", "test1")
 	assert.NoError(t, err)
 
-	defaultClient2, infoListObj2, err := createMockedDefaultClient(t, "test2", "test2")
+	defaultClient2, infoListObj2, err := createMockedDefaultClientInfoLister(t, "test2", "test2")
 	assert.NoError(t, err)
 
 	// create factory that can list projects:
@@ -119,10 +119,10 @@ func TestMultiClientFQDNClobberingInfo(t *testing.T) {
 	ctx := context.Background()
 	// Make two k8 clients and two default clients
 
-	defaultClient1, infoListObj1, err := createMockedDefaultClient(t, "test1", "test1")
+	defaultClient1, infoListObj1, err := createMockedDefaultClientInfoLister(t, "test1", "test1")
 	assert.NoError(t, err)
 
-	defaultClient2, infoListObj2, err := createMockedDefaultClient(t, "acorn.io/jacob/test1", "test1")
+	defaultClient2, infoListObj2, err := createMockedDefaultClientInfoLister(t, "acorn.io/jacob/test1", "test1")
 	assert.NoError(t, err)
 
 	// create factory that can list projects:
