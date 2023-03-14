@@ -28,7 +28,7 @@ spec:
     - from:
         - ipBlock:
             cidr: "0.0.0.0/0"
-            except: ["10.2.0.0/24"]
+            except: ["10.2.0.0/24", "192.168.50.0/24"]
         - namespaceSelector:
             matchLabels:
               "kubernetes.io/metadata.name": "kube-system"
@@ -50,7 +50,7 @@ spec:
     - from:
         - ipBlock:
             cidr: "0.0.0.0/0"
-            except: [ "10.2.0.0/24" ]
+            except: [ "10.2.0.0/24", "192.168.50.0/24" ]
         - namespaceSelector:
             matchLabels:
               "kubernetes.io/metadata.name": "kube-system"

@@ -157,11 +157,17 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	// Validate the pod CIDR
-	if *finalConfForValidation.PodCIDR != "" {
-		if _, _, err = net.ParseCIDR(*finalConfForValidation.PodCIDR); err != nil {
-			return err
+	// Validate the pod CIDRsq
+	var errs []error
+	for _, cidr := range finalConfForValidation.PodCIDRs {
+		if cidr != "" {
+			if _, _, err = net.ParseCIDR(cidr); err != nil {
+				errs = append(errs, err)
+			}
 		}
+	}
+	if len(errs) > 0 {
+		return merr.NewErrors(errs...)
 	}
 
 	opts = opts.complete()

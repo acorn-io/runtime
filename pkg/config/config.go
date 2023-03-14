@@ -102,9 +102,6 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.IngressControllerNamespace == nil {
 		c.IngressControllerNamespace = new(string)
 	}
-	if c.PodCIDR == nil {
-		c.PodCIDR = new(string)
-	}
 
 	return nil
 }
@@ -333,8 +330,8 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
 	}
 
-	if newConfig.PodCIDR != nil {
-		mergedConfig.PodCIDR = newConfig.PodCIDR
+	if newConfig.PodCIDRs != nil {
+		mergedConfig.PodCIDRs = newConfig.PodCIDRs
 	}
 
 	return &mergedConfig

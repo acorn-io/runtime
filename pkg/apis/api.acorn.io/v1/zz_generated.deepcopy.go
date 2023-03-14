@@ -416,10 +416,10 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.PodCIDR != nil {
-		in, out := &in.PodCIDR, &out.PodCIDR
-		*out = new(string)
-		**out = **in
+	if in.PodCIDRs != nil {
+		in, out := &in.PodCIDRs, &out.PodCIDRs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 }
 
