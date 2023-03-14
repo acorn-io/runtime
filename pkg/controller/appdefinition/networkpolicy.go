@@ -153,8 +153,7 @@ func buildNetPolForHTTPPublishedPort(name, namespace, ingressNamespace, containe
 // and from nodes or load balancers that are from a cloud provider.
 func buildNetPolForOtherPublishedPort(name, namespace, containerName string, podCIDRs []string, port int32) *networkingv1.NetworkPolicy {
 	ipBlock := networkingv1.IPBlock{
-		CIDR:   "0.0.0.0/0",
-		Except: []string{},
+		CIDR: "0.0.0.0/0",
 	}
 	for _, cidr := range podCIDRs {
 		if cidr != "" {
