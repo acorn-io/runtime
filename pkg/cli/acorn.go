@@ -14,6 +14,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 	"k8s.io/klog/v2"
 )
 
@@ -131,7 +132,7 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 	}
 	//check default project to ensure it exists in the current context
 	//except for project cmds to allow project use <valid project> to succeed
-	if a.Project == "" && !isProjectCmd(cmd) {
+	if a.Project == "" && !isProjectCmd(cmd) && !isProjectAgnostic(cmd) {
 		a.Project = cfg.CurrentProject
 	}
 	if a.Project != "" {
@@ -145,6 +146,11 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 
 func isProjectCmd(cmd *cobra.Command) bool {
 	return (cmd.Parent() != nil && cmd.Parent().Name() == "project") || (cmd.Name() == "project")
+}
+
+func isProjectAgnostic(cmd *cobra.Command) bool {
+	agnosticCommands := []string{"install", "check", "uninstall", "render"}
+	return slices.Contains(agnosticCommands, cmd.Name())
 }
 
 func (a *Acorn) Run(cmd *cobra.Command, args []string) error {
