@@ -33,6 +33,7 @@ acorn [flags]
 * [acorn container](acorn_container.md)	 - Manage containers
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn exec](acorn_exec.md)	 - Run a command in a container
+* [acorn fmt](acorn_fmt.md)	 - Format an Acornfile
 * [acorn image](acorn_image.md)	 - Manage images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
 * [acorn install](acorn_install.md)	 - Install and configure acorn in the cluster
