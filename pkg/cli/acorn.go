@@ -121,30 +121,24 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return err
-	}
-	clientFactory := CommandClientFactory{
-		cmd:   cmd,
-		acorn: a,
-	}
-	//check default project to ensure it exists in the current context
-	//except for project cmds to allow project use <valid project> to succeed
-	if a.Project == "" && !isProjectCmd(cmd) {
-		a.Project = cfg.CurrentProject
-	}
+
 	if a.Project != "" {
+		clientFactory := CommandClientFactory{
+			cmd:   cmd,
+			acorn: a,
+		}
+		cfg, err := config.ReadCLIConfig()
+		if err != nil {
+			return err
+		}
+
 		err = project.Exists(cmd.Context(), clientFactory.Options().WithCLIConfig(cfg), a.Project)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
-}
 
-func isProjectCmd(cmd *cobra.Command) bool {
-	return (cmd.Parent() != nil && cmd.Parent().Name() == "project") || (cmd.Name() == "project")
+	return nil
 }
 
 func (a *Acorn) Run(cmd *cobra.Command, args []string) error {
