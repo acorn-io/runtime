@@ -42,7 +42,10 @@
                 "useCustomCABundle": null,
                 "propagateProjectAnnotations": null,
                 "propagateProjectLabels": null,
-                "manageVolumeClasses": null
+                "manageVolumeClasses": null,
+                "disableNetworkPolicies": null,
+                "ingressControllerNamespace": null,
+                "podCIDRs": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -70,7 +73,10 @@
                 "useCustomCABundle": null,
                 "propagateProjectAnnotations": null,
                 "propagateProjectLabels": null,
-                "manageVolumeClasses": null
+                "manageVolumeClasses": null,
+                "disableNetworkPolicies": null,
+                "ingressControllerNamespace": null,
+                "podCIDRs": null
             }
         }
     }

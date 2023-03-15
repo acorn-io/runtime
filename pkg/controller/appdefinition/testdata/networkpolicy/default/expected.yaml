@@ -1,0 +1,74 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-name
+  namespace: app-created-namespace
+spec:
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              acorn.io/app-namespace: app-namespace
+  podSelector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/managed: "true"
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-name-containerone-80
+  namespace: app-created-namespace
+spec:
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 80
+  podSelector:
+    matchLabels:
+      acorn.io/container-name: containerOne
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-name-containertwo-sidecar-mysidecarcontainer-10000
+  namespace: app-created-namespace
+spec:
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - port: 10000
+  podSelector:
+    matchLabels:
+      acorn.io/container-name: containerTwo
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-name-myjob-9999
+  namespace: app-created-namespace
+spec:
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: "0.0.0.0/0"
+        - namespaceSelector:
+            matchLabels:
+              "kubernetes.io/metadata.name": kube-system
+      ports:
+        - port: 9999
+  podSelector:
+    matchLabels:
+      acorn.io/container-name: "myJob"
+  policyTypes:
+    - Ingress

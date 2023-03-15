@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config: '{"podCIDRs":["10.2.0.0/24","192.168.50.0/24"]}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system

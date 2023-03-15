@@ -20,11 +20,13 @@ projects:
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
+      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
+      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -50,11 +52,13 @@ projects:
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
+      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
+      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
