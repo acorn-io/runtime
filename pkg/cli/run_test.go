@@ -265,6 +265,63 @@ func TestRun(t *testing.T) {
 			wantErr: true,
 			wantOut: "Acornfile_temp is not a directory",
 		},
+		{
+			name: "acorn run --update image-dne", fields: fields{
+				All:   false,
+				Type:  nil,
+				Force: true,
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader(""),
+			},
+			args: args{
+				args:   []string{"--update", "image-dne"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: true,
+			wantOut: "error: app image-dne does not exist",
+		},
+		{
+			name: "acorn run --update --replace", fields: fields{
+				All:   false,
+				Type:  nil,
+				Force: true,
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader(""),
+			},
+			args: args{
+				args:   []string{"--update", "--replace"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: true,
+			wantOut: "cannot combine --update/-u and --replace/-r",
+		},
+		{
+			name: "acorn run --update -i", fields: fields{
+				All:   false,
+				Type:  nil,
+				Force: true,
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader(""),
+			},
+			args: args{
+				args:   []string{"--update", "-i"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: true,
+			wantOut: "cannot use --update/-u or --replace/-r with --dev/-i",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

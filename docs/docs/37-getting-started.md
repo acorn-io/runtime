@@ -275,11 +275,11 @@ You probably already noticed the link right there in the `ENDPOINTS` column. It 
 
 Now that we have a way to package and deploy our app, lets look at how we can configure the Acornfile to enable the development flow. In this mode, we will be able to make changes and see them updated inside the app container in real time.
 
-To enable the Acorn development mode, first stop the app and then re-run with the `-i` flag.
+To enable the Acorn development mode, first stop the app and then re-run with the `dev` command.
 
 ```bash
 acorn stop awesome-acorn
-acorn run -n awesome-acorn -i .
+acorn dev -n awesome-acorn 
 ```
 
 In development mode, Acorn will watch the local directory for changes and synchronize them to the running Acorn app.
@@ -322,7 +322,7 @@ page_template = '''
         '''
 ```
 
-You will see the change applied when when you reload the application's page in your browser.
+You will see the change applied when you reload the application's page in your browser.
 
 ## Step 7. Build and Push your Acorn image
 

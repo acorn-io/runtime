@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUpdate(t *testing.T) {
+func TestDev(t *testing.T) {
 	type fields struct {
-		Quiet  bool
-		Output string
-		All    bool
+		All   bool
+		Type  []string
+		Force bool
 	}
 	type args struct {
 		cmd    *cobra.Command
@@ -32,10 +32,10 @@ func TestUpdate(t *testing.T) {
 		commandContext CommandContext
 	}{
 		{
-			name: "acorn update dne", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
+			name: "acorn dev image-dne", fields: fields{
+				All:   false,
+				Type:  nil,
+				Force: true,
 			},
 			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
@@ -44,17 +44,17 @@ func TestUpdate(t *testing.T) {
 				StdIn:         strings.NewReader(""),
 			},
 			args: args{
-				args:   []string{"dne"},
+				args:   []string{"image-dne"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "error: app dne does not exist",
+			wantOut: "error: app image-dne does not exist",
 		},
 		{
-			name: "acorn update dne", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
+			name: "acorn dev --name dne . ", fields: fields{
+				All:   false,
+				Type:  nil,
+				Force: true,
 			},
 			commandContext: CommandContext{
 				ClientFactory: &testdata.MockClientFactory{},
@@ -63,7 +63,7 @@ func TestUpdate(t *testing.T) {
 				StdIn:         strings.NewReader(""),
 			},
 			args: args{
-				args:   []string{"dne"},
+				args:   []string{"--name", "dne", "."},
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
@@ -74,8 +74,7 @@ func TestUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r, w, _ := os.Pipe()
 			os.Stdout = w
-			tt.commandContext.StdOut = w
-			tt.args.cmd = NewUpdate(tt.commandContext)
+			tt.args.cmd = NewDev(tt.commandContext)
 			tt.args.cmd.SetArgs(tt.args.args)
 			err := tt.args.cmd.Execute()
 			if err != nil && !tt.wantErr {
@@ -85,7 +84,8 @@ func TestUpdate(t *testing.T) {
 			} else {
 				w.Close()
 				out, _ := io.ReadAll(r)
-				assert.Equal(t, tt.wantOut, string(out))
+				testOut, _ := os.ReadFile(tt.wantOut)
+				assert.Equal(t, string(testOut), string(out))
 			}
 		})
 	}
