@@ -16,18 +16,15 @@ projects:
       builderPerProject: null
       clusterDomains: null
       defaultPublishMode: ""
-      disableNetworkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
-      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -50,18 +47,15 @@ projects:
       builderPerProject: null
       clusterDomains: null
       defaultPublishMode: ""
-      disableNetworkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
-      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -82,18 +76,15 @@ projects:
       builderPerProject: null
       clusterDomains: null
       defaultPublishMode: ""
-      disableNetworkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
-      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -116,18 +107,15 @@ projects:
       builderPerProject: null
       clusterDomains: null
       defaultPublishMode: ""
-      disableNetworkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
-      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null

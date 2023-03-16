@@ -1,6 +1,0 @@
-containers: {
-	foo: {
-		image: "public.ecr.aws/docker/library/nginx:latest"
-		ports: "80/http"
-	}
-}
