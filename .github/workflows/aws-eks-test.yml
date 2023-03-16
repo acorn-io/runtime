@@ -42,8 +42,13 @@ jobs:
           aws eks update-kubeconfig --region ${{ secrets.GHA_SVC_ACC_AWS_REGION }} --name ${{ secrets.GHA_SVC_ACC_EKS_CLUSTER_NAME }}
 
       - name: install acorn
+        # If a previous run left Acorn installed, uninstall it
         run: |
+          if acorn check; then
+            acorn uninstall -af
+          fi
           acorn install --image ghcr.io/acorn-io/acorn:main
+          
         env:
           KUBECONFIG: "/home/runner/.kube/config"
 
@@ -74,22 +79,26 @@ jobs:
 
       - name: create run artifacts
         if: always()
-        # Add any artifacts that should be assosciated with this run to /tmp/artifacts/${{ github.run_id }}
+        # Add any artifacts that should be associated with this run to /tmp/artifacts/${{ github.run_id }}
         run: |
-          mkdir -p /tmp/artifacts/${{ github.run_id }} ||
-          kubectl logs -n acorn-system -l app=acorn-api > /tmp/artifacts/${{ github.run_id }}/acorn-api.log ||
-          kubectl logs -n acorn-system -l app=acorn-controller > /tmp/artifacts/${{ github.run_id }}/acorn-controller.log ||
-          true
+          mkdir -p /tmp/artifacts/${{ github.run_id }}
+          kubectl logs -n acorn-system -l app=acorn-api > /tmp/artifacts/${{ github.run_id }}/logs/acorn-api.log || true
+          kubectl logs -n acorn-system -l app=acorn-controller > /tmp/artifacts/${{ github.run_id }}/logs/acorn-controller.log || true
+          kubectl get all -n acorn-image-system > /tmp/artifacts/${{ github.run_id }}/resources/acorn-image-system.txt || true
+          kubectl get all -n acorn-system > /tmp/artifacts/${{ github.run_id }}/resources/acorn-system.txt || true
+          kubectl get all -n acorn > /tmp/artifacts/${{ github.run_id }}/resources/acorn.txt || true
+          acorn all -A > /tmp/artifacts/${{ github.run_id }}/resources/acorn-resources-state.txt || true
 
       - name: upload run artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: run-artifacts
-          path: /tmp/artifacts/${{ github.run_id }}
+          path: /tmp/artifacts/${{ github.run_id }}/
 
+      # Only uninstall on success, keep around on failure for debugging
       - name: uninstall acorn
-        if: always()
+        if: success()
         run: |
           acorn uninstall -af
         env:
