@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -155,19 +154,6 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	if err = validateMemoryArgs(*finalConfForValidation.WorkloadMemoryDefault, *finalConfForValidation.WorkloadMemoryMaximum); err != nil {
 		return err
-	}
-
-	// Validate the pod CIDRsq
-	var errs []error
-	for _, cidr := range finalConfForValidation.PodCIDRs {
-		if cidr != "" {
-			if _, _, err = net.ParseCIDR(cidr); err != nil {
-				errs = append(errs, err)
-			}
-		}
-	}
-	if len(errs) > 0 {
-		return merr.NewErrors(errs...)
 	}
 
 	opts = opts.complete()
