@@ -252,3 +252,71 @@ func TestContainerDebugExec(t *testing.T) {
 	exit := <-cio.ExitCode
 	assert.Equal(t, 0, exit.Code)
 }
+
+func TestContainerWithSidecarExec(t *testing.T) {
+	helper.StartController(t)
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	lclient, err := kclient.New(restConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	c, err := client.New(restConfig, "", ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	imageID := client2.NewImageWithSidecar(t, ns.Name)
+	app, err := c.AppRun(ctx, imageID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+		return app.Status.ContainerStatus["web"].UpToDate > 0
+	})
+
+	cons, err := c.ContainerReplicaList(ctx, &client.ContainerReplicaListOptions{App: app.Name})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, cons, 2)
+
+	webCont := helper.WaitForObject(t, lclient.Watch, &apiv1.ContainerReplicaList{}, &cons[0], func(con *apiv1.ContainerReplica) bool {
+		return con.Status.Phase == corev1.PodRunning
+	})
+	sidecarCont := helper.WaitForObject(t, lclient.Watch, &apiv1.ContainerReplicaList{}, &cons[1], func(con *apiv1.ContainerReplica) bool {
+		return con.Status.Phase == corev1.PodRunning
+	})
+
+	webIO, err := c.ContainerReplicaExec(ctx, webCont.Name, []string{"cat", "/tmp/file"}, false, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	webData, err := io.ReadAll(webIO.Stdout)
+	if err != nil {
+		t.Fatal(err)
+	}
+	webExit := <-webIO.ExitCode
+
+	assert.Equal(t, "This is the web container", string(webData))
+	assert.Equal(t, 0, webExit.Code)
+
+	sidecarIO, err := c.ContainerReplicaExec(ctx, sidecarCont.Name, []string{"cat", "/tmp/file"}, false, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sidecarData, err := io.ReadAll(sidecarIO.Stdout)
+	sidecarExit := <-sidecarIO.ExitCode
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "This is the sidecar", string(sidecarData))
+	assert.Equal(t, 0, sidecarExit.Code)
+}

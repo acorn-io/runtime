@@ -1,0 +1,12 @@
+containers: {
+	web: {
+		image: "public.ecr.aws/docker/library/nginx:latest"
+        files: "/tmp/file": "This is the web container"
+
+        sidecars: sidecar: {
+            image: "public.ecr.aws/docker/library/busybox:latest"
+            command: ["/bin/sh", "-c", "sleep 9999"]
+            files: "/tmp/file": "This is the sidecar"
+        }
+	}
+}

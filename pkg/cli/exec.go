@@ -87,6 +87,9 @@ func (s *Exec) filterContainers(containers []apiv1.ContainerReplica) (result []a
 		} else if c.Spec.ContainerName == s.Container {
 			result = append(result, c)
 			break
+		} else if c.Spec.ContainerName+"."+c.Spec.SidecarName == s.Container {
+			result = append(result, c)
+			break
 		}
 	}
 	return result
