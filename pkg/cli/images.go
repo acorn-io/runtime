@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -48,8 +49,22 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	var image *apiv1.Image
 	tagToMatch := ""
 
+	allSetByUser := cmd.Flags().Changed("all")
+
 	if len(args) == 1 {
-		image, err = c.ImageGet(cmd.Context(), args[0])
+		searchStr := args[0]
+
+		ref, err := name.ParseReference(searchStr, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+		if err != nil {
+			return err
+		}
+
+		// If the image is a digest, then we need to get the image by digest
+		if dig, ok := ref.(name.Digest); ok {
+			searchStr = dig.DigestStr()
+		}
+
+		image, err = c.ImageGet(cmd.Context(), searchStr)
 		if err != nil {
 			return err
 		}
@@ -108,35 +123,39 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		for _, tag := range image.Tags {
-			imageRef, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+			imageTagRef, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 			if err != nil {
 				return err
 			}
 
-			if imageRef.Context().RegistryStr() != "" {
-				imagePrint.Repository = imageRef.Context().RegistryStr() + "/"
-			}
-			imagePrint.Repository += imageRef.Context().RepositoryStr()
-
-			// untagged repository reference, which is NOT considered :latest
-			if imageRef.Identifier() == "" {
-				if a.All { // FIXME: this is always true if an image is specified, so we need a differentiation if it was set by --all or by image argument
-					out.Write(imagePrint)
-				}
-				continue
-			}
-
-			var ntag name.Tag
-			ntag, err = name.NewTag(imageRef.Name(), name.WithDefaultRegistry(""))
-			if err != nil {
-				if !a.All {
-					// not a real tag (e.g. SHA), skip
-					continue
+			if imageTagRef.Identifier() == "" {
+				tag = fmt.Sprintf("%s/%s@%s", imageTagRef.Context().RegistryStr(), imageTagRef.Context().RepositoryStr(), image.Digest)
+				imageTagRef, err = name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+				if err != nil {
+					return err
 				}
 			}
 
-			if tagToMatch == ntag.Name() || tagToMatch == "" {
-				imagePrint.Tag = ntag.TagStr()
+			if imageTagRef.Context().RegistryStr() != "" {
+				imagePrint.Repository = imageTagRef.Context().RegistryStr() + "/"
+			}
+			imagePrint.Repository += imageTagRef.Context().RepositoryStr()
+
+			if tagToMatch == imageTagRef.Name() {
+				ntag, ok := imageTagRef.(name.Tag)
+				if ok {
+					imagePrint.Tag = ntag.TagStr()
+				}
+				out.Write(imagePrint)
+			} else if tagToMatch == "" {
+				ntag, ok := imageTagRef.(name.Tag)
+				if ok {
+					imagePrint.Tag = ntag.TagStr()
+				} else {
+					if !allSetByUser {
+						continue
+					}
+				}
 				out.Write(imagePrint)
 			}
 		}
