@@ -159,6 +159,6 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	pterm.Success.Printf("Login to %s succeeded\n", serverAddress)
+	pterm.Success.Printf("Login to %s as %s succeeded\n", serverAddress, a.Username)
 	return nil
 }
