@@ -21,6 +21,7 @@ acorn install
 ```
       --acorn-dns string                       enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)
       --acorn-dns-endpoint string              The URL to access the Acorn DNS service
+      --allow-traffic-from-namespace strings   Namespaces that can bypass NetworkPolicies and send network traffic to all Acorn apps
       --allow-user-annotation strings          Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --allow-user-label strings               Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --api-server-replicas int                acorn-api deployment replica count

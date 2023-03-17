@@ -26,6 +26,23 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 	appNamespace := app.Namespace        // this is where the AppInstance lives
 	podNamespace := app.Status.Namespace // this is where the app is actually running
 
+	allowedNamespaceSelectors := []networkingv1.NetworkPolicyPeer{{
+		NamespaceSelector: &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				labels.AcornAppNamespace: appNamespace,
+			},
+		},
+	}}
+	for _, namespace := range cfg.AllowTrafficFromNamespace {
+		allowedNamespaceSelectors = append(allowedNamespaceSelectors, networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"kubernetes.io/metadata.name": namespace,
+				},
+			},
+		})
+	}
+
 	// create the NetworkPolicy for the whole app
 	// this allows traffic only from within the project
 	resp.Objects(&networkingv1.NetworkPolicy{
@@ -38,13 +55,7 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 				MatchLabels: labels.Managed(app),
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
-				From: []networkingv1.NetworkPolicyPeer{{
-					NamespaceSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							labels.AcornAppNamespace: appNamespace,
-						},
-					}},
-				},
+				From: allowedNamespaceSelectors,
 			}},
 			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},

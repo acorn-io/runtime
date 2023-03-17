@@ -328,6 +328,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.PodCIDRs = newConfig.PodCIDRs
 	}
 
+	if newConfig.AllowTrafficFromNamespace != nil {
+		mergedConfig.AllowTrafficFromNamespace = newConfig.AllowTrafficFromNamespace
+	}
+
 	return &mergedConfig
 }
 

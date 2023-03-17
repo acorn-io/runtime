@@ -349,6 +349,7 @@ type Config struct {
 	DisableNetworkPolicies         *bool    `json:"disableNetworkPolicies" name:"disable-network-policies" usage:"Disable the creation Kubernetes NetworkPolicies which block cross-project network traffic (default false)"`
 	IngressControllerNamespace     *string  `json:"ingressControllerNamespace" name:"ingress-controller-namespace" usage:"The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies."`
 	PodCIDRs                       []string `json:"podCIDRs" name:"pod-cidr" usage:"The IP address ranges for pods in the cluster, in CIDR format - used to secure published TCP/UDP ports with NetworkPolicies"`
+	AllowTrafficFromNamespace      []string `json:"allowTrafficFromNamespace" name:"allow-traffic-from-namespace" usage:"Namespaces that can bypass NetworkPolicies and send network traffic to all Acorn apps"`
 }
 
 type EncryptionKey struct {
