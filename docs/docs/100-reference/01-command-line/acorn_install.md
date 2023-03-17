@@ -28,11 +28,13 @@ acorn install
       --builder-per-project                    Create a dedicated builder per project
       --cluster-domain strings                 The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int                acorn-controller deployment replica count
+      --disable-network-policies               Disable the creation Kubernetes NetworkPolicies which block cross-project network traffic (default false)
   -h, --help                                   help for install
       --http-endpoint-pattern string           Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations     Don't propagate user-defined labels and annotations to dependent objects
       --image string                           Override the default image used for the deployment
       --ingress-class-name string              The ingress class name to assign to all created ingress resources (default '')
+      --ingress-controller-namespace string    The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies.
       --internal-cluster-domain string         The Kubernetes internal cluster domain (default svc.cluster.local)
       --internal-registry-prefix string        The image prefix to use when pushing internal images (example ghcr.io/my-org/)
       --lets-encrypt string                    enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)
@@ -40,6 +42,7 @@ acorn install
       --lets-encrypt-tos-agree                 Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)
       --manage-volume-classes                  Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes
   -o, --output string                          Output manifests instead of applying them (json, yaml)
+      --pod-cidr strings                       The IP address ranges for pods in the cluster, in CIDR format - used to secure published TCP/UDP ports with NetworkPolicies
       --pod-security-enforce-profile string    The name of the PodSecurity profile to set (default baseline)
       --propagate-project-annotation strings   The list of keys of annotations to propagate from acorn project to app namespaces
       --propagate-project-label strings        The list of keys of labels to propagate from acorn project to app namespaces
