@@ -161,7 +161,9 @@ func Ingress(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance) (
 
 	for _, entry := range typed.Sorted(bindings.ByHostname()) {
 		hostname := entry.Key
-		ports := entry.Value
+		ports := typed.MapSlice(entry.Value, func(p v1.PortDef) v1.PortDef {
+			return p.Complete()
+		})
 		if hostname == "" {
 			for i, port := range ports {
 				targetName := svc.Name

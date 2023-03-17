@@ -16,6 +16,10 @@ spec:
       targetPort: 91
       protocol: "TCP"
       name: "90"
+    - port: 92
+      targetPort: 92
+      protocol: "TCP"
+      name: "92"
   selector:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
@@ -35,15 +39,19 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: 80
+    - port: 81
       targetPort: 81
       protocol: "TCP"
       appProtocol: "HTTP"
-      name: "80"
+      name: "81"
     - port: 90
       targetPort: 91
       protocol: "TCP"
       name: "90"
+    - port: 92
+      targetPort: 92
+      protocol: "TCP"
+      name: "92"
   selector:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
