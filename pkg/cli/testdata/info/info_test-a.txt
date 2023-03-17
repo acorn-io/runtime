@@ -10,6 +10,7 @@ projects:
     config:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -43,6 +44,7 @@ projects:
     userConfig:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -74,6 +76,7 @@ projects:
     config:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -107,6 +110,7 @@ projects:
     userConfig:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null

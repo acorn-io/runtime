@@ -44,7 +44,8 @@
                 "manageVolumeClasses": null,
                 "disableNetworkPolicies": null,
                 "ingressControllerNamespace": null,
-                "podCIDRs": null
+                "podCIDRs": null,
+                "allowTrafficFromNamespace": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -74,7 +75,8 @@
                 "manageVolumeClasses": null,
                 "disableNetworkPolicies": null,
                 "ingressControllerNamespace": null,
-                "podCIDRs": null
+                "podCIDRs": null,
+                "allowTrafficFromNamespace": null
             }
         }
     }
