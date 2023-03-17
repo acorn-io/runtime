@@ -13,8 +13,7 @@ func NewOfferings(c CommandContext) *cobra.Command {
 acorn offerings`,
 		Short: "Show infrastructure offerings",
 	})
-	cmd.AddCommand(NewVolumeClasses(c))
-	cmd.AddCommand(NewComputeClasses(c))
+	cmd.AddCommand(NewVolumeClasses(c), NewComputeClasses(c), NewRegions(c))
 	return cmd
 }
 

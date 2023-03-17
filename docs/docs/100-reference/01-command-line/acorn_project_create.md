@@ -24,7 +24,8 @@ acorn project create acorn.io/username/new-project
 ### Options
 
 ```
-  -h, --help   help for create
+  -h, --help            help for create
+      --region string   Region to create project in
 ```
 
 ### Options inherited from parent commands

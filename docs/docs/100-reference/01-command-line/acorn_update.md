@@ -31,6 +31,7 @@ acorn update [flags] APP_NAME [deploy flags]
   -p, --publish strings           Publish port of application (format [public:]private) (ex 81:80)
   -P, --publish-all               Publish all (true) or none (false) of the defined ports of application
       --pull                      Re-pull the app's image, which will cause the app to re-deploy if the image has changed
+      --region string             Region in which to deploy the app, immutable
       --replace                   Toggle replacing update, resetting undefined fields to default values
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
       --target-namespace string   The name of the namespace to be created and deleted for the application resources

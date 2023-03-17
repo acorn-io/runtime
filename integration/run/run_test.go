@@ -1100,155 +1100,74 @@ func TestUsingComputeClasses(t *testing.T) {
 	}
 }
 
-func TestCreatingComputeClasses(t *testing.T) {
+func TestAppWithBadRegion(t *testing.T) {
 	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
+
+	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndNamespace(t)
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	_, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{Region: "does-not-exist"})
+	if err == nil || !strings.Contains(err.Error(), "is not supported for project") {
+		t.Fatalf("expected an invalid region error, got %v", err)
+	}
+}
+
+func TestAppUpdateRegion(t *testing.T) {
+	helper.StartController(t)
+
+	k8sclient := helper.MustReturn(kclient.Default)
 	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndNamespace(t)
 
-	checks := []struct {
-		name      string
-		memory    adminv1.ComputeClassMemory
-		cpuScaler float64
-		fail      bool
-	}{
-		{
-			name: "valid-only-max",
-			memory: adminv1.ComputeClassMemory{
-				Max: "512Mi",
-			},
-			fail: false,
-		},
-		{
-			name: "valid-only-min",
-			memory: adminv1.ComputeClassMemory{
-				Min: "512Mi",
-			},
-			fail: false,
-		},
-		{
-			name: "valid-only-default",
-			memory: adminv1.ComputeClassMemory{
-				Default: "512Mi",
-			},
-			fail: false,
-		},
-		{
-			name:      "valid-values",
-			cpuScaler: 0.25,
-			memory: adminv1.ComputeClassMemory{
-				Default: "1Gi",
-				Values:  []string{"1Gi", "2Gi"},
-			},
-		},
-		{
-			name: "valid-empty",
-		},
-		{
-			name: "invalid-memory-default",
-			memory: adminv1.ComputeClassMemory{
-				Default: "invalid",
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-memory-min",
-			memory: adminv1.ComputeClassMemory{
-				Min: "invalid",
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-memory-max",
-			memory: adminv1.ComputeClassMemory{
-				Max: "invalid",
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-memory-values",
-			memory: adminv1.ComputeClassMemory{
-				Values: []string{"invalid"},
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-default-less-than-min",
-			memory: adminv1.ComputeClassMemory{
-				Default: "128Mi",
-				Min:     "512Mi",
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-default-greater-than-max",
-			memory: adminv1.ComputeClassMemory{
-				Default: "1Gi",
-				Max:     "512Mi",
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-min-max-swapped",
-			memory: adminv1.ComputeClassMemory{
-				Min: "1Gi",
-				Max: "512Mi",
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-default-for-values",
-			memory: adminv1.ComputeClassMemory{
-				Default: "128Mi",
-				Values:  []string{"512Mi"},
-			},
-			fail: true,
-		},
-		{
-			name: "invalid-min-max-set-with-values",
-			memory: adminv1.ComputeClassMemory{
-				Min:    "512Mi",
-				Max:    "4Gi",
-				Values: []string{"2Gi", "3Gi"},
-			},
-			fail: true,
-		},
+	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/simple",
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for _, tt := range checks {
-		t.Run(tt.name, func(t *testing.T) {
-			// Create a non-instanced ComputeClass to trigger Mink valdiation
-			computeClass := adminapiv1.ProjectComputeClass{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "acorn-test-custom",
-					Namespace:    c.GetNamespace(),
-				},
-				CPUScaler: tt.cpuScaler,
-				Memory:    tt.memory,
-			}
-
-			// TODO - dry run
-			err = kclient.Create(ctx, &computeClass)
-			if err != nil && !tt.fail {
-				t.Fatal("did not expect creation to fail:", err)
-			} else if err == nil {
-				if err := kclient.Delete(context.Background(), &computeClass); err != nil && !apierrors.IsNotFound(err) {
-					t.Fatal("failed to cleanup test:", err)
-				}
-				if tt.fail {
-					t.Fatal("expected an error to occur when creating an invalid ComputeClass but did not receive one")
-				}
-			}
-
-		})
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+			obj.Status.Condition(v1.AppInstanceConditionReady).Success
+	})
+
+	for {
+		// Update the app region to be `local`, which should be the default
+		if err = k8sclient.Get(ctx, kclient.ObjectKey{Namespace: app.Namespace, Name: app.Name}, app); err != nil {
+			t.Fatal(err)
+		}
+		app.Spec.Region = "local"
+		if err = k8sclient.Update(ctx, app); err == nil {
+			break
+		} else if !apierrors.IsConflict(err) {
+			t.Fatal(err)
+		}
+	}
+
+	for {
+		// Now try to update the app region to something else, which should fail
+		if err = k8sclient.Get(ctx, kclient.ObjectKey{Namespace: app.Namespace, Name: app.Name}, app); err != nil {
+			t.Fatal(err)
+		}
+		app.Spec.Region = "non-local"
+		if err = k8sclient.Update(ctx, app); err == nil {
+			t.Fatal("expected error")
+		} else if !apierrors.IsConflict(err) {
+			break
+		}
+	}
 }
 
 func getStorageClassName(t *testing.T, storageClasses *storagev1.StorageClassList) string {

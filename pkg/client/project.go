@@ -28,11 +28,15 @@ func (c *DefaultClient) ProjectList(ctx context.Context) ([]apiv1.Project, error
 	return result.Items, nil
 }
 
-func (c *DefaultClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+func (c *DefaultClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
 	project := &apiv1.Project{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
+	}
+	if region != "" {
+		project.Spec.DefaultRegion = region
+		project.Spec.SupportedRegions = []string{region}
 	}
 	return project, c.Client.Create(ctx, project)
 }

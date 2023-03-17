@@ -318,11 +318,11 @@ func (d *DeferredClient) ProjectList(ctx context.Context) ([]apiv1.Project, erro
 	return d.Client.ProjectList(ctx)
 }
 
-func (d *DeferredClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+func (d *DeferredClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
 	if err := d.create(); err != nil {
 		return nil, err
 	}
-	return d.Client.ProjectCreate(ctx, name)
+	return d.Client.ProjectCreate(ctx, name, region)
 }
 
 func (d *DeferredClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
@@ -365,6 +365,20 @@ func (d *DeferredClient) VolumeClassGet(ctx context.Context, name string) (*apiv
 		return nil, err
 	}
 	return d.Client.VolumeClassGet(ctx, name)
+}
+
+func (d *DeferredClient) RegionList(ctx context.Context) ([]apiv1.Region, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.RegionList(ctx)
+}
+
+func (d *DeferredClient) RegionGet(ctx context.Context, name string) (*apiv1.Region, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.RegionGet(ctx, name)
 }
 
 func (d *DeferredClient) GetProject() string {

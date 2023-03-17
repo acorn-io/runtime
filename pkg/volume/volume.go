@@ -19,17 +19,17 @@ import (
 )
 
 func SyncVolumeClasses(req router.Request, resp router.Response) error {
-	storageClass := req.Object.(*storagev1.StorageClass)
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
 	}
 
-	// If the admin has chosen to manually manage the volume classes, then there is nothing to do.
-	if *cfg.ManageVolumeClasses {
+	// If the admin has chosen to manually manage the volume classes or the storage class has been deleted, then there is nothing to do.
+	if *cfg.ManageVolumeClasses || req.Object == nil || !req.Object.GetDeletionTimestamp().IsZero() {
 		return nil
 	}
 
+	storageClass := req.Object.(*storagev1.StorageClass)
 	resp.Objects(&adminv1.ClusterVolumeClassInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: storageClass.Name,

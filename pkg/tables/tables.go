@@ -149,6 +149,15 @@ var (
 		{"Default", "{{ boolToStar .Default }}"},
 	}
 
+	Region = [][]string{
+		{"Name", "Name"},
+		{"Account", "{{ .Spec.AccountName }}"},
+		{"Region Name", "{{ .Spec.RegionName }}"},
+		{"Created", "{{ ago .CreationTimestamp }}"},
+		{"Description", "{{ .Spec.Description }}"},
+	}
+	RegionConverter = MustConverter(Region)
+
 	RuleRequests = [][]string{
 		{"Service", "Service"},
 		{"Verbs", "Verbs"},

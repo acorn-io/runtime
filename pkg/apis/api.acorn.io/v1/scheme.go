@@ -57,6 +57,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&AcornImageBuildList{},
 		&ComputeClass{},
 		&ComputeClassList{},
+		&Region{},
+		&RegionList{},
 	)
 
 	// Add common types

@@ -103,6 +103,7 @@ type LogOptions apiv1.LogOptions
 
 type AppRunOptions struct {
 	Name                string
+	Region              string
 	Annotations         []v1.ScopedLabel
 	Labels              []v1.ScopedLabel
 	PublishMode         v1.PublishMode
@@ -231,7 +232,7 @@ type Client interface {
 
 	ProjectGet(ctx context.Context, name string) (*apiv1.Project, error)
 	ProjectList(ctx context.Context) ([]apiv1.Project, error)
-	ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error)
+	ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error)
 	ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error)
 
 	VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error)
@@ -241,6 +242,9 @@ type Client interface {
 
 	ComputeClassList(ctx context.Context) ([]apiv1.ComputeClass, error)
 	ComputeClassGet(ctx context.Context, name string) (*apiv1.ComputeClass, error)
+
+	RegionList(ctx context.Context) ([]apiv1.Region, error)
+	RegionGet(ctx context.Context, name string) (*apiv1.Region, error)
 
 	GetProject() string
 	GetNamespace() string

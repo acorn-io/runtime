@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/images"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/info"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/projects"
+	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/regions"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/secrets"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/volumes"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/volumes/class"
@@ -86,6 +87,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"secrets/reveal":         secrets.NewReveal(c),
 		"infos":                  info.NewStorage(c),
 		"computeclasses":         computeclass.NewAggregateStorage(c),
+		"regions":                regions.NewStorage(c),
 	}
 
 	return stores, nil

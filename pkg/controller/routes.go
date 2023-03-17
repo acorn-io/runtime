@@ -18,6 +18,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/service"
 	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/region"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -90,4 +91,5 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	configRouter.HandlerFunc(builder.DeployRegistry)
 	configRouter.HandlerFunc(config.HandleAutoUpgradeInterval)
 	configRouter.HandlerFunc(volume.CreateEphemeralVolumeClass)
+	configRouter.HandlerFunc(region.CreateLocalRegion)
 }

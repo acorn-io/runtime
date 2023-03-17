@@ -6,6 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -365,16 +366,27 @@ type InfoList struct {
 type Project struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Spec              ProjectSpec   `json:"spec,omitempty"`
 	Status            ProjectStatus `json:"status,omitempty"`
 }
 
+type ProjectSpec struct {
+	DefaultRegion    string   `json:"defaultRegion,omitempty"`
+	SupportedRegions []string `json:"supportedRegions,omitempty"`
+}
+
 type ProjectStatus struct {
-	Placement string `json:"placement,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
+	Placement     string `json:"placement,omitempty"`
+	Namespace     string `json:"namespace,omitempty"`
+	DefaultRegion string `json:"defaultRegion,omitempty"`
 }
 
 func (in *Project) NamespaceScoped() bool {
 	return false
+}
+
+func (in *Project) ForRegion(region string) bool {
+	return region == "" || in.Status.DefaultRegion == region || slices.Contains(in.Spec.SupportedRegions, region)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -431,4 +443,20 @@ type ServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Service `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Region adminv1.RegionInstance
+
+func (in *Region) NamespaceScoped() bool {
+	return false
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type RegionList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Region `json:"items"`
 }

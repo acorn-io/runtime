@@ -11,20 +11,24 @@ import (
 )
 
 func NewStorage(c kclient.WithWatch) rest.Storage {
-	remoteResource := remote.NewWithTranslation(&Translator{},
-		&corev1.Namespace{}, c)
+	remoteResource := remote.NewWithTranslation(&Translator{}, &corev1.Namespace{}, c)
 	strategy := &Strategy{
 		c:       c,
 		lister:  remoteResource,
 		creater: remoteResource,
+		updater: remoteResource,
 		deleter: remoteResource,
 	}
+	validator := &Validator{c, "local"}
 	return stores.NewBuilder(c.Scheme(), &apiv1.Project{}).
 		WithCreate(strategy).
+		WithUpdate(strategy).
 		WithDelete(strategy).
 		WithGet(strategy).
 		// Watch is not enabled because the dynamic privileges can do weird things...
 		WithList(strategy).
+		WithValidateCreate(validator).
+		WithValidateUpdate(validator).
 		WithTableConverter(tables.ProjectConverter).
 		Build()
 }
