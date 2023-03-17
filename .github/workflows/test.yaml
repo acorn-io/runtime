@@ -24,8 +24,7 @@ jobs:
       - uses: debianmaster/actions-k3s@v1.0.5
         with:
           version: 'v1.23.6-k3s1'
-      - run: make validate-ci
-      - run: make validate
+      - run: make validate-code
       - run: make build
       - run: docker buildx install
       - run: make setup-ci-image
