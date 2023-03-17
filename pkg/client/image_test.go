@@ -1,9 +1,8 @@
 package client_test
 
-// TODO: Add failure states to be tested
-
 import (
 	"context"
+
 	v12 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -14,9 +13,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	// may want to use envtest instead
-	testcontrollerclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
+
+	testcontrollerclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 type defaultClientImagesConfig struct {
@@ -35,16 +34,10 @@ func createMockedDefaultClientImageLister(t *testing.T, config defaultClientImag
 				labels.AcornProject:       "true",
 			},
 		},
-		Spec:   corev1.NamespaceSpec{},
-		Status: corev1.NamespaceStatus{},
 	}
 
 	imageListObj := config.images
 	testingScheme := scheme2.Scheme
-	err := scheme2.AddToScheme(testingScheme)
-	if err != nil {
-		return client.DefaultClient{}, err
-	}
 
 	testK8ClientBuilder := testcontrollerclient.NewClientBuilder()
 	testK8ClientBuilder.WithScheme(testingScheme)
@@ -67,18 +60,15 @@ func TestDefaultClientImageList(t *testing.T) {
 
 	mockConfig := defaultClientImagesConfig{
 		images: v12.ImageList{
-			TypeMeta: metav1.TypeMeta{},
-			ListMeta: metav1.ListMeta{},
 			Items: []v12.Image{
 				{
-					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ImageName",
 						Namespace: "NS",
 					},
-					Repository: "Repo1",
-					Digest:     "Digest1",
-					Tags:       nil,
+					Repo:   "Repo1",
+					Digest: "Digest1",
+					Tags:   nil,
 				},
 			},
 		},
@@ -101,22 +91,22 @@ func TestMultiClientImageListSingle(t *testing.T) {
 
 	mockConfig1 := defaultClientImagesConfig{
 		images: v12.ImageList{
-			TypeMeta: metav1.TypeMeta{},
-			ListMeta: metav1.ListMeta{},
 			Items: []v12.Image{
 				{
-					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ImageName1",
 						Namespace: "NS1",
+						Labels: map[string]string{
+							labels.AcornProject: "NS1",
+						},
 					},
-					Repository: "Repo1",
-					Digest:     "Digest1",
-					Tags:       nil,
+					Repo:   "Repo1",
+					Digest: "Digest1",
+					Tags:   nil,
 				},
 			},
 		},
-		projectName: "projName1",
+		projectName: "NS1",
 		namespace:   "NS1",
 	}
 	defaultClient1, err := createMockedDefaultClientImageLister(t, mockConfig1)
@@ -128,7 +118,7 @@ func TestMultiClientImageListSingle(t *testing.T) {
 	// Lists default clients to use
 	mFactory.EXPECT().List(gomock.Any()).Return([]client.Client{&defaultClient1}, nil)
 	// gets default project
-	mFactory.EXPECT().DefaultProject().Return("projName1").AnyTimes()
+	mFactory.EXPECT().DefaultProject().Return("NS1").AnyTimes()
 	projectMap := make(map[string]*client.DefaultClient)
 	projectMap["projName1"] = &defaultClient1
 
@@ -136,7 +126,7 @@ func TestMultiClientImageListSingle(t *testing.T) {
 		return projectMap[projectName], nil
 	}).AnyTimes()
 
-	mMultiClient := client.NewMultiClient("projName1", "NS1", mFactory)
+	mMultiClient := client.NewMultiClient("NS1", "NS1", mFactory)
 	imageListResp, err := mMultiClient.ImageList(ctx)
 
 	assert.NoError(t, err, "issue calling multi-client info")
@@ -152,22 +142,22 @@ func TestMultiClientImageListMuliple(t *testing.T) {
 
 	mockConfig1 := defaultClientImagesConfig{
 		images: v12.ImageList{
-			TypeMeta: metav1.TypeMeta{},
-			ListMeta: metav1.ListMeta{},
 			Items: []v12.Image{
 				{
-					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ImageName1",
 						Namespace: "NS1",
+						Labels: map[string]string{
+							labels.AcornProject: "NS1",
+						},
 					},
-					Repository: "Repo1",
-					Digest:     "Digest1",
-					Tags:       nil,
+					Repo:   "Repo1",
+					Digest: "Digest1",
+					Tags:   nil,
 				},
 			},
 		},
-		projectName: "projName1",
+		projectName: "NS1",
 		namespace:   "NS1",
 	}
 	defaultClient1, err := createMockedDefaultClientImageLister(t, mockConfig1)
@@ -175,22 +165,22 @@ func TestMultiClientImageListMuliple(t *testing.T) {
 
 	mockConfig2 := defaultClientImagesConfig{
 		images: v12.ImageList{
-			TypeMeta: metav1.TypeMeta{},
-			ListMeta: metav1.ListMeta{},
 			Items: []v12.Image{
 				{
-					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ImageName2",
 						Namespace: "NS2",
+						Labels: map[string]string{
+							labels.AcornProject: "NS2",
+						},
 					},
-					Repository: "Repo2",
-					Digest:     "Digest2",
-					Tags:       nil,
+					Repo:   "Repo2",
+					Digest: "Digest2",
+					Tags:   nil,
 				},
 			},
 		},
-		projectName: "projName2",
+		projectName: "NS2",
 		namespace:   "NS2",
 	}
 	defaultClient2, err := createMockedDefaultClientImageLister(t, mockConfig2)
@@ -204,14 +194,14 @@ func TestMultiClientImageListMuliple(t *testing.T) {
 	// gets default project
 	mFactory.EXPECT().DefaultProject().Return("projName1").AnyTimes()
 	projectMap := make(map[string]*client.DefaultClient)
-	projectMap["projName1"] = &defaultClient1
-	projectMap["projName2"] = &defaultClient2
+	projectMap["NS1"] = &defaultClient1
+	projectMap["NS2"] = &defaultClient2
 
 	mFactory.EXPECT().ForProject(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, projectName string) (client.Client, error) {
 		return projectMap[projectName], nil
 	}).AnyTimes()
 
-	mMultiClient := client.NewMultiClient("projName1", "projName1", mFactory)
+	mMultiClient := client.NewMultiClient("NS1", "NS2", mFactory)
 	imageListResp, err := mMultiClient.ImageList(ctx)
 
 	assert.NoError(t, err, "issue calling multi-client info")
@@ -229,18 +219,18 @@ func TestMultiClientImageListMultipleFQDNClobber(t *testing.T) {
 
 	mockConfig1 := defaultClientImagesConfig{
 		images: v12.ImageList{
-			TypeMeta: metav1.TypeMeta{},
-			ListMeta: metav1.ListMeta{},
 			Items: []v12.Image{
 				{
-					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ImageName1",
 						Namespace: "projName1",
+						Labels: map[string]string{
+							labels.AcornProject: "projName1",
+						},
 					},
-					Repository: "Repo1",
-					Digest:     "Digest1",
-					Tags:       nil,
+					Repo:   "Repo1",
+					Digest: "Digest1",
+					Tags:   nil,
 				},
 			},
 		},
@@ -252,18 +242,18 @@ func TestMultiClientImageListMultipleFQDNClobber(t *testing.T) {
 
 	mockConfig2 := defaultClientImagesConfig{
 		images: v12.ImageList{
-			TypeMeta: metav1.TypeMeta{},
-			ListMeta: metav1.ListMeta{},
 			Items: []v12.Image{
 				{
-					TypeMeta: metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ImageName2",
 						Namespace: "test2",
+						Labels: map[string]string{
+							labels.AcornProject: "acorn.io/jacob/test2",
+						},
 					},
-					Repository: "Repo2",
-					Digest:     "Digest2",
-					Tags:       nil,
+					Repo:   "Repo2",
+					Digest: "Digest2",
+					Tags:   nil,
 				},
 			},
 		},

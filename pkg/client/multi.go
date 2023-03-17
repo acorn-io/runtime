@@ -2,13 +2,13 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/acorn/pkg/labels"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -325,7 +325,6 @@ func (m *MultiClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Vol
 }
 
 func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
-	fmt.Printf("CALL TO MULTI")
 	return aggregateOptionalNaming(ctx, false, m.Factory, func(c Client) ([]apiv1.Image, error) {
 		imageList, err := c.ImageList(ctx)
 		if err != nil {
@@ -333,7 +332,10 @@ func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 		}
 		projectName := c.GetProject()
 		for i := range imageList {
-			imageList[i].Project = projectName
+			if imageList[i].Labels == nil {
+				imageList[i].Labels = make(map[string]string)
+			}
+			imageList[i].Labels[labels.AcornProject] = projectName
 		}
 		return imageList, nil
 	})

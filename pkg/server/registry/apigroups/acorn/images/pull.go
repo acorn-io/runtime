@@ -169,8 +169,8 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 					Name:      hash.Hex,
 					Namespace: namespace,
 				},
-				Repository: recordRepo,
-				Digest:     hash.String(),
+				Repo:   recordRepo,
+				Digest: hash.String(),
 			}
 			if err := i.client.Create(ctx, img); err != nil && !apierror.IsAlreadyExists(err) {
 				progress2 <- ggcrv1.Update{

@@ -9,7 +9,7 @@ func SimpleFormat(values [][]string) (string, string) {
 	headerBuffer := bytes.Buffer{}
 	valueBuffer := bytes.Buffer{}
 	for _, v := range values {
-		// add Column label in all caps
+		// add column label in all caps
 		appendTabDelim(&headerBuffer, strings.ToUpper(v[0]))
 		if strings.Contains(v[1], "{{") {
 			// Special formatting

@@ -164,7 +164,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 
 		// Only add the project info if called with -A
 		if allProjects {
-			imagePrint.Project = image.Project
+			imagePrint.Project = image.Labels[labels.AcornProject]
 		}
 
 		// no tag set at all, so only print if --all is set
@@ -227,7 +227,6 @@ type imagePrint struct {
 }
 
 type imageContainer struct {
-	Project    string
 	Container  string
 	Repository string
 	Tags       []string
@@ -254,6 +253,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 	}
 
 	for _, image := range images {
+		imageProject := image.Labels[labels.AcornProject]
 		containerImages, err := getImageContainers(c, ctx, image)
 		if err != nil {
 			return err
@@ -266,12 +266,10 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 				ImageID:    imageContainer.ImageID,
 			}
 			if allProjects { // Same project for all container images
-				imageContainerPrint.Project = image.Project
-
+				imageContainerPrint.Project = imageProject
 			}
+
 			if len(imageContainer.Tags) == 0 && a.All {
-				imageContainerPrint.Tag = "<none>"
-				imageContainerPrint.Repository = "<none>"
 				out.Write(imageContainerPrint)
 				continue
 			}
@@ -297,7 +295,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 }
 
 func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image) ([]imageContainer, error) {
-	imageContainers := []imageContainer{}
+	var imageContainers []imageContainer
 
 	imgDetails, err := c.ImageDetails(ctx, image.Name, nil)
 	if err != nil {
@@ -313,11 +311,10 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 }
 
 func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []imageContainer {
-	imageContainers := []imageContainer{}
+	var imageContainers []imageContainer
 
 	for k, v := range containers {
 		imageContainerObject := imageContainer{
-			Project:   image.Project,
 			Tags:      image.Tags,
 			Container: k,
 			Digest:    v.Image,
@@ -328,7 +325,6 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 
 		for sidecar, img := range v.Sidecars {
 			ic := imageContainer{
-				Project:   image.Project,
 				Tags:      image.Tags,
 				Container: sidecar,
 				Digest:    img.Image,

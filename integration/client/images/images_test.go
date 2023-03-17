@@ -2,10 +2,11 @@ package images
 
 import (
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/project"
 	"strings"
 	"testing"
+
+	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/project"
 
 	client2 "github.com/acorn-io/acorn/integration/client"
 	"github.com/acorn-io/acorn/integration/helper"
@@ -412,86 +413,83 @@ func TestImageBadTag(t *testing.T) {
 	assert.Equal(t, "could not parse reference: foo@@:badtag", err.Error())
 }
 
-func TestImageList(t *testing.T) {
+func TestImageListBuildTwoImagesAssertMultiClientLists(t *testing.T) {
 	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
+	helper.EnsureCRDs(t)
 	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns1 := helper.TempNamespace(t, kclient)
+	ns1 := helper.TempProject(t, kclient)
 
 	c1, err := client.New(restConfig, "", ns1.Name)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create first client: %s", err.Error())
 	}
 
-	id1 := client2.NewImage(t, ns1.Name)
-
-	remoteTagName1 := registry + "/test:ci1"
-
-	err = c1.ImageTag(ctx, id1, remoteTagName1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	progress, err := c1.ImagePush(ctx, remoteTagName1, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for update := range progress {
-		if update.Error != "" {
-			t.Fatal(update.Error)
-		}
-	}
-
-	ns2 := helper.TempNamespace(t, kclient)
+	ns2 := helper.TempProject(t, kclient)
 
 	c2, err := client.New(restConfig, "", ns2.Name)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create second client: %s", err.Error())
 	}
 
-	id2 := client2.NewImage(t, ns2.Name)
-
-	remoteTagName2 := registry + "/test:ci2"
-
-	err = c2.ImageTag(ctx, id2, remoteTagName2)
+	id1 := client2.NewImage(t, ns1.Name)
+	err = c1.ImageTag(ctx, id1, "test:okay1")
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to tag image1: %s", err.Error())
 	}
 
-	progress, err = c2.ImagePush(ctx, remoteTagName2, nil)
+	id2 := client2.NewImage2(t, ns2.Name)
+	err = c2.ImageTag(ctx, id2, "test:okay2")
 	if err != nil {
-		t.Fatal(err)
-	}
-
-	for update := range progress {
-		if update.Error != "" {
-			t.Fatal(update.Error)
-		}
+		t.Fatalf("failed to tag image2: %s", err.Error())
 	}
 
 	// Check individual client image list
-	list, err := c1.ImageList(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, list, 1)
+	list1, err := c1.ImageList(ctx)
+	if err != nil {
+		t.Fatalf("failed to run imagelist on client1: %s", err.Error())
+	}
+	assert.Len(t, list1, 1)
+
+	list2, err := c2.ImageList(ctx)
+	if err != nil {
+		t.Fatalf("failed to run imagelist on client2: %s", err.Error())
+	}
+	assert.Len(t, list2, 1)
 
 	cliConfig, err := config.ReadCLIConfig()
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("could not obtain cli config: %s", err.Error())
 	}
+	cliConfig.CurrentProject = ns1.Name
 
 	// Create multiclient to test commands off of
 	mc, err := project.Client(ctx, project.Options{AllProjects: true, CLIConfig: cliConfig})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("could not create multi client: %s", err.Error())
 	}
 	// Test multiclient image list
 	multilist, err := mc.ImageList(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, multilist, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// obtain elements to check exist
+	var imageObjectMetaNames []string
+	var imageDigests []string
+
+	for _, image := range multilist {
+		imageObjectMetaNames = append(imageObjectMetaNames, image.ObjectMeta.Name)
+		imageDigests = append(imageDigests, image.Digest)
+
+	}
+	assert.Contains(t, imageObjectMetaNames, list1[0].ObjectMeta.Name)
+	assert.Contains(t, imageDigests, list1[0].Digest)
+	assert.Contains(t, imageObjectMetaNames, list2[0].ObjectMeta.Name)
+	assert.Contains(t, imageDigests, list2[0].Digest)
+
+	assert.GreaterOrEqual(t, len(multilist), 2, "Missing elements in image multilist")
 
 }

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/acorn-io/acorn/integration/helper"
@@ -30,6 +31,12 @@ func NewImage2(t *testing.T, namespace string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		_, err := c.AcornImageBuildDelete(helper.GetCTX(t), image.Name)
+		if err != nil {
+			fmt.Printf("Issue deleting image %s", image.Name)
+		}
+	})
 	return image.ID
 }
 
@@ -43,5 +50,11 @@ func NewImage(t *testing.T, namespace string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		_, err := c.AcornImageBuildDelete(helper.GetCTX(t), image.Name)
+		if err != nil {
+			fmt.Printf("Issue deleting image %s", image.Name)
+		}
+	})
 	return image.ID
 }

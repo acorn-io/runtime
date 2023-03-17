@@ -28,8 +28,6 @@ func createMockedDefaultClientInfoLister(t *testing.T, projectName string, names
 				labels.AcornProject:       "true",
 			},
 		},
-		Spec:   corev1.NamespaceSpec{},
-		Status: corev1.NamespaceStatus{},
 	}
 
 	infoListObj := v12.InfoList{
@@ -53,10 +51,6 @@ func createMockedDefaultClientInfoLister(t *testing.T, projectName string, names
 		},
 	}
 	testingScheme := scheme2.Scheme
-	err := scheme2.AddToScheme(testingScheme)
-	if err != nil {
-		return client.DefaultClient{}, v12.InfoList{}, err
-	}
 
 	testK8ClientBuilder := testcontrollerclient.NewClientBuilder()
 	testK8ClientBuilder.WithScheme(testingScheme)
