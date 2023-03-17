@@ -110,8 +110,8 @@ func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config,
 		return nil, nil, err
 	}
 
-	if len(svc.Spec.Ports) == 0 {
-		return nil, nil, nil
+	if svc == nil || len(svc.Spec.Ports) == 0 {
+		return nil, missing, nil
 	}
 
 	newService := &corev1.Service{
