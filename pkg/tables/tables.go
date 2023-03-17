@@ -48,6 +48,12 @@ var (
 	}
 	VolumeClassConverter = MustConverter(VolumeClass)
 
+	Service = [][]string{
+		{"Name", "{{ . | name }}"},
+		{"Created", "{{ago .CreationTimestamp}}"},
+	}
+	ServiceConverter = MustConverter(Service)
+
 	// Used for acorn image related printing
 	ImageAcorn = [][]string{
 		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},

@@ -9,7 +9,6 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -99,9 +98,6 @@ func (c *ContainerExec) connect(podName, podNamespace, containerName string, exe
 
 func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.Object, r registryrest.Responder) (http.Handler, error) {
 	execOpt := options.(*apiv1.ContainerReplicaExecOptions)
-	if id == "_" && execOpt.DebugImage != "" {
-		return c.execNew(ctx, execOpt)
-	}
 
 	container := &apiv1.ContainerReplica{}
 	ns, _ := request.NamespaceFrom(ctx)
@@ -140,56 +136,6 @@ func command(args []string) []string {
 		return defaultExecCmd
 	}
 	return args
-}
-
-func (c *ContainerExec) execNew(ctx context.Context, execOpts *apiv1.ContainerReplicaExecOptions) (http.Handler, error) {
-	ns, _ := request.NamespaceFrom(ctx)
-	execName := "shell"
-	pods := c.k8s.CoreV1().Pods(ns)
-	pod, err := pods.Create(ctx, &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "debug-shell-",
-			Labels: map[string]string{
-				labels.AcornDebugShell: "true",
-			},
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    execName,
-					Image:   execOpts.DebugImage,
-					Command: []string{"sleep", "9999999"},
-				},
-			},
-			RestartPolicy: corev1.RestartPolicyNever,
-		},
-	}, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		<-ctx.Done()
-		_ = pods.Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
-	}()
-
-	pod, err = watcher.New[*corev1.Pod](c.client).ByObject(ctx, pod, func(pod *corev1.Pod) (bool, error) {
-		for _, status := range pod.Status.ContainerStatuses {
-			if status.Name == execName {
-				if status.State.Running != nil {
-					return true, nil
-				} else if status.State.Terminated != nil {
-					return false, fmt.Errorf("%s: %s", status.State.Terminated.Reason, status.State.Terminated.Message)
-				}
-			}
-		}
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return c.connect(pod.Name, pod.Namespace, execName, execOpts)
 }
 
 func (c *ContainerExec) execEphemeral(ctx context.Context, container *apiv1.ContainerReplica, containerName string, execOpts *apiv1.ContainerReplicaExecOptions) (http.Handler, error) {

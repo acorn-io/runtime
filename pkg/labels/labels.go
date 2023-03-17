@@ -14,6 +14,7 @@ const (
 	AcornAppGeneration           = Prefix + "app-generation"
 	AcornAppNamespace            = Prefix + "app-namespace"
 	AcornAppName                 = Prefix + "app-name"
+	AcornParentAcornName         = Prefix + "parent-acorn-name"
 	AcornAcornName               = Prefix + "acorn-name"
 	AcornServiceName             = Prefix + "service-name"
 	AcornServicePublish          = Prefix + "service-publish"
@@ -42,7 +43,6 @@ const (
 	AcornDNSHash                 = Prefix + "dns-hash"
 	AcornLinkName                = Prefix + "link-name"
 	AcornDNSState                = Prefix + "applied-dns-state"
-	AcornDebugShell              = Prefix + "debug-shell"
 	AcornDomain                  = Prefix + "domain"
 	AcornCertNotValidBefore      = Prefix + "cert-not-valid-before"
 	AcornCertNotValidAfter       = Prefix + "cert-not-valid-after"
@@ -140,6 +140,12 @@ func FilterUserDefined(appInstance *v1.AppInstance, allowedLabels, allowedAnnota
 		v.Labels = filter(v.Labels, allowedLabels)
 		v.Annotations = filter(v.Annotations, allowedAnnotations)
 		appInstance.Status.AppSpec.Volumes[key] = v
+	}
+
+	for key, s := range appInstance.Status.AppSpec.Services {
+		s.Labels = filter(s.Labels, allowedLabels)
+		s.Annotations = filter(s.Annotations, allowedAnnotations)
+		appInstance.Status.AppSpec.Services[key] = s
 	}
 
 	return appInstance

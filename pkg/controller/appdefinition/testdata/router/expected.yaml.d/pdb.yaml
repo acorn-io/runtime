@@ -16,22 +16,3 @@ spec:
       "acorn.io/router-name": "router-name"
       "acorn.io/managed": "true"
   maxUnavailable: 25%
----
-kind: PodDisruptionBudget
-apiVersion: policy/v1
-metadata:
-  name: app-name-app-namespace-app-name-1234567890ab
-  namespace: acorn-system
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-    acorn.io/service-name: app-name
-spec:
-  maxUnavailable: 25%
-  selector:
-    matchLabels:
-      acorn.io/app-name: app-name
-      acorn.io/app-namespace: app-namespace
-      acorn.io/managed: "true"
-      acorn.io/service-name: app-name

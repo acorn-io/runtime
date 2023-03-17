@@ -1,0 +1,34 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+  annotations:
+    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"},"oneimage-app-name-a5b0aade.local.on-acorn.io":{"port":81,"service":"oneimage"}}'
+spec:
+  rules:
+    - host: oneimage-app-name-a5b0aade.local.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: oneimage
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    - host: localhost
+      http:
+        paths:
+          - backend:
+              service:
+                name: oneimage
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

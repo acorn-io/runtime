@@ -31,6 +31,13 @@ const (
 
 type ChangeType string
 
+type AcornBuild struct {
+	OriginalImage string     `json:"originalImage,omitempty"`
+	Context       string     `json:"context,omitempty"`
+	Acornfile     string     `json:"acornfile,omitempty"`
+	BuildArgs     GenericMap `json:"buildArgs,omitempty"`
+}
+
 type Build struct {
 	Context            string            `json:"context,omitempty"`
 	Dockerfile         string            `json:"dockerfile,omitempty"`
@@ -66,52 +73,39 @@ var (
 	PublishProtocolHTTPS = PublishProtocol("https")
 )
 
+type PortBindings []PortBinding
+
 type PortBinding struct {
-	Expose            bool     `json:"expose,omitempty"`
-	Port              int32    `json:"port,omitempty"`
-	Protocol          Protocol `json:"protocol,omitempty"`
-	Publish           bool     `json:"publish,omitempty"`
-	ServiceName       string   `json:"serviceName,omitempty"`
-	TargetPort        int32    `json:"targetPort,omitempty"`
-	TargetServiceName string   `json:"targetServiceName,omitempty"`
+	Port     int32    `json:"port,omitempty"`
+	Protocol Protocol `json:"protocol,omitempty"`
+	Hostname string   `json:"hostname,omitempty"`
+	// Deprecated Use Hostname instead
+	ZZ_ServiceName    string `json:"serviceName,omitempty"`
+	TargetPort        int32  `json:"targetPort,omitempty"`
+	TargetServiceName string `json:"targetServiceName,omitempty"`
 }
 
-func (in PortBinding) Complete(serviceName string) PortBinding {
-	if in.ServiceName == "" {
-		in.ServiceName = serviceName
+func (in PortBinding) Complete() PortBinding {
+	if in.Hostname != "" && in.Protocol == "" {
+		in.Protocol = ProtocolHTTP
 	}
-	if in.TargetPort == 0 {
-		in.TargetPort = in.Port
-	}
-	if in.Port == 0 {
-		in.Port = in.TargetPort
+	if in.Hostname != "" && in.Protocol != ProtocolHTTP {
+		in.Hostname = ""
 	}
 	return in
 }
 
-func (in PortDef) String() string {
-	in = in.Complete(in.ServiceName)
+func (in PortDef) FormatString(serviceName string) string {
+	//in = in.Complete(in.ServiceName)
 	buf := &strings.Builder{}
-	if in.Expose {
-		buf.WriteString("expose: ")
-	}
-	if in.Publish {
-		buf.WriteString("publish: ")
-	}
-	if in.ServiceName != "" {
-		buf.WriteString(in.ServiceName)
+	if serviceName != "" {
+		buf.WriteString(serviceName)
 	}
 	if in.Port != in.TargetPort {
 		if buf.Len() > 0 {
 			buf.WriteString(":")
 		}
 		buf.WriteString(fmt.Sprint(in.Port))
-	}
-	if in.TargetServiceName != "" {
-		if buf.Len() > 0 {
-			buf.WriteString(":")
-		}
-		buf.WriteString(in.TargetServiceName)
 	}
 	if buf.Len() > 0 {
 		buf.WriteString(":")
@@ -124,20 +118,14 @@ func (in PortDef) String() string {
 }
 
 type PortDef struct {
-	Expose      bool     `json:"expose,omitempty"`
-	Port        int32    `json:"port,omitempty"`
-	Protocol    Protocol `json:"protocol,omitempty"`
-	Publish     bool     `json:"publish,omitempty"`
-	ServiceName string   `json:"serviceName,omitempty"`
-	TargetPort  int32    `json:"targetPort,omitempty"`
-	// TargetServiceName is only used in portDefs for acorns, not containers
-	TargetServiceName string `json:"targetServiceName,omitempty"`
+	Hostname   string   `json:"hostname,omitempty"`
+	Protocol   Protocol `json:"protocol,omitempty"`
+	Publish    bool     `json:"publish,omitempty"`
+	Port       int32    `json:"port,omitempty"`
+	TargetPort int32    `json:"targetPort,omitempty"`
 }
 
-func (in PortDef) Complete(serviceName string) PortDef {
-	if in.ServiceName == "" && serviceName != "" {
-		in.ServiceName = serviceName
-	}
+func (in PortDef) Complete() PortDef {
 	if in.TargetPort == 0 {
 		in.TargetPort = in.Port
 	}
@@ -330,7 +318,9 @@ type AppSpec struct {
 	Images      map[string]Image         `json:"images,omitempty"`
 	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
 	Secrets     map[string]Secret        `json:"secrets,omitempty"`
+	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
 	Routers     map[string]Router        `json:"routers,omitempty"`
+	Services    map[string]Service       `json:"services,omitempty"`
 }
 
 type Route struct {
@@ -348,7 +338,27 @@ type Router struct {
 	Routes      Routes            `json:"routes,omitempty"`
 }
 
+type Acorn struct {
+	Labels              ScopedLabels    `json:"labels,omitempty"`
+	Annotations         ScopedLabels    `json:"annotations,omitempty"`
+	Image               string          `json:"image,omitempty"`
+	Build               *AcornBuild     `json:"build,omitempty"`
+	Profiles            []string        `json:"profiles,omitempty"`
+	DeployArgs          GenericMap      `json:"deployArgs,omitempty"`
+	Publish             PortBindings    `json:"publish,omitempty"`
+	Environment         NameValues      `json:"environment,omitempty"`
+	Secrets             SecretBindings  `json:"secrets,omitempty"`
+	Volumes             VolumeBindings  `json:"volumes,omitempty"`
+	Links               ServiceBindings `json:"links,omitempty"`
+	Permissions         []Permissions   `json:"permissions,omitempty"`
+	AutoUpgrade         *bool           `json:"autoUpgrade,omitempty"`
+	NotifyUpgrade       *bool           `json:"notifyUpgrade,omitempty"`
+	AutoUpgradeInterval string          `json:"autoUpgradeInterval,omitempty"`
+	Memory              MemoryMap       `json:"memory,omitempty"`
+}
+
 type Secret struct {
+	External    string            `json:"external,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Type        string            `json:"type,omitempty"`
@@ -359,6 +369,7 @@ type Secret struct {
 type AccessModes []AccessMode
 
 type VolumeRequest struct {
+	External    string            `json:"external,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Class       string            `json:"class,omitempty"`
@@ -371,3 +382,16 @@ type MemoryMap map[string]*int64
 
 // Workload to its class
 type ComputeClassMap map[string]string
+
+type Service struct {
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Default     bool              `json:"default,omitempty"`
+	External    string            `json:"external,omitempty"`
+	Address     string            `json:"address,omitempty"`
+	Ports       Ports             `json:"ports,omitempty"`
+	Container   string            `json:"container,omitempty"`
+	Secrets     []string          `json:"secrets,omitempty"`
+	Attributes  GenericMap        `json:"attributes,omitempty"`
+	Destroy     *Container        `json:"destroy,omitempty"`
+}

@@ -22,8 +22,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "app1"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/app1": "true"
       annotations:
         acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
     spec:
@@ -67,8 +65,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "app2"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/app2": "true"
       annotations:
         acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
     spec:

@@ -1,53 +1,48 @@
 ---
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app1
   namespace: app-created-namespace
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/service-name": "app1"
     "acorn.io/container-name": "app1"
     "acorn.io/managed": "true"
 spec:
-  type: ClusterIP
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "app1"
+    "acorn.io/managed": "true"
+  container: app1
   ports:
     - port: 80
       targetPort: 81
-      protocol: "TCP"
-      appProtocol: "HTTP"
+      publish: true
+      protocol: http
       name: "80"
-  selector:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-    port-number.acorn.io/81: "true"
-    service-name.acorn.io/app1: "true"
 ---
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app2
   namespace: app-created-namespace
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
-    "acorn.io/service-name": "app2"
     "acorn.io/container-name": "app2"
     "acorn.io/managed": "true"
 spec:
-  type: ClusterIP
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "app2"
+    "acorn.io/managed": "true"
+  container: app2
   ports:
     - port: 80
       targetPort: 81
-      protocol: "TCP"
-      appProtocol: "HTTP"
+      publish: true
+      protocol: http
       name: "80"
-  selector:
-      acorn.io/app-name: app-name
-      acorn.io/app-namespace: app-namespace
-      acorn.io/managed: "true"
-      port-number.acorn.io/81: "true"
-      service-name.acorn.io/app2: "true"
----

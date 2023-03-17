@@ -22,9 +22,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
-        "service-name.acorn.io/oneimage": "true"
-        "port-number.acorn.io/81": "true"
-        "port-number.acorn.io/91": "true"
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
     spec:
@@ -127,8 +124,8 @@ spec:
       "acorn.io/managed": "true"
   maxUnavailable: 25%
 ---
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: oneimage
   namespace: app-created-namespace
@@ -136,27 +133,25 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
-    "acorn.io/service-name": "oneimage"
     "acorn.io/container-name": "oneimage"
 spec:
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/container-name": "oneimage"
+  default: true
+  container: oneimage
   type: ClusterIP
   ports:
     - port: 80
       targetPort: 81
-      protocol: "TCP"
-      appProtocol: "HTTP"
+      protocol: http
       name: "80"
     - port: 90
       targetPort: 91
-      protocol: "TCP"
+      protocol: tcp
       name: "90"
-  selector:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/managed": "true"
-    "service-name.acorn.io/oneimage": "true"
-    "port-number.acorn.io/81": "true"
-    "port-number.acorn.io/91": "true"
 ---
 kind: AppInstance
 apiVersion: internal.acorn.io/v1

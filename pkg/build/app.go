@@ -1,14 +1,12 @@
 package build
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/buildclient"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
@@ -40,22 +38,22 @@ func (a *AppImageOptions) GetRemoteOptions() []remote.Option {
 	return a.RemoteOptions
 }
 
-func FromAppImage(ctx context.Context, pushRepo string, appImage *v1.AppImage, messages buildclient.Messages, opts *AppImageOptions) (string, error) {
+func fromAppImage(ctx *buildContext, appImage *v1.AppImage) (string, error) {
 	tempContext, err := getContextFromAppImage(appImage)
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(tempContext)
 
-	tag, err := buildImageNoManifest(ctx, pushRepo, tempContext, v1.Build{
+	tag, err := buildImageNoManifest(ctx, tempContext, v1.Build{
 		Context:    ".",
 		Dockerfile: "Dockerfile",
-	}, messages, opts.GetKeychain())
+	})
 	if err != nil {
 		return "", err
 	}
 
-	return createAppManifest(ctx, tag, appImage.ImageData, opts.GetFullTag(), opts.GetRemoteOptions())
+	return createAppManifest(ctx.ctx, tag, appImage.ImageData, false, ctx.remoteOpts)
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {

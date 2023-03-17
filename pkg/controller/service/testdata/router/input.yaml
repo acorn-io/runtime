@@ -1,0 +1,27 @@
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: router-name
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+spec:
+  default: true
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  ports:
+  - name: "80"
+    port: 80
+    protocol: http
+    targetPort: 8080
+  containerLabels:
+    acorn.io/app-name: app-name
+    acorn.io/router-name: router-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"

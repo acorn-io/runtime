@@ -1,5 +1,5 @@
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   namespace: app-created-namespace
   name: db
@@ -9,5 +9,4 @@ metadata:
     acorn.io/link-name: foo
     acorn.io/managed: "true"
 spec:
-  type: ExternalName
-  externalName: foo.app-namespace.svc.cluster.local
+  external: foo

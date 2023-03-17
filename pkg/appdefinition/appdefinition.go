@@ -11,6 +11,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/aml"
+	"github.com/acorn-io/aml/pkg/cue"
 	"sigs.k8s.io/yaml"
 )
 
@@ -62,6 +63,16 @@ func NewAppDefinition(data []byte) (*AppDefinition, error) {
 		return nil, err
 	}
 	return appDef, nil
+}
+
+func assignAcornImage(originalImage string, build *v1.AcornBuild, image string) (string, *v1.AcornBuild) {
+	if build == nil {
+		build = &v1.AcornBuild{}
+	}
+	if build.OriginalImage == "" {
+		build.OriginalImage = originalImage
+	}
+	return image, build
 }
 
 func assignImage(originalImage string, build *v1.Build, image string) (string, *v1.Build) {
@@ -154,6 +165,12 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 				spec.Images[i] = imgSpec
 			}
 		}
+		for i, acorn := range imageData.Acorns {
+			if acornSpec, ok := spec.Acorns[i]; ok {
+				acornSpec.Image, acornSpec.Build = assignAcornImage(acornSpec.Image, acornSpec.Build, acorn.Image)
+				spec.Acorns[i] = acornSpec
+			}
+		}
 	}
 
 	return spec, nil
@@ -166,6 +183,32 @@ func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerIm
 			continue
 		}
 		fileSet[filepath.Join(cwd, build.Build.Dockerfile)] = true
+	}
+}
+
+func addAcorns(fileSet map[string]bool, builds map[string]v1.AcornBuilderSpec, cwd string) {
+	for _, build := range builds {
+		if build.Build == nil {
+			continue
+		}
+		data, err := cue.ReadCUE(filepath.Join(cwd, build.Build.Acornfile))
+		if err != nil {
+			return
+		}
+
+		fileSet[filepath.Join(cwd, build.Build.Acornfile)] = true
+
+		appDef, err := NewAppDefinition(data)
+		if err != nil {
+			return
+		}
+		files, err := appDef.WatchFiles(filepath.Join(cwd, build.Build.Context))
+		if err != nil {
+			return
+		}
+		for _, f := range files {
+			fileSet[f] = true
+		}
 	}
 }
 
@@ -188,6 +231,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	addContainerFiles(fileSet, spec.Containers, cwd)
 	addContainerFiles(fileSet, spec.Jobs, cwd)
 	addFiles(fileSet, spec.Images, cwd)
+	addAcorns(fileSet, spec.Acorns, cwd)
 
 	for k := range fileSet {
 		result = append(result, k)

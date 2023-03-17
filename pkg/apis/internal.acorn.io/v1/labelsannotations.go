@@ -12,6 +12,8 @@ const (
 	LabelTypeVolume    = "volume"
 	LabelTypeSecret    = "secret"
 	LabelTypeMeta      = "metadata"
+	LabelTypeAcorn     = "acorn"
+	LabelTypeService   = "service"
 )
 
 var canonicalTypes = map[string]string{
@@ -27,6 +29,10 @@ var canonicalTypes = map[string]string{
 	"secrets":    LabelTypeSecret,
 	"metadata":   LabelTypeMeta,
 	"metadatas":  LabelTypeMeta,
+	"acorn":      LabelTypeAcorn,
+	"acorns":     LabelTypeAcorn,
+	"service":    LabelTypeService,
+	"services":   LabelTypeService,
 }
 
 // ParseScopedLabels parses labels from their string format into the struct form. Examples of the string format:

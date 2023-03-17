@@ -22,6 +22,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&BuilderInstanceList{},
 		&AppInstance{},
 		&AppInstanceList{},
+		&ServiceInstance{},
+		&ServiceInstanceList{},
 		&ImageInstance{},
 		&ImageInstanceList{})
 

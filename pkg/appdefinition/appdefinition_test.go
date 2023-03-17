@@ -12,6 +12,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/stretchr/testify/assert"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 func TestParseRouters(t *testing.T) {
@@ -177,6 +178,27 @@ images: {
     }
   }
 }
+
+acorns: {
+  afile: {
+    build: "sub/dir1"
+  }
+  anone: {
+    image: "done"
+  }
+  afull: {
+    build: {
+      context: "sub/dir2"
+      acornfile: "sub/dir3/Acornfile"
+      buildArgs: {
+        key: "value"
+        key2: {
+          key3: "value3"
+		}
+	  }
+    }
+  }
+}
 `))
 	if err != nil {
 		t.Fatal(err)
@@ -216,6 +238,17 @@ images: {
 	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
 	assert.Equal(t, "other", buildSpec.Images["full"].Build.Target)
 	assert.Equal(t, "done", buildSpec.Images["none"].Image)
+
+	assert.Len(t, buildSpec.Acorns, 3)
+	assert.Equal(t, "", buildSpec.Acorns["afile"].Image)
+	assert.Equal(t, "sub/dir1", buildSpec.Acorns["afile"].Build.Context)
+	assert.Equal(t, filepath.Join("sub", "dir1", "Acornfile"), buildSpec.Acorns["afile"].Build.Acornfile)
+	assert.Equal(t, "", buildSpec.Acorns["afull"].Image)
+	assert.Equal(t, "sub/dir2", buildSpec.Acorns["afull"].Build.Context)
+	assert.Equal(t, "sub/dir3/Acornfile", buildSpec.Acorns["afull"].Build.Acornfile)
+	assert.Equal(t, "value", buildSpec.Acorns["afull"].Build.BuildArgs["key"])
+	assert.Equal(t, map[string]any{"key3": "value3"}, buildSpec.Acorns["afull"].Build.BuildArgs["key2"])
+	assert.Equal(t, "done", buildSpec.Acorns["anone"].Image)
 }
 
 func TestWatchFiles(t *testing.T) {
@@ -742,69 +775,55 @@ containers: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, false, appSpec.Containers["s"].Ports[0].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[0].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[0].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, false, appSpec.Containers["s"].Ports[1].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[1].Port)
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, false, appSpec.Containers["s"].Ports[2].Expose)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Ports[2].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[2].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, false, appSpec.Containers["s"].Ports[3].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[3].Port)
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[3].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[0].Expose)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[1].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[1].Port)
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[1].Protocol, v1.ProtocolTCP)
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[2].Expose)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[2].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left"].Ports[3].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[3].Port)
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[3].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left2"].Ports[0].Expose)
 	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["left2"].Ports[0].Publish)
-	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left2"].Ports[0].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["left2"].Ports[0].Port)
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left2"].Ports[0].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left2"].Ports[0].Protocol, v1.ProtocolHTTP)
 	assert.Equal(t, true, appSpec.Containers["s"].Sidecars["left2"].Ports[1].Publish)
-	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["left2"].Ports[1].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left2"].Ports[1].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left2"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left2"].Ports[1].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right"].Ports[0].Expose)
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right3"].Ports[0].Expose)
 	assert.Equal(t, int32(12), appSpec.Containers["s"].Sidecars["right3"].Ports[0].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right3"].Ports[0].Protocol, v1.Protocol(""))
-	assert.Equal(t, false, appSpec.Containers["s"].Sidecars["right3"].Ports[1].Expose)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right3"].Ports[1].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right3"].Ports[1].Protocol, v1.Protocol(""))
 }
@@ -859,7 +878,7 @@ containers: {
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[1].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Ports[2].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[2].Protocol, v1.ProtocolHTTP)
 
@@ -867,7 +886,7 @@ containers: {
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Ports[3].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["left"].Ports[0].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[0].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[0].Protocol, v1.Protocol(""))
 
@@ -875,7 +894,7 @@ containers: {
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[1].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[1].Protocol, v1.ProtocolTCP)
 
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["left"].Ports[2].Port)
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["left"].Ports[2].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[2].Protocol, v1.ProtocolHTTP)
 
@@ -883,7 +902,7 @@ containers: {
 	assert.Equal(t, int32(81), appSpec.Containers["s"].Sidecars["left"].Ports[3].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["left"].Ports[3].Protocol, v1.ProtocolHTTP)
 
-	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["right"].Ports[0].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right"].Ports[0].Protocol, v1.Protocol(""))
 
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
@@ -1067,6 +1086,7 @@ images: {
 				Image: "images-image-image",
 			},
 		},
+		Acorns: map[string]v1.AcornBuilderSpec{},
 	}, buildSpec)
 
 	app := appImage.WithImageData(v1.ImagesData{
@@ -1567,6 +1587,341 @@ containers: foo: build: buildArgs: one: args.foo
 	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.BuildArgs["one"])
 }
 
+func TestAcornFirstForm(t *testing.T) {
+	acornCue := `
+acorns: first: {
+	labels: [
+		{
+			resourceType: "container"
+			resourceName: "containerName"
+			key: "keyname"
+			value: "value"
+		},
+		{
+			resourceType: "acorn"
+			resourceName: "containerName2"
+			key: "keyname2"
+			value: "value2"
+		}
+	]
+	annotations: [
+		{
+			resourceType: "container"
+			resourceName: "containerName"
+			key: "keyname"
+			value: "value"
+		},
+		{
+			resourceType: "acorn"
+			resourceName: "containerName2"
+			key: "keyname2"
+			value: "value2"
+		}
+	]
+	image: "acornimage"
+	build: "./dir"
+	publish: 80
+	volumes: "a:b"
+	secrets: "a:b"
+	links: "b:c"
+	autoUpgrade: true
+	autoUpgradeInterval: "20s"
+	notifyUpgrade: true
+	workloadClasses: "wc"
+	mem: 1Gi
+	env: [
+		"a=b",
+		"c=d"
+	]
+	deployArgs: foo: 12
+	profiles: ["abc", "def"]
+	permissions: [{
+		serviceName: "asfd"
+		rules: ["pods"]
+		clusterRules: [{
+			verbs: ["get", "list", "watch", "update", "patch", "delete", "deletecollection", "create"]
+			namespaces: ["aaa", "bbb"]
+			apiGroups: [""]
+			resources: ["pods"]
+		}]
+	}]
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acorn := appSpec.Acorns["first"]
+
+	assert.Equal(t, v1.ScopedLabel{
+		ResourceType: "container",
+		ResourceName: "containerName",
+		Key:          "keyname",
+		Value:        "value",
+	}, acorn.Labels[0])
+	assert.Equal(t, v1.ScopedLabel{
+		ResourceType: "acorn",
+		ResourceName: "containerName2",
+		Key:          "keyname2",
+		Value:        "value2",
+	}, acorn.Labels[1])
+	assert.Equal(t, v1.ScopedLabel{
+		ResourceType: "container",
+		ResourceName: "containerName",
+		Key:          "keyname",
+		Value:        "value",
+	}, acorn.Annotations[0])
+	assert.Equal(t, v1.ScopedLabel{
+		ResourceType: "acorn",
+		ResourceName: "containerName2",
+		Key:          "keyname2",
+		Value:        "value2",
+	}, acorn.Annotations[1])
+	assert.Equal(t, "acornimage", acorn.Image)
+	assert.Equal(t, &v1.AcornBuild{
+		Context:   "./dir",
+		Acornfile: "dir/Acornfile",
+	}, acorn.Build)
+	assert.Equal(t, v1.VolumeBinding{
+		Volume: "a",
+		Target: "b",
+	}, acorn.Volumes[0])
+	assert.Equal(t, v1.SecretBinding{
+		Secret: "a",
+		Target: "b",
+	}, acorn.Secrets[0])
+	assert.Equal(t, v1.ServiceBinding{
+		Service: "b",
+		Target:  "c",
+	}, acorn.Links[0])
+	assert.True(t, *acorn.AutoUpgrade)
+	assert.True(t, *acorn.NotifyUpgrade)
+	assert.Equal(t, "20s", acorn.AutoUpgradeInterval)
+	assert.Equal(t, v1.MemoryMap{
+		"": &[]int64{1 << 30}[0],
+	}, acorn.Memory)
+	assert.Equal(t, v1.NameValue{
+		Name:  "a",
+		Value: "b",
+	}, acorn.Environment[0])
+	assert.Equal(t, v1.NameValue{
+		Name:  "c",
+		Value: "d",
+	}, acorn.Environment[1])
+	assert.Equal(t, v1.GenericMap{
+		"foo": int64(12),
+	}, acorn.DeployArgs)
+	assert.Equal(t, []string{"abc", "def"}, acorn.Profiles)
+	assert.Equal(t, v1.Permissions{
+		ServiceName: "asfd",
+		Rules: []v1.PolicyRule{
+			{
+				Verbs:     v1.DefaultVerbs,
+				APIGroups: []string{""},
+				Resources: []string{"pods"},
+			},
+		},
+		ClusterRules: []v1.ClusterPolicyRule{
+			{
+				PolicyRule: rbacv1.PolicyRule{
+					Verbs:           v1.DefaultVerbs,
+					APIGroups:       []string{""},
+					Resources:       []string{"pods"},
+					ResourceNames:   []string{},
+					NonResourceURLs: []string{},
+				},
+				Namespaces: []string{"aaa", "bbb"},
+			},
+		},
+	}, acorn.Permissions[0])
+
+	//assert.True(t, false, "missing workload classes")
+}
+
+func TestAcornSecondForm(t *testing.T) {
+	acornCue := `
+acorns: first: {
+	labels: {
+		"containers:containername:abc.io/keyname": "value",
+	}
+	annotations: {
+		"acorn:containername2:abc.io/keyname2": "value2",
+	}
+	build: {
+		context: "abc"
+		acornfile: "other/Acornfile"
+		buildArgs: a: "b"
+	}
+	publish: "example.com:1234/http"
+	volumes: [{
+		volume: "abc"
+		target: "def"
+	}]
+	secrets: [{
+		secret: "abc"
+		target: "def"
+	}]
+	links: [{
+		service: "abc"
+		target: "def"
+	}]
+	mem: {
+		"foo": 1Gi
+	}
+	env: {
+		"X": "v"
+	}
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acorn := appSpec.Acorns["first"]
+
+	assert.Equal(t, v1.ScopedLabel{
+		ResourceType: "container",
+		ResourceName: "containername",
+		Key:          "abc.io/keyname",
+		Value:        "value",
+	}, acorn.Labels[0])
+	assert.Equal(t, v1.ScopedLabel{
+		ResourceType: "acorn",
+		ResourceName: "containername2",
+		Key:          "abc.io/keyname2",
+		Value:        "value2",
+	}, acorn.Annotations[0])
+	assert.Equal(t, &v1.AcornBuild{
+		Context:   "abc",
+		Acornfile: "other/Acornfile",
+		BuildArgs: v1.GenericMap{
+			"a": "b",
+		},
+	}, acorn.Build)
+	assert.Equal(t, v1.PortBinding{
+		Hostname:   "example.com",
+		TargetPort: 1234,
+		Protocol:   v1.ProtocolHTTP,
+	}, acorn.Publish[0])
+	assert.Equal(t, v1.VolumeBinding{
+		Volume: "abc",
+		Target: "def",
+	}, acorn.Volumes[0])
+	assert.Equal(t, v1.SecretBinding{
+		Secret: "abc",
+		Target: "def",
+	}, acorn.Secrets[0])
+	assert.Equal(t, v1.ServiceBinding{
+		Service: "abc",
+		Target:  "def",
+	}, acorn.Links[0])
+	assert.Equal(t, v1.MemoryMap{
+		"foo": &[]int64{1 << 30}[0],
+	}, acorn.Memory)
+	assert.Equal(t, v1.NameValues{
+		{
+			Name:  "X",
+			Value: "v",
+		},
+	}, acorn.Environment)
+}
+
+func TestAcornThirdForm(t *testing.T) {
+	acornCue := `
+acorns: first: {
+	publish: [{
+		hostname: "example.com"
+		targetPort: 80
+		targetServiceName: "asdf"
+	}, 80, "example.com:123"]
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	acorn := appSpec.Acorns["first"]
+
+	assert.Equal(t, v1.PortBinding{
+		Hostname:          "example.com",
+		Port:              80,
+		TargetPort:        80,
+		TargetServiceName: "asdf",
+	}, acorn.Publish[0])
+	assert.Equal(t, v1.PortBinding{
+		TargetPort: 80,
+	}, acorn.Publish[1])
+	assert.Equal(t, v1.PortBinding{
+		Hostname:   "example.com",
+		TargetPort: 123,
+	}, acorn.Publish[2])
+}
+
+func TestService(t *testing.T) {
+	acornCue := `
+services: first: {
+	default: true
+	external: "externalname"
+	address: "some.address"
+	ports: "80"
+	container: "foo"
+	secrets: ["sfoo", "sbar"]
+	attributes: foo: hi: "bye"
+	destroy: {
+		image: "yo"
+	}
+}
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	svc := appSpec.Services["first"]
+
+	assert.Equal(t, true, svc.Default)
+	assert.Equal(t, "externalname", svc.External)
+	assert.Equal(t, "some.address", svc.Address)
+	assert.Equal(t, v1.PortDef{
+		TargetPort: 80,
+	}, svc.Ports[0])
+	assert.Equal(t, "foo", svc.Container)
+	assert.Equal(t, []string{"sfoo", "sbar"}, svc.Secrets)
+	assert.Equal(t, v1.GenericMap{
+		"foo": map[string]any{
+			"hi": "bye",
+		},
+	}, svc.Attributes)
+	assert.Equal(t, "yo", svc.Destroy.Image)
+}
+
 func TestCronJob(t *testing.T) {
 	acornCue := `
 jobs: foo: {
@@ -1587,7 +1942,7 @@ jobs: foo: {
 	assert.Equal(t, "daily", appSpec.Jobs["foo"].Schedule)
 }
 
-func TestAliasNotMatchContainer(t *testing.T) {
+func TestInvalidPublishHostname(t *testing.T) {
 	acornCue := `
 containers: foo: {
   ports: "foo2:80"
@@ -1598,17 +1953,38 @@ containers: foo2: image: "image"
 
 	_, err := NewAppDefinition([]byte(acornCue))
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "duplicate name [foo2] used by [")
+	assert.Contains(t, err.Error(), "[foo2] is not a valid hostname to publish, missing \".\"")
+}
+
+func TestLink(t *testing.T) {
+	acornCue := `
+acorns: one: links: ["two:three", "one"]
+`
+
+	def, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := def.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "two", appSpec.Acorns["one"].Links[0].Service)
+	assert.Equal(t, "three", appSpec.Acorns["one"].Links[0].Target)
+	assert.Equal(t, "one", appSpec.Acorns["one"].Links[1].Service)
+	assert.Equal(t, "one", appSpec.Acorns["one"].Links[1].Target)
 }
 
 func TestAlias(t *testing.T) {
 	acornCue := `
 containers: foo: {
-  ports: "foo2:80"
+  ports: "foo2.local:80"
   image: "image"
 }
 containers: foo3: {
-  ports: "foo4:80"
+  ports: "foo4.local:80"
   image: "image"
 }
 `
@@ -1623,8 +1999,8 @@ containers: foo3: {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "foo2", appSpec.Containers["foo"].Ports[0].ServiceName)
-	assert.Equal(t, "foo4", appSpec.Containers["foo3"].Ports[0].ServiceName)
+	assert.Equal(t, "foo2.local", appSpec.Containers["foo"].Ports[0].Hostname)
+	assert.Equal(t, "foo4.local", appSpec.Containers["foo3"].Ports[0].Hostname)
 }
 
 func TestProbes(t *testing.T) {
@@ -1799,6 +2175,8 @@ containers: cont: {
   permissions: localData.permissions
   sidecars: side: permissions: localData.permissions
 }
+
+acorns: acorn: permissions: [localData.permissions]
 `
 
 	def, err := NewAppDefinition([]byte(acornCue))
@@ -1838,6 +2216,18 @@ containers: cont: {
 	assert.Equal(t, "a", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Namespaces[0])
 	assert.Equal(t, "b", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Namespaces[1])
 	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Acorns["acorn"].Permissions[0].Rules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Acorns["acorn"].Permissions[0].Rules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions[0].Rules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions[0].Rules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions[0].Rules[0].NonResourceURLs[0])
+
+	assert.Equal(t, "verb", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].Verbs[0])
+	assert.Equal(t, "groups", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].APIGroups[0])
+	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].Resources[0])
+	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].ResourceNames[0])
+	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].NonResourceURLs[0])
 }
 
 func TestNoImport(t *testing.T) {
@@ -2119,6 +2509,35 @@ containers: a: env: a: ""
 	assert.Equal(t, "", appSpec.Containers["a"].Environment[0].Value)
 }
 
+func TestEmptyAcornEnv(t *testing.T) {
+	data := `
+acorns: slice: env: ["a=b", "c=d"]
+acorns: m: env: a: "b"
+acorns: m: env: c: "d"
+`
+	appDef, err := NewAppDefinition([]byte(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, appSpec.Acorns["slice"].Environment, 2)
+	assert.Equal(t, "a", appSpec.Acorns["slice"].Environment[0].Name)
+	assert.Equal(t, "b", appSpec.Acorns["slice"].Environment[0].Value)
+	assert.Equal(t, "c", appSpec.Acorns["slice"].Environment[1].Name)
+	assert.Equal(t, "d", appSpec.Acorns["slice"].Environment[1].Value)
+
+	assert.Len(t, appSpec.Acorns["m"].Environment, 2)
+	assert.Equal(t, "a", appSpec.Acorns["m"].Environment[0].Name)
+	assert.Equal(t, "b", appSpec.Acorns["m"].Environment[0].Value)
+	assert.Equal(t, "c", appSpec.Acorns["m"].Environment[1].Name)
+	assert.Equal(t, "d", appSpec.Acorns["m"].Environment[1].Value)
+}
+
 func TestTemplateSecretCustomNames(t *testing.T) {
 	data := `
 containers: test: {
@@ -2234,4 +2653,106 @@ containers: default: image: "foo"
 	assert.Equal(t, v1.Probes{}, spec.Containers["array"].Probes)
 	assert.Equal(t, v1.Probes{}, spec.Containers["map"].Probes)
 	assert.Equal(t, v1.Probes(nil), spec.Containers["default"].Probes)
+}
+
+func TestNestedScopedLabels(t *testing.T) {
+	// labels and annotations on a acorn are both unmarshalled into a ScopedLabels struct, which is just a slice
+	// Similar to ports, in the Acornfile you can define them using an object syntax or short-form string syntax.
+	// We're testing that they get unmarshalled properly
+	appImage, err := NewAppDefinition([]byte(`acorns: {
+	s: {
+		labels: [
+			{
+				resourceType: "",
+				resourceName: "",
+				key: "globalkey",
+				value: "x0"
+			},
+			{
+				resourceType: "containers",
+				resourceName: "",
+				key: "conskey",
+				value: "x1"
+			},
+			{
+				resourceType: "containers",
+				resourceName: "confoo",
+				key: "fookey",
+				value: "x2"
+			},
+			{
+				resourceType: "",
+				resourceName: "objbar",
+				key: "acorn.io/barkey",
+				value: "x3"
+			}
+		]
+		annotations: {
+			globalkey: "v0"
+			"containers:conskey": "v1"
+			"containers:confoo:acorn.io/fookey": "v2"
+			"conbar:barkey": "v3"
+		}
+		image: ""
+	}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		errors.Print(os.Stderr, err, nil)
+		t.Fatal(err)
+	}
+
+	// Asserting that labels defined using the struct/object form are properly unmarshalled
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "", Key: "globalkey", Value: "x0"}, appSpec.Acorns["s"].Labels[0])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "", Key: "conskey", Value: "x1"}, appSpec.Acorns["s"].Labels[1])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "confoo", Key: "fookey", Value: "x2"}, appSpec.Acorns["s"].Labels[2])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "objbar", Key: "acorn.io/barkey", Value: "x3"}, appSpec.Acorns["s"].Labels[3])
+
+	// Asserting that annotations defined using the shorthand string form are properly unmarshalled
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "", Key: "globalkey", Value: "v0"}, appSpec.Acorns["s"].Annotations[0])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "", ResourceName: "conbar", Key: "barkey", Value: "v3"}, appSpec.Acorns["s"].Annotations[1])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "", Key: "conskey", Value: "v1"}, appSpec.Acorns["s"].Annotations[2])
+	assert.Equal(t, v1.ScopedLabel{ResourceType: "container", ResourceName: "confoo", Key: "acorn.io/fookey", Value: "v2"}, appSpec.Acorns["s"].Annotations[3])
+
+	// Expect error because resourceType isn't one of the whitelisted types
+	_, err = NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: [
+			{
+				resourceType: "asdf",
+				resourceName: "",
+				key: "key",
+				value: "x0"
+			},
+		]
+		image: ""
+	}}`))
+	assert.Error(t, err)
+
+	// Expect error because label key's resourceName section isn't a simple dnsName
+	_, err = NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: {
+			"containers:acorn.io/foo:key": "val"
+		}
+		image: ""
+	}}`))
+	assert.Error(t, err)
+
+	// Expect error because resourceType isn't a simple dns name
+	_, err = NewAppDefinition([]byte(`acorns: {
+	s: {
+    	labels: [
+			{
+				resourceType: "acorn.io"
+				key: "asdf"
+				value: "asdf"
+			}
+		]
+		image: ""
+	}}`))
+	assert.Error(t, err)
 }

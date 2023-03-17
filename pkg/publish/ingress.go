@@ -18,8 +18,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/name"
-	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,7 +35,7 @@ const dnsValidationPattern = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-
 
 func ValidateEndpointPattern(pattern string) error {
 	// Validate the Go Template
-	endpoint, err := toEndpoint(pattern, "clusterdomain", "container", "app", "namespace")
+	endpoint, err := toHTTPEndpointHostname(pattern, "clusterdomain", "container", "app", "namespace")
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func truncate(s ...string) string {
 	return name.SafeConcatName(s...)
 }
 
-func toEndpoint(pattern, domain, container, appName, appNamespace string) (string, error) {
+func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace string) (string, error) {
 	// This should not happen since the pattern in the config (passed to this through pattern) should
 	// always be set to the default if the pattern is "". However,if it is not somehow, set it here.
 	if pattern == "" {
@@ -130,9 +130,14 @@ type Target struct {
 	Service string `json:"service,omitempty"`
 }
 
-func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, _ error) {
-	if app.Spec.Stop != nil && *app.Spec.Stop {
-		// remove all ingress
+func Ingress(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
+	if app.Spec.GetStopped() {
+		return nil, nil
+	}
+
+	bindings := ports.ApplyBindings(svc.Name, app.Spec.PublishMode, app.Spec.Publish, ports.ByProtocol(svc.Spec.Ports, v1.ProtocolHTTP))
+
+	if len(bindings) == 0 {
 		return nil, nil
 	}
 
@@ -149,102 +154,69 @@ func Ingress(req router.Request, app *v1.AppInstance) (result []kclient.Object, 
 		}
 	}
 
-	ps, err := ports.NewForIngressPublish(app)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		rules   []networkingv1.IngressRule
+		targets = map[string]Target{}
+	)
 
-	rawPS, err := ports.New(app)
-	if err != nil {
-		return nil, err
-	}
+	for _, entry := range typed.Sorted(bindings.ByHostname()) {
+		hostname := entry.Key
+		ports := entry.Value
+		if hostname == "" {
+			for i, port := range ports {
+				targetName := svc.Name
+				if i > 0 {
+					targetName = name.SafeConcatName(targetName, fmt.Sprint(port.Port))
+				}
 
-	// Look for Secrets in the app namespace that contain cert manager TLS certs
-	tlsCerts, err := getCerts(req, app.Namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, serviceName := range ps.ServiceNames() {
-		var (
-			rules   []networkingv1.IngressRule
-			targets = map[string]Target{}
-		)
-
-		for i, port := range ps.PortsForService(serviceName) {
-			hostnames, ok := ps.Hostnames[port]
-			if ok {
-				for _, hostname := range hostnames {
-					targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
-					rules = append(rules, rule(hostname, serviceName, port.Port))
+				for _, domain := range cfg.ClusterDomains {
+					hostname, err := toHTTPEndpointHostname(*cfg.HttpEndpointPattern, domain, targetName, app.GetName(), app.GetNamespace())
+					if err != nil {
+						return nil, err
+					}
+					targets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
+					rules = append(rules, getIngressRule(app, svc, hostname, port.Port))
 				}
 			}
-			svcName := serviceName
-			if i > 0 {
-				svcName = name.SafeConcatName(serviceName, fmt.Sprint(port.Port))
+		} else {
+			if len(ports) > 1 {
+				return nil, fmt.Errorf("multiple ports bound to the same hostname [%s]", hostname)
 			}
-			for _, domain := range cfg.ClusterDomains {
-				hostname, err := toEndpoint(*cfg.HttpEndpointPattern, domain, svcName, app.GetName(), app.GetNamespace())
-				if err != nil {
-					return nil, err
-				}
-				hostnameMinusPort, _, _ := strings.Cut(hostname, ":")
-				targets[hostname] = Target{Port: port.TargetPort, Service: serviceName}
-				rules = append(rules, rule(hostnameMinusPort, serviceName, port.Port))
-			}
+			targets[hostname] = Target{Port: ports[0].TargetPort, Service: svc.Name}
+			rules = append(rules, getIngressRule(app, svc, hostname, ports[0].Port))
 		}
-
-		targetJSON, err := json.Marshal(targets)
-		if err != nil {
-			return nil, err
-		}
-
-		filteredTLSCerts := filterCertsForPublishedHosts(rules, tlsCerts)
-		for i, tlsCert := range filteredTLSCerts {
-			originalSecret := &corev1.Secret{}
-
-			err := req.Get(originalSecret, tlsCert.SecretNamespace, tlsCert.SecretName)
-			if err != nil {
-				return nil, err
-			}
-			secretName := name.SafeConcatName(tlsCert.SecretName, app.Name, app.Namespace, string(originalSecret.UID)[:12])
-			result = append(result, &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:        secretName,
-					Namespace:   app.Status.Namespace,
-					Labels:      labels.Merge(originalSecret.Labels, labels.Managed(app)),
-					Annotations: originalSecret.Annotations,
-				},
-				Type: corev1.SecretTypeTLS,
-				Data: originalSecret.Data,
-			})
-
-			//Override the secret name to the copied name
-			filteredTLSCerts[i].SecretName = secretName
-			filteredTLSCerts[i].SecretNamespace = app.Status.Namespace
-		}
-
-		tlsIngress := getCertsForPublishedHosts(rules, filteredTLSCerts)
-		labelMap, annotations := ingressLabelsAndAnnotations(serviceName, string(targetJSON), app, ps, rawPS)
-		tlsIngress = setupCertManager(serviceName, annotations, rules, tlsIngress)
-
-		result = append(result, &networkingv1.Ingress{
-			TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:        serviceName,
-				Namespace:   app.Status.Namespace,
-				Labels:      labelMap,
-				Annotations: annotations,
-			},
-			Spec: networkingv1.IngressSpec{
-				IngressClassName: ingressClassName,
-				Rules:            rules,
-				TLS:              tlsIngress,
-			},
-		})
 	}
 
-	return result, nil
+	secrets, ingressTLS, err := setupCertsForRules(req, app, svc, rules)
+	if err != nil {
+		return nil, err
+	}
+
+	targetJSON, err := json.Marshal(targets)
+	if err != nil {
+		return nil, err
+	}
+
+	result = append(result, &networkingv1.Ingress{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      svc.Name,
+			Namespace: app.Status.Namespace,
+			Labels:    svc.Spec.Labels,
+			Annotations: labels.Merge(svc.Spec.Annotations, map[string]string{
+				labels.AcornTargets: string(targetJSON),
+			}),
+		},
+		Spec: networkingv1.IngressSpec{
+			IngressClassName: ingressClassName,
+			Rules:            rules,
+			TLS:              ingressTLS,
+		},
+	})
+
+	result = append(result, secrets...)
+
+	return
 }
 
 func setupCertManager(serviceName string, annotations map[string]string, rules []networkingv1.IngressRule, tls []networkingv1.IngressTLS) []networkingv1.IngressTLS {
@@ -271,7 +243,7 @@ func setupCertManager(serviceName string, annotations map[string]string, rules [
 }
 
 // IngressClassNameIfNoDefault returns an ingress class name if there is exactly one IngressClass and it is not
-// set as the default. We return a pointer here because "" is not a valid value for ingressClassName and will cause the
+// set as the default. We return a pointer here because "" is not a valid value for ingressClassName and will cause
 // the ingress to fail.
 func IngressClassNameIfNoDefault(ctx context.Context, client kclient.Client) (*string, error) {
 	var ingressClasses networkingv1.IngressClassList
@@ -288,49 +260,15 @@ func IngressClassNameIfNoDefault(ctx context.Context, client kclient.Client) (*s
 	return nil, nil
 }
 
-func routerIngressLabelsAndAnnotations(name, targetJSON string, app *v1.AppInstance, portSet, rawPS *ports.Set) (map[string]string, map[string]string) {
-	labelMap := labels.Managed(app, labels.AcornServiceName, name)
-	anns := map[string]string{labels.AcornTargets: targetJSON}
+func getIngressRule(app *v1.AppInstance, svc *v1.ServiceInstance, host string, port int32) networkingv1.IngressRule {
+	// strip possible port in host
+	host, _, _ = strings.Cut(host, ":")
 
-	// This is complicated, but we need to do this because an ingress can be for multiple containers, if both containers
-	//have a port with the same serviceName. So, this logic finds all the containers an ingress is for and
-	// gathers the labels/annotations from them.
-	if ports, ok := portSet.Services[name]; ok {
-		for port := range ports {
-			for _, t := range rawPS.Ports[port] {
-				labelMap = labels.Merge(labelMap, labels.GatherScoped(t.RouterName, v1.LabelTypeRouter,
-					app.Status.AppSpec.Labels, app.Status.AppSpec.Routers[t.RouterName].Labels, app.Spec.Labels))
-				anns = labels.Merge(anns, labels.GatherScoped(t.RouterName, v1.LabelTypeRouter,
-					app.Status.AppSpec.Annotations, app.Status.AppSpec.Routers[t.RouterName].Annotations, app.Spec.Annotations))
-			}
-		}
+	router, ok := app.Status.AppSpec.Routers[svc.Name]
+	if ok {
+		return routerRule(host, router)
 	}
 
-	return labelMap, anns
-}
-
-func ingressLabelsAndAnnotations(name, targetJSON string, app *v1.AppInstance, portSet, rawPS *ports.Set) (map[string]string, map[string]string) {
-	labelMap := labels.Managed(app, labels.AcornServiceName, name)
-	anns := map[string]string{labels.AcornTargets: targetJSON}
-
-	// This is complicated, but we need to do this because an ingress can be for multiple containers, if both containers
-	//have a port with the same serviceName. So, this logic finds all the containers an ingress is for and
-	// gathers the labels/annotations from them.
-	if ports, ok := portSet.Services[name]; ok {
-		for port := range ports {
-			for _, t := range rawPS.Ports[port] {
-				labelMap = labels.Merge(labelMap, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer,
-					app.Status.AppSpec.Labels, app.Status.AppSpec.Containers[t.ContainerName].Labels, app.Spec.Labels))
-				anns = labels.Merge(anns, labels.GatherScoped(t.ContainerName, v1.LabelTypeContainer,
-					app.Status.AppSpec.Annotations, app.Status.AppSpec.Containers[t.ContainerName].Annotations, app.Spec.Annotations))
-			}
-		}
-	}
-
-	return labelMap, anns
-}
-
-func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 	return networkingv1.IngressRule{
 		Host: host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
@@ -341,7 +279,7 @@ func rule(host, serviceName string, port int32) networkingv1.IngressRule {
 						PathType: &[]networkingv1.PathType{networkingv1.PathTypePrefix}[0],
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
-								Name: serviceName,
+								Name: svc.Name,
 								Port: networkingv1.ServiceBackendPort{
 									Number: port,
 								},

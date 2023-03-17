@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/tonistiigi/fsutil/types"
 )
 
 func wsURL(url string) string {
@@ -78,6 +81,20 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 			return msg.AppImage, nil
 		} else if msg.RegistryServerAddress != "" {
 			err := messages.Send(lookupCred(ctx, creds, msg.RegistryServerAddress))
+			if err != nil {
+				return nil, err
+			}
+		} else if msg.Acornfile != "" {
+			data, err := os.ReadFile(filepath.Join(cwd, msg.Acornfile))
+			if err != nil {
+				return nil, err
+			}
+			err = messages.Send(&Message{
+				Acornfile: msg.Acornfile,
+				Packet: &types.Packet{
+					Data: data,
+				},
+			})
 			if err != nil {
 				return nil, err
 			}

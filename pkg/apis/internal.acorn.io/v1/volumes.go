@@ -26,14 +26,16 @@ func ParseVolumes(args []string, binding bool) (result []VolumeBinding, _ error)
 			Target: volName,
 		}
 
+		kvOpts := KVMap(opts, ",")
 		if binding {
-			opts := KVMap(opts, ",")
-			volumeBinding.Class = strings.TrimSpace(opts["class"])
-			q, err := ParseQuantity(opts["size"])
+			volumeBinding.Class = strings.TrimSpace(kvOpts["class"])
+			q, err := ParseQuantity(kvOpts["size"])
 			if err != nil {
 				return nil, fmt.Errorf("parsing [%s]: %w", arg, err)
 			}
 			volumeBinding.Size = q
+		} else if len(kvOpts) > 0 {
+			return nil, fmt.Errorf("options [%s] are not supported in acorn volume binding definition", opts)
 		}
 
 		result = append(result, volumeBinding)

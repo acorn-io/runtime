@@ -74,7 +74,6 @@ Flags:
       --compute-class strings     Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)
   -i, --dev                       Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
   -e, --env strings               Environment variables to set on running containers
-      --expose strings            In cluster expose ports of an application (format [public:]private) (ex 81:80)
   -f, --file string               Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                      help for run
       --interval string           If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)

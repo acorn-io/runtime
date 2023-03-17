@@ -49,6 +49,7 @@ var (
 					"containerreplicas",
 					"credentials",
 					"secrets",
+					"services",
 				},
 			},
 			{
@@ -105,6 +106,7 @@ var (
 			{
 				Verbs: []string{"delete"},
 				Resources: []string{
+					"services",
 					"volumes",
 					"containerreplicas",
 				},

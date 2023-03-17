@@ -23,9 +23,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/91": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/oneimage": "true"
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","publish":true,"targetPort":91}],"probes":null}}}'
     spec:
@@ -77,9 +74,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "buildimage"
         "acorn.io/managed": "true"
-        "port-number.acorn.io/91": "true"
-        "port-number.acorn.io/81": "true"
-        "service-name.acorn.io/buildimage": "true"
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":443,"protocol":"tcp","publish":true,"targetPort":91}],"probes":null}'
     spec:

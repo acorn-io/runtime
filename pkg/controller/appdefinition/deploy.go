@@ -12,9 +12,9 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/expose"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/pdb"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tags"
@@ -23,7 +23,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/data/convert"
-	"golang.org/x/exp/maps"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -81,18 +80,14 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addJobs(req, appInstance, tag, pullSecrets, resp); err != nil {
 		return err
 	}
-	if err := addPublish(req, appInstance, resp); err != nil {
-		return err
-	}
-	if err := addExpose(req, appInstance, resp); err != nil {
-		return err
-	}
+	addExpose(appInstance, resp)
 	if err := addPVCs(req, appInstance, resp); err != nil {
 		return err
 	}
 	if err := addConfigMaps(appInstance, resp); err != nil {
 		return err
 	}
+	addAcorns(appInstance, tag, pullSecrets, resp)
 
 	resp.Objects(pullSecrets.Objects()...)
 	return pullSecrets.Err()
@@ -600,7 +595,6 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	podLabels := containerLabels(appInstance, container, name)
 	deploymentLabels := containerLabels(appInstance, container, name)
 	matchLabels := selectorMatchLabels(appInstance, name)
-	maps.Copy(podLabels, ports.ToPodLabels(appInstance, name))
 
 	deploymentAnnotations := containerAnnotations(appInstance, container, name)
 
@@ -664,7 +658,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
 			result = append(result, toPermissions(perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)...)
 		}
-		result = append(result, sa, dep, expose.ToPodDisruptionBudget(dep))
+		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))
 	}
 	return result, nil
 }

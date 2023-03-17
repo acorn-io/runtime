@@ -22,8 +22,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
-        "service-name.acorn.io/oneimage": "true"
-        "port-number.acorn.io/81": "true"
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
     spec:
@@ -83,8 +81,6 @@ spec:
         "acorn.io/app-name": "app-name"
         "acorn.io/container-name": "twoimage"
         "acorn.io/managed": "true"
-        "service-name.acorn.io/twoimage": "true"
-        "port-number.acorn.io/81": "true"
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
     spec:

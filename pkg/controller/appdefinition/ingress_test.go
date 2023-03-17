@@ -3,14 +3,13 @@ package appdefinition
 import (
 	"testing"
 
+	v12 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
+	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/networking/v1"
-
-	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/acorn-io/baaah/pkg/router/tester"
 )
 
 func TestIngress(t *testing.T) {
@@ -46,12 +45,12 @@ func TestIngressPrefix(t *testing.T) {
 	var index1 int
 	var index2 int
 	for index, yaml := range resp.Collected {
-		if _, ok := yaml.(*v1.Ingress); ok {
+		if _, ok := yaml.(*v12.ServiceInstance); ok {
 			index1 = index
 		}
 	}
 	for index, yaml := range resp2.Collected {
-		if _, ok := yaml.(*v1.Ingress); ok {
+		if _, ok := yaml.(*v12.ServiceInstance); ok {
 			index2 = index
 		}
 	}

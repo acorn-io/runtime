@@ -75,6 +75,20 @@ func PullAppImage(ctx context.Context, c client.Reader, namespace, image string,
 	return appImage, nil
 }
 
+const DefaultRegistry = "NO_DEFAULT"
+
+func ParseReferenceNoDefault(name string) (imagename.Reference, error) {
+	ref, err := imagename.ParseReference(name, imagename.WithDefaultRegistry(DefaultRegistry))
+	if err != nil {
+		return nil, err
+	}
+
+	if ref.Context().RegistryStr() == DefaultRegistry {
+		return nil, fmt.Errorf("missing registry host in the tag [%s] (ie ghcr.io or docker.io)", name)
+	}
+	return ref, nil
+}
+
 func ResolveTag(tag imagename.Reference, image string) string {
 	if DigestPattern.MatchString(image) {
 		return tag.Context().Digest(image).String()
@@ -138,7 +152,7 @@ func GetRuntimePullableImageReference(ctx context.Context, c client.Reader, name
 		return imagesystem.GetRuntimePullableInternalRepoForNamespaceAndID(ctx, c, namespace, image)
 	}
 
-	return imagesystem.ParseAndEnsureNotInternalRepo(ctx, c, image)
+	return imagename.ParseReference(image)
 }
 
 func GetImageReference(ctx context.Context, c client.Reader, namespace, image string) (imagename.Reference, error) {

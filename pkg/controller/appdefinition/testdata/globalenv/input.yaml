@@ -20,3 +20,9 @@ status:
         environment:
         - name: env-name
           value: env-value
+    acorns:
+      acorn-name:
+        image: "acorn-image-name"
+        environment:
+        - name: env-name
+          value: env-value

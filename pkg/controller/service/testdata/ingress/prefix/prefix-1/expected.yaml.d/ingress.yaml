@@ -1,0 +1,34 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: con1
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "con1"
+    "acorn.io/managed": "true"
+    "allconsl1": "value"
+    "conl1": "value"
+    "conl3": "value"
+    "globall1": "value"
+    "globall2": "value"
+  annotations:
+    "acorn.io/targets": '{"con1-app-name-2aaa2251.local.on-acorn.io":{"port":81,"service":"con1"}}'
+    "allconsa1": "value"
+    "cona1": "value"
+    "cona3": "value"
+    "globala1": "value"
+    "globala2": "value"
+spec:
+  rules:
+    - host: con1-app-name-2aaa2251.local.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: con1
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

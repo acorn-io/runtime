@@ -1,5 +1,5 @@
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: oneimage
   namespace: app-created-namespace
@@ -7,25 +7,23 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
-    "acorn.io/service-name": "oneimage"
     "acorn.io/container-name": "oneimage"
 spec:
+  container: oneimage
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/container-name": "oneimage"
   type: ClusterIP
   ports:
     - port: 80
       targetPort: 81
-      protocol: "TCP"
-      appProtocol: "HTTP"
+      protocol: "http"
       name: "80"
-  selector:
-    "acorn.io/app-namespace": "app-namespace"
-    "acorn.io/app-name": "app-name"
-    "acorn.io/managed": "true"
-    "service-name.acorn.io/oneimage": "true"
-    "port-number.acorn.io/81": "true"
 ---
-kind: Service
-apiVersion: v1
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: twoimage
   namespace: app-created-namespace
@@ -33,19 +31,16 @@ metadata:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
-    "acorn.io/service-name": "twoimage"
     "acorn.io/container-name": "twoimage"
 spec:
-  type: ClusterIP
-  ports:
-    - port: 80
-      targetPort: 81
-      protocol: "TCP"
-      appProtocol: "HTTP"
-      name: "80"
-  selector:
+  container: twoimage
+  labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
-    "service-name.acorn.io/twoimage": "true"
-    "port-number.acorn.io/81": "true"
+    "acorn.io/container-name": "twoimage"
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: "http"
+      name: "80"
