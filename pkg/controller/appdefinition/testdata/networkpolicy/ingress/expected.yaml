@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: acorn-my-app-my-service-service-7777-service-7777
+  name: acorn-my-app-my-service-service-7777-9999-10000
   namespace: my-app-namespace
 spec:
   ingress:
@@ -31,7 +31,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: acorn-my-app-my-service-nginx-9090-nginx-9090
+  name: acorn-my-app-my-service-nginx-9090-9090
   namespace: my-app-namespace
 spec:
   ingress:
