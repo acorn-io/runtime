@@ -16,7 +16,7 @@ func NetworkPolicy(req router.Request, resp router.Response) error {
 			Namespace: app.Status.Namespace,
 		},
 		Spec: networkingv1.NetworkPolicySpec{
-			Ingress:     []networkingv1.NetworkPolicyIngressRule{},
+			Ingress:     []networkingv1.NetworkPolicyIngressRule{{}},
 			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},
 		Status: networkingv1.NetworkPolicyStatus{},
