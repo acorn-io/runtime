@@ -24,8 +24,6 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ClusterComputeClassInstanceList{},
 		&ProjectComputeClassInstance{},
 		&ProjectComputeClassInstanceList{},
-		&RegionInstance{},
-		&RegionInstanceList{},
 	)
 
 	// Add common types

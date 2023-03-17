@@ -24,6 +24,7 @@ status:
     memory:
       "": 0
       container-name: 0
+    region: local
     volumes:
       foo:
         class: test-volume-class

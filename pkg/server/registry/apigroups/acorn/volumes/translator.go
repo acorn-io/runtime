@@ -66,7 +66,7 @@ func (t *Translator) pvToVolume(ctx context.Context, pv corev1.PersistentVolume)
 		Spec: apiv1.VolumeSpec{
 			Capacity:    pv.Spec.Capacity.Storage(),
 			AccessModes: accessModes,
-			Class:       pv.Spec.StorageClassName,
+			Class:       pv.Labels[labels.AcornVolumeClass],
 		},
 		Status: apiv1.VolumeStatus{
 			AppName:      pv.Labels[labels.AcornAppName],
@@ -84,10 +84,10 @@ func (t *Translator) pvToVolume(ctx context.Context, pv corev1.PersistentVolume)
 		vol.Status.Status += "/deleted"
 	}
 
-	if _, ok := pv.Labels[labels.AcornVolumeClass]; !ok && pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Name != "" {
+	if vol.Spec.Class == "" && pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Name != "" {
 		pvc := new(corev1.PersistentVolumeClaim)
 		if err := t.c.Get(ctx, ktypes.NamespacedName{Namespace: pv.Spec.ClaimRef.Namespace, Name: pv.Spec.ClaimRef.Name}, pvc); err == nil {
-			pv.Labels[labels.AcornVolumeClass] = pvc.Labels[labels.AcornVolumeClass]
+			vol.Spec.Class = pvc.Labels[labels.AcornVolumeClass]
 		}
 	}
 

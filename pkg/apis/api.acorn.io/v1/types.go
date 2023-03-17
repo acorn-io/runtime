@@ -224,10 +224,25 @@ type VolumeStatus struct {
 	VolumeName   string        `json:"volumeName,omitempty"`
 	Status       string        `json:"status,omitempty"`
 	Columns      VolumeColumns `json:"columns,omitempty"`
+	Region       string        `json:"region,omitempty"`
 }
 
 type VolumeColumns struct {
 	AccessModes string `json:"accessModes,omitempty"`
+}
+
+func (in *Volume) ForRegion(region string) bool {
+	// If the region of a volume is not set, then it hasn't been synced yet. In this case, we assume that the volume is in
+	// the same region as the app, and return true.
+	if in.Status.Region == "" {
+		in.Status.Region = region
+	}
+
+	return in.Status.Region == region
+}
+
+func (in *Volume) ForOtherRegions(region string) bool {
+	return in.Status.Region != region
 }
 
 // +k8s:conversion-gen:explicit-from=net/url.Values
@@ -392,6 +407,13 @@ func (in *Project) ForRegion(region string) bool {
 	return region == "" || in.Status.DefaultRegion == region || slices.Contains(in.Spec.SupportedRegions, region)
 }
 
+func (in *Project) ForOtherRegions(region string) bool {
+	if len(in.Spec.SupportedRegions) == 0 {
+		return false
+	}
+	return len(in.Spec.SupportedRegions) > 1 || in.Spec.SupportedRegions[0] != region
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ProjectList struct {
@@ -446,22 +468,6 @@ type ServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Service `json:"items"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type Region adminv1.RegionInstance
-
-func (in *Region) NamespaceScoped() bool {
-	return false
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type RegionList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Region `json:"items"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

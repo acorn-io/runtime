@@ -33,7 +33,6 @@ var (
 				Verbs: []string{"create", "update", "delete"},
 				Resources: []string{
 					"projects",
-					"regions",
 				},
 			},
 		},
@@ -148,7 +147,6 @@ var (
 					"clustervolumeclasses",
 					"projectcomputeclasses",
 					"clustercomputeclasses",
-					"regions",
 					"imageallowrules",
 				},
 				APIGroups: []string{admin_acorn_io.Group},

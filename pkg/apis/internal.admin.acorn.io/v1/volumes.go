@@ -17,6 +17,7 @@ type ProjectVolumeClassInstance struct {
 	AllowedAccessModes v1.AccessModes  `json:"allowedAccessModes,omitempty"`
 	Size               VolumeClassSize `json:"size,omitempty"`
 	Inactive           bool            `json:"inactive,omitempty"`
+	SupportedRegions   []string        `json:"supportedRegions,omitempty"`
 }
 
 type VolumeClassSize struct {
@@ -39,6 +40,27 @@ type ClusterVolumeClassInstance ProjectVolumeClassInstance
 
 func (c *ClusterVolumeClassInstance) NamespaceScoped() bool {
 	return false
+}
+
+func (c *ClusterVolumeClassInstance) ForRegion(region string) bool {
+	for _, r := range c.SupportedRegions {
+		if r == region {
+			return true
+		}
+	}
+	c.SupportedRegions = append(c.SupportedRegions, region)
+	return true
+}
+
+// ForOtherRegions returns true if there are other regions that this instance is supported in.
+func (c *ClusterVolumeClassInstance) ForOtherRegions(region string) bool {
+	for i, r := range c.SupportedRegions {
+		if r == region {
+			c.SupportedRegions = append(c.SupportedRegions[:i], c.SupportedRegions[i+1:]...)
+		}
+	}
+
+	return len(c.SupportedRegions) > 0
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -3,6 +3,8 @@ package controller
 import (
 	"net/http"
 
+	policyv1 "k8s.io/api/policy/v1"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
@@ -18,14 +20,12 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/service"
 	"github.com/acorn-io/acorn/pkg/controller/tls"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/region"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
-	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
@@ -95,5 +95,4 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	configRouter.HandlerFunc(builder.DeployRegistry)
 	configRouter.HandlerFunc(config.HandleAutoUpgradeInterval)
 	configRouter.HandlerFunc(volume.CreateEphemeralVolumeClass)
-	configRouter.HandlerFunc(region.CreateLocalRegion)
 }

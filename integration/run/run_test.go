@@ -130,6 +130,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		StorageClassName: getStorageClassName(t, storageClasses),
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -188,7 +189,9 @@ func TestVolumeBoundBadClass(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		StorageClassName: getStorageClassName(t, storageClasses),
+		SupportedRegions: []string{"local"},
 	}
+
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
 	}
@@ -226,8 +229,9 @@ func TestVolumeClassInactive(t *testing.T) {
 	c, _ := helper.ClientAndNamespace(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
-		ObjectMeta: metav1.ObjectMeta{Name: "acorn-test-custom"},
-		Inactive:   true,
+		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
+		Inactive:         true,
+		SupportedRegions: []string{"local"},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -264,6 +268,7 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 			Min: "10Gi",
 			Max: "100Gi",
 		},
+		SupportedRegions: []string{"local"},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -307,6 +312,7 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 			Min: "10Gi",
 			Max: "100Gi",
 		},
+		SupportedRegions: []string{"local"},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -354,6 +360,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		StorageClassName: getStorageClassName(t, storageClasses),
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -425,6 +432,7 @@ func TestClusterVolumeClass(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("9G"),
 		},
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -487,6 +495,7 @@ func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("9G"),
 		},
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -545,6 +554,7 @@ func TestProjectVolumeClass(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("3G"),
 		},
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -720,6 +730,7 @@ func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
 			Min:     v1.Quantity("2G"),
 			Max:     v1.Quantity("6G"),
 		},
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -900,6 +911,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					Min: "512Mi",
 					Max: "1Gi",
 				},
+				SupportedRegions: []string{"local"},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -934,6 +946,7 @@ func TestUsingComputeClasses(t *testing.T) {
 				Memory: adminv1.ComputeClassMemory{
 					Max: "1Gi",
 				},
+				SupportedRegions: []string{"local"},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -971,6 +984,7 @@ func TestUsingComputeClasses(t *testing.T) {
 						"2Gi",
 					},
 				},
+				SupportedRegions: []string{"local"},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -1008,6 +1022,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					Max:     "1Gi",
 					Min:     "512Mi",
 				},
+				SupportedRegions: []string{"local"},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -1029,6 +1044,25 @@ func TestUsingComputeClasses(t *testing.T) {
 				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
 					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
 			},
+		},
+		{
+			name:              "unsupported-region",
+			testDataDirectory: "./testdata/simple",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				Default:   true,
+				CPUScaler: 0.25,
+				Memory: adminv1.ComputeClassMemory{
+					Default: "512Mi",
+					Max:     "1Gi",
+					Min:     "512Mi",
+				},
+				SupportedRegions: []string{"non-local"},
+			},
+			fail: true,
 		},
 		{
 			name:              "does-not-exist",
@@ -1129,7 +1163,7 @@ func getStorageClassName(t *testing.T, storageClasses *storagev1.StorageClassLis
 	}
 
 	storageClassName := storageClasses.Items[0].Name
-	// Use local-=path if it exists
+	// Use local-path if it exists
 	for _, sc := range storageClasses.Items {
 		if sc.Name == "local-path" {
 			storageClassName = sc.Name

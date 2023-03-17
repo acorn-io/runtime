@@ -2,18 +2,15 @@ package volume
 
 import (
 	"context"
-	"fmt"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
-	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/kubectl/pkg/util/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -44,6 +41,7 @@ func SyncVolumeClasses(req router.Request, resp router.Response) error {
 		Description:      "Acorn-generated volume class representing the storage class " + storageClass.Name,
 		StorageClassName: storageClass.Name,
 		Default:          storageClass.Annotations[storage.IsDefaultStorageClassAnnotation] == "true",
+		SupportedRegions: []string{"local"},
 	})
 
 	return nil
@@ -59,7 +57,8 @@ func CreateEphemeralVolumeClass(req router.Request, resp router.Response) error 
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "ephemeral",
 		},
-		Description: "Acorn-generated volume class representing ephemeral volumes not backed by a storage class",
+		Description:      "Acorn-generated volume class representing ephemeral volumes not backed by a storage class",
+		SupportedRegions: []string{"local"},
 	})
 
 	return nil
@@ -149,62 +148,6 @@ func getVolumeClassNames(volumeClasses map[string]adminv1.ProjectVolumeClassInst
 	}
 
 	return typed.SortedKeys(storageClassName)
-}
-
-func ValidateVolumeClasses(ctx context.Context, c client.Client, namespace string, appInstanceSpec v1.AppInstanceSpec, appSpec *v1.AppSpec) *field.Error {
-	if len(appInstanceSpec.Volumes) == 0 && len(appSpec.Volumes) == 0 {
-		return nil
-	}
-
-	volumeClasses, defaultVolumeClass, err := GetVolumeClasses(ctx, c, namespace)
-	if err != nil {
-		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, err.Error())
-	}
-
-	volumeBindings := make(map[string]v1.VolumeBinding)
-	for i, vol := range appInstanceSpec.Volumes {
-		if volClass, ok := volumeClasses[vol.Class]; vol.Class != "" && (!ok || volClass.Inactive) {
-			return field.Invalid(field.NewPath("spec", "volumes").Index(i), vol.Class, "not a valid volume class")
-		}
-		volumeBindings[vol.Target] = vol
-	}
-
-	var (
-		volClass adminv1.ProjectVolumeClassInstance
-		ok       bool
-	)
-	for name, vol := range appSpec.Volumes {
-		calculatedVolumeRequest := CopyVolumeDefaults(vol, volumeBindings[name], v1.VolumeDefault{})
-		if calculatedVolumeRequest.Class != "" {
-			volClass, ok = volumeClasses[calculatedVolumeRequest.Class]
-			if !ok || volClass.Inactive {
-				return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
-			}
-		} else if defaultVolumeClass != nil {
-			volClass = *defaultVolumeClass
-		} else {
-			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("no volume class found for %s", name))
-		}
-
-		if calculatedVolumeRequest.Size != "" {
-			q := v1.MustParseResourceQuantity(calculatedVolumeRequest.Size)
-			if volClass.Size.Min != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Min)) < 0 {
-				return field.Invalid(field.NewPath("spec", "volumes", name, "size"), q.String(), fmt.Sprintf("less than volume class %s minimum of %v", calculatedVolumeRequest.Class, volClass.Size.Min))
-			}
-			if volClass.Size.Max != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Max)) > 0 {
-				return field.Invalid(field.NewPath("spec", "volumes", name, "size"), q.String(), fmt.Sprintf("greater than volume class %s maximum of %v", calculatedVolumeRequest.Class, volClass.Size.Max))
-			}
-		}
-		if volClass.AllowedAccessModes != nil {
-			for _, am := range calculatedVolumeRequest.AccessModes {
-				if !slices.Contains(volClass.AllowedAccessModes, am) {
-					return field.Invalid(field.NewPath("spec", "volumes", name, "accessModes"), am, fmt.Sprintf("not an allowed access mode of %v", calculatedVolumeRequest.Class))
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func CopyVolumeDefaults(volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeBinding, volumeDefaults v1.VolumeDefault) v1.VolumeRequest {

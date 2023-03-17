@@ -21,7 +21,8 @@ acorn offering regions`,
 }
 
 type Regions struct {
-	Quiet  bool `usage:"Output only names" short:"q"`
+	Quiet  bool   `usage:"Output only names" short:"q"`
+	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client ClientFactory
 }
 
@@ -31,7 +32,7 @@ func (a *Regions) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.Region, a.Quiet, "")
+	out := table.NewWriter(tables.Region, a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		region, err := c.RegionGet(cmd.Context(), args[0])
@@ -53,7 +54,7 @@ func (a *Regions) Run(cmd *cobra.Command, args []string) error {
 				out.Write(region)
 			}
 		} else {
-			out.Write(region)
+			out.Write(&region)
 		}
 	}
 
