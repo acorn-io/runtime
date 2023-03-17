@@ -16,13 +16,13 @@ spec:
     "acorn.io/managed": "true"
   container: oneimage
   ports:
-    - port: 80
-      targetPort: 81
+    - targetPort: 81
       publish: true
       protocol: http
-      name: "80"
     - port: 90
       targetPort: 91
       publish: true
       protocol: tcp
-      name: "90"
+    - targetPort: 92
+      publish: true
+      protocol: tcp

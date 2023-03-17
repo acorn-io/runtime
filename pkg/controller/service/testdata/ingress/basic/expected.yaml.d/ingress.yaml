@@ -19,7 +19,7 @@ spec:
               service:
                 name: oneimage
                 port:
-                  number: 80
+                  number: 81
             path: /
             pathType: Prefix
     - host: ci1.acorn.not
@@ -29,7 +29,7 @@ spec:
               service:
                 name: oneimage
                 port:
-                  number: 80
+                  number: 81
             path: /
             pathType: Prefix
     - host: localhost
@@ -39,7 +39,7 @@ spec:
               service:
                 name: oneimage
                 port:
-                  number: 80
+                  number: 81
             path: /
             pathType: Prefix
   tls:
