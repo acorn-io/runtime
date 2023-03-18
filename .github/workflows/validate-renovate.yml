@@ -1,0 +1,31 @@
+name: 'Validate renovate config'
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.github/renovate.json'
+      - '.github/workflows/validate-renovate.yml'
+
+  pull_request:
+    paths:
+      - '.github/renovate.json'
+      - '.github/workflows/validate-renovate.yml'
+
+jobs:
+  validate-renovate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+          with:
+            node-version: '16'
+        - name: Install renovate
+          run: npm i -g renovate
+        - name: Validate config
+          run: renovate-config-validator
+          env:
+            RENOVATE_CONFIG_FILE: .github/renovate.json
