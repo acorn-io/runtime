@@ -132,11 +132,20 @@ func parsePortBindingTuple(left, right string) (PortBinding, error) {
 			TargetPort: rightNum,
 		}, nil
 	} else if !leftIsNum && rightIsNum {
-		// example.com:80 format
-		return PortBinding{
-			Hostname:   left,
-			TargetPort: rightNum,
-		}, nil
+		if strings.Contains(left, ".") {
+			// example.com:80 format
+			return PortBinding{
+				Hostname:   left,
+				TargetPort: rightNum,
+				Protocol:   ProtocolHTTP,
+			}, nil
+		} else {
+			// app:80 format
+			return PortBinding{
+				TargetServiceName: left,
+				TargetPort:        rightNum,
+			}, nil
+		}
 	} else if leftIsNum && !rightIsNum {
 		// 80:service format
 		return PortBinding{
@@ -144,11 +153,15 @@ func parsePortBindingTuple(left, right string) (PortBinding, error) {
 			TargetServiceName: right,
 		}, nil
 	} else {
-		// hostname:service
-		return PortBinding{
-			Hostname:          left,
-			TargetServiceName: right,
-		}, nil
+		if strings.Contains(left, ".") {
+			// hostname:service
+			return PortBinding{
+				Hostname:          left,
+				TargetServiceName: right,
+				Protocol:          ProtocolHTTP,
+			}, nil
+		}
+		return PortBinding{}, fmt.Errorf("[%s] must be a hostname containing a \".\"", left)
 	}
 }
 
@@ -246,6 +259,10 @@ func ParsePortBindings(args []string) (result []PortBinding, _ error) {
 			binding, err = parsePortBindingTuple(parts[0], parts[1])
 			if err != nil {
 				return nil, err
+			}
+			if (binding.Protocol == ProtocolHTTP || (binding.Protocol == "" && proto == string(ProtocolHTTP))) &&
+				binding.Port != 0 {
+				return nil, fmt.Errorf("can not bind an http port [%d] to an alternative port [%d], only hostname", binding.TargetPort, binding.Port)
 			}
 		case 3:
 			binding, err = parsePortBindingTriplet(parts[0], parts[1], parts[2])

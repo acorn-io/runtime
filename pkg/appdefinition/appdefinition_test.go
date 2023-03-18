@@ -1875,6 +1875,7 @@ acorns: first: {
 	assert.Equal(t, v1.PortBinding{
 		Hostname:   "example.com",
 		TargetPort: 123,
+		Protocol:   v1.ProtocolHTTP,
 	}, acorn.Publish[2])
 }
 
