@@ -27,7 +27,7 @@ func toContainerLabelsService(appInstance *v1.AppInstance, service *v1.ServiceIn
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Ports:    typed.MapSlice(service.Spec.Ports, ports.ToServicePort),
+			Ports:    ports.ToServicePorts(service.Spec.Ports),
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: typed.Concat(labels.Managed(appInstance), service.Spec.ContainerLabels),
 		},
@@ -45,7 +45,7 @@ func toContainerService(appInstance *v1.AppInstance, service *v1.ServiceInstance
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Ports:    typed.MapSlice(service.Spec.Ports, ports.ToServicePort),
+			Ports:    ports.ToServicePorts(service.Spec.Ports),
 			Type:     corev1.ServiceTypeClusterIP,
 			Selector: labels.Managed(appInstance, labels.AcornContainerName, service.Spec.Container),
 		},
@@ -63,7 +63,7 @@ func toAddressService(appInstance *v1.AppInstance, service *v1.ServiceInstance) 
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Ports: typed.MapSlice(service.Spec.Ports, ports.ToServicePort),
+			Ports: ports.ToServicePorts(service.Spec.Ports),
 		},
 	}
 	ipAddr := net.ParseIP(service.Spec.Address)

@@ -29,7 +29,7 @@ func IsLinked(app *v1.AppInstance, name string) bool {
 func ByProtocol(ports []v1.PortDef, protocols ...v1.Protocol) (result []v1.PortDef) {
 	for _, port := range ports {
 		for _, proto := range protocols {
-			if port.Protocol == proto {
+			if port.Complete().Protocol == proto {
 				result = append(result, port)
 				break
 			}

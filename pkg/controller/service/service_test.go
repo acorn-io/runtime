@@ -89,8 +89,17 @@ func TestIngressLabelsNamespace(t *testing.T) {
 func TestLetsEncrypt(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/letsencrypt", RenderServices)
 }
+
 func TestService(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/service/basic", RenderServices)
+}
+
+func TestServiceOverlay(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/service/tcp-http-overlap", RenderServices)
+}
+
+func TestBindNoProtocol(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/service/bind-no-protocol", RenderServices)
 }
 
 func TestRouter(t *testing.T) {
