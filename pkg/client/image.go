@@ -167,6 +167,7 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 }
 
 func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
+
 	image, err := c.ImageGet(ctx, imageName)
 	if apierrors.IsNotFound(err) {
 		return nil, nil
@@ -204,6 +205,17 @@ func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts 
 }
 
 func (c *DefaultClient) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, error) {
+
+	ref, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+	if err != nil {
+		return nil, err
+	}
+
+	// If the image is a digest, then we need to get the image by digest
+	if dig, ok := ref.(name.Digest); ok {
+		imageName = dig.DigestStr()
+	}
+
 	result := &apiv1.Image{}
 	return result, c.Client.Get(ctx, kclient.ObjectKey{
 		Name:      strings.ReplaceAll(imageName, "/", "+"),

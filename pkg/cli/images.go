@@ -52,19 +52,8 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	allSetByUser := cmd.Flags().Changed("all")
 
 	if len(args) == 1 {
-		searchStr := args[0]
 
-		ref, err := name.ParseReference(searchStr, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
-		if err != nil {
-			return err
-		}
-
-		// If the image is a digest, then we need to get the image by digest
-		if dig, ok := ref.(name.Digest); ok {
-			searchStr = dig.DigestStr()
-		}
-
-		image, err = c.ImageGet(cmd.Context(), searchStr)
+		image, err = c.ImageGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
@@ -146,7 +135,6 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 				if ok {
 					imagePrint.Tag = ntag.TagStr()
 				}
-				out.Write(imagePrint)
 			} else if tagToMatch == "" {
 				ntag, ok := imageTagRef.(name.Tag)
 				if ok {
@@ -156,8 +144,10 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 						continue
 					}
 				}
-				out.Write(imagePrint)
 			}
+			out.Write(imagePrint)
+			imagePrint.Repository = ""
+			imagePrint.Tag = ""
 		}
 	}
 
