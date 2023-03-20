@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/storage"
@@ -64,6 +65,8 @@ func (s *Strategy) list(ctx context.Context, namespace string, opts storage.List
 		if vc.Default {
 			projectDefaultExists = true
 		}
+		// Reset TypeMeta so proper GVK is reported
+		vc.TypeMeta = metav1.TypeMeta{}
 		volumeClasses.Items = append(volumeClasses.Items, apiv1.VolumeClass(vc))
 		projectVolumeClassesSeen[vc.Name] = struct{}{}
 	}
@@ -76,6 +79,8 @@ func (s *Strategy) list(ctx context.Context, namespace string, opts storage.List
 		if projectDefaultExists {
 			cvc.Default = false
 		}
+		// Reset TypeMeta so proper GVK is reported
+		cvc.TypeMeta = metav1.TypeMeta{}
 		volumeClasses.Items = append(volumeClasses.Items, apiv1.VolumeClass(cvc))
 	}
 
