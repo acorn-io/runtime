@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/pdb"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/acorn/pkg/tolerations"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	name2 "github.com/rancher/wrangler/pkg/name"
@@ -118,6 +119,12 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 									},
 								},
 							},
+						},
+					},
+					Tolerations: []corev1.Toleration{
+						{
+							Key:      tolerations.WorkloadTolerationKey,
+							Operator: corev1.TolerationOpExists,
 						},
 					},
 					ServiceAccountName: routerName,
