@@ -1,8 +1,12 @@
 package cli
 
 import (
+	"fmt"
+
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -35,6 +39,9 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	out := table.NewWriter(tables.Volume, a.Quiet, a.Output)
+	out.AddFormatFunc("alias", func(obj apiv1.Volume) string {
+		return volumeAlias(&obj)
+	})
 
 	if len(args) == 1 {
 		volume, err := c.VolumeGet(cmd.Context(), args[0])
@@ -61,4 +68,14 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return out.Err()
+}
+
+// volumeAliases matches the correct app name to the given volume
+func volumeAlias(volume *apiv1.Volume) string {
+
+	if len(volume.Labels[labels.AcornVolumeName]) > 0 && len(volume.Labels[labels.AcornAppName]) > 0 {
+		return fmt.Sprintf("%s.%s", volume.Labels[labels.AcornAppName], volume.Labels[labels.AcornVolumeName])
+	}
+
+	return ""
 }

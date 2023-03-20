@@ -37,14 +37,17 @@ func addRmObject(rmObjects *RmObjects, obj string) {
 func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([]string, error) {
 	var result []string
 	secrets, err := client.SecretList(cmd.Context())
-	apps, _ := client.AppList(cmd.Context())
+	if err != nil {
+		return nil, err
+	}
 
+	apps, err := client.AppList(cmd.Context())
 	if err != nil {
 		return nil, err
 	}
 
 	for _, secret := range secrets {
-		aliasList := aliases(&secret, apps)
+		aliasList := secretAliases(&secret, apps)
 		if len(aliasList) != 0 {
 			secretName := strings.Split(aliasList[0], ".")
 			if len(secretName) != 0 && arg == secretName[0] {
@@ -62,10 +65,9 @@ func getVolumesToDelete(arg string, client client.Client, cmd *cobra.Command) ([
 	}
 
 	for _, volume := range volumes {
-		if arg == volume.Status.AppName {
+		if arg == volume.Status.AppName { // if the volume is a part of the app
 			result = append(result, volume.Name)
 		}
-
 	}
 	return result, nil
 }

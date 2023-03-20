@@ -47,7 +47,7 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 
 	out := table.NewWriter(tables.Secret, a.Quiet, a.Output)
 	out.AddFormatFunc("alias", func(obj apiv1.Secret) string {
-		return strings.Join(aliases(&obj, apps), ",")
+		return strings.Join(secretAliases(&obj, apps), ",")
 	})
 
 	if len(args) == 1 {
@@ -77,7 +77,7 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 	return out.Err()
 }
 
-func aliases(secret *apiv1.Secret, apps []apiv1.App) (result []string) {
+func secretAliases(secret *apiv1.Secret, apps []apiv1.App) (result []string) {
 	names := sets.NewString()
 	for _, app := range apps {
 		for _, binding := range app.Spec.Secrets {

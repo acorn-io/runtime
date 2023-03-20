@@ -25,6 +25,7 @@ var (
 	AppConverter = MustConverter(App)
 
 	Volume = [][]string{
+		{"Alias", "{{alias .}}"},
 		{"Name", "{{ . | name }}"},
 		{"App-Name", "Status.AppName"},
 		{"Bound-Volume", "Status.VolumeName"},
