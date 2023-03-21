@@ -131,24 +131,29 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			imagePrint.Repository += imageTagRef.Context().RepositoryStr()
 
 			if tagToMatch == imageTagRef.Name() {
-				ntag, ok := imageTagRef.(name.Tag)
-				if ok {
+				if ntag, ok := imageTagRef.(name.Tag); ok {
+					// it's a tag, so print it like usual
 					imagePrint.Tag = ntag.TagStr()
+					out.Write(imagePrint)
+				} else if _, ok := imageTagRef.(name.Digest); ok {
+					// it's a digest, so print without a tag
+					out.Write(imagePrint)
 				}
 			} else if tagToMatch == "" {
-				ntag, ok := imageTagRef.(name.Tag)
-				if ok {
+				if ntag, ok := imageTagRef.(name.Tag); ok {
+					// it's a tag, so print it like usual
 					imagePrint.Tag = ntag.TagStr()
-				} else {
-					if !allSetByUser {
-						continue
-					}
+					out.Write(imagePrint)
+				} else if allSetByUser {
+					// it's not a tag but user wants to see everything
+					out.Write(imagePrint)
 				}
 			}
-			out.Write(imagePrint)
+
 			imagePrint.Repository = ""
 			imagePrint.Tag = ""
 		}
+
 	}
 
 	return out.Err()
