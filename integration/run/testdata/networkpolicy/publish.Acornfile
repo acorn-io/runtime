@@ -1,0 +1,6 @@
+containers: {
+	bar: {
+		image: "public.ecr.aws/docker/library/nginx:latest"
+		ports: publish: "80/http"
+	}
+}
