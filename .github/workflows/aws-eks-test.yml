@@ -80,7 +80,7 @@ jobs:
         if: always()
         # Add any artifacts that should be associated with this run to /tmp/artifacts/${{ github.run_id }}
         run: |
-          mkdir -p /tmp/artifacts/${{ github.run_id }}
+          mkdir -p /tmp/artifacts/${{ github.run_id }}/logs /tmp/artifacts/${{ github.run_id }}/resources
           kubectl logs -n acorn-system -l app=acorn-api > /tmp/artifacts/${{ github.run_id }}/logs/acorn-api.log || true
           kubectl logs -n acorn-system -l app=acorn-controller > /tmp/artifacts/${{ github.run_id }}/logs/acorn-controller.log || true
           kubectl get all -n acorn-image-system > /tmp/artifacts/${{ github.run_id }}/resources/acorn-image-system.txt || true
