@@ -17,6 +17,56 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestProjectPrefixCompletions(t *testing.T) {
+	appNames := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
+	apps := make([]apiv1.App, 0, len(appNames))
+	for _, name := range appNames {
+		apps = append(apps, apiv1.App{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+
+	mockClientFactory := &testdata.MockClientFactory{
+		AppList: apps,
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Project Prefix Doesn't Exist",
+			toComplete:    "nonexist::t",
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Project Prefix Doesn't Exist, no resource",
+			toComplete:    "nonexist::",
+			wantNames:     []string{}, // unsure why this is returning
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Project Prefix Exist, no resource, still get completions",
+			toComplete:    "project::",
+			wantNames:     []string{"project::test-1", "project::acorn-1", "project::acorn-2", "project::hub", "project::test-2"}, // unsure why this is returning
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+	}
+
+	comp := newCompletion(mockClientFactory, appsThenContainersCompletion).checkProjectPrefix()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantNames, got, "appsThenContainersCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+			assert.Equalf(t, tt.wantDirective, got1, "appsThenContainersCompletion(_, _, %v, %v)", tt.args, tt.toComplete)
+		})
+	}
+}
+
 func TestAppsThenContainersCompletion(t *testing.T) {
 	appNames := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
 	containerNames := []string{"test-1.container-1", "acorn-1.container-1", "acorn-2.container-1", "hub.container", "hub.other-container", "test-2.container-1"}
@@ -179,6 +229,12 @@ func TestAppsCompletion(t *testing.T) {
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
+			name:          "With Project:: Complete hub, only hub returned",
+			toComplete:    "project::hub",
+			wantNames:     []string{"project::hub"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
 			name:          "Complete empty, but all names already in args",
 			args:          names,
 			wantNames:     []string{},
@@ -192,7 +248,7 @@ func TestAppsCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, appsCompletion)
+	comp := newCompletion(mockClientFactory, appsCompletion).checkProjectPrefix()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -230,6 +286,12 @@ func TestContainersCompletion(t *testing.T) {
 			name:          "Complete starting with t",
 			toComplete:    "t",
 			wantNames:     []string{"test-1.container-1", "test-2.container-1"},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "With project:: Complete starting with t",
+			toComplete:    "project::t",
+			wantNames:     []string{"project::test-1.container-1", "project::test-2.container-1"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
@@ -283,7 +345,7 @@ func TestContainersCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, containersCompletion)
+	comp := newCompletion(mockClientFactory, containersCompletion).checkProjectPrefix()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)

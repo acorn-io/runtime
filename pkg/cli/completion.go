@@ -85,6 +85,41 @@ func (a *completion) complete(cmd *cobra.Command, args []string, toComplete stri
 	return removeExistingArgs(result, args), a.successDirective
 }
 
+func (a *completion) checkProjectPrefix() *completion {
+	currentCompletionFunc := a.completionFunc
+	newCompletionFunc := func(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+		if parsedProject, after, found := strings.Cut(toComplete, "::"); found {
+
+			// check that the provided project exists, return a helpful error otherwise
+			allProjects, err := c.ProjectList(ctx)
+			found := false
+			for _, project := range allProjects {
+				if strings.ToLower(project.Name) == strings.ToLower(parsedProject) {
+					found = true
+				}
+			}
+			if !found {
+				return []string{}, nil
+			}
+
+			// completion for the string after the ::
+			completions, err := currentCompletionFunc(ctx, c, after)
+			if err != nil {
+				return []string{}, err
+			}
+			// add back on projectName:: to the original completion
+			compiledCompletions := make([]string, len(completions))
+			for i, str := range completions {
+				compiledCompletions[i] = parsedProject + "::" + str
+			}
+			return compiledCompletions, nil
+		}
+		return currentCompletionFunc(ctx, c, toComplete)
+	}
+	a.completionFunc = newCompletionFunc
+	return a
+}
+
 func appsThenContainersCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
 	// If the toComplete has a '.', then the user is looking for a container.
 	if strings.Contains(toComplete, ".") {

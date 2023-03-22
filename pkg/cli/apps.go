@@ -8,15 +8,31 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
+// cli.projectscoped command
+// takes a command, add a new prerun to it, that is the project scope parser that I wrote
+// iterate over all flags and args, if any of them have the thing i set, ::
+// break it out into -j
+
+// or create 1 fun in 1 place
+// inside builder, projectscope.go, func that takes args of an app and flags of a command
+// iterate over them, does prerun i was writing,
+// fun a* app = pre, call that scope function
+
+// is there anything that is not project scoped, what would I want to not touch with this?
+
+//global flag info
+// bc acorn is root command, all flags attached are global commands for the sub commands
+
 func NewApp(c CommandContext) *cobra.Command {
 	return cli.Command(&App{client: c.ClientFactory}, cobra.Command{
 		Use:     "app [flags] [APP_NAME...]",
 		Aliases: []string{"apps", "a", "ps"},
 		Example: `
 acorn app`,
-		SilenceUsage:      true,
-		Short:             "List or get apps",
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
+		SilenceUsage: true,
+		Short:        "List or get apps",
+		//PreRun: c.ClientFactory.
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).checkProjectPrefix().complete,
 	})
 }
 
@@ -29,6 +45,7 @@ type App struct {
 
 func (a *App) Run(cmd *cobra.Command, args []string) error {
 	c, err := a.client.CreateDefault()
+
 	if err != nil {
 		return err
 	}

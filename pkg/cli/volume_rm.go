@@ -13,7 +13,7 @@ func NewVolumeDelete(c CommandContext) *cobra.Command {
 		Example:           `acorn volume rm my-volume`,
 		SilenceUsage:      true,
 		Short:             "Delete a volume",
-		ValidArgsFunction: newCompletion(c.ClientFactory, volumesCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, volumesCompletion).checkProjectPrefix().complete,
 	})
 	return cmd
 }

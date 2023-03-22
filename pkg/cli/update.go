@@ -19,7 +19,7 @@ func NewUpdate(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Update a deployed app",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).checkProjectPrefix().complete,
 	})
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)

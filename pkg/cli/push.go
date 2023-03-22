@@ -16,7 +16,7 @@ func NewPush(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Push an image to a remote registry",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(false)).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(false)).withShouldCompleteOptions(onlyNumArgs(1)).checkProjectPrefix().complete,
 	})
 }
 

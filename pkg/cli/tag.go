@@ -11,7 +11,7 @@ func NewTag(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Tag an image",
 		Args:              cobra.ExactArgs(2),
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(2)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(2)).checkProjectPrefix().complete,
 	})
 }
 

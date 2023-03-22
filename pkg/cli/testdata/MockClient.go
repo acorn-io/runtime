@@ -391,7 +391,7 @@ func (m *MockClient) ContainerReplicaList(ctx context.Context, opts *client.Cont
 	}
 	return []apiv1.ContainerReplica{{
 		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
+		ObjectMeta: metav1.ObjectMeta{Name: "container"},
 		Spec:       apiv1.ContainerReplicaSpec{AppName: "found"},
 		Status:     apiv1.ContainerReplicaStatus{},
 	}}, nil

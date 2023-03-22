@@ -14,7 +14,7 @@ func NewImageDelete(c CommandContext) *cobra.Command {
 		Example:           `acorn image rm my-image`,
 		SilenceUsage:      true,
 		Short:             "Delete an Image",
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).checkProjectPrefix().complete,
 	})
 	return cmd
 }

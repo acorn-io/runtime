@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client/term"
@@ -138,8 +139,23 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// parse the form project::resource
+	for i, arg := range args {
+		if projectOverride, newArg, ok := strings.Cut(arg, "::"); ok {
+			args[i] = newArg
+			a.Project = projectOverride
+		}
+	}
+	cmd.SetArgs(args)
+
 	return nil
 }
+
+// This runs from running acorn. How do I get this to run before all commands
+//func (a *Acorn) Pre(cmd *cobra.Command, args []string) error {
+//
+//
+//}
 
 func (a *Acorn) Run(cmd *cobra.Command, args []string) error {
 	return cmd.Help()
