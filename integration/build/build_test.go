@@ -25,6 +25,17 @@ func TestBuildFailed(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestBuildDev(t *testing.T) {
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
+	img, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/dev/Acornfile", &client.AcornImageBuildOptions{
+		Cwd:      "./testdata/dev",
+		Profiles: []string{"dev"},
+	})
+	assert.NoError(t, err)
+	_, ok := img.ImageData.Containers["default"]
+	assert.True(t, ok)
+}
+
 func TestBuildFailedNoImageBuild(t *testing.T) {
 	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	_, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/no-image-build/Acornfile", &client.AcornImageBuildOptions{

@@ -3848,6 +3848,20 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceSpec(ref common.R
 							Format: "",
 						},
 					},
+					"profiles": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 					"platforms": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},

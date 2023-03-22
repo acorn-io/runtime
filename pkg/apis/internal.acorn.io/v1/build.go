@@ -62,6 +62,7 @@ type AcornImageBuildInstance struct {
 type AcornImageBuildInstanceSpec struct {
 	BuilderName string     `json:"builderName,omitempty" wrangler:"required"`
 	Acornfile   string     `json:"acornfile,omitempty"`
+	Profiles    []string   `json:"profiles,omitempty"`
 	Platforms   []Platform `json:"platforms,omitempty"`
 	Args        GenericMap `json:"args,omitempty"`
 	VCS         VCS        `json:"vcs,omitempty"`

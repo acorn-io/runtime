@@ -99,7 +99,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		return nil, err
 	}
 
-	appDefinition, buildArgs, err := appDefinition.WithArgs(ctx.opts.Args, []string{"build?"})
+	appDefinition, buildArgs, err := appDefinition.WithArgs(ctx.opts.Args, append([]string{"build?"}, ctx.opts.Profiles...))
 	if err != nil {
 		return nil, err
 	}
