@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 // NetworkPolicyForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
@@ -93,9 +94,9 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 		svc := corev1.Service{}
 		err = req.Get(&svc, ingress.Namespace, svcName)
 		if err != nil {
-			// is this okay to do? sometimes the Service doesn't exist yet when we need to get it
-			// so errors might occasionally appear in the logs but things eventually settle and work
-			return err
+			// service doesn't exist yet, so retry in 3 seconds
+			resp.RetryAfter(3 * time.Second)
+			return nil
 		}
 
 		netPolName := fmt.Sprintf("%s-%s-%s-%s", projectName, appName, ingress.Name, svcName)
