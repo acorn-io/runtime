@@ -130,12 +130,12 @@ type Target struct {
 	Service string `json:"service,omitempty"`
 }
 
-func Ingress(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
-	if app.Spec.GetStopped() {
+func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
+	if svc.Spec.PublishMode == v1.PublishModeNone {
 		return nil, nil
 	}
 
-	bindings := ports.ApplyBindings(svc.Name, app.Spec.PublishMode, app.Spec.Publish, ports.ByProtocol(svc.Spec.Ports, v1.ProtocolHTTP))
+	bindings := ports.ApplyBindings(svc.Spec.PublishMode, svc.Spec.Publish, ports.ByProtocol(svc.Spec.Ports, v1.ProtocolHTTP))
 
 	if len(bindings) == 0 {
 		return nil, nil
@@ -172,12 +172,12 @@ func Ingress(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance) (
 				}
 
 				for _, domain := range cfg.ClusterDomains {
-					hostname, err := toHTTPEndpointHostname(*cfg.HttpEndpointPattern, domain, targetName, app.GetName(), app.GetNamespace())
+					hostname, err := toHTTPEndpointHostname(*cfg.HttpEndpointPattern, domain, targetName, svc.Spec.AppName, svc.Spec.AppNamespace)
 					if err != nil {
 						return nil, err
 					}
 					targets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
-					rules = append(rules, getIngressRule(app, svc, hostname, port.Port))
+					rules = append(rules, getIngressRule(svc, hostname, port.Port))
 				}
 			}
 		} else {
@@ -185,11 +185,11 @@ func Ingress(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance) (
 				return nil, fmt.Errorf("multiple ports bound to the same hostname [%s]", hostname)
 			}
 			targets[hostname] = Target{Port: ports[0].TargetPort, Service: svc.Name}
-			rules = append(rules, getIngressRule(app, svc, hostname, ports[0].Port))
+			rules = append(rules, getIngressRule(svc, hostname, ports[0].Port))
 		}
 	}
 
-	secrets, ingressTLS, err := setupCertsForRules(req, app, svc, rules)
+	secrets, ingressTLS, err := setupCertsForRules(req, svc, rules)
 	if err != nil {
 		return nil, err
 	}
@@ -199,11 +199,28 @@ func Ingress(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance) (
 		return nil, err
 	}
 
+	proto := v1.PublishProtocolHTTP
+	if len(ingressTLS) > 0 {
+		proto = v1.PublishProtocolHTTPS
+	}
+
+	hostnameSeen := map[string]struct{}{}
+	for _, rule := range rules {
+		if _, ok := hostnameSeen[rule.Host]; ok {
+			continue
+		}
+		hostnameSeen[rule.Host] = struct{}{}
+		svc.Status.Endpoints = append(svc.Status.Endpoints, v1.Endpoint{
+			Address:         rule.Host,
+			PublishProtocol: proto,
+		})
+	}
+
 	result = append(result, &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      svc.Name,
-			Namespace: app.Status.Namespace,
+			Namespace: svc.Namespace,
 			Labels:    svc.Spec.Labels,
 			Annotations: labels.Merge(svc.Spec.Annotations, map[string]string{
 				labels.AcornTargets: string(targetJSON),
@@ -262,13 +279,12 @@ func IngressClassNameIfNoDefault(ctx context.Context, client kclient.Client) (*s
 	return nil, nil
 }
 
-func getIngressRule(app *v1.AppInstance, svc *v1.ServiceInstance, host string, port int32) networkingv1.IngressRule {
+func getIngressRule(svc *v1.ServiceInstance, host string, port int32) networkingv1.IngressRule {
 	// strip possible port in host
 	host, _, _ = strings.Cut(host, ":")
 
-	router, ok := app.Status.AppSpec.Routers[svc.Name]
-	if ok {
-		return routerRule(host, router)
+	if len(svc.Spec.Routes) > 0 {
+		return routerRule(host, svc.Spec.Routes)
 	}
 
 	return networkingv1.IngressRule{

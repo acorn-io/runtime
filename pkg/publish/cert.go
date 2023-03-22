@@ -98,7 +98,7 @@ func getCerts(req router.Request, namespace string) ([]TLSCert, error) {
 	return result, nil
 }
 
-func copySecretsForCerts(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance, filteredTLSCerts []TLSCert) (objs []client.Object, resultTLSCert []TLSCert, _ error) {
+func copySecretsForCerts(req router.Request, svc *v1.ServiceInstance, filteredTLSCerts []TLSCert) (objs []client.Object, resultTLSCert []TLSCert, _ error) {
 	for _, tlsCert := range filteredTLSCerts {
 		originalSecret := &corev1.Secret{}
 
@@ -110,8 +110,8 @@ func copySecretsForCerts(req router.Request, app *v1.AppInstance, svc *v1.Servic
 		objs = append(objs, &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        secretName,
-				Namespace:   app.Status.Namespace,
-				Labels:      labels.Merge(originalSecret.Labels, labels.Managed(app)),
+				Namespace:   svc.Namespace,
+				Labels:      labels.Merge(originalSecret.Labels, labels.ManagedByApp(svc.Spec.AppNamespace, svc.Spec.AppName)),
 				Annotations: originalSecret.Annotations,
 			},
 			Type: corev1.SecretTypeTLS,
@@ -120,21 +120,21 @@ func copySecretsForCerts(req router.Request, app *v1.AppInstance, svc *v1.Servic
 
 		//Override the secret name to the copied name
 		tlsCert.SecretName = secretName
-		tlsCert.SecretNamespace = app.Status.Namespace
+		tlsCert.SecretNamespace = svc.Namespace
 		resultTLSCert = append(resultTLSCert, tlsCert)
 	}
 
 	return
 }
 
-func setupCertsForRules(req router.Request, app *v1.AppInstance, svc *v1.ServiceInstance, rules []networkingv1.IngressRule) ([]client.Object, []networkingv1.IngressTLS, error) {
-	tlsCerts, err := getCerts(req, app.Namespace)
+func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []networkingv1.IngressRule) ([]client.Object, []networkingv1.IngressTLS, error) {
+	tlsCerts, err := getCerts(req, svc.Spec.AppNamespace)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	tlsCerts = getCertsMatchingRules(rules, tlsCerts)
-	secrets, tlsCerts, err := copySecretsForCerts(req, app, svc, tlsCerts)
+	secrets, tlsCerts, err := copySecretsForCerts(req, svc, tlsCerts)
 	if err != nil {
 		return nil, nil, err
 	}

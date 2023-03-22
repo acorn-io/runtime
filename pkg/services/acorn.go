@@ -9,6 +9,13 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func publishMode(app *v1.AppInstance) v1.PublishMode {
+	if app.Spec.GetStopped() {
+		return v1.PublishModeNone
+	}
+	return app.Spec.PublishMode
+}
+
 func forDefined(appInstance *v1.AppInstance) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
 		serviceName, service := entry.Key, entry.Value
@@ -24,6 +31,10 @@ func forDefined(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Labels:    labels.Managed(appInstance, labels.AcornServiceName, serviceName),
 			},
 			Spec: v1.ServiceInstanceSpec{
+				AppName:      appInstance.Name,
+				AppNamespace: appInstance.Namespace,
+				PublishMode:  publishMode(appInstance),
+				Publish:      ports2.PortPublishForService(serviceName, appInstance.Spec.Publish),
 				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornServiceName, serviceName),
 					labels.GatherScoped(serviceName, v1.LabelTypeService,
 						appInstance.Status.AppSpec.Labels, service.Labels, appInstance.Spec.Labels)),
@@ -59,6 +70,11 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Labels:    labels.Managed(appInstance, labels.AcornRouterName, routerName),
 			},
 			Spec: v1.ServiceInstanceSpec{
+				AppName:      appInstance.Name,
+				AppNamespace: appInstance.Namespace,
+				PublishMode:  publishMode(appInstance),
+				Publish:      ports2.PortPublishForService(routerName, appInstance.Spec.Publish),
+				Routes:       router.Routes,
 				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornRouterName, routerName),
 					labels.GatherScoped(routerName, v1.LabelTypeRouter,
 						appInstance.Status.AppSpec.Labels, router.Labels, appInstance.Spec.Labels)),
@@ -95,6 +111,10 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Labels:    labels.Managed(appInstance, labels.AcornContainerName, containerName),
 			},
 			Spec: v1.ServiceInstanceSpec{
+				AppName:      appInstance.Name,
+				AppNamespace: appInstance.Namespace,
+				PublishMode:  publishMode(appInstance),
+				Publish:      ports2.PortPublishForService(containerName, appInstance.Spec.Publish),
 				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornContainerName, containerName),
 					labels.GatherScoped(containerName, v1.LabelTypeContainer,
 						appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)),
@@ -119,7 +139,11 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 					labels.AcornLinkName, link.Service),
 			},
 			Spec: v1.ServiceInstanceSpec{
-				External: link.Service,
+				AppName:      app.Name,
+				AppNamespace: app.Namespace,
+				PublishMode:  publishMode(app),
+				Publish:      ports2.PortPublishForService(link.Target, app.Spec.Publish),
+				External:     link.Service,
 			},
 		}
 		result = append(result, newService)

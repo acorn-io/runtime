@@ -9,9 +9,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -43,11 +41,8 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 		forNamespace = builder.Namespace
 	}
 
-	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(), pubKey, privKey, builder.Status.UUID, registryDNS, *cfg.UseCustomCABundle)
-
-	if *cfg.PublishBuilders {
-		objs = append(objs, getIngress(name))
-	}
+	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(),
+		pubKey, privKey, builder.Status.UUID, registryDNS, *cfg.UseCustomCABundle, *cfg.PublishBuilders)
 
 	if *cfg.BuilderPerProject {
 		resp.Objects(objs...)
@@ -83,12 +78,21 @@ func DeployBuilder(req router.Request, resp router.Response) error {
 	builder.Status.ServiceName = serviceName
 
 	for _, obj := range objs {
-		ing, ok := obj.(*networkingv1.Ingress)
-		if ok {
-			if len(ing.Spec.TLS) > 0 {
-				builder.Status.Endpoint = "https://" + ing.Spec.Rules[0].Host
-			} else {
-				builder.Status.Endpoint = "http://" + ing.Spec.Rules[0].Host
+		svc, ok := obj.(*v1.ServiceInstance)
+		if ok && *cfg.PublishBuilders {
+			if len(svc.Status.Endpoints) == 0 {
+				existing := &v1.ServiceInstance{}
+				err := req.Get(existing, svc.Namespace, svc.Name)
+				if err == nil {
+					svc = existing
+				}
+			}
+			if len(svc.Status.Endpoints) > 0 {
+				if svc.Status.Endpoints[0].PublishProtocol == v1.PublishProtocolHTTPS {
+					builder.Status.Endpoint = "https://" + svc.Status.Endpoints[0].Address
+				} else {
+					builder.Status.Endpoint = "http://" + svc.Status.Endpoints[0].Address
+				}
 			}
 			continue
 		}
@@ -110,25 +114,4 @@ func DeployBuilder(req router.Request, resp router.Response) error {
 	}
 
 	return nil
-}
-
-func getIngress(name string) *v1.ServiceInstance {
-	return &v1.ServiceInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: system.ImagesNamespace,
-		},
-		Spec: v1.ServiceInstanceSpec{
-			ContainerLabels: map[string]string{
-				"app": name,
-			},
-			Ports: []v1.PortDef{
-				{
-					Port:     8080,
-					Protocol: v1.ProtocolHTTP,
-					Publish:  true,
-				},
-			},
-		},
-	}
 }

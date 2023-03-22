@@ -2,6 +2,7 @@ package ports
 
 import (
 	"fmt"
+	"sort"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -56,6 +57,10 @@ func (b BoundPorts) ServicePorts() (result []corev1.ServicePort, _ error) {
 		result = append(result, ToServicePort(port))
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
+
 	return
 }
 
@@ -87,7 +92,21 @@ func listenDefFromPort(port v1.PortDef) ListenDef {
 	return def
 }
 
-func ApplyBindings(serviceName string, mode v1.PublishMode, bindings []v1.PortBinding, ports []v1.PortDef) (result BoundPorts) {
+func PortPublishForService(serviceName string, bindings []v1.PortBinding) (result []v1.PortPublish) {
+	for _, binding := range bindings {
+		if serviceMatches(serviceName, binding) {
+			result = append(result, v1.PortPublish{
+				Port:       binding.Port,
+				Protocol:   binding.Protocol,
+				Hostname:   binding.Hostname,
+				TargetPort: binding.TargetPort,
+			})
+		}
+	}
+	return
+}
+
+func ApplyBindings(mode v1.PublishMode, bindings []v1.PortPublish, ports []v1.PortDef) (result BoundPorts) {
 	result = BoundPorts{}
 
 	if mode == v1.PublishModeNone {
@@ -100,7 +119,7 @@ func ApplyBindings(serviceName string, mode v1.PublishMode, bindings []v1.PortBi
 		)
 
 		for _, binding := range bindings {
-			if matches(serviceName, binding, port) {
+			if matches(binding, port) {
 				published = true
 
 				def := listenDefFromPort(port)
@@ -136,7 +155,7 @@ func ApplyBindings(serviceName string, mode v1.PublishMode, bindings []v1.PortBi
 	return
 }
 
-func portMatches(binding v1.PortBinding, port v1.PortDef) bool {
+func portMatches(binding v1.PortPublish, port v1.PortDef) bool {
 	return binding.TargetPort == 0 || binding.TargetPort == port.Port
 }
 
@@ -144,18 +163,17 @@ func serviceMatches(serviceName string, binding v1.PortBinding) bool {
 	return binding.TargetServiceName == "" || binding.TargetServiceName == serviceName
 }
 
-func protoMatches(binding v1.PortBinding, port v1.PortDef) bool {
+func protoMatches(binding v1.PortPublish, port v1.PortDef) bool {
 	return binding.Protocol == "" ||
 		binding.Protocol == port.Protocol
 }
 
-func matches(serviceName string, binding v1.PortBinding, port v1.PortDef) bool {
+func matches(binding v1.PortPublish, port v1.PortDef) bool {
 	port = port.Complete()
 	binding = binding.Complete()
 
 	return protoMatches(binding, port) &&
-		portMatches(binding, port) &&
-		serviceMatches(serviceName, binding)
+		portMatches(binding, port)
 }
 
 func collectPorts(seen map[int32]struct{}, ports []v1.PortDef) (result []v1.PortDef) {

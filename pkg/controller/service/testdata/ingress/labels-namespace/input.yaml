@@ -5,6 +5,8 @@ metadata:
   name: app-name
   namespace: app-namespace
 spec:
+  appName: app-name
+  appNamespace: app-namespace
   image: test
   labels:
   - resourceType: ""
