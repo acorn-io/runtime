@@ -255,6 +255,7 @@ type AcornImageBuildOptions struct {
 	Cwd         string
 	Platforms   []v1.Platform
 	Args        map[string]any
+	Profiles    []string
 	Streams     *streams.Output
 }
 
