@@ -142,8 +142,9 @@ func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Read
 		}
 	}
 
-	// If a clusterDomain hasn't been set yet, use the localhost wildcard domain
-	if len(c.ClusterDomains) == 0 {
+	// If a clusterDomain hasn't been set yet and acorn-dns hasn't been explicitly disabled,
+	// use the localhost wildcard domain
+	if len(c.ClusterDomains) == 0 && !strings.EqualFold(*c.AcornDNS, "disabled") {
 		c.ClusterDomains = []string{ClusterDomainDefault}
 	}
 	return nil

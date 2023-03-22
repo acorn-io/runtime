@@ -189,6 +189,10 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 		}
 	}
 
+	if len(rules) == 0 {
+		return
+	}
+
 	secrets, ingressTLS, err := setupCertsForRules(req, svc, rules)
 	if err != nil {
 		return nil, err

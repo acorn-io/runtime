@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	mocks "github.com/acorn-io/acorn/pkg/mocks/k8s"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,6 +17,85 @@ func TestAcornDNSDisabledNoLookupsHappen(t *testing.T) {
 		AcornDNS: &s,
 	}, nil)
 	// if a lookup is going to happen this method would panic as the getter is nil
+}
+
+func TestAcornDNSStates(t *testing.T) {
+	s := "disabled"
+	conf := &apiv1.Config{
+		AcornDNS: &s,
+	}
+	err := complete(context.Background(), conf, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Empty(t, conf.ClusterDomains)
+
+	tests := []struct {
+		name                   string
+		expectedClusterDomains []string
+		conf                   *apiv1.Config
+		prepare                func(f *mocks.MockReader)
+	}{
+		{
+			// acornDNS is explicitly disabled, expect no clusterDomain to be returned
+			name: "acornDNS disabled expect no clusterdomains",
+			conf: &apiv1.Config{
+				AcornDNS: &[]string{"disabled"}[0], // hack for one-liner string pointer
+			},
+			expectedClusterDomains: nil,
+		},
+		{
+			// acornDNS is explicitly disabled. User defined domain, expect just user defined domain
+			name: "acornDNS disabled expect custom clusterdomains",
+			conf: &apiv1.Config{
+				AcornDNS:       &[]string{"disabled"}[0],
+				ClusterDomains: []string{".custom.com"},
+			},
+			expectedClusterDomains: []string{".custom.com"},
+		},
+		{
+			// acornDNS is in "auto" mode. No user configured domain, expect local as a fallback
+			name: "acornDNS auto expect local clusterdomain",
+			conf: &apiv1.Config{
+				AcornDNS: &[]string{"auto"}[0],
+			},
+			expectedClusterDomains: []string{".local.on-acorn.io"},
+			prepare: func(f *mocks.MockReader) {
+				f.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				f.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+		{
+			// acornDNS is in "auto" mode, but user configured a domain, expect just the user configured domain
+			name: "acornDNS auto expect custom clusterdomain",
+			conf: &apiv1.Config{
+				AcornDNS:       &[]string{"auto"}[0],
+				ClusterDomains: []string{".custom.com"},
+			},
+			expectedClusterDomains: []string{".custom.com"},
+			prepare: func(f *mocks.MockReader) {
+				f.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				f.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			r := mocks.NewMockReader(ctrl)
+			if tt.prepare != nil {
+				tt.prepare(r)
+			}
+
+			err := complete(context.Background(), tt.conf, r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, tt.expectedClusterDomains, tt.conf.ClusterDomains)
+		})
+	}
 }
 
 func TestMergeConfigWithZeroLengthStringsArrayShouldNotOverride(t *testing.T) {
