@@ -5,14 +5,14 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
-func routerRule(host string, router v1.Router) networkingv1.IngressRule {
+func routerRule(host string, routes []v1.Route) networkingv1.IngressRule {
 	rule := networkingv1.IngressRule{
 		Host: host,
 		IngressRuleValue: networkingv1.IngressRuleValue{
 			HTTP: &networkingv1.HTTPIngressRuleValue{},
 		},
 	}
-	for _, route := range router.Routes {
+	for _, route := range routes {
 		if route.Path == "" || route.TargetServiceName == "" {
 			continue
 		}

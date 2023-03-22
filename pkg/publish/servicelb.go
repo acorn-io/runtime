@@ -10,12 +10,12 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ServiceLoadBalancer(app *v1.AppInstance, svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
-	if app.Spec.GetStopped() {
+func ServiceLoadBalancer(svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
+	if svc.Spec.PublishMode == v1.PublishModeNone {
 		return nil, nil
 	}
 
-	bindings := ports.ApplyBindings(svc.Name, app.Spec.PublishMode, app.Spec.Publish,
+	bindings := ports.ApplyBindings(svc.Spec.PublishMode, svc.Spec.Publish,
 		ports.ByProtocol(svc.Spec.Ports, v1.ProtocolTCP, v1.ProtocolUDP))
 
 	if len(bindings) == 0 {
@@ -40,8 +40,8 @@ func ServiceLoadBalancer(app *v1.AppInstance, svc *v1.ServiceInstance) (result [
 
 	result = append(result, &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name.SafeConcatName(svc.Name, "publish", app.ShortID()),
-			Namespace: app.Status.Namespace,
+			Name:      name.SafeConcatName(svc.Name, "publish", svc.ShortID()),
+			Namespace: svc.Namespace,
 			Labels: labels.Merge(svc.Spec.Labels, map[string]string{
 				labels.AcornServicePublish: "true",
 			}),
@@ -49,7 +49,7 @@ func ServiceLoadBalancer(app *v1.AppInstance, svc *v1.ServiceInstance) (result [
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    servicePorts,
-			Selector: labels.Merge(labels.Managed(app), selectorLabels),
+			Selector: labels.Merge(labels.ManagedByApp(svc.Spec.AppNamespace, svc.Spec.AppName), selectorLabels),
 			Type:     corev1.ServiceTypeLoadBalancer,
 		},
 	})

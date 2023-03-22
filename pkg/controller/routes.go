@@ -1,6 +1,7 @@
 package controller
 
 import (
+	policyv1 "k8s.io/api/policy/v1"
 	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -68,16 +69,18 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
-	router.Type(&v1.ServiceInstance{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
 	router.Type(&corev1.PersistentVolume{}).Selector(managedSelector).HandlerFunc(appdefinition.ReleaseVolume)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
-	router.Type(&appsv1.DaemonSet{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
-	router.Type(&appsv1.Deployment{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
-	router.Type(&corev1.Service{}).Namespace(system.Namespace).HandlerFunc(gc.GCOrphans)
+	router.Type(&appsv1.DaemonSet{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
+	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
+	router.Type(&corev1.Service{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
+	router.Type(&policyv1.PodDisruptionBudget{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)

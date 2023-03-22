@@ -10,6 +10,10 @@ metadata:
     "acorn.io/container-name": "app1"
     "acorn.io/managed": "true"
 spec:
+  appName: app-name
+  appNamespace: app-namespace
+  publish:
+  - hostname: ci1.acorn.not
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
@@ -34,6 +38,10 @@ metadata:
     "acorn.io/container-name": "app2"
     "acorn.io/managed": "true"
 spec:
+  appName: app-name
+  appNamespace: app-namespace
+  publish:
+  - hostname: ci1.acorn.not
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"

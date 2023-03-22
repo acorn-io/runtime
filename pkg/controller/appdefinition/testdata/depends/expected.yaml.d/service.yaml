@@ -9,4 +9,6 @@ metadata:
     acorn.io/link-name: foo
     acorn.io/managed: "true"
 spec:
+  appName: app-name
+  appNamespace: app-namespace
   external: foo

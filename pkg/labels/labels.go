@@ -71,10 +71,10 @@ func ExcludeAcornKey(input map[string]string) map[string]string {
 	return result
 }
 
-func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
+func ManagedByApp(appNamespace, appName string, kv ...string) map[string]string {
 	labels := map[string]string{
-		AcornAppName:      appInstance.Name,
-		AcornAppNamespace: appInstance.Namespace,
+		AcornAppName:      appName,
+		AcornAppNamespace: appNamespace,
 		AcornManaged:      "true",
 	}
 	for i := 0; i+1 < len(kv); i += 2 {
@@ -85,6 +85,10 @@ func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
 		}
 	}
 	return labels
+}
+
+func Managed(appInstance *v1.AppInstance, kv ...string) map[string]string {
+	return ManagedByApp(appInstance.Namespace, appInstance.Name, kv...)
 }
 
 // GatherScoped takes in labels (or annotations) from the various places they can appear in an acorn app and sifts through

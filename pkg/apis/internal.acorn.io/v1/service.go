@@ -16,7 +16,19 @@ type ServiceInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Spec ServiceInstanceSpec `json:"spec,omitempty"`
+	Spec   ServiceInstanceSpec   `json:"spec,omitempty"`
+	Status ServiceInstanceStatus `json:"status,omitempty"`
+}
+
+type ServiceInstanceStatus struct {
+	Endpoints []Endpoint `json:"endpoints,omitempty"`
+}
+
+func (in *ServiceInstance) ShortID() string {
+	if len(in.UID) > 11 {
+		return string(in.UID[:12])
+	}
+	return string(in.UID)
 }
 
 type ServiceInstanceSpec struct {
@@ -31,4 +43,28 @@ type ServiceInstanceSpec struct {
 	Secrets         []string          `json:"secrets,omitempty"`
 	Attributes      GenericMap        `json:"attributes,omitempty"`
 	Destroy         *Container        `json:"destroy,omitempty"`
+
+	// Fields from app
+	AppName      string        `json:"appName,omitempty"`
+	AppNamespace string        `json:"appNamespace,omitempty"`
+	Routes       []Route       `json:"routes,omitempty"`
+	PublishMode  PublishMode   `json:"publishMode,omitempty"`
+	Publish      []PortPublish `json:"publish,omitempty"`
+}
+
+type PortPublish struct {
+	Port       int32    `json:"port,omitempty"`
+	Protocol   Protocol `json:"protocol,omitempty"`
+	Hostname   string   `json:"hostname,omitempty"`
+	TargetPort int32    `json:"targetPort,omitempty"`
+}
+
+func (in PortPublish) Complete() PortPublish {
+	if in.Hostname != "" && in.Protocol == "" {
+		in.Protocol = ProtocolHTTP
+	}
+	if in.Hostname != "" && in.Protocol != ProtocolHTTP {
+		in.Hostname = ""
+	}
+	return in
 }

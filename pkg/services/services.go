@@ -18,47 +18,49 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toContainerLabelsService(appInstance *v1.AppInstance, service *v1.ServiceInstance) (result []kclient.Object) {
+func toContainerLabelsService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
-			Namespace:   appInstance.Status.Namespace,
+			Namespace:   service.Namespace,
 			Labels:      service.Spec.Labels,
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Ports:    ports.ToServicePorts(service.Spec.Ports),
-			Type:     corev1.ServiceTypeClusterIP,
-			Selector: typed.Concat(labels.Managed(appInstance), service.Spec.ContainerLabels),
+			Ports: ports.ToServicePorts(service.Spec.Ports),
+			Type:  corev1.ServiceTypeClusterIP,
+			Selector: typed.Concat(labels.ManagedByApp(service.Spec.AppNamespace, service.Spec.AppName),
+				service.Spec.ContainerLabels),
 		},
 	}
 	result = append(result, newService)
 	return
 }
 
-func toContainerService(appInstance *v1.AppInstance, service *v1.ServiceInstance) (result []kclient.Object) {
+func toContainerService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
-			Namespace:   appInstance.Status.Namespace,
+			Namespace:   service.Namespace,
 			Labels:      service.Spec.Labels,
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Ports:    ports.ToServicePorts(service.Spec.Ports),
-			Type:     corev1.ServiceTypeClusterIP,
-			Selector: labels.Managed(appInstance, labels.AcornContainerName, service.Spec.Container),
+			Ports: ports.ToServicePorts(service.Spec.Ports),
+			Type:  corev1.ServiceTypeClusterIP,
+			Selector: labels.ManagedByApp(service.Spec.AppNamespace,
+				service.Spec.AppName, labels.AcornContainerName, service.Spec.Container),
 		},
 	}
 	result = append(result, newService)
 	return
 }
 
-func toAddressService(appInstance *v1.AppInstance, service *v1.ServiceInstance) (result []kclient.Object) {
+func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
-			Namespace:   appInstance.Status.Namespace,
+			Namespace:   service.Namespace,
 			Labels:      service.Spec.Labels,
 			Annotations: service.Spec.Annotations,
 		},
@@ -102,8 +104,8 @@ func toAddressService(appInstance *v1.AppInstance, service *v1.ServiceInstance) 
 	return
 }
 
-func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, appInstance *v1.AppInstance, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
-	svc, err := resolveTargetService(ctx, c, service.Spec.External, appInstance.Namespace)
+func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
+	svc, err := resolveTargetService(ctx, c, service.Spec.External, service.Spec.AppNamespace)
 	if apierrors.IsNotFound(err) {
 		missing = append(missing, service.Spec.External)
 	} else if err != nil {
@@ -117,7 +119,7 @@ func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config,
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
-			Namespace:   appInstance.Status.Namespace,
+			Namespace:   service.Namespace,
 			Labels:      service.Spec.Labels,
 			Annotations: service.Spec.Annotations,
 		},
@@ -131,11 +133,11 @@ func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config,
 	return
 }
 
-func toDefaultService(cfg *apiv1.Config, appInstance *v1.AppInstance, service *corev1.Service) kclient.Object {
+func toDefaultService(cfg *apiv1.Config, svc *v1.ServiceInstance, service *corev1.Service) kclient.Object {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        appInstance.Name,
-			Namespace:   appInstance.Namespace,
+			Name:        svc.Spec.AppName,
+			Namespace:   svc.Spec.AppNamespace,
 			Labels:      service.Labels,
 			Annotations: service.Annotations,
 		},
@@ -147,7 +149,7 @@ func toDefaultService(cfg *apiv1.Config, appInstance *v1.AppInstance, service *c
 	}
 }
 
-func ToK8sService(req router.Request, appInstance *v1.AppInstance, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
+func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return nil, nil, err
@@ -160,7 +162,7 @@ func ToK8sService(req router.Request, appInstance *v1.AppInstance, service *v1.S
 		if service.Spec.Default {
 			for _, obj := range result {
 				if svc, ok := obj.(*corev1.Service); ok {
-					result = append(result, toDefaultService(cfg, appInstance, svc))
+					result = append(result, toDefaultService(cfg, service, svc))
 					return
 				}
 			}
@@ -169,13 +171,13 @@ func ToK8sService(req router.Request, appInstance *v1.AppInstance, service *v1.S
 	}()
 
 	if service.Spec.External != "" {
-		return toExternalService(req.Ctx, req.Client, cfg, appInstance, service)
+		return toExternalService(req.Ctx, req.Client, cfg, service)
 	} else if service.Spec.Address != "" {
-		return toAddressService(appInstance, service), nil, nil
+		return toAddressService(service), nil, nil
 	} else if service.Spec.Container != "" {
-		return toContainerService(appInstance, service), nil, nil
+		return toContainerService(service), nil, nil
 	} else if len(service.Spec.ContainerLabels) > 0 {
-		return toContainerLabelsService(appInstance, service), nil, nil
+		return toContainerLabelsService(service), nil, nil
 	}
 	return
 }

@@ -3,18 +3,23 @@ apiVersion: internal.acorn.io/v1
 metadata:
   name: app1
   namespace: app-created-namespace
+  uid: 1234567890abcdef
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "app1"
     "acorn.io/managed": "true"
 spec:
+  appName: app-name
+  appNamespace: app-namespace
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "app1"
     "acorn.io/managed": "true"
   container: app1
+  publish:
+    - hostname: ci1.acorn.not
   ports:
     - port: 80
       targetPort: 81

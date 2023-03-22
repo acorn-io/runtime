@@ -9,6 +9,8 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/container-name": "oneimage"
 spec:
+  appName: app-name
+  appNamespace: app-namespace
   default: true
   labels:
     "acorn.io/app-namespace": "app-namespace"
