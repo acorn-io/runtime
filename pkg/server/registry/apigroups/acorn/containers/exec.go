@@ -101,12 +101,8 @@ func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.
 
 	container := &apiv1.ContainerReplica{}
 	ns, _ := request.NamespaceFrom(ctx)
-	ns, name, err := c.t.FromPublicName(ctx, ns, id)
-	if err != nil {
-		return nil, err
-	}
 
-	err = c.client.Get(ctx, k8sclient.ObjectKey{Namespace: ns, Name: name}, container)
+	err := c.client.Get(ctx, k8sclient.ObjectKey{Namespace: ns, Name: id}, container)
 	if err != nil {
 		return nil, err
 	}

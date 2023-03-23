@@ -28,6 +28,7 @@ type Translator struct {
 	client kclient.Client
 }
 
+// name can be <app-name>+"."+<pod-name> or <app-name>+"."+<pod-name>+"."+<container-name>
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
 	for {
 		prefix, suffix, ok := strings.Cut(name, ".")
@@ -42,9 +43,13 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 
 		name = suffix
 		namespace = app.Status.Namespace
+		// stop when name becomes <pod-name> or <pod-name>+"."+<container-name>
+		if strings.Count(name, ".") < 2 {
+			break
+		}
 	}
-
-	return namespace, name, nil
+	// return <pod-name> with <container-name> stripped if any
+	return namespace, strings.Split(name, ".")[0], nil
 }
 
 func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
