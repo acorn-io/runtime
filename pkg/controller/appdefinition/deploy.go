@@ -2,10 +2,9 @@ package appdefinition
 
 import (
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	url2 "net/url"
+	"net/url"
 	"path"
 	"strings"
 
@@ -16,9 +15,11 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pdb"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/acorn-io/acorn/pkg/tags"
+	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -71,30 +72,30 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	if err := addDeployments(req, appInstance, tag, pullSecrets, resp); err != nil {
+	interpolator := secrets.NewInterpolator(req, appInstance)
+
+	if err := addDeployments(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
 	if err := addRouters(appInstance, resp); err != nil {
 		return err
 	}
-	if err := addJobs(req, appInstance, tag, pullSecrets, resp); err != nil {
+	if err := addJobs(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
 	addExpose(appInstance, resp)
 	if err := addPVCs(req, appInstance, resp); err != nil {
 		return err
 	}
-	if err := addConfigMaps(appInstance, resp); err != nil {
-		return err
-	}
 	addAcorns(appInstance, tag, pullSecrets, resp)
 
 	resp.Objects(pullSecrets.Objects()...)
-	return pullSecrets.Err()
+	resp.Objects(interpolator.Objects()...)
+	return merr.NewErrors(pullSecrets.Err(), interpolator.Err())
 }
 
-func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
-	deps, err := ToDeployments(req, appInstance, tag, pullSecrets)
+func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator, resp router.Response) error {
+	deps, err := ToDeployments(req, appInstance, tag, pullSecrets, secrets)
 	if err != nil {
 		return err
 	}
@@ -118,30 +119,10 @@ func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
 	return
 }
 
-func translateEnvValue(app *v1.AppInstance, value string) string {
-	switch value {
-	case "${app.image}":
-		if tags.IsLocalReference(app.Status.AppImage.ID) {
-			return app.Status.AppImage.ID
-		} else if app.Status.AppImage.ID != "" && app.Status.AppImage.Digest != "" {
-			tag, err := name.NewTag(app.Status.AppImage.ID)
-			if err == nil {
-				return tag.Digest(app.Status.AppImage.Digest).String()
-			}
-		}
-	case "${app.namespace}":
-		return app.Namespace
-	}
-	return value
-}
-
-func toEnv(app *v1.AppInstance, envs []v1.EnvVar, appEnv []v1.NameValue) (result []corev1.EnvVar) {
+func toEnv(envs []v1.EnvVar, appEnv []v1.NameValue, interpolator *secrets.Interpolator) (result []corev1.EnvVar) {
 	for _, env := range envs {
 		if env.Secret.Name == "" {
-			result = append(result, corev1.EnvVar{
-				Name:  env.Name,
-				Value: translateEnvValue(app, env.Value),
-			})
+			result = append(result, interpolator.ToEnv(env.Name, env.Value))
 		} else {
 			if env.Secret.Key == "" {
 				continue
@@ -182,7 +163,7 @@ func hasContextDir(container v1.Container) bool {
 	return false
 }
 
-func toContainers(req router.Request, app *v1.AppInstance, tag name.Reference, name string, container v1.Container) ([]corev1.Container, []corev1.Container) {
+func toContainers(app *v1.AppInstance, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) ([]corev1.Container, []corev1.Container) {
 	var (
 		containers     []corev1.Container
 		initContainers []corev1.Container
@@ -203,10 +184,10 @@ func toContainers(req router.Request, app *v1.AppInstance, tag name.Reference, n
 		})
 	}
 
-	newContainer := toContainer(req, app, tag, name, name, container)
+	newContainer := toContainer(app, tag, name, container, interpolator)
 	containers = append(containers, newContainer)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		newContainer = toContainer(req, app, tag, name, entry.Key, entry.Value)
+		newContainer = toContainer(app, tag, entry.Key, entry.Value, interpolator)
 
 		if entry.Value.Init {
 			initContainers = append(initContainers, newContainer)
@@ -231,19 +212,17 @@ func sanitizeVolumeName(name string) string {
 	return name
 }
 
-func toMounts(app *v1.AppInstance, deploymentName, containerName string, container v1.Container) (result []corev1.VolumeMount) {
+func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secrets.Interpolator) (result []corev1.VolumeMount) {
 	for _, entry := range typed.Sorted(container.Files) {
 		suffix := ""
-		if normalizeMode(entry.Value.Mode) != "" {
+		if volume.NormalizeMode(entry.Value.Mode) != "" {
 			suffix = "-" + entry.Value.Mode
 		}
 		if entry.Value.Secret.Key == "" || entry.Value.Secret.Name == "" {
-			result = append(result, corev1.VolumeMount{
-				Name:      "files" + suffix,
-				MountPath: path.Join("/", entry.Key),
-				SubPath:   pathHash(app.Name, deploymentName, containerName, entry.Key),
-			})
+			// inline file
+			result = append(result, interpolation.ToVolumeMount(entry.Key, entry.Value))
 		} else {
+			// file pointing to secret
 			result = append(result, corev1.VolumeMount{
 				Name:      "secret--" + entry.Value.Secret.Name + suffix,
 				MountPath: path.Join("/", entry.Key),
@@ -309,7 +288,7 @@ func toPorts(container v1.Container) []corev1.ContainerPort {
 }
 
 func parseURLForProbe(probeURL string) (scheme corev1.URIScheme, host string, port intstr.IntOrString, path string, ok bool) {
-	u, err := url2.Parse(probeURL)
+	u, err := url.Parse(probeURL)
 	if err != nil {
 		return
 	}
@@ -399,19 +378,19 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 	return nil
 }
 
-func toContainer(req router.Request, app *v1.AppInstance, tag name.Reference, deploymentName, containerName string, container v1.Container) corev1.Container {
+func toContainer(app *v1.AppInstance, tag name.Reference, containerName string, container v1.Container, interpolator *secrets.Interpolator) corev1.Container {
 	containerObject := corev1.Container{
 		Name:           containerName,
 		Image:          images.ResolveTag(tag, container.Image),
 		Command:        container.Entrypoint,
 		Args:           container.Command,
 		WorkingDir:     container.WorkingDir,
-		Env:            toEnv(app, container.Environment, app.Spec.Environment),
+		Env:            toEnv(container.Environment, app.Spec.Environment, interpolator),
 		EnvFrom:        toEnvFrom(container.Environment),
 		TTY:            container.Interactive,
 		Stdin:          container.Interactive,
 		Ports:          toPorts(container),
-		VolumeMounts:   toMounts(app, deploymentName, containerName, container),
+		VolumeMounts:   toMounts(app, container, interpolator),
 		LivenessProbe:  toProbe(container, v1.LivenessProbeType),
 		StartupProbe:   toProbe(container, v1.StartupProbeType),
 		ReadinessProbe: toProbe(container, v1.ReadinessProbeType),
@@ -575,19 +554,21 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 	return result, nil
 }
 
-func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets) (*appsv1.Deployment, error) {
+func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Reference, name string, container v1.Container, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (*appsv1.Deployment, error) {
 	var (
 		stateful = isStateful(appInstance, container)
 	)
 
-	containers, initContainers := toContainers(req, appInstance, tag, name, container)
+	interpolator = interpolator.ForService(name)
+
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, err := toVolumes(appInstance, container)
+	volumes, err := toVolumes(appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
@@ -630,6 +611,8 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		},
 	}
 
+	interpolator.AddMissingAnnotations(dep.Spec.Template.Annotations)
+
 	if stateful {
 		dep.Spec.Replicas = &[]int32{1}[0]
 		dep.Spec.Template.Spec.Hostname = dep.Name
@@ -645,12 +628,12 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	return dep, nil
 }
 
-func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object, _ error) {
+func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		if ports.IsLinked(appInstance, entry.Key) {
 			continue
 		}
-		dep, err := toDeployment(req, appInstance, tag, entry.Key, entry.Value, pullSecrets)
+		dep, err := toDeployment(req, appInstance, tag, entry.Key, entry.Value, pullSecrets, secrets)
 		if err != nil {
 			return nil, err
 		}
@@ -660,76 +643,5 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		}
 		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))
 	}
-	return result, nil
-}
-
-func addFileContent(configMap *corev1.ConfigMap, appName, deploymentName string, container v1.Container) error {
-	data := configMap.BinaryData
-	for filePath, file := range container.Files {
-		content, err := base64.StdEncoding.DecodeString(file.Content)
-		if err != nil {
-			return err
-		}
-		hashPath := pathHash(appName, deploymentName, deploymentName, filePath)
-		data[hashPath] = content
-		configMap.Annotations[hashPath] = path.Join(appName, deploymentName, deploymentName, filePath)
-	}
-	for sidecarName, sidecar := range container.Sidecars {
-		for filePath, file := range sidecar.Files {
-			content, err := base64.StdEncoding.DecodeString(file.Content)
-			if err != nil {
-				return err
-			}
-			hashPath := pathHash(appName, deploymentName, sidecarName, filePath)
-			data[hashPath] = content
-			configMap.Annotations[hashPath] = path.Join(appName, deploymentName, sidecarName, filePath)
-		}
-	}
-	return nil
-}
-
-func addConfigMaps(appInstance *v1.AppInstance, resp router.Response) error {
-	objs, err := toConfigMaps(appInstance)
-	resp.Objects(objs...)
-	return err
-}
-
-func toConfigMaps(appInstance *v1.AppInstance) (result []kclient.Object, err error) {
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "files",
-			Namespace: appInstance.Status.Namespace,
-			Labels: map[string]string{
-				labels.AcornManaged: "true",
-			},
-			Annotations: map[string]string{},
-		},
-		BinaryData: map[string][]byte{},
-	}
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		if err := addFileContent(configMap, appInstance.Name, entry.Key, entry.Value); err != nil {
-			return nil, err
-		}
-	}
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
-		if err := addFileContent(configMap, appInstance.Name, entry.Key, entry.Value); err != nil {
-			return nil, err
-		}
-	}
-	if len(configMap.BinaryData) == 0 {
-		return nil, nil
-	}
-
-	fileMode := getFilesFileModesForApp(appInstance)
-	for _, mode := range typed.SortedKeys(fileMode) {
-		if mode == "" {
-			result = append(result, configMap)
-		} else {
-			copy := configMap.DeepCopy()
-			copy.Name += "-" + mode
-			result = append(result, copy)
-		}
-	}
-
 	return result, nil
 }

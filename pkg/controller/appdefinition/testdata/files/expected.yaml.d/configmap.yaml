@@ -1,40 +1,14 @@
-kind: ConfigMap
+kind: Secret
 apiVersion: v1
 metadata:
-  name: files
+  name: secrets-1234567890ab
   namespace: app-created-namespace
   labels:
     "acorn.io/managed": "true"
-  annotations:
-    4b55bb46c09e: app-name/oneimage/oneimage/content-test-mode
-    8bbe3f160ad7: app-name/oneimage/oneimage/content-test
-    9f61e131eb0e: app-name/oneimage/sidecar/sidecar-content-test-mode
-    f88478b1092a: app-name/oneimage/sidecar/sidecar-content-test
-    efa6c2e6cb88: app-name/oneimage/oneimage/secret-test
-binaryData:
-  efa6c2e6cb88: ""
-  4b55bb46c09e: YmFzZS1tb2Rl
-  8bbe3f160ad7: YmFzZQ==
-  9f61e131eb0e: c2lkZWNhci1tb2Rl
-  f88478b1092a: c2lkZWNhcg==
-
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: files-0123
-  namespace: app-created-namespace
-  labels:
-    "acorn.io/managed": "true"
-  annotations:
-    4b55bb46c09e: app-name/oneimage/oneimage/content-test-mode
-    8bbe3f160ad7: app-name/oneimage/oneimage/content-test
-    9f61e131eb0e: app-name/oneimage/sidecar/sidecar-content-test-mode
-    f88478b1092a: app-name/oneimage/sidecar/sidecar-content-test
-    efa6c2e6cb88: app-name/oneimage/oneimage/secret-test
-binaryData:
-  efa6c2e6cb88: ""
-  4b55bb46c09e: YmFzZS1tb2Rl
-  8bbe3f160ad7: YmFzZQ==
-  9f61e131eb0e: c2lkZWNhci1tb2Rl
-  f88478b1092a: c2lkZWNhcg==
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+data:
+  5c33e93cc3bbe9d0e837f3348d7f282a06af35489438fd859b28313f72c37945: c2lkZWNhci1tb2Rl
+  297373ad8cebefdc9f7648df22c5316809ffa1ae8fac7f7d28ef03c85cb1e25e: YmFzZQ==
+  3252662f7954d69b726865bd880352fcad024ae627d97e5c1dfa3b9c34bbf4da: c2lkZWNhcg==
+  c867913001b694e9eb439dc5e0b64efd3f103f8e975cd817b1c39508832f46a7: YmFzZS1tb2Rl

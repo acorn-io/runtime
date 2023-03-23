@@ -36,11 +36,11 @@ spec:
           image: image-name
           volumeMounts:
           - mountPath: /content-test
-            name: files
-            subPath: 8bbe3f160ad7
+            name: secrets-1234567890ab
+            subPath: 297373ad8cebefdc9f7648df22c5316809ffa1ae8fac7f7d28ef03c85cb1e25e
           - mountPath: /content-test-mode
-            name: files-0123
-            subPath: 4b55bb46c09e
+            name: secrets-1234567890ab-0123
+            subPath: c867913001b694e9eb439dc5e0b64efd3f103f8e975cd817b1c39508832f46a7
           - mountPath: /secret-test
             name: secret--ref
             subPath: key-name
@@ -48,20 +48,20 @@ spec:
           image: image-name
           volumeMounts:
             - mountPath: /sidecar-content-test
-              name: files
-              subPath: f88478b1092a
+              name: secrets-1234567890ab
+              subPath: 3252662f7954d69b726865bd880352fcad024ae627d97e5c1dfa3b9c34bbf4da
             - mountPath: /sidecar-content-test-mode
-              name: files-0123
-              subPath: 9f61e131eb0e
+              name: secrets-1234567890ab-0123
+              subPath: 5c33e93cc3bbe9d0e837f3348d7f282a06af35489438fd859b28313f72c37945
       volumes:
-      - name: files
-        configMap:
-          name: files
-      - name: files-0123
-        configMap:
-          defaultMode: 0123
-          name: files-0123
       - name: secret--ref
         secret:
           secretName: ref
+      - name: secrets-1234567890ab
+        secret:
+          secretName: secrets-1234567890ab
+      - name: secrets-1234567890ab-0123
+        secret:
+          defaultMode: 0123
+          secretName: secrets-1234567890ab
 

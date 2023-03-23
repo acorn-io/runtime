@@ -18,6 +18,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func NormalizeMode(mode string) string {
+	if mode == "0644" || mode == "644" {
+		return ""
+	}
+	return mode
+}
+
 func SyncVolumeClasses(req router.Request, resp router.Response) error {
 	storageClass := req.Object.(*storagev1.StorageClass)
 	cfg, err := config.Get(req.Ctx, req.Client)
