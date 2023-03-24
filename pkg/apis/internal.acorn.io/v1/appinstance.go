@@ -60,6 +60,7 @@ const (
 )
 
 type AppInstanceSpec struct {
+	Region              string           `json:"region,omitempty"`
 	Labels              []ScopedLabel    `json:"labels,omitempty"`
 	Annotations         []ScopedLabel    `json:"annotations,omitempty"`
 	Image               string           `json:"image,omitempty"`
@@ -185,6 +186,7 @@ type AppInstanceStatus struct {
 type Defaults struct {
 	Volumes map[string]VolumeDefault `json:"volumes,omitempty"`
 	Memory  map[string]*int64        `json:"memory,omitempty"`
+	Region  string                   `json:"region,omitempty"`
 }
 
 type VolumeDefault struct {

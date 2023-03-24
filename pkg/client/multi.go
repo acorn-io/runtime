@@ -437,12 +437,12 @@ func (m *MultiClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Pr
 	return c.ProjectDelete(ctx, name)
 }
 
-func (m *MultiClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+func (m *MultiClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
-	return c.ProjectCreate(ctx, name)
+	return c.ProjectCreate(ctx, name, region)
 }
 
 func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {
@@ -467,6 +467,18 @@ func (m *MultiClient) ComputeClassGet(ctx context.Context, name string) (*apiv1.
 func (m *MultiClient) ComputeClassList(ctx context.Context) ([]apiv1.ComputeClass, error) {
 	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.ComputeClass, error) {
 		return client.ComputeClassList(ctx)
+	})
+}
+
+func (m *MultiClient) RegionGet(ctx context.Context, name string) (*apiv1.Region, error) {
+	return onOne(ctx, m.Factory, name, func(name string, client Client) (*apiv1.Region, error) {
+		return client.RegionGet(ctx, name)
+	})
+}
+
+func (m *MultiClient) RegionList(ctx context.Context) ([]apiv1.Region, error) {
+	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.Region, error) {
+		return client.RegionList(ctx)
 	})
 }
 

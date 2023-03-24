@@ -360,3 +360,19 @@ func computeClassFlagCompletion(ctx context.Context, c client.Client, toComplete
 
 	return result, err
 }
+
+func regionsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	regions, err := c.RegionList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+	for _, region := range regions {
+		if strings.HasPrefix(region.Name, toComplete) {
+			result = append(result, region.Name)
+		}
+	}
+
+	return result, nil
+}

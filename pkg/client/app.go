@@ -41,6 +41,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Labels:      appScoped(opts.Labels),
 		},
 		Spec: v1.AppInstanceSpec{
+			Region:              opts.Region,
 			Image:               image,
 			PublishMode:         opts.PublishMode,
 			DeployArgs:          opts.DeployArgs,

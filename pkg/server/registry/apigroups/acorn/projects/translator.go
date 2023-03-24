@@ -2,6 +2,7 @@ package projects
 
 import (
 	"context"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -39,9 +40,20 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 		if !ns.DeletionTimestamp.IsZero() {
 			continue
 		}
+
+		defaultRegion := ns.Annotations[labels.AcornProjectDefaultRegion]
+		supportedRegions := strings.Split(ns.Annotations[labels.AcornProjectSupportedRegions], ",")
+
 		delete(ns.Labels, labels.AcornProject)
+		delete(ns.Annotations, labels.AcornProjectDefaultRegion)
+		delete(ns.Annotations, labels.AcornProjectSupportedRegions)
+
 		result = append(result, &apiv1.Project{
 			ObjectMeta: ns.ObjectMeta,
+			Spec: apiv1.ProjectSpec{
+				DefaultRegion:    defaultRegion,
+				SupportedRegions: supportedRegions,
+			},
 			Status: apiv1.ProjectStatus{
 				Namespace: ns.Name,
 			},
@@ -52,14 +64,24 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 
 func (t *Translator) FromPublic(ctx context.Context, obj runtime.Object) (types.Object, error) {
 	prj := obj.(*apiv1.Project)
-	if prj.Labels == nil {
-		prj.Labels = map[string]string{
-			labels.AcornProject: "true",
-		}
-	}
-	return &corev1.Namespace{
+
+	ns := &corev1.Namespace{
 		ObjectMeta: prj.ObjectMeta,
-	}, nil
+	}
+
+	if ns.Labels == nil {
+		ns.Labels = make(map[string]string)
+	}
+	ns.Labels[labels.AcornProject] = "true"
+
+	if ns.Annotations == nil {
+		ns.Annotations = make(map[string]string)
+	}
+	ns.Annotations[labels.AcornProjectDefaultRegion] = prj.Spec.DefaultRegion
+	ns.Annotations[labels.AcornProjectSupportedRegions] = strings.Join(prj.Spec.SupportedRegions, ",")
+	ns.Annotations[labels.AcornCalculatedProjectDefaultRegion] = prj.Status.DefaultRegion
+
+	return ns, nil
 }
 
 func (t *Translator) NewPublic() types.Object {

@@ -22,13 +22,13 @@ func lastPart(s string) string {
 	return parts[len(parts)-1]
 }
 
-func Create(ctx context.Context, opts Options, name string) error {
+func Create(ctx context.Context, opts Options, name, region string) error {
 	opts.Project = name
 	c, err := Client(ctx, opts)
 	if err != nil {
 		return err
 	}
-	_, err = c.ProjectCreate(ctx, lastPart(name))
+	_, err = c.ProjectCreate(ctx, lastPart(name), region)
 	return err
 }
 

@@ -26,3 +26,10 @@ size:
   max: 10Gi
   default: 2Gi
 allowedAccessModes: ["readWriteOnce"]
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-namespace
+  labels:
+    acorn.io/project: "true"

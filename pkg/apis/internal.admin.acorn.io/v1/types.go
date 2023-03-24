@@ -50,3 +50,41 @@ type ComputeClassMemory struct {
 	Default string   `json:"default,omitempty"`
 	Values  []string `json:"values,omitempty"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type RegionInstance struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec   RegionInstanceSpec   `json:"spec,omitempty"`
+	Status RegionInstanceStatus `json:"status,omitempty"`
+}
+
+func (in *RegionInstance) ForRegion(region string) bool {
+	return in.Spec.RegionName == region
+}
+
+func (in *RegionInstance) NamespaceScoped() bool {
+	return false
+}
+
+type RegionInstanceSpec struct {
+	Description string `json:"description,omitempty"`
+	AccountName string `json:"accountName,omitempty"`
+	Role        string `json:"role,omitempty"`
+	RegionName  string `json:"regionName,omitempty"`
+}
+
+type RegionInstanceStatus struct {
+	ClusterCreated bool `json:"clusterCreated,omitempty"`
+	ClusterReady   bool `json:"clusterReady,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type RegionInstanceList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []RegionInstance `json:"items"`
+}

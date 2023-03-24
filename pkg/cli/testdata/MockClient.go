@@ -47,6 +47,8 @@ type MockClientFactory struct {
 	VolumeClassItem  *apiv1.VolumeClass
 	ComputeClassList []apiv1.ComputeClass
 	ComputeClassItem *apiv1.ComputeClass
+	RegionList       []apiv1.Region
+	RegionItem       *apiv1.Region
 }
 
 func (dc *MockClientFactory) Options() project.Options {
@@ -73,6 +75,8 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		VolumeClassItem:  dc.VolumeClassItem,
 		ComputeClasses:   dc.ComputeClassList,
 		ComputeClassItem: dc.ComputeClassItem,
+		Regions:          dc.RegionList,
+		RegionItem:       dc.RegionItem,
 	}, nil
 }
 
@@ -95,6 +99,8 @@ type MockClient struct {
 	VolumeClassItem  *apiv1.VolumeClass
 	ComputeClasses   []apiv1.ComputeClass
 	ComputeClassItem *apiv1.ComputeClass
+	Regions          []apiv1.Region
+	RegionItem       *apiv1.Region
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -690,7 +696,7 @@ func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Projec
 	return nil, nil
 }
 
-func (m *MockClient) ProjectCreate(ctx context.Context, name string) (*apiv1.Project, error) {
+func (m *MockClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
 	// TODO implement me
 	panic("implement me")
 }
@@ -718,5 +724,26 @@ func (m *MockClient) VolumeClassGet(_ context.Context, name string) (*apiv1.Volu
 	return nil, apierrors.NewNotFound(schema.GroupResource{
 		Group:    "api.acorn.io",
 		Resource: "volumeclasses",
+	}, name)
+}
+
+func (m *MockClient) RegionList(context.Context) ([]apiv1.Region, error) {
+	return m.Regions, nil
+}
+
+func (m *MockClient) RegionGet(_ context.Context, name string) (*apiv1.Region, error) {
+	if m.RegionItem != nil {
+		return m.RegionItem, nil
+	}
+
+	for _, s := range m.Regions {
+		if s.Name == name {
+			return &s, nil
+		}
+	}
+
+	return nil, apierrors.NewNotFound(schema.GroupResource{
+		Group:    "api.acorn.io",
+		Resource: "regions",
 	}, name)
 }

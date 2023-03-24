@@ -70,6 +70,11 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
+		if err = s.validateRegion(ctx, params); err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "region"), params.Spec.Region, err.Error()))
+			return
+		}
+
 		workloadsFromImage, err := s.getWorkloads(imageDetails)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
@@ -114,7 +119,35 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 
 func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
 	newParams := obj.(*apiv1.App)
+	oldParams := old.(*apiv1.App)
+	if newParams.Spec.Region != oldParams.Spec.Region && newParams.Spec.Region != oldParams.Status.Defaults.Region {
+		result = append(result, field.Invalid(field.NewPath("spec", "region"), newParams.Spec.Region, "cannot change region"))
+		return result
+	}
 	return s.Validate(ctx, newParams)
+}
+
+func (s *Validator) validateRegion(ctx context.Context, app *apiv1.App) error {
+	project := new(apiv1.Project)
+	err := s.client.Get(ctx, kclient.ObjectKey{Name: app.Namespace}, project)
+	if err != nil {
+		return err
+	}
+
+	if app.Spec.Region == "" {
+		if project.Spec.DefaultRegion == "" && project.Status.DefaultRegion == "" {
+			return fmt.Errorf("no region can be determined because project default region is not set")
+		}
+
+		// Region default will be calculated later
+		return nil
+	}
+
+	if !project.ForRegion(app.Spec.Region) {
+		return fmt.Errorf("region %s is not supported for project %s", app.Spec.Region, app.Namespace)
+	}
+
+	return nil
 }
 
 func (s *Validator) checkRemoteAccess(ctx context.Context, namespace, image string) error {

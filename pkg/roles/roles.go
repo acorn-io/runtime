@@ -24,14 +24,16 @@ var (
 				Verbs: []string{"get", "list"},
 				Resources: []string{
 					"projects",
+					"regions",
 				},
 			},
 		},
 		ClusterEdit: {
 			{
-				Verbs: []string{"create", "delete"},
+				Verbs: []string{"create", "update", "delete"},
 				Resources: []string{
 					"projects",
+					"regions",
 				},
 			},
 		},
@@ -57,6 +59,7 @@ var (
 				Resources: []string{
 					"volumeclasses",
 					"computeclasses",
+					"regions",
 				},
 			},
 			{
@@ -144,6 +147,7 @@ var (
 					"clustervolumeclasses",
 					"projectcomputeclasses",
 					"clustercomputeclasses",
+					"regions",
 				},
 				APIGroups: []string{admin_acorn_io.Group},
 			},

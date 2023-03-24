@@ -16,3 +16,6 @@ metadata:
   name: acorn
   labels:
     acorn.io/project: "true"
+  annotations:
+    acorn.io/project-default-region: "local"
+    acorn.io/project-supported-regions: "local"

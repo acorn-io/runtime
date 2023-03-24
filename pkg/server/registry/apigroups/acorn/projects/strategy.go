@@ -25,17 +25,19 @@ import (
 type Strategy struct {
 	c       kclient.Client
 	creater strategy.Creater
+	updater strategy.Updater
 	lister  strategy.Lister
 	deleter strategy.Deleter
 }
 
 func (s *Strategy) Create(ctx context.Context, object types.Object) (types.Object, error) {
+	project := object.(*apiv1.Project)
+
 	result, err := s.creater.Create(ctx, object)
 	if !apierrors.IsAlreadyExists(err) {
 		return result, err
 	}
 
-	project := object.(*apiv1.Project)
 	ns := &corev1.Namespace{}
 	getErr := s.c.Get(ctx, router.Key("", project.Name), ns)
 	if getErr == nil {
@@ -61,6 +63,10 @@ func (s *Strategy) Create(ctx context.Context, object types.Object) (types.Objec
 		}
 	}
 	return result, err
+}
+
+func (s *Strategy) Update(ctx context.Context, object types.Object) (types.Object, error) {
+	return s.updater.Update(ctx, object)
 }
 
 // Get is based on list because list will do the RBAC checks to ensure the user can access that
@@ -112,6 +118,11 @@ func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
 				if slices.Contains(user.GetGroups(), subject.Name) {
 					rulesName.Insert(crb.RoleRef.Name)
 				}
+			case "ServiceAccount":
+				if fmt.Sprintf("system:serviceaccount:%s:%s", subject.Namespace, subject.Name) == user.GetName() {
+					rulesName.Insert(crb.RoleRef.Name)
+				}
+
 			}
 		}
 	}
@@ -149,7 +160,7 @@ func matches(allowed []string, requested string) bool {
 		slices.Contains(allowed, requested)
 }
 
-func (s Strategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
+func (s *Strategy) List(ctx context.Context, namespace string, opts storage.ListOptions) (types.ObjectList, error) {
 	names, all, err := s.allowed(ctx)
 	if err != nil {
 		return s.NewList(), err
@@ -179,10 +190,10 @@ func (s Strategy) List(ctx context.Context, namespace string, opts storage.ListO
 	return items, nil
 }
 
-func (s Strategy) New() types.Object {
+func (s *Strategy) New() types.Object {
 	return &apiv1.Project{}
 }
 
-func (s Strategy) NewList() types.ObjectList {
+func (s *Strategy) NewList() types.ObjectList {
 	return &apiv1.ProjectList{}
 }

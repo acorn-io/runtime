@@ -38,5 +38,6 @@ acorn offerings
 
 * [acorn](acorn.md)	 - 
 * [acorn offerings computeclasses](acorn_offerings_computeclasses.md)	 - List available ComputeClasses
+* [acorn offerings regions](acorn_offerings_regions.md)	 - List available regions
 * [acorn offerings volumeclasses](acorn_offerings_volumeclasses.md)	 - List available volume classes
 

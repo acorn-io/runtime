@@ -92,15 +92,16 @@ func NewRun(c CommandContext) *cobra.Command {
   acorn update --confirm-upgrade myapp
 `})
 
-	// This will produce an error if the volume flag doesn't exist or a completion function has already
-	// been registered for this flag. Not returning the error since neither of these is likely occur.
+	// These will produce an error if the flag doesn't exist or a completion function has already been registered for the
+	// flag. Not returning the error since neither of these is likely occur.
 	if err := cmd.RegisterFlagCompletionFunc("volume", newCompletion(c.ClientFactory, volumeFlagClassCompletion).complete); err != nil {
 		cmd.Printf("Error registering completion function for -v flag: %v\n", err)
 	}
-	// This will produce an error if the computeclass flag doesn't exist or a completion function has already
-	// been registered for this flag. Not returning the error since neither of these is likely occur.
 	if err := cmd.RegisterFlagCompletionFunc("compute-class", newCompletion(c.ClientFactory, computeClassFlagCompletion).complete); err != nil {
 		cmd.Printf("Error registering completion function for --compute-class flag: %v\n", err)
+	}
+	if err := cmd.RegisterFlagCompletionFunc("region", newCompletion(c.ClientFactory, regionsCompletion).complete); err != nil {
+		cmd.Printf("Error registering completion function for --region flag: %v\n", err)
 	}
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
@@ -121,6 +122,7 @@ type Run struct {
 
 type RunArgs struct {
 	Name            string   `usage:"Name of app to create" short:"n"`
+	Region          string   `usage:"Region in which to deploy the app, immutable"`
 	File            string   `short:"f" usage:"Name of the build file" default:"DIRECTORY/Acornfile"`
 	Volume          []string `usage:"Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)" short:"v" split:"false"`
 	Secret          []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
@@ -148,6 +150,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	)
 
 	opts.Name = s.Name
+	opts.Region = s.Region
 	opts.Profiles = s.Profile
 	opts.TargetNamespace = s.TargetNamespace
 	opts.AutoUpgrade = s.AutoUpgrade

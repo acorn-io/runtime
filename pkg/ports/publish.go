@@ -41,7 +41,7 @@ func ByProtocol(ports []v1.PortDef, protocols ...v1.Protocol) (result []v1.PortD
 
 type BoundPorts map[ListenDef][]v1.PortDef
 
-func (b BoundPorts) ServicePorts() (result []corev1.ServicePort, _ error) {
+func (b BoundPorts) ServicePorts() (result []corev1.ServicePort, err error) {
 	for listen, ports := range b {
 		if len(ports) > 1 {
 			l := typed.MapSlice(ports, func(t v1.PortDef) string {

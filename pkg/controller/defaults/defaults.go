@@ -45,11 +45,15 @@ func calculate(req router.Request, appInstance *internalv1.AppInstance) error {
 		return err
 	}
 
-	if err := addVolumeClassDefaults(req.Ctx, req.Client, appInstance); err != nil {
+	if err = addDefaultRegion(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	}
 
-	if err := addDefaultMemory(req, cfg, appInstance); err != nil {
+	if err = addVolumeClassDefaults(req.Ctx, req.Client, appInstance); err != nil {
+		return err
+	}
+
+	if err = addDefaultMemory(req, cfg, appInstance); err != nil {
 		return err
 	}
 

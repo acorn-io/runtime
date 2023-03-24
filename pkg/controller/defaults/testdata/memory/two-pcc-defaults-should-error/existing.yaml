@@ -42,3 +42,10 @@ affinity:
           operator: In
           values:
           - bar
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: app-namespace
+  labels:
+    acorn.io/project: "true"
