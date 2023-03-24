@@ -12,6 +12,14 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// Calculate is a handler that sets the scheduling rules for an AppInstance to its
+// status if and only if its generation is different from its observedGeneration.
+//
+// This is necessary because querying for scheduling rules will result in all running
+// AppInstances using the backing resources (the Acorn Config or a ComputeClass, for example)
+// to be redeployed when the resources change. By calculating scheduling rules only when the
+// generation changes, we can ensure that updated backing resources are only applied when an
+// AppInstance is updated directly.
 func Calculate(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionScheduling)

@@ -8,6 +8,13 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 )
 
+// Calculate is a handler that sets the defaults for an AppInstance to its status if
+// and only if its generation is different from its observedGeneration.
+//
+// This is necessary because querying for defaults will result in all running
+// AppInstances using that default to redeploy when a default changes. By
+// calculating the defaults only when the generation changes, we can ensure that
+// updated defaults are only applied when an AppInstance is updated directly.
 func Calculate(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefaults)
