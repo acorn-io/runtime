@@ -3,6 +3,8 @@ package expr
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -14,7 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"strings"
 )
 
 type resolver struct {
@@ -51,9 +52,14 @@ func Resolve(ctx context.Context, req kclient.Client, namespace, expr string) (k
 	)
 	for i, name := range parts {
 		if validSecrets == nil {
-			obj, err = r.getAcorn(namespace, name)
-			if apierrors.IsNotFound(err) {
+			if i+1 == len(parts) {
+				// if it's the last item it can't be an app
 				obj, err = r.getService(namespace, name)
+			} else {
+				obj, err = r.getAcorn(namespace, name)
+				if apierrors.IsNotFound(err) {
+					obj, err = r.getService(namespace, name)
+				}
 			}
 		}
 		if validSecrets != nil || apierrors.IsNotFound(err) {
