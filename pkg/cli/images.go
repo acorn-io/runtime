@@ -49,23 +49,48 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	var image *apiv1.Image
 	tagToMatch := ""
 
-	allSetByUser := cmd.Flags().Changed("all")
+	repoSearch := false
 
 	if len(args) == 1 {
 
-		image, err = c.ImageGet(cmd.Context(), args[0])
+		ref, err := name.ParseReference(args[0], name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return err
 		}
-		if !strings.Contains(image.Digest, args[0]) {
-			//normalize through ParseReference inorder to add :latest tag to input if necessary
-			imageParsedReference, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
+
+		// tag or digest was provided
+		if ref.Identifier() != "" {
+			image, err = c.ImageGet(cmd.Context(), args[0])
 			if err != nil {
 				return err
 			}
-			tagToMatch = imageParsedReference.Name()
+			if !strings.Contains(image.Digest, args[0]) {
+				//normalize through ParseReference inorder to add :latest tag to input if necessary
+				imageParsedReference, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
+				if err != nil {
+					return err
+				}
+				tagToMatch = imageParsedReference.Name()
+			}
+			images = []apiv1.Image{*image}
+		} else {
+			// no tag or digest was provided, so we need to get all images and filter by repo
+			repoSearch = true
+			il, err := c.ImageList(cmd.Context())
+			if err != nil {
+				return err
+			}
+
+			// only consider images that have at least one tag matching the registry/repo prefix
+			for _, i := range il {
+				for _, t := range i.Tags {
+					if strings.HasPrefix(t, args[0]) {
+						images = append(images, i)
+						break
+					}
+				}
+			}
 		}
-		images = []apiv1.Image{*image}
 
 		// If an image was provided explicitly, then display it even if it doesn't have tags
 		a.All = true
@@ -107,16 +132,26 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			Tag:        "",
 			Repository: "",
 		}
+
+		// no tag set at all, so only print if --all is set
 		if len(image.Tags) == 0 && a.All {
 			out.Write(imagePrint)
 			continue
 		}
+
+		// loop through all tags
 		for _, tag := range image.Tags {
 			imageTagRef, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 			if err != nil {
 				return err
 			}
 
+			// if we are searching by repo, then filter out tags that don't match
+			if repoSearch && !strings.HasPrefix(imageTagRef.Name(), args[0]) {
+				continue
+			}
+
+			// tag without ref and digest, but for proper filtering we need to add digest, so we can match it if a user searched by digest
 			if imageTagRef.Identifier() == "" {
 				tag = fmt.Sprintf("%s/%s@%s", imageTagRef.Context().RegistryStr(), imageTagRef.Context().RepositoryStr(), image.Digest)
 				imageTagRef, err = name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
@@ -125,27 +160,27 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
+			// in any case, add registry/repository information to the output
 			if imageTagRef.Context().RegistryStr() != "" {
 				imagePrint.Repository = imageTagRef.Context().RegistryStr() + "/"
 			}
 			imagePrint.Repository += imageTagRef.Context().RepositoryStr()
 
-			if tagToMatch == imageTagRef.Name() {
+			if tagToMatch == "" {
+				// > not searching by tag
+				if ntag, ok := imageTagRef.(name.Tag); ok {
+					// it's a tag, so print it like usual
+					imagePrint.Tag = ntag.TagStr()
+				}
+				out.Write(imagePrint)
+			} else if tagToMatch == imageTagRef.Name() {
+				// > searching by tag
 				if ntag, ok := imageTagRef.(name.Tag); ok {
 					// it's a tag, so print it like usual
 					imagePrint.Tag = ntag.TagStr()
 					out.Write(imagePrint)
 				} else if _, ok := imageTagRef.(name.Digest); ok {
 					// it's a digest, so print without a tag
-					out.Write(imagePrint)
-				}
-			} else if tagToMatch == "" {
-				if ntag, ok := imageTagRef.(name.Tag); ok {
-					// it's a tag, so print it like usual
-					imagePrint.Tag = ntag.TagStr()
-					out.Write(imagePrint)
-				} else if allSetByUser {
-					// it's not a tag but user wants to see everything
 					out.Write(imagePrint)
 				}
 			}

@@ -161,11 +161,11 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
 	} else {
-		tag, err := name.ParseReference(imageName, name.WithDefaultRegistry(""))
+		tag, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return nil, "", err
 		}
-		tagName = tag.Name()
+		tagName = strings.TrimSuffix(tag.Name(), ":")
 	}
 
 	var matchedImage apiv1.Image
