@@ -195,7 +195,7 @@ outer:
 				continue
 			}
 		}
-
+		//set attach back false to allow after dev mode has been attached for syncing to occur above
 		opts.Build.Attach = false
 		if opts.Build.AppName != "" {
 			opts.Run.Name = opts.Build.AppName

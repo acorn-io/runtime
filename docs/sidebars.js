@@ -61,7 +61,10 @@ const sidebars = {
       "running/auto-upgrades",
       "running/namespaces-and-service-accounts",
       "running/compute-resources",
-      "running/projects"
+      "running/projects",
+      "running/update-acorns",
+      "running/dev",
+        
     ],
     "collapsed": true
   },

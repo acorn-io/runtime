@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"context"
 	"fmt"
+	"context"
 	"io"
 	"os"
 	"strings"
@@ -17,6 +17,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
+	"github.com/acorn-io/acorn/pkg/mocks"
+	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 
 	"github.com/stretchr/testify/assert"

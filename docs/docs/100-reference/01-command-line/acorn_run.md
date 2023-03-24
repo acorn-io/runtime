@@ -99,8 +99,8 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
   -p, --publish strings           Publish port of application (format [public:]private) (ex 81:80)
   -P, --publish-all               Publish all (true) or none (false) of the defined ports of application
   -q, --quiet                     Do not print status
-      --replace                   Toggle replacing update, resetting undefined fields to default values
       --region string             Region in which to deploy the app, immutable
+      --replace                   Replace the app with only defined values, resetting undefined fields to default values
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
       --target-namespace string   The name of the namespace to be created and deleted for the application resources
   -u, --update                    Update the app if it already exists

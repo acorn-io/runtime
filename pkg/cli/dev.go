@@ -65,13 +65,10 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	cwd := "."
-	if len(args) > 0 {
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		cwd = args[0]
-	}
-	//acorn args set cwd back to .
-	if strings.HasPrefix(cwd, "-") {
-		cwd = "."
 	}
 
 	image := cwd

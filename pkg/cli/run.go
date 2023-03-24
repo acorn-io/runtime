@@ -9,6 +9,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -112,7 +113,7 @@ type Run struct {
 	Wait              *bool  `usage:"Wait for app to become ready before command exiting (default true)"`
 	Quiet             bool   `usage:"Do not print status" short:"q"`
 	Update            bool   `usage:"Update the app if it already exists" short:"u"`
-	Replace           bool   `usage:"Toggle replacing update, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
 	Image             string `json:"image,omitempty"`
 
 	out    io.Writer
@@ -345,20 +346,23 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 			return err
 		}
 	}
-	image := s.Image
+	imageForFlags := s.Image
 
 	if s.Name == "" && !isDir {
-		image = args[0]
+		imageForFlags = args[0]
 	}
 
 	//updating an already existing app
-	if app != nil && s.Image == "" {
-		image = app.Spec.Image
+	if app != nil && imageForFlags == "" {
+		imageForFlags = app.Spec.Image
+	}
+	if _, isPattern := autoupgrade.AutoUpgradePattern(imageForFlags); isPattern {
+		imageForFlags = app.Status.AppImage.ID
 	}
 
 	//creating an image and updating
-	if s.Image == "" && isDir {
-		image, err = buildImage(cmd.Context(), c, s.File, cwd, args)
+	if s.Image == "" && isDir && len(args) > 0 {
+		imageForFlags, err = buildImage(cmd.Context(), c, s.File, cwd, args)
 		if err == pflag.ErrHelp {
 			return nil
 		} else if err != nil {
@@ -366,10 +370,10 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 		}
 	}
 	//PUT update of a running app
-	if s.Replace && !isDir && image == "" {
-		image = s.Image
+	if s.Replace && !isDir && imageForFlags == "" {
+		imageForFlags = s.Image
 	}
-	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)
+	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, imageForFlags)
 	if err != nil {
 		return err
 	}
@@ -387,7 +391,7 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 	runOpts.DeployArgs = deployParams
 
 	opts := runOpts.ToUpdate()
-	opts.Image = image
+	opts.Image = imageForFlags
 
 	// Overwrite == true means patchMode == false
 	opts.Replace = s.Replace
@@ -400,7 +404,7 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 		return outputApp(s.out, s.Output, app)
 	}
 	if app == nil {
-		app, err = rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, runOpts)
+		app, err = rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, imageForFlags, runOpts)
 		if err != nil {
 			return err
 		}
