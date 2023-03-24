@@ -22,7 +22,8 @@ acorn offering volumeclasses`,
 }
 
 type Storage struct {
-	Quiet  bool `usage:"Output only names" short:"q"`
+	Quiet  bool   `usage:"Output only names" short:"q"`
+	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client ClientFactory
 }
 
@@ -32,7 +33,7 @@ func (a *Storage) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out := table.NewWriter(tables.VolumeClass, a.Quiet, "")
+	out := table.NewWriter(tables.VolumeClass, a.Quiet, a.Output)
 
 	if len(args) == 1 {
 		volume, err := c.VolumeClassGet(cmd.Context(), args[0])

@@ -19,8 +19,9 @@ acorn offering volumeclasses
 ### Options
 
 ```
-  -h, --help    help for volumeclasses
-  -q, --quiet   Output only names
+  -h, --help            help for volumeclasses
+  -o, --output string   Output format (json, yaml, {{gotemplate}})
+  -q, --quiet           Output only names
 ```
 
 ### Options inherited from parent commands
@@ -30,7 +31,6 @@ acorn offering volumeclasses
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
       --kubeconfig string   Explicitly use kubeconfig file, overriding current project
-  -o, --output string       Output format (json, yaml, {{gotemplate}})
   -j, --project string      Project to work in
 ```
 
