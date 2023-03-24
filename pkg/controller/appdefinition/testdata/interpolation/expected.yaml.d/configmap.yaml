@@ -8,5 +8,5 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
 data:
-  5c33e93cc3bbe9d0e837f3348d7f282a06af35489438fd859b28313f72c37945: c2lkZWNhci1tb2Rl
-  297373ad8cebefdc9f7648df22c5316809ffa1ae8fac7f7d28ef03c85cb1e25e: YmFzZQ==
+  a5f340dbab90b0c91d2105e25dd40dc53caeaa3a743bb3d727f2fcffad20d6f6: cHJlZml4IHZhbHVlMSBzdWZmaXggdmFsdWUy
+  f03c1b4f253aca5688ec2e8116345fdad2a771377d7dab1194255c0da25564f3: cHJlZml4IHZhbHVlMSBhZnRlcg==

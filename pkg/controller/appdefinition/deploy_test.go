@@ -1,11 +1,11 @@
 package appdefinition
 
 import (
-	"encoding/hex"
-	"strings"
+	"encoding/base64"
+	"github.com/acorn-io/acorn/pkg/digest"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"testing"
 
-	"cuelang.org/go/pkg/crypto/sha256"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -76,11 +76,15 @@ func ToDeploymentsTest(t *testing.T, appInstance *v1.AppInstance, tag name.Refer
 	t.Helper()
 
 	req := tester.NewRequest(t, scheme.Scheme, appInstance)
-	deps, err := ToDeployments(req, appInstance, tag, pullSecrets)
+	interpolator := secrets.NewInterpolator(req, appInstance)
+	deps, err := ToDeployments(req, appInstance, tag, pullSecrets, interpolator)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return deps
+	if err := interpolator.Err(); err != nil {
+		t.Fatal(err)
+	}
+	return append(deps, interpolator.Objects()...)
 }
 
 func TestEntrypointCommand(t *testing.T) {
@@ -228,6 +232,7 @@ func TestFiles(t *testing.T) {
 	app := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "app",
+			UID:  "123",
 		},
 		Status: v1.AppInstanceStatus{
 			AppSpec: v1.AppSpec{
@@ -273,40 +278,35 @@ func TestFiles(t *testing.T) {
 		},
 	}
 
-	dep := ToDeploymentsTest(t, app, testTag, nil)[1].(*appsv1.Deployment)
+	objs := ToDeploymentsTest(t, app, testTag, nil)
+	dep := objs[1].(*appsv1.Deployment)
 
-	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
-	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
-	assert.Equal(t, toPathHash("/app/test/test/a1/b/c"), dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].SubPath)
-	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
-	assert.Equal(t, "/a2/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
-	assert.Equal(t, toPathHash("/app/test/test/a2/b/c"), dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].SubPath)
-
-	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].Name)
-	assert.Equal(t, "/a/b1/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].MountPath)
-	assert.Equal(t, toPathHash("/app/test/left/a/b1/c"), dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].SubPath)
-	assert.Equal(t, "files", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].Name)
-	assert.Equal(t, "/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].MountPath)
-	assert.Equal(t, toPathHash("/app/test/left/a/b2/c"), dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].SubPath)
-
-	configMaps, err := toConfigMaps(app)
-	if err != nil {
-		t.Fatal(err)
+	toHash := func(s string) string {
+		t.Helper()
+		data, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return digest.SHA256(string(data))
 	}
-	configMap := configMaps[0].(*corev1.ConfigMap)
 
-	assert.Len(t, configMap.BinaryData, 8)
-	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test/test/a2/b/c")])
-	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test2/test2/a2/b/c")])
-	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test/left/a/b2/c")])
-	assert.Equal(t, []byte("d"), configMap.BinaryData[toPathHash("/app/test2/left/a/b2/c")])
-	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test/test/a1/b/c")])
-	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test/left/a/b1/c")])
-	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test2/test2/a1/b/c")])
-	assert.Equal(t, []byte("e"), configMap.BinaryData[toPathHash("/app/test2/left/a/b1/c")])
-}
+	assert.Equal(t, "secrets-123", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].Name)
+	assert.Equal(t, "/a1/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].MountPath)
+	assert.Equal(t, toHash("ZQ=="), dep.Spec.Template.Spec.Containers[0].VolumeMounts[0].SubPath)
+	assert.Equal(t, "secrets-123", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].Name)
+	assert.Equal(t, "/a2/b/c", dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].MountPath)
+	assert.Equal(t, toHash("ZA=="), dep.Spec.Template.Spec.Containers[0].VolumeMounts[1].SubPath)
 
-func toPathHash(path string) string {
-	path = strings.TrimPrefix(path, "/")
-	return hex.EncodeToString(sha256.Sum256([]byte(path))[:])[:12]
+	assert.Equal(t, "secrets-123", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].Name)
+	assert.Equal(t, "/a/b1/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].MountPath)
+	assert.Equal(t, toHash("ZQ=="), dep.Spec.Template.Spec.Containers[1].VolumeMounts[0].SubPath)
+	assert.Equal(t, "secrets-123", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].Name)
+	assert.Equal(t, "/a/b2/c", dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].MountPath)
+	assert.Equal(t, toHash("ZA=="), dep.Spec.Template.Spec.Containers[1].VolumeMounts[1].SubPath)
+
+	configMap := objs[6].(*corev1.Secret)
+
+	assert.Len(t, configMap.Data, 2)
+	assert.Equal(t, []byte("d"), configMap.Data["4658d6abbbaf7748c172ed5a3e003cdb8997648f88724834e41f75e54520e142"])
+	assert.Equal(t, []byte("e"), configMap.Data["6b672b9a7e4feb4fd38386f90405bc0ae261413a758dd8eb2786be61df8dc27d"])
 }

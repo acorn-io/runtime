@@ -23,7 +23,7 @@ spec:
         "acorn.io/container-name": "oneimage"
         "acorn.io/managed": "true"
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","probes":null,"sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name","probes":null}}}'
+        acorn.io/container-spec: '{"environment":[{"name":"foo","secret":{},"value":"prefix @{secret.sec-1.key1} after"},{"name":"foo-not-interpolated","secret":{},"value":"prefix @{other.sec-1.key1} after"}],"files":{"content-test":{"content":"cHJlZml4IEB7c2VjcmV0cy5zZWMtMS5rZXkxfSBzdWZmaXggQHtzZWNyZXRzLnNlYy0xLmtleTJ9","mode":"0644","secret":{}}},"image":"image-name","probes":null}'
     spec:
       terminationGracePeriodSeconds: 5
       imagePullSecrets:
@@ -34,20 +34,20 @@ spec:
       containers:
         - name: oneimage
           image: image-name
-        - name: sidecar
-          image: image-name
           volumeMounts:
-            - mountPath: /content-test
-              name: secrets-1234567890ab
-              subPath: 297373ad8cebefdc9f7648df22c5316809ffa1ae8fac7f7d28ef03c85cb1e25e
-            - mountPath: /sidecar-content-test-mode
-              name: secrets-1234567890ab-0755
-              subPath: 5c33e93cc3bbe9d0e837f3348d7f282a06af35489438fd859b28313f72c37945
+          - mountPath: /content-test
+            name: secrets-1234567890ab
+            subPath: a5f340dbab90b0c91d2105e25dd40dc53caeaa3a743bb3d727f2fcffad20d6f6
+          env:
+          - name: foo
+            valueFrom:
+              secretKeyRef:
+                key: f03c1b4f253aca5688ec2e8116345fdad2a771377d7dab1194255c0da25564f3
+                name: secrets-1234567890ab
+          - name: foo-not-interpolated
+            value: prefix @{other.sec-1.key1} after
       volumes:
       - name: secrets-1234567890ab
         secret:
           secretName: secrets-1234567890ab
-      - name: secrets-1234567890ab-0755
-        secret:
-          defaultMode: 0755
-          secretName: secrets-1234567890ab
+

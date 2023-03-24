@@ -2,6 +2,7 @@ package appdefinition
 
 import (
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"sort"
 	"strconv"
 	"strings"
@@ -244,7 +245,7 @@ type volumeReference struct {
 }
 
 func (v volumeReference) Suffix() string {
-	if normalizeMode(v.mode) == "" {
+	if volume.NormalizeMode(v.mode) == "" {
 		return ""
 	}
 	return "-" + v.mode
@@ -260,46 +261,28 @@ func toMode(m string) (*int32, error) {
 }
 
 func (v volumeReference) ParseMode() (*int32, error) {
-	if normalizeMode(v.mode) == "" {
+	if volume.NormalizeMode(v.mode) == "" {
 		return nil, nil
 	}
 	return toMode(v.mode)
 }
 
-func getFilesFileModesForApp(app *v1.AppInstance) map[string]bool {
-	fileModes := map[string]bool{}
-	for _, container := range app.Status.AppSpec.Containers {
-		addFilesFileModesForContainer(fileModes, container)
-	}
-	for _, container := range app.Status.AppSpec.Jobs {
-		addFilesFileModesForContainer(fileModes, container)
-	}
-	return fileModes
-}
-
-func normalizeMode(mode string) string {
-	if mode == "0644" || mode == "644" {
-		return ""
-	}
-	return mode
-}
-
 func addFilesFileModesForContainer(fileModes map[string]bool, container v1.Container) {
 	for _, file := range container.Files {
 		if file.Content != "" && file.Secret.Name == "" {
-			fileModes[normalizeMode(file.Mode)] = true
+			fileModes[volume.NormalizeMode(file.Mode)] = true
 		}
 	}
 	for _, sidecar := range container.Sidecars {
 		for _, file := range sidecar.Files {
 			if file.Content != "" && file.Secret.Name == "" {
-				fileModes[normalizeMode(file.Mode)] = true
+				fileModes[volume.NormalizeMode(file.Mode)] = true
 			}
 		}
 	}
 }
 
-func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []corev1.Volume, _ error) {
+func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator) (result []corev1.Volume, _ error) {
 	volumeReferences := map[volumeReference]bool{}
 	addVolumeReferencesForContainer(appInstance, volumeReferences, container)
 	for _, entry := range typed.Sorted(container.Sidecars) {
@@ -349,14 +332,15 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 	fileModes := map[string]bool{}
 	addFilesFileModesForContainer(fileModes, container)
 
+	secretName := interpolator.SecretName()
 	for _, modeString := range typed.SortedKeys(fileModes) {
-		name := "files"
 		var (
 			mode *int32
 			err  error
+			name = interpolator.SecretName()
 		)
 		if modeString != "" {
-			name = "files-" + modeString
+			name = name + "-" + modeString
 			mode, err = toMode(modeString)
 			if err != nil {
 				return nil, err
@@ -365,11 +349,9 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container) (result []co
 		result = append(result, corev1.Volume{
 			Name: name,
 			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
+				Secret: &corev1.SecretVolumeSource{
 					DefaultMode: mode,
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: name,
-					},
+					SecretName:  secretName,
 				},
 			},
 		})

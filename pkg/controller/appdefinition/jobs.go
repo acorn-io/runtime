@@ -5,6 +5,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -14,8 +15,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
-	jobs, err := toJobs(req, appInstance, pullSecrets, tag)
+func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, interpolator *secrets.Interpolator, resp router.Response) error {
+	jobs, err := toJobs(req, appInstance, pullSecrets, tag, interpolator)
 	if err != nil {
 		return err
 	}
@@ -23,9 +24,9 @@ func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference
 	return nil
 }
 
-func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference) (result []kclient.Object, _ error) {
+func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, interpolator *secrets.Interpolator) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
-		job, err := toJob(req, appInstance, pullSecrets, tag, entry.Key, entry.Value)
+		job, err := toJob(req, appInstance, pullSecrets, tag, entry.Key, entry.Value, interpolator)
 		if err != nil {
 			return nil, err
 		}
@@ -46,8 +47,10 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
-func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container) (kclient.Object, error) {
-	containers, initContainers := toContainers(req, appInstance, tag, name, container)
+func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) (kclient.Object, error) {
+	interpolator = interpolator.ForService(name)
+
+	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
 	if err != nil {
@@ -57,7 +60,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
 		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
 
-	volumes, err := toVolumes(appInstance, container)
+	volumes, err := toVolumes(appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +88,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			},
 		},
 	}
+
+	interpolator.AddMissingAnnotations(jobSpec.Template.Annotations)
 
 	if container.Schedule == "" {
 		return &batchv1.Job{

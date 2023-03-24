@@ -1,0 +1,31 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  uid: 1234567890abcdef
+  name: app-name
+  namespace: app-namespace
+spec:
+  image: test
+  publishAllPorts: true
+  endpoints:
+    - target: oneimage
+      hostname: localhost
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      oneimage:
+        image: "image-name"
+        environment:
+          foo: "prefix @{secret.sec-1.key1} after"
+          foo-not-interpolated: "prefix @{other.sec-1.key1} after"
+        files:
+          content-test:
+            content: "cHJlZml4IEB7c2VjcmV0cy5zZWMtMS5rZXkxfSBzdWZmaXggQHtzZWNyZXRzLnNlYy0xLmtleTJ9"
+  conditions:
+  - reason: Success
+    status: "True"
+    success: true
+    type: defined
