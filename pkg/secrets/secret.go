@@ -1,18 +1,13 @@
 package secrets
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
-	"regexp"
-	"sort"
-	"strings"
-
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
+	"github.com/acorn-io/acorn/pkg/expr"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -28,7 +23,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"math/big"
+	"regexp"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sort"
 )
 
 func seedData(existing *corev1.Secret, from map[string]string, keys ...string) map[string][]byte {
@@ -421,75 +419,38 @@ func generateSecret(secrets map[string]*corev1.Secret, req router.Request, appIn
 	}
 }
 
-func lookupSecret(ctx context.Context, req router.Request, parent *v1.AppInstance, namespace, secretName string) (*corev1.Secret, error) {
-	parts := strings.Split(secretName, ".")
-	for i := range parts {
-		if i+1 >= len(parts) {
-			existingSecret := &corev1.Secret{}
-			err := req.Get(existingSecret, namespace, parts[i])
-			return existingSecret, err
-		} else {
-			appName := parts[i]
-			if parent != nil {
-				// check for links
-				for _, binding := range parent.Spec.Links {
-					if binding.Target == appName {
-						appName = binding.Service
-						namespace = parent.Namespace
-						break
-					}
-				}
-			}
-
-			app := &v1.AppInstance{}
-			err := req.Get(app, namespace, appName)
-			if err != nil {
-				return nil, err
-			}
-			if app.Status.Namespace == "" {
-				return nil, fmt.Errorf("waiting for app %s", app.Name)
-			}
-			if !app.Status.Condition(v1.AppInstanceConditionParsed).Success {
-				return nil, fmt.Errorf("waiting for app %s to be parsed", app.Name)
-			}
-			if _, ok := app.Status.AppSpec.Secrets[parts[i+1]]; !ok {
-				return nil, fmt.Errorf("app %s does not have secret %s defined", app.Name, parts[i+1])
-			}
-			namespace = app.Status.Namespace
-		}
-	}
-
-	panic("BUG: unreachable for secretName " + secretName)
-}
-
 func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string) (*corev1.Secret, error) {
 	if sec, ok := secrets[secretName]; ok {
 		return sec, nil
 	}
 
-	if strings.Contains(secretName, ".") {
-		existingSecret, err := lookupSecret(req.Ctx, req, appInstance, appInstance.Status.Namespace, secretName)
+	var external bool
+	for _, binding := range appInstance.Spec.Secrets {
+		if binding.Target == secretName {
+			external = true
+			secretName = binding.Secret
+		}
+	}
+
+	if !external {
+		secretDef := appInstance.Status.AppSpec.Secrets[secretName]
+		if secretDef.External != "" {
+			external = true
+			secretName = secretDef.External
+		}
+	}
+
+	if external {
+		obj, err := expr.Resolve(req.Ctx, req.Client, appInstance.Namespace, secretName)
+		if err != nil {
+			return nil, err
+		}
+		existingSecret, err := expr.AssertType[*corev1.Secret](obj, secretName)
 		if err != nil {
 			return nil, err
 		}
 		secrets[secretName] = existingSecret
 		return existingSecret, nil
-	}
-
-	for _, binding := range appInstance.Spec.Secrets {
-		if binding.Target == secretName {
-			existingSecret, err := lookupSecret(req.Ctx, req, nil, appInstance.Namespace, binding.Secret)
-			if err != nil {
-				return nil, err
-			}
-			// Check fields to see if they need to be decrypted
-			existingSecret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, existingSecret.Data, appInstance.Namespace)
-			if err != nil {
-				return nil, fmt.Errorf("decrypting %s/%s: %w", appInstance.Namespace, binding.Secret, err)
-			}
-			secrets[secretName] = existingSecret
-			return existingSecret, nil
-		}
 	}
 
 	secret, err := generateSecret(secrets, req, appInstance, secretName)
