@@ -5,13 +5,17 @@ import (
 	"encoding/base64"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/digest"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/ref"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/volume"
+	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/pkg/replace"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/merr"
@@ -151,6 +155,66 @@ func (i *Interpolator) resolveSecrets(secretName, keyName string) (string, bool,
 	return string(secret.Data[keyName]), true, nil
 }
 
+func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, extra []string) (string, error) {
+	switch prop {
+	case "address":
+		fallthrough
+	case "hostname":
+		if svc.Spec.Address != "" {
+			return svc.Spec.Address, nil
+		}
+		cfg, err := config.Get(i.ctx, i.client)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s.%s.%s", svc.Name, svc.Namespace, cfg.InternalClusterDomain), nil
+	case "port":
+		fallthrough
+	case "ports":
+		if len(extra) != 1 {
+			return "", fmt.Errorf("can not lookup ports expecting single number, got [%s]", strings.Join(extra, "."))
+		}
+		for _, port := range svc.Spec.Ports {
+			p := port.Complete()
+			if strconv.Itoa(int(p.Port)) == extra[0] {
+				return strconv.Itoa(int(p.TargetPort)), nil
+			}
+		}
+		return "", fmt.Errorf("failed to find port [%s] defined on service [%s]", extra[0], svc.Name)
+	case "data":
+		expr := strings.Join(extra, ".")
+		v, err := aml.Interpolate(svc.Spec.Data, expr)
+		return fmt.Sprint(v), err
+	default:
+		return "", fmt.Errorf("invalid property [%s] to lookup on service [%s]", prop, svc.Name)
+	}
+}
+
+func (i *Interpolator) resolveServices(serviceName string, parts []string) (string, bool, error) {
+	switch parts[0] {
+	case "secrets":
+		fallthrough
+	case "secret":
+		if len(parts) != 2 {
+			return "", false, fmt.Errorf("invalid expression services.%s.%s", serviceName, strings.Join(parts, "."))
+		}
+		secret := &corev1.Secret{}
+		err := ref.Lookup(i.ctx, i.client, secret, i.namespace, serviceName, parts[0])
+		if err != nil {
+			return "", false, err
+		}
+		return string(secret.Data[parts[1]]), true, nil
+	}
+
+	svc := &v1.ServiceInstance{}
+	if err := ref.Lookup(i.ctx, i.client, svc, i.namespace, serviceName); err != nil {
+		return "", false, err
+	}
+
+	ret, err := i.serviceProperty(svc, parts[0], parts[1:])
+	return ret, true, err
+}
+
 func (i *Interpolator) resolve(token string) (string, bool, error) {
 	scheme, tail, ok := strings.Cut(token, "://")
 	if ok {
@@ -170,9 +234,10 @@ func (i *Interpolator) resolve(token string) (string, bool, error) {
 	case "service":
 		fallthrough
 	case "services":
-		if len(parts) != 3 {
-			return "", false, fmt.Errorf("invalid expression [%s], must have three parts separated by \".\"", token)
+		if len(parts) < 3 {
+			return "", false, fmt.Errorf("invalid expression [%s], must have at least three parts separated by \".\"", token)
 		}
+		return i.resolveServices(parts[1], parts[2:])
 	case "secret":
 		fallthrough
 	case "secrets":
@@ -188,8 +253,6 @@ func (i *Interpolator) resolve(token string) (string, bool, error) {
 	default:
 		return "", false, nil
 	}
-
-	return "", false, nil
 }
 
 func (i *Interpolator) Err() error {

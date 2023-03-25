@@ -392,6 +392,6 @@ type Service struct {
 	Ports       Ports             `json:"ports,omitempty"`
 	Container   string            `json:"container,omitempty"`
 	Secrets     []string          `json:"secrets,omitempty"`
-	Attributes  GenericMap        `json:"attributes,omitempty"`
+	Data        GenericMap        `json:"data,omitempty"`
 	Destroy     *Container        `json:"destroy,omitempty"`
 }

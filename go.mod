@@ -16,7 +16,7 @@ replace (
 require (
 	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20230323151150-0080cb34ce0a
+	github.com/acorn-io/aml v0.0.0-20230325055444-afdc93f2ebb4
 	github.com/acorn-io/baaah v0.0.0-20230314011022-8b20d035baa2
 	github.com/acorn-io/mink v0.0.0-20230322170736-9b5c9bdef8c4
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78

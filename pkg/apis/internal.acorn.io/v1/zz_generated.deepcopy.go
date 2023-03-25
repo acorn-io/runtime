@@ -2027,7 +2027,7 @@ func (in *Service) DeepCopyInto(out *Service) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	out.Attributes = in.Attributes.DeepCopy()
+	out.Data = in.Data.DeepCopy()
 	if in.Destroy != nil {
 		in, out := &in.Destroy, &out.Destroy
 		*out = new(Container)
@@ -2172,7 +2172,7 @@ func (in *ServiceInstanceSpec) DeepCopyInto(out *ServiceInstanceSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	out.Attributes = in.Attributes.DeepCopy()
+	out.Data = in.Data.DeepCopy()
 	if in.Destroy != nil {
 		in, out := &in.Destroy, &out.Destroy
 		*out = new(Container)

@@ -5,11 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
+	"regexp"
+	"sort"
+	"strings"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
-	"github.com/acorn-io/acorn/pkg/expr"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/ref"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/data/convert"
@@ -23,10 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"math/big"
-	"regexp"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sort"
 )
 
 func seedData(existing *corev1.Secret, from map[string]string, keys ...string) map[string][]byte {
@@ -439,11 +441,8 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	}
 
 	if externalRef != "" {
-		obj, err := expr.Resolve(req.Ctx, req.Client, appInstance.Namespace, externalRef)
-		if err != nil {
-			return nil, err
-		}
-		existingSecret, err := expr.AssertType[*corev1.Secret](obj, secretName)
+		existingSecret := &corev1.Secret{}
+		err := ref.Lookup(req.Ctx, req.Client, existingSecret, appInstance.Namespace, strings.Split(externalRef, ".")...)
 		if err != nil {
 			return nil, err
 		}

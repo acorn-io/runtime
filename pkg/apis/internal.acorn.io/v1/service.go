@@ -41,7 +41,7 @@ type ServiceInstanceSpec struct {
 	Container       string            `json:"container,omitempty"`
 	ContainerLabels map[string]string `json:"containerLabels,omitempty"`
 	Secrets         []string          `json:"secrets,omitempty"`
-	Attributes      GenericMap        `json:"attributes,omitempty"`
+	Data            GenericMap        `json:"data,omitempty"`
 	Destroy         *Container        `json:"destroy,omitempty"`
 
 	// Fields from app
