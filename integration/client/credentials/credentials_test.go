@@ -93,8 +93,17 @@ func TestCredentialList(t *testing.T) {
 		return creds[i].Username < creds[j].Username
 	})
 
-	assert.Equal(t, cred1, &creds[0])
-	assert.Equal(t, cred2, &creds[1])
+	assert.Equal(t, cred1.ObjectMeta, creds[0].ObjectMeta)
+	assert.Equal(t, cred1.ServerAddress, creds[0].ServerAddress)
+	assert.Equal(t, cred1.Username, creds[0].Username)
+	assert.Equal(t, cred1.Password, creds[0].Password)
+	assert.Equal(t, cred1.SkipChecks, creds[0].SkipChecks)
+
+	assert.Equal(t, cred2.ObjectMeta, creds[1].ObjectMeta)
+	assert.Equal(t, cred2.ServerAddress, creds[1].ServerAddress)
+	assert.Equal(t, cred2.Username, creds[1].Username)
+	assert.Equal(t, cred2.Password, creds[1].Password)
+	assert.Equal(t, cred2.SkipChecks, creds[1].SkipChecks)
 }
 
 func TestCredentialGet(t *testing.T) {

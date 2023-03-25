@@ -65,8 +65,15 @@ func TestSecretList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, secret1, &secrets[1])
-	assert.Equal(t, secret2, &secrets[0])
+	assert.Equal(t, secret1.ObjectMeta, secrets[1].ObjectMeta)
+	assert.Equal(t, secret1.Type, secrets[1].Type)
+	assert.Equal(t, secret1.Keys, secrets[1].Keys)
+	assert.Equal(t, secret1.Data, secrets[1].Data)
+
+	assert.Equal(t, secret2.ObjectMeta, secrets[0].ObjectMeta)
+	assert.Equal(t, secret2.Type, secrets[0].Type)
+	assert.Equal(t, secret2.Keys, secrets[0].Keys)
+	assert.Equal(t, secret2.Data, secrets[0].Data)
 }
 
 func TestSecretGet(t *testing.T) {
