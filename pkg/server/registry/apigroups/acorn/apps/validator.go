@@ -135,11 +135,14 @@ func (s *Validator) validateRegion(ctx context.Context, app *apiv1.App) error {
 	}
 
 	if app.Spec.Region == "" {
-		if project.Spec.DefaultRegion == "" && project.Status.DefaultRegion == "" {
-			return fmt.Errorf("no region can be determined because project default region is not set")
+		app.Status.Defaults.Region = project.Spec.DefaultRegion
+		if app.Status.Defaults.Region == "" {
+			if project.Status.DefaultRegion == "" {
+				return fmt.Errorf("no region can be determined because project default region is not set")
+			}
+			app.Status.Defaults.Region = project.Status.DefaultRegion
 		}
 
-		// Region default will be calculated later
 		return nil
 	}
 

@@ -6,11 +6,9 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Validator struct {
-	Client        kclient.Client
 	DefaultRegion string
 }
 

@@ -22,10 +22,6 @@ func TempNamespace(t *testing.T, client client.Client) *corev1.Namespace {
 				"test.acorn.io/namespace": "true",
 				labels.AcornProject:       "true",
 			},
-			Annotations: map[string]string{
-				labels.AcornProjectDefaultRegion:    "local",
-				labels.AcornProjectSupportedRegions: "local",
-			},
 		},
 		Spec:   corev1.NamespaceSpec{},
 		Status: corev1.NamespaceStatus{},

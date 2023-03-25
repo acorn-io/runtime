@@ -1,8 +1,0 @@
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: app-namespace
-  labels:
-    acorn.io/project: "true"
-  annotations:
-    acorn.io/calculated-project-default-region: local

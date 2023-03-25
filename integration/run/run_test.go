@@ -1119,57 +1119,6 @@ func TestAppWithBadRegion(t *testing.T) {
 	}
 }
 
-func TestAppUpdateRegion(t *testing.T) {
-	helper.StartController(t)
-
-	k8sclient := helper.MustReturn(kclient.Default)
-	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
-
-	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/simple",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app, err := c.AppRun(ctx, image.ID, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
-			obj.Status.Condition(v1.AppInstanceConditionReady).Success
-	})
-
-	for {
-		// Update the app region to be `local`, which should be the default
-		if err = k8sclient.Get(ctx, kclient.ObjectKey{Namespace: app.Namespace, Name: app.Name}, app); err != nil {
-			t.Fatal(err)
-		}
-		app.Spec.Region = "local"
-		if err = k8sclient.Update(ctx, app); err == nil {
-			break
-		} else if !apierrors.IsConflict(err) {
-			t.Fatal(err)
-		}
-	}
-
-	for {
-		// Now try to update the app region to something else, which should fail
-		if err = k8sclient.Get(ctx, kclient.ObjectKey{Namespace: app.Namespace, Name: app.Name}, app); err != nil {
-			t.Fatal(err)
-		}
-		app.Spec.Region = "non-local"
-		if err = k8sclient.Update(ctx, app); err == nil {
-			t.Fatal("expected error")
-		} else if !apierrors.IsConflict(err) {
-			break
-		}
-	}
-}
-
 func getStorageClassName(t *testing.T, storageClasses *storagev1.StorageClassList) string {
 	t.Helper()
 	if len(storageClasses.Items) == 0 {
