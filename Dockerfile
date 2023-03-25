@@ -5,13 +5,13 @@ FROM moby/buildkit:v0.10.6 AS buildkit
 FROM public.ecr.aws/docker/library/registry:2.8.1 AS registry
 FROM rancher/klipper-lb:v0.3.5 AS klipper-lb
 
-FROM public.ecr.aws/docker/library/golang:1.19-alpine AS helper
+FROM public.ecr.aws/docker/library/golang:1.20-alpine AS helper
 WORKDIR /usr/src
 RUN apk -U add curl
 RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v5.18.5.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/acorn-helper -ldflags "-s -w" ./helper
 
-FROM public.ecr.aws/docker/library/golang:1.19 AS build
+FROM public.ecr.aws/docker/library/golang:1.20 AS build
 COPY / /src
 WORKDIR /src
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build make build
