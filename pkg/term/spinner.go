@@ -49,13 +49,18 @@ type Spinner struct {
 }
 
 func NewSpinner(text string) *Spinner {
-	spinner, err := pterm.DefaultSpinner.
+	var err error
+	spinner := pterm.DefaultSpinner.
 		WithRemoveWhenDone(false).
 		// Src: https://github.com/gernest/wow/blob/master/spin/spinners.go#L335
-		WithSequence(`  ⠋ `, `  ⠙ `, `  ⠹ `, `  ⠸ `, `  ⠼ `, `  ⠴ `, `  ⠦ `, `  ⠧ `, `  ⠇ `, `  ⠏ `).
-		Start(trimWidth(text))
-	if err != nil {
-		panic(err)
+		WithSequence(`  ⠋ `, `  ⠙ `, `  ⠹ `, `  ⠸ `, `  ⠼ `, `  ⠴ `, `  ⠦ `, `  ⠧ `, `  ⠇ `, `  ⠏ `)
+	if !pterm.RawOutput {
+		spinner, err = spinner.Start(trimWidth(text))
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		fmt.Println()
 	}
 
 	return &Spinner{
