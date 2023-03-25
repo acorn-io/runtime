@@ -424,28 +424,31 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 		return sec, nil
 	}
 
-	var external bool
+	externalRef := ""
 	for _, binding := range appInstance.Spec.Secrets {
 		if binding.Target == secretName {
-			external = true
-			secretName = binding.Secret
+			externalRef = binding.Secret
 		}
 	}
 
-	if !external {
+	if externalRef == "" {
 		secretDef := appInstance.Status.AppSpec.Secrets[secretName]
 		if secretDef.External != "" {
-			external = true
-			secretName = secretDef.External
+			externalRef = secretDef.External
 		}
 	}
 
-	if external {
-		obj, err := expr.Resolve(req.Ctx, req.Client, appInstance.Namespace, secretName)
+	if externalRef != "" {
+		obj, err := expr.Resolve(req.Ctx, req.Client, appInstance.Namespace, externalRef)
 		if err != nil {
 			return nil, err
 		}
 		existingSecret, err := expr.AssertType[*corev1.Secret](obj, secretName)
+		if err != nil {
+			return nil, err
+		}
+		existingSecret = existingSecret.DeepCopy()
+		existingSecret.Data, err = nacl.DecryptNamespacedDataMap(req.Ctx, req.Client, existingSecret.Data, appInstance.Namespace)
 		if err != nil {
 			return nil, err
 		}
