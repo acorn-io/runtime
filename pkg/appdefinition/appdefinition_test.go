@@ -1888,7 +1888,7 @@ services: first: {
 	ports: "80"
 	container: "foo"
 	secrets: ["sfoo", "sbar"]
-	attributes: foo: hi: "bye"
+	data: foo: hi: "bye"
 	destroy: {
 		image: "yo"
 	}
@@ -1919,7 +1919,7 @@ services: first: {
 		"foo": map[string]any{
 			"hi": "bye",
 		},
-	}, svc.Attributes)
+	}, svc.Data)
 	assert.Equal(t, "yo", svc.Destroy.Image)
 }
 

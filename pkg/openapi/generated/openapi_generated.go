@@ -7156,7 +7156,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 							},
 						},
 					},
-					"attributes": {
+					"data": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -7404,7 +7404,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref common.Reference
 							},
 						},
 					},
-					"attributes": {
+					"data": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{

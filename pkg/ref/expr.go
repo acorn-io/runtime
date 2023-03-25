@@ -1,4 +1,4 @@
-package expr
+package ref
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	klabels "k8s.io/apimachinery/pkg/labels"
@@ -23,13 +22,6 @@ type resolver struct {
 	req kclient.Client
 }
 
-func AssertType[T kclient.Object](obj kclient.Object, expr string) (result T, _ error) {
-	if o, ok := obj.(T); ok {
-		return o, nil
-	}
-	return result, fmt.Errorf("expression [%s] does not resolve to type [%s], got [%s]", expr, typeString(obj), typeString(typed.New[T]()))
-}
-
 func typeString(obj kclient.Object) string {
 	gvk, err := apiutil.GVKForObject(obj, scheme.Scheme)
 	if err != nil {
@@ -38,110 +30,106 @@ func typeString(obj kclient.Object) string {
 	return strings.ToLower(strings.ReplaceAll(gvk.Kind, "Instance", ""))
 }
 
-func Resolve(ctx context.Context, req kclient.Client, namespace, expr string) (kclient.Object, error) {
+func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespace string, parts ...string) error {
 	r := &resolver{
 		ctx: ctx,
 		req: req,
 	}
 
 	var (
-		parts        = strings.Split(strings.TrimSpace(expr), ".")
-		obj          kclient.Object
 		validSecrets *[]string
-		err          error
 	)
 	for i, name := range parts {
-		if validSecrets == nil {
-			if i+1 == len(parts) {
-				// if it's the last item it can't be an app
-				obj, err = r.getService(namespace, name)
-			} else {
-				obj, err = r.getAcorn(namespace, name)
+		if i+1 == len(parts) {
+			switch v := out.(type) {
+			case *corev1.Secret:
+				return r.getSecret(v, namespace, name, validSecrets)
+			case *v1.ServiceInstance:
+				err := r.getService(v, namespace, name)
 				if apierrors.IsNotFound(err) {
-					obj, err = r.getService(namespace, name)
+					app, appErr := r.getAcorn(namespace, name)
+					if appErr == nil {
+						err = r.getServiceForAcorn(v, app)
+					}
 				}
+				return err
+			default:
+				return fmt.Errorf("can not marshal expr [%s] to type %s", strings.Join(parts, "."), typeString(out))
 			}
 		}
-		if validSecrets != nil || apierrors.IsNotFound(err) {
-			obj, err = r.getSecret(namespace, name, validSecrets)
-		}
-		if err != nil {
-			return nil, err
-		}
-		if app, ok := obj.(*v1.AppInstance); ok {
-			namespace = app.Status.Namespace
-		} else if svc, ok := obj.(*v1.ServiceInstance); ok {
-			validSecrets = &svc.Spec.Secrets
-			namespace = svc.Namespace
-		} else if _, ok := obj.(*corev1.Secret); ok && i+1 != len(parts) {
-			return nil, apierrors.NewNotFound(schema.GroupResource{
+
+		if validSecrets == nil {
+			app, err := r.getAcorn(namespace, name)
+			if apierrors.IsNotFound(err) {
+				svc := &v1.ServiceInstance{}
+				if err := r.getService(svc, namespace, name); err != nil {
+					return err
+				}
+				validSecrets = &svc.Spec.Secrets
+				namespace = svc.Namespace
+			} else if err != nil {
+				return err
+			} else {
+				validSecrets = nil
+				namespace = app.Status.Namespace
+			}
+		} else if len(parts)-i == 2 && (parts[i] == "secrets" || parts[i] == "secret") {
+			// support "svc.secrets.name" syntax
+		} else {
+			// if validSecrets is set then we already found a service and we are evaluating the second
+			// to last part which is invalid as it must be a secret name and the last part at this point
+			return apierrors.NewNotFound(schema.GroupResource{
 				Group:    corev1.SchemeGroupVersion.Group,
 				Resource: "Secret",
 			}, parts[i+1])
 		}
 	}
 
-	if app, ok := obj.(*v1.AppInstance); ok {
-		return r.getServiceForAcorn(app)
-	}
-
-	return obj, nil
+	return nil
 }
 
-func (r *resolver) getServiceForAcorn(app *v1.AppInstance) (*v1.ServiceInstance, error) {
+func (r *resolver) getServiceForAcorn(out *v1.ServiceInstance, app *v1.AppInstance) error {
 	svcs := &v1.ServiceInstanceList{}
 	if app.Status.Namespace != "" {
 		err := r.req.List(r.ctx, svcs, &kclient.ListOptions{
 			Namespace: app.Status.Namespace,
 		})
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 	for _, svc := range svcs.Items {
 		if svc.Spec.Default {
-			return &svc, nil
+			svc.DeepCopyInto(out)
+			return nil
 		}
 	}
 
-	return nil, apierrors.NewNotFound(schema.GroupResource{
+	return apierrors.NewNotFound(schema.GroupResource{
 		Group:    v1.SchemeGroupVersion.Group,
 		Resource: "ServiceInstance",
 	}, app.Name)
 }
 
-func (r *resolver) getService(namespace, name string) (*v1.ServiceInstance, error) {
-	svc := &v1.ServiceInstance{}
+func (r *resolver) getService(svc *v1.ServiceInstance, namespace, name string) error {
 	if err := r.req.Get(r.ctx, router.Key(namespace, name), svc); err != nil {
-		return nil, err
+		return err
 	}
 
 	if svc.Spec.External == "" {
-		return svc, nil
+		return nil
 	}
 
 	ns := &corev1.Namespace{}
 	err := r.req.Get(r.ctx, router.Key("", svc.Namespace), nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	obj, err := Resolve(r.ctx, r.req, ns.Labels[labels.AcornAppNamespace], svc.Spec.External)
-	if err != nil {
-		return nil, err
-	}
-
-	if svc, ok := obj.(*v1.ServiceInstance); ok {
-		return svc, nil
-	}
-
-	return nil, apierrors.NewNotFound(schema.GroupResource{
-		Group:    v1.SchemeGroupVersion.Group,
-		Resource: "AppInstance",
-	}, name)
+	return Lookup(r.ctx, r.req, svc, ns.Labels[labels.AcornAppNamespace], svc.Spec.External)
 }
 
-func (r *resolver) getSecret(namespace, name string, validSecrets *[]string) (*corev1.Secret, error) {
+func (r *resolver) getSecret(secret *corev1.Secret, namespace, name string, validSecrets *[]string) error {
 	if validSecrets != nil {
 		var found bool
 		for _, secretName := range *validSecrets {
@@ -150,14 +138,13 @@ func (r *resolver) getSecret(namespace, name string, validSecrets *[]string) (*c
 			}
 		}
 		if !found {
-			return nil, apierrors.NewNotFound(schema.GroupResource{
+			return apierrors.NewNotFound(schema.GroupResource{
 				Group:    v1.SchemeGroupVersion.Group,
 				Resource: "Secret",
 			}, name)
 		}
 	}
-	svc := &corev1.Secret{}
-	return svc, r.req.Get(r.ctx, router.Key(namespace, name), svc)
+	return r.req.Get(r.ctx, router.Key(namespace, name), secret)
 }
 
 func (r *resolver) getAcorn(namespace, name string) (*v1.AppInstance, error) {

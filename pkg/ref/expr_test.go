@@ -1,7 +1,9 @@
-package expr
+package ref
 
 import (
 	"context"
+	"testing"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -10,14 +12,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"testing"
 )
 
 func TestResolve(t *testing.T) {
 	type args struct {
 		objects   []kclient.Object
-		expr      string
+		expr      []string
 		namespace string
 	}
 
@@ -135,7 +135,7 @@ func TestResolve(t *testing.T) {
 			name: "direct lookup of app",
 			args: args{
 				objects:   objects,
-				expr:      "app-name",
+				expr:      []string{"app-name"},
 				namespace: "project-name",
 			},
 			want: want{
@@ -148,7 +148,7 @@ func TestResolve(t *testing.T) {
 			name: "lookup of app defined in acorn",
 			args: args{
 				objects:   objects,
-				expr:      "child-app",
+				expr:      []string{"child-app"},
 				namespace: "app-namespace",
 			},
 			want: want{
@@ -161,7 +161,7 @@ func TestResolve(t *testing.T) {
 			name: "lookup of app nested",
 			args: args{
 				objects:   objects,
-				expr:      "child-app.grandchild-app",
+				expr:      []string{"child-app", "grandchild-app"},
 				namespace: "app-namespace",
 			},
 			want: want{
@@ -174,7 +174,7 @@ func TestResolve(t *testing.T) {
 			name: "external lookup of service",
 			args: args{
 				objects:   objects,
-				expr:      "app-name.app-name-default-svc",
+				expr:      []string{"app-name", "app-name-default-svc"},
 				namespace: "project-name",
 			},
 			want: want{
@@ -187,7 +187,20 @@ func TestResolve(t *testing.T) {
 			name: "external lookup of secret",
 			args: args{
 				objects:   objects,
-				expr:      "app-name.app-name-default-svc.secret",
+				expr:      []string{"app-name", "app-name-default-svc", "secret"},
+				namespace: "project-name",
+			},
+			want: want{
+				kind:      "Secret",
+				name:      "secret",
+				namespace: "app-namespace",
+			},
+		},
+		{
+			name: "external lookup of secret with svc.secrets.name syntax",
+			args: args{
+				objects:   objects,
+				expr:      []string{"app-name", "app-name-default-svc", "secrets", "secret"},
 				namespace: "project-name",
 			},
 			want: want{
@@ -204,20 +217,26 @@ func TestResolve(t *testing.T) {
 				Objects:   tt.args.objects,
 				SchemeObj: scheme.Scheme,
 			}
-			got, err := Resolve(context.Background(), req, tt.args.namespace, tt.args.expr)
+			var out kclient.Object
+			switch tt.want.kind {
+			case "ServiceInstance":
+				out = &v1.ServiceInstance{}
+			case "AppInstance":
+				out = &v1.AppInstance{}
+			case "Secret":
+				out = &corev1.Secret{}
+			default:
+				t.Fatal("invalid kind")
+			}
+			err := Lookup(context.Background(), req, out, tt.args.namespace, tt.args.expr...)
 			if tt.want.err == nil {
 				assert.NoError(t, err)
 			} else {
 				tt.want.err(t, err)
 			}
 			if err == nil {
-				gvk, err := apiutil.GVKForObject(got, scheme.Scheme)
-				if err != nil {
-					t.Fatal(err)
-				}
-				assert.Equal(t, tt.want.kind, gvk.Kind)
-				assert.Equal(t, tt.want.name, got.GetName())
-				assert.Equal(t, tt.want.namespace, got.GetNamespace())
+				assert.Equal(t, tt.want.name, out.GetName())
+				assert.Equal(t, tt.want.namespace, out.GetNamespace())
 			}
 		})
 	}
