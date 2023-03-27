@@ -2,10 +2,10 @@ package imagesystem
 
 import (
 	"fmt"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"path/filepath"
 
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/tolerations"
 	appsv1 "k8s.io/api/apps/v1"

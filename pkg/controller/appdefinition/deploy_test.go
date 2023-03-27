@@ -2,13 +2,13 @@ package appdefinition
 
 import (
 	"encoding/base64"
-	"github.com/acorn-io/acorn/pkg/digest"
-	"github.com/acorn-io/acorn/pkg/secrets"
 	"testing"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
+	"github.com/acorn-io/acorn/pkg/digest"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/google/go-containerregistry/pkg/name"

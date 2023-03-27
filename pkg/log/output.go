@@ -2,12 +2,13 @@ package log
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
-	"strings"
-	"time"
 )
 
 var (
