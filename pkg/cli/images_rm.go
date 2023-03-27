@@ -5,6 +5,7 @@ import (
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +32,12 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, image := range args {
-		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
+		// normalize image name (adding :latest if no tag is specified)
+		ref, err := name.ParseReference(image, name.WithDefaultRegistry(""))
+		if err != nil {
+			return err
+		}
+		deleted, err := c.ImageDelete(cmd.Context(), ref.Name(), &client.ImageDeleteOptions{Force: a.Force})
 
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", image, err)
