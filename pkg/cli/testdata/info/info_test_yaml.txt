@@ -17,7 +17,6 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      networkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -27,6 +26,7 @@ projects:
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
+      networkPolicies: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -49,7 +49,6 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      networkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -59,6 +58,7 @@ projects:
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
+      networkPolicies: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
