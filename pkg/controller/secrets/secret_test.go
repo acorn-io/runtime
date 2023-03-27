@@ -1,6 +1,8 @@
 package secrets
 
 import (
+	"regexp"
+	"strings"
 	"testing"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -10,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"regexp"
-	"strings"
 )
 
 func TestSecretImageReference(t *testing.T) {

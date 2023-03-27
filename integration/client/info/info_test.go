@@ -1,6 +1,9 @@
 package info_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/acorn-io/acorn/integration/helper"
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
@@ -8,8 +11,6 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/project"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestDefaultClientInfoOneNamespace(t *testing.T) {

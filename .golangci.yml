@@ -19,4 +19,6 @@ linters:
   - typecheck
   - thelper
   - unused
+  - goimports
   fast: false
+  max-same-issues: 50

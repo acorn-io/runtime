@@ -2,15 +2,16 @@ package log
 
 import (
 	"context"
+	"sort"
+	"strings"
+	"testing"
+
 	"github.com/acorn-io/acorn/integration/helper"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"sort"
-	"strings"
-	"testing"
 )
 
 const sampleLog = `line 1-1

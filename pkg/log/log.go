@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
-	"k8s.io/utils/strings/slices"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +17,7 @@ import (
 	applabels "github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,6 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	v12 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

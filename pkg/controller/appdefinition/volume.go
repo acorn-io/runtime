@@ -2,13 +2,13 @@ package appdefinition
 
 import (
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/secrets"
 	"sort"
 	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
