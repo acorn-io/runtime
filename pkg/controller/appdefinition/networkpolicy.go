@@ -20,7 +20,7 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
-	} else if *cfg.DisableNetworkPolicies {
+	} else if !*cfg.NetworkPolicies {
 		return nil
 	}
 
@@ -72,7 +72,7 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
-	} else if *cfg.DisableNetworkPolicies {
+	} else if !*cfg.NetworkPolicies {
 		return nil
 	}
 
@@ -172,7 +172,7 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
-	} else if *cfg.DisableNetworkPolicies {
+	} else if !*cfg.NetworkPolicies {
 		return nil
 	}
 

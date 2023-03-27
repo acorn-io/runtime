@@ -16,7 +16,7 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      disableNetworkPolicies: null
+      networkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -27,7 +27,6 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -50,7 +49,7 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      disableNetworkPolicies: null
+      networkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -61,7 +60,6 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -82,7 +80,7 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      disableNetworkPolicies: null
+      networkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -93,7 +91,6 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -116,7 +113,7 @@ projects:
       autoUpgradeInterval: null
       builderPerProject: null
       clusterDomains: null
-      disableNetworkPolicies: null
+      networkPolicies: null
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
@@ -127,7 +124,6 @@ projects:
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
-      podCIDRs: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null

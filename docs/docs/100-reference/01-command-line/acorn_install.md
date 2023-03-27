@@ -29,7 +29,6 @@ acorn install
       --builder-per-project                    Create a dedicated builder per project
       --cluster-domain strings                 The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int                acorn-controller deployment replica count
-      --disable-network-policies               Disable the creation Kubernetes NetworkPolicies which block cross-project network traffic (default false)
   -h, --help                                   help for install
       --http-endpoint-pattern string           Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations     Don't propagate user-defined labels and annotations to dependent objects
@@ -42,6 +41,7 @@ acorn install
       --lets-encrypt-email string              Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')
       --lets-encrypt-tos-agree                 Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)
       --manage-volume-classes                  Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes
+      --network-policies                       Create Kubernetes NetworkPolicies which block cross-project network traffic (default true)
   -o, --output string                          Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string    The name of the PodSecurity profile to set (default baseline)
       --propagate-project-annotation strings   The list of keys of annotations to propagate from acorn project to app namespaces

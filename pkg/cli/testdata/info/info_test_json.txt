@@ -42,9 +42,8 @@
                 "propagateProjectAnnotations": null,
                 "propagateProjectLabels": null,
                 "manageVolumeClasses": null,
-                "disableNetworkPolicies": null,
+                "networkPolicies": null,
                 "ingressControllerNamespace": null,
-                "podCIDRs": null,
                 "allowTrafficFromNamespace": null
             },
             "userConfig": {
@@ -73,9 +72,8 @@
                 "propagateProjectAnnotations": null,
                 "propagateProjectLabels": null,
                 "manageVolumeClasses": null,
-                "disableNetworkPolicies": null,
+                "networkPolicies": null,
                 "ingressControllerNamespace": null,
-                "podCIDRs": null,
                 "allowTrafficFromNamespace": null
             }
         }

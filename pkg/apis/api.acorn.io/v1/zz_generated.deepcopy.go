@@ -406,8 +406,8 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.DisableNetworkPolicies != nil {
-		in, out := &in.DisableNetworkPolicies, &out.DisableNetworkPolicies
+	if in.NetworkPolicies != nil {
+		in, out := &in.NetworkPolicies, &out.NetworkPolicies
 		*out = new(bool)
 		**out = **in
 	}

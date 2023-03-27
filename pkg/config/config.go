@@ -92,8 +92,8 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.UseCustomCABundle == nil {
 		c.UseCustomCABundle = new(bool)
 	}
-	if c.DisableNetworkPolicies == nil {
-		c.DisableNetworkPolicies = new(bool)
+	if c.NetworkPolicies == nil {
+		c.NetworkPolicies = &[]bool{true}[0]
 	}
 	if c.IngressControllerNamespace == nil {
 		c.IngressControllerNamespace = new(string)
@@ -316,8 +316,8 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.PropagateProjectLabels = newConfig.PropagateProjectLabels
 	}
 
-	if newConfig.DisableNetworkPolicies != nil {
-		mergedConfig.DisableNetworkPolicies = newConfig.DisableNetworkPolicies
+	if newConfig.NetworkPolicies != nil {
+		mergedConfig.NetworkPolicies = newConfig.NetworkPolicies
 	}
 
 	if newConfig.IngressControllerNamespace != nil {
