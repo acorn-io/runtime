@@ -1,16 +1,16 @@
 containers: {
 	one: {
-		image: "public.ecr.aws/docker/library/nginx:latest"
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
 		ports: "80/http"
 		dependsOn: ["job1", "job2"]
 	}
 	two: {
-		image: "public.ecr.aws/docker/library/nginx:latest"
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
 		ports: "80/http"
 		dependsOn: "one"
 	}
 	three: {
-		image: "public.ecr.aws/docker/library/nginx:latest"
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
 		ports: "80/http"
 		dependsOn: "two"
 	}
@@ -18,12 +18,12 @@ containers: {
 
 jobs: {
 	job1: {
-		image:"public.ecr.aws/docker/library/busybox:latest"
+		image:"ghcr.io/acorn-io/images-mirror/busybox:latest"
 		command: "/bin/true"
 		dependsOn: "job2"
 	}
 	job2: {
-		image:"public.ecr.aws/docker/library/busybox:latest"
+		image:"ghcr.io/acorn-io/images-mirror/busybox:latest"
 		command: "/bin/true"
 	}
 }

@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/busybox:latest AS not-default
+FROM ghcr.io/acorn-io/images-mirror/busybox:latest AS not-default
 
-FROM public.ecr.aws/docker/library/busybox:latest
+FROM ghcr.io/acorn-io/images-mirror/busybox:latest
 COPY this-will-fail /

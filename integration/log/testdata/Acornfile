@@ -1,23 +1,23 @@
 containers: {
 	"cont1-1": {
-		image: "public.ecr.aws/docker/library/busybox:latest"
+		image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 		command: [
 			"sh", "-c", "echo -e \"line 1-1\nline 1-2\"; sleep 9999"
 		]
 		sidecars: "cont2-1": {
-			image: "public.ecr.aws/docker/library/busybox:latest"
+			image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 			command: [
 				"sh", "-c", "echo -e \"line 1-3\nline 1-4\"; sleep 9999"
 			]
 		}
 	}
 	"cont1-2": {
-		image: "public.ecr.aws/docker/library/busybox:latest"
+		image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 		command: [
 			"sh", "-c", "echo -e \"line 2-1\nline 2-2\"; sleep 9999"
 		]
 		sidecars: "cont2-2": {
-			image: "public.ecr.aws/docker/library/busybox:latest"
+			image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 			command: [
 			  "sh", "-c", "echo -e \"line 2-3\nline 2-4\"; sleep 9999"
 			]

@@ -1,7 +1,7 @@
 // This file must match its sibling except for the value of index.txt
 containers: {
 	web: {
-		image: "public.ecr.aws/docker/library/busybox:latest"
+		image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 		files: {
 			"/foo/index.txt": "2"
 		}

@@ -788,7 +788,7 @@ func TestImageNameAnnotation(t *testing.T) {
 		}
 
 		_, digest, _ := strings.Cut(pod.Spec.Containers[0].Image, "sha256:")
-		return mapping["sha256:"+digest] == "public.ecr.aws/docker/library/nginx:latest"
+		return mapping["sha256:"+digest] == "ghcr.io/acorn-io/images-mirror/nginx:latest"
 	})
 }
 

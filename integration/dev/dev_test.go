@@ -20,10 +20,10 @@ const (
 containers: default: build: {}
 `
 	dockerfile1 = `
-FROM public.ecr.aws/docker/library/busybox:latest
+FROM ghcr.io/acorn-io/images-mirror/busybox:latest
 CMD ["echo", "hi"]`
 	dockerfile2 = `
-FROM public.ecr.aws/docker/library/busybox:latest
+FROM ghcr.io/acorn-io/images-mirror/busybox:latest
 CMD ["echo", "bye"]`
 )
 

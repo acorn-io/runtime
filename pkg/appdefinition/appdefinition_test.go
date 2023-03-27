@@ -146,7 +146,7 @@ containers: {
         build: {}
       }
       right: {
-        image: "public.ecr.aws/docker/library/nginx:latest"
+        image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
         dirs: "/var/tmp": "./foo/bar"
       }
     }
@@ -223,9 +223,9 @@ acorns: {
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["left"].Build.Dockerfile)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["left"].Build.Context)
 
-	assert.Equal(t, "public.ecr.aws/docker/library/nginx:latest", buildSpec.Containers["file"].Sidecars["right"].Image)
+	assert.Equal(t, "ghcr.io/acorn-io/images-mirror/nginx:latest", buildSpec.Containers["file"].Sidecars["right"].Image)
 	assert.Equal(t, "Dockerfile", buildSpec.Containers["file"].Sidecars["right"].Build.Dockerfile)
-	assert.Equal(t, "public.ecr.aws/docker/library/nginx:latest", buildSpec.Containers["file"].Sidecars["right"].Build.BaseImage)
+	assert.Equal(t, "ghcr.io/acorn-io/images-mirror/nginx:latest", buildSpec.Containers["file"].Sidecars["right"].Build.BaseImage)
 	assert.Equal(t, ".", buildSpec.Containers["file"].Sidecars["right"].Build.Context)
 	assert.Equal(t, "./foo/bar", buildSpec.Containers["file"].Sidecars["right"].Build.ContextDirs["/var/tmp"])
 

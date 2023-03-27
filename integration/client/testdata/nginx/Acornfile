@@ -1,2 +1,2 @@
-containers: default: image: "public.ecr.aws/docker/library/nginx:latest"
+containers: default: image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
 containers: default: dirs: "/usr/share/www": "vol"
