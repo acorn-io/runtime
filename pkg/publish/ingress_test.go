@@ -286,7 +286,7 @@ func Test_setupCertManager(t *testing.T) {
 			want: []networkingv1.IngressTLS{{Hosts: []string{"host"}}},
 		},
 		{
-			name: "annotation but tls found",
+			name: "annotation and tls found, prefer annotation",
 			args: args{
 				serviceName: "foo",
 				annotations: map[string]string{
@@ -295,7 +295,7 @@ func Test_setupCertManager(t *testing.T) {
 				rules: []networkingv1.IngressRule{{Host: "host1"}},
 				tls:   []networkingv1.IngressTLS{{Hosts: []string{"host"}}},
 			},
-			want: []networkingv1.IngressTLS{{Hosts: []string{"host"}}},
+			want: []networkingv1.IngressTLS{{Hosts: []string{"host1"}, SecretName: "foo-cm-cert-1"}},
 		},
 		{
 			name: "cluster-issuer annotation found",
