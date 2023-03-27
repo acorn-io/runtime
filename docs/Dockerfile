@@ -1,4 +1,4 @@
-FROM ghcr.io/yashgiri/acorn-images-mirror/node:19-buster as src
+FROM ghcr.io/acorn-io/images-mirror/node:19-buster as src
 COPY / /usr/src
 WORKDIR /usr/src
 RUN yarn install
