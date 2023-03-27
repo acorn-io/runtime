@@ -1245,11 +1245,13 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 			expectFailure: false,
 		},
 		{
-			name:          "curl-bar-proj1",
-			client:        proj1Client,
-			podIP:         barIP,
-			imageID:       curlImage1.ID,
-			expectFailure: false,
+			name:    "curl-bar-proj1",
+			client:  proj1Client,
+			podIP:   barIP,
+			imageID: curlImage1.ID,
+			// even though bar has port 80 published, it should not be reachable from anything outside
+			// proj2 except for the ingress controller, so failure is expected here
+			expectFailure: true,
 		},
 		{
 			name:          "curl-foo-proj2",
