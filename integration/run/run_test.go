@@ -1151,7 +1151,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	kc := helper.MustReturn(kclient.Default)
 
 	// create two separate projects in which to run two Nginx apps
-	proj1, err := c.ProjectCreate(ctx, "proj1")
+	proj1, err := c.ProjectCreate(ctx, "proj1", "local")
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
@@ -1160,7 +1160,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 		t.Fatal("error creating client for proj1:", err)
 	}
 
-	proj2, err := c.ProjectCreate(ctx, "proj2")
+	proj2, err := c.ProjectCreate(ctx, "proj2", "local")
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
