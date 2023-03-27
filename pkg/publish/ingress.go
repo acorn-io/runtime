@@ -243,9 +243,8 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 }
 
 func setupCertManager(serviceName string, annotations map[string]string, rules []networkingv1.IngressRule, tls []networkingv1.IngressTLS) []networkingv1.IngressTLS {
-	if (annotations["cert-manager.io/cluster-issuer"] == "" && annotations["cert-manager.io/issuer"] == "") ||
-		len(tls) != 0 {
-		// cert-manager is not being used, or we have TLS for this
+	if annotations["cert-manager.io/cluster-issuer"] == "" && annotations["cert-manager.io/issuer"] == "" {
+		// cert-manager override is not being used
 		return tls
 	}
 
