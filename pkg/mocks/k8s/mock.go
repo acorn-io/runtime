@@ -6,36 +6,37 @@ package mocks
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	types "k8s.io/apimachinery/pkg/types"
-	reflect "reflect"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// MockReader is a mock of Reader interface
+// MockReader is a mock of Reader interface.
 type MockReader struct {
 	ctrl     *gomock.Controller
 	recorder *MockReaderMockRecorder
 }
 
-// MockReaderMockRecorder is the mock recorder for MockReader
+// MockReaderMockRecorder is the mock recorder for MockReader.
 type MockReaderMockRecorder struct {
 	mock *MockReader
 }
 
-// NewMockReader creates a new mock instance
+// NewMockReader creates a new mock instance.
 func NewMockReader(ctrl *gomock.Controller) *MockReader {
 	mock := &MockReader{ctrl: ctrl}
 	mock.recorder = &MockReaderMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockReader) EXPECT() *MockReaderMockRecorder {
 	return m.recorder
 }
 
-// Get mocks base method
+// Get mocks base method.
 func (m *MockReader) Get(arg0 context.Context, arg1 types.NamespacedName, arg2 client.Object) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2)
@@ -43,13 +44,13 @@ func (m *MockReader) Get(arg0 context.Context, arg1 types.NamespacedName, arg2 c
 	return ret0
 }
 
-// Get indicates an expected call of Get
+// Get indicates an expected call of Get.
 func (mr *MockReaderMockRecorder) Get(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockReader)(nil).Get), arg0, arg1, arg2)
 }
 
-// List mocks base method
+// List mocks base method.
 func (m *MockReader) List(arg0 context.Context, arg1 client.ObjectList, arg2 ...client.ListOption) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -61,7 +62,7 @@ func (m *MockReader) List(arg0 context.Context, arg1 client.ObjectList, arg2 ...
 	return ret0
 }
 
-// List indicates an expected call of List
+// List indicates an expected call of List.
 func (mr *MockReaderMockRecorder) List(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
