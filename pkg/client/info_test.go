@@ -4,6 +4,8 @@ package client_test
 
 import (
 	"context"
+	"testing"
+
 	v12 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -16,7 +18,6 @@ import (
 
 	// may want to use envtest instead
 	testcontrollerclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 func createMockedDefaultClient(t *testing.T, projectName string, namespace string) (client.DefaultClient, v12.InfoList, error) {
@@ -102,12 +103,9 @@ func TestMultiClientInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mFactory := mocks.NewMockProjectClientFactory(ctrl)
 	mFactory.EXPECT().List(gomock.Any()).Return([]client.Client{&defaultClient1, &defaultClient2}, nil)
-	mFactory.EXPECT().DefaultProject().Return("test1")
 	projectMap := make(map[string]*client.DefaultClient)
 	projectMap["test1"] = &defaultClient1
 	projectMap["test2"] = &defaultClient2
-
-	mFactory.EXPECT().ForProject(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, projectName string) client.Client { return projectMap[projectName] })
 
 	mMultiClient := client.NewMultiClient("test1", "test1", mFactory)
 	infoResp, err := mMultiClient.Info(ctx)
@@ -133,12 +131,9 @@ func TestMultiClientFQDNClobberingInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mFactory := mocks.NewMockProjectClientFactory(ctrl)
 	mFactory.EXPECT().List(gomock.Any()).Return([]client.Client{&defaultClient1, &defaultClient2}, nil)
-	mFactory.EXPECT().DefaultProject().Return("test1")
 	projectMap := make(map[string]*client.DefaultClient)
 	projectMap["test1"] = &defaultClient1
 	projectMap["acorn.io/jacob/test1"] = &defaultClient2
-
-	mFactory.EXPECT().ForProject(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, projectName string) client.Client { return projectMap[projectName] })
 
 	mMultiClient := client.NewMultiClient("test1", "test1", mFactory)
 	infoResp, err := mMultiClient.Info(ctx)

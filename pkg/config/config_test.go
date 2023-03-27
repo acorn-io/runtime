@@ -74,10 +74,6 @@ func TestAcornDNSStates(t *testing.T) {
 				ClusterDomains: []string{".custom.com"},
 			},
 			expectedClusterDomains: []string{".custom.com"},
-			prepare: func(f *mocks.MockReader) {
-				f.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				f.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil)
-			},
 		},
 	}
 
