@@ -225,9 +225,6 @@ type Client interface {
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
 
-	ImageAllowRulesGet(ctx context.Context, name string) (*apiv1.ImageAllowRules, error)
-	ImageAllowRulesList(ctx context.Context) ([]apiv1.ImageAllowRules, error)
-
 	AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
 	AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error)
 	AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)

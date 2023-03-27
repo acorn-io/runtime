@@ -276,20 +276,6 @@ func (d *DeferredClient) ImageDetails(ctx context.Context, imageName string, opt
 	return d.Client.ImageDetails(ctx, imageName, opts)
 }
 
-func (d *DeferredClient) ImageAllowRulesList(ctx context.Context) ([]apiv1.ImageAllowRules, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.ImageAllowRulesList(ctx)
-}
-
-func (d *DeferredClient) ImageAllowRulesGet(ctx context.Context, name string) (*apiv1.ImageAllowRules, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.ImageAllowRulesGet(ctx, name)
-}
-
 func (d *DeferredClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	if err := d.create(); err != nil {
 		return nil, err

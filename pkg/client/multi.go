@@ -379,22 +379,6 @@ func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *
 	return c.ImageDetails(ctx, imageName, opts)
 }
 
-func (m *MultiClient) ImageAllowRulesList(ctx context.Context) ([]apiv1.ImageAllowRules, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
-	if err != nil {
-		return nil, err
-	}
-	return c.ImageAllowRulesList(ctx)
-}
-
-func (m *MultiClient) ImageAllowRulesGet(ctx context.Context, name string) (*apiv1.ImageAllowRules, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
-	if err != nil {
-		return nil, err
-	}
-	return c.ImageAllowRulesGet(ctx, name)
-}
-
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
