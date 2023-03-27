@@ -15,6 +15,7 @@ import (
 )
 
 type Translator struct {
+	defaultRegion string
 }
 
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
@@ -41,8 +42,17 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 			continue
 		}
 
+		var supportedRegions []string
+		if len(ns.Annotations[labels.AcornProjectSupportedRegions]) > 0 {
+			supportedRegions = strings.Split(ns.Annotations[labels.AcornProjectSupportedRegions], ",")
+		}
+
 		defaultRegion := ns.Annotations[labels.AcornProjectDefaultRegion]
-		supportedRegions := strings.Split(ns.Annotations[labels.AcornProjectSupportedRegions], ",")
+
+		calculatedDefaultRegion := ns.Annotations[labels.AcornCalculatedProjectDefaultRegion]
+		if defaultRegion == "" && calculatedDefaultRegion == "" {
+			calculatedDefaultRegion = t.defaultRegion
+		}
 
 		delete(ns.Labels, labels.AcornProject)
 		delete(ns.Annotations, labels.AcornProjectDefaultRegion)
@@ -55,7 +65,8 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 				SupportedRegions: supportedRegions,
 			},
 			Status: apiv1.ProjectStatus{
-				Namespace: ns.Name,
+				Namespace:     ns.Name,
+				DefaultRegion: calculatedDefaultRegion,
 			},
 		})
 	}
