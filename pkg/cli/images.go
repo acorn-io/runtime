@@ -58,19 +58,14 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		// tag or digest was provided
-		if ref.Identifier() != "" {
+		// tag, digest or ID was provided
+		if ref.Identifier() != "" || !strings.Contains(ref.Name(), "/") {
 			image, err = c.ImageGet(cmd.Context(), args[0])
 			if err != nil {
 				return err
 			}
 			if !strings.Contains(image.Digest, args[0]) {
-				//normalize through ParseReference inorder to add :latest tag to input if necessary
-				imageParsedReference, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
-				if err != nil {
-					return err
-				}
-				tagToMatch = imageParsedReference.Name()
+				tagToMatch = ref.Name()
 			}
 			images = []apiv1.Image{*image}
 		} else {
