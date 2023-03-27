@@ -416,11 +416,6 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.PodCIDRs != nil {
-		in, out := &in.PodCIDRs, &out.PodCIDRs
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.AllowTrafficFromNamespace != nil {
 		in, out := &in.AllowTrafficFromNamespace, &out.AllowTrafficFromNamespace
 		*out = make([]string, len(*in))

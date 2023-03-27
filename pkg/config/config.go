@@ -324,10 +324,6 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
 	}
 
-	if newConfig.PodCIDRs != nil {
-		mergedConfig.PodCIDRs = newConfig.PodCIDRs
-	}
-
 	if newConfig.AllowTrafficFromNamespace != nil {
 		mergedConfig.AllowTrafficFromNamespace = newConfig.AllowTrafficFromNamespace
 	}

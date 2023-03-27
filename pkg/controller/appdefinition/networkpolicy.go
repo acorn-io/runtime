@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 	"time"
 )
 
@@ -166,8 +167,7 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 }
 
 // NetworkPolicyForService creates a Kubernetes NetworkPolicy to allow traffic to published TCP/UDP ports
-// on Acorn apps that are exposed with LoadBalancer Services. Traffic will be allowed from all IP addresses,
-// but can be restricted by providing the pod IP address range (--pod-cidr) during Acorn installation.
+// on Acorn apps that are exposed with LoadBalancer Services.
 func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
@@ -191,9 +191,16 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	ipBlock := networkingv1.IPBlock{
 		CIDR: "0.0.0.0/0",
 	}
-	for _, cidr := range cfg.PodCIDRs {
-		if cidr != "" {
-			ipBlock.Except = append(ipBlock.Except, cidr)
+	// get pod CIDRs from the nodes so that we can only allow traffic from IP addresses outside the cluster
+	nodes := corev1.NodeList{}
+	if err = req.Client.List(req.Ctx, &nodes); err != nil {
+		return fmt.Errorf("failed to list nodes: %w", err)
+	}
+	for _, node := range nodes.Items {
+		for _, cidr := range node.Spec.PodCIDRs {
+			if !slices.Contains(ipBlock.Except, cidr) {
+				ipBlock.Except = append(ipBlock.Except, cidr)
+			}
 		}
 	}
 
