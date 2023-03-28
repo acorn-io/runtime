@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/cosign"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/rancher/wrangler/pkg/merr"
 	ocosign "github.com/sigstore/cosign/pkg/cosign"
 	ociremote "github.com/sigstore/cosign/pkg/oci/remote"
 	"github.com/sirupsen/logrus"
@@ -79,6 +80,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 			// allOf: all signatures must pass verification
 			if rule.SignedBy.AllOf != nil {
 				for allOfRuleIndex, signer := range rule.SignedBy.AllOf {
+					logrus.Debugf("Checking image %s against %s/%s.signatures.allOf.%d", image, ImageAllowRules.Namespace, ImageAllowRules.Name, allOfRuleIndex)
 					verifyOpts.Key = signer
 					err := cosign.VerifySignature(ctx, c, verifyOpts)
 					if err != nil {
@@ -87,16 +89,16 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 							logrus.Warnf(notAllowedErr.Error())
 							return notAllowedErr
 						}
-						return fmt.Errorf("failed to verify signature: %w", err)
+						return fmt.Errorf("error verifying image %s against %s/%s.signatures.allOf.%d: %w", image, ImageAllowRules.Namespace, ImageAllowRules.Name, allOfRuleIndex, err)
 					}
 				}
 			}
-
+			var anyOfErrs []error
 			// anyOf: only one signature must pass verification
 			if rule.SignedBy.AnyOf != nil {
 				anyOfOK := false
 				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
-					logrus.Debugf("Checking image %s against anyOf rule #%d in %s/%s", image, anyOfRuleIndex, ImageAllowRules.Namespace, ImageAllowRules.Name)
+					logrus.Debugf("Checking image %s against %s/%s.signatures.anyOf.%d", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex)
 					verifyOpts.Key = signer
 					err := cosign.VerifySignature(ctx, c, verifyOpts)
 					if err == nil {
@@ -104,15 +106,23 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 						break
 					} else {
 						if _, ok := err.(*ocosign.VerificationError); ok {
-							logrus.Debugf("image %s not allowed as per anyOf rule %s/%s #%d: %v", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex, err)
+							logrus.Debugf("image %s not allowed as per %s/%s.signatures.anyOf.%d: %v", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex, err)
 						} else {
-							logrus.Errorf("failed to verify %s/%s.anyOf.%d: %v", ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex, err)
+							e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.%d: %w", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex, err)
+							anyOfErrs = append(anyOfErrs, e)
+							logrus.Errorln(e.Error())
 						}
 					}
 				}
 				if !anyOfOK {
-					logrus.Warnf("image %s is not allowed as per anyOf rule in %s/%s", image, ImageAllowRules.Namespace, ImageAllowRules.Name)
 					notAllowedErr.SubrulePath += ".anyOf"
+					if len(anyOfErrs) == len(rule.SignedBy.AnyOf) {
+						// we had errors for all anyOf rules (not failed verification, but actual errors)
+						e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.*: %w", image, ImageAllowRules.Namespace, ImageAllowRules.Name, merr.NewErrors(anyOfErrs...))
+						logrus.Errorln(e.Error())
+						return e
+					}
+					logrus.Warnf("image %s is not allowed as per %s/%s.signatures.anyOf", image, ImageAllowRules.Namespace, ImageAllowRules.Name)
 					return notAllowedErr
 				}
 			}
