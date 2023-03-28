@@ -3,7 +3,6 @@ package appdefinition
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -13,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
 )
@@ -98,9 +98,12 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 		svc := corev1.Service{}
 		err = req.Get(&svc, ingress.Namespace, svcName)
 		if err != nil {
-			// service doesn't exist yet, so retry in 3 seconds
-			resp.RetryAfter(3 * time.Second)
-			return nil
+			if apierror.IsNotFound(err) {
+				// service doesn't exist yet, so return nil
+				// this handler will get re-called later
+				return nil
+			}
+			return err
 		}
 
 		netPolName := name.SafeConcatName(projectName, appName, ingress.Name, svcName)
