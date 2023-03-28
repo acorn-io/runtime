@@ -2,11 +2,13 @@ package appdefinition
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -101,7 +103,7 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 			return nil
 		}
 
-		netPolName := fmt.Sprintf("%s-%s-%s-%s", projectName, appName, ingress.Name, svcName)
+		netPolName := name.SafeConcatName(projectName, appName, ingress.Name, svcName)
 
 		// build the namespaceSelector for the NetPol
 		var namespaceSelector metav1.LabelSelector
@@ -124,7 +126,7 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 						Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
 						Port:     &targetPort,
 					})
-					netPolName += fmt.Sprintf("-%d", targetPort.IntVal)
+					netPolName = name.SafeConcatName(netPolName, strconv.Itoa(int(targetPort.IntVal)))
 				}
 			}
 		}
@@ -219,7 +221,7 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	// build the NetPol
 	resp.Objects(&networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s-%s-%s", projectName, appName, service.Name, containerName),
+			Name:      name.SafeConcatName(projectName, appName, service.Name, containerName),
 			Namespace: service.Namespace,
 		},
 		Spec: networkingv1.NetworkPolicySpec{
