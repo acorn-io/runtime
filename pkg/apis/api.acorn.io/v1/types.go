@@ -348,7 +348,7 @@ type Config struct {
 	ManageVolumeClasses            *bool    `json:"manageVolumeClasses" name:"manage-volume-classes" usage:"Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes"`
 	NetworkPolicies                *bool    `json:"networkPolicies" name:"network-policies" usage:"Create Kubernetes NetworkPolicies which block cross-project network traffic (default true)"`
 	IngressControllerNamespace     *string  `json:"ingressControllerNamespace" name:"ingress-controller-namespace" usage:"The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies."`
-	AllowTrafficFromNamespace      []string `json:"allowTrafficFromNamespace" name:"allow-traffic-from-namespace" usage:"Namespaces that can bypass NetworkPolicies and send network traffic to all Acorn apps"`
+	AllowTrafficFromNamespace      []string `json:"allowTrafficFromNamespace" name:"allow-traffic-from-namespace" usage:"Namespaces that are allowed to send network traffic to all Acorn apps"`
 }
 
 type EncryptionKey struct {

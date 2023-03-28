@@ -2,6 +2,8 @@ package appdefinition
 
 import (
 	"fmt"
+	"time"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -11,7 +13,6 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
-	"time"
 )
 
 // NetworkPolicyForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic

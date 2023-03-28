@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/acorn-io/baaah/pkg/restconfig"
 	"strings"
 	"testing"
+
+	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 
 	"github.com/acorn-io/acorn/integration/helper"
 	adminapiv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"

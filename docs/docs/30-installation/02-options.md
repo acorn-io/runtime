@@ -97,7 +97,7 @@ If an admin would rather manually manage the volume classes and not have these g
 ## Kubernetes NetworkPolicies
 By default, Acorn will automatically create and manage Kubernetes [NetworkPolicies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to isolate Acorn projects on the network level. This behavior can be disabled by passing `--network-policies=false` to `acorn install`, and can later be re-enabled by passing `--network-policies=true`.
 
-Containers and jobs that publish HTTP ports will be able to receive traffic from anywhere (inside and outside the cluster) to that port. To lock this down better (and allow traffic coming from the outside, but not other Acorn projects on the inside of the cluster), specify the `--ingress-controller-namespace` parameter during installation.
+By default, Acorn workloads that publish ports that use HTTP will be allowed to receive traffic from internal (other pods in the cluster) and external (through the cluster's ingress) sources. To secure this further, you can require all traffic to Acorn workloads flow through your ingress by specifying the `--ingress-controller-namespace` parameter during installation.
 
 To allow traffic from a specific namespace to all Acorn apps in the cluster, use `--allow-traffic-from-namespace=<namespace>`. This is useful if there is a monitoring namespace, for example, that needs to be able to connect to all the pods created by Acorn in order to scrape metrics.
 
