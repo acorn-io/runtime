@@ -1,10 +1,9 @@
 package secrets
 
 import (
-	"testing"
-
 	"regexp"
 	"strings"
+	"testing"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"

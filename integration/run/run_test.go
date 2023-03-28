@@ -7,9 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/acorn-io/baaah/pkg/restconfig"
-
 	"github.com/acorn-io/acorn/integration/helper"
 	adminapiv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -20,7 +17,9 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/run"
+	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/tolerations"
+	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
