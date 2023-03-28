@@ -1,8 +1,6 @@
 package secrets
 
 import (
-	"regexp"
-	"strings"
 	"testing"
 
 	"regexp"
