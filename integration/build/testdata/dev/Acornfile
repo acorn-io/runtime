@@ -1,5 +1,5 @@
 containers: {
 	if args.dev {
-		default: image: "public.ecr.aws/docker/library/busybox:latest"
+		default: image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 	}
 }

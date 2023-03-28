@@ -1,1 +1,1 @@
-FROM public.ecr.aws/docker/library/busybox:latest
+FROM ghcr.io/acorn-io/images-mirror/busybox:latest

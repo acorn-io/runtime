@@ -6,7 +6,7 @@ containers: {
 	    build: images.itwo.build
 	}
 	three: {
-	    image: "public.ecr.aws/docker/library/busybox:latest"
+	    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 	}
 }
 
@@ -21,6 +21,6 @@ images: {
 		}
 	}
 	three: {
-	    image: "public.ecr.aws/docker/library/busybox:latest"
+	    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 	}
 }

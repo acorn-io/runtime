@@ -94,7 +94,7 @@ profiles: {
 
 containers: {
 	web: {
-		image: "public.ecr.aws/docker/library/nginx:latest"
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
 		scale: args.replicas
 	}
 }`)

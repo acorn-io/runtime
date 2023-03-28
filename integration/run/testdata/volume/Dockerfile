@@ -1,1 +1,1 @@
-FROM public.ecr.aws/docker/library/nginx:latest
+FROM ghcr.io/acorn-io/images-mirror/nginx:latest
