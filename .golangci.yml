@@ -20,5 +20,6 @@ linters:
   - thelper
   - unused
   - goimports
+  - whitespace
   fast: false
   max-same-issues: 50

@@ -75,7 +75,6 @@ func PreInstallChecks(ctx context.Context, opts CheckOptions) []CheckResult {
 // PostInstallChecks is a list of all checks that are run after the installation.
 // They are not critical and should not affect the installation process.
 func PostInstallChecks(ctx context.Context, opts CheckOptions) []CheckResult {
-
 	return RunChecks(ctx, opts,
 		CheckDefaultStorageClass,
 		CheckIngressCapability,
@@ -113,7 +112,6 @@ func silenceKlog() {
 }
 
 func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
-
 	result := CheckResult{
 		Name: "Exec",
 	}
@@ -251,7 +249,6 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 	result.Passed = true
 	result.Message = "Successfully executed command in container replica"
 	return result
-
 }
 
 func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult {
@@ -474,7 +471,6 @@ func CheckNodesReady(ctx context.Context, opts CheckOptions) CheckResult {
  * -> This is a critical check that must be passed for Acorn to be installed.
  */
 func CheckRBAC(ctx context.Context, opts CheckOptions) CheckResult {
-
 	result := CheckResult{
 		Name: "RBAC",
 	}

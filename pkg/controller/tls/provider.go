@@ -64,7 +64,6 @@ func NewDNSClient(endpoint, domain, token string) DNSClient {
 }
 
 func (d *DNSClient) SetTXTRecord(domain, text string) error {
-
 	prefix := strings.TrimSuffix(strings.TrimSuffix(domain, "."), d.domain)
 
 	var requests []dns.RecordRequest

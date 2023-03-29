@@ -13,7 +13,6 @@ func ReleaseVolume(req router.Request, resp router.Response) error {
 	if pv.Labels[labels.AcornManaged] == "true" &&
 		pv.Status.Phase == corev1.VolumeReleased &&
 		pv.Spec.ClaimRef != nil {
-
 		app := &v1.AppInstance{}
 		err := req.Get(app, pv.Labels[labels.AcornAppNamespace], pv.Labels[labels.AcornAppName])
 		if apierror.IsNotFound(err) {

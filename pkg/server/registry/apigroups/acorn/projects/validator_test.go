@@ -77,7 +77,6 @@ func TestProjectCreateValidation(t *testing.T) {
 			} else if tt.wantError && err == nil {
 				t.Fatal("expected error for test case")
 			}
-
 		})
 	}
 }

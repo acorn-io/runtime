@@ -142,7 +142,6 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			if err := kclient.Delete(ctx, &tt.volumeClass); err != nil && !apierrors.IsNotFound(err) {
 				t.Fatal(err)
 			}
-
 		})
 	}
 }
@@ -308,7 +307,6 @@ func TestClusterVolumeClassCreateValidation(t *testing.T) {
 			if err := kclient.Delete(ctx, &tt.volumeClass); err != nil && !apierrors.IsNotFound(err) {
 				t.Fatal(err)
 			}
-
 		})
 	}
 }

@@ -288,7 +288,6 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if s.Interactive && isDir {
-
 		return dev.Dev(cmd.Context(), c, s.File, &dev.Options{
 			Args: args,
 			Build: client.AcornImageBuildOptions{

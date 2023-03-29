@@ -183,7 +183,6 @@ func TestEncryptionEndToEnd(t *testing.T) {
 	})
 
 	assert.Equal(t, plainTextData, string(secret.Data["key"]))
-
 }
 
 func TestNamespacedDecryption(t *testing.T) {

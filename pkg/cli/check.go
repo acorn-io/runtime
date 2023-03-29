@@ -32,7 +32,6 @@ type Check struct {
 }
 
 func (a *Check) Run(cmd *cobra.Command, args []string) error {
-
 	checkOpts := install.CheckOptions{RuntimeImage: a.Image, IngressClassName: a.IngressClassName, Namespace: a.TestNamespace}
 	checkresult := install.RunChecks(cmd.Context(), checkOpts,
 		install.CheckRBAC,

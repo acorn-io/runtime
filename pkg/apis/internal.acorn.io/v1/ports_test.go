@@ -30,7 +30,6 @@ func TestParseVolumesWithoutBinding(t *testing.T) {
 		Size:   "11G",
 		Class:  "aclass",
 	}, vs[1])
-
 }
 
 func TestParseVolumes(t *testing.T) {

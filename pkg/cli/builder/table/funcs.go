@@ -149,7 +149,6 @@ func cleanFields(obj any) any {
 		return ro
 	}
 	return obj
-
 }
 
 func FormatYAML(data any) (string, error) {

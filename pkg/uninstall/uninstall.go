@@ -351,5 +351,4 @@ func shouldContinue(toDelete, toKeep []kclient.Object) (bool, error) {
 	}
 	return prompt.Bool("Do you want to delete/keep the above resources? "+
 		"To delete all resources pass run \"acorn uninstall --all\"", false)
-
 }

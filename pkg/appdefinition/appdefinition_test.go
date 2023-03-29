@@ -573,7 +573,6 @@ containers: {
 			},
 		},
 	}, appSpec.Containers["a"].Environment)
-
 }
 
 func TestWorkdir(t *testing.T) {
@@ -1375,7 +1374,6 @@ secrets: {
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
 	}, appSpec.Secrets["opt"])
-
 }
 
 func TestImageDataOverride(t *testing.T) {

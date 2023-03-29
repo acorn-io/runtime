@@ -461,7 +461,6 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	}
 	secrets[secretName] = secret
 	return secret, nil
-
 }
 
 func generate(characters string, tokenLength int) (string, error) {
