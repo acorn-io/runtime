@@ -170,8 +170,8 @@ github.com/acorn-io/etcd/server/v3 v3.6.0-ot-1 h1:oumHTN5G2L/DjJaB7liN5I2hB3MRm5
 github.com/acorn-io/etcd/server/v3 v3.6.0-ot-1/go.mod h1:khTpELqJBbFyzmrQi3xz/m9COJFJM2uBO/y8HP2iRFc=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf h1:y2vkS4R2O+iRDUP8QLvS10i7RoVaMP4spSPGdM93jXo=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
-github.com/acorn-io/mink v0.0.0-20230324184309-04bf81884e15 h1:b5AKbjnT9P1210EGeuFh2sy5uL8/GYJyoGtNxSw2ICo=
-github.com/acorn-io/mink v0.0.0-20230324184309-04bf81884e15/go.mod h1:vhGespZm+y5YRTQ9L/zDFrOuzIbouVbA8sbykaPbzhE=
+github.com/acorn-io/mink v0.0.0-20230328215511-344a41486fb9 h1:4kte1CLcrJIbXwRg/RWVAZPNUn/vwS8KuVtsZ7S1nOA=
+github.com/acorn-io/mink v0.0.0-20230328215511-344a41486fb9/go.mod h1:vhGespZm+y5YRTQ9L/zDFrOuzIbouVbA8sbykaPbzhE=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
 github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
