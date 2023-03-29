@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+data:
+  config: '{"ingressControllerNamespace":"traefik"}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-7777
+  namespace: my-app-namespace
+  labels:
+    acorn.io/service-name: service-7777
+spec:
+  ports:
+    - name: "7777"
+      port: 7777
+      protocol: TCP
+      targetPort: 9999
+    - name: "portName"
+      port: 10000
+      protocol: TCP
+      targetPort: 10000
+  selector:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    port-number.acorn.io/9999: "true"
+    service-name.acorn.io/service-7777: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-9090
+  namespace: my-app-namespace
+  labels:
+    acorn.io/service-name: nginx-9090
+spec:
+  ports:
+    - name: "9090"
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+  selector:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    port-number.acorn.io/9090: "true"
+    service-name.acorn.io/nginx-9090: "true"

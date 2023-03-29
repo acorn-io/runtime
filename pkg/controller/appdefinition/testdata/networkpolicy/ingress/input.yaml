@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-service
+  name: my-service
+  namespace: my-app-namespace
+spec:
+  rules:
+    - host: myhostname.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: service-7777
+                port:
+                  number: 7777
+            path: /seven
+            pathType: Prefix
+          - backend:
+              service:
+                name: service-7777
+                port:
+                  name: portName
+            path: /anotherpath
+            pathType: Prefix
+          - backend:
+              service:
+                name: nginx-9090
+                port:
+                  number: 9090
+            path: /nine
+            pathType: Prefix

@@ -10,6 +10,7 @@ projects:
     config:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -18,12 +19,14 @@ projects:
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
+      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
+      networkPolicies: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -40,6 +43,7 @@ projects:
     userConfig:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -48,12 +52,14 @@ projects:
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
+      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
+      networkPolicies: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -68,6 +74,7 @@ projects:
     config:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -76,12 +83,14 @@ projects:
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
+      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
+      networkPolicies: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null
@@ -98,6 +107,7 @@ projects:
     userConfig:
       acornDNS: null
       acornDNSEndpoint: null
+      allowTrafficFromNamespace: null
       allowUserAnnotations: null
       allowUserLabels: null
       autoUpgradeInterval: null
@@ -106,12 +116,14 @@ projects:
       httpEndpointPattern: null
       ignoreUserLabelsAndAnnotations: null
       ingressClassName: null
+      ingressControllerNamespace: null
       internalClusterDomain: ""
       internalRegistryPrefix: null
       letsEncrypt: null
       letsEncryptEmail: ""
       letsEncryptTOSAgree: null
       manageVolumeClasses: null
+      networkPolicies: null
       podSecurityEnforceProfile: ""
       propagateProjectAnnotations: null
       propagateProjectLabels: null

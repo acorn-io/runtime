@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/container-name: one
+    acorn.io/managed: "true"
+    acorn.io/service-name: one
+    acorn.io/service-publish: "true"
+  name: one-publish
+  namespace: my-app-namespace
+spec:
+  type: LoadBalancer
+  ports:
+    - name: "8080"
+      nodePort: 32492
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: "9090"
+      nodePort: 30154
+      port: 9090
+      protocol: UDP
+      targetPort: 9090
+  selector:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    port-number.acorn.io/8080: "true"
+    port-number.acorn.io/9090: "true"
+    service-name.acorn.io/one: "true"

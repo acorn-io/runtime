@@ -1,0 +1,6 @@
+containers: {
+	bar: {
+		image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+		ports: publish: "80/http"
+	}
+}

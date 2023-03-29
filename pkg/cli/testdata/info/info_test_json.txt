@@ -41,7 +41,10 @@
                 "useCustomCABundle": null,
                 "propagateProjectAnnotations": null,
                 "propagateProjectLabels": null,
-                "manageVolumeClasses": null
+                "manageVolumeClasses": null,
+                "networkPolicies": null,
+                "ingressControllerNamespace": null,
+                "allowTrafficFromNamespace": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -68,7 +71,10 @@
                 "useCustomCABundle": null,
                 "propagateProjectAnnotations": null,
                 "propagateProjectLabels": null,
-                "manageVolumeClasses": null
+                "manageVolumeClasses": null,
+                "networkPolicies": null,
+                "ingressControllerNamespace": null,
+                "allowTrafficFromNamespace": null
             }
         }
     }

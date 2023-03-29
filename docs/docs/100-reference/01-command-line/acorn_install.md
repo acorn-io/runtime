@@ -21,6 +21,7 @@ acorn install
 ```
       --acorn-dns string                       enabled|disabled|auto. If enabled, containers created by Acorn will get public FQDNs. Auto functions as disabled if a custom clusterDomain has been supplied (default auto)
       --acorn-dns-endpoint string              The URL to access the Acorn DNS service
+      --allow-traffic-from-namespace strings   Namespaces that are allowed to send network traffic to all Acorn apps
       --allow-user-annotation strings          Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --allow-user-label strings               Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --api-server-replicas int                acorn-api deployment replica count
@@ -33,12 +34,14 @@ acorn install
       --ignore-user-labels-and-annotations     Don't propagate user-defined labels and annotations to dependent objects
       --image string                           Override the default image used for the deployment
       --ingress-class-name string              The ingress class name to assign to all created ingress resources (default '')
+      --ingress-controller-namespace string    The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies.
       --internal-cluster-domain string         The Kubernetes internal cluster domain (default svc.cluster.local)
       --internal-registry-prefix string        The image prefix to use when pushing internal images (example ghcr.io/my-org/)
       --lets-encrypt string                    enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)
       --lets-encrypt-email string              Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')
       --lets-encrypt-tos-agree                 Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)
       --manage-volume-classes                  Manually manage volume classes rather than sync with storage classes, setting to 'true' will delete Acorn-created volume classes
+      --network-policies                       Create Kubernetes NetworkPolicies which block cross-project network traffic (default true)
   -o, --output string                          Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string    The name of the PodSecurity profile to set (default baseline)
       --propagate-project-annotation strings   The list of keys of annotations to propagate from acorn project to app namespaces
