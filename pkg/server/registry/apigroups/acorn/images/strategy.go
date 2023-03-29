@@ -155,6 +155,7 @@ func (s *Strategy) findImage(ctx context.Context, namespace, imageName string) (
 // - tag name: <registry>/<repo>:<tag> or <repo>:<tag>
 func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, string, error) {
 	var (
+		repoDigest   name.Digest
 		digest       string
 		digestPrefix string
 		tagName      string
@@ -171,7 +172,7 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 			return nil, "", err
 		}
 		if dig, ok := ref.(name.Digest); ok {
-			digest = dig.DigestStr()
+			repoDigest = dig
 		} else {
 			tagName = strings.TrimSuffix(ref.Name(), ":") // drop pontential trailing ":" if no tag was specified
 		}
@@ -187,6 +188,20 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 				return nil, "", apierrors.NewBadRequest(reason)
 			}
 			matchedImage = image
+		}
+
+		if repoDigest.Name() != "" && image.Digest == repoDigest.DigestStr() {
+			// Matching by repo digest returns an image which matches the digest and has at least one tag
+			// which matches the repo part of the repo digest.
+			for _, tag := range image.Tags {
+				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+				if err != nil {
+					continue
+				}
+				if imageParsedTag.Context().Name() == repoDigest.Context().Name() {
+					return &image, tag, nil
+				}
+			}
 		}
 
 		for i, tag := range image.Tags {
