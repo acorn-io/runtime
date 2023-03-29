@@ -5,3 +5,5 @@ metadata:
 storageClassName: storage-name
 description: Acorn-generated volume class representing the storage class storage-name
 default: true
+supportedRegions:
+- local

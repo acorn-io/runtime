@@ -21,6 +21,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"golang.org/x/exp/slices"
 	authv1 "k8s.io/api/authorization/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -46,6 +47,17 @@ func NewValidator(client kclient.Client, clientFactory *client.Factory) *Validat
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.App)
 
+	project := new(apiv1.Project)
+	if err := s.client.Get(ctx, kclient.ObjectKey{Name: params.Namespace}, project); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "images"), params.Spec.Image, err.Error()))
+		return
+	}
+
+	if err := s.validateRegion(params, project); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "region"), params.Spec.Region, err.Error()))
+		return
+	}
+
 	if err := imagesystem.IsNotInternalRepo(ctx, s.client, params.Spec.Image); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 		return
@@ -68,11 +80,6 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		imageDetails, err := s.getImageDetails(ctx, params, image)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
-			return
-		}
-
-		if err = s.validateRegion(ctx, params); err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "region"), params.Spec.Region, err.Error()))
 			return
 		}
 
@@ -101,13 +108,13 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
-		errs := s.checkScheduling(ctx, params, *apiv1cfg, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
+		errs := s.checkScheduling(ctx, params, project, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
 		if len(errs) != 0 {
 			result = append(result, errs...)
 			return
 		}
 
-		if err := volume.ValidateVolumeClasses(ctx, s.client, params.Namespace, params.Spec, imageDetails.AppSpec); err != nil {
+		if err := validateVolumeClasses(ctx, s.client, params.Namespace, params.Spec, imageDetails.AppSpec, project); err != nil {
 			result = append(result, err)
 			return
 		}
@@ -141,22 +148,13 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	return s.Validate(ctx, newParams)
 }
 
-func (s *Validator) validateRegion(ctx context.Context, app *apiv1.App) error {
-	project := new(apiv1.Project)
-	err := s.client.Get(ctx, kclient.ObjectKey{Name: app.Namespace}, project)
-	if err != nil {
-		return err
-	}
-
+func (s *Validator) validateRegion(app *apiv1.App, project *apiv1.Project) error {
 	if app.Spec.Region == "" {
-		app.Status.Defaults.Region = project.Spec.DefaultRegion
-		if app.Status.Defaults.Region == "" {
-			if project.Status.DefaultRegion == "" {
-				return fmt.Errorf("no region can be determined because project default region is not set")
-			}
-			app.Status.Defaults.Region = project.Status.DefaultRegion
+		if project.Spec.DefaultRegion == "" && project.Status.DefaultRegion == "" {
+			return fmt.Errorf("no region can be determined because project default region is not set")
 		}
 
+		// Region default will be calculated later
 		return nil
 	}
 
@@ -366,12 +364,17 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 	return merr.NewErrors(errs...)
 }
 
-func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, cfg apiv1.Config, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
+func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *apiv1.Project, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	var (
-		memory       = params.Spec.Memory
-		computeClass = params.Spec.ComputeClass
+		memory        = params.Spec.Memory
+		computeClass  = params.Spec.ComputeClass
+		defaultRegion = project.Spec.DefaultRegion
 	)
-	validationErrors := []*field.Error{}
+	if defaultRegion == "" {
+		defaultRegion = project.Status.DefaultRegion
+	}
+
+	var validationErrors []*field.Error
 	err := validateMemoryRunFlags(memory, workloads)
 	if err != nil {
 		validationErrors = append(validationErrors, err...)
@@ -384,6 +387,10 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, cfg 
 		}
 
 		if wc != nil {
+			if !slices.Contains(wc.SupportedRegions, params.Spec.Region) && !slices.Contains(wc.SupportedRegions, defaultRegion) {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", fmt.Sprintf("computeclass %s does not support region %s", wc.Name, params.Spec.Region)))
+				continue
+			}
 			// Parse the memory
 			wcMemory, err := adminv1.ParseComputeClassMemory(wc.Memory)
 			if err != nil {
@@ -444,6 +451,67 @@ func validateMemoryRunFlags(memory v1.MemoryMap, workloads map[string]v1.Contain
 		}
 	}
 	return validationErrors
+}
+
+func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace string, appInstanceSpec v1.AppInstanceSpec, appSpec *v1.AppSpec, project *apiv1.Project) *field.Error {
+	if len(appInstanceSpec.Volumes) == 0 && len(appSpec.Volumes) == 0 {
+		return nil
+	}
+
+	defaultRegion := project.Spec.DefaultRegion
+	if defaultRegion == "" {
+		defaultRegion = project.Status.DefaultRegion
+	}
+
+	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClasses(ctx, c, namespace)
+	if err != nil {
+		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, err.Error())
+	}
+
+	volumeBindings := make(map[string]v1.VolumeBinding)
+	for i, vol := range appInstanceSpec.Volumes {
+		if volClass, ok := volumeClasses[vol.Class]; vol.Class != "" && (!ok || volClass.Inactive || (volClass.SupportedRegions != nil && !slices.Contains(volClass.SupportedRegions, defaultRegion) && !slices.Contains(volClass.SupportedRegions, appInstanceSpec.Region))) {
+			return field.Invalid(field.NewPath("spec", "volumes").Index(i), vol.Class, "not a valid volume class")
+		}
+		volumeBindings[vol.Target] = vol
+	}
+
+	var (
+		volClass adminv1.ProjectVolumeClassInstance
+		ok       bool
+	)
+	for volName, vol := range appSpec.Volumes {
+		calculatedVolumeRequest := volume.CopyVolumeDefaults(vol, volumeBindings[volName], v1.VolumeDefault{})
+		if calculatedVolumeRequest.Class != "" {
+			volClass, ok = volumeClasses[calculatedVolumeRequest.Class]
+			if !ok || volClass.Inactive || (!slices.Contains(volClass.SupportedRegions, defaultRegion) && !slices.Contains(volClass.SupportedRegions, appInstanceSpec.Region)) {
+				return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
+			}
+		} else if defaultVolumeClass != nil {
+			volClass = *defaultVolumeClass
+		} else {
+			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("no volume class found for %s", volName))
+		}
+
+		if calculatedVolumeRequest.Size != "" {
+			q := v1.MustParseResourceQuantity(calculatedVolumeRequest.Size)
+			if volClass.Size.Min != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Min)) < 0 {
+				return field.Invalid(field.NewPath("spec", "volumes", volName, "size"), q.String(), fmt.Sprintf("less than volume class %s minimum of %v", calculatedVolumeRequest.Class, volClass.Size.Min))
+			}
+			if volClass.Size.Max != "" && q.Cmp(*v1.MustParseResourceQuantity(volClass.Size.Max)) > 0 {
+				return field.Invalid(field.NewPath("spec", "volumes", volName, "size"), q.String(), fmt.Sprintf("greater than volume class %s maximum of %v", calculatedVolumeRequest.Class, volClass.Size.Max))
+			}
+		}
+		if volClass.AllowedAccessModes != nil {
+			for _, am := range calculatedVolumeRequest.AccessModes {
+				if !slices.Contains(volClass.AllowedAccessModes, am) {
+					return field.Invalid(field.NewPath("spec", "volumes", volName, "accessModes"), am, fmt.Sprintf("not an allowed access mode of %v", calculatedVolumeRequest.Class))
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *Validator) getPermissions(details *client.ImageDetails) (result []v1.Permissions, _ error) {

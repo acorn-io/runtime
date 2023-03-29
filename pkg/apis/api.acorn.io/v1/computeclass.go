@@ -11,9 +11,10 @@ type ComputeClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Memory      v1.ComputeClassMemory `json:"memory,omitempty"`
-	Description string                `json:"description,omitempty"`
-	Default     bool                  `json:"default"`
+	Memory           v1.ComputeClassMemory `json:"memory,omitempty"`
+	Description      string                `json:"description,omitempty"`
+	Default          bool                  `json:"default"`
+	SupportedRegions []string              `json:"supportedRegions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

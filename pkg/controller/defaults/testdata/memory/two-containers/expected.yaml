@@ -15,6 +15,7 @@ status:
       "": 0
       oneimage: 0
       twoimage: 0
+    region: local
   namespace: app-created-namespace
   appImage:
     id: test

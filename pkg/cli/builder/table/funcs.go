@@ -38,6 +38,7 @@ var (
 		"displayRange":  DisplayRange,
 		"memoryToRange": MemoryToRange,
 		"defaultMemory": DefaultMemory,
+		"ownerName":     OwnerReferenceName,
 	}
 )
 
@@ -247,4 +248,13 @@ func AppGeneration(app apiv1.App, msg string) string {
 		return "[controller: not processed] " + msg
 	}
 	return msg
+}
+
+func OwnerReferenceName(obj metav1.Object) string {
+	owners := obj.GetOwnerReferences()
+	if len(owners) == 0 || owners[0].Name == "" {
+		return "local"
+	}
+
+	return owners[0].Name
 }

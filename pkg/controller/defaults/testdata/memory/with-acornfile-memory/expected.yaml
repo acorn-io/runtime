@@ -13,6 +13,7 @@ status:
       "": 0
       left: 0
       oneimage: 0
+    region: local
   namespace: app-created-namespace
   appImage:
     id: test

@@ -54,10 +54,11 @@ func (s *Strategy) List(ctx context.Context, namespace string, options storage.L
 			projectDefaultExists = true
 		}
 		computeClasses.Items = append(computeClasses.Items, apiv1.ComputeClass{
-			ObjectMeta:  v1.ObjectMeta{Name: pcc.Name, Namespace: pcc.Namespace, CreationTimestamp: pcc.CreationTimestamp},
-			Memory:      adminv1.ComputeClassMemory(pcc.Memory),
-			Default:     pcc.Default,
-			Description: pcc.Description,
+			ObjectMeta:       v1.ObjectMeta{Name: pcc.Name, Namespace: pcc.Namespace, CreationTimestamp: pcc.CreationTimestamp},
+			Memory:           pcc.Memory,
+			Default:          pcc.Default,
+			Description:      pcc.Description,
+			SupportedRegions: pcc.SupportedRegions,
 		})
 		projectComputeClassesSeen[pcc.Name] = struct{}{}
 	}
@@ -71,10 +72,11 @@ func (s *Strategy) List(ctx context.Context, namespace string, options storage.L
 			ccc.Default = false
 		}
 		computeClasses.Items = append(computeClasses.Items, apiv1.ComputeClass{
-			ObjectMeta:  v1.ObjectMeta{Name: ccc.Name},
-			Memory:      adminv1.ComputeClassMemory(ccc.Memory),
-			Default:     ccc.Default,
-			Description: ccc.Description,
+			ObjectMeta:       v1.ObjectMeta{Name: ccc.Name},
+			Memory:           ccc.Memory,
+			Default:          ccc.Default,
+			Description:      ccc.Description,
+			SupportedRegions: ccc.SupportedRegions,
 		})
 	}
 

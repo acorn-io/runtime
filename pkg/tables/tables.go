@@ -156,7 +156,7 @@ var (
 
 	Region = [][]string{
 		{"Name", "Name"},
-		{"Account", "{{ .Spec.AccountName }}"},
+		{"Account", "{{ ownerName . }}"},
 		{"Region Name", "{{ .Spec.RegionName }}"},
 		{"Created", "{{ ago .CreationTimestamp }}"},
 		{"Description", "{{ .Spec.Description }}"},
