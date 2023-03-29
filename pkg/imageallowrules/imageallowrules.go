@@ -78,7 +78,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 			notAllowedErr.SubrulePath = fmt.Sprintf("%d", ruleIndex)
 
 			// allOf: all signatures must pass verification
-			if rule.SignedBy.AllOf != nil {
+			if len(rule.SignedBy.AllOf) != 0 {
 				for allOfRuleIndex, signer := range rule.SignedBy.AllOf {
 					logrus.Debugf("Checking image %s against %s/%s.signatures.allOf.%d", image, ImageAllowRules.Namespace, ImageAllowRules.Name, allOfRuleIndex)
 					verifyOpts.Key = signer
@@ -95,7 +95,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 			}
 			var anyOfErrs []error
 			// anyOf: only one signature must pass verification
-			if rule.SignedBy.AnyOf != nil {
+			if len(rule.SignedBy.AnyOf) != 0 {
 				anyOfOK := false
 				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
 					logrus.Debugf("Checking image %s against %s/%s.signatures.anyOf.%d", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex)

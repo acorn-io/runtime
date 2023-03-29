@@ -290,7 +290,7 @@ func extractPayload(verified []oci.Signature) ([]payload.SimpleContainerImage, e
 	return sigPayloads, nil
 }
 
-var ALGORITHMS = map[string]crypto.Hash{
+var algorithms = map[string]crypto.Hash{
 	"":       crypto.SHA256,
 	"sha256": crypto.SHA256,
 	"sha512": crypto.SHA512,
@@ -299,7 +299,7 @@ var ALGORITHMS = map[string]crypto.Hash{
 func LoadKey(ctx context.Context, keyRef string, algorithm string) (verifier signature.Verifier, err error) {
 	if strings.HasPrefix(strings.TrimSpace(keyRef), "-----BEGIN PUBLIC KEY-----") {
 		// no scheme, inline PEM
-		verifier, err = decodePEM([]byte(keyRef), ALGORITHMS[algorithm])
+		verifier, err = decodePEM([]byte(keyRef), algorithms[algorithm])
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
