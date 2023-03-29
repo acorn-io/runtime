@@ -206,7 +206,6 @@ func imagesCompletion(allowDigest bool) completionFunc {
 					result = append(result, digest)
 				}
 			}
-
 		}
 
 		return result, nil

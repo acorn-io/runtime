@@ -41,7 +41,6 @@ func ProvisionWildcardCert(req router.Request, resp router.Response, domain, tok
 
 	// Generate wildcard certificate for domain
 	return leUser.provisionCertIfNotExists(req.Ctx, req.Client, wildcardDomain, system.Namespace, system.TLSSecretName)
-
 }
 
 // RequireSecretTypeTLS is a middleware that ensures that we only act on TLS-Type secrets
@@ -77,7 +76,6 @@ func RenewCert(req router.Request, resp router.Response) error {
 	domain := sec.Annotations[labels.AcornDomain]
 
 	go func() {
-
 		// Do not start a new challenge if we already have one in progress
 		if !lockDomain(domain) {
 			logrus.Debugf("not starting certificate renewal: %v: %s", ErrCertificateRequestInProgress, domain)
@@ -108,16 +106,13 @@ func RenewCert(req router.Request, resp router.Response) error {
 		}
 
 		logrus.Infof("TLS secret %s/%s renewed for domain %s", newSec.Namespace, newSec.Name, domain)
-
 	}()
 
 	return nil
-
 }
 
 // ProvisionCerts handles the provisioning of new TLS certificates for AppInstances
 func ProvisionCerts(req router.Request, resp router.Response) error {
-
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -225,7 +220,6 @@ func findExistingCertSecret(ctx context.Context, client kclient.Client, target s
 				return &sec, nil
 			}
 		}
-
 	}
 	return nil, nil
 }

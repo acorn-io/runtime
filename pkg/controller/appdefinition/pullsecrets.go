@@ -50,7 +50,6 @@ func (p *PullSecrets) ForAcorn(acornName, image string) []corev1.LocalObjectRefe
 			Image: image,
 		},
 	})
-
 }
 
 func (p *PullSecrets) ForContainer(containerName string, containers []corev1.Container) []corev1.LocalObjectReference {

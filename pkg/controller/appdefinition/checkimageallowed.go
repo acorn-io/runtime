@@ -16,7 +16,6 @@ import (
 // CheckImageAllowedHandler is a router handler that checks if the image is allowed by the image allow rules and sets a status field accordingly
 func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 	return func(req router.Request, resp router.Response) error {
-
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionImageAllowed)
 

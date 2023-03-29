@@ -122,7 +122,6 @@ func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
 				if fmt.Sprintf("system:serviceaccount:%s:%s", subject.Namespace, subject.Name) == user.GetName() {
 					rulesName.Insert(crb.RoleRef.Name)
 				}
-
 			}
 		}
 	}

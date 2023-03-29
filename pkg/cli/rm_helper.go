@@ -65,7 +65,6 @@ func getVolumesToDelete(arg string, client client.Client, cmd *cobra.Command) ([
 		if arg == volume.Status.AppName {
 			result = append(result, volume.Name)
 		}
-
 	}
 	return result, nil
 }
@@ -109,7 +108,6 @@ func removeContainer(arg string, c client.Client, cmd *cobra.Command, force bool
 
 		fmt.Println("Removed: " + con)
 		continue
-
 	}
 	return nil
 }
@@ -146,7 +144,6 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) e
 		} else {
 			fmt.Printf("Error: No such volume: %s\n", vol)
 		}
-
 	}
 	return nil
 }

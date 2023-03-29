@@ -29,7 +29,6 @@ func TestToRecordRequests(t *testing.T) {
 
 	// If the only hostname is "localhost", we can't actually CNAME to localhost, so expect an A record for 127.0.0.1
 	assrt(t, ".foo.com", []string{"app.foo.com"}, nil, nil, []string{"localhost"}, []RecordRequest{{"app", RecordTypeA, []string{"127.0.0.1"}}})
-
 }
 
 func assrt(t *testing.T, domain string, specRulesHosts, statusIPv4s, statusIPv6s, statusHosts []string, expectedRRs []RecordRequest) {

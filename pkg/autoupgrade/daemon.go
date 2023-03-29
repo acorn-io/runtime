@@ -165,7 +165,6 @@ func (d *daemon) determineAppsToRefresh(apps map[kclient.ObjectKey]v1.AppInstanc
 			}
 			imageKey := imageAndNamespaceKey{image: img, namespace: app.Namespace}
 			imagesToRefresh[imageKey] = append(imagesToRefresh[imageKey], appKey)
-
 		}
 	}
 

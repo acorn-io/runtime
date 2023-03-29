@@ -104,7 +104,6 @@ func ValidateComputeClass(wc ProjectComputeClassInstance, memory resource.Quanti
 		}
 		return fmt.Errorf("%w: defined memory %v exceeds the maximum memory for the ComputeClass %v of %v",
 			ErrInvalidMemoryForClass, memory.String(), wc.Name, parsedMemory.Max.String())
-
 	}
 	if min := parsedMemory.Min.Value(); memBytes != 0 && memBytes < min {
 		if memBytes == *memDefault {

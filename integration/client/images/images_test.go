@@ -408,5 +408,4 @@ func TestImageBadTag(t *testing.T) {
 
 	err = c.ImageTag(ctx, image.Name, "foo@@:badtag")
 	assert.Equal(t, "repository can only contain the characters `abcdefghijklmnopqrstuvwxyz0123456789_-./`: foo@@", err.Error())
-
 }

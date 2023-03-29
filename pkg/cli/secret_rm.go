@@ -24,7 +24,6 @@ type SecretDelete struct {
 }
 
 func (a *SecretDelete) Run(cmd *cobra.Command, args []string) error {
-
 	client, err := a.client.CreateDefault()
 	if err != nil {
 		return err

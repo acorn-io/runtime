@@ -165,7 +165,6 @@ func TestInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			ctrl := gomock.NewController(t)
 			//Mocked client for cli's client calls.
 			mClient := mocks.NewMockClient(ctrl)

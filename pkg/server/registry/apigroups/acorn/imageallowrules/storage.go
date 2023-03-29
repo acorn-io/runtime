@@ -10,7 +10,6 @@ import (
 )
 
 func NewStorage(c client.WithWatch) rest.Storage {
-
 	remoteResource := remote.NewWithSimpleTranslation(&Translator{}, &apiv1.ImageAllowRules{}, c)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.ImageAllowRules{}).

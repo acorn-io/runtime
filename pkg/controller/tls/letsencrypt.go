@@ -123,7 +123,6 @@ func (u *LEUser) register() error {
 	u.registration = reg
 
 	return nil
-
 }
 
 func (u *LEUser) toSecret() (*corev1.Secret, error) {
@@ -194,7 +193,6 @@ func (u *LEUser) toHash() string {
 }
 
 func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
-
 	cfg, err := config.Get(ctx, client)
 	if err != nil {
 		return nil, err
@@ -269,7 +267,6 @@ func ensureLEUser(ctx context.Context, client kclient.Client) (*LEUser, error) {
 	logrus.Infof("Registered Let's Encrypt User: %s", newLEUser.email)
 
 	return newLEUser, nil
-
 }
 
 func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, name string) (*corev1.Secret, error) {
@@ -302,17 +299,14 @@ func (u *LEUser) certToSecret(cert *certificate.Resource, domain, namespace, nam
 	}
 
 	return sec, nil
-
 }
 
 func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resource, error) {
-
 	if strings.HasPrefix(domain, "*.") {
 		return u.dnsChallenge(ctx, domain)
 	}
 
 	return u.httpChallenge(ctx, domain)
-
 }
 
 func lockDomain(domain string) bool {
@@ -368,7 +362,6 @@ func stillValid(cert []byte) bool {
 
 // mustRenew returns true if the certificate must be renewed, either because the Let's Encrypt settings changed, the certificate is invalid or it's about to expire
 func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
-
 	// (a) let's encrypt user settings changed -> renew
 	if sec.Annotations[labels.AcornLetsEncryptSettingsHash] != u.toHash() {
 		logrus.Infof("let's encrypt settings changed, must renew certificate for %s", sec.Annotations[labels.AcornDomain])
@@ -381,7 +374,6 @@ func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
 	}
 
 	return false
-
 }
 
 func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.Resource, error) {
@@ -427,7 +419,6 @@ func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.
 	}
 
 	return client.Certificate.Obtain(request)
-
 }
 
 func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate.Resource, error) {

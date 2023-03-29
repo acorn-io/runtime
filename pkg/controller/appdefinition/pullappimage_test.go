@@ -8,7 +8,6 @@ import (
 )
 
 func TestDetermineDesiredImage(t *testing.T) {
-
 	//// Auto-upgrade cases
 
 	// spec.Image is a pattern, status.image.ID not set, availableAppImage set. Expect the desiredImage to match availableAppImage

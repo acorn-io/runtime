@@ -18,7 +18,6 @@ func NewLogs(c CommandContext) *cobra.Command {
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
-
 }
 
 type Logs struct {

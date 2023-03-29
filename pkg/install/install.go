@@ -292,7 +292,6 @@ func TraefikResources() (result []kclient.Object, _ error) {
 		}
 		labels[labels2.AcornManaged] = "true"
 		m.SetLabels(labels)
-
 	}
 
 	return objs, nil

@@ -82,7 +82,6 @@ func (c *DefaultClient) AppUpdate(ctx context.Context, name string, opts *AppUpd
 }
 
 func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
-
 	app, err := c.AppGet(ctx, name)
 	if err != nil {
 		return nil, err

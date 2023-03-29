@@ -80,12 +80,10 @@ func pushOCIDir(path string, ref name.Reference) error {
 	fmt.Println(h)
 
 	return nil
-
 }
 
 // TODO: mock oci registry and signatures
 func TestVerifySignature(t *testing.T) {
-
 	imgPath := "./testdata/img.oci"
 	imgDigestExpected := "sha256:245864d0312e7e33201eff111cfc071727f4eaa9edd10a395c367077e200cad2"
 
@@ -228,7 +226,5 @@ func TestVerifySignature(t *testing.T) {
 		if err == nil && tc.shouldError {
 			t.Fatalf("[%d] expected error but got none: %s", ti, tc.description)
 		}
-
 	}
-
 }

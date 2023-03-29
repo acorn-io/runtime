@@ -33,7 +33,6 @@ func (e *ErrImageNotAllowed) Is(target error) bool {
 
 // CheckImageAllowed checks if the image is allowed by the ImageAllowRules on cluster and project level
 func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) error {
-
 	// Get ImageAllowRules in the same namespace as the AppInstance
 	ImageAllowRulesList := &v1.ImageAllowRulesInstanceList{}
 	if err := c.List(ctx, ImageAllowRulesList, &client.ListOptions{Namespace: namespace}); err != nil {
@@ -49,7 +48,6 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image st
 }
 
 func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRulesInstance, opts ...remote.Option) error {
-
 	if len(imageAllowRules) == 0 {
 		// No ImageAllowRules found, so allow the image
 		return nil
@@ -67,13 +65,11 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		RegistryClientOpts: []ociremote.Option{ociremote.WithRemoteOptions(opts...)},
 	}
 	for _, ImageAllowRules := range imageAllowRules {
-
 		notAllowedErr := &ErrImageNotAllowed{Rule: fmt.Sprintf("%s/%s", ImageAllowRules.Namespace, ImageAllowRules.Name), Image: image}
 
 		// > Signatures
 		notAllowedErr.SubruleType = "signatures"
 		for ruleIndex, rule := range ImageAllowRules.Signatures.Rules {
-
 			verifyOpts.AnnotationRules = rule.Annotations
 			notAllowedErr.SubrulePath = fmt.Sprintf("%d", ruleIndex)
 

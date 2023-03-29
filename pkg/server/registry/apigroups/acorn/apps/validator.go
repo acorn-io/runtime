@@ -562,7 +562,6 @@ func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image stri
 		if tags.IsLocalReference(image) {
 			return "", false, err
 		}
-
 	} else if err != nil {
 		return "", false, err
 	} else {

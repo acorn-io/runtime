@@ -24,7 +24,6 @@ func (r *SignatureAnnotations) AsSelector() (labels.Selector, error) {
 	}
 
 	return metav1.LabelSelectorAsSelector(labelselector)
-
 }
 
 type SignatureRules struct {

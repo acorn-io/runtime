@@ -158,7 +158,6 @@ func TestCreatingComputeClasses(t *testing.T) {
 					t.Fatal("expected an error to occur when creating an invalid ComputeClass but did not receive one")
 				}
 			}
-
 		})
 	}
 }

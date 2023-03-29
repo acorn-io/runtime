@@ -42,7 +42,6 @@ type VerifyOpts struct {
 
 // verifySignature checks if the image is signed with the given key and if the annotations match the given rules
 func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) error {
-
 	// --- image name to digest hash
 	imgRef, err := name.ParseReference(opts.ImageRef)
 	if err != nil {
@@ -98,7 +97,6 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 	logrus.Debugf("Signature %s has digest: %s", sigRefToUse.Name(), sigDigest)
 
 	if !opts.NoCache {
-
 		internalRepo, _, err := imagesystem.GetInternalRepoForNamespace(ctx, c, opts.Namespace)
 		if err != nil {
 			return fmt.Errorf("failed to get internal repo for namespace %s: %w", opts.Namespace, err)
@@ -187,7 +185,6 @@ func decodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, 
 var ErrAnnotationsUnmatched = cosign.NewVerificationError("annotations unmatched")
 
 func checkAnnotations(payloads []payload.SimpleContainerImage, annotationRule v1.SignatureAnnotations) error {
-
 	sel, err := annotationRule.AsSelector()
 	if err != nil {
 		return fmt.Errorf("failed to parse annotation rule: %w", err)
