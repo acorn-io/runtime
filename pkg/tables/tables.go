@@ -138,6 +138,11 @@ var (
 	}
 	BuildConverter = MustConverter(Build)
 
+	ImageAllowRules = [][]string{
+		{"Name", "{{ . | name }}"},
+	}
+	ImageAllowRulesConverter = MustConverter(ImageAllowRules)
+
 	Project = [][]string{
 		{"Name", "Name"},
 		{"Created", "{{ago .CreationTimestamp}}"},

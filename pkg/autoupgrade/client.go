@@ -6,6 +6,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/images"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -21,6 +22,7 @@ type daemonClient interface {
 	getTagsMatchingRepo(context.Context, name.Reference, string, string) ([]string, error)
 	imageDigest(context.Context, string, string, ...remote.Option) (string, error)
 	resolveLocalTag(context.Context, string, string) (string, bool, error)
+	checkImageAllowed(context.Context, string, string) error
 }
 
 type client struct {
@@ -55,4 +57,8 @@ func (c *client) imageDigest(ctx context.Context, namespace, name string, opts .
 
 func (c *client) resolveLocalTag(ctx context.Context, namespace, name string) (string, bool, error) {
 	return tags2.ResolveLocal(ctx, c.client, namespace, name)
+}
+
+func (c *client) checkImageAllowed(ctx context.Context, namespace, name string) error {
+	return imageallowrules.CheckImageAllowed(ctx, c.client, namespace, name)
 }

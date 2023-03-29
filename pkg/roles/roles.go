@@ -60,6 +60,7 @@ var (
 					"volumeclasses",
 					"computeclasses",
 					"regions",
+					"imageallowrules",
 				},
 			},
 			{
@@ -148,6 +149,7 @@ var (
 					"projectcomputeclasses",
 					"clustercomputeclasses",
 					"regions",
+					"imageallowrules",
 				},
 				APIGroups: []string{admin_acorn_io.Group},
 			},
