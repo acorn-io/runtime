@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -72,6 +73,12 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 // Acorn apps from the ingress controller. If the ingress controller namespace is not defined, traffic from
 // all namespaces will be allowed instead.
 func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
+	// check if this is being called as a finalizer for a deleted Ingress
+	// we need this because we sometimes create NetworkPolicies in different namespaces from where their owning Ingresses live
+	if !req.Object.GetDeletionTimestamp().IsZero() {
+		return nil
+	}
+
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -104,6 +111,32 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 				return nil
 			}
 			return err
+		}
+
+		// This service is either a normal ClusterIP service or an ExternalName service which
+		// points to a service in a different namespace (if there are Acorn links involved).
+		// If it's an ExternalName, we need to get the service to which it points.
+		if svc.Spec.Type == corev1.ServiceTypeExternalName {
+			externalName := svc.Spec.ExternalName
+
+			// the ExternalName is in the format <service name>.<namespace>.svc.<cluster domain>
+			svcName, rest, ok := strings.Cut(externalName, ".")
+			if !ok {
+				return fmt.Errorf("failed to parse ExternalName '%s' of svc '%s'", externalName, svc.Name)
+			}
+			svcNamespace, _, ok := strings.Cut(rest, ".")
+			if !ok {
+				return fmt.Errorf("failed to parse ExternalName '%s' of svc '%s'", externalName, svc.Name)
+			}
+
+			svc = corev1.Service{}
+			err = req.Get(&svc, svcNamespace, svcName)
+			if err != nil {
+				if apierror.IsNotFound(err) {
+					return fmt.Errorf("failed to find service '%s', targeted by ExternalName '%s'", svcName, externalName)
+				}
+				return err
+			}
 		}
 
 		netPolName := name.SafeConcatName(projectName, appName, ingress.Name, svcName)
@@ -143,7 +176,7 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 		resp.Objects(&networkingv1.NetworkPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      netPolName,
-				Namespace: ingress.Namespace,
+				Namespace: svc.Namespace,
 			},
 			Spec: networkingv1.NetworkPolicySpec{
 				PodSelector: metav1.LabelSelector{
