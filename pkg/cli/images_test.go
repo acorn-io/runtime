@@ -223,13 +223,13 @@ func TestImage(t *testing.T) {
 					ImageItem: &apiv1.Image{
 						ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
 						Tags:       []string{"testtag1:latest", "testtag2:v1"},
-						Digest:     "lkjhgfdsa1234567890"}},
+						Digest:     "sha256:abcdef1234567890"}},
 				StdOut: w,
 				StdErr: w,
 				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"lkjhgfdsa1234567890"},
+				args:   []string{"abcdef1234567890"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
@@ -246,7 +246,7 @@ func TestImage(t *testing.T) {
 					ImageItem: &apiv1.Image{
 						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
 						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
-						Digest:     "registry1234567"}},
+						Digest:     "sha256:abcdef1234567890"}},
 				StdOut: w,
 				StdErr: w,
 				StdIn:  strings.NewReader("y\n"),
@@ -269,13 +269,13 @@ func TestImage(t *testing.T) {
 					ImageItem: &apiv1.Image{
 						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
 						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
-						Digest:     "registry1234567"}},
+						Digest:     "sha256:abcdef1234567890"}},
 				StdOut: w,
 				StdErr: w,
 				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"registry1234567"},
+				args:   []string{"sha256:abcdef1234567890"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
@@ -292,13 +292,13 @@ func TestImage(t *testing.T) {
 					ImageItem: &apiv1.Image{
 						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
 						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
-						Digest:     "registry1234567"}},
+						Digest:     "sha256:abcdef1234567890"}},
 				StdOut: w,
 				StdErr: w,
 				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"-c", "registry1234567"},
+				args:   []string{"-c", "sha256:abcdef1234567890"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
@@ -315,13 +315,13 @@ func TestImage(t *testing.T) {
 					ImageItem: &apiv1.Image{
 						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
 						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
-						Digest:     "registry1234567"}},
+						Digest:     "sha256:abcdef1234567890"}},
 				StdOut: w,
 				StdErr: w,
 				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"-q", "registry1234567"},
+				args:   []string{"-q", "sha256:abcdef1234567890"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
@@ -338,13 +338,13 @@ func TestImage(t *testing.T) {
 					ImageItem: &apiv1.Image{
 						ObjectMeta: metav1.ObjectMeta{Name: "registy1234567-two-tags"},
 						Tags:       []string{"index.docker.io/subdir/test:v1", "index.docker.io/subdir/test:v2"},
-						Digest:     "registry1234567"}},
+						Digest:     "sha256:abcdef1234567890"}},
 				StdOut: w,
 				StdErr: w,
 				StdIn:  strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"-q", "-c", "registry1234567"},
+				args:   []string{"-q", "-c", "sha256:abcdef1234567890"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
@@ -391,7 +391,7 @@ func TestImage(t *testing.T) {
 			wantOut: "Error: No such image: dne-image\n",
 		},
 		{
-			name: "acorn image rm found-image-two-tags1234567", fields: fields{
+			name: "acorn image rm ff12345", fields: fields{
 				All:    false,
 				Quiet:  false,
 				Output: "",
@@ -403,14 +403,14 @@ func TestImage(t *testing.T) {
 				StdIn:         strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"rm", "found-image-two-tags1234567"},
+				args:   []string{"rm", "ff12345"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "deleting found-image-two-tags1234567: unable to delete found-image-two-tags1234567 (must be forced) - image is referenced in multiple repositories",
+			wantOut: "deleting ff12345: unable to delete ff12345 (must be forced) - image is referenced in multiple repositories",
 		},
 		{
-			name: "acorn image rm found-image-two-tags1234567 -f", fields: fields{
+			name: "acorn image rm ff12345 -f", fields: fields{
 				All:    false,
 				Quiet:  false,
 				Output: "",
@@ -422,11 +422,11 @@ func TestImage(t *testing.T) {
 				StdIn:         strings.NewReader("y\n"),
 			},
 			args: args{
-				args:   []string{"rm", "found-image-two-tags1234567", "-f"},
+				args:   []string{"rm", "ff12345", "-f"},
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "found-image-two-tags1234567\n",
+			wantOut: "ff12345\n",
 		},
 	}
 

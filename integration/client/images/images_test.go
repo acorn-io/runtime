@@ -404,8 +404,9 @@ func TestImageBadTag(t *testing.T) {
 	assert.Equal(t, "sha256:"+image.Name, image.Digest)
 
 	err = c.ImageTag(ctx, image.Name, "foo:a@badtag")
-	assert.Equal(t, "tag can only contain the characters `abcdefghijklmnopqrstuvwxyz0123456789_-.ABCDEFGHIJKLMNOPQRSTUVWXYZ`: a@badtag", err.Error())
+	assert.Equal(t, "could not parse reference: foo:a@badtag", err.Error())
 
 	err = c.ImageTag(ctx, image.Name, "foo@@:badtag")
-	assert.Equal(t, "repository can only contain the characters `abcdefghijklmnopqrstuvwxyz0123456789_-./`: foo@@", err.Error())
+	assert.Equal(t, "could not parse reference: foo@@:badtag", err.Error())
+
 }
