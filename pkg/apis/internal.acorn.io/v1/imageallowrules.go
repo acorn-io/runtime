@@ -33,8 +33,7 @@ type SignatureRules struct {
 }
 
 type ImageAllowRuleSignatures struct {
-	Sources []string         `json:"sources,omitempty"` // for now, we only support OCI registries, credentials sourced from project
-	Rules   []SignatureRules `json:"rules,omitempty"`
+	Rules []SignatureRules `json:"rules,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
