@@ -148,6 +148,11 @@ func (s *Strategy) findImage(ctx context.Context, namespace, imageName string) (
 	return findImageMatch(*result, imageName)
 }
 
+// findImageMatch matches images by digest, digest prefix, or tag name:
+// - digest (raw): sha256:<digest> or <digest> (exactly 64 chars)
+// - digest (image): <registry>/<repo>@sha256:<digest> or <repo>@sha256:<digest>
+// - digest prefix: sha256:<digest prefix> (min. 3 chars)
+// - tag name: <registry>/<repo>:<tag> or <repo>:<tag>
 func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, string, error) {
 	var (
 		digest       string
@@ -161,11 +166,15 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
 	} else {
-		tag, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+		ref, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return nil, "", err
 		}
-		tagName = strings.TrimSuffix(tag.Name(), ":")
+		if dig, ok := ref.(name.Digest); ok {
+			digest = dig.DigestStr()
+		} else {
+			tagName = strings.TrimSuffix(ref.Name(), ":") // drop pontential trailing ":" if no tag was specified
+		}
 	}
 
 	var matchedImage apiv1.Image
