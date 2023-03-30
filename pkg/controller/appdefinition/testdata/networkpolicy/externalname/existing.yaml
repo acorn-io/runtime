@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+data:
+  config: '{"ingressControllerNamespace":"traefik"}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-7777
+  namespace: my-app-namespace
+  labels:
+    acorn.io/service-name: service-7777
+spec:
+  type: ClusterIP
+  ports:
+    - name: "7777"
+      port: 7777
+      protocol: TCP
+      targetPort: 9999
+  selector:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    port-number.acorn.io/9999: "true"
+    service-name.acorn.io/service-7777: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-7777
+  namespace: other-namespace
+spec:
+  type: ExternalName
+  externalName: service-7777.my-app-namespace.svc.cluster.local
+  ports:
+    - appProtocol: HTTP
+      name: "7777"
+      port: 7777
+      protocol: TCP
+      targetPort: 7777

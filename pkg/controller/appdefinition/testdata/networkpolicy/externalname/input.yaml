@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-service
+  name: service-7777
+  namespace: other-namespace
+spec:
+  rules:
+    - host: myhostname.on-acorn.io
+      http:
+        paths:
+          - backend:
+              service:
+                name: service-7777
+                port:
+                  number: 7777
+            path: /seven
+            pathType: Prefix

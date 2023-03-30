@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: acorn-my-app-service-7777-service-7777-9999
+  namespace: my-app-namespace
+spec:
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: acorn-system
+      ports:
+        - port: 9999
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      acorn.io/app-name: my-app
+      acorn.io/app-namespace: acorn
+      acorn.io/managed: "true"
+      port-number.acorn.io/9999: "true"
+      service-name.acorn.io/service-7777: "true"
+  policyTypes:
+    - Ingress
