@@ -34,8 +34,8 @@ func (e *ErrImageNotAllowed) Is(target error) bool {
 // CheckImageAllowed checks if the image is allowed by the ImageAllowRules on cluster and project level
 func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) error {
 	// Get ImageAllowRules in the same namespace as the AppInstance
-	ImageAllowRulesList := &v1.ImageAllowRulesInstanceList{}
-	if err := c.List(ctx, ImageAllowRulesList, &client.ListOptions{Namespace: namespace}); err != nil {
+	rulesList := &v1.ImageAllowRuleInstanceList{}
+	if err := c.List(ctx, rulesList, &client.ListOptions{Namespace: namespace}); err != nil {
 		return fmt.Errorf("failed to list ImageAllowRules: %w", err)
 	}
 
@@ -44,10 +44,10 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image st
 		return err
 	}
 
-	return CheckImageAgainstRules(ctx, c, namespace, image, ImageAllowRulesList.Items, opts...)
+	return CheckImageAgainstRules(ctx, c, namespace, image, rulesList.Items, opts...)
 }
 
-func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRulesInstance, opts ...remote.Option) error {
+func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRuleInstance, opts ...remote.Option) error {
 	if len(imageAllowRules) == 0 {
 		// No ImageAllowRules found, so allow the image
 		return nil
@@ -64,19 +64,19 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		SignatureAlgorithm: "sha256", // FIXME: make signature algorithm configurable (?)
 		RegistryClientOpts: []ociremote.Option{ociremote.WithRemoteOptions(opts...)},
 	}
-	for _, ImageAllowRules := range imageAllowRules {
-		notAllowedErr := &ErrImageNotAllowed{Rule: fmt.Sprintf("%s/%s", ImageAllowRules.Namespace, ImageAllowRules.Name), Image: image}
+	for _, imageAllowRule := range imageAllowRules {
+		notAllowedErr := &ErrImageNotAllowed{Rule: fmt.Sprintf("%s/%s", imageAllowRule.Namespace, imageAllowRule.Name), Image: image}
 
 		// > Signatures
 		notAllowedErr.SubruleType = "signatures"
-		for ruleIndex, rule := range ImageAllowRules.Signatures.Rules {
+		for ruleIndex, rule := range imageAllowRule.Signatures.Rules {
 			verifyOpts.AnnotationRules = rule.Annotations
 			notAllowedErr.SubrulePath = fmt.Sprintf("%d", ruleIndex)
 
 			// allOf: all signatures must pass verification
 			if len(rule.SignedBy.AllOf) != 0 {
 				for allOfRuleIndex, signer := range rule.SignedBy.AllOf {
-					logrus.Debugf("Checking image %s against %s/%s.signatures.allOf.%d", image, ImageAllowRules.Namespace, ImageAllowRules.Name, allOfRuleIndex)
+					logrus.Debugf("Checking image %s against %s/%s.signatures.allOf.%d", image, imageAllowRule.Namespace, imageAllowRule.Name, allOfRuleIndex)
 					verifyOpts.Key = signer
 					err := cosign.VerifySignature(ctx, c, verifyOpts)
 					if err != nil {
@@ -85,7 +85,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 							logrus.Warnf(notAllowedErr.Error())
 							return notAllowedErr
 						}
-						return fmt.Errorf("error verifying image %s against %s/%s.signatures.allOf.%d: %w", image, ImageAllowRules.Namespace, ImageAllowRules.Name, allOfRuleIndex, err)
+						return fmt.Errorf("error verifying image %s against %s/%s.signatures.allOf.%d: %w", image, imageAllowRule.Namespace, imageAllowRule.Name, allOfRuleIndex, err)
 					}
 				}
 			}
@@ -94,7 +94,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 			if len(rule.SignedBy.AnyOf) != 0 {
 				anyOfOK := false
 				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
-					logrus.Debugf("Checking image %s against %s/%s.signatures.anyOf.%d", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex)
+					logrus.Debugf("Checking image %s against %s/%s.signatures.anyOf.%d", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex)
 					verifyOpts.Key = signer
 					err := cosign.VerifySignature(ctx, c, verifyOpts)
 					if err == nil {
@@ -102,9 +102,9 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 						break
 					} else {
 						if _, ok := err.(*ocosign.VerificationError); ok {
-							logrus.Debugf("image %s not allowed as per %s/%s.signatures.anyOf.%d: %v", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex, err)
+							logrus.Debugf("image %s not allowed as per %s/%s.signatures.anyOf.%d: %v", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex, err)
 						} else {
-							e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.%d: %w", image, ImageAllowRules.Namespace, ImageAllowRules.Name, anyOfRuleIndex, err)
+							e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.%d: %w", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex, err)
 							anyOfErrs = append(anyOfErrs, e)
 							logrus.Errorln(e.Error())
 						}
@@ -114,11 +114,11 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 					notAllowedErr.SubrulePath += ".anyOf"
 					if len(anyOfErrs) == len(rule.SignedBy.AnyOf) {
 						// we had errors for all anyOf rules (not failed verification, but actual errors)
-						e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.*: %w", image, ImageAllowRules.Namespace, ImageAllowRules.Name, merr.NewErrors(anyOfErrs...))
+						e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.*: %w", image, imageAllowRule.Namespace, imageAllowRule.Name, merr.NewErrors(anyOfErrs...))
 						logrus.Errorln(e.Error())
 						return e
 					}
-					logrus.Warnf("image %s is not allowed as per %s/%s.signatures.anyOf", image, ImageAllowRules.Namespace, ImageAllowRules.Name)
+					logrus.Warnf("image %s is not allowed as per %s/%s.signatures.anyOf", image, imageAllowRule.Namespace, imageAllowRule.Name)
 					return notAllowedErr
 				}
 			}

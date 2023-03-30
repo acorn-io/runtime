@@ -9,9 +9,9 @@ import (
 type Translator struct{}
 
 func (s *Translator) FromPublic(obj mtypes.Object) mtypes.Object {
-	return (*v1.ImageAllowRulesInstance)(obj.(*apiv1.ImageAllowRules))
+	return (*v1.ImageAllowRuleInstance)(obj.(*apiv1.ImageAllowRule))
 }
 
 func (s *Translator) ToPublic(obj mtypes.Object) mtypes.Object {
-	return (*apiv1.ImageAllowRules)(obj.(*v1.ImageAllowRulesInstance))
+	return (*apiv1.ImageAllowRule)(obj.(*v1.ImageAllowRuleInstance))
 }

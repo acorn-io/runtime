@@ -26,8 +26,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ServiceInstanceList{},
 		&ImageInstance{},
 		&ImageInstanceList{},
-		&ImageAllowRulesInstance{},
-		&ImageAllowRulesInstanceList{},
+		&ImageAllowRuleInstance{},
+		&ImageAllowRuleInstanceList{},
 	)
 
 	// Add common types

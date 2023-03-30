@@ -138,10 +138,10 @@ var (
 	}
 	BuildConverter = MustConverter(Build)
 
-	ImageAllowRules = [][]string{
+	ImageAllowRule = [][]string{
 		{"Name", "{{ . | name }}"},
 	}
-	ImageAllowRulesConverter = MustConverter(ImageAllowRules)
+	ImageAllowRuleConverter = MustConverter(ImageAllowRule)
 
 	Project = [][]string{
 		{"Name", "Name"},
