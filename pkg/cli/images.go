@@ -52,7 +52,6 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	repoToMatch := ""
 
 	if len(args) == 1 {
-
 		ref, err := name.ParseReference(args[0], name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return err
@@ -73,7 +72,6 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			}
 			images = []apiv1.Image{*image}
 		} else {
-
 			if tags.SHAPermissivePrefixPattern.MatchString(args[0]) {
 				// > search by ID or prefix
 				image, err = c.ImageGet(cmd.Context(), args[0])
@@ -193,7 +191,6 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			imagePrint.Repository = ""
 			imagePrint.Tag = ""
 		}
-
 	}
 
 	return out.Err()

@@ -169,7 +169,6 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 }
 
 func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
-
 	image, err := c.ImageGet(ctx, imageName)
 	if apierrors.IsNotFound(err) {
 		return nil, nil

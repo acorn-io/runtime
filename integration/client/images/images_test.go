@@ -408,5 +408,4 @@ func TestImageBadTag(t *testing.T) {
 
 	err = c.ImageTag(ctx, image.Name, "foo@@:badtag")
 	assert.Equal(t, "could not parse reference: foo@@:badtag", err.Error())
-
 }
