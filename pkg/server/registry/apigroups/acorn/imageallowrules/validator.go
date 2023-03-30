@@ -12,7 +12,7 @@ import (
 type Validator struct{}
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
-	aiar := obj.(*apiv1.ImageAllowRules)
+	aiar := obj.(*apiv1.ImageAllowRule)
 	result = append(result, validateSignatureRules(ctx, aiar.Signatures)...)
 	return
 }

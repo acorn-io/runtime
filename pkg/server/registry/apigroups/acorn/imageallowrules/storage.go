@@ -10,12 +10,12 @@ import (
 )
 
 func NewStorage(c client.WithWatch) rest.Storage {
-	remoteResource := remote.NewWithSimpleTranslation(&Translator{}, &apiv1.ImageAllowRules{}, c)
+	remoteResource := remote.NewWithSimpleTranslation(&Translator{}, &apiv1.ImageAllowRule{}, c)
 
-	return stores.NewBuilder(c.Scheme(), &apiv1.ImageAllowRules{}).
+	return stores.NewBuilder(c.Scheme(), &apiv1.ImageAllowRule{}).
 		WithValidateCreate(&Validator{}).
 		WithValidateUpdate(&Validator{}).
 		WithCompleteCRUD(remoteResource).
-		WithTableConverter(tables.ImageAllowRulesConverter).
+		WithTableConverter(tables.ImageAllowRuleConverter).
 		Build()
 }

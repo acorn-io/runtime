@@ -37,7 +37,7 @@ type ImageAllowRuleSignatures struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ImageAllowRulesInstance struct {
+type ImageAllowRuleInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
@@ -46,8 +46,8 @@ type ImageAllowRulesInstance struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ImageAllowRulesInstanceList struct {
+type ImageAllowRuleInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ImageAllowRulesInstance `json:"items"`
+	Items           []ImageAllowRuleInstance `json:"items"`
 }
