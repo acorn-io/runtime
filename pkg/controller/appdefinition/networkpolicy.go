@@ -130,8 +130,7 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 			}
 
 			svc = corev1.Service{}
-			err = req.Get(&svc, svcNamespace, svcName)
-			if err != nil {
+			if err = req.Get(&svc, svcNamespace, svcName); err != nil {
 				if apierror.IsNotFound(err) {
 					return fmt.Errorf("failed to find service '%s', targeted by ExternalName '%s'", svcName, externalName)
 				}
