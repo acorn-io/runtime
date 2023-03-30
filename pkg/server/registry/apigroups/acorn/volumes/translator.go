@@ -22,7 +22,6 @@ type Translator struct {
 }
 
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
-
 	i := strings.LastIndex(name, ".")
 	// If there is not a period, or string ends with period, parse it not as an alias
 	if i == -1 || i+1 >= len(name) {

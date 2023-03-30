@@ -69,7 +69,6 @@ func TestVolume(t *testing.T) {
 				}
 				return nil, nil
 			}).AnyTimes()
-
 	}
 
 	type fields struct {

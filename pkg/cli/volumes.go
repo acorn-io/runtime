@@ -72,7 +72,6 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 
 // volumeAliases matches the correct app name to the given volume
 func volumeAlias(volume *apiv1.Volume) string {
-
 	if len(volume.Labels[labels.AcornVolumeName]) > 0 && len(volume.Labels[labels.AcornAppName]) > 0 {
 		return fmt.Sprintf("%s.%s", volume.Labels[labels.AcornAppName], volume.Labels[labels.AcornVolumeName])
 	}
