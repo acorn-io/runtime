@@ -25,7 +25,7 @@ type Translator struct {
 
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
 	i := strings.LastIndex(name, ".")
-	if i == -1 || i+1 > len(name) {
+	if i == -1 || i+1 >= len(name) {
 		return namespace, name, nil
 	}
 

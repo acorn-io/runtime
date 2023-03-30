@@ -49,13 +49,13 @@ CONTAINERS:
 VOLUMES:
 {
     "metadata": {
-        "name": "found.volume",
+        "name": "volume",
         "creationTimestamp": null
     },
     "spec": {},
     "status": {
         "appName": "found",
-        "volumeName": "found.volume",
+        "volumeName": "vol",
         "columns": {}
     }
 }

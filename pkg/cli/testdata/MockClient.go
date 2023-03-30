@@ -3,6 +3,7 @@ package testdata
 import (
 	"context"
 	"fmt"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"net"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -451,10 +452,14 @@ func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 		return m.Volumes, nil
 	}
 	return []apiv1.Volume{{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "found.volume"},
-		Spec:       apiv1.VolumeSpec{},
-		Status:     apiv1.VolumeStatus{AppName: "found", VolumeName: "found.volume"},
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "volume",
+			Labels: map[string]string{
+				labels.AcornVolumeName: "vol",
+				labels.AcornAppName:    "found",
+			}},
+		Spec:   apiv1.VolumeSpec{},
+		Status: apiv1.VolumeStatus{AppName: "found", VolumeName: "vol"},
 	}}, nil
 }
 
@@ -462,15 +467,23 @@ func (m *MockClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volume,
 	if m.VolumeItem != nil {
 		return m.VolumeItem, nil
 	}
+	potentialVol := apiv1.Volume{TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "volume",
+			Labels: map[string]string{
+				labels.AcornVolumeName: "vol",
+				labels.AcornAppName:    "found",
+			}},
+		Spec:   apiv1.VolumeSpec{},
+		Status: apiv1.VolumeStatus{AppName: "found", VolumeName: "vol"},
+	}
+
 	switch name {
 	case "dne":
 		return nil, fmt.Errorf("error: volume %s does not exist", name)
-	case "found.volume":
-		return &apiv1.Volume{TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{Name: "found.volume"},
-			Spec:       apiv1.VolumeSpec{},
-			Status:     apiv1.VolumeStatus{AppName: "found", VolumeName: "found.volume"},
-		}, nil
+	case "volume":
+		return &potentialVol, nil
+	case "found.vol":
+		return &potentialVol, nil
 	}
 	return nil, nil
 }
@@ -482,7 +495,9 @@ func (m *MockClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Volu
 	switch name {
 	case "dne":
 		return nil, nil
-	case "found.volume":
+	case "volume":
+		return &apiv1.Volume{}, nil
+	case "found.vol":
 		return &apiv1.Volume{}, nil
 	}
 	return nil, nil
