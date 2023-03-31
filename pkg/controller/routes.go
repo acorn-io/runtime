@@ -68,8 +68,10 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 
+	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.SetRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
 
+	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.SetRegion)
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)

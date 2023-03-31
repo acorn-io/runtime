@@ -27,12 +27,14 @@ func (in *ClusterComputeClassInstance) ForRegion(region string) bool {
 
 // ForOtherRegions returns true if there are other regions that this instance is supported in.
 func (in *ClusterComputeClassInstance) ForOtherRegions(region string) bool {
-	for i, r := range in.SupportedRegions {
-		if r == region {
-			in.SupportedRegions = append(in.SupportedRegions[:i], in.SupportedRegions[i+1:]...)
+	regions := make([]string, 0, len(in.SupportedRegions))
+	for _, r := range in.SupportedRegions {
+		if r != region {
+			regions = append(regions, region)
 		}
 	}
 
+	in.SupportedRegions = regions
 	return len(in.SupportedRegions) > 0
 }
 

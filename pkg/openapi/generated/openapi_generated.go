@@ -2159,6 +2159,12 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 				Required: []string{"ready", "restartCount", "image", "imageID"},
 			},
@@ -3113,12 +3119,6 @@ func schema_pkg_apis_apiacornio_v1_ProjectStatus(ref common.ReferenceCallback) c
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"placement": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"namespace": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -4372,6 +4372,12 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref common
 							Format: "",
 						},
 					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -5405,6 +5411,12 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref common.Referen
 						},
 					},
 					"serviceName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"region": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

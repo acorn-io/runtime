@@ -368,11 +368,8 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 	var (
 		memory        = params.Spec.Memory
 		computeClass  = params.Spec.ComputeClass
-		defaultRegion = project.Spec.DefaultRegion
+		defaultRegion = project.GetRegion()
 	)
-	if defaultRegion == "" {
-		defaultRegion = project.Status.DefaultRegion
-	}
 
 	var validationErrors []*field.Error
 	err := validateMemoryRunFlags(memory, workloads)
@@ -458,11 +455,7 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 		return nil
 	}
 
-	defaultRegion := project.Spec.DefaultRegion
-	if defaultRegion == "" {
-		defaultRegion = project.Status.DefaultRegion
-	}
-
+	defaultRegion := project.GetRegion()
 	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClasses(ctx, c, namespace)
 	if err != nil {
 		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, err.Error())

@@ -76,10 +76,27 @@ type AcornImageBuildInstanceStatus struct {
 	AppImage           AppImage    `json:"appImage,omitempty"`
 	Conditions         []Condition `json:"conditions,omitempty"`
 	BuildError         string      `json:"buildError,omitempty"`
+	Region             string      `json:"region,omitempty"`
 }
 
 func (in *AcornImageBuildInstance) Conditions() *[]Condition {
 	return &in.Status.Conditions
+}
+
+func (in *AcornImageBuildInstance) ForRegion(region string) bool {
+	return in.Status.Region == region
+}
+
+func (in *AcornImageBuildInstance) ForOtherRegions(region string) bool {
+	return in.Status.Region != region
+}
+
+func (in *AcornImageBuildInstance) GetRegion() string {
+	return in.Status.Region
+}
+
+func (in *AcornImageBuildInstance) SetDefaultRegion(region string) {
+	in.Status.Region = region
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -106,6 +123,23 @@ type BuilderInstanceStatus struct {
 	Endpoint           string `json:"endpoint,omitempty"`
 	PublicKey          string `json:"publicKey,omitempty"`
 	ServiceName        string `json:"serviceName,omitempty"`
+	Region             string `json:"region,omitempty"`
+}
+
+func (b *BuilderInstance) ForRegion(region string) bool {
+	return b.Status.Region == region
+}
+
+func (b *BuilderInstance) ForOtherRegions(region string) bool {
+	return b.Status.Region != region
+}
+
+func (b *BuilderInstance) GetRegion() string {
+	return b.Status.Region
+}
+
+func (b *BuilderInstance) SetDefaultRegion(region string) {
+	b.Status.Region = region
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

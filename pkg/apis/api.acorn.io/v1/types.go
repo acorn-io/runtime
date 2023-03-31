@@ -89,6 +89,29 @@ type ContainerReplicaStatus struct {
 	Image                string                  `json:"image"`
 	ImageID              string                  `json:"imageID"`
 	Started              *bool                   `json:"started,omitempty"`
+
+	Region string `json:"region,omitempty"`
+}
+
+// ForRegion checks or sets the region of a ContainerReplica.
+// If a ContainerReplica's region is unset, ForRegion sets it to the given region and returns true.
+// Otherwise, it returns true if and only if the ContainerReplica belongs to the given region.
+func (in *ContainerReplica) ForRegion(region string) bool {
+	// If the region of a Container Replica is not set, then it hasn't been synced yet. In this case, we assume that it is in
+	// the same region as the app, and return true.
+	if in.Status.Region == "" {
+		in.Status.Region = region
+	}
+
+	return in.Status.Region == region
+}
+
+func (in *ContainerReplica) ForOtherRegions(region string) bool {
+	return in.Status.Region != region
+}
+
+func (in *ContainerReplica) GetRegion() string {
+	return in.Status.Region
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -394,7 +417,6 @@ type ProjectSpec struct {
 }
 
 type ProjectStatus struct {
-	Placement     string `json:"placement,omitempty"`
 	Namespace     string `json:"namespace,omitempty"`
 	DefaultRegion string `json:"defaultRegion,omitempty"`
 }
@@ -412,6 +434,21 @@ func (in *Project) ForOtherRegions(region string) bool {
 		return false
 	}
 	return len(in.Spec.SupportedRegions) > 1 || in.Spec.SupportedRegions[0] != region
+}
+
+func (in *Project) GetRegion() string {
+	if in.Spec.DefaultRegion != "" {
+		return in.Spec.DefaultRegion
+	}
+	return in.Status.DefaultRegion
+}
+
+func (in *Project) SetDefaultRegion(region string) {
+	if in.Spec.DefaultRegion == "" {
+		in.Status.DefaultRegion = region
+	} else {
+		in.Status.DefaultRegion = ""
+	}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
