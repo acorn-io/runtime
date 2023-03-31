@@ -64,7 +64,6 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 
 	// Check if the image is allowed
 	verifyOpts := cosign.VerifyOpts{
-		ImageRef:           image,
 		Namespace:          namespace,
 		AnnotationRules:    v1.SignatureAnnotations{},
 		Key:                "",
@@ -72,6 +71,11 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		OciRemoteOpts:      []ociremote.Option{ociremote.WithRemoteOptions(opts...)},
 		CraneOpts:          []crane.Option{crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain)},
 	}
+
+	if err := cosign.EnsureReferences(ctx, c, image, &verifyOpts); err != nil {
+		return fmt.Errorf("error ensuring references for image %s: %w", image, err)
+	}
+
 	for _, imageAllowRule := range imageAllowRules {
 		notAllowedErr := &ErrImageNotAllowed{Rule: fmt.Sprintf("%s/%s", imageAllowRule.Namespace, imageAllowRule.Name), Image: image}
 
@@ -86,7 +90,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 				for allOfRuleIndex, signer := range rule.SignedBy.AllOf {
 					logrus.Debugf("Checking image %s against %s/%s.signatures.allOf.%d", image, imageAllowRule.Namespace, imageAllowRule.Name, allOfRuleIndex)
 					verifyOpts.Key = signer
-					err := cosign.VerifySignature(ctx, c, verifyOpts)
+					err := cosign.VerifySignature(ctx, verifyOpts)
 					if err != nil {
 						if _, ok := err.(*ocosign.VerificationError); ok {
 							notAllowedErr.SubrulePath += fmt.Sprintf(".allOf.%d (%v)", allOfRuleIndex, err)
@@ -104,7 +108,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
 					logrus.Debugf("Checking image %s against %s/%s.signatures.anyOf.%d", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex)
 					verifyOpts.Key = signer
-					err := cosign.VerifySignature(ctx, c, verifyOpts)
+					err := cosign.VerifySignature(ctx, verifyOpts)
 					if err == nil {
 						anyOfOK = true
 						break

@@ -82,7 +82,6 @@ func pushOCIDir(path string, ref name.Reference) error {
 	return nil
 }
 
-// TODO: mock oci registry and signatures
 func TestVerifySignature(t *testing.T) {
 	imgPath := "./testdata/img.oci"
 	imgDigestExpected := "sha256:245864d0312e7e33201eff111cfc071727f4eaa9edd10a395c367077e200cad2"
@@ -177,12 +176,13 @@ func TestVerifySignature(t *testing.T) {
 	}
 
 	opts := VerifyOpts{
-		ImageRef:           fmt.Sprintf("%s@%s", imgRepo, imgDigestExpected),
 		SignatureAlgorithm: "sha256",
 		NoCache:            true,
 	}
 
-	ref, err := name.ParseReference(opts.ImageRef)
+	imgName := fmt.Sprintf("%s@%s", imgRepo, imgDigestExpected)
+
+	ref, err := name.ParseReference(imgName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +191,7 @@ func TestVerifySignature(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	digest, err := crane.Digest(opts.ImageRef)
+	digest, err := crane.Digest(ref.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +218,11 @@ func TestVerifySignature(t *testing.T) {
 		opts.Key = tc.key
 		opts.AnnotationRules = tc.annotationrules
 
-		err = VerifySignature(context.Background(), nil, opts)
+		if err := EnsureReferences(context.Background(), nil, imgName, &opts); err != nil {
+			t.Fatal(err)
+		}
+
+		err = VerifySignature(context.Background(), opts)
 		if err != nil && !tc.shouldError {
 			t.Fatalf("[%d] unexpected error: %v, but %s", ti, err, tc.description)
 		}
