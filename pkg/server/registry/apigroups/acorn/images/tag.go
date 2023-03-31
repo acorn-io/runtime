@@ -80,7 +80,7 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	}
 	set := sets.NewString(res...)
 
-	imageRef, err := name.ParseReference(tagToAdd)
+	imageRef, err := name.ParseReference(tagToAdd, name.WithDefaultRegistry(""))
 	if err != nil {
 		return nil, err
 	}

@@ -119,17 +119,17 @@ func TestImageTag(t *testing.T) {
 
 	image := images[0]
 
-	err = c.ImageTag(ctx, image.Name, "foo")
+	err = c.ImageTag(ctx, image.Name, "foo:latest")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.ImageTag(ctx, "foo", "bar")
+	err = c.ImageTag(ctx, "foo:latest", "bar:latest")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.ImageTag(ctx, "foo", "ghcr.io/acorn-io/acorn/test:v0.0.0-abc")
+	err = c.ImageTag(ctx, "foo:latest", "ghcr.io/acorn-io/acorn/test:v0.0.0-abc")
 	if err != nil {
 		t.Fatal(err)
 	}
