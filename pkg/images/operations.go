@@ -162,7 +162,7 @@ func GetImageReference(ctx context.Context, c client.Reader, namespace, image st
 	return imagename.ParseReference(image)
 }
 
-func GetAuthenticationRemoteOptionsWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
+func GetAuthenticationRemoteKeychainWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string) (authn.Keychain, error) {
 	authn, err := pullsecret.Keychain(ctx, client, namespace)
 	if err != nil {
 		return nil, err
@@ -170,6 +170,15 @@ func GetAuthenticationRemoteOptionsWithLocalAuth(ctx context.Context, registry a
 
 	if localAuth != nil {
 		authn = NewSimpleKeychain(registry, *localAuth, authn)
+	}
+
+	return authn, nil
+}
+
+func GetAuthenticationRemoteOptionsWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
+	authn, err := GetAuthenticationRemoteKeychainWithLocalAuth(ctx, registry, localAuth, client, namespace)
+	if err != nil {
+		return nil, err
 	}
 
 	result := []remote.Option{

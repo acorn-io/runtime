@@ -7,6 +7,8 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cosign"
 	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rancher/wrangler/pkg/merr"
 	ocosign "github.com/sigstore/cosign/pkg/cosign"
@@ -44,10 +46,15 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image st
 		return err
 	}
 
-	return CheckImageAgainstRules(ctx, c, namespace, image, rulesList.Items, opts...)
+	keychain, err := images.GetAuthenticationRemoteKeychainWithLocalAuth(ctx, nil, nil, c, namespace)
+	if err != nil {
+		return err
+	}
+
+	return CheckImageAgainstRules(ctx, c, namespace, image, rulesList.Items, keychain, opts...)
 }
 
-func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRuleInstance, opts ...remote.Option) error {
+func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRuleInstance, keychain authn.Keychain, opts ...remote.Option) error {
 	if len(imageAllowRules) == 0 {
 		// No ImageAllowRules found, so allow the image
 		return nil
@@ -62,7 +69,8 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		AnnotationRules:    v1.SignatureAnnotations{},
 		Key:                "",
 		SignatureAlgorithm: "sha256", // FIXME: make signature algorithm configurable (?)
-		RegistryClientOpts: []ociremote.Option{ociremote.WithRemoteOptions(opts...)},
+		OciRemoteOpts:      []ociremote.Option{ociremote.WithRemoteOptions(opts...)},
+		CraneOpts:          []crane.Option{crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain)},
 	}
 	for _, imageAllowRule := range imageAllowRules {
 		notAllowedErr := &ErrImageNotAllowed{Rule: fmt.Sprintf("%s/%s", imageAllowRule.Namespace, imageAllowRule.Name), Image: image}

@@ -36,11 +36,15 @@ type VerifyOpts struct {
 	AnnotationRules    v1.SignatureAnnotations
 	Key                string
 	SignatureAlgorithm string
-	RegistryClientOpts []ociremote.Option
+	OciRemoteOpts      []ociremote.Option
+	CraneOpts          []crane.Option
 	NoCache            bool
 }
 
-// verifySignature checks if the image is signed with the given key and if the annotations match the given rules
+// VerifySignature checks if the image is signed with the given key and if the annotations match the given rules
+// This does a lot of image and image manifest juggling to fetch artifacts, digests, etc. from the registry, so we have to be
+// careful to not do too many GET requests that count against registry rate limits (e.g. for DockerHub).
+// Crane uses HEAD (with GET as a fallback) wherever it can, so it's a good choice here e.g. for fetching digests.
 func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) error {
 	// --- image name to digest hash
 	imgRef, err := name.ParseReference(opts.ImageRef)
@@ -48,12 +52,14 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 		return fmt.Errorf("failed to parse image %s: %w", opts.ImageRef, err)
 	}
 
-	imgDigest, err := ociremote.ResolveDigest(imgRef, opts.RegistryClientOpts...)
+	imgDigest, err := crane.Digest(imgRef.Name(), opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
 	if err != nil {
 		return fmt.Errorf("failed to resolve image digest: %w", err)
 	}
 
-	imgDigestHash, err := ggcrv1.NewHash(imgDigest.Identifier())
+	imgRef = imgRef.Context().Digest(imgDigest)
+
+	imgDigestHash, err := ggcrv1.NewHash(imgDigest)
 	if err != nil {
 		return err
 	}
@@ -63,7 +69,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 	cosignOpts := &cosign.CheckOpts{
 		Annotations:        map[string]interface{}{},
 		ClaimVerifier:      cosign.SimpleClaimVerifier,
-		RegistryClientOpts: opts.RegistryClientOpts,
+		RegistryClientOpts: opts.OciRemoteOpts,
 	}
 
 	// --- parse key
@@ -76,12 +82,12 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 	}
 
 	// -- signature hash
-	sigTag, err := ociremote.SignatureTag(imgRef, opts.RegistryClientOpts...)
+	sigTag, err := ociremote.SignatureTag(imgRef, opts.OciRemoteOpts...) // we force imgRef to be a digest above, so this should *not* make a GET request to the registry
 	if err != nil {
 		return fmt.Errorf("failed to get signature tag: %w", err)
 	}
 
-	sigDigest, err := crane.Digest(sigTag.Name(), crane.WithAuthFromKeychain(authn.DefaultKeychain))
+	sigDigest, err := crane.Digest(sigTag.Name(), opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
 	if err != nil {
 		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
 			// signature artifact not found -> that's an actual verification error
@@ -106,7 +112,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 
 		// --- check if we have the signature artifact locally, if not, copy it over from external registry
 		mustPull := false
-		localSigSHA, err := crane.Digest(localSignatureArtifact, crane.WithAuthFromKeychain(authn.DefaultKeychain))
+		localSigSHA, err := crane.Digest(localSignatureArtifact, opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
 		if err != nil {
 			var terr *transport.Error
 			if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
@@ -122,7 +128,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 
 		if mustPull {
 			// --- pull signature artifact
-			err := crane.Copy(sigTag.Name(), localSignatureArtifact, crane.WithAuthFromKeychain(authn.DefaultKeychain))
+			err := crane.Copy(sigTag.Name(), localSignatureArtifact, opts.CraneOpts...) // Pull (GET) counts against the rate limits, so this shouldn't be done too often
 			if err != nil {
 				return fmt.Errorf("failed to copy signature artifact: %w", err)
 			}
@@ -138,7 +144,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 		logrus.Debugf("Checking if image %s is signed with %s (cache: %s)", imgRef, sigTag, localSignatureArtifact)
 	}
 
-	sigs, err := ociremote.Signatures(sigRefToUse, ociremote.WithRemoteOptions(remote.WithAuthFromKeychain(authn.DefaultKeychain)))
+	sigs, err := ociremote.Signatures(sigRefToUse, ociremote.WithRemoteOptions(remote.WithAuthFromKeychain(authn.DefaultKeychain))) // this runs against our internal registry, so it should not count against the rate limits
 	if err != nil {
 		return fmt.Errorf("failed to get signatures: %w", err)
 	}
