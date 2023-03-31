@@ -101,6 +101,26 @@ By default, Acorn workloads that publish ports that use HTTP will be allowed to 
 
 To allow traffic from a specific namespace to all Acorn apps in the cluster, use `--allow-traffic-from-namespace=<namespace>`. This is useful if there is a monitoring namespace, for example, that needs to be able to connect to all the pods created by Acorn in order to scrape metrics.
 
+## Working with external LoadBalancer controllers
+If you are using an external `LoadBalancer` controller that requires annotations on `LoadBalancer` Services to operate, such as the `aws-load-balancer-controller`, you can pass the `--service-lb-annotations` flag to `acorn install`. This will cause Acorn to add the specified annotations to all `LoadBalancer` Services it creates. The value of the flag should be a comma-separated list of key-value pairs, where the key is the annotation name and the value is the annotation value. For example:
+
+```bash
+acorn install --service-lb-annotations service.beta.kubernetes.io/aws-load-balancer-type=external,service.beta.kubernetes.io/aws-load-balancer-scheme=internet-facing,service.beta.kubernetes.io/aws-load-balancer-nlb-target-type=instance
+```
+
+For readability, you can also pass the flag multiple times, and the values will be concatenated. For example:
+
+```bash
+acorn install
+    --service-lb-annotations service.beta.kubernetes.io/aws-load-balancer-type=external
+    --service-lb-annotations service.beta.kubernetes.io/aws-load-balancer-scheme=internet-facing
+    --service-lb-annotations service.beta.kubernetes.io/aws-load-balancer-nlb-target-type=instance
+```
+
+:::note
+These annotations get added before the the `LoadBalancer` Service is created which is a requisite for some `LoadBalancer` controllers to work properly, like the `aws-load-balancer-controller`.
+:::
+
 ## Changing install options
 If you want to change your installation options after the initial installation, just rerun `acorn install` with the new options. This will update the existing install dynamically.
 

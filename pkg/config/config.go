@@ -316,6 +316,12 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.PropagateProjectLabels = newConfig.PropagateProjectLabels
 	}
 
+	if len(newConfig.ServiceLBAnnotations) == 0 {
+		mergedConfig.ServiceLBAnnotations = nil
+	} else {
+		mergedConfig.ServiceLBAnnotations = newConfig.ServiceLBAnnotations
+	}
+
 	if newConfig.NetworkPolicies != nil {
 		mergedConfig.NetworkPolicies = newConfig.NetworkPolicies
 	}

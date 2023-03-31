@@ -44,7 +44,8 @@
                 "manageVolumeClasses": null,
                 "networkPolicies": null,
                 "ingressControllerNamespace": null,
-                "allowTrafficFromNamespace": null
+                "allowTrafficFromNamespace": null,
+                "serviceLBAnnotations": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -74,7 +75,8 @@
                 "manageVolumeClasses": null,
                 "networkPolicies": null,
                 "ingressControllerNamespace": null,
-                "allowTrafficFromNamespace": null
+                "allowTrafficFromNamespace": null,
+                "serviceLBAnnotations": null
             }
         }
     }
