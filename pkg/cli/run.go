@@ -208,6 +208,9 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	return opts, nil
 }
 
+// isDirectory checks that the path from the provided directory
+// point to a directory. If it does not point to a directory and it points at a file,
+// it errors. Otherwise, the function returns false.
 func isDirectory(cwd string) (bool, error) {
 	if s, err := os.Stat(cwd); os.IsNotExist(err) {
 		return false, nil
