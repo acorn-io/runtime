@@ -49,14 +49,14 @@ var (
 	}
 	ServiceConverter = MustConverter(Service)
 
-	// Used for acorn image related printing
+	// ImageAcorn Used for acorn image related printing
 	ImageAcorn = [][]string{
 		{"Repository", "{{if (not .Repository)}}<none>{{else if .Project }}{{.Project}}::{{end}}{{ .Repository }}"},
 		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
 		{"Image-ID", "{{trunc .Name}}"},
 	}
 
-	// Used for kubectl image related printing
+	// Image Used for kubectl image related printing
 	Image = [][]string{
 		{"Image-ID", "{{trunc .Name}}"},
 		{"Tags", "{{if .Tags}}{{else}}<none>{{end}}{{range $index, $v := .Tags}}{{if $index}},{{end}}{{if eq $v \"\"}}<none>{{else}}{{$v}}{{end}}{{end}}"},

@@ -382,11 +382,18 @@ func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
 }
 
 func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (result *ImageDetails, err error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	// Image may exist on any project within MultiClient
+	clients, err := m.Factory.List(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return c.ImageDetails(ctx, imageName, opts)
+	var details *ImageDetails
+	for _, client := range clients {
+		if details, err = client.ImageDetails(ctx, imageName, opts); err == nil {
+			return details, nil
+		}
+	}
+	return nil, err
 }
 
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {

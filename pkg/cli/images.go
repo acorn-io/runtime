@@ -9,6 +9,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -129,12 +130,11 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if a.Containers {
-		//only display first tag in -c <tag>
+		// only display first tag in -c <tag>
 		if image != nil && len(image.Tags) != 0 && tagToMatch == "" && len(args) != 0 {
 			args[0] = image.Tags[0]
 			tagToMatch = image.Tags[0]
 		}
-
 		return printContainerImages(images, cmd.Context(), c, a, args, tagToMatch, allProjects)
 	}
 
@@ -158,8 +158,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			Digest:     image.Digest,
 			Tag:        "",
 			Repository: "",
-			Project: "",
-
+			Project:    "",
 		}
 
 		// Only add the project info if called with -A

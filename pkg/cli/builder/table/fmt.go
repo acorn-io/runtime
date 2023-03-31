@@ -15,7 +15,7 @@ func SimpleFormat(values [][]string) (string, string) {
 			// Special formatting
 			appendTabDelim(&valueBuffer, v[1])
 		} else {
-			// Default formatting, loop up name
+			// Default formatting
 			appendTabDelim(&valueBuffer, "{{."+v[1]+"}}")
 		}
 	}
