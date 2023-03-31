@@ -190,10 +190,12 @@ func TestVolume(t *testing.T) {
 								CreationTimestamp: metav1.NewTime(tenYearsAgo),
 								Name:              "my-volume",
 								Labels: map[string]string{
-									labels.AcornVolumeClass: "my-class",
-									labels.AcornVolumeName:  "my-vol",
-									labels.AcornAppName:     "app",
+									labels.AcornVolumeName: "my-vol",
+									labels.AcornAppName:    "app",
 								},
+							},
+							Spec: apiv1.VolumeSpec{
+								Class: "my-class",
 							},
 						},
 					}, nil).AnyTimes()
