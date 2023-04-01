@@ -76,12 +76,6 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 // Acorn apps from the ingress controller. If the ingress controller namespace is not defined, traffic from
 // all namespaces will be allowed instead.
 func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
-	// check if this is being called as a finalizer for a deleted Ingress
-	// we need this because we sometimes create NetworkPolicies in different namespaces from where their owning Ingresses live
-	if !req.Object.GetDeletionTimestamp().IsZero() {
-		return nil
-	}
-
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
