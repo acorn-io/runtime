@@ -4,6 +4,8 @@ kind: NetworkPolicy
 metadata:
   name: acorn-my-app-one-publish-one
   namespace: my-app-namespace
+  labels:
+    "acorn.io/managed": "true"
 spec:
   podSelector:
     matchLabels:

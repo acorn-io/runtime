@@ -3,6 +3,8 @@ kind: NetworkPolicy
 metadata:
   name: acorn-my-app-service-7777-service-7777-9999
   namespace: my-app-namespace
+  labels:
+    "acorn.io/managed": "true"
 spec:
   ingress:
     - from:

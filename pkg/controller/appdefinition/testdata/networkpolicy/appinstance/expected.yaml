@@ -4,6 +4,8 @@ kind: NetworkPolicy
 metadata:
   name: app-name
   namespace: app-created-namespace
+  labels:
+    "acorn.io/managed": "true"
 spec:
   ingress:
     - from:

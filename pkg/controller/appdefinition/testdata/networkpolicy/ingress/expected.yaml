@@ -4,6 +4,8 @@ kind: NetworkPolicy
 metadata:
   name: acorn-my-app-my-service-service-7777-9999-10000
   namespace: my-app-namespace
+  labels:
+    "acorn.io/managed": "true"
 spec:
   ingress:
     - from:
@@ -33,6 +35,8 @@ kind: NetworkPolicy
 metadata:
   name: acorn-my-app-my-service-nginx-9090-9090
   namespace: my-app-namespace
+  labels:
+    "acorn.io/managed": "true"
 spec:
   ingress:
     - from:
