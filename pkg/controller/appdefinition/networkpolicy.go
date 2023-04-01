@@ -55,6 +55,9 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
 			Namespace: podNamespace,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
@@ -176,6 +179,9 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      netPolName,
 				Namespace: svc.Namespace,
+				Labels: map[string]string{
+					labels.AcornManaged: "true",
+				},
 			},
 			Spec: networkingv1.NetworkPolicySpec{
 				PodSelector: metav1.LabelSelector{
@@ -258,6 +264,9 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name.SafeConcatName(projectName, appName, service.Name, containerName),
 			Namespace: service.Namespace,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
