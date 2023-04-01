@@ -2,15 +2,18 @@ package publish
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/baaah/pkg/name"
+	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ServiceLoadBalancer(svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
+func ServiceLoadBalancer(req router.Request, svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
 	if svc.Spec.PublishMode == v1.PublishModeNone {
 		return nil, nil
 	}
@@ -31,6 +34,19 @@ func ServiceLoadBalancer(svc *v1.ServiceInstance) (result []kclient.Object, _ er
 
 	if len(selectorLabels) == 0 {
 		return nil, nil
+	}
+
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	if svc.Spec.Annotations == nil {
+		svc.Spec.Annotations = map[string]string{}
+	}
+
+	for _, entry := range typed.Sorted(cfg.ServiceLBAnnotations) {
+		svc.Spec.Annotations[entry.Key] = entry.Value
 	}
 
 	servicePorts, err := bindings.ServicePorts()

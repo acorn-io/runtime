@@ -19,7 +19,7 @@ func RenderServices(req router.Request, resp router.Response) error {
 	}
 	resp.Objects(objs...)
 
-	objs, err = publish.ServiceLoadBalancer(svcInstance)
+	objs, err = publish.ServiceLoadBalancer(req, svcInstance)
 	if err != nil {
 		return err
 	}
