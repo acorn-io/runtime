@@ -73,7 +73,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			images = []apiv1.Image{*image}
 		} else {
 			if tags.SHAPermissivePrefixPattern.MatchString(args[0]) {
-				// > search by ID or prefix
+				// > search by ID or prefix or untagged (in order untagged > ID > prefix)
 				image, err = c.ImageGet(cmd.Context(), args[0])
 				if err != nil {
 					if !apierrors.IsNotFound(err) {
@@ -81,6 +81,19 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 					}
 				} else if image != nil {
 					images = []apiv1.Image{*image}
+
+					// here, we don't know whether the image was matched by ID or by `:latest` auto-tag,
+					// so we check for the latter in the tags, as it takes precedence
+					tagRef, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
+					if err != nil {
+						return err
+					}
+					for _, t := range image.Tags {
+						if t == tagRef.Name() {
+							tagToMatch = t
+							break
+						}
+					}
 				}
 			} else {
 				// > search by repository
