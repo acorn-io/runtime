@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -54,6 +55,9 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
 			Namespace: podNamespace,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
@@ -106,6 +110,31 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 			return err
 		}
 
+		// This service is either a normal ClusterIP service or an ExternalName service which
+		// points to a service in a different namespace (if there are Acorn links involved).
+		// If it's an ExternalName, we need to get the service to which it points.
+		if svc.Spec.Type == corev1.ServiceTypeExternalName {
+			externalName := svc.Spec.ExternalName
+
+			// the ExternalName is in the format <service name>.<namespace>.svc.<cluster domain>
+			svcName, rest, ok := strings.Cut(externalName, ".")
+			if !ok {
+				return fmt.Errorf("failed to parse ExternalName '%s' of svc '%s'", externalName, svc.Name)
+			}
+			svcNamespace, _, ok := strings.Cut(rest, ".")
+			if !ok {
+				return fmt.Errorf("failed to parse ExternalName '%s' of svc '%s'", externalName, svc.Name)
+			}
+
+			svc = corev1.Service{}
+			if err = req.Get(&svc, svcNamespace, svcName); err != nil {
+				if apierror.IsNotFound(err) {
+					return fmt.Errorf("failed to find service '%s', targeted by ExternalName '%s'", svcName, externalName)
+				}
+				return err
+			}
+		}
+
 		netPolName := name.SafeConcatName(projectName, appName, ingress.Name, svcName)
 
 		// build the namespaceSelector for the NetPol
@@ -143,7 +172,10 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 		resp.Objects(&networkingv1.NetworkPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      netPolName,
-				Namespace: ingress.Namespace,
+				Namespace: svc.Namespace,
+				Labels: map[string]string{
+					labels.AcornManaged: "true",
+				},
 			},
 			Spec: networkingv1.NetworkPolicySpec{
 				PodSelector: metav1.LabelSelector{
@@ -226,6 +258,9 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name.SafeConcatName(projectName, appName, service.Name, containerName),
 			Namespace: service.Namespace,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
 		},
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{

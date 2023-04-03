@@ -89,6 +89,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(appdefinition.NetworkPolicyForService)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(appdefinition.NetworkPolicyForIngress)
+	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 
 	configRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName)
 	configRouter.Handler(config.NewDNSConfigHandler())

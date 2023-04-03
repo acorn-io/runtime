@@ -14,6 +14,7 @@ import (
 	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/config"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/run"
@@ -1183,6 +1184,13 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndNamespace(t)
 	kc := helper.MustReturn(kclient.Default)
+
+	cfg, err := config.Get(ctx, kc)
+	if err != nil {
+		t.Fatal(err)
+	} else if !*cfg.NetworkPolicies {
+		t.SkipNow() // skip this test because NetworkPolicies are not enabled
+	}
 
 	// create two separate projects in which to run two Nginx apps
 	proj1, err := c.ProjectCreate(ctx, "proj1", "local")
