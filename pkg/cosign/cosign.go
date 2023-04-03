@@ -11,11 +11,9 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
-	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/sigstore/cosign/pkg/cosign"
 	"github.com/sigstore/cosign/pkg/oci"
@@ -31,29 +29,121 @@ import (
 )
 
 type VerifyOpts struct {
-	ImageRef           string
+	ImageRef           name.Digest
+	SignatureRef       name.Reference
 	Namespace          string
 	AnnotationRules    v1.SignatureAnnotations
 	Key                string
 	SignatureAlgorithm string
-	RegistryClientOpts []ociremote.Option
+	OciRemoteOpts      []ociremote.Option
+	CraneOpts          []crane.Option
 	NoCache            bool
 }
 
-// verifySignature checks if the image is signed with the given key and if the annotations match the given rules
-func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) error {
+// EnsureReferences will enrich the VerifyOpts with the image digest and signature reference.
+// It's outsourced here, so we can ensure that it's used as few times as possible to reduce the number of potential
+// GET requests to the registry which would count against potential rate limits.
+func EnsureReferences(ctx context.Context, c client.Reader, img string, opts *VerifyOpts) error {
 	// --- image name to digest hash
-	imgRef, err := name.ParseReference(opts.ImageRef)
+	imgRef, err := name.ParseReference(img)
 	if err != nil {
-		return fmt.Errorf("failed to parse image %s: %w", opts.ImageRef, err)
+		return fmt.Errorf("failed to parse image %s: %w", img, err)
 	}
 
-	imgDigest, err := ociremote.ResolveDigest(imgRef, opts.RegistryClientOpts...)
+	imgDigest, err := crane.Digest(imgRef.Name(), opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
 	if err != nil {
 		return fmt.Errorf("failed to resolve image digest: %w", err)
 	}
 
-	imgDigestHash, err := ggcrv1.NewHash(imgDigest.Identifier())
+	opts.ImageRef = imgRef.Context().Digest(imgDigest)
+
+	signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.OciRemoteOpts, opts.CraneOpts)
+	if err != nil {
+		return fmt.Errorf("failed to ensure signature artifact: %w", err)
+	}
+	opts.SignatureRef = signatureRef
+
+	return nil
+}
+
+func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace string, img name.Digest, noCache bool, ociRemoteOpts []ociremote.Option, craneOpts []crane.Option) (name.Reference, error) {
+	// -- signature hash
+	sigTag, err := ociremote.SignatureTag(img, ociRemoteOpts...) // we force imgRef to be a digest above, so this should *not* make a GET request to the registry
+	if err != nil {
+		return nil, fmt.Errorf("failed to get signature tag: %w", err)
+	}
+
+	sigDigest, err := crane.Digest(sigTag.Name(), craneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+	if err != nil {
+		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
+			// signature artifact not found -> that's an actual verification error
+			return nil, fmt.Errorf("%w: expected signature artifact %s not found", cosign.ErrNoMatchingSignatures, sigTag.Name())
+		}
+		return nil, fmt.Errorf("failed to get signature digest: %w", err)
+	}
+
+	sigRefToUse, err := name.ParseReference(sigTag.Name(), name.WeakValidation)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse signature reference: %w", err)
+	}
+	logrus.Debugf("Signature %s has digest: %s", sigRefToUse.Name(), sigDigest)
+
+	if !noCache {
+		internalRepo, _, err := imagesystem.GetInternalRepoForNamespace(ctx, c, namespace)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get internal repo for namespace %s: %w", namespace, err)
+		}
+
+		localSignatureArtifact := fmt.Sprintf("%s:%s", internalRepo, sigTag.Identifier())
+
+		// --- check if we have the signature artifact locally, if not, copy it over from external registry
+		mustPull := false
+		localSigSHA, err := crane.Digest(localSignatureArtifact, craneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+		if err != nil {
+			var terr *transport.Error
+			if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
+				logrus.Debugf("signature artifact %s not found locally, will try to pull it", localSignatureArtifact)
+				mustPull = true
+			} else {
+				return nil, fmt.Errorf("failed to get local signature digest, cannot check if we have it cached locally: %w", err)
+			}
+		} else if localSigSHA != sigDigest {
+			logrus.Debugf("Local signature digest %s does not match remote signature digest %s, will try to pull it", localSigSHA, sigDigest)
+			mustPull = true
+		}
+
+		if mustPull {
+			// --- pull signature artifact
+			err := crane.Copy(sigTag.Name(), localSignatureArtifact, craneOpts...) // Pull (GET) counts against the rate limits, so this shouldn't be done too often
+			if err != nil {
+				return nil, fmt.Errorf("failed to copy signature artifact: %w", err)
+			}
+		}
+
+		lname, err := name.ParseReference(localSignatureArtifact, name.WeakValidation)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse local signature artifact %s: %w", localSignatureArtifact, err)
+		}
+
+		sigRefToUse = lname
+
+		logrus.Debugf("Checking if image %s is signed with %s (cache: %s)", img, sigTag, localSignatureArtifact)
+	}
+
+	return sigRefToUse, nil
+}
+
+// VerifySignature checks if the image is signed with the given key and if the annotations match the given rules
+// This does a lot of image and image manifest juggling to fetch artifacts, digests, etc. from the registry, so we have to be
+// careful to not do too many GET requests that count against registry rate limits (e.g. for DockerHub).
+// Crane uses HEAD (with GET as a fallback) wherever it can, so it's a good choice here e.g. for fetching digests.
+func VerifySignature(ctx context.Context, opts VerifyOpts) error {
+	sigs, err := ociremote.Signatures(opts.SignatureRef, opts.OciRemoteOpts...) // this runs against our internal registry, so it should not count against the rate limits
+	if err != nil {
+		return fmt.Errorf("failed to get signatures: %w", err)
+	}
+
+	imgDigestHash, err := ggcrv1.NewHash(opts.ImageRef.DigestStr())
 	if err != nil {
 		return err
 	}
@@ -63,7 +153,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 	cosignOpts := &cosign.CheckOpts{
 		Annotations:        map[string]interface{}{},
 		ClaimVerifier:      cosign.SimpleClaimVerifier,
-		RegistryClientOpts: opts.RegistryClientOpts,
+		RegistryClientOpts: opts.OciRemoteOpts,
 	}
 
 	// --- parse key
@@ -75,74 +165,6 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 		cosignOpts.SigVerifier = verifier
 	}
 
-	// -- signature hash
-	sigTag, err := ociremote.SignatureTag(imgRef, opts.RegistryClientOpts...)
-	if err != nil {
-		return fmt.Errorf("failed to get signature tag: %w", err)
-	}
-
-	sigDigest, err := crane.Digest(sigTag.Name(), crane.WithAuthFromKeychain(authn.DefaultKeychain))
-	if err != nil {
-		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
-			// signature artifact not found -> that's an actual verification error
-			return fmt.Errorf("%w: expected signature artifact %s not found", cosign.ErrNoMatchingSignatures, sigTag.Name())
-		}
-		return fmt.Errorf("failed to get signature digest: %w", err)
-	}
-
-	sigRefToUse, err := name.ParseReference(sigTag.Name(), name.WeakValidation)
-	if err != nil {
-		return fmt.Errorf("failed to parse signature reference: %w", err)
-	}
-	logrus.Debugf("Signature %s has digest: %s", sigRefToUse.Name(), sigDigest)
-
-	if !opts.NoCache {
-		internalRepo, _, err := imagesystem.GetInternalRepoForNamespace(ctx, c, opts.Namespace)
-		if err != nil {
-			return fmt.Errorf("failed to get internal repo for namespace %s: %w", opts.Namespace, err)
-		}
-
-		localSignatureArtifact := fmt.Sprintf("%s:%s", internalRepo, sigTag.Identifier())
-
-		// --- check if we have the signature artifact locally, if not, copy it over from external registry
-		mustPull := false
-		localSigSHA, err := crane.Digest(localSignatureArtifact, crane.WithAuthFromKeychain(authn.DefaultKeychain))
-		if err != nil {
-			var terr *transport.Error
-			if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
-				logrus.Debugf("signature artifact %s not found locally, will try to pull it", localSignatureArtifact)
-				mustPull = true
-			} else {
-				return fmt.Errorf("failed to get local signature digest, cannot check if we have it cached locally: %w", err)
-			}
-		} else if localSigSHA != sigDigest {
-			logrus.Debugf("Local signature digest %s does not match remote signature digest %s, will try to pull it", localSigSHA, sigDigest)
-			mustPull = true
-		}
-
-		if mustPull {
-			// --- pull signature artifact
-			err := crane.Copy(sigTag.Name(), localSignatureArtifact, crane.WithAuthFromKeychain(authn.DefaultKeychain))
-			if err != nil {
-				return fmt.Errorf("failed to copy signature artifact: %w", err)
-			}
-		}
-
-		lname, err := name.ParseReference(localSignatureArtifact, name.WeakValidation)
-		if err != nil {
-			return fmt.Errorf("failed to parse local signature artifact %s: %w", localSignatureArtifact, err)
-		}
-
-		sigRefToUse = lname
-
-		logrus.Debugf("Checking if image %s is signed with %s (cache: %s)", imgRef, sigTag, localSignatureArtifact)
-	}
-
-	sigs, err := ociremote.Signatures(sigRefToUse, ociremote.WithRemoteOptions(remote.WithAuthFromKeychain(authn.DefaultKeychain)))
-	if err != nil {
-		return fmt.Errorf("failed to get signatures: %w", err)
-	}
-
 	// --- get and verify signatures
 	signatures, bundlesVerified, err := verifySignatures(ctx, sigs, imgDigestHash, cosignOpts)
 	if err != nil {
@@ -152,7 +174,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 		return fmt.Errorf("failed to verify image signatures: %w", err)
 	}
 
-	logrus.Debugf("image %s: %d signatures verified (bundle verified: %v)", imgRef, len(signatures), bundlesVerified)
+	logrus.Debugf("image %s: %d signatures verified (bundle verified: %v)", opts.ImageRef.Name(), len(signatures), bundlesVerified)
 
 	// --- extract payloads for subsequent checks
 	payloads, err := extractPayload(signatures)
@@ -167,7 +189,7 @@ func VerifySignature(ctx context.Context, c client.Reader, opts VerifyOpts) erro
 		}
 		return fmt.Errorf("failed to check annotations: %w", err)
 	}
-	logrus.Debugf("image %s: Annotations (%+v) verified", imgRef, opts.AnnotationRules)
+	logrus.Debugf("image %s: Annotations (%+v) verified", opts.ImageRef.Name(), opts.AnnotationRules)
 
 	return nil
 }
