@@ -158,7 +158,7 @@ func (s *Validator) validateRegion(app *apiv1.App, project *apiv1.Project) error
 		return nil
 	}
 
-	if !project.ForRegion(app.Spec.Region) {
+	if !project.HasRegion(app.Spec.Region) {
 		return fmt.Errorf("region %s is not supported for project %s", app.Spec.Region, app.Namespace)
 	}
 

@@ -30,12 +30,8 @@ func (in *Region) NamespaceScoped() bool {
 	return false
 }
 
-func (in *Region) ForRegion(region string) bool {
+func (in *Region) HasRegion(region string) bool {
 	return in.Spec.RegionName == region
-}
-
-func (in *Region) ForOtherRegions(region string) bool {
-	return in.Spec.RegionName != region
 }
 
 func (in *Region) Conditions() *[]v1.Condition {

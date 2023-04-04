@@ -93,10 +93,10 @@ type ContainerReplicaStatus struct {
 	Region string `json:"region,omitempty"`
 }
 
-// ForRegion checks or sets the region of a ContainerReplica.
-// If a ContainerReplica's region is unset, ForRegion sets it to the given region and returns true.
+// EnsureRegion checks or sets the region of a ContainerReplica.
+// If a ContainerReplica's region is unset, EnsureRegion sets it to the given region and returns true.
 // Otherwise, it returns true if and only if the ContainerReplica belongs to the given region.
-func (in *ContainerReplica) ForRegion(region string) bool {
+func (in *ContainerReplica) EnsureRegion(region string) bool {
 	// If the region of a Container Replica is not set, then it hasn't been synced yet. In this case, we assume that it is in
 	// the same region as the app, and return true.
 	if in.Status.Region == "" {
@@ -104,10 +104,6 @@ func (in *ContainerReplica) ForRegion(region string) bool {
 	}
 
 	return in.Status.Region == region
-}
-
-func (in *ContainerReplica) ForOtherRegions(region string) bool {
-	return in.Status.Region != region
 }
 
 func (in *ContainerReplica) GetRegion() string {
@@ -254,7 +250,10 @@ type VolumeColumns struct {
 	AccessModes string `json:"accessModes,omitempty"`
 }
 
-func (in *Volume) ForRegion(region string) bool {
+// EnsureRegion checks or sets the region of a ContainerReplica.
+// If a ContainerReplica's region is unset, EnsureRegion sets it to the given region and returns true.
+// Otherwise, it returns true if and only if the ContainerReplica belongs to the given region.
+func (in *Volume) EnsureRegion(region string) bool {
 	// If the region of a volume is not set, then it hasn't been synced yet. In this case, we assume that the volume is in
 	// the same region as the app, and return true.
 	if in.Status.Region == "" {
@@ -262,10 +261,6 @@ func (in *Volume) ForRegion(region string) bool {
 	}
 
 	return in.Status.Region == region
-}
-
-func (in *Volume) ForOtherRegions(region string) bool {
-	return in.Status.Region != region
 }
 
 // +k8s:conversion-gen:explicit-from=net/url.Values
@@ -425,15 +420,8 @@ func (in *Project) NamespaceScoped() bool {
 	return false
 }
 
-func (in *Project) ForRegion(region string) bool {
+func (in *Project) HasRegion(region string) bool {
 	return region == "" || in.Status.DefaultRegion == region || slices.Contains(in.Spec.SupportedRegions, region)
-}
-
-func (in *Project) ForOtherRegions(region string) bool {
-	if len(in.Spec.SupportedRegions) == 0 {
-		return false
-	}
-	return len(in.Spec.SupportedRegions) > 1 || in.Spec.SupportedRegions[0] != region
 }
 
 func (in *Project) GetRegion() string {

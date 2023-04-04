@@ -83,12 +83,8 @@ func (in *AcornImageBuildInstance) Conditions() *[]Condition {
 	return &in.Status.Conditions
 }
 
-func (in *AcornImageBuildInstance) ForRegion(region string) bool {
+func (in *AcornImageBuildInstance) HasRegion(region string) bool {
 	return in.Status.Region == region
-}
-
-func (in *AcornImageBuildInstance) ForOtherRegions(region string) bool {
-	return in.Status.Region != region
 }
 
 func (in *AcornImageBuildInstance) GetRegion() string {
@@ -126,12 +122,8 @@ type BuilderInstanceStatus struct {
 	Region             string `json:"region,omitempty"`
 }
 
-func (b *BuilderInstance) ForRegion(region string) bool {
+func (b *BuilderInstance) HasRegion(region string) bool {
 	return b.Status.Region == region
-}
-
-func (b *BuilderInstance) ForOtherRegions(region string) bool {
-	return b.Status.Region != region
 }
 
 func (b *BuilderInstance) GetRegion() string {
