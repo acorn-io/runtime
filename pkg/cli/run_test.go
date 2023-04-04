@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"fmt"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -12,8 +12,6 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/mocks"
-	"github.com/golang/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
@@ -270,59 +268,70 @@ func TestRun(t *testing.T) {
 		{
 			name: "acorn run --update image-dne", fields: fields{
 				All:   false,
-				Type:  nil,
 				Force: true,
 			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
-			},
 			args: args{
-				args:   []string{"--update", "image-dne"},
-				client: &testdata.MockClient{},
+				args: []string{"--update", "image-dne"},
 			},
 			wantErr: true,
 			wantOut: "error: app image-dne does not exist",
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+							Spec:       apiv1.InfoSpec{},
+						},
+					}, nil)
+				f.EXPECT().ImageDetails(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, fmt.Errorf("error: app image-dne does not exist"))
+			},
 		},
 		{
 			name: "acorn run --update --replace", fields: fields{
 				All:   false,
-				Type:  nil,
 				Force: true,
 			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
-			},
 			args: args{
-				args:   []string{"--update", "--replace"},
-				client: &testdata.MockClient{},
+				args: []string{"--update", "--replace"},
 			},
 			wantErr: true,
 			wantOut: "cannot combine --update/-u and --replace/-r",
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+							Spec:       apiv1.InfoSpec{},
+						},
+					}, nil)
+			},
 		},
 		{
 			name: "acorn run --update -i", fields: fields{
 				All:   false,
-				Type:  nil,
 				Force: true,
 			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
-			},
 			args: args{
-				args:   []string{"--update", "-i"},
-				client: &testdata.MockClient{},
+				args: []string{"--update", "-i"},
 			},
 			wantErr: true,
 			wantOut: "cannot use --update/-u or --replace/-r with --dev/-i",
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+							Spec:       apiv1.InfoSpec{},
+						},
+					}, nil)
+			},
 		},
 	}
 	for _, tt := range tests {
