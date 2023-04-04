@@ -111,7 +111,7 @@ func TestAcornProject(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "projects.api.acorn.io \"noproject\" not found",
+			wantOut: "project \"noproject\" does not exist within the current context",
 		},
 		{
 			name: "acorn image -j 12.badname",
@@ -131,7 +131,7 @@ func TestAcornProject(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "invalid project name [12.badname]: can not contain \".\"",
+			wantOut: "project \"12.badname\" does not exist within the current context",
 		},
 		{
 			name: "acorn image -j badname/projectname/here",
@@ -151,7 +151,7 @@ func TestAcornProject(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "failed to find authentication token for server badname, please run 'acorn login badname' first",
+			wantOut: "project \"badname/projectname/here\" does not exist within the current context",
 		},
 	}
 	for _, tt := range tests {

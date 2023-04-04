@@ -8,8 +8,6 @@ import (
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client/term"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/project"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
@@ -118,22 +116,6 @@ func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
 		if err := logging.Parse([]string{
 			fmt.Sprintf("-v=%d", level),
 		}); err != nil {
-			return err
-		}
-	}
-
-	if a.Project != "" {
-		clientFactory := CommandClientFactory{
-			cmd:   cmd,
-			acorn: a,
-		}
-		cfg, err := config.ReadCLIConfig()
-		if err != nil {
-			return err
-		}
-
-		err = project.Exists(cmd.Context(), clientFactory.Options().WithCLIConfig(cfg), a.Project)
-		if err != nil {
 			return err
 		}
 	}

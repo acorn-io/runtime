@@ -24,6 +24,7 @@ func lastPart(s string) string {
 
 func Create(ctx context.Context, opts Options, name, region string) error {
 	opts.Project = name
+	opts.Create = true
 	c, err := Client(ctx, opts)
 	if err != nil {
 		return err
