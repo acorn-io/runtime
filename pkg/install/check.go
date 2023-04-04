@@ -31,6 +31,7 @@ import (
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/util/storage"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CheckResult describes the results of a check, making it human-readable
@@ -361,40 +362,28 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		ing.Spec.IngressClassName = opts.IngressClassName
 	}
 
-	// Create objects
-	if err := cli.Create(ctx, ep); err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating endpoint: %v", err)
-		return result
-	}
+	resources := []client.Object{ep, svc, ing}
+
+	// Cleanup resources
 	defer func() {
-		if err := cli.Delete(ctx, ep); err != nil && !apierrors.IsNotFound(err) {
-			klog.Errorf("Error deleting endpoint: %v", err)
+		for _, r := range resources {
+			// context.Background() so deletion won't get cancelled by parent context
+			if err := cli.Delete(context.Background(), r); err != nil && !apierrors.IsNotFound(err) {
+				klog.Errorf("error deleting check-ingress resource %s: %v", r.GetName(), err)
+			}
 		}
 	}()
 
-	if err := cli.Create(ctx, svc); err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating service: %v", err)
-		return result
-	}
-	defer func() {
-		if err := cli.Delete(ctx, svc); err != nil {
-			klog.Errorf("Error deleting service: %v", err)
+	// Create resources
+	for _, r := range resources {
+		if err := cli.Create(ctx, r); err != nil {
+			result.Passed = false
+			result.Message = fmt.Sprintf("Error creating %s: %v", r.GetName(), err)
+			return result
 		}
-	}()
-
-	if err := cli.Create(ctx, ing); err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating ingress: %v", err)
-		return result
 	}
-	defer func() {
-		if err := cli.Delete(ctx, ing); err != nil {
-			klog.Errorf("Error deleting ingress: %v", err)
-		}
-	}()
 
+	// Wait for ingress to be ready, or timeout after 1 minute
 	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 	_, err = watcher.New[*networkingv1.Ingress](cli).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
