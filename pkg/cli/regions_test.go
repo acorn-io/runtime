@@ -39,7 +39,7 @@ func TestRegions(t *testing.T) {
 			args:    []string{},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME      ACCOUNT   REGION NAME   CREATED   DESCRIPTION\nlocal     local     us-east-2     10y ago   Test region\n",
+			wantOut: "NAME      ACCOUNT   REGION NAME   CREATED   DESCRIPTION\nlocal               us-east-2     10y ago   Test region\n",
 		},
 		{
 			name: "acorn regions with one region with owner reference",
@@ -92,7 +92,7 @@ func TestRegions(t *testing.T) {
 			args:    []string{},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME      ACCOUNT   REGION NAME   CREATED   DESCRIPTION\nlocal     local     us-east-2     10y ago   Test region\nlocal     local     us-west-2     10y ago   Another test region\n",
+			wantOut: "NAME      ACCOUNT   REGION NAME   CREATED   DESCRIPTION\nlocal               us-east-2     10y ago   Test region\nlocal               us-west-2     10y ago   Another test region\n",
 		},
 	}
 	for _, tt := range tests {

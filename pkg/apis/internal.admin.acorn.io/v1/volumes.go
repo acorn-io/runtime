@@ -42,7 +42,8 @@ func (c *ClusterVolumeClassInstance) NamespaceScoped() bool {
 	return false
 }
 
-func (c *ClusterVolumeClassInstance) ForRegion(region string) bool {
+// EnsureRegion checks that the class supports the region. If it does not, then the region is added.
+func (c *ClusterVolumeClassInstance) EnsureRegion(region string) bool {
 	for _, r := range c.SupportedRegions {
 		if r == region {
 			return true
@@ -53,13 +54,16 @@ func (c *ClusterVolumeClassInstance) ForRegion(region string) bool {
 }
 
 // ForOtherRegions returns true if there are other regions that this instance is supported in.
+// The region passed here is removed for the supported regions.
 func (c *ClusterVolumeClassInstance) ForOtherRegions(region string) bool {
-	for i, r := range c.SupportedRegions {
-		if r == region {
-			c.SupportedRegions = append(c.SupportedRegions[:i], c.SupportedRegions[i+1:]...)
+	regions := make([]string, 0, len(c.SupportedRegions))
+	for _, r := range c.SupportedRegions {
+		if r != region {
+			regions = append(regions, region)
 		}
 	}
 
+	c.SupportedRegions = regions
 	return len(c.SupportedRegions) > 0
 }
 

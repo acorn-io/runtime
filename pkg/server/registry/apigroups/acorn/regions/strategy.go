@@ -28,6 +28,11 @@ func (s *strategy) Get(_ context.Context, _, name string) (types.Object, error) 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "local",
 			CreationTimestamp: s.startTime,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Name: "local",
+				},
+			},
 		},
 		Spec: apiv1.RegionSpec{
 			Description: "Local Region",

@@ -45,12 +45,23 @@ type AppInstance struct {
 	Status AppInstanceStatus `json:"status,omitempty"`
 }
 
-func (in *AppInstance) ForRegion(region string) bool {
+func (in *AppInstance) HasRegion(region string) bool {
 	return in.Status.Defaults.Region == region || in.Spec.Region == region
 }
 
-func (in *AppInstance) ForOtherRegions(region string) bool {
-	return in.Spec.Region != "" && in.Spec.Region != region || in.Status.Defaults.Region != "" && in.Status.Defaults.Region != region
+func (in *AppInstance) GetRegion() string {
+	if in.Spec.Region != "" {
+		return in.Spec.Region
+	}
+	return in.Status.Defaults.Region
+}
+
+func (in *AppInstance) SetDefaultRegion(region string) {
+	if in.Spec.Region == "" {
+		in.Status.Defaults.Region = region
+	} else {
+		in.Status.Defaults.Region = ""
+	}
 }
 
 func (in *AppInstance) ShortID() string {

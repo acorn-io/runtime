@@ -24,7 +24,7 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) field.Erro
 	// Reset the default region on status to indicate that a "real" default is set.
 	project.Status.DefaultRegion = ""
 
-	if !project.ForRegion(project.Spec.DefaultRegion) {
+	if !project.HasRegion(project.Spec.DefaultRegion) {
 		return append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
 	}
 

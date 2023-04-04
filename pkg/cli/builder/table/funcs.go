@@ -251,8 +251,8 @@ func AppGeneration(app apiv1.App, msg string) string {
 
 func OwnerReferenceName(obj metav1.Object) string {
 	owners := obj.GetOwnerReferences()
-	if len(owners) == 0 || owners[0].Name == "" {
-		return "local"
+	if len(owners) == 0 {
+		return ""
 	}
 
 	return owners[0].Name
