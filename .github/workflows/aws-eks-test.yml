@@ -47,7 +47,7 @@ jobs:
           if acorn check; then
             acorn uninstall -af
           fi
-          acorn install --image ghcr.io/acorn-io/acorn:main
+          acorn install --image ghcr.io/acorn-io/acorn:main --network-policies=false
           
         env:
           KUBECONFIG: "/home/runner/.kube/config"
