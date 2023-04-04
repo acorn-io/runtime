@@ -138,6 +138,13 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 					pvc.Spec.StorageClassName = &volClass.StorageClassName
 					pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 				}
+			} else {
+				// User did not specify a class with the binding, so get the class from the existing volume.
+				pv := new(corev1.PersistentVolume)
+				if err = req.Get(pv, "", volumeBinding.Volume); err != nil {
+					return nil, err
+				}
+				pvc.Labels[labels.AcornVolumeClass] = pv.Labels[labels.AcornVolumeClass]
 			}
 
 			if volumeBinding.Size != "" {
