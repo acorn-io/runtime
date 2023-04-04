@@ -620,7 +620,8 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("9G"),
 		},
-		Default: true,
+		Default:          true,
+		SupportedRegions: []string{"local"},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -1153,6 +1154,51 @@ func TestAppWithBadRegion(t *testing.T) {
 
 	_, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{Region: "does-not-exist"})
 	if err == nil || !strings.Contains(err.Error(), "is not supported for project") {
+		t.Fatalf("expected an invalid region error, got %v", err)
+	}
+}
+
+func TestAppWithBadDefaultRegion(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	c, ns := helper.ClientAndNamespace(t)
+
+	storageClasses := new(storagev1.StorageClassList)
+	err := kclient.List(ctx, storageClasses)
+	if err != nil || len(storageClasses.Items) == 0 {
+		t.Skip("No storage classes, so skipping TestAppWithBadDefaultRegion")
+		return
+	}
+
+	volumeClass := adminapiv1.ProjectVolumeClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns.Name,
+			Name:      "acorn-test-custom",
+		},
+		StorageClassName: getStorageClassName(t, storageClasses),
+		Default:          true,
+		SupportedRegions: []string{"custom"},
+	}
+	if err = kclient.Create(ctx, &volumeClass); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err = kclient.Delete(context.Background(), &volumeClass); err != nil && !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}()
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/no-class-with-values/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/no-class-with-values",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.AppRun(ctx, image.ID, nil)
+	if err == nil || !strings.Contains(err.Error(), "is not a valid volume class") {
 		t.Fatalf("expected an invalid region error, got %v", err)
 	}
 }

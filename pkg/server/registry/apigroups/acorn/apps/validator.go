@@ -196,7 +196,7 @@ func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, 
 	return nil
 }
 
-func (s *Validator) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
+func (s *Validator) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
 	if len(rule.Verbs) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
@@ -289,7 +289,7 @@ func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessRev
 	var errs []error
 	for _, rule := range rules {
 		if len(rule.NonResourceURLs) > 0 {
-			if err := s.checkNonResourceRole(ctx, sar, rule, namespace); err != nil {
+			if err := s.checkNonResourceRole(ctx, sar, rule); err != nil {
 				errs = append(errs, err)
 			}
 		} else {
@@ -469,21 +469,18 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 		volumeBindings[vol.Target] = vol
 	}
 
-	var (
-		volClass adminv1.ProjectVolumeClassInstance
-		ok       bool
-	)
+	var volClass adminv1.ProjectVolumeClassInstance
 	for volName, vol := range appSpec.Volumes {
 		calculatedVolumeRequest := volume.CopyVolumeDefaults(vol, volumeBindings[volName], v1.VolumeDefault{})
 		if calculatedVolumeRequest.Class != "" {
-			volClass, ok = volumeClasses[calculatedVolumeRequest.Class]
-			if !ok || volClass.Inactive || (!slices.Contains(volClass.SupportedRegions, defaultRegion) && !slices.Contains(volClass.SupportedRegions, appInstanceSpec.Region)) {
-				return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
-			}
+			volClass = volumeClasses[calculatedVolumeRequest.Class]
 		} else if defaultVolumeClass != nil {
 			volClass = *defaultVolumeClass
 		} else {
 			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("no volume class found for %s", volName))
+		}
+		if volClass.Inactive || (!slices.Contains(volClass.SupportedRegions, defaultRegion) && !slices.Contains(volClass.SupportedRegions, appInstanceSpec.Region)) {
+			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
 		}
 
 		if calculatedVolumeRequest.Size != "" {
