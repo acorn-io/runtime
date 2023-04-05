@@ -32,7 +32,7 @@ func (in *ClusterComputeClassInstance) ForOtherRegions(region string) bool {
 	regions := make([]string, 0, len(in.SupportedRegions))
 	for _, r := range in.SupportedRegions {
 		if r != region {
-			regions = append(regions, region)
+			regions = append(regions, r)
 		}
 	}
 
