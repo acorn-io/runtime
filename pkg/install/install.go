@@ -156,6 +156,10 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
+	if err = validateServiceLBAnnotations(finalConfForValidation.ServiceLBAnnotations); err != nil {
+		return err
+	}
+
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
 		return printObject(image, opts)
@@ -255,6 +259,16 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	}
 
 	pterm.Success.Println("Installation done")
+	return nil
+}
+
+func validateServiceLBAnnotations(annotations []string) error {
+	for _, annotation := range annotations {
+		_, _, found := strings.Cut(annotation, "=")
+		if !found {
+			return fmt.Errorf("invalid annotation %s, must be in the form of key=value", annotation)
+		}
+	}
 	return nil
 }
 

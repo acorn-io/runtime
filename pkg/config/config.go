@@ -202,6 +202,14 @@ func IsDockerDesktop(ctx context.Context, getter kclient.Reader) (bool, error) {
 	return false, nil
 }
 
+// merge merges two Config objects. The newConfig object takes precedence over the oldConfig object.
+//
+// WARNING: We have had many bugs with this merge logic. To avoid this when adding fields here, there
+// are two main cases to be considered when adding a new field to the Config object and merging it here:
+//
+// 1. If the newConfig does not pass a field at all, the field in the oldConfig should be used.
+// 2. The newConfig should have a way of unsetting the values in the oldConfig.
+// 3. A newConfig should have a way of setting values that overwrite the oldConfig.
 func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	var (
 		mergedConfig apiv1.Config
@@ -316,9 +324,15 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.PropagateProjectLabels = newConfig.PropagateProjectLabels
 	}
 
-	if len(newConfig.ServiceLBAnnotations) == 0 {
+	if len(newConfig.AllowTrafficFromNamespace) > 0 && newConfig.AllowTrafficFromNamespace[0] == "" {
+		mergedConfig.AllowTrafficFromNamespace = nil
+	} else if len(newConfig.AllowTrafficFromNamespace) > 0 {
+		mergedConfig.AllowTrafficFromNamespace = newConfig.AllowTrafficFromNamespace
+	}
+
+	if len(newConfig.ServiceLBAnnotations) > 0 && newConfig.ServiceLBAnnotations[0] == "" {
 		mergedConfig.ServiceLBAnnotations = nil
-	} else {
+	} else if len(newConfig.ServiceLBAnnotations) > 0 {
 		mergedConfig.ServiceLBAnnotations = newConfig.ServiceLBAnnotations
 	}
 
@@ -328,10 +342,6 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.IngressControllerNamespace != nil {
 		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
-	}
-
-	if newConfig.AllowTrafficFromNamespace != nil {
-		mergedConfig.AllowTrafficFromNamespace = newConfig.AllowTrafficFromNamespace
 	}
 
 	return &mergedConfig

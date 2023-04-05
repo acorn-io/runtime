@@ -428,10 +428,8 @@ func (in *Config) DeepCopyInto(out *Config) {
 	}
 	if in.ServiceLBAnnotations != nil {
 		in, out := &in.ServiceLBAnnotations, &out.ServiceLBAnnotations
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 }
 

@@ -1,13 +1,15 @@
 package publish
 
 import (
+	"fmt"
+	"strings"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,8 +47,13 @@ func ServiceLoadBalancer(req router.Request, svc *v1.ServiceInstance) (result []
 		svc.Spec.Annotations = map[string]string{}
 	}
 
-	for _, entry := range typed.Sorted(cfg.ServiceLBAnnotations) {
-		svc.Spec.Annotations[entry.Key] = entry.Value
+	for _, annotation := range cfg.ServiceLBAnnotations {
+		key, value, found := strings.Cut(annotation, "=")
+		// This shouldn't happen due to the same validation in the CLI side. Check anyway.
+		if !found {
+			return nil, fmt.Errorf("invalid annotation %s set in Config, must be in the form of key=value", annotation)
+		}
+		svc.Spec.Annotations[key] = value
 	}
 
 	servicePorts, err := bindings.ServicePorts()

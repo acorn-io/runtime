@@ -48,7 +48,7 @@ acorn install
       --propagate-project-label strings        The list of keys of labels to propagate from acorn project to app namespaces
       --publish-builders                       Publish the builders through ingress to so build traffic does not traverse the api-server
       --record-builds                          Keep a record of each acorn build that happens
-      --service-lb-annotations strings         Annotations to add to the service of type LoadBalancer. Defaults to empty. (example key=value)
+      --service-lb-annotation strings          Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)
       --set-pod-security-enforce-profile       Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                            Bypass installation checks
       --use-custom-ca-bundle                   Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false.
