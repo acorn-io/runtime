@@ -80,6 +80,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	opts = opts.ParseAndTranslate(cmd.Context(), c)
 
 	if image != "." {
 		_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)

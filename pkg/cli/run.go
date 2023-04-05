@@ -300,6 +300,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	runOpts = runOpts.ParseAndTranslate(cmd.Context(), c)
 
 	if len(args) > 1 {
 		_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, image)
@@ -388,6 +389,7 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 	if err != nil {
 		return err
 	}
+	runOpts = runOpts.ParseAndTranslate(cmd.Context(), c)
 	runOpts.DeployArgs = deployParams
 
 	opts := runOpts.ToUpdate()

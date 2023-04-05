@@ -102,6 +102,59 @@ func TestParseVolumesWithBinding(t *testing.T) {
 	}, vs[6])
 }
 
+// Confirm that volumes written as "app.vol" parses correctly
+func TestParseVolumesWithAliasAndBinding(t *testing.T) {
+	input := []string{
+		"app.bar:bar",
+		"app.foo:bar",
+		"app.bar:bar,size=11G,class=aclass",
+		"app.foo:bar,size=11G,class=aclass",
+		"app.foo:bar,class=aclass",
+		"app.foo:bar,size=11G",
+		"app.foo,size=11G,class=aclass",
+	}
+	vs, err := ParseVolumes(input, true)
+	fmt.Printf("%+v", vs)
+	assert.NoError(t, err)
+	assert.NotEqual(t, vs[0], vs[2])
+	assert.NotEqual(t, vs[1], vs[3])
+	assert.Equal(t, VolumeBinding{
+		Volume: "app.bar",
+		Target: "bar",
+	}, vs[0])
+	assert.Equal(t, VolumeBinding{
+		Volume: "app.foo",
+		Target: "bar",
+	}, vs[1])
+	assert.Equal(t, VolumeBinding{
+		Volume: "app.bar",
+		Target: "bar",
+		Size:   "11G",
+		Class:  "aclass",
+	}, vs[2])
+	assert.Equal(t, VolumeBinding{
+		Volume: "app.foo",
+		Target: "bar",
+		Size:   "11G",
+		Class:  "aclass",
+	}, vs[3])
+	assert.Equal(t, VolumeBinding{
+		Volume: "app.foo",
+		Target: "bar",
+		Class:  "aclass",
+	}, vs[4])
+	assert.Equal(t, VolumeBinding{
+		Volume: "app.foo",
+		Target: "bar",
+		Size:   "11G",
+	}, vs[5])
+	assert.Equal(t, VolumeBinding{
+		Target: "app.foo",
+		Size:   "11G",
+		Class:  "aclass",
+	}, vs[6])
+}
+
 func TestParsePorts(t *testing.T) {
 	tests := []struct {
 		name       string

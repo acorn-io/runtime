@@ -2,6 +2,7 @@ package volumes
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -46,9 +47,12 @@ func (t *Translator) FromPublicName(ctx context.Context, namespace, name string)
 
 	if len(volumes.Items) == 1 {
 		return "", volumes.Items[0].Name, nil
+	} else if len(volumes.Items) > 1 {
+		return "", name, fmt.Errorf("found mutiple pvc's satisfying %s", name)
 	}
 
-	return "", name, nil
+	// Parsed as an alias due to period in the name but could not find corresponding pv
+	return "", name, fmt.Errorf("failed to find pv name from alias: %s", name)
 }
 
 func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {

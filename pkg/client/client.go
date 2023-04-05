@@ -124,6 +124,17 @@ type AppRunOptions struct {
 	ComputeClass        v1.ComputeClassMap
 }
 
+func (a AppRunOptions) ParseAndTranslate(ctx context.Context, c Client) AppRunOptions {
+	if len(a.Volumes) > 0 {
+		for i, volumeBinding := range a.Volumes {
+			if vol, err := c.VolumeGet(ctx, volumeBinding.Volume); err == nil {
+				a.Volumes[i].Volume = vol.Name
+			}
+		}
+	}
+	return a
+}
+
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 	return AppUpdateOptions{
 		Annotations:         a.Annotations,
