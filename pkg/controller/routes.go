@@ -52,7 +52,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(defaults.Calculate)
 	appRouter.HandlerFunc(scheduling.Calculate)
 	appRouter = appRouter.Middleware(appdefinition.CheckStatus)
-	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
+	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.ParseVolumeBindingsMiddleware, appdefinition.CheckDependencies).HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
 	appRouter.HandlerFunc(appdefinition.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
