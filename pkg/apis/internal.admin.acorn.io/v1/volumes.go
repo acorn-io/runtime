@@ -59,7 +59,7 @@ func (c *ClusterVolumeClassInstance) ForOtherRegions(region string) bool {
 	regions := make([]string, 0, len(c.SupportedRegions))
 	for _, r := range c.SupportedRegions {
 		if r != region {
-			regions = append(regions, region)
+			regions = append(regions, r)
 		}
 	}
 
