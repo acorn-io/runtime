@@ -480,7 +480,7 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("no volume class found for %s", volName))
 		}
 		if volClass.Inactive || (!slices.Contains(volClass.SupportedRegions, defaultRegion) && !slices.Contains(volClass.SupportedRegions, appInstanceSpec.Region)) {
-			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", calculatedVolumeRequest.Class))
+			return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("%s is not a valid volume class", volClass.Name))
 		}
 
 		if calculatedVolumeRequest.Size != "" {
