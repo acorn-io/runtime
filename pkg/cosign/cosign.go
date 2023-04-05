@@ -73,7 +73,7 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 		return nil, fmt.Errorf("failed to get signature tag: %w", err)
 	}
 
-	sigDigest, err := crane.Digest(sigTag.Name(), craneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+	sigDigest, err := SimpleDigest(sigTag, craneOpts...) // similar to crane.Digest, but fails if HEAD returns 404 Not Found
 	if err != nil {
 		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
 			// signature artifact not found -> that's an actual verification error
