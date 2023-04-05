@@ -194,7 +194,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			// If we have autoUpgradeTagPattern, we need to use it to compare the current tag against all the tags
 			tagPattern, isPattern := AutoUpgradePattern(app.Spec.Image)
 			if isPattern {
-				nextAppImage, updated, err = findLatestTagForImageWithPattern(ctx, d.client, imageKey.namespace, imageKey.image, tagPattern)
+				nextAppImage, updated, err = findLatestTagForImageWithPattern(ctx, d.client, current.Identifier(), imageKey.namespace, imageKey.image, tagPattern)
 				if err != nil {
 					logrus.Errorf("Problem finding latest tag for app %v: %v", appKey, err)
 					continue

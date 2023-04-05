@@ -21,7 +21,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 	name := strings.ReplaceAll(imageName, "/", "+")
 
 	if tagPattern, isPattern := autoupgrade.AutoUpgradePattern(imageName); isPattern {
-		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, namespace, imageName, tagPattern); err != nil {
+		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern); err != nil {
 			return nil, err
 		} else if !found {
 			return nil, fmt.Errorf("unable to find an image for %v matching pattern %v", imageName, tagPattern)
