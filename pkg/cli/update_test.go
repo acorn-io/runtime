@@ -50,6 +50,25 @@ func TestUpdate(t *testing.T) {
 			wantErr: true,
 			wantOut: "error: app dne does not exist",
 		},
+		{
+			name: "acorn update dne", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader(""),
+			},
+			args: args{
+				args:   []string{"dne"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: true,
+			wantOut: "error: app dne does not exist",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

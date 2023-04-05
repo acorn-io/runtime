@@ -12,11 +12,11 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/mocks"
-	"github.com/golang/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
+	"github.com/acorn-io/acorn/pkg/mocks"
+	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 
 	"github.com/stretchr/testify/assert"
@@ -264,6 +264,74 @@ func TestRun(t *testing.T) {
 			},
 			wantErr: true,
 			wantOut: "Acornfile_temp is not a directory",
+		},
+		{
+			name: "acorn run --update image-dne", fields: fields{
+				All:   false,
+				Force: true,
+			},
+			args: args{
+				args: []string{"--update", "image-dne"},
+			},
+			wantErr: true,
+			wantOut: "error: app image-dne does not exist",
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+							Spec:       apiv1.InfoSpec{},
+						},
+					}, nil)
+				f.EXPECT().ImageDetails(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+					nil, fmt.Errorf("error: app image-dne does not exist"))
+			},
+		},
+		{
+			name: "acorn run --update --replace", fields: fields{
+				All:   false,
+				Force: true,
+			},
+			args: args{
+				args: []string{"--update", "--replace"},
+			},
+			wantErr: true,
+			wantOut: "cannot combine --update/-u and --replace/-r",
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+							Spec:       apiv1.InfoSpec{},
+						},
+					}, nil)
+			},
+		},
+		{
+			name: "acorn run --update -i", fields: fields{
+				All:   false,
+				Force: true,
+			},
+			args: args{
+				args: []string{"--update", "-i"},
+			},
+			wantErr: true,
+			wantOut: "cannot use --update/-u or --replace/-r with --dev/-i",
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+							Spec:       apiv1.InfoSpec{},
+						},
+					}, nil)
+			},
 		},
 	}
 	for _, tt := range tests {

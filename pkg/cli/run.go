@@ -6,20 +6,18 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/deployargs"
-	"github.com/acorn-io/acorn/pkg/dev"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/acorn-io/acorn/pkg/wait"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -110,11 +108,13 @@ func NewRun(c CommandContext) *cobra.Command {
 
 type Run struct {
 	RunArgs
-	Interactive       bool  `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i" name:"dev"`
-	BidirectionalSync bool  `usage:"In interactive mode download changes in addition to uploading" short:"b"`
-	Wait              *bool `usage:"Wait for app to become ready before command exiting (default true)"`
-	Quiet             bool  `usage:"Do not print status" short:"q"`
-	Update            bool  `usage:"Update the app if it already exists" short:"u"`
+	Interactive       bool   `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i" name:"dev"`
+	BidirectionalSync bool   `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Wait              *bool  `usage:"Wait for app to become ready before command exiting (default true)"`
+	Quiet             bool   `usage:"Do not print status" short:"q"`
+	Update            bool   `usage:"Update the app if it already exists" short:"u"`
+	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Image             string `json:"image,omitempty"`
 
 	out    io.Writer
 	client ClientFactory
@@ -245,7 +245,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	existingApp, _ := c.AppGet(cmd.Context(), s.Name)
-	if existingApp != nil && !s.Update && !s.Interactive {
+	if existingApp != nil && !s.Update && !s.Replace && !s.Interactive {
 		return fmt.Errorf("app \"%s\" already exists", s.Name)
 	}
 
@@ -254,56 +254,36 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	// Update mode -> early exits on invalid combinations
-	if s.Update {
-		if s.Interactive {
-			return fmt.Errorf("cannot use --update/-u with --dev/-i")
-		}
-		if s.Name == "" {
-			return fmt.Errorf("--name/-n NAME is required when updating an app")
-		}
-
-		// unset update mode if app does not exist
-		_, err := c.AppGet(cmd.Context(), s.Name)
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				s.Update = false
-			} else {
-				return err
-			}
-		}
-	}
-
-	opts, err := s.ToOpts()
-	if err != nil {
-		return err
-	}
-
 	cwd := "."
 	if len(args) > 0 {
 		cwd = args[0]
 	}
-
 	isDir, err := isDirectory(cwd)
 	if err != nil {
 		return err
 	}
-
-	if s.Interactive && isDir {
-		return dev.Dev(cmd.Context(), c, s.File, &dev.Options{
-			Args: args,
-			Build: client.AcornImageBuildOptions{
-				Cwd: cwd,
-			},
-			Run:               opts,
-			Dangerous:         s.Dangerous,
-			BidirectionalSync: s.BidirectionalSync,
-		})
+	var opts client.AppRunOptions
+	// Update mode -> early exits on invalid combinations
+	if s.Update && s.Replace {
+		return fmt.Errorf("cannot combine --update/-u and --replace/-r")
+	}
+	if s.Update || s.Replace {
+		if s.Interactive {
+			return fmt.Errorf("cannot use --update/-u or --replace/-r with --dev/-i")
+		}
+		return updateHelper(cmd, args, s, c, isDir, cwd)
 	}
 
 	if s.Interactive {
-		s.Profile = append([]string{"dev?"}, s.Profile...)
+		d := Dev{
+			RunArgs:           s.RunArgs,
+			BidirectionalSync: s.BidirectionalSync,
+			Quiet:             s.Quiet,
+			out:               s.out,
+			client:            s.client,
+		}
+		err := d.Run(cmd, append([]string{}, args...))
+		return err
 	}
 
 	image := cwd
@@ -316,21 +296,9 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if s.Update {
-		u := Update{
-			Image:   image,
-			RunArgs: s.RunArgs,
-			client:  s.client,
-			out:     s.out,
-			Replace: true,
-		}
-		err := u.Run(cmd, append([]string{s.Name}, args...))
-		if err != nil {
-			return err
-		}
-		if s.Wait == nil || *s.Wait {
-			return wait.App(cmd.Context(), c, s.Name, s.Quiet)
-		}
+	runOpts, err := s.ToOpts()
+	if err != nil {
+		return err
 	}
 
 	if len(args) > 1 {
@@ -346,31 +314,110 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		opts.DeployArgs = deployParams
+		runOpts.DeployArgs = deployParams
 	}
 
 	if s.Output != "" {
 		app := client.ToApp(c.GetNamespace(), image, &opts)
 		return outputApp(s.out, s.Output, app)
 	}
-	app, err := rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, opts)
+
+	app, err := rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, image, runOpts)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println(app.Name)
 
-	if s.Interactive {
-		go func() { _ = dev.LogLoop(cmd.Context(), c, app, nil) }()
-		go func() { _ = dev.AppStatusLoop(cmd.Context(), c, app) }()
-		<-cmd.Context().Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = c.AppStop(ctx, app.Name)
-	} else if s.Wait == nil || *s.Wait {
+	if s.Wait == nil || *s.Wait {
 		return wait.App(cmd.Context(), c, app.Name, s.Quiet)
 	}
 
+	return nil
+}
+
+func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, isDir bool, cwd string) error {
+	var app *apiv1.App
+	var err error
+
+	if s.Name != "" {
+		app, err = c.AppGet(cmd.Context(), s.Name)
+		if err != nil {
+			return err
+		}
+	}
+	imageForFlags := s.Image
+
+	if s.Name == "" && !isDir {
+		imageForFlags = args[0]
+	}
+
+	//updating an already existing app
+	if app != nil && imageForFlags == "" {
+		imageForFlags = app.Spec.Image
+	}
+	if _, isPattern := autoupgrade.AutoUpgradePattern(imageForFlags); isPattern {
+		imageForFlags = app.Status.AppImage.ID
+	}
+
+	//creating an image and updating
+	if s.Image == "" && isDir && len(args) > 0 {
+		imageForFlags, err = buildImage(cmd.Context(), c, s.File, cwd, args)
+		if err == pflag.ErrHelp {
+			return nil
+		} else if err != nil {
+			return err
+		}
+	}
+	//PUT update of a running app
+	if s.Replace && !isDir && imageForFlags == "" {
+		imageForFlags = s.Image
+	}
+	_, flags, err := deployargs.ToFlagsFromImage(cmd.Context(), c, imageForFlags)
+	if err != nil {
+		return err
+	}
+	deployParams, err := flags.Parse(args)
+	if pflag.ErrHelp == err {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	runOpts, err := s.ToOpts()
+	if err != nil {
+		return err
+	}
+	runOpts.DeployArgs = deployParams
+
+	opts := runOpts.ToUpdate()
+	opts.Image = imageForFlags
+
+	// Overwrite == true means patchMode == false
+	opts.Replace = s.Replace
+
+	if s.Output != "" {
+		app, err := client.ToAppUpdate(cmd.Context(), c, s.Name, &opts)
+		if err != nil {
+			return err
+		}
+		return outputApp(s.out, s.Output, app)
+	}
+	if app == nil {
+		app, err = rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, imageForFlags, runOpts)
+		if err != nil {
+			return err
+		}
+	} else {
+		app, err = rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, s.Name, opts)
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Println(app.Name)
+	if s.Wait == nil || *s.Wait {
+		return wait.App(cmd.Context(), c, app.Name, s.Quiet)
+	}
 	return nil
 }
 

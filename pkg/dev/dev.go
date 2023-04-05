@@ -181,22 +181,30 @@ outer:
 		}
 
 		opts.Build.Args = params
-		image, err := client.AcornImageBuild(ctx, file, &opts.Build)
-		if err != nil {
-			logrus.Errorf("Failed to build %s: %v", file, err)
-			logrus.Infof("Build failed, touch [%s] to rebuild", file)
-			go func() {
-				time.Sleep(120 * time.Second)
-				watcher.Trigger()
-			}()
-			continue
+		var image *v1.AppImage
+		if !opts.Build.Attach {
+			image, err = client.AcornImageBuild(ctx, file, &opts.Build)
+			opts.Build.ImageID = image.ID
+			if err != nil {
+				logrus.Errorf("Failed to build %s: %v", file, err)
+				logrus.Infof("Build failed, touch [%s] to rebuild", file)
+				go func() {
+					time.Sleep(120 * time.Second)
+					watcher.Trigger()
+				}()
+				continue
+			}
 		}
-
+		//set attach back false to allow after dev mode has been attached for syncing to occur above
+		opts.Build.Attach = false
+		if opts.Build.AppName != "" {
+			opts.Run.Name = opts.Build.AppName
+		}
 		var (
 			app *apiv1.App
 		)
 		for {
-			app, err = runOrUpdate(ctx, client, file, image.ID, opts)
+			app, err = runOrUpdate(ctx, client, file, opts.Build.ImageID, opts)
 			if apierror.IsConflict(err) {
 				logrus.Errorf("Failed to run/update app: %v", err)
 				time.Sleep(time.Second)
