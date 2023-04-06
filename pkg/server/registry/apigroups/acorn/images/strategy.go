@@ -178,15 +178,18 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 		if err != nil {
 			return nil, "", err
 		}
-		if dig, ok := ref.(name.Digest); ok {
+		if ref.Identifier() == "" {
+			tagNameDefault = ref.Name()
+		} else if dig, ok := ref.(name.Digest); ok {
 			repoDigest = dig
 		} else {
-			tagName = strings.TrimSuffix(ref.Name(), ":") // drop pontential trailing ":" if no tag was specified
+			tagName = ref.Name()
 		}
 	}
 
 	if tagNameDefault != "" {
-		t, err := name.ParseReference(imageName, name.WithDefaultRegistry(""))
+		// add default tag (:latest)
+		t, err := name.ParseReference(tagNameDefault, name.WithDefaultRegistry(""))
 		if err != nil {
 			return nil, "", err
 		}

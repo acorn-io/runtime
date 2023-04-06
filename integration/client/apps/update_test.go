@@ -30,7 +30,7 @@ func TestUpdatePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, "foo:latest", &client.AppRunOptions{Name: "test"})
+	app, err := c.AppRun(ctx, "foo", &client.AppRunOptions{Name: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}
