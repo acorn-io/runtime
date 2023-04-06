@@ -455,6 +455,7 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 			Annotations: map[string]string{
 				labels.AcornDomain:                  domain,
 				labels.AcornLetsEncryptSettingsHash: u.toHash(),
+				labels.AcornAppNamespace:            system.Namespace,
 			},
 		},
 		Spec: corev1.ServiceSpec{
@@ -480,7 +481,8 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 				labels.AcornLetsEncryptSettingsHash: u.toHash(),
 			},
 			Labels: map[string]string{
-				labels.AcornManaged: "true",
+				labels.AcornManaged:      "true",
+				labels.AcornAppNamespace: system.Namespace,
 			},
 		},
 		Spec: networkingv1.IngressSpec{
