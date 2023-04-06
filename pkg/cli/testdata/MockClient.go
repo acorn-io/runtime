@@ -536,12 +536,12 @@ func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.
 		return m.ImageItem, nil
 	}
 	switch name {
-	case "found-image-two-tags1234567":
+	case "ff12345":
 		if !opts.Force {
 			return nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", name)
 		} else {
 			return &apiv1.Image{TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{Name: "found-image-two-tags1234567"},
+				ObjectMeta: metav1.ObjectMeta{Name: "ff12345"},
 				Tags:       []string{"testtag1:latest", "testtag2:latest"},
 			}, nil
 		}

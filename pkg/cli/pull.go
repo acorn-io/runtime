@@ -29,7 +29,7 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	tag, err := name.NewTag(args[0])
+	ref, err := name.ParseReference(args[0])
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	auth, _, err := creds.Get(cmd.Context(), tag.RegistryStr())
+	auth, _, err := creds.Get(cmd.Context(), ref.Context().RegistryStr())
 	if err != nil {
 		return err
 	}

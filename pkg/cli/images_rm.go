@@ -2,9 +2,12 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/tags"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
@@ -31,8 +34,18 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, image := range args {
-		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
+		opts := []name.Option{name.WithDefaultRegistry("")}
 
+		if strings.HasPrefix("sha256:", image) || tags.SHAPermissivePrefixPattern.MatchString(image) {
+			opts = append(opts, name.WithDefaultTag(""))
+		}
+
+		// normalize image name (adding :latest if no tag is specified and it's not a digest or potential ID)
+		ref, err := name.ParseReference(image, opts...)
+		if err != nil {
+			return err
+		}
+		deleted, err := c.ImageDelete(cmd.Context(), strings.TrimSuffix(ref.Name(), ":"), &client.ImageDeleteOptions{Force: a.Force})
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", image, err)
 		}

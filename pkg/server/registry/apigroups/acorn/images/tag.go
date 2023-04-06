@@ -2,6 +2,8 @@ package images
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -71,24 +73,41 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	if err != nil {
 		return nil, err
 	}
-	res, err := normalizeTags(image.Tags)
+
+	res, err := normalizeTags(image.Tags, false) // normalize tags *without* adding :latest
 	if err != nil {
 		return nil, err
 	}
 	set := sets.NewString(res...)
 
-	imageParsedTag, err := name.NewTag(tagToAdd, name.WithDefaultRegistry(""))
+	imageRef, err := name.ParseReference(tagToAdd, name.WithDefaultRegistry(""))
 	if err != nil {
 		return nil, err
 	}
-	set.Insert(imageParsedTag.Name())
+	if _, ok := imageRef.(name.Digest); ok {
+		// digest-only references are inserted without the digest portion (only registry/repository)
+		// and *only* if no tagged reference with the same registry/repository prefix exists
+		for _, tag := range set.List() {
+			if strings.HasPrefix(tag, imageRef.Context().Name()) {
+				return image, nil
+			}
+		}
+		set.Insert(imageRef.Context().Name())
+	} else {
+		if set.Has(imageRef.Context().Name()) {
+			// we're inserting a tag, so we can remove any digest-only entry
+			set.Delete(imageRef.Context().Name())
+		}
+		set.Insert(imageRef.Name())
+	}
 
+	// remove the tag from any other image
 	hasChanged := false
 	for _, img := range imageList.Items {
 		if img.Name == image.Name {
 			continue
 		}
-		res, err = normalizeTags(img.Tags)
+		res, err = normalizeTags(img.Tags, false)
 		if err != nil {
 			return nil, err
 		}
@@ -111,14 +130,25 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	return image, t.client.Update(ctx, image)
 }
 
-func normalizeTags(tags []string) ([]string, error) {
+func normalizeTags(tags []string, implicitLatestTag bool) ([]string, error) {
 	var result []string
 	for _, tag := range tags {
-		imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+		nameOpts := []name.Option{
+			name.WithDefaultRegistry(""),
+		}
+		if !implicitLatestTag {
+			nameOpts = append(nameOpts, name.WithDefaultTag(""))
+		}
+
+		imageParsedTag, err := name.NewTag(tag, nameOpts...)
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, imageParsedTag.Name())
+		if imageParsedTag.TagStr() == "" {
+			result = append(result, fmt.Sprintf("%s/%s", imageParsedTag.RegistryStr(), imageParsedTag.RepositoryStr()))
+		} else {
+			result = append(result, imageParsedTag.Name())
+		}
 	}
 	return result, nil
 }

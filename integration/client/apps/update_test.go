@@ -30,7 +30,7 @@ func TestUpdatePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, "foo", &client.AppRunOptions{Name: "test"})
+	app, err := c.AppRun(ctx, "foo:latest", &client.AppRunOptions{Name: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestUpdatePull(t *testing.T) {
 	assert.Equal(t, app.Status.AppImage.ID, imageID)
 
 	imageID2 := client2.NewImage2(t, ns.Name)
-	err = c.ImageTag(ctx, imageID2, "foo")
+	err = c.ImageTag(ctx, imageID2, "foo:latest")
 	if err != nil {
 		t.Fatal(err)
 	}

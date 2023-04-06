@@ -148,28 +148,61 @@ func (s *Strategy) findImage(ctx context.Context, namespace, imageName string) (
 	return findImageMatch(*result, imageName)
 }
 
+// findImageMatch matches images by digest, digest prefix, or tag name:
+//
+// - digest (raw): sha256:<digest> or <digest> (exactly 64 chars)
+// - digest (image): <registry>/<repo>@sha256:<digest> or <repo>@sha256:<digest>
+// - digest prefix: sha256:<digest prefix> (min. 3 chars)
+// - tag name: <registry>/<repo>:<tag> or <repo>:<tag>
+// - tag name (with default): <registry>/<repo> or <repo> -> Will be matched against the default tag (:latest)
+//   - Note: if we get some string here, that matches the SHAPermissivePrefixPattern, it could be both a digest or a name without a tag
+//     so we will try to match it against the default tag (:latest) first and if that fails, we treat it as a digest(-prefix)
 func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, string, error) {
 	var (
-		digest       string
-		digestPrefix string
-		tagName      string
+		repoDigest     name.Digest
+		digest         string
+		digestPrefix   string
+		tagName        string
+		tagNameDefault string
 	)
 	if strings.HasPrefix(imageName, "sha256:") {
 		digest = imageName
 	} else if tags2.SHAPattern.MatchString(imageName) {
 		digest = "sha256:" + imageName
+		tagNameDefault = imageName
 	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
 		digestPrefix = "sha256:" + imageName
+		tagNameDefault = imageName
 	} else {
-		tag, err := name.ParseReference(imageName, name.WithDefaultRegistry(""))
+		ref, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return nil, "", err
 		}
-		tagName = tag.Name()
+		if dig, ok := ref.(name.Digest); ok {
+			repoDigest = dig
+		} else {
+			tagName = strings.TrimSuffix(ref.Name(), ":") // drop pontential trailing ":" if no tag was specified
+		}
+	}
+
+	if tagNameDefault != "" {
+		t, err := name.ParseReference(imageName, name.WithDefaultRegistry(""))
+		if err != nil {
+			return nil, "", err
+		}
+		tagNameDefault = t.Name()
 	}
 
 	var matchedImage apiv1.Image
 	for _, image := range images.Items {
+		if tagNameDefault != "" {
+			for _, tag := range image.Tags {
+				if tag == tagNameDefault {
+					return &image, "", nil
+				}
+			}
+		}
+
 		if image.Digest == digest {
 			return &image, "", nil
 		} else if digestPrefix != "" && strings.HasPrefix(image.Digest, digestPrefix) {
@@ -178,6 +211,20 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 				return nil, "", apierrors.NewBadRequest(reason)
 			}
 			matchedImage = image
+		}
+
+		if repoDigest.Name() != "" && image.Digest == repoDigest.DigestStr() {
+			// Matching by repo digest returns an image which matches the digest and has at least one tag
+			// which matches the repo part of the repo digest.
+			for _, tag := range image.Tags {
+				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+				if err != nil {
+					continue
+				}
+				if imageParsedTag.Context().Name() == repoDigest.Context().Name() {
+					return &image, tag, nil
+				}
+			}
 		}
 
 		for i, tag := range image.Tags {

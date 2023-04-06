@@ -18,6 +18,12 @@ func TestFindMatchingImage(t *testing.T) {
 		{
 			Digest: "sha256:123409876",
 		},
+		{
+			Digest: "sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb",
+			Tags: []string{
+				"foo/bar",
+			},
+		},
 	}
 	il := apiv1.ImageList{
 		Items: images,
@@ -32,6 +38,13 @@ func TestFindMatchingImage(t *testing.T) {
 
 	_, _, err = findImageMatch(il, "123")
 	assert.Error(t, err)
+
+	image, ref, err = findImageMatch(il, "foo/bar@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, "sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb", image.Digest)
+	assert.Equal(t, "foo/bar", ref)
 
 	_, _, err = findImageMatch(il, "ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
 	assert.Error(t, err)

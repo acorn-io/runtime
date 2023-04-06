@@ -10,6 +10,8 @@ import (
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -173,19 +175,48 @@ func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts 
 	} else if err != nil {
 		return nil, err
 	}
+	var remainingTags []string
+
+	imageParsedRef, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+	if err != nil {
+		return nil, err
+	}
+	tagToDelete := ""
+	repoToDelete := ""
+
+	if _, ok := imageParsedRef.(name.Digest); ok {
+		// if the image is referenced by digest, we need to delete the tag with only registry/repository
+		repoToDelete = imageParsedRef.Context().Name()
+	} else if tag, err := name.NewTag(imageName, name.StrictValidation); err == nil {
+		tagToDelete = tag.Name()
+	}
+
+	// Getting an image, auto-suffixed with :latest also returns images that don't have that tag (explicit :latest) at all, potentially yielding errors down the line
+	if tagToDelete != "" && !slices.Contains(image.Tags, tagToDelete) {
+		return image, fmt.Errorf("image tag %s not found", imageName)
+	}
+
 	if len(image.Tags) == 1 {
 		return image, c.Client.Delete(ctx, image)
 	}
-	var remainingTags []string
 
-	imageParsedTag, err := name.NewTag(imageName, name.WithDefaultRegistry(""))
-	if err != nil {
-		return image, nil
-	}
 	for _, tag := range image.Tags {
-		if tag != imageParsedTag.Name() {
-			remainingTags = append(remainingTags, tag)
+		if tag == tagToDelete {
+			logrus.Debugf("Delete: %s", tag)
+			continue
 		}
+
+		ref, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+		if err != nil {
+			return nil, err
+		}
+		if ref.Context().Name() == repoToDelete {
+			logrus.Infof("Delete: %s", tag)
+			continue
+		}
+
+		// not filtered out, keep it safe
+		remainingTags = append(remainingTags, tag)
 	}
 	if len(remainingTags) != len(image.Tags) {
 		image.Tags = remainingTags

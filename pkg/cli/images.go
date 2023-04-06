@@ -10,8 +10,10 @@ import (
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func NewImage(c CommandContext) *cobra.Command {
@@ -47,25 +49,77 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	var images []apiv1.Image
 	var image *apiv1.Image
 	tagToMatch := ""
+	repoToMatch := ""
 
 	if len(args) == 1 {
-		image, err = c.ImageGet(cmd.Context(), args[0])
+		ref, err := name.ParseReference(args[0], name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return err
 		}
-		if !strings.Contains(image.Digest, args[0]) {
-			//normalize through ParseReference inorder to add :latest tag to input if necessary
-			imageParsedReference, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
+
+		if ref.Identifier() != "" {
+			// > search by ID, tag or prefix
+			image, err = c.ImageGet(cmd.Context(), args[0])
 			if err != nil {
 				return err
 			}
-			tagToMatch = imageParsedReference.Name()
+
+			if _, ok := ref.(name.Digest); ok {
+				// > search by digest -> show all images
+				repoToMatch = ref.Context().Name()
+			} else if !strings.Contains(image.Digest, args[0]) {
+				tagToMatch = ref.Name()
+			}
+			images = []apiv1.Image{*image}
+		} else {
+			if tags.SHAPermissivePrefixPattern.MatchString(args[0]) {
+				// > search by ID or prefix or untagged (in order untagged > ID > prefix)
+				image, err = c.ImageGet(cmd.Context(), args[0])
+				if err != nil {
+					if !apierrors.IsNotFound(err) {
+						return err
+					}
+				} else if image != nil {
+					images = []apiv1.Image{*image}
+
+					// here, we don't know whether the image was matched by ID or by `:latest` auto-tag,
+					// so we check for the latter in the tags, as it takes precedence
+					tagRef, err := name.ParseReference(args[0], name.WithDefaultRegistry(""))
+					if err != nil {
+						return err
+					}
+					for _, t := range image.Tags {
+						if t == tagRef.Name() {
+							tagToMatch = t
+							break
+						}
+					}
+				}
+			} else {
+				// > search by repository
+				// no tag or digest was provided, so we need to get all images and filter by repo
+				repoToMatch = ref.Context().Name()
+				il, err := c.ImageList(cmd.Context())
+				if err != nil {
+					return err
+				}
+
+				// only consider images that have at least one tag matching the registry/repo prefix -> granular filtering is done later
+				for _, i := range il {
+					for _, t := range i.Tags {
+						if strings.HasPrefix(t, repoToMatch) {
+							images = append(images, i)
+							break
+						}
+					}
+				}
+			}
 		}
-		images = []apiv1.Image{*image}
 
 		// If an image was provided explicitly, then display it even if it doesn't have tags
 		a.All = true
 	} else {
+		// > No filter, list all
 		images, err = c.ImageList(cmd.Context())
 		if err != nil {
 			return err
@@ -98,28 +152,57 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 
 	for _, image := range images {
 		imagePrint := imagePrint{
-			Name:   image.ObjectMeta.Name,
-			Digest: image.Digest,
-			Tag:    "",
+			Name:       image.ObjectMeta.Name,
+			Digest:     image.Digest,
+			Tag:        "",
+			Repository: "",
 		}
+
+		// no tag set at all, so only print if --all is set
 		if len(image.Tags) == 0 && a.All {
 			out.Write(imagePrint)
 			continue
 		}
+
+		// loop through all tags
 		for _, tag := range image.Tags {
-			imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+			imageTagRef, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 			if err != nil {
 				return err
 			}
-			if tagToMatch == imageParsedTag.Name() || tagToMatch == "" {
-				imagePrint.Tag = imageParsedTag.TagStr()
-				if imageParsedTag.RegistryStr() != "" {
-					imagePrint.Repository = imageParsedTag.RegistryStr() + "/"
-				}
-				imagePrint.Repository += imageParsedTag.RepositoryStr()
-				out.Write(imagePrint)
-				imagePrint.Repository = ""
+
+			// if we are searching by repo, then filter out tags that don't match
+			if repoToMatch != "" && imageTagRef.Context().Name() != repoToMatch {
+				continue
 			}
+
+			// in any case, add registry/repository information to the output
+			if imageTagRef.Context().RegistryStr() != "" {
+				imagePrint.Repository = imageTagRef.Context().RegistryStr() + "/"
+			}
+			imagePrint.Repository += imageTagRef.Context().RepositoryStr()
+
+			if tagToMatch == "" && repoToMatch == "" {
+				// > not searching by tag or repo
+				if ntag, ok := imageTagRef.(name.Tag); ok {
+					// it's a tag, so add the tag output
+					imagePrint.Tag = ntag.TagStr()
+				}
+				out.Write(imagePrint)
+			} else if tagToMatch == imageTagRef.Name() || repoToMatch == imageTagRef.Context().Name() {
+				// > searching by tag
+				if ntag, ok := imageTagRef.(name.Tag); ok {
+					// it's a tag, so add the tag output
+					imagePrint.Tag = ntag.TagStr()
+					out.Write(imagePrint)
+				} else if _, ok := imageTagRef.(name.Digest); ok {
+					// it's a digest, so print without a tag
+					out.Write(imagePrint)
+				}
+			}
+
+			imagePrint.Repository = ""
+			imagePrint.Tag = ""
 		}
 	}
 
