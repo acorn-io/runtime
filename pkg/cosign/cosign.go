@@ -75,7 +75,8 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 
 	sigDigest, err := SimpleDigest(sigTag, craneOpts...) // similar to crane.Digest, but fails if HEAD returns 404 Not Found
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
+		var terr *transport.Error
+		if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
 			// signature artifact not found -> that's an actual verification error
 			return nil, fmt.Errorf("%w: expected signature artifact %s not found", cosign.ErrNoMatchingSignatures, sigTag.Name())
 		}
