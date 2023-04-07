@@ -185,10 +185,11 @@ func TestRefreshImages(t *testing.T) {
 	thirtySecondsAgo := now.Add(-30 * time.Second)
 	ptrTrue := &[]bool{true}[0]
 	appImages := map[string]string{
-		"test-1":      "acorn/test-1:v#.#.#",
-		"acorn-1":     "docker.io/acorn/acorn-1:v1.1.1-*",
-		"enabled-app": "docker.io/acorn/enabled:latest",
-		"notify-app":  "docker.io/acorn/notify:latest",
+		"test-1":           "acorn/test-1:v#.#.#",
+		"acorn-1":          "docker.io/acorn/acorn-1:v1.1.1-*",
+		"enabled-app":      "docker.io/acorn/enabled:latest",
+		"notify-app":       "docker.io/acorn/notify:latest",
+		"test-autoupgrade": "index.docker.io/acorn/test-autoupgrade:v#.#.#",
 	}
 	apps := make(map[kclient.ObjectKey]v1.AppInstance, len(appImages))
 	for _, entry := range typed.Sorted(appImages) {
@@ -343,27 +344,25 @@ func TestRefreshImages(t *testing.T) {
 		},
 		{
 			name:                   "Auto refresh tag with multiple remote tags with latest tag image denied and current being an older image",
-			client:                 &mockDaemonClient{remoteTags: []string{"v1.1.1", "v1.1.2"}, imageDenyList: map[string]struct{}{"index.docker.io/acorn/test-1:v1.1.2": {}}},
-			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): thirtySecondsAgo},
-			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "index.docker.io/acorn/test-1:v1.1.1", namespace: "acorn"}: {router.Key("acorn", "test-1")}},
-			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): now},
-			appsUpdated:            map[string]string{"test-1": "index.docker.io/acorn/test-1:v1.1.1"},
+			client:                 &mockDaemonClient{remoteImageDigest: "sha256:acorn1234index.docker.io/acorn/test-autoupgradeabcd", remoteTags: []string{"v1.1.1", "v1.1.2"}, imageDenyList: map[string]struct{}{"index.docker.io/acorn/test-autoupgrade:v1.1.2": {}}},
+			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-autoupgrade"): thirtySecondsAgo},
+			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "index.docker.io/acorn/test-autoupgrade:v1.1.1", namespace: "acorn"}: {router.Key("acorn", "test-autoupgrade")}},
+			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-autoupgrade"): now},
 		},
 		{
 			name:                   "Auto refresh tag with multiple remote tags with latest tag image denied and current being latest image",
-			client:                 &mockDaemonClient{remoteTags: []string{"v1.1.1", "v1.1.2"}, imageDenyList: map[string]struct{}{"index.docker.io/acorn/test-1:v1.1.2": {}}},
-			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): thirtySecondsAgo},
-			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "index.docker.io/acorn/test-1:v1.1.2", namespace: "acorn"}: {router.Key("acorn", "test-1")}},
-			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): now},
-			appsUpdated:            map[string]string{"test-1": "index.docker.io/acorn/test-1:v1.1.2"},
+			client:                 &mockDaemonClient{remoteImageDigest: "sha256:acorn1234index.docker.io/acorn/test-autoupgradeabcd", remoteTags: []string{"v1.1.1", "v1.1.2"}, imageDenyList: map[string]struct{}{"index.docker.io/acorn/test-autoupgrade:v1.1.2": {}}},
+			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-autoupgrade"): thirtySecondsAgo},
+			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "index.docker.io/acorn/test-autoupgrade:v1.1.2", namespace: "acorn"}: {router.Key("acorn", "test-autoupgrade")}},
+			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-autoupgrade"): now},
 		},
 		{
 			name:                   "Auto refresh tag with multiple remote tags with non-latest tag image denied and current being the oldest image",
-			client:                 &mockDaemonClient{remoteTags: []string{"v1.1.1", "v1.1.2", "v1.1.3"}, imageDenyList: map[string]struct{}{"index.docker.io/acorn/test-1:v1.1.2": {}}},
-			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): thirtySecondsAgo},
-			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "index.docker.io/acorn/test-1", namespace: "acorn"}: {router.Key("acorn", "test-1")}},
-			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): now},
-			appsUpdated:            map[string]string{"test-1": "index.docker.io/acorn/test-1:v1.1.3"},
+			client:                 &mockDaemonClient{remoteTags: []string{"v1.1.1", "v1.1.2", "v1.1.3"}, imageDenyList: map[string]struct{}{"index.docker.io/acorn/test-autoupgrade:v1.1.2": {}}},
+			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-autoupgrade"): thirtySecondsAgo},
+			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "index.docker.io/acorn/test-autoupgrade", namespace: "acorn"}: {router.Key("acorn", "test-autoupgrade")}},
+			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-autoupgrade"): now},
+			appsUpdated:            map[string]string{"test-autoupgrade": "index.docker.io/acorn/test-autoupgrade:v1.1.3"},
 		},
 	}
 	for _, tt := range tests {
