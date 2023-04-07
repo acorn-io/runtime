@@ -13,6 +13,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const invalidTag = "+notfound+"
+
 func getTagsForImagePattern(ctx context.Context, c daemonClient, namespace, image string) (imagename.Reference, []string, error) {
 	current, err := imagename.ParseReference(image, imagename.WithDefaultRegistry(defaultNoReg))
 	if err != nil {
@@ -35,18 +37,21 @@ func getTagsForImagePattern(ctx context.Context, c daemonClient, namespace, imag
 	return current, append(tags, localTags...), nil
 }
 
-func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, namespace, image, pattern string) (string, bool, error) {
+func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, current, namespace, image, pattern string) (string, bool, error) {
 	ref, tags, err := getTagsForImagePattern(ctx, c, namespace, strings.TrimSuffix(image, ":"+pattern))
 	if err != nil {
 		return "", false, err
 	}
 
-	newTag := imagename.DefaultTag
+	newTag := current
+	if newTag == "" {
+		newTag = invalidTag
+	}
 	newImage := strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/")
 	for len(tags) > 0 {
-		nTag, err := FindLatest(imagename.DefaultTag, pattern, tags)
-		if err != nil || nTag == imagename.DefaultTag {
-			// resorting to default tag, so stop trying (we don't want to loop forever)
+		nTag, err := FindLatest(current, pattern, tags)
+		if err != nil || nTag == current {
+			// resorting to current tag, so stop trying (we don't want to loop forever)
 			break
 		}
 		img := strings.TrimPrefix(ref.Context().Tag(nTag).Name(), defaultNoReg+"/")
@@ -61,12 +66,17 @@ func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, names
 		}
 	}
 
-	return newImage, newTag != imagename.DefaultTag, err
+	// no new image needs to be returned since no new tags were found
+	if newTag == invalidTag {
+		return "", false, err
+	}
+
+	return newImage, newTag != current, err
 }
 
 // FindLatestTagForImageWithPattern will return the latest tag for image corresponding to the pattern.
-func FindLatestTagForImageWithPattern(ctx context.Context, c kclient.Client, namespace, image, pattern string) (string, bool, error) {
-	return findLatestTagForImageWithPattern(ctx, &client{c}, namespace, image, pattern)
+func FindLatestTagForImageWithPattern(ctx context.Context, c kclient.Client, current, namespace, image, pattern string) (string, bool, error) {
+	return findLatestTagForImageWithPattern(ctx, &client{c}, current, namespace, image, pattern)
 }
 
 // FindLatest returns the tag from the tags slice that sorts as the "latest" according to the supplied pattern. The supplied
