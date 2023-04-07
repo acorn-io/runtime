@@ -271,7 +271,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		if s.Interactive {
 			return fmt.Errorf("cannot use --update/-u or --replace/-r with --dev/-i")
 		}
-		return updateHelper(cmd, args, s, c, isDir, cwd)
+		//if app does not exist but --update/--replace flag is used create app instead
+		if existingApp != nil {
+			return updateHelper(cmd, args, s, c, isDir, cwd)
+		}
 	}
 
 	if s.Interactive {

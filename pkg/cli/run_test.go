@@ -285,8 +285,6 @@ func TestRun(t *testing.T) {
 							Spec:       apiv1.InfoSpec{},
 						},
 					}, nil)
-				f.EXPECT().ImageDetails(gomock.Any(), gomock.Any(), gomock.Any()).Return(
-					nil, fmt.Errorf("error: app image-dne does not exist"))
 			},
 		},
 		{
