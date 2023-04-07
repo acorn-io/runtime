@@ -3,9 +3,12 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/pterm/pterm"
+	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/spf13/cobra"
@@ -101,7 +104,6 @@ func removeContainer(arg string, c client.Client, cmd *cobra.Command, force bool
 		}
 
 		fmt.Println("Removed: " + con)
-		continue
 	}
 	return nil
 }
@@ -141,7 +143,7 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) e
 	}
 	return nil
 }
-func removeApp(arg string, c client.Client, cmd *cobra.Command, force bool) error {
+func removeApp(arg string, c client.Client, cmd *cobra.Command, force, wait bool) error {
 	if !force {
 		pterm.FgRed.Println(arg)
 		err := prompt.Remove("app")
@@ -150,14 +152,36 @@ func removeApp(arg string, c client.Client, cmd *cobra.Command, force bool) erro
 		}
 	}
 	app, err := c.AppDelete(cmd.Context(), arg)
-
 	if err != nil {
 		return fmt.Errorf("deleting app %s: %w", arg, err)
 	}
-	if app != nil {
-		fmt.Println("Removed: " + arg)
-	} else {
+
+	if app == nil {
 		fmt.Printf("Error: No such app: %s\n", arg)
+		return nil
+	}
+
+	// Ensure this gets printed whether we wait or not
+	defer func() {
+		if err == nil || apierrors.IsNotFound(err) {
+			fmt.Println("Removed: " + arg)
+		}
+	}()
+	if wait {
+		fmt.Printf("Waiting for app %s to be removed...\n", arg)
+		for {
+			select {
+			case <-cmd.Context().Done():
+				return cmd.Context().Err()
+			default:
+				if _, err = c.AppGet(cmd.Context(), arg); apierrors.IsNotFound(err) {
+					return nil
+				} else if err != nil {
+					logrus.Debugf("Error getting app for removal check: %v", err)
+				}
+			}
+			time.Sleep(time.Second)
+		}
 	}
 	return nil
 }
