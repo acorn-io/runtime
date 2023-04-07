@@ -43,17 +43,15 @@ func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, curre
 		return "", false, err
 	}
 
-	var newTag string
-	if current == "" {
+	newTag := current
+	if newTag == "" {
 		newTag = invalidTag
-	} else {
-		newTag = current
 	}
 	newImage := strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/")
 	for len(tags) > 0 {
 		nTag, err := FindLatest(current, pattern, tags)
 		if err != nil || nTag == current {
-			// resorting to default tag, so stop trying (we don't want to loop forever)
+			// resorting to current tag, so stop trying (we don't want to loop forever)
 			break
 		}
 		img := strings.TrimPrefix(ref.Context().Tag(nTag).Name(), defaultNoReg+"/")
