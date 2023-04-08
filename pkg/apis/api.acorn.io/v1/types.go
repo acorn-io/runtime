@@ -238,12 +238,13 @@ type VolumeSpec struct {
 }
 
 type VolumeStatus struct {
-	AppName      string        `json:"appName,omitempty"`
-	AppNamespace string        `json:"appNamespace,omitempty"`
-	VolumeName   string        `json:"volumeName,omitempty"`
-	Status       string        `json:"status,omitempty"`
-	Columns      VolumeColumns `json:"columns,omitempty"`
-	Region       string        `json:"region,omitempty"`
+	AppName       string        `json:"appName,omitempty"`
+	AppPublicName string        `json:"appPublicName,omitempty"`
+	AppNamespace  string        `json:"appNamespace,omitempty"`
+	VolumeName    string        `json:"volumeName,omitempty"`
+	Status        string        `json:"status,omitempty"`
+	Columns       VolumeColumns `json:"columns,omitempty"`
+	Region        string        `json:"region,omitempty"`
 }
 
 type VolumeColumns struct {
@@ -276,6 +277,7 @@ type ContainerReplicaExecOptions struct {
 
 const (
 	SecretTypeCredential = "acorn.io/credential"
+	SecretTypeContext    = "acorn.io/context"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

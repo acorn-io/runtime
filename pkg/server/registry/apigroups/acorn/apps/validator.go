@@ -23,7 +23,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"golang.org/x/exp/slices"
 	authv1 "k8s.io/api/authorization/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -58,7 +57,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		return
 	}
 
-	if err := imagesystem.IsNotInternalRepo(ctx, s.client, params.Spec.Image); err != nil {
+	if err := imagesystem.IsNotInternalRepo(ctx, s.client, params.Namespace, params.Spec.Image); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 		return
 	}
@@ -190,7 +189,7 @@ func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, 
 	}
 	if !sar.Status.Allowed {
 		return &client.ErrNotAuthorized{
-			Rule: (rbacv1.PolicyRule)(rule),
+			Rule: rule,
 		}
 	}
 	return nil
@@ -199,6 +198,10 @@ func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, 
 func (s *Validator) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
 	if len(rule.Verbs) == 0 {
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
+	}
+
+	if len(rule.APIGroups) != 0 {
+		return fmt.Errorf("can not deploy acorn due to requesting role nonResourceURLs %v and non-empty apiGroups set %v", rule.NonResourceURLs, rule.APIGroups)
 	}
 
 	for _, url := range rule.NonResourceURLs {
@@ -268,24 +271,7 @@ func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAc
 	return nil
 }
 
-func (s *Validator) checkClusterRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.ClusterPolicyRule) error {
-	for _, rule := range rules {
-		if len(rule.Namespaces) == 0 {
-			if err := s.checkRules(ctx, sar, []v1.PolicyRule{(v1.PolicyRule)(rule.PolicyRule)}, ""); err != nil {
-				return err
-			}
-		} else {
-			for _, ns := range rule.Namespaces {
-				if err := s.checkRules(ctx, sar, []v1.PolicyRule{(v1.PolicyRule)(rule.PolicyRule)}, ns); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, namespace string) error {
+func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, currentNamespace string) error {
 	var errs []error
 	for _, rule := range rules {
 		if len(rule.NonResourceURLs) > 0 {
@@ -293,8 +279,10 @@ func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessRev
 				errs = append(errs, err)
 			}
 		} else {
-			if err := s.checkResourceRole(ctx, sar, rule, namespace); err != nil {
-				errs = append(errs, err)
+			for _, namespace := range rule.ResolveNamespaces(currentNamespace) {
+				if err := s.checkResourceRole(ctx, sar, rule, namespace); err != nil {
+					errs = append(errs, err)
+				}
 			}
 		}
 	}
@@ -310,13 +298,12 @@ func (s *Validator) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions,
 
 	permsError := &client.ErrRulesNeeded{Permissions: []v1.Permissions{}}
 	for _, perm := range perms {
-		if len(perm.ClusterRules) == 0 && len(perm.Rules) == 0 {
+		if len(perm.Rules) == 0 {
 			continue
 		}
 
 		if specPerms := v1.FindPermission(perm.ServiceName, requestedPerms); !specPerms.HasRules() ||
-			!equality.Semantic.DeepEqual(perm.ClusterRules, specPerms.Get().ClusterRules) ||
-			!equality.Semantic.DeepEqual(perm.ClusterRules, specPerms.Get().ClusterRules) {
+			!equality.Semantic.DeepEqual(perm.Rules, specPerms.Get().Rules) {
 			permsError.Permissions = append(permsError.Permissions, perm)
 			continue
 		}
@@ -351,10 +338,6 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 			sar.Spec.Extra[k] = v
 		}
 
-		if err := s.checkClusterRules(ctx, sar, perm.ClusterRules); err != nil {
-			errs = append(errs, err)
-		}
-
 		ns, _ := request.NamespaceFrom(ctx)
 		if err := s.checkRules(ctx, sar, perm.Rules, ns); err != nil {
 			errs = append(errs, err)
@@ -367,7 +350,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *apiv1.Project, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	var (
 		memory        = params.Spec.Memory
-		computeClass  = params.Spec.ComputeClass
+		computeClass  = params.Spec.ComputeClasses
 		defaultRegion = project.GetRegion()
 	)
 
@@ -437,7 +420,7 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 }
 
 func validateMemoryRunFlags(memory v1.MemoryMap, workloads map[string]v1.Container) []*field.Error {
-	validationErrors := []*field.Error{}
+	var validationErrors []*field.Error
 	for key := range memory {
 		if key == "" {
 			continue
@@ -527,16 +510,14 @@ func (s *Validator) getWorkloads(details *client.ImageDetails) (map[string]v1.Co
 }
 
 func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
-	permissions := []v1.Permissions{}
+	var permissions []v1.Permissions
 	for _, entry := range typed.Sorted(containers) {
 		entryPermissions := v1.Permissions{
-			ServiceName:  entry.Key,
-			ClusterRules: entry.Value.Permissions.Get().ClusterRules,
-			Rules:        entry.Value.Permissions.Get().Rules,
+			ServiceName: entry.Key,
+			Rules:       entry.Value.Permissions.Get().Rules,
 		}
 
 		for _, sidecar := range typed.Sorted(entry.Value.Sidecars) {
-			entryPermissions.ClusterRules = append(entryPermissions.ClusterRules, sidecar.Value.Permissions.Get().ClusterRules...)
 			entryPermissions.Rules = append(entryPermissions.Rules, sidecar.Value.Permissions.Get().Rules...)
 		}
 

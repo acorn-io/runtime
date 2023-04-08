@@ -161,7 +161,11 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		}
 		for i, img := range imageData.Images {
 			if imgSpec, ok := spec.Images[i]; ok {
-				imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, img.Image)
+				if imgSpec.AcornBuild != nil {
+					imgSpec.Image, imgSpec.AcornBuild = assignAcornImage(imgSpec.Image, imgSpec.AcornBuild, img.Image)
+				} else {
+					imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, img.Image)
+				}
 				spec.Images[i] = imgSpec
 			}
 		}
@@ -169,6 +173,10 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 			if acornSpec, ok := spec.Acorns[i]; ok {
 				acornSpec.Image, acornSpec.Build = assignAcornImage(acornSpec.Image, acornSpec.Build, acorn.Image)
 				spec.Acorns[i] = acornSpec
+			}
+			if svcSpec, ok := spec.Services[i]; ok {
+				svcSpec.Image, svcSpec.Build = assignAcornImage(svcSpec.Image, svcSpec.Build, acorn.Image)
+				spec.Services[i] = svcSpec
 			}
 		}
 	}
@@ -214,10 +222,13 @@ func addAcorns(fileSet map[string]bool, builds map[string]v1.AcornBuilderSpec, c
 
 func addFiles(fileSet map[string]bool, builds map[string]v1.ImageBuilderSpec, cwd string) {
 	for _, build := range builds {
-		if build.Build == nil {
-			continue
+		if build.ContainerBuild == nil {
+			if build.AcornBuild != nil {
+				fileSet[filepath.Join(cwd, build.AcornBuild.Acornfile)] = true
+			}
+		} else {
+			fileSet[filepath.Join(cwd, build.ContainerBuild.Dockerfile)] = true
 		}
-		fileSet[filepath.Join(cwd, build.Build.Dockerfile)] = true
 	}
 }
 
@@ -231,6 +242,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 	addContainerFiles(fileSet, spec.Containers, cwd)
 	addContainerFiles(fileSet, spec.Jobs, cwd)
 	addFiles(fileSet, spec.Images, cwd)
+	addAcorns(fileSet, spec.Services, cwd)
 	addAcorns(fileSet, spec.Acorns, cwd)
 
 	for k := range fileSet {

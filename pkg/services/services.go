@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/ref"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
@@ -105,14 +108,28 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 }
 
 func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
-	svc, err := resolveTargetService(ctx, c, service.Spec.External, service.Spec.AppNamespace)
+	var (
+		servicePorts  []corev1.ServicePort
+		targetService = &v1.ServiceInstance{}
+	)
+
+	err = ref.Lookup(ctx, c, targetService, service.Spec.AppNamespace, strings.Split(service.Spec.External, ".")...)
 	if apierrors.IsNotFound(err) {
-		missing = append(missing, service.Spec.External)
+		k8sService := &corev1.Service{}
+		if err := c.Get(ctx, router.Key(service.Spec.AppNamespace, service.Spec.External), k8sService); err == nil {
+			servicePorts = ports.CopyServicePorts(k8sService.Spec.Ports)
+			targetService.Name = k8sService.Name
+			targetService.Namespace = k8sService.Namespace
+		} else {
+			missing = append(missing, service.Spec.External)
+		}
 	} else if err != nil {
 		return nil, nil, err
+	} else {
+		servicePorts = ports.ToServicePorts(targetService.Spec.Ports)
 	}
 
-	if svc == nil || len(svc.Spec.Ports) == 0 {
+	if len(servicePorts) == 0 {
 		return nil, missing, nil
 	}
 
@@ -125,8 +142,8 @@ func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config,
 		},
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.%s", svc.Name, svc.Namespace, cfg.InternalClusterDomain),
-			Ports:        ports.CopyServicePorts(svc.Spec.Ports),
+			ExternalName: fmt.Sprintf("%s.%s.%s", targetService.Name, targetService.Namespace, cfg.InternalClusterDomain),
+			Ports:        servicePorts,
 		},
 	}
 	result = append(result, newService)
@@ -166,6 +183,24 @@ func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kcl
 					return
 				}
 			}
+		}
+	}()
+
+	var waiting bool
+
+	defer func() {
+		if err != nil {
+			return
+		}
+		cond := condition.ForName(service, v1.ServiceInstanceConditionDefined)
+		if waiting {
+			if service.Spec.Job == "" {
+				cond.Unknown("waiting to be defined")
+			} else {
+				cond.Unknown(fmt.Sprintf("waiting for job [%s]", service.Spec.Job))
+			}
+		} else {
+			cond.Success()
 		}
 	}()
 

@@ -3,8 +3,9 @@ package testdata
 import (
 	"context"
 	"fmt"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"net"
+
+	"github.com/acorn-io/acorn/pkg/labels"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -453,13 +454,17 @@ func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	}
 	return []apiv1.Volume{{
 		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "volume",
+		ObjectMeta: metav1.ObjectMeta{Name: "found.vol",
 			Labels: map[string]string{
 				labels.AcornVolumeName: "vol",
 				labels.AcornAppName:    "found",
 			}},
-		Spec:   apiv1.VolumeSpec{},
-		Status: apiv1.VolumeStatus{AppName: "found", VolumeName: "vol"},
+		Spec: apiv1.VolumeSpec{},
+		Status: apiv1.VolumeStatus{
+			AppPublicName: "found",
+			AppName:       "found",
+			VolumeName:    "vol",
+		},
 	}}, nil
 }
 
@@ -468,13 +473,17 @@ func (m *MockClient) VolumeGet(ctx context.Context, name string) (*apiv1.Volume,
 		return m.VolumeItem, nil
 	}
 	potentialVol := apiv1.Volume{TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "volume",
+		ObjectMeta: metav1.ObjectMeta{Name: "found.vol",
 			Labels: map[string]string{
 				labels.AcornVolumeName: "vol",
 				labels.AcornAppName:    "found",
 			}},
-		Spec:   apiv1.VolumeSpec{},
-		Status: apiv1.VolumeStatus{AppName: "found", VolumeName: "vol"},
+		Spec: apiv1.VolumeSpec{},
+		Status: apiv1.VolumeStatus{
+			AppName:       "found",
+			AppPublicName: "found",
+			VolumeName:    "vol",
+		},
 	}
 
 	switch name {

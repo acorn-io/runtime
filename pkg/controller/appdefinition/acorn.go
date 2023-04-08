@@ -1,10 +1,13 @@
 package appdefinition
 
 import (
+	"strings"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -25,7 +28,42 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 		}
 		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
 	}
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
+		serviceName, service := entry.Key, entry.Value
+		if ports.IsLinked(appInstance, serviceName) || service.Image == "" {
+			continue
+		}
+		result = append(result, toAcorn(appInstance, tag, pullSecrets, serviceName, v1.Acorn{
+			Labels:              service.Labels,
+			Annotations:         service.Annotations,
+			Image:               service.Image,
+			DeployArgs:          service.ServiceArgs,
+			Environment:         service.Environment,
+			Secrets:             service.Secrets,
+			Links:               service.Links,
+			AutoUpgrade:         service.AutoUpgrade,
+			NotifyUpgrade:       service.NotifyUpgrade,
+			AutoUpgradeInterval: service.AutoUpgradeInterval,
+			Memory:              service.Memory,
+		}))
+	}
 	return result
+}
+
+func scopeSecrets(app *v1.AppInstance, bindings v1.SecretBindings) (result v1.SecretBindings) {
+	for _, binding := range bindings {
+		binding.Secret = publicname.Get(app) + "." + binding.Secret
+		result = append(result, binding)
+	}
+	return
+}
+
+func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.ServiceBindings) {
+	for _, binding := range bindings {
+		binding.Service = publicname.Get(app) + "." + binding.Service
+		result = append(result, binding)
+	}
+	return
 }
 
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
@@ -34,18 +72,15 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
 
-	parentName := appInstance.Labels[labels.AcornParentAcornName]
-	if parentName == "" {
-		parentName = appInstance.Name
-	} else {
-		parentName = parentName + "." + appInstance.Name
-	}
 	labelMap := labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Labels, appInstance.Spec.Labels, acorn.Labels),
-		labels.Managed(appInstance, labels.AcornAcornName, acornName, labels.AcornParentAcornName, parentName))
+		labels.Managed(appInstance,
+			labels.AcornAcornName, acornName,
+			labels.AcornParentAcornName, appInstance.Name,
+			labels.AcornPublicName, publicname.ForChild(appInstance, acornName)))
 
 	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name2.SafeConcatName(appInstance.Name, acornName, appInstance.ShortID()),
+			Name:        name2.SafeHashConcatName(appInstance.Name, acornName),
 			Namespace:   appInstance.Namespace,
 			Labels:      labelMap,
 			Annotations: appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
@@ -55,19 +90,33 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Annotations: append(acorn.Annotations, appInstance.Spec.Annotations...),
 			Image:       image,
 			Volumes:     acorn.Volumes,
-			Secrets:     acorn.Secrets,
+			Secrets:     scopeSecrets(appInstance, acorn.Secrets),
 			PublishMode: appInstance.Spec.PublishMode,
-			Links:       acorn.Links,
+			Links:       scopeLinks(appInstance, acorn.Links),
 			Profiles:    acorn.Profiles,
+			DevMode:     appInstance.Spec.DevMode,
 			DeployArgs:  acorn.DeployArgs,
 			Publish:     acorn.Publish,
 			Stop:        appInstance.Spec.Stop,
 			Environment: append(acorn.Environment, appInstance.Spec.Environment...),
-			Permissions: appInstance.Spec.Permissions,
+			Permissions: trimPermPrefix(appInstance.Spec.Permissions, acornName),
 		},
 	}
 
 	return acornInstance
+}
+
+func trimPermPrefix(perms []v1.Permissions, name string) (result []v1.Permissions) {
+	for _, perm := range perms {
+		prefix := perm.ServiceName + "."
+		if strings.HasPrefix(perm.ServiceName, prefix) {
+			result = append(result, v1.Permissions{
+				ServiceName: strings.TrimPrefix(perm.ServiceName, prefix),
+				Rules:       perm.Rules,
+			})
+		}
+	}
+	return
 }
 
 func appInstanceScoped(acornName string, globalLabels map[string]string, appSpecLabels []v1.ScopedLabel, acornScopedLabels v1.ScopedLabels) map[string]string {

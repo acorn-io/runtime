@@ -1,10 +1,14 @@
 package services
 
 import (
+	"context"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	ports2 "github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/baaah/pkg/typed"
+	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -16,12 +20,26 @@ func publishMode(app *v1.AppInstance) v1.PublishMode {
 	return app.Spec.PublishMode
 }
 
-func forDefined(appInstance *v1.AppInstance) (result []kclient.Object) {
+func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
 		serviceName, service := entry.Key, entry.Value
 
 		if ports2.IsLinked(appInstance, serviceName) {
 			continue
+		}
+
+		// service acorn, skip because acorn will be defined
+		if service.Image != "" {
+			continue
+		}
+
+		// generated service, will be defined elsewhere
+		if service.GetJob() != "" {
+			service = *service.DeepCopy()
+			_, err := jobs.GetOutputFor(ctx, c, appInstance, service.GetJob(), serviceName, &service)
+			if err != nil && !apierror.IsNotFound(err) {
+				return nil, err
+			}
 		}
 
 		result = append(result, &v1.ServiceInstance{
@@ -37,22 +55,39 @@ func forDefined(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Publish:      ports2.PortPublishForService(serviceName, appInstance.Spec.Publish),
 				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornServiceName, serviceName),
 					labels.GatherScoped(serviceName, v1.LabelTypeService,
-						appInstance.Status.AppSpec.Labels, service.Labels, appInstance.Spec.Labels)),
+						appInstance.Status.AppSpec.Labels, asMap(service.Labels), appInstance.Spec.Labels)),
 				Annotations: labels.GatherScoped(serviceName, v1.LabelTypeService,
-					appInstance.Status.AppSpec.Annotations, service.Annotations, appInstance.Spec.Annotations),
+					appInstance.Status.AppSpec.Annotations, asMap(service.Annotations), appInstance.Spec.Annotations),
 				Default:   service.Default,
 				External:  service.External,
 				Address:   service.Address,
 				Ports:     service.Ports,
 				Container: service.Container,
-				Secrets:   service.Secrets,
+				Secrets:   asSlice(service.Secrets),
 				Data:      service.Data,
-				Destroy:   service.Destroy,
+				Job:       service.GetJob(),
 			},
 		})
 	}
 
 	return
+}
+
+func asSlice(s v1.SecretBindings) (result []string) {
+	for _, s := range s {
+		if s.Target != "" {
+			result = append(result, s.Target)
+		}
+	}
+	return
+}
+
+func asMap(s v1.ScopedLabels) map[string]string {
+	result := map[string]string{}
+	for _, s := range s {
+		result[s.Key] = s.Value
+	}
+	return result
 }
 
 func forRouters(appInstance *v1.AppInstance) (result []kclient.Object) {
@@ -152,8 +187,12 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 	return
 }
 
-func ToAcornServices(appInstance *v1.AppInstance) (result []kclient.Object) {
-	result = append(result, forDefined(appInstance)...)
+func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+	objs, err := forDefined(ctx, c, appInstance)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, objs...)
 	result = append(result, forContainers(appInstance)...)
 	result = append(result, forRouters(appInstance)...)
 	// determine default before adding linked services

@@ -7,21 +7,21 @@ metadata:
 spec:
   image: test
   permissions:
-  - serviceName: oneimage
-    clusterRules:
-    - verbs:
-      - create
-      apiGroups:
-      - "foo.io"
-      resources:
-      - "bar"
-    rules:
-    - verbs:
-      - patch
-      apiGroups:
-      - "bar.io"
-      resources:
-      - "foo"
+    - serviceName: oneimage
+      rules:
+        - verbs:
+            - create
+          apiGroups:
+            - "foo.io"
+          resources:
+            - "bar"
+          scope: "account"
+        - verbs:
+            - patch
+          apiGroups:
+            - "bar.io"
+          resources:
+            - "foo"
 status:
   namespace: app-created-namespace
   appImage:

@@ -13,7 +13,6 @@ import (
 
 	"github.com/acorn-io/aml"
 	"github.com/google/shlex"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -548,6 +547,16 @@ type acornAliases struct {
 	Mem MemoryMap  `json:"mem,omitempty"`
 }
 
+func (a acornAliases) SetService(dst Service) Service {
+	if len(a.Env) > 0 {
+		dst.Environment = append(dst.Environment, a.Env...)
+	}
+	if len(a.Mem) > 0 {
+		dst.Memory = a.Mem
+	}
+	return dst
+}
+
 func (a acornAliases) SetAcorn(dst Acorn) Acorn {
 	if len(a.Env) > 0 {
 		dst.Environment = append(dst.Environment, a.Env...)
@@ -670,9 +679,46 @@ func (in *Container) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type policyRuleAliases struct {
+	Verb         string   `json:"verb,omitempty"`
+	APIGroup     string   `json:"apiGroup,omitempty"`
+	Resource     string   `json:"resource,omitempty"`
+	ResourceName string   `json:"resourceName,omitempty"`
+	Scope        string   `json:"scope,omitempty"`
+	Namespaces   []string `json:"namespaces,omitempty"`
+}
+
 func (in *PolicyRule) UnmarshalJSON(data []byte) error {
 	if !isString(data) {
-		return json.Unmarshal(data, (*rbacv1.PolicyRule)(in))
+		type policyRule PolicyRule
+		if err := json.Unmarshal(data, (*policyRule)(in)); err != nil {
+			return err
+		}
+		alias := &policyRuleAliases{}
+		if err := json.Unmarshal(data, alias); err != nil {
+			return err
+		}
+		if alias.Verb != "" {
+			in.Verbs = append(in.Verbs, alias.Verb)
+		}
+		if alias.APIGroup != "" {
+			in.APIGroups = append(in.APIGroups, alias.APIGroup)
+		}
+		if alias.Resource != "" {
+			in.Resources = append(in.Resources, alias.Resource)
+		}
+		if alias.ResourceName != "" {
+			in.ResourceNames = append(in.ResourceNames, alias.ResourceName)
+		}
+		if alias.Scope != "" {
+			in.Scopes = append(in.Scopes, alias.Scope)
+		}
+		if len(alias.Namespaces) > 0 {
+			for _, ns := range alias.Namespaces {
+				in.Scopes = append(in.Scopes, "namespace:"+ns)
+			}
+		}
+		return nil
 	}
 
 	s, err := parseString(data)
@@ -685,6 +731,9 @@ func (in *PolicyRule) UnmarshalJSON(data []byte) error {
 	}
 
 	resource, apiGroup, _ := strings.Cut(s, ".")
+	if apiGroup == "" {
+		apiGroup = "api.acorn.io"
+	}
 	in.Resources = []string{resource}
 	in.APIGroups = []string{apiGroup}
 	in.Verbs = DefaultVerbs
@@ -695,36 +744,29 @@ func (in *PolicyRule) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (in *ClusterPolicyRule) UnmarshalJSON(data []byte) error {
-	if !isString(data) {
-		type clusterPolicyRule ClusterPolicyRule
-		return json.Unmarshal(data, (*clusterPolicyRule)(in))
-	}
-
-	s, err := parseString(data)
-	if err != nil {
-		return err
-	}
-	read := strings.HasPrefix(s, "read ")
-	if read {
-		s = strings.TrimPrefix(s, "read ")
-	}
-
-	resource, apiGroup, _ := strings.Cut(s, ".")
-	in.Resources = []string{resource}
-	in.APIGroups = []string{apiGroup}
-	in.Verbs = DefaultVerbs
-	if read {
-		in.Verbs = ReadVerbs
-	}
-
-	return nil
+type permissionsClusterRules struct {
+	ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
 }
 
 func (in *Permissions) UnmarshalJSON(data []byte) error {
 	if !isArray(data) {
 		type permissions Permissions
-		return json.Unmarshal(data, (*permissions)(in))
+		err := json.Unmarshal(data, (*permissions)(in))
+		if err != nil {
+			return err
+		}
+		var clusterRules permissionsClusterRules
+		err = json.Unmarshal(data, &clusterRules)
+		if err != nil {
+			return err
+		}
+		for _, rule := range clusterRules.ClusterRules {
+			if len(rule.Scopes) == 0 {
+				rule.Scopes = append(rule.Scopes, "cluster")
+			}
+			in.Rules = append(in.Rules, rule)
+		}
+		return nil
 	}
 
 	var rules []PolicyRule
@@ -1337,4 +1379,21 @@ func ParseNameValues(fillEnv bool, s ...string) (result []NameValue) {
 		})
 	}
 	return result
+}
+
+func (in *Service) UnmarshalJSON(data []byte) error {
+	var a Service
+	type acorn Service
+	if err := json.Unmarshal(data, (*acorn)(&a)); err != nil {
+		return err
+	}
+
+	var alias acornAliases
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+
+	a = alias.SetService(a)
+	*in = a
+	return nil
 }

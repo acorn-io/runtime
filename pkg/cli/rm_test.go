@@ -239,7 +239,7 @@ func TestAppRm(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "Removed: volume\n",
+			wantOut: "Removed: found.vol\n",
 		},
 		{
 			name: "does exist volume type long", fields: fields{
@@ -258,7 +258,7 @@ func TestAppRm(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "Removed: volume\n",
+			wantOut: "Removed: found.vol\n",
 		},
 		{
 			name: "does exist secret type short", fields: fields{
@@ -315,7 +315,7 @@ func TestAppRm(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "Removed: found\nRemoved: volume\nRemoved: found.secret\n",
+			wantOut: "Removed: found\nRemoved: found.vol\nRemoved: found.secret\n",
 		},
 		{
 			name: "no app name arg default type", fields: fields{

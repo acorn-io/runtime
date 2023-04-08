@@ -15,6 +15,7 @@ const (
 	AcornAppNamespace                   = Prefix + "app-namespace"
 	AcornAppName                        = Prefix + "app-name"
 	AcornParentAcornName                = Prefix + "parent-acorn-name"
+	AcornPublicName                     = Prefix + "public-name"
 	AcornAcornName                      = Prefix + "acorn-name"
 	AcornServiceName                    = Prefix + "service-name"
 	AcornServicePublish                 = Prefix + "service-publish"
@@ -150,8 +151,20 @@ func FilterUserDefined(appInstance *v1.AppInstance, allowedLabels, allowedAnnota
 	}
 
 	for key, s := range appInstance.Status.AppSpec.Services {
-		s.Labels = filter(s.Labels, allowedLabels)
-		s.Annotations = filter(s.Annotations, allowedAnnotations)
+		labels := v1.ScopedLabels{}
+		annotations := v1.ScopedLabels{}
+		for _, v := range s.Labels {
+			if slices.Contains(allowedLabels, v.Key) {
+				labels = append(labels, v)
+			}
+		}
+		for _, v := range s.Annotations {
+			if slices.Contains(allowedAnnotations, v.Key) {
+				annotations = append(annotations, v)
+			}
+		}
+		s.Labels = labels
+		s.Annotations = annotations
 		appInstance.Status.AppSpec.Services[key] = s
 	}
 

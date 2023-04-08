@@ -6,9 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/acorn-io/acorn/pkg/publicname"
+	"github.com/acorn-io/acorn/pkg/secrets"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -51,13 +53,38 @@ func translateAccessModes(accessModes []v1.AccessMode) []corev1.PersistentVolume
 func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeName string) (string, error) {
 	var pvc corev1.PersistentVolumeClaim
 	if err := req.Get(&pvc, appInstance.Status.Namespace, volumeName); err == nil {
-		return pvc.Spec.VolumeName, nil
+		if pvc.Spec.VolumeName == "" {
+			return "", nil
+		}
+		pv := corev1.PersistentVolume{}
+		if err := req.Get(&pv, "", pvc.Spec.VolumeName); err == nil {
+			if pv.DeletionTimestamp.IsZero() {
+				return pvc.Spec.VolumeName, nil
+			}
+		} else if !apierrors.IsNotFound(err) {
+			return "", err
+		}
 	} else if !apierrors.IsNotFound(err) {
 		return "", err
 	}
 
+	// same thing as above but uncached
 	if err := req.Get(uncached.Get(&pvc), appInstance.Status.Namespace, volumeName); err == nil {
-		return pvc.Spec.VolumeName, nil
+		if pvc.Spec.VolumeName == "" {
+			return "", nil
+		}
+		pv := corev1.PersistentVolume{}
+		if err := req.Get(uncached.Get(&pv), "", pvc.Spec.VolumeName); err == nil {
+			if pv.DeletionTimestamp.IsZero() {
+				return pvc.Spec.VolumeName, nil
+			}
+		} else if !apierrors.IsNotFound(err) {
+			return "", err
+		}
+		// at this point we have to delete the PVC so that we can reset the invalid pvc.Spec.VolumeName
+		if err := req.Client.Delete(req.Ctx, &pvc); err != nil {
+			return "", err
+		}
 	} else if !apierrors.IsNotFound(err) {
 		return "", err
 	}
@@ -184,6 +211,7 @@ func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.V
 		labels.AcornAppNamespace: appInstance.Namespace,
 		labels.AcornManaged:      "true",
 		labels.AcornVolumeName:   volume,
+		labels.AcornPublicName:   publicname.ForChild(appInstance, volume),
 	}
 	return labels.Merge(labelMap, labels.GatherScoped(volume, v1.LabelTypeVolume, appInstance.Status.AppSpec.Labels,
 		volumeRequest.Labels, appInstance.Spec.Labels))

@@ -3,7 +3,7 @@ containers: {
 		build: "one"
 	}
 	two: {
-	    build: images.itwo.build
+	    build: images.itwo.containerBuild
 	}
 	three: {
 	    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
@@ -12,10 +12,10 @@ containers: {
 
 images: {
 	ione: {
-		build: "one"
+		containerBuild: "one"
 	}
 	itwo: {
-		build: {
+		containerBuild: {
 			dockerfile: "two/subdir/Dockerfile.txt"
 			context: "two/subdir/subdir2"
 		}

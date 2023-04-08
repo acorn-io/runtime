@@ -80,6 +80,7 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/volume-name": "foo"
     acorn.io/volume-class: "test-custom-class"
+    acorn.io/public-name: app-name.foo
 spec:
   resources:
     requests:
@@ -99,6 +100,7 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/volume-name": "bar"
     acorn.io/volume-class: "test-custom-class"
+    acorn.io/public-name: app-name.bar
 spec:
   resources:
     requests:

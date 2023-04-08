@@ -41,18 +41,9 @@ func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([
 		return nil, err
 	}
 
-	apps, err := client.AppList(cmd.Context())
-	if err != nil {
-		return nil, err
-	}
-
 	for _, secret := range secrets {
-		aliasList := secretAliases(&secret, apps)
-		if len(aliasList) != 0 {
-			secretName := strings.Split(aliasList[0], ".")
-			if len(secretName) != 0 && arg == secretName[0] {
-				result = append(result, secret.Name)
-			}
+		if strings.HasPrefix(secret.Name, arg+".") {
+			result = append(result, secret.Name)
 		}
 	}
 	return result, nil

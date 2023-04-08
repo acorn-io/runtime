@@ -8,20 +8,20 @@ spec:
   image: test
   permissions:
   - serviceName: oneimage
-    clusterRules:
-    - verbs:
-      - create
-      apiGroups:
-      - "foo.io"
-      resources:
-      - "bar"
     rules:
-    - verbs:
-      - patch
-      apiGroups:
-      - "bar.io"
-      resources:
-      - "foo"
+      - verbs:
+          - create
+        apiGroups:
+          - "foo.io"
+        resources:
+          - "bar"
+        scope: "cluster"
+      - verbs:
+          - patch
+        apiGroups:
+          - "bar.io"
+        resources:
+          - "foo"
 status:
   namespace: app-created-namespace
   appImage:

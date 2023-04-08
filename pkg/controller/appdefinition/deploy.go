@@ -19,7 +19,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/apply"
-	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -53,10 +52,21 @@ func FilterLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
 func DeploySpec(req router.Request, resp router.Response) (err error) {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
+	interpolator := secrets.NewInterpolator(req, appInstance)
 
 	defer func() {
 		if err == nil {
-			status.Success()
+			// if there is an issue with interpolation, we just record it on the condition
+			// but still allow the handler to reconcile resp objects. This is to avoid a
+			// possible catch 22 where interpolation fails but we can't update the acorn
+			// because it's failing. This happens when we refer to an object that has
+			// yet to be created
+			interpolatorErr := interpolator.Err()
+			if interpolatorErr == nil {
+				status.Success()
+			} else {
+				status.Error(err)
+			}
 		} else {
 			status.Error(err)
 		}
@@ -72,8 +82,6 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	interpolator := secrets.NewInterpolator(req, appInstance)
-
 	if err := addDeployments(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
@@ -83,7 +91,9 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addJobs(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
-	addExpose(appInstance, resp)
+	if err := addServices(req, appInstance, resp); err != nil {
+		return err
+	}
 	if err := addPVCs(req, appInstance, resp); err != nil {
 		return err
 	}
@@ -91,7 +101,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 
 	resp.Objects(pullSecrets.Objects()...)
 	resp.Objects(interpolator.Objects()...)
-	return merr.NewErrors(pullSecrets.Err(), interpolator.Err())
+	return pullSecrets.Err()
 }
 
 func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator, resp router.Response) error {
@@ -611,7 +621,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		},
 	}
 
-	interpolator.AddMissingAnnotations(dep.Spec.Template.Annotations)
+	interpolator.AddMissingAnnotations(dep.Annotations)
 
 	if stateful {
 		dep.Spec.Replicas = &[]int32{1}[0]

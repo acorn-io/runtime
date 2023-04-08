@@ -57,13 +57,13 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		return nil, err
 	}
 
-	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
-		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
-
 	volumes, err := toVolumes(appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
+
+	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
+		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
 
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
@@ -89,7 +89,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		},
 	}
 
-	interpolator.AddMissingAnnotations(jobSpec.Template.Annotations)
+	interpolator.AddMissingAnnotations(baseAnnotations)
 
 	if container.Schedule == "" {
 		return &batchv1.Job{

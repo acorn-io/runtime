@@ -9,13 +9,20 @@ import (
 
 func TestParseVolumesWithoutBinding(t *testing.T) {
 	input := []string{
-		"bar:bar",
 		"bar",
 	}
 
 	vs, err := ParseVolumes(input, false)
 	assert.NoError(t, err)
-	assert.Equal(t, vs[0], vs[1])
+	assert.Equal(t, "", vs[0].Volume)
+	assert.Equal(t, "bar", vs[0].Target)
+
+	input = []string{
+		"bar:bar",
+	}
+
+	_, err = ParseVolumes(input, false)
+	assert.Error(t, err)
 
 	input = []string{
 		"bar:bar",
@@ -34,20 +41,9 @@ func TestParseVolumesWithoutBinding(t *testing.T) {
 
 func TestParseVolumes(t *testing.T) {
 	input := []string{
-		"foo:bar",
-		"foo:bar",
-	}
-
-	vs, err := ParseVolumes(input, false)
-	assert.NoError(t, err)
-	assert.Equal(t, vs[0], vs[1])
-	assert.Equal(t, "foo", vs[0].Volume)
-	assert.Equal(t, "bar", vs[0].Target)
-
-	input = []string{
 		"bar:bar,size=11G,class=aclass",
 	}
-	_, err = ParseVolumes(input, false)
+	_, err := ParseVolumes(input, false)
 	assert.Error(t, err)
 }
 

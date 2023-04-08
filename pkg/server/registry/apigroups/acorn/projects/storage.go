@@ -5,6 +5,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
+	"github.com/acorn-io/mink/pkg/strategy/translation"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/registry/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -13,7 +14,8 @@ import (
 const localRegion = "local"
 
 func NewStorage(c kclient.WithWatch) rest.Storage {
-	remoteResource := remote.NewWithTranslation(&Translator{localRegion}, &corev1.Namespace{}, c)
+	remoteResource := translation.NewTranslationStrategy(&Translator{localRegion},
+		remote.NewRemote(&corev1.Namespace{}, c))
 	strategy := &Strategy{
 		c:       c,
 		lister:  remoteResource,

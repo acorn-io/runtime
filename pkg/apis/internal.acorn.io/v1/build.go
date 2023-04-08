@@ -16,16 +16,19 @@ type ContainerImageBuilderSpec struct {
 }
 
 type ImageBuilderSpec struct {
-	Image string `json:"image,omitempty"`
-	Build *Build `json:"build,omitempty"`
+	Image          string      `json:"image,omitempty"`
+	ContainerBuild *Build      `json:"containerBuild,omitempty"`
+	AcornBuild     *AcornBuild `json:"acornBuild,omitempty"`
 }
 
 type AcornBuilderSpec struct {
-	Image string      `json:"image,omitempty"`
-	Build *AcornBuild `json:"build,omitempty"`
+	AutoUpgrade bool        `json:"autoUpgrade,omitempty"`
+	Image       string      `json:"image,omitempty"`
+	Build       *AcornBuild `json:"build,omitempty"`
 }
 
 type BuilderSpec struct {
+	Services   map[string]AcornBuilderSpec          `json:"services,omitempty"`
 	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
 	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
 	Images     map[string]ImageBuilderSpec          `json:"images,omitempty"`

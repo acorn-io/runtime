@@ -5,6 +5,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
+	"github.com/acorn-io/mink/pkg/strategy/translation"
 	"github.com/acorn-io/mink/pkg/validator"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -12,9 +13,9 @@ import (
 )
 
 func NewStore(c kclient.WithWatch) rest.Storage {
-	remoteResource := remote.NewWithTranslation(&Translator{
+	remoteResource := translation.NewTranslationStrategy(&Translator{
 		client: c,
-	}, &corev1.Secret{}, c)
+	}, remote.NewRemote(&corev1.Secret{}, c))
 
 	strategy := &Strategy{}
 	return stores.NewBuilder(c.Scheme(), &apiv1.Credential{}).

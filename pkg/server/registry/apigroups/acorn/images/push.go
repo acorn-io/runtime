@@ -142,7 +142,7 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		})
 	}
 
-	if _, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, pushTag.String()); err != nil {
+	if _, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, image.Namespace, pushTag.String()); err != nil {
 		return nil, nil, err
 	}
 

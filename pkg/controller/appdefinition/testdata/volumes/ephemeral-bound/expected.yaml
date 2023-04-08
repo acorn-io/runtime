@@ -72,6 +72,7 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/volume-name": "foo"
     "acorn.io/volume-class": "custom-class"
+    acorn.io/public-name: app-name.foo
 spec:
   accessModes:
     - ReadWriteOnce

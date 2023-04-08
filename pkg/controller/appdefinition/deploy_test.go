@@ -307,6 +307,6 @@ func TestFiles(t *testing.T) {
 	configMap := objs[6].(*corev1.Secret)
 
 	assert.Len(t, configMap.Data, 2)
-	assert.Equal(t, []byte("d"), configMap.Data["4658d6abbbaf7748c172ed5a3e003cdb8997648f88724834e41f75e54520e142"])
-	assert.Equal(t, []byte("e"), configMap.Data["6b672b9a7e4feb4fd38386f90405bc0ae261413a758dd8eb2786be61df8dc27d"])
+	assert.Equal(t, []byte("d"), configMap.Data[toHash("ZA==")])
+	assert.Equal(t, []byte("e"), configMap.Data[toHash("ZQ==")])
 }

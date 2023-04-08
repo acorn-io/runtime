@@ -184,7 +184,6 @@ outer:
 		var image *v1.AppImage
 		if !opts.Build.Attach {
 			image, err = client.AcornImageBuild(ctx, file, &opts.Build)
-			opts.Build.ImageID = image.ID
 			if err != nil {
 				logrus.Errorf("Failed to build %s: %v", file, err)
 				logrus.Infof("Build failed, touch [%s] to rebuild", file)
@@ -194,6 +193,7 @@ outer:
 				}()
 				continue
 			}
+			opts.Build.ImageID = image.ID
 		}
 		//set attach back false to allow after dev mode has been attached for syncing to occur above
 		opts.Build.Attach = false

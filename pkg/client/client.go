@@ -96,7 +96,7 @@ type AppUpdateOptions struct {
 	NotifyUpgrade       *bool
 	AutoUpgradeInterval string
 	Memory              v1.MemoryMap
-	ComputeClass        v1.ComputeClassMap
+	ComputeClasses      v1.ComputeClassMap
 }
 
 type LogOptions apiv1.LogOptions
@@ -121,7 +121,7 @@ type AppRunOptions struct {
 	NotifyUpgrade       *bool
 	AutoUpgradeInterval string
 	Memory              v1.MemoryMap
-	ComputeClass        v1.ComputeClassMap
+	ComputeClasses      v1.ComputeClassMap
 }
 
 func (a AppRunOptions) ToUpdate() AppUpdateOptions {
@@ -143,7 +143,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		NotifyUpgrade:       a.NotifyUpgrade,
 		AutoUpgradeInterval: a.AutoUpgradeInterval,
 		Memory:              a.Memory,
-		ComputeClass:        a.ComputeClass,
+		ComputeClasses:      a.ComputeClasses,
 	}
 }
 
@@ -166,7 +166,7 @@ func (a AppUpdateOptions) ToRun() AppRunOptions {
 		NotifyUpgrade:       a.NotifyUpgrade,
 		AutoUpgradeInterval: a.AutoUpgradeInterval,
 		Memory:              a.Memory,
-		ComputeClass:        a.ComputeClass,
+		ComputeClasses:      a.ComputeClasses,
 	}
 }
 

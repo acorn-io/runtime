@@ -109,7 +109,7 @@ func (i *ImagePull) ConnectMethods() []string {
 }
 
 func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ggcrv1.Update, error) {
-	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, imageName)
+	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, namespace, imageName)
 	if err != nil {
 		return nil, err
 	}

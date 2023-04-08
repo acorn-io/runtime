@@ -5,16 +5,17 @@ import (
 	"strings"
 )
 
-func ParseVolumes(args []string, binding bool) (result []VolumeBinding, _ error) {
+func ParseVolumes(args []string, fromCLI bool) (result []VolumeBinding, _ error) {
 	for _, arg := range args {
 		arg, opts, _ := strings.Cut(arg, ",")
 		existing, volName, ok := strings.Cut(arg, ":")
-		if !ok {
-			volName = existing
-			if binding {
-				// In a binding no existing means we want to configure the generated volume, not bind one
-				existing = ""
+		if ok {
+			if !fromCLI {
+				return nil, fmt.Errorf("invalid volume configuration [%s], can not contain ':'", arg)
 			}
+		} else {
+			volName = existing
+			existing = ""
 		}
 		volName = strings.TrimSpace(volName)
 		existing = strings.TrimSpace(existing)
@@ -27,7 +28,7 @@ func ParseVolumes(args []string, binding bool) (result []VolumeBinding, _ error)
 		}
 
 		kvOpts := KVMap(opts, ",")
-		if binding {
+		if fromCLI {
 			volumeBinding.Class = strings.TrimSpace(kvOpts["class"])
 			q, err := ParseQuantity(kvOpts["size"])
 			if err != nil {

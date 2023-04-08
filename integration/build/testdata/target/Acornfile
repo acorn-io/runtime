@@ -7,7 +7,7 @@ containers: {
 }
 images: {
 	isimple: {
-		build: {
+		containerBuild: {
 		    target: "not-default"
 		}
 	}

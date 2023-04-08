@@ -2,7 +2,6 @@ package secrets
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -10,18 +9,21 @@ import (
 	"sort"
 	"strings"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/ref"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	"golang.org/x/exp/maps"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -56,100 +58,7 @@ var (
 	imageSecretRegexp    = regexp.MustCompile(`\${image://(.*?)}`)
 )
 
-func getCronJobLatestJob(req router.Request, namespace, name string) (jobName string, err error) {
-	cronJob := &batchv1.CronJob{}
-	err = req.Get(cronJob, namespace, name)
-	if err != nil {
-		return "", err
-	}
-
-	l := klabels.SelectorFromSet(cronJob.Spec.JobTemplate.Labels)
-	if err != nil {
-		return "", err
-	}
-
-	var jobsFromCron batchv1.JobList
-	err = req.List(&jobsFromCron, &kclient.ListOptions{
-		Namespace:     namespace,
-		LabelSelector: l,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	for _, job := range jobsFromCron.Items {
-		if job.Status.CompletionTime != nil && cronJob.Status.LastSuccessfulTime != nil &&
-			job.Status.CompletionTime.Time == cronJob.Status.LastSuccessfulTime.Time {
-			return job.Name, nil
-		}
-	}
-
-	return "", ErrJobNotDone
-}
-
-func getJobOutput(req router.Request, appInstance *v1.AppInstance, name string) (job *batchv1.Job, data []byte, err error) {
-	namespace := appInstance.Status.Namespace
-
-	if val, ok := appInstance.Status.AppSpec.Jobs[name]; ok {
-		if val.Schedule != "" {
-			name, err = getCronJobLatestJob(req, namespace, name)
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-	}
-
-	job = &batchv1.Job{}
-	err = req.Get(job, namespace, name)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if job.Status.Succeeded != 1 {
-		return nil, nil, ErrJobNotDone
-	}
-
-	sel, err := metav1.LabelSelectorAsSelector(job.Spec.Selector)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	pods := &corev1.PodList{}
-	err = req.List(pods, &kclient.ListOptions{
-		Namespace:     namespace,
-		LabelSelector: sel,
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if len(pods.Items) == 0 {
-		return nil, nil, apierrors.NewNotFound(schema.GroupResource{
-			Resource: "pods",
-		}, "")
-	}
-
-	for _, pod := range pods.Items {
-		for _, status := range pod.Status.ContainerStatuses {
-			if status.State.Terminated == nil || status.State.Terminated.ExitCode != 0 {
-				continue
-			}
-			if len(status.State.Terminated.Message) > 0 {
-				return job, []byte(status.State.Terminated.Message), nil
-			}
-		}
-	}
-
-	return nil, nil, ErrJobNoOutput
-}
-
 func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret, existing *corev1.Secret) (*corev1.Secret, error) {
-	_, output, err := getJobOutput(req, appInstance, convert.ToString(secretRef.Params["job"]))
-
-	if err != nil {
-		return nil, err
-	}
-
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: secretName + "-",
@@ -164,14 +73,23 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 	format := convert.ToString(secretRef.Params["format"])
 	switch format {
 	case "text":
-		secret.Data["content"] = output
+		var output string
+		_, err := jobs.GetOutputFor(req.Ctx, req.Client, appInstance, convert.ToString(secretRef.Params["job"]), secretName, &output)
+		if err != nil {
+			return nil, err
+		}
+
+		secret.Data["content"] = []byte(output)
+	case "aml":
+		fallthrough
 	case "json":
-		newSecret := &secretData{}
-		if err := json.Unmarshal(output, newSecret); err != nil {
+		newSecret := &v1.Secret{}
+		_, err := jobs.GetOutputFor(req.Ctx, req.Client, appInstance, convert.ToString(secretRef.Params["job"]), secretName, newSecret)
+		if err != nil {
 			return nil, err
 		}
 		for k, v := range newSecret.Data {
-			secret.Data[k] = v
+			secret.Data[k] = []byte(v)
 		}
 		if newSecret.Type != "" {
 			inType := corev1.SecretType(v1.SecretTypePrefix + newSecret.Type)
@@ -182,11 +100,6 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 	}
 
 	return updateOrCreate(req, existing, secret)
-}
-
-type secretData struct {
-	Type string            `json:"type,omitempty"`
-	Data map[string][]byte `json:"data,omitempty"`
 }
 
 func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret, existing *corev1.Secret) (*corev1.Secret, error) {
@@ -357,8 +270,12 @@ func acornLabelsForSecret(secretName string, appInstance *v1.AppInstance) map[st
 }
 
 func labelsForSecret(secretName string, appInstance *v1.AppInstance, secretRef v1.Secret) map[string]string {
-	return labels.Merge(acornLabelsForSecret(secretName, appInstance), labels.GatherScoped(secretName, v1.LabelTypeSecret,
-		appInstance.Status.AppSpec.Labels, secretRef.Labels, appInstance.Spec.Labels))
+	result := labels.Merge(acornLabelsForSecret(secretName, appInstance),
+		labels.GatherScoped(secretName, v1.LabelTypeSecret,
+			appInstance.Status.AppSpec.Labels, secretRef.Labels, appInstance.Spec.Labels))
+	return labels.Merge(result, map[string]string{
+		labels.AcornPublicName: publicname.ForChild(appInstance, secretName),
+	})
 }
 
 func annotationsForSecret(secretName string, appInstance *v1.AppInstance, secretRef v1.Secret) map[string]string {
@@ -441,6 +358,18 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	}
 
 	if externalRef != "" {
+		if strings.HasPrefix(externalRef, "context://") {
+			existingSecret := &corev1.Secret{}
+			name := "context-" + strings.TrimPrefix(externalRef, "context://")
+			if err := req.Get(existingSecret, system.Namespace, name); err != nil {
+				return nil, err
+			}
+			if existingSecret.Type != apiv1.SecretTypeContext {
+				return nil, fmt.Errorf("found secrets %s/%s but type is [%s] and not [%s]",
+					system.Namespace, name, existingSecret.Type, apiv1.SecretTypeContext)
+			}
+			return existingSecret, nil
+		}
 		existingSecret := &corev1.Secret{}
 		err := ref.Lookup(req.Ctx, req.Client, existingSecret, appInstance.Namespace, strings.Split(externalRef, ".")...)
 		if err != nil {
