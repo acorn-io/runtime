@@ -2,6 +2,11 @@ dist: releases
 snapshot:
   name_template: '{{ trimprefix .Summary "v" }}'
 
+before:
+  hooks:
+    - go mod tidy
+    - ./scripts/manpages.sh
+
 builds:
   - id: default
     env:
@@ -25,27 +30,28 @@ builds:
       - -s
       - -w
       - -X "github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}"
-      - -X "github.com/acorn-io/acorn/pkg/config.AcornDNSEndpointDefault={{ .Env.ACORN_DNS_ENDPOINT }}"
+#      - -X "github.com/acorn-io/acorn/pkg/config.AcornDNSEndpointDefault={{ .Env.ACORN_DNS_ENDPOINT }}"
 
 universal_binaries:
   - id: mac
     ids:
       - default
     replace: true
-    hooks:
-      post:
-        - cmd: ./tools/notarize "{{ .Path }}" "{{ .ProjectName }}-v{{ .Version }}-macOS-universal"
-          output: true
-          env:
-            - SIGN={{ if index .Env "SIGN" }}1{{ end }}
-            - NOTARIZE={{ if index .Env "NOTARIZE" }}{{ .Env.NOTARIZE }}{{ end }}
-            - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
-            - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
-            - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
-            - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
+#    hooks:
+#      post:
+#        - cmd: ./tools/notarize "{{ .Path }}" "{{ .ProjectName }}-v{{ .Version }}-macOS-universal"
+#          output: true
+#          env:
+#            - SIGN={{ if index .Env "SIGN" }}1{{ end }}
+#            - NOTARIZE={{ if index .Env "NOTARIZE" }}{{ .Env.NOTARIZE }}{{ end }}
+#            - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
+#            - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
+#            - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
+#            - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
 
 archives:
   - id: default
+    rlcp: true
     builds:
       - default
       - mac
@@ -53,18 +59,22 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    files:
+      - LICENSE
+      - README.md
+      - manpages/*
 
 checksum:
   name_template: "checksums.txt"
   extra_files:
     - glob: "./releases/*.dmg"
 
-signs:
-  - id: cosign
-    cmd: cosign
-    stdin: "{{ .Env.COSIGN_PASSWORD }}"
-    args: ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
-    artifacts: checksum
+#signs:
+#  - id: cosign
+#    cmd: cosign
+#    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+#    args: ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
+#    artifacts: checksum
 
 changelog:
   use: github
@@ -93,6 +103,12 @@ brews:
       owner: acorn-io
       name: homebrew-cli
       token: "{{ .Env.GH_PROJECT_TOKEN }}"
+    test: |
+      system "#{bin}/acorn -v"
+    install: |-
+      bin1.install "acorn"
+      prefix.install "LICENSE", "README.md"
+      man1.install "manpages/acorn.1.gz"
 
 dockers:
   - use: buildx
@@ -165,6 +181,6 @@ docker_manifests:
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm64
       - ghcr.io/acorn-io/acorn:v{{ .Version }}-arm32v7
 
-docker_signs:
-  - artifacts: all
-    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+#docker_signs:
+#  - artifacts: all
+#    stdin: "{{ .Env.COSIGN_PASSWORD }}"
