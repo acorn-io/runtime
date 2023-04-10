@@ -3,13 +3,14 @@
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
-  name: app-name-acorn-name-1234567890ab
+  name: app-name-acorn-name-01b5d4ac
   namespace: app-namespace
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
     "acorn.io/acorn-name": "acorn-name"
     "acorn.io/managed": "true"
+    "acorn.io/public-name": "app-name.acorn-name"
     "acorn.io/parent-acorn-name": "app-name"
     "global": "value"
     "global2": "value"

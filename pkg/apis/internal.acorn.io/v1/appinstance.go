@@ -22,7 +22,6 @@ var (
 	AppInstanceConditionJobs         = "jobs"
 	AppInstanceConditionAcorns       = "acorns"
 	AppInstanceConditionReady        = "Ready"
-	AppInstanceConditionUpgrade      = "upgrade"
 	AppInstanceConditionVolumes      = "volumes"
 	AppInstanceConditionImageAllowed = "image-allowed"
 )
@@ -99,7 +98,7 @@ type AppInstanceSpec struct {
 	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
-	ComputeClass        ComputeClassMap  `json:"computeClass,omitempty"`
+	ComputeClasses      ComputeClassMap  `json:"computeClass,omitempty"`
 	Memory              MemoryMap        `json:"memory,omitempty"`
 }
 

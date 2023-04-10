@@ -19,9 +19,8 @@ var (
 	AppConverter = MustConverter(App)
 
 	Volume = [][]string{
-		{"Alias", "{{alias .}}"},
 		{"Name", "{{ . | name }}"},
-		{"App-Name", "Status.AppName"},
+		{"App-Name", "Status.AppPublicName"},
 		{"Bound-Volume", "Status.VolumeName"},
 		{"Capacity", "Spec.Capacity"},
 		{"Volume-Class", "{{ .Spec.Class }}"},
@@ -97,7 +96,6 @@ var (
 	CredentialConverter = MustConverter(Credential)
 
 	Secret = [][]string{
-		{"Alias", "{{alias .}}"},
 		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},
 		{"Keys", "Keys"},

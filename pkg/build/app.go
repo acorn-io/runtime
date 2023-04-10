@@ -53,7 +53,7 @@ func fromAppImage(ctx *buildContext, appImage *v1.AppImage) (string, error) {
 		return "", err
 	}
 
-	return createAppManifest(ctx.ctx, tag, appImage.ImageData, false, ctx.remoteOpts)
+	return createAppManifest(tag, appImage.ImageData, ctx.remoteOpts)
 }
 
 func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {

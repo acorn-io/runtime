@@ -11,21 +11,29 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/digest"
+	"github.com/acorn-io/acorn/pkg/encryption/nacl"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ref"
-	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/pkg/replace"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/google/go-containerregistry/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+var (
+	serviceTokens = sets.NewString("address",
+		"hostname",
+		"port",
+		"ports",
+		"data")
 )
 
 type Interpolator struct {
@@ -100,12 +108,14 @@ func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.Volum
 	data, err := base64.StdEncoding.DecodeString(file.Content)
 	if err != nil {
 		*i.errs = append(*i.errs, err)
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], err.Error())
 		return corev1.VolumeMount{}
 	}
 
 	newValue, err := i.replace(string(data))
 	if err != nil {
 		*i.errs = append(*i.errs, err)
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], err.Error())
 		return corev1.VolumeMount{}
 	}
 
@@ -128,26 +138,17 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	case "namespace":
 		return i.app.Namespace, true, nil
 	case "image":
-		if tags.IsLocalReference(i.app.Status.AppImage.ID) {
-			return i.app.Status.AppImage.ID, true, nil
-		} else if i.app.Status.AppImage.ID != "" && i.app.Status.AppImage.Digest != "" {
-			tag, err := name.NewTag(i.app.Status.AppImage.ID)
-			if err != nil {
-				return "", false, err
-			}
-			return tag.Digest(i.app.Status.AppImage.Digest).String(), true, nil
-		}
-		return "", false, nil
+		return i.app.Status.AppImage.ID, true, nil
 	default:
 		return "", false, nil
 	}
 }
 
-func (i *Interpolator) resolveSecrets(secretName, keyName string) (string, bool, error) {
+func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (string, bool, error) {
 	secret := &corev1.Secret{}
-	err := i.client.Get(i.ctx, router.Key(i.namespace, secretName), secret)
+	err := ref.Lookup(i.ctx, i.client, secret, i.namespace, secretName...)
 	if apierrors.IsNotFound(err) {
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], secretName)
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], strings.Join(secretName, "."))
 		return "", false, nil
 	} else if err != nil {
 		return "", false, err
@@ -155,9 +156,44 @@ func (i *Interpolator) resolveSecrets(secretName, keyName string) (string, bool,
 	return string(secret.Data[keyName]), true, nil
 }
 
+func splitServiceProperty(parts []string) (head []string, tail []string, err error) {
+	for i, part := range parts {
+		if serviceTokens.Has(part) {
+			return parts[:i], parts[i:], nil
+		}
+	}
+	return nil, nil, fmt.Errorf("service lookup [%s] must include one service propery [%s]",
+		strings.Join(parts, "."), strings.Join(serviceTokens.List(), ","))
+}
+
 func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, extra []string) (string, error) {
+	// sanity check that our serviceToken map is complete, because this will fail if you add
+	// a new case but don't add to the serviceToken set then it won't get to the switch
+	if !serviceTokens.Has(prop) {
+		return "", fmt.Errorf("invalid property [%s] to lookup on service [%s]", prop, svc.Name)
+	}
+
 	switch prop {
+	case "secrets":
+		fallthrough
+	case "secret":
+		secret := &corev1.Secret{}
+		err := ref.Lookup(i.ctx, i.client, secret, svc.Namespace, prop)
+		if apierrors.IsNotFound(err) {
+			i.missing[i.serviceName] = append(i.missing[i.serviceName], prop)
+			return "", nil
+		} else if err != nil {
+			return "", err
+		}
+		return string(secret.Data[strings.Join(extra, ".")]), nil
+	case "endpoint":
+		if len(svc.Status.Endpoints) > 0 {
+			return svc.Status.Endpoints[0].Address, nil
+		}
+		return "<pending>", nil
 	case "address":
+		fallthrough
+	case "host":
 		fallthrough
 	case "hostname":
 		if svc.Spec.Address != "" {
@@ -182,7 +218,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		}
 		return "", fmt.Errorf("failed to find port [%s] defined on service [%s]", extra[0], svc.Name)
 	case "data":
-		expr := strings.Join(extra, ".")
+		expr := "@{" + strings.Join(extra, ".") + "}"
 		v, err := aml.Interpolate(svc.Spec.Data, expr)
 		return fmt.Sprint(v), err
 	default:
@@ -190,28 +226,23 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 	}
 }
 
-func (i *Interpolator) resolveServices(serviceName string, parts []string) (string, bool, error) {
-	switch parts[0] {
-	case "secrets":
-		fallthrough
-	case "secret":
-		if len(parts) != 2 {
-			return "", false, fmt.Errorf("invalid expression services.%s.%s", serviceName, strings.Join(parts, "."))
-		}
-		secret := &corev1.Secret{}
-		err := ref.Lookup(i.ctx, i.client, secret, i.namespace, serviceName, parts[0])
-		if err != nil {
-			return "", false, err
-		}
-		return string(secret.Data[parts[1]]), true, nil
-	}
-
-	svc := &v1.ServiceInstance{}
-	if err := ref.Lookup(i.ctx, i.client, svc, i.namespace, serviceName); err != nil {
+func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
+	serviceName, properties, err := splitServiceProperty(parts)
+	if err != nil {
 		return "", false, err
 	}
 
-	ret, err := i.serviceProperty(svc, parts[0], parts[1:])
+	svc := &v1.ServiceInstance{}
+	err = ref.Lookup(i.ctx, i.client, svc, i.namespace, serviceName...)
+	if apierrors.IsNotFound(err) {
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], strings.Join(serviceName, "."))
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+
+	ret, err := i.serviceProperty(svc, properties[0], properties[1:])
 	return ret, true, err
 }
 
@@ -224,7 +255,7 @@ func (i *Interpolator) resolve(token string) (string, bool, error) {
 		case "secrets":
 			parts := strings.Split(tail, "/")
 			if len(parts) == 2 {
-				return i.resolveSecrets(parts[0], parts[1])
+				return i.resolveSecrets([]string{parts[0]}, parts[1])
 			}
 		}
 	}
@@ -237,22 +268,40 @@ func (i *Interpolator) resolve(token string) (string, bool, error) {
 		if len(parts) < 3 {
 			return "", false, fmt.Errorf("invalid expression [%s], must have at least three parts separated by \".\"", token)
 		}
-		return i.resolveServices(parts[1], parts[2:])
+		return i.resolveServices(parts[1:])
 	case "secret":
 		fallthrough
 	case "secrets":
-		if len(parts) != 3 {
-			return "", false, fmt.Errorf("invalid expression [%s], must have three parts separated by \".\"", token)
+		if len(parts) < 3 {
+			return "", false, fmt.Errorf("invalid expression [%s], must have at least three parts separated by \".\"", token)
 		}
-		return i.resolveSecrets(parts[1], parts[2])
+		return i.resolveSecrets(parts[1:len(parts)-1], parts[len(parts)-1])
+	case "acorn":
+		fallthrough
 	case "app":
 		if len(parts) != 2 {
 			return "", false, fmt.Errorf("invalid expression [%s], must have two parts separated by \".\"", token)
 		}
 		return i.resolveApp(parts[1])
+	case "image":
+		fallthrough
+	case "images":
+		if len(parts) != 2 {
+			return "", false, fmt.Errorf("invalid expression [%s], must have two parts separated by \".\"", token)
+		}
+		return i.resolveImages(parts[1])
 	default:
 		return "", false, nil
 	}
+}
+
+func (i *Interpolator) resolveImages(imageName string) (string, bool, error) {
+	img, ok := i.app.Status.AppSpec.Images[imageName]
+	if !ok {
+		return "", false, nil
+	}
+	tag, err := images.ResolveTagForApp(i.ctx, i.client, i.app, img.Image)
+	return tag, true, err
 }
 
 func (i *Interpolator) Err() error {
@@ -260,13 +309,21 @@ func (i *Interpolator) Err() error {
 }
 
 func (i *Interpolator) replace(content string) (string, error) {
-	return replace.Replace(content, "@{", "}", i.resolve)
+	content, err := replace.Replace(content, "@{", "}", i.resolve)
+	if err != nil {
+		return "", err
+	}
+	return replace.Replace(content, nacl.EncPrefix, nacl.EncSuffix, func(s string) (string, bool, error) {
+		data, err := nacl.DecryptNamespacedData(i.ctx, i.client, []byte(nacl.EncPrefix+s+nacl.EncSuffix), i.app.Namespace)
+		return string(data), true, err
+	})
 }
 
 func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
 	newValue, err := i.replace(value)
 	if err != nil {
 		*i.errs = append(*i.errs, err)
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], err.Error())
 		return corev1.EnvVar{}
 	}
 	if value == newValue {

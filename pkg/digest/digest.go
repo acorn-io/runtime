@@ -7,9 +7,11 @@ import (
 
 func SHA256(parts ...string) string {
 	d := sha256.New()
-	for _, part := range parts {
+	for i, part := range parts {
+		if i > 0 {
+			d.Write([]byte{'\x00'})
+		}
 		d.Write([]byte(part))
-		d.Write([]byte{'\x00'})
 	}
 	hash := d.Sum(nil)
 	return hex.EncodeToString(hash[:])

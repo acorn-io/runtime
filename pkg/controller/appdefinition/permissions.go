@@ -10,30 +10,19 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toRulesFromClusterRules(rules []v1.ClusterPolicyRule) (result []rbacv1.PolicyRule) {
+func toRBACPolicyRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
 	for _, rule := range rules {
 		result = append(result, rule.PolicyRule)
 	}
 	return
 }
 
-func toRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
-	for _, rule := range rules {
-		result = append(result, (rbacv1.PolicyRule)(rule))
-	}
-	return
-}
-
 func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object) {
-	byNamespace := map[string][]v1.ClusterPolicyRule{}
+	byNamespace := map[string][]v1.PolicyRule{}
 
-	for _, clusterRule := range permissions.ClusterRules {
-		if len(clusterRule.Namespaces) == 0 {
-			byNamespace[""] = append(byNamespace[""], clusterRule)
-		} else {
-			for _, namespace := range clusterRule.Namespaces {
-				byNamespace[namespace] = append(byNamespace[namespace], clusterRule)
-			}
+	for _, rule := range permissions.Rules {
+		for _, ns := range rule.ResolveNamespaces(appInstance.Namespace) {
+			byNamespace[ns] = append(byNamespace[ns], rule)
 		}
 	}
 
@@ -48,7 +37,7 @@ func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[
 					Labels:      labels.Merge(labels.Managed(appInstance), labelMap),
 					Annotations: annotations,
 				},
-				Rules: toRulesFromClusterRules(rules),
+				Rules: toRBACPolicyRules(rules),
 			}, &rbacv1.ClusterRoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:        name,
@@ -71,7 +60,7 @@ func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[
 		} else {
 			name := name.SafeConcatName(permissions.ServiceName, appInstance.Name, appInstance.Namespace, appInstance.ShortID(), namespace)
 			result = append(result, toRoleAndRoleBinding(name, namespace, permissions.ServiceName, appInstance.Status.Namespace,
-				toRulesFromClusterRules(rules), labelMap, annotations, appInstance)...)
+				toRBACPolicyRules(rules), labelMap, annotations, appInstance)...)
 		}
 	}
 
@@ -112,12 +101,6 @@ func toRoleAndRoleBinding(roleName, roleNamespace, serviceAccountName, serviceAc
 }
 
 func toPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object) {
-	if len(permissions.ClusterRules) > 0 {
-		result = append(result, toClusterPermissions(permissions, labelMap, annotations, appInstance)...)
-	}
-	if len(permissions.Rules) > 0 {
-		result = append(result, toRoleAndRoleBinding(permissions.ServiceName, appInstance.Status.Namespace, permissions.ServiceName, appInstance.Status.Namespace,
-			toRules(permissions.Rules), labelMap, annotations, appInstance)...)
-	}
+	result = append(result, toClusterPermissions(permissions, labelMap, annotations, appInstance)...)
 	return result
 }

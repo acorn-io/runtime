@@ -50,7 +50,7 @@ func (f *EncryptedData) Marshal() (string, error) {
 		return "", err
 	}
 	b64 := base64.RawURLEncoding.EncodeToString(jsonBytes)
-	return strings.Join([]string{"ACORNENC", b64}, ":"), nil
+	return strings.Join([]string{"ACORNENC", b64, ":"}, ":"), nil
 }
 
 func (f MultiEncryptedData) Marshal() (string, error) {
@@ -59,5 +59,5 @@ func (f MultiEncryptedData) Marshal() (string, error) {
 		return "", err
 	}
 	b64 := base64.RawURLEncoding.EncodeToString(jsonBytes)
-	return strings.Join([]string{"ACORNENC", b64}, ":"), nil
+	return strings.Join([]string{"ACORNENC", b64, ":"}, ":"), nil
 }

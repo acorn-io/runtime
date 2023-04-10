@@ -221,13 +221,18 @@ func StartController(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		cfg, err := config.Get(ctx, c.Router.Backend())
+		rawClient, err := hclient.Default()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		cfg, err := config.Get(ctx, rawClient)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		if *cfg.BuilderPerProject {
-			err = config.Set(ctx, c.Router.Backend(), &apiv1.Config{
+			err = config.Set(ctx, rawClient, &apiv1.Config{
 				BuilderPerProject: new(bool),
 			})
 			if err != nil {

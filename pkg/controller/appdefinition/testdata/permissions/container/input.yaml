@@ -8,14 +8,14 @@ spec:
   image: test
   permissions:
   - serviceName: oneimage
-    clusterRules:
+    rules:
     - verbs:
       - create
       apiGroups:
       - "foo.io"
       resources:
       - "bar"
-    rules:
+      scope: "cluster"
     - verbs:
       - patch
       apiGroups:

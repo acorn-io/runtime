@@ -38,10 +38,11 @@ VOLUMES:
 ---
 metadata:
   creationTimestamp: null
-  name: volume
+  name: found.vol
 spec: {}
 status:
   appName: found
+  appPublicName: found
   columns: {}
   volumeName: vol
 

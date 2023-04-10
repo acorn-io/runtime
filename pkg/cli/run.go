@@ -162,7 +162,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 		return opts, err
 	}
 
-	opts.ComputeClass, err = v1.ParseComputeClass(s.ComputeClass)
+	opts.ComputeClasses, err = v1.ParseComputeClass(s.ComputeClass)
 	if err != nil {
 		return opts, err
 	}

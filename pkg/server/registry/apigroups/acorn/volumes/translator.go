@@ -95,10 +95,11 @@ func (t *Translator) pvToVolume(ctx context.Context, pv corev1.PersistentVolume)
 			Class:       pv.Labels[labels.AcornVolumeClass],
 		},
 		Status: apiv1.VolumeStatus{
-			AppName:      pv.Labels[labels.AcornAppName],
-			AppNamespace: pv.Labels[labels.AcornAppNamespace],
-			VolumeName:   pv.Labels[labels.AcornVolumeName],
-			Status:       strings.ToLower(string(pv.Status.Phase)),
+			AppName:       pv.Labels[labels.AcornAppName],
+			AppPublicName: pv.Labels[labels.AcornPublicName],
+			AppNamespace:  pv.Labels[labels.AcornAppNamespace],
+			VolumeName:    pv.Labels[labels.AcornVolumeName],
+			Status:        strings.ToLower(string(pv.Status.Phase)),
 			Columns: apiv1.VolumeColumns{
 				AccessModes: strings.Join(shortAccessModes, ","),
 			},

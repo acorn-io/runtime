@@ -36,7 +36,7 @@ status:
 kind: AppInstance
 apiVersion: internal.acorn.io/v1
 metadata:
-  name: app-name-acorn-name-1234567890ab
+  name: app-name-acorn-name-01b5d4ac
   namespace: app-namespace
   labels:
     acorn.io/acorn-name: acorn-name
@@ -44,6 +44,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
     acorn.io/parent-acorn-name: app-name
+    acorn.io/public-name: app-name.acorn-name
 spec:
   image: acorn-image-name
   environment:

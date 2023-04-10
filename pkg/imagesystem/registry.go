@@ -160,11 +160,21 @@ func getRegistryPort(ctx context.Context, c client.Reader) (int, error) {
 	return 0, fmt.Errorf("failed to find node port for registry %s/%s", system.ImagesNamespace, system.RegistryName)
 }
 
-func IsNotInternalRepo(ctx context.Context, c client.Reader, image string) error {
+func IsNotInternalRepo(ctx context.Context, c client.Reader, namespace, image string) error {
 	if !strings.Contains(image, "/") {
 		return nil
 	}
 
+	// Allow images that start with same prefix as the namespace registry
+	repo, err := GetRuntimePullableInternalRepoForNamespace(ctx, c, namespace)
+	if err != nil {
+		return err
+	}
+	if strings.HasPrefix(image, repo.String()+"@sha256:") {
+		return nil
+	}
+
+	// Make sure image does not start with internal repo
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return err
@@ -199,8 +209,8 @@ func isNotInternalRepo(prefix, image string) error {
 	return nil
 }
 
-func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, image string) (name.Reference, error) {
-	if err := IsNotInternalRepo(ctx, c, image); err != nil {
+func ParseAndEnsureNotInternalRepo(ctx context.Context, c client.Reader, namespace, image string) (name.Reference, error) {
+	if err := IsNotInternalRepo(ctx, c, namespace, image); err != nil {
 		return nil, err
 	}
 	return name.ParseReference(image)

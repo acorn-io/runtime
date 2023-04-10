@@ -8,23 +8,23 @@ spec:
   image: test
   permissions:
   - serviceName: oneimage
-    clusterRules:
+    rules:
     - verbs:
       - create
       apiGroups:
       - "foo.io"
       resources:
       - "bar"
+      scope: "account"
     - verbs:
         - create
       apiGroups:
         - "2.foo.io"
       resources:
         - "2.bar"
-      namespaces:
-        - "ns1"
-        - "ns2"
-    rules:
+      scopes:
+        - "namespace:ns1"
+        - "namespace:ns2"
     - verbs:
       - patch
       apiGroups:

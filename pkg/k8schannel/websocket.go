@@ -190,7 +190,8 @@ func (c *Connection) Close() (err error) {
 			stream.cond.Broadcast()
 		}
 	}()
-	return c.conn.Close()
+	return c.conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+		time.Now().Add(time.Second))
 }
 
 func (c *Connection) ForStream(streamNum uint8) net.Conn {

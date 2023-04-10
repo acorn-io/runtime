@@ -37,12 +37,12 @@ spec:
           volumeMounts:
           - mountPath: /content-test
             name: secrets-1234567890ab
-            subPath: a5f340dbab90b0c91d2105e25dd40dc53caeaa3a743bb3d727f2fcffad20d6f6
+            subPath: eec12d274809b6405b79110d6bafcc22235fa23858c2ac8e59e086d27df99360
           env:
           - name: foo
             valueFrom:
               secretKeyRef:
-                key: f03c1b4f253aca5688ec2e8116345fdad2a771377d7dab1194255c0da25564f3
+                key: c53776b8f8ef0486fa82e2f0912453dd9d9dcdab4e4b2ec4a1c249a314daf7ba
                 name: secrets-1234567890ab
           - name: foo-not-interpolated
             value: prefix @{other.sec-1.key1} after

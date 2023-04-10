@@ -19,6 +19,7 @@ metadata:
     allowed.io: test-allowed-app-spec-label
     permit-scoped.io: test-named
     permit.io: test-permit-app-spec-label
+    acorn.io/public-name: app-name.foo
 spec:
   accessModes:
     - ReadWriteOnce

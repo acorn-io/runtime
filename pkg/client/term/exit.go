@@ -25,6 +25,10 @@ func ToExitCode(conn io.ReadCloser) ExitCode {
 			Err:  err,
 		}
 	}
+	if len(data) == 0 {
+		return ExitCode{}
+	}
+
 	err = json.Unmarshal(data, &status)
 	if err != nil {
 		return ExitCode{

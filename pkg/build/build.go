@@ -12,6 +12,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	images2 "github.com/acorn-io/acorn/pkg/images"
@@ -195,6 +196,9 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 	for _, entry := range typed.Sorted(acorns) {
 		key, acornImage := entry.Key, entry.Value
 		if acornImage.Image != "" {
+			if _, auto := autoupgrade.AutoUpgradePattern(acornImage.Image); auto || acornImage.AutoUpgrade {
+				continue
+			}
 			id, err := pullImage(ctx, acornImage.Image)
 			if err != nil {
 				return nil, err
@@ -227,26 +231,39 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 
 func buildImages(ctx *buildContext, buildCache *buildCache, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
 	result := map[string]v1.ImageData{}
+	acornBuilds := map[string]v1.AcornBuilderSpec{}
 
 	for _, entry := range typed.Sorted(images) {
 		key, image := entry.Key, entry.Value
-		if image.Image != "" || image.Build == nil {
-			image.Build = &v1.Build{
-				BaseImage: image.Image,
+		if image.ContainerBuild == nil {
+			acornBuilds[key] = v1.AcornBuilderSpec{
+				Image: image.Image,
+				Build: image.AcornBuild,
 			}
-		}
+		} else {
+			if image.Image != "" {
+				image.ContainerBuild = &v1.Build{
+					BaseImage: image.Image,
+				}
+			}
 
-		id, err := fromBuild(ctx, buildCache, *image.Build)
-		if err != nil {
-			return nil, err
-		}
+			id, err := fromBuild(ctx, buildCache, *image.ContainerBuild)
+			if err != nil {
+				return nil, err
+			}
 
-		result[key] = v1.ImageData{
-			Image: id,
+			result[key] = v1.ImageData{
+				Image: id,
+			}
 		}
 	}
 
-	return result, nil
+	acornImages, err := buildAcorns(ctx, acornBuilds)
+	if err != nil {
+		return nil, err
+	}
+
+	return typed.Concat(result, acornImages), nil
 }
 
 func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
@@ -274,7 +291,7 @@ func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
 		return data, err
 	}
 
-	data.Acorns, err = buildAcorns(ctx, spec.Acorns)
+	data.Acorns, err = buildAcorns(ctx, typed.Concat(spec.Acorns, spec.Services))
 	if err != nil {
 		return data, err
 	}

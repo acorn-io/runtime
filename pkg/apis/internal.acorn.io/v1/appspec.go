@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -221,24 +222,77 @@ type ScopedLabel struct {
 	Value        string `json:"value,omitempty"`
 }
 
-type PolicyRule rbacv1.PolicyRule
+type PolicyRule struct {
+	rbacv1.PolicyRule
+	Scopes []string `json:"scopes,omitempty"`
+}
 
-type ClusterPolicyRule struct {
-	rbacv1.PolicyRule `json:",inline"`
-	Namespaces        []string `json:"namespaces,omitempty"`
+func (p PolicyRule) IsAccountScoped() bool {
+	for _, scope := range p.Scopes {
+		if scope == "" {
+			return true
+		}
+		if scope == "cluster" {
+			return true
+		}
+		if scope == "account" {
+			return true
+		}
+	}
+	return false
+}
+
+func (p PolicyRule) IsProjectScoped() bool {
+	if len(p.Scopes) == 0 {
+		return true
+	}
+	for _, scope := range p.Scopes {
+		if scope == "project" {
+			return true
+		}
+	}
+	return false
+}
+
+func (p PolicyRule) ResolveNamespaces(currentNamespace string) (result []string) {
+	namespaces := map[string]struct{}{}
+	if p.IsProjectScoped() {
+		namespaces[currentNamespace] = struct{}{}
+	}
+	if p.IsAccountScoped() {
+		namespaces[""] = struct{}{}
+	}
+	for _, namespace := range p.Namespaces() {
+		namespaces[namespace] = struct{}{}
+	}
+
+	for namespace := range namespaces {
+		result = append(result, namespace)
+	}
+
+	sort.Strings(result)
+	return
+}
+
+func (p PolicyRule) Namespaces() (result []string) {
+	for _, scope := range p.Scopes {
+		if strings.HasPrefix(scope, "namespace:") {
+			result = append(result, strings.TrimPrefix(scope, "namespace:"))
+		}
+	}
+	return
 }
 
 type Permissions struct {
-	ServiceName  string              `json:"serviceName,omitempty"`
-	Rules        []PolicyRule        `json:"rules,omitempty"`
-	ClusterRules []ClusterPolicyRule `json:"clusterRules,omitempty"`
+	ServiceName string       `json:"serviceName,omitempty"`
+	Rules       []PolicyRule `json:"rules,omitempty"`
 }
 
 func (in *Permissions) HasRules() bool {
 	if in == nil {
 		return false
 	}
-	return len(in.ClusterRules) > 0 || len(in.Rules) > 0
+	return len(in.Rules) > 0
 }
 
 func (in *Permissions) Get() Permissions {
@@ -306,8 +360,9 @@ type Container struct {
 }
 
 type Image struct {
-	Image string `json:"image,omitempty"`
-	Build *Build `json:"build,omitempty"`
+	Image      string      `json:"image,omitempty"`
+	Build      *Build      `json:"containerBuild,omitempty"`
+	AcornBuild *AcornBuild `json:"build,omitempty"`
 }
 
 type AppSpec struct {
@@ -350,11 +405,11 @@ type Acorn struct {
 	Secrets             SecretBindings  `json:"secrets,omitempty"`
 	Volumes             VolumeBindings  `json:"volumes,omitempty"`
 	Links               ServiceBindings `json:"links,omitempty"`
-	Permissions         []Permissions   `json:"permissions,omitempty"`
 	AutoUpgrade         *bool           `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool           `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string          `json:"autoUpgradeInterval,omitempty"`
 	Memory              MemoryMap       `json:"memory,omitempty"`
+	ComputeClasses      ComputeClassMap `json:"computeClasses,omitempty"`
 }
 
 type Secret struct {
@@ -369,7 +424,6 @@ type Secret struct {
 type AccessModes []AccessMode
 
 type VolumeRequest struct {
-	External    string            `json:"external,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Class       string            `json:"class,omitempty"`
@@ -383,15 +437,36 @@ type MemoryMap map[string]*int64
 // Workload to its class
 type ComputeClassMap map[string]string
 
+type GeneratedService struct {
+	Job string `json:"job,omitempty"`
+}
+
 type Service struct {
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
-	Default     bool              `json:"default,omitempty"`
-	External    string            `json:"external,omitempty"`
-	Address     string            `json:"address,omitempty"`
-	Ports       Ports             `json:"ports,omitempty"`
-	Container   string            `json:"container,omitempty"`
-	Secrets     []string          `json:"secrets,omitempty"`
-	Data        GenericMap        `json:"data,omitempty"`
-	Destroy     *Container        `json:"destroy,omitempty"`
+	Labels              ScopedLabels      `json:"labels,omitempty"`
+	Annotations         ScopedLabels      `json:"annotations,omitempty"`
+	Default             bool              `json:"default,omitempty"`
+	External            string            `json:"external,omitempty"`
+	Address             string            `json:"address,omitempty"`
+	Ports               Ports             `json:"ports,omitempty"`
+	Container           string            `json:"container,omitempty"`
+	Data                GenericMap        `json:"data,omitempty"`
+	Generated           *GeneratedService `json:"generated,omitempty"`
+	Image               string            `json:"image,omitempty"`
+	Build               *AcornBuild       `json:"build,omitempty"`
+	ServiceArgs         GenericMap        `json:"serviceArgs,omitempty"`
+	Environment         NameValues        `json:"environment,omitempty"`
+	Secrets             SecretBindings    `json:"secrets,omitempty"`
+	Links               ServiceBindings   `json:"links,omitempty"`
+	Permissions         []Permissions     `json:"permissions,omitempty"`
+	AutoUpgrade         *bool             `json:"autoUpgrade,omitempty"`
+	NotifyUpgrade       *bool             `json:"notifyUpgrade,omitempty"`
+	AutoUpgradeInterval string            `json:"autoUpgradeInterval,omitempty"`
+	Memory              MemoryMap         `json:"memory,omitempty"`
+}
+
+func (s Service) GetJob() string {
+	if s.Generated == nil {
+		return ""
+	}
+	return s.Generated.Job
 }

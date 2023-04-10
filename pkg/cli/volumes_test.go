@@ -27,24 +27,24 @@ func TestVolume(t *testing.T) {
 		f.EXPECT().VolumeList(gomock.Any()).Return(
 			[]apiv1.Volume{{
 				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{Name: "volume",
+				ObjectMeta: metav1.ObjectMeta{Name: "found.vol",
 					Labels: map[string]string{
 						labels.AcornVolumeName: "vol",
 						labels.AcornAppName:    "found",
 					}},
 				Spec:   apiv1.VolumeSpec{},
-				Status: apiv1.VolumeStatus{AppName: "found", VolumeName: "vol"},
+				Status: apiv1.VolumeStatus{AppPublicName: "found", AppName: "found", VolumeName: "vol"},
 			}}, nil).AnyTimes()
 		f.EXPECT().VolumeGet(gomock.Any(), gomock.Any()).DoAndReturn(
 			func(ctx context.Context, name string) (*apiv1.Volume, error) {
 				potentialVol := apiv1.Volume{TypeMeta: metav1.TypeMeta{},
-					ObjectMeta: metav1.ObjectMeta{Name: "volume",
+					ObjectMeta: metav1.ObjectMeta{Name: "found.vol",
 						Labels: map[string]string{
 							labels.AcornVolumeName: "vol",
 							labels.AcornAppName:    "found",
 						}},
 					Spec:   apiv1.VolumeSpec{},
-					Status: apiv1.VolumeStatus{AppName: "found", VolumeName: "vol"},
+					Status: apiv1.VolumeStatus{AppPublicName: "found", AppName: "found", VolumeName: "vol"},
 				}
 
 				switch name {
@@ -100,7 +100,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "ALIAS       NAME      APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   volume    found      vol            <nil>                                              292y ago\n",
+			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   found      vol            <nil>                                              292y ago\n",
 		},
 		{
 			name: "acorn volume -o json", fields: fields{
@@ -113,7 +113,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "{\n    \"metadata\": {\n        \"name\": \"volume\",\n        \"creationTimestamp\": null\n    },\n    \"spec\": {},\n    \"status\": {\n        \"appName\": \"found\",\n        \"volumeName\": \"vol\",\n        \"columns\": {}\n    }\n}\n\n",
+			wantOut: "{\n    \"metadata\": {\n        \"name\": \"found.vol\",\n        \"creationTimestamp\": null\n    },\n    \"spec\": {},\n    \"status\": {\n        \"appName\": \"found\",\n        \"appPublicName\": \"found\",\n        \"volumeName\": \"vol\",\n        \"columns\": {}\n    }\n}\n\n",
 		},
 		{
 			name: "acorn volume -o yaml", fields: fields{
@@ -126,7 +126,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "---\nmetadata:\n  creationTimestamp: null\n  name: volume\nspec: {}\nstatus:\n  appName: found\n  columns: {}\n  volumeName: vol\n\n",
+			wantOut: "---\nmetadata:\n  creationTimestamp: null\n  name: found.vol\nspec: {}\nstatus:\n  appName: found\n  appPublicName: found\n  columns: {}\n  volumeName: vol\n\n",
 		},
 		{
 			name: "acorn volume found.vol", fields: fields{
@@ -139,7 +139,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "ALIAS       NAME      APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   volume    found      vol            <nil>                                              292y ago\n",
+			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   found      vol            <nil>                                              292y ago\n",
 		},
 		{
 			name: "acorn volume dne", fields: fields{
@@ -204,7 +204,7 @@ func TestVolume(t *testing.T) {
 				args:   []string{},
 				client: &testdata.MockClient{},
 			},
-			wantOut: "ALIAS        NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\napp.my-vol   my-volume                             <nil>      my-class                                10y ago\n",
+			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nmy-volume                             <nil>      my-class                                10y ago\n",
 		},
 	}
 	for _, tt := range tests {

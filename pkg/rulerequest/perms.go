@@ -17,39 +17,24 @@ type RuleRequest struct {
 
 func ToRuleRequests(perms []v1.Permissions) (result []RuleRequest) {
 	for _, perm := range perms {
-		result = append(result, clusterRulesToRequests(perm.ServiceName, perm.ClusterRules)...)
 		result = append(result, rulesToRequests(perm.ServiceName, perm.Rules)...)
-	}
-	return
-}
-
-func clusterRulesToRequests(serviceName string, rules []v1.ClusterPolicyRule) (result []RuleRequest) {
-	for _, rule := range rules {
-		result = append(result, clusterRuleToRequests(serviceName, rule)...)
 	}
 	return
 }
 
 func rulesToRequests(serviceName string, rules []v1.PolicyRule) (result []RuleRequest) {
 	for _, rule := range rules {
-		result = append(result, ruleToRequests(serviceName, rule, "app")...)
-	}
-	return
-}
-
-func clusterRuleToRequests(serviceName string, rule v1.ClusterPolicyRule) (result []RuleRequest) {
-	if len(rule.Namespaces) == 0 {
-		return ruleToRequests(serviceName, (v1.PolicyRule)(rule.PolicyRule), "cluster")
-	}
-
-	for _, namespace := range rule.Namespaces {
-		requests := ruleToRequests(serviceName, (v1.PolicyRule)(rule.PolicyRule), "cluster")
-		for _, request := range requests {
-			request.Namespace = namespace
-			result = append(result, request)
+		if rule.IsAccountScoped() {
+			result = append(result, ruleToRequests(serviceName, rule, "account")...)
+		}
+		if rule.IsProjectScoped() {
+			result = append(result, ruleToRequests(serviceName, rule, "project")...)
+		}
+		namespaces := rule.Namespaces()
+		if len(namespaces) > 0 {
+			result = append(result, ruleToRequests(serviceName, rule, "namespaces:"+strings.Join(namespaces, ","))...)
 		}
 	}
-
 	return
 }
 

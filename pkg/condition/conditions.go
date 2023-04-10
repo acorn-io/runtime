@@ -1,6 +1,8 @@
 package condition
 
 import (
+	"reflect"
+
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/router"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -9,6 +11,22 @@ import (
 type Conditions interface {
 	kclient.Object
 	Conditions() *[]v1.Condition
+}
+
+type reflector struct {
+	kclient.Object
+}
+
+func (r *reflector) Conditions() *[]v1.Condition {
+	ptr := reflect.ValueOf(r.Object).Elem().FieldByName("Status").FieldByName("Conditions").Addr()
+	v := ptr.Interface().(*[]v1.Condition)
+	return v
+}
+
+func ForName(obj kclient.Object, name string) *Callback {
+	return Setter(&reflector{
+		Object: obj,
+	}, nil, name)
 }
 
 func Setter(cond Conditions, resp router.Response, name string) *Callback {

@@ -11,10 +11,19 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	EncPrefix = "ACORNENC:"
+	EncSuffix = "::"
+)
+
+func IsAcornEncryptedData(data []byte) bool {
+	return strings.HasPrefix(string(data), EncPrefix)
+}
+
 func DecryptNamespacedDataMap(ctx context.Context, c kclient.Reader, data map[string][]byte, ownerNamespace string) (map[string][]byte, error) {
 	to := map[string][]byte{}
 	for k, v := range data {
-		if strings.HasPrefix(string(v), "ACORNENC:") {
+		if IsAcornEncryptedData(v) {
 			decryptedData, err := DecryptNamespacedData(ctx, c, v, ownerNamespace)
 			if err != nil {
 				return data, err
@@ -71,7 +80,8 @@ func (k *NaclKey) Decrypt(encData []byte) ([]byte, error) {
 }
 
 func unwrapForDecryption(data []byte) (map[string][]byte, error) {
-	trimmedData := strings.TrimPrefix(string(data), "ACORNENC:")
+	trimmedData := strings.TrimPrefix(string(data), EncPrefix)
+	trimmedData = strings.TrimSuffix(trimmedData, EncSuffix)
 
 	data, err := base64.RawURLEncoding.DecodeString(trimmedData)
 	if err != nil {

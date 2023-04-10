@@ -5,6 +5,6 @@ containers: {
 }
 images: {
 	isimple: {
-		build: {}
+		containerBuild: {}
 	}
 }

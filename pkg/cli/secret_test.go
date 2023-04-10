@@ -48,7 +48,7 @@ func TestSecret(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "ALIAS         NAME           TYPE      KEYS      CREATED\nfound.found   found.secret             []        292y ago\n",
+			wantOut: "NAME           TYPE      KEYS      CREATED\nfound.secret             []        292y ago\n",
 		},
 		{
 			name: "acorn secret -o json", fields: fields{
@@ -105,7 +105,7 @@ func TestSecret(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "ALIAS         NAME           TYPE      KEYS      CREATED\nfound.found   found.secret             []        292y ago\n",
+			wantOut: "NAME           TYPE      KEYS      CREATED\nfound.secret             []        292y ago\n",
 		},
 		{
 			name: "acorn secret dne", fields: fields{
@@ -219,7 +219,7 @@ func TestSecret(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "ACORNENC:e30\n",
+			wantOut: "ACORNENC:e30::\n",
 		},
 	}
 	for _, tt := range tests {

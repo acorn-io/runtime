@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 var (
@@ -25,7 +24,7 @@ func (e *ErrRulesNeeded) Error() string {
 }
 
 type ErrNotAuthorized struct {
-	Rule rbacv1.PolicyRule
+	Rule v1.PolicyRule
 }
 
 func (e *ErrNotAuthorized) Error() string {

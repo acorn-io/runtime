@@ -1,7 +1,6 @@
 package build
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -203,7 +202,7 @@ func retryGetImage(d name.Digest, opts []remote.Option) (result ggcrv1.Image, er
 	return
 }
 
-func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, fullDigest bool, opts []remote.Option) (string, error) {
+func createAppManifest(ref string, data v1.ImagesData, opts []remote.Option) (string, error) {
 	d, err := name.NewDigest(ref)
 	if err != nil {
 		return "", err
@@ -241,10 +240,6 @@ func createAppManifest(ctx context.Context, ref string, data v1.ImagesData, full
 	err = remote.WriteIndex(d.Tag(h.Hex), index, opts...)
 	if err != nil {
 		return "", err
-	}
-
-	if fullDigest {
-		return d.Digest(h.String()).Name(), nil
 	}
 
 	return h.Hex, nil

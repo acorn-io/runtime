@@ -17,6 +17,7 @@ metadata:
     global-scoped-label: test-global
     named-scoped-label: test-named
     volume-scoped-label: test-volume
+    acorn.io/public-name: app-name.foo
 spec:
   accessModes:
     - ReadWriteOnce

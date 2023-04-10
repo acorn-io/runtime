@@ -10,6 +10,12 @@ type ServiceInstanceList struct {
 	Items           []ServiceInstance `json:"items"`
 }
 
+type ServiceInstanceCondition string
+
+var (
+	ServiceInstanceConditionDefined = "defined"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ServiceInstance struct {
@@ -21,7 +27,8 @@ type ServiceInstance struct {
 }
 
 type ServiceInstanceStatus struct {
-	Endpoints []Endpoint `json:"endpoints,omitempty"`
+	Conditions []Condition `json:"conditions,omitempty"`
+	Endpoints  []Endpoint  `json:"endpoints,omitempty"`
 }
 
 func (in *ServiceInstance) ShortID() string {
@@ -39,10 +46,10 @@ type ServiceInstanceSpec struct {
 	Address         string            `json:"address,omitempty"`
 	Ports           Ports             `json:"ports,omitempty"`
 	Container       string            `json:"container,omitempty"`
+	Job             string            `json:"job,omitempty"`
 	ContainerLabels map[string]string `json:"containerLabels,omitempty"`
 	Secrets         []string          `json:"secrets,omitempty"`
 	Data            GenericMap        `json:"data,omitempty"`
-	Destroy         *Container        `json:"destroy,omitempty"`
 
 	// Fields from app
 	AppName      string        `json:"appName,omitempty"`

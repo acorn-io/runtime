@@ -89,6 +89,14 @@ func ParseReferenceNoDefault(name string) (imagename.Reference, error) {
 	return ref, nil
 }
 
+func ResolveTagForApp(ctx context.Context, c client.Client, app *v1.AppInstance, image string) (string, error) {
+	tag, err := GetRuntimePullableImageReference(ctx, c, app.Namespace, app.Status.AppImage.ID)
+	if err != nil {
+		return "", err
+	}
+	return ResolveTag(tag, image), nil
+}
+
 func ResolveTag(tag imagename.Reference, image string) string {
 	if DigestPattern.MatchString(image) {
 		return tag.Context().Digest(image).String()

@@ -12,7 +12,6 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/stretchr/testify/assert"
-	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 func TestParseRouters(t *testing.T) {
@@ -165,13 +164,13 @@ containers: {
 
 images: {
   file: {
-    build: "sub/dir1"
+    acornBuild: "sub/dir1"
   }
   none: {
     image: "done"
   }
   full: {
-    build: {
+    containerBuild: {
       context: "sub/dir2"	
       dockerfile: "sub/dir3/Dockerfile"
       target: "other"
@@ -231,12 +230,12 @@ acorns: {
 
 	assert.Len(t, buildSpec.Images, 3)
 	assert.Equal(t, "", buildSpec.Images["file"].Image)
-	assert.Equal(t, "sub/dir1", buildSpec.Images["file"].Build.Context)
-	assert.Equal(t, filepath.Join("sub", "dir1", "Dockerfile"), buildSpec.Images["file"].Build.Dockerfile)
+	assert.Equal(t, "sub/dir1", buildSpec.Images["file"].AcornBuild.Context)
+	assert.Equal(t, filepath.Join("sub", "dir1", "Acornfile"), buildSpec.Images["file"].AcornBuild.Acornfile)
 	assert.Equal(t, "", buildSpec.Images["full"].Image)
-	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].Build.Context)
-	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].Build.Dockerfile)
-	assert.Equal(t, "other", buildSpec.Images["full"].Build.Target)
+	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].ContainerBuild.Context)
+	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].ContainerBuild.Dockerfile)
+	assert.Equal(t, "other", buildSpec.Images["full"].ContainerBuild.Target)
 	assert.Equal(t, "done", buildSpec.Images["none"].Image)
 
 	assert.Len(t, buildSpec.Acorns, 3)
@@ -279,16 +278,16 @@ containers: {
 
 images: {
   file: {
-    build: "sub/dir2"
+    acornBuild: "sub/dir2"
   }
   none: {
     image: "done"
   }
   two: {
-    build: {}
+    acornBuild: {}
   }
   full: {
-    build: {
+    containerBuild: {
       dockerfile: "sub/dir3/bockerfile"
     }
   }
@@ -304,11 +303,12 @@ images: {
 	}
 
 	assert.Equal(t, []string{
+		filepath.Join("root-path", "Acornfile"),
 		filepath.Join("root-path", "Dockerfile"),
 		filepath.Join("root-path", "asdf", "dockerfile"),
 		filepath.Join("root-path", "dockerfile.sidecar"),
 		filepath.Join("root-path", "sub", "dir1", "Dockerfile"),
-		filepath.Join("root-path", "sub", "dir2", "Dockerfile"),
+		filepath.Join("root-path", "sub", "dir2", "Acornfile"),
 		filepath.Join("root-path", "sub", "dir3", "bockerfile"),
 	}, files)
 }
@@ -984,7 +984,7 @@ containers: {
 }
 images: {
 	build: {
-      build: {}
+      acornBuild: {}
     }
     image: {
       image: "images-image-image"
@@ -1000,7 +1000,8 @@ images: {
 	}
 
 	assert.Equal(t, &v1.BuilderSpec{
-		Jobs: map[string]v1.ContainerImageBuilderSpec{},
+		Services: map[string]v1.AcornBuilderSpec{},
+		Jobs:     map[string]v1.ContainerImageBuilderSpec{},
 		Containers: map[string]v1.ContainerImageBuilderSpec{
 			"image": {
 				Image: "image-image",
@@ -1075,10 +1076,10 @@ images: {
 		},
 		Images: map[string]v1.ImageBuilderSpec{
 			"build": {
-				Build: &v1.Build{
-					BuildArgs:  map[string]string{},
-					Context:    ".",
-					Dockerfile: "Dockerfile",
+				AcornBuild: &v1.AcornBuild{
+					BuildArgs: v1.GenericMap{},
+					Context:   ".",
+					Acornfile: "Acornfile",
 				},
 			},
 			"image": {
@@ -1619,13 +1620,12 @@ acorns: first: {
 	image: "acornimage"
 	build: "./dir"
 	publish: 80
-	volumes: "a:b"
+	volumes: "b"
 	secrets: "a:b"
 	links: "b:c"
 	autoUpgrade: true
 	autoUpgradeInterval: "20s"
 	notifyUpgrade: true
-	workloadClasses: "wc"
 	mem: 1Gi
 	env: [
 		"a=b",
@@ -1633,16 +1633,6 @@ acorns: first: {
 	]
 	deployArgs: foo: 12
 	profiles: ["abc", "def"]
-	permissions: [{
-		serviceName: "asfd"
-		rules: ["pods"]
-		clusterRules: [{
-			verbs: ["get", "list", "watch", "update", "patch", "delete", "deletecollection", "create"]
-			namespaces: ["aaa", "bbb"]
-			apiGroups: [""]
-			resources: ["pods"]
-		}]
-	}]
 }
 `
 
@@ -1688,7 +1678,7 @@ acorns: first: {
 		Acornfile: "dir/Acornfile",
 	}, acorn.Build)
 	assert.Equal(t, v1.VolumeBinding{
-		Volume: "a",
+		Volume: "",
 		Target: "b",
 	}, acorn.Volumes[0])
 	assert.Equal(t, v1.SecretBinding{
@@ -1717,30 +1707,6 @@ acorns: first: {
 		"foo": int64(12),
 	}, acorn.DeployArgs)
 	assert.Equal(t, []string{"abc", "def"}, acorn.Profiles)
-	assert.Equal(t, v1.Permissions{
-		ServiceName: "asfd",
-		Rules: []v1.PolicyRule{
-			{
-				Verbs:     v1.DefaultVerbs,
-				APIGroups: []string{""},
-				Resources: []string{"pods"},
-			},
-		},
-		ClusterRules: []v1.ClusterPolicyRule{
-			{
-				PolicyRule: rbacv1.PolicyRule{
-					Verbs:           v1.DefaultVerbs,
-					APIGroups:       []string{""},
-					Resources:       []string{"pods"},
-					ResourceNames:   []string{},
-					NonResourceURLs: []string{},
-				},
-				Namespaces: []string{"aaa", "bbb"},
-			},
-		},
-	}, acorn.Permissions[0])
-
-	//assert.True(t, false, "missing workload classes")
 }
 
 func TestAcornSecondForm(t *testing.T) {
@@ -1759,7 +1725,6 @@ acorns: first: {
 	}
 	publish: "example.com:1234/http"
 	volumes: [{
-		volume: "abc"
 		target: "def"
 	}]
 	secrets: [{
@@ -1816,7 +1781,7 @@ acorns: first: {
 		Protocol:   v1.ProtocolHTTP,
 	}, acorn.Publish[0])
 	assert.Equal(t, v1.VolumeBinding{
-		Volume: "abc",
+		Volume: "",
 		Target: "def",
 	}, acorn.Volumes[0])
 	assert.Equal(t, v1.SecretBinding{
@@ -1887,9 +1852,27 @@ services: first: {
 	container: "foo"
 	secrets: ["sfoo", "sbar"]
 	data: foo: hi: "bye"
-	destroy: {
-		image: "yo"
-	}
+}
+
+services: acorn: {
+	default: true
+	labels: foo: "bar"
+	image: "foo"
+	build: "./dir"
+	secrets: "foo:bar"
+	env: foo: "bar"
+	autoUpgrade: true
+	autoUpgradeInterval:   "5m"
+	notifyUpgrade:         true
+	mem:      44G
+	env: foo: "bar"
+	serviceArgs: key: "value"
+}
+
+services: job: {
+	default: true
+	labels: foo: "bar"
+	generated: job: "foo"
 }
 `
 
@@ -1912,13 +1895,52 @@ services: first: {
 		TargetPort: 80,
 	}, svc.Ports[0])
 	assert.Equal(t, "foo", svc.Container)
-	assert.Equal(t, []string{"sfoo", "sbar"}, svc.Secrets)
+	assert.Equal(t, v1.SecretBindings{
+		{
+			Secret: "sfoo",
+			Target: "sfoo",
+		},
+		{
+			Secret: "sbar",
+			Target: "sbar",
+		},
+	}, svc.Secrets)
 	assert.Equal(t, v1.GenericMap{
 		"foo": map[string]any{
 			"hi": "bye",
 		},
 	}, svc.Data)
-	assert.Equal(t, "yo", svc.Destroy.Image)
+
+	acorn := appSpec.Services["acorn"]
+
+	assert.Equal(t, true, acorn.Default)
+	assert.Equal(t, "foo", acorn.Image)
+	assert.Equal(t, "./dir", acorn.Build.Context)
+	assert.Equal(t, "foo", acorn.Labels[0].Key)
+	assert.Equal(t, "bar", acorn.Labels[0].Value)
+	assert.Equal(t, "foo", acorn.Image)
+	assert.Equal(t, "./dir", acorn.Build.Context)
+	assert.Equal(t, v1.SecretBindings{
+		{
+			Secret: "foo",
+			Target: "bar",
+		},
+	}, acorn.Secrets)
+	assert.Equal(t, true, *acorn.AutoUpgrade)
+	assert.Equal(t, "5m", acorn.AutoUpgradeInterval)
+	assert.Equal(t, true, *acorn.NotifyUpgrade)
+	assert.Equal(t, int64(44000000000), *acorn.Memory[""])
+	assert.Equal(t, "foo", acorn.Environment[0].Name)
+	assert.Equal(t, "bar", acorn.Environment[0].Value)
+	assert.Equal(t, v1.GenericMap{
+		"key": "value",
+	}, acorn.ServiceArgs)
+
+	job := appSpec.Services["job"]
+	assert.Equal(t, true, job.Default)
+	assert.Equal(t, "foo", job.Generated.Job)
+	assert.Equal(t, "foo", job.Labels[0].Key)
+	assert.Equal(t, "bar", job.Labels[0].Value)
 }
 
 func TestCronJob(t *testing.T) {
@@ -2156,16 +2178,7 @@ localData: permissions: {
       resources: ["resources"]
       resourceNames: ["names"]
       nonResourceURLs: ["foo"]
-    }
-  ]
-  clusterRules: [
-    {
-      verbs: ["verb"]
-      apiGroups: ["groups"]
-      resources: ["resources"]
-      resourceNames: ["names"]
-      nonResourceURLs: ["foo"]
-	  namespaces: ["a", "b"]
+      scopes: ["foo"]
     }
   ]
 }
@@ -2174,8 +2187,6 @@ containers: cont: {
   permissions: localData.permissions
   sidecars: side: permissions: localData.permissions
 }
-
-acorns: acorn: permissions: [localData.permissions]
 `
 
 	def, err := NewAppDefinition([]byte(acornCue))
@@ -2193,40 +2204,14 @@ acorns: acorn: permissions: [localData.permissions]
 	assert.Equal(t, "resources", appSpec.Containers["cont"].Permissions.Rules[0].Resources[0])
 	assert.Equal(t, "names", appSpec.Containers["cont"].Permissions.Rules[0].ResourceNames[0])
 	assert.Equal(t, "foo", appSpec.Containers["cont"].Permissions.Rules[0].NonResourceURLs[0])
-
-	assert.Equal(t, "verb", appSpec.Containers["cont"].Permissions.ClusterRules[0].Verbs[0])
-	assert.Equal(t, "groups", appSpec.Containers["cont"].Permissions.ClusterRules[0].APIGroups[0])
-	assert.Equal(t, "resources", appSpec.Containers["cont"].Permissions.ClusterRules[0].Resources[0])
-	assert.Equal(t, "names", appSpec.Containers["cont"].Permissions.ClusterRules[0].ResourceNames[0])
-	assert.Equal(t, "a", appSpec.Containers["cont"].Permissions.ClusterRules[0].Namespaces[0])
-	assert.Equal(t, "b", appSpec.Containers["cont"].Permissions.ClusterRules[0].Namespaces[1])
-	assert.Equal(t, "foo", appSpec.Containers["cont"].Permissions.ClusterRules[0].NonResourceURLs[0])
+	assert.Equal(t, "foo", appSpec.Containers["cont"].Permissions.Rules[0].Scopes[0])
 
 	assert.Equal(t, "verb", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].Verbs[0])
 	assert.Equal(t, "groups", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].APIGroups[0])
 	assert.Equal(t, "resources", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].Resources[0])
 	assert.Equal(t, "names", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].ResourceNames[0])
 	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].NonResourceURLs[0])
-
-	assert.Equal(t, "verb", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Verbs[0])
-	assert.Equal(t, "groups", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].APIGroups[0])
-	assert.Equal(t, "resources", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Resources[0])
-	assert.Equal(t, "names", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].ResourceNames[0])
-	assert.Equal(t, "a", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Namespaces[0])
-	assert.Equal(t, "b", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].Namespaces[1])
-	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.ClusterRules[0].NonResourceURLs[0])
-
-	assert.Equal(t, "verb", appSpec.Acorns["acorn"].Permissions[0].Rules[0].Verbs[0])
-	assert.Equal(t, "groups", appSpec.Acorns["acorn"].Permissions[0].Rules[0].APIGroups[0])
-	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions[0].Rules[0].Resources[0])
-	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions[0].Rules[0].ResourceNames[0])
-	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions[0].Rules[0].NonResourceURLs[0])
-
-	assert.Equal(t, "verb", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].Verbs[0])
-	assert.Equal(t, "groups", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].APIGroups[0])
-	assert.Equal(t, "resources", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].Resources[0])
-	assert.Equal(t, "names", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].ResourceNames[0])
-	assert.Equal(t, "foo", appSpec.Acorns["acorn"].Permissions[0].ClusterRules[0].NonResourceURLs[0])
+	assert.Equal(t, "foo", appSpec.Containers["cont"].Sidecars["side"].Permissions.Rules[0].Scopes[0])
 }
 
 func TestNoImport(t *testing.T) {
@@ -2606,7 +2591,7 @@ containers: test: {
 	assert.Equal(t, "api.group", appSpec.Containers["test"].Permissions.Rules[0].APIGroups[0])
 	assert.Equal(t, v1.DefaultVerbs, appSpec.Containers["test"].Permissions.Rules[0].Verbs)
 	assert.Equal(t, "secrets", appSpec.Containers["test"].Permissions.Rules[1].Resources[0])
-	assert.Equal(t, "", appSpec.Containers["test"].Permissions.Rules[1].APIGroups[0])
+	assert.Equal(t, "api.acorn.io", appSpec.Containers["test"].Permissions.Rules[1].APIGroups[0])
 	assert.Equal(t, []string{"get", "list", "watch"}, appSpec.Containers["test"].Permissions.Rules[1].Verbs)
 }
 
