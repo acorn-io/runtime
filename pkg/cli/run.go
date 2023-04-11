@@ -273,7 +273,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 		}
 		//if app does not exist but --update/--replace flag is used create app instead
 		if existingApp != nil {
-			return updateHelper(cmd, args, s, c, isDir, cwd)
+			return updateHelper(cmd, args, s, c, existingApp, isDir, cwd)
 		}
 	}
 
@@ -339,40 +339,23 @@ func (s *Run) Run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, isDir bool, cwd string) error {
-	var app *apiv1.App
-	var err error
-
-	if s.Name != "" {
-		app, err = c.AppGet(cmd.Context(), s.Name)
-		if err != nil {
-			return err
-		}
-	}
+func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, existingApp *apiv1.App, isDir bool, cwd string) error {
+	// need image and imageForFlags to differentiate which image to use to update in auto-upgrade formats
+	image := s.Image
 	imageForFlags := s.Image
 
-	if s.Name == "" && !isDir {
-		imageForFlags = args[0]
+	// updating an already existing app
+	if imageForFlags == "" {
+		imageForFlags = existingApp.Spec.Image
 	}
-
-	//updating an already existing app
-	if app != nil && imageForFlags == "" {
-		imageForFlags = app.Spec.Image
+	if image == "" {
+		image = existingApp.Spec.Image
 	}
 	if _, isPattern := autoupgrade.AutoUpgradePattern(imageForFlags); isPattern {
-		imageForFlags = app.Status.AppImage.ID
+		imageForFlags = existingApp.Status.AppImage.ID
 	}
 
-	//creating an image and updating
-	if s.Image == "" && isDir && len(args) > 0 {
-		imageForFlags, err = buildImage(cmd.Context(), c, s.File, cwd, args)
-		if err == pflag.ErrHelp {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-	//PUT update of a running app
+	// PUT update of a running app
 	if s.Replace && !isDir && imageForFlags == "" {
 		imageForFlags = s.Image
 	}
@@ -394,7 +377,7 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 	runOpts.DeployArgs = deployParams
 
 	opts := runOpts.ToUpdate()
-	opts.Image = imageForFlags
+	opts.Image = image
 
 	// Overwrite == true means patchMode == false
 	opts.Replace = s.Replace
@@ -406,16 +389,10 @@ func updateHelper(cmd *cobra.Command, args []string, s *Run, c client.Client, is
 		}
 		return outputApp(s.out, s.Output, app)
 	}
-	if app == nil {
-		app, err = rulerequest.PromptRun(cmd.Context(), c, s.Dangerous, imageForFlags, runOpts)
-		if err != nil {
-			return err
-		}
-	} else {
-		app, err = rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, s.Name, opts)
-		if err != nil {
-			return err
-		}
+
+	app, err := rulerequest.PromptUpdate(cmd.Context(), c, s.Dangerous, s.Name, opts)
+	if err != nil {
+		return err
 	}
 	fmt.Println(app.Name)
 	if s.Wait == nil || *s.Wait {
