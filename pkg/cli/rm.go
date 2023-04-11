@@ -59,7 +59,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 
 	for _, arg := range args {
 		if rmObjects.App {
-			err := removeApp(arg, c, cmd, a.Force)
+			err := removeApp(arg, c, cmd, a.Force, rmObjects.Container || rmObjects.Volume || rmObjects.Secret)
 			if err != nil {
 				return err
 			}
