@@ -227,7 +227,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 				if !updated && digest != "" {
 					if err := d.client.checkImageAllowed(ctx, app.Namespace, nextAppImage); err != nil {
 						if errors.Is(err, &imageallowrules.ErrImageNotAllowed{}) {
-							logrus.Warnf("Updated image %s for %s/%s is not allowed: %v", nextAppImage, app.Namespace, app.Name, err)
+							logrus.Debugf("Updated image %s for %s/%s is not allowed: %v", nextAppImage, app.Namespace, app.Name, err)
 							continue
 						}
 						logrus.Errorf("error checking if updated image %s for %s/%s  is allowed: %v", app.Namespace, app.Name, nextAppImage, err)
