@@ -228,6 +228,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 					if err := d.client.checkImageAllowed(ctx, app.Namespace, nextAppImage); err != nil {
 						if errors.Is(err, &imageallowrules.ErrImageNotAllowed{}) {
 							logrus.Debugf("Updated image %s for %s/%s is not allowed: %v", nextAppImage, app.Namespace, app.Name, err)
+							d.appKeysPrevCheck[appKey] = updateTime
 							continue
 						}
 						logrus.Errorf("error checking if updated image %s for %s/%s  is allowed: %v", app.Namespace, app.Name, nextAppImage, err)
@@ -239,12 +240,14 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 				switch mode {
 				case "enabled":
 					if app.Status.AvailableAppImage == nextAppImage {
+						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.AvailableAppImage = nextAppImage
 					app.Status.ConfirmUpgradeAppImage = ""
 				case "notify":
 					if app.Status.ConfirmUpgradeAppImage == nextAppImage {
+						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.ConfirmUpgradeAppImage = nextAppImage
