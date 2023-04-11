@@ -2,11 +2,13 @@ package autoupgrade
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/baaah/pkg/router"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
@@ -222,16 +224,30 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			}
 
 			if updated || strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
+				if !updated && digest != "" {
+					if err := d.client.checkImageAllowed(ctx, app.Namespace, nextAppImage); err != nil {
+						if errors.Is(err, &imageallowrules.ErrImageNotAllowed{}) {
+							logrus.Debugf("Updated image %s for %s/%s is not allowed: %v", nextAppImage, app.Namespace, app.Name, err)
+							d.appKeysPrevCheck[appKey] = updateTime
+							continue
+						}
+						logrus.Errorf("error checking if updated image %s for %s/%s  is allowed: %v", app.Namespace, app.Name, nextAppImage, err)
+						continue
+					}
+				}
+
 				mode, _ := Mode(app.Spec)
 				switch mode {
 				case "enabled":
 					if app.Status.AvailableAppImage == nextAppImage {
+						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.AvailableAppImage = nextAppImage
 					app.Status.ConfirmUpgradeAppImage = ""
 				case "notify":
 					if app.Status.ConfirmUpgradeAppImage == nextAppImage {
+						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.ConfirmUpgradeAppImage = nextAppImage
@@ -241,10 +257,10 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 					continue
 				}
 				if updated {
-					logrus.Infof("Triggering an auto-upprade of app %v because a new tag was found matching pattern %v. New tag: %v",
+					logrus.Infof("Triggering an auto-upgrade of app %v because a new tag was found matching pattern %v. New tag: %v",
 						appKey, tagPattern, newTag)
 				} else {
-					logrus.Infof("Triggering an auto-upprade of app %v because a new digest [%v] was detected for image %v",
+					logrus.Infof("Triggering an auto-upgrade of app %v because a new digest [%v] was detected for image %v",
 						appKey, digest, imageKey.image)
 				}
 				if err := d.client.updateAppStatus(ctx, &app); err != nil {
