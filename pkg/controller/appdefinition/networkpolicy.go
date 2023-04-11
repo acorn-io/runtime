@@ -87,6 +87,12 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 	appName := ingress.Labels[labels.AcornAppName]
 	projectName := ingress.Labels[labels.AcornAppNamespace]
 
+	// look for case where the ingress is Acorn-managed but isn't for a specific app
+	// this can happen when we install Traefik for Docker Desktop, for example
+	if appName == "" || projectName == "" {
+		return nil
+	}
+
 	// create a mapping of k8s Service names to published port names/numbers
 	svcNameToPorts := make(map[string][]networkingv1.ServiceBackendPort)
 	for _, rule := range ingress.Spec.Rules {
@@ -224,6 +230,11 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	appName := service.Labels[labels.AcornAppName]
 	projectName := service.Labels[labels.AcornAppNamespace]
 	containerName := service.Labels[labels.AcornContainerName]
+
+	// look for case where the service is Acorn-managed but isn't for a specific app
+	if appName == "" || projectName == "" || containerName == "" {
+		return nil
+	}
 
 	// build the ipBlock for the NetPol
 	ipBlock := networkingv1.IPBlock{
