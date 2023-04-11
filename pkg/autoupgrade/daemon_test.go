@@ -9,6 +9,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -66,7 +67,7 @@ func (m *mockDaemonClient) resolveLocalTag(context.Context, string, string) (str
 
 func (m *mockDaemonClient) checkImageAllowed(_ context.Context, _ string, img string) error {
 	if _, ok := m.imageDenyList[img]; ok {
-		return fmt.Errorf("Mock error - Image %s Denied", img)
+		return &imageallowrules.ErrImageNotAllowed{Image: img, Rule: "MockRule", SubruleType: "MockRule", SubrulePath: ".*"}
 	}
 	return nil
 }
@@ -280,6 +281,13 @@ func TestRefreshImages(t *testing.T) {
 			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "docker.io/acorn/acorn-1", namespace: "acorn"}: {router.Key("acorn", "acorn-1")}},
 			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "acorn-1"): now},
 			appsUpdated:            map[string]string{"acorn-1": "docker.io/acorn/acorn-1"},
+		},
+		{
+			name:                   "Auto refresh tag with remote digest change but new image is disallowed", // Note: this is not 100% accurate, since imageAllowRules check against image digests, but it's good enought to test the logic
+			client:                 &mockDaemonClient{remoteImageDigest: "sha256:acorn4321docker.io/acorn/acorn-1dcba", imageDenyList: map[string]struct{}{"docker.io/acorn/acorn-1": {}}},
+			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "acorn-1"): thirtySecondsAgo},
+			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "docker.io/acorn/acorn-1", namespace: "acorn"}: {router.Key("acorn", "acorn-1")}},
+			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "acorn-1"): now},
 		},
 		{
 			name:                   "Auto refresh tag with local digest change",
