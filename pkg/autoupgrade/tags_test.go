@@ -28,6 +28,9 @@ func TestTags(t *testing.T) {
 	// I don't care about the "pre-release" part, just give me the latest 1.x
 	test(t, "v#.#-**", 1, []string{"v1.0-a", "v1.1-b", "v1.0-c", "v1.0-z"})
 
+	// I don't care about the anything other than the numerical version, just give me the latest 1.x
+	test(t, "v#.#**", 2, []string{"v1.0-a", "v1.1-b", "v1.2", "v1.0-c", "v1.0-z"})
+
 	// an alpha sort segment, followed by a dot, followed by a numeric sort segment
 	test(t, "v#.#-*.#", 2, []string{"v1.1-a.9", "v1.1-b.1", "v1.1-b.2", "v1.1-b.0"})
 

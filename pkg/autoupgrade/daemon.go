@@ -178,7 +178,7 @@ func (d *daemon) determineAppsToRefresh(apps map[kclient.ObjectKey]v1.AppInstanc
 // which will trigger the appInstance handlers to pick up the change and deploy the new version of the app
 func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v1.AppInstance, imagesToRefresh map[imageAndNamespaceKey][]kclient.ObjectKey, updateTime time.Time) {
 	for imageKey, appsForImage := range imagesToRefresh {
-		current, err := imagename.ParseReference(imageKey.image, imagename.WithDefaultRegistry(defaultNoReg))
+		current, err := imagename.ParseReference(imageKey.image, imagename.WithDefaultRegistry(defaultNoReg), imagename.WithDefaultTag(""))
 		if err != nil {
 			logrus.Errorf("Problem parsing image referece %v: %v", imageKey.image, err)
 			continue
@@ -206,9 +206,11 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			// Updated can be false for two reasons:
 			// 1. The tag was a pattern and a newer tag was not found
 			// 2. The tag was not a pattern
-			// In either case, we also want to check to see if new content was pushed to the current tag
+			// In either case, we also want to check to see if new content was pushed to the current tag, if the image has a current tag.
 			// This satisfies the usecase of autoUpgrade with an app's tag is something static, like "latest"
-			if !updated {
+			// However, if the tag is a pattern and the current image has no tag, we don't want to check for a digest because this would
+			// result in a digest upgrade even though no tag matched.
+			if !updated && (!isPattern || current.Identifier() != "") {
 				nextAppImage = imageKey.image
 				var pullErr error
 				if current.Context().RegistryStr() != defaultNoReg {
