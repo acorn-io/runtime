@@ -28,6 +28,7 @@ var (
 		"boolToStar":    BoolToStar,
 		"array":         ToArray,
 		"arrayFirst":    ToArrayFirst,
+		"arrayNoSpace":  ToArrayNoSpace,
 		"graph":         Graph,
 		"pointer":       Pointer,
 		"fullID":        FormatID,

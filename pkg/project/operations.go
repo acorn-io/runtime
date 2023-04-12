@@ -114,6 +114,11 @@ type listResult struct {
 	projects []string
 }
 
+type DetailProject struct {
+	FullName string
+	Project  *apiv1.Project
+}
+
 func listHubServers(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
 	for _, hubServer := range cfg.HubServers {
 		// copy for usage in goroutine
@@ -183,4 +188,39 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 
 	sort.Strings(projects)
 	return projects, warnings, nil
+}
+
+func GetDetails(ctx context.Context, opts Options, projectNames []string) (result []DetailProject, err error) {
+	entryCh := make(chan DetailProject)
+	errCh := make(chan error)
+
+	// Launch a goroutine for each project to retrieve its information
+	for _, projectName := range projectNames {
+		go func(proj string, opts Options) {
+			opts.Project = proj
+			c, err := Client(ctx, opts)
+			if err != nil {
+				errCh <- err
+			}
+			project, err := c.ProjectGet(ctx, lastPart(opts.Project))
+			if err != nil {
+				errCh <- err
+			}
+			entryCh <- DetailProject{
+				FullName: proj,
+				Project:  project,
+			}
+		}(projectName, opts)
+	}
+
+	for i := 0; i < len(projectNames); i++ {
+		select {
+		case entry := <-entryCh:
+			result = append(result, entry)
+		case err := <-errCh:
+			return nil, err
+		}
+	}
+
+	return result, nil
 }

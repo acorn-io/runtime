@@ -434,6 +434,13 @@ func (in *Project) GetRegion() string {
 	return in.Status.DefaultRegion
 }
 
+func (in *Project) GetSupportedRegions() []string {
+	if len(in.Spec.SupportedRegions) != 0 {
+		return in.Spec.SupportedRegions
+	}
+	return []string{in.GetRegion()}
+}
+
 func (in *Project) SetDefaultRegion(region string) {
 	if in.Spec.DefaultRegion == "" {
 		in.Status.DefaultRegion = region

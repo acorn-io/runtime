@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"sort"
+
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -36,8 +38,10 @@ type Project struct {
 }
 
 type projectEntry struct {
-	Name    string `json:"name,omitempty"`
-	Default bool   `json:"default,omitempty"`
+	Name          string   `json:"name,omitempty"`
+	Default       bool     `json:"default,omitempty"`
+	Regions       []string `json:"regions,omitempty"`
+	DefaultRegion string   `json:"default-region,omitempty"`
 }
 
 func (a *Project) Run(cmd *cobra.Command, args []string) error {
@@ -80,10 +84,25 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	out := table.NewWriter(tables.ProjectClient, a.Quiet, a.Output)
-	for _, project := range projectNames {
+	projectDetails, err := project.GetDetails(cmd.Context(), a.client.Options(), projectNames)
+	if err != nil {
+		return err
+	}
+	sort.Slice(projectDetails, func(i, j int) bool {
+		return projectDetails[i].FullName < projectDetails[j].FullName
+	})
+	for _, projectItem := range projectDetails {
+		supportedRegions := projectItem.Project.GetSupportedRegions()
+		defaultRegion := projectItem.Project.GetRegion()
+		for i, supportedRegion := range supportedRegions {
+			if supportedRegion == defaultRegion {
+				supportedRegions[i] = supportedRegion + "*"
+			}
+		}
 		out.Write(projectEntry{
-			Name:    project,
-			Default: defaultProject == project,
+			Name:    projectItem.FullName,
+			Default: defaultProject == projectItem.FullName,
+			Regions: supportedRegions,
 		})
 	}
 

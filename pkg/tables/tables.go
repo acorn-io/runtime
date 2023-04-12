@@ -145,6 +145,7 @@ var (
 	ProjectClient = [][]string{
 		{"Name", "Name"},
 		{"Default", "{{ boolToStar .Default }}"},
+		{"Regions", "{{ arrayNoSpace .Regions }}"},
 	}
 
 	Region = [][]string{
