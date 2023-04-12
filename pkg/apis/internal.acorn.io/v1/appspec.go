@@ -223,8 +223,8 @@ type ScopedLabel struct {
 }
 
 type PolicyRule struct {
-	rbacv1.PolicyRule
-	Scopes []string `json:"scopes,omitempty"`
+	rbacv1.PolicyRule `json:",inline"`
+	Scopes            []string `json:"scopes,omitempty"`
 }
 
 func (p PolicyRule) IsAccountScoped() bool {
