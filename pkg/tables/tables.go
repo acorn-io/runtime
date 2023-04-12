@@ -38,6 +38,7 @@ var (
 		{"Size-Range", "{{ displayRange .Size.Min .Size.Max }}"},
 		{"Default-Size", "{{ .Size.Default }}"},
 		{"Access-Modes", "{{ pointer .AllowedAccessModes }}"},
+		{"Regions", "{{ arrayNoSpace .SupportedRegions }}"},
 		{"Description", "{{ .Description }}"},
 	}
 	VolumeClassConverter = MustConverter(VolumeClass)
@@ -120,6 +121,7 @@ var (
 		{"Default", "{{ boolToStar .Default }}"},
 		{"Memory Range", "{{ memoryToRange .Memory }}"},
 		{"Memory Default", "{{ defaultMemory .Memory }}"},
+		{"Regions", "{{ arrayNoSpace .SupportedRegions }}"},
 		{"Description", "Description"},
 	}
 	ComputeClassConverter = MustConverter(ComputeClass)

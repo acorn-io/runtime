@@ -42,7 +42,7 @@ func TestVolumeClass(t *testing.T) {
 			args:    []string{},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE   DEFAULT-SIZE   ACCESS-MODES                   DESCRIPTION\nlocal-path-class   *                    local-path      1Gi-10Gi     5Gi            [readOnlyMany readWriteOnce]   Just a little test\n",
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE   DEFAULT-SIZE   ACCESS-MODES                   REGIONS   DESCRIPTION\nlocal-path-class   *                    local-path      1Gi-10Gi     5Gi            [readOnlyMany readWriteOnce]             Just a little test\n",
 		},
 		{
 			name: "acorn volume classes with one storage that is not default",
@@ -61,7 +61,7 @@ func TestVolumeClass(t *testing.T) {
 			args:    []string{},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE   DEFAULT-SIZE   ACCESS-MODES      DESCRIPTION\nlocal-path-class                        local-path      0.5Gi-5Gi    3Gi            [readWriteMany]   \n",
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE   DEFAULT-SIZE   ACCESS-MODES      REGIONS   DESCRIPTION\nlocal-path-class                        local-path      0.5Gi-5Gi    3Gi            [readWriteMany]             \n",
 		},
 		{
 			name: "acorn volume classes with two storages, one default",
@@ -79,7 +79,7 @@ func TestVolumeClass(t *testing.T) {
 			args:    []string{},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   DESCRIPTION\nlocal-path-class                        local-path      Unrestricted                                 \nmagic-class        *                    magic           Unrestricted                                 \n",
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   REGIONS   DESCRIPTION\nlocal-path-class                        local-path      Unrestricted                                           \nmagic-class        *                    magic           Unrestricted                                           \n",
 		},
 		{
 			name: "acorn volume classes with two storages, one inactive",
@@ -97,7 +97,7 @@ func TestVolumeClass(t *testing.T) {
 			args:    []string{},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   DESCRIPTION\nlocal-path-class                        local-path      Unrestricted                                 \nmagic-class                  *          magic           Unrestricted                                 \n",
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   REGIONS   DESCRIPTION\nlocal-path-class                        local-path      Unrestricted                                           \nmagic-class                  *          magic           Unrestricted                                           \n",
 		},
 		{
 			name: "acorn volume classes with two storages that are both default",
@@ -117,7 +117,7 @@ func TestVolumeClass(t *testing.T) {
 			quiet:   false,
 			wantErr: false,
 			// Shouldn't happen, but we should handle it "correctly" if it does.
-			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   DESCRIPTION\nlocal-path-class   *                    local-path      Unrestricted                                 \nmagic-class        *                    magic           Unrestricted                                 \n",
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   REGIONS   DESCRIPTION\nlocal-path-class   *                    local-path      Unrestricted                                           \nmagic-class        *                    magic           Unrestricted                                           \n",
 		},
 		{
 			name: "acorn volume classes with arg that is default",
@@ -136,7 +136,7 @@ func TestVolumeClass(t *testing.T) {
 			args:    []string{"local-path-class"},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   DESCRIPTION\nlocal-path-class   *                    local-path      Unrestricted                                 \n",
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   REGIONS   DESCRIPTION\nlocal-path-class   *                    local-path      Unrestricted                                           \n",
 		},
 		{
 			name: "acorn volume classes with arg that is not default",
@@ -154,7 +154,27 @@ func TestVolumeClass(t *testing.T) {
 			args:    []string{"magic-class"},
 			quiet:   false,
 			wantErr: false,
-			wantOut: "NAME          DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   DESCRIPTION\nmagic-class                        magic           Unrestricted                                 \n",
+			wantOut: "NAME          DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   REGIONS   DESCRIPTION\nmagic-class                        magic           Unrestricted                                           \n",
+		},
+		{
+			name: "acorn volume classes with two storages with supported regions",
+			existingVolumeClasses: []apiv1.VolumeClass{
+				{
+					ObjectMeta:       metav1.ObjectMeta{Name: "local-path-class"},
+					StorageClassName: "local-path",
+					SupportedRegions: []string{"local", "other-region"},
+				},
+				{
+					ObjectMeta:       metav1.ObjectMeta{Name: "magic-class"},
+					StorageClassName: "magic",
+					Default:          true,
+					SupportedRegions: []string{"local", "another-region"},
+				},
+			},
+			args:    []string{},
+			quiet:   false,
+			wantErr: false,
+			wantOut: "NAME               DEFAULT   INACTIVE   STORAGE-CLASS   SIZE-RANGE     DEFAULT-SIZE   ACCESS-MODES   REGIONS                DESCRIPTION\nlocal-path-class                        local-path      Unrestricted                                 local,other-region     \nmagic-class        *                    magic           Unrestricted                                 local,another-region   \n",
 		},
 	}
 	for _, tt := range tests {
