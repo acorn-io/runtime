@@ -49,8 +49,8 @@ func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, curre
 	}
 	newImage := strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/")
 	for len(tags) > 0 {
-		nTag, err := FindLatest(current, pattern, tags)
-		if err != nil || nTag == current {
+		nTag, err := FindLatest(newTag, pattern, tags)
+		if err != nil || nTag == newTag {
 			// resorting to current tag, so stop trying (we don't want to loop forever)
 			break
 		}
@@ -97,7 +97,7 @@ func FindLatest(current, pattern string, tags []string) (string, error) {
 
 	// ** denotes a part of the tag that should be completely ignored for both matching and sorting. Replace it with
 	// a regexp expression that matches all valid tag characters
-	pattern = strings.ReplaceAll(pattern, "**", `([0-9A-Za-z_.-]+)`)
+	pattern = strings.ReplaceAll(pattern, "**", `([0-9A-Za-z_.-]{0,})`)
 
 	index := 0
 	var namedMatchingGroups []namedMatchingGroup
