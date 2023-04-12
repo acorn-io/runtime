@@ -15,12 +15,14 @@ import (
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ref"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/pkg/replace"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/google/go-containerregistry/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -135,13 +137,22 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	switch keyName {
 	case "name":
 		return i.app.Name, true, nil
+	case "project":
+		fallthrough
 	case "namespace":
 		return i.app.Namespace, true, nil
 	case "image":
-		return i.app.Status.AppImage.ID, true, nil
-	default:
-		return "", false, nil
+		if tags.IsLocalReference(i.app.Status.AppImage.ID) {
+			return i.app.Status.AppImage.ID, true, nil
+		} else if i.app.Status.AppImage.ID != "" && i.app.Status.AppImage.Digest != "" {
+			tag, err := name.NewTag(i.app.Status.AppImage.ID)
+			if err != nil {
+				return "", false, err
+			}
+			return tag.Digest(i.app.Status.AppImage.Digest).String(), true, nil
+		}
 	}
+	return "", false, nil
 }
 
 func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (string, bool, error) {
