@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -19,18 +20,13 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionImageAllowed)
 
-		targetImage, unknownReason := determineTargetImage(appInstance)
+		targetImage := appInstance.Status.AppImage.Name
+
 		if targetImage == "" {
-			if appInstance.Status.AppImage.Name != "" {
-				targetImage = appInstance.Status.AppImage.Name
-			} else {
-				if unknownReason != "" {
-					cond.Unknown(unknownReason)
-				} else {
-					cond.Error(fmt.Errorf("no image specified"))
-				}
+			if _, pattern := autoupgrade.AutoUpgradePattern(appInstance.Spec.Image); pattern {
 				return nil
 			}
+			targetImage = appInstance.Spec.Image
 		}
 
 		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, remote.WithTransport(transport)); err != nil {
