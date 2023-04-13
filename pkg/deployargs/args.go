@@ -1,63 +1,30 @@
 package deployargs
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/flagparams"
-	"github.com/acorn-io/aml/pkg/cue"
 	"golang.org/x/exp/maps"
 )
 
-func ToFlagsFromFile(file, cwd string) (*appdefinition.AppDefinition, *flagparams.Flags, error) {
-	buildFile := build.ResolveFile(file, cwd)
-	data, err := cue.ReadCUE(buildFile)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	appDef, err := appdefinition.NewAppDefinition(data)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return toFlags(file, appDef)
-}
-
-func ToFlagsFromImage(ctx context.Context, c client.Client, image string) (*appdefinition.AppDefinition, *flagparams.Flags, error) {
-	imageDetails, err := c.ImageDetails(ctx, image, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	appDef, err := appdefinition.FromAppImage(&imageDetails.AppImage)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return toFlags(image, appDef)
-}
-
-func toFlags(image string, appDef *appdefinition.AppDefinition) (*appdefinition.AppDefinition, *flagparams.Flags, error) {
+func ToFlags(name string, appDef *appdefinition.AppDefinition) (*flagparams.Flags, error) {
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	params, err := appDef.Args()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	flags := flagparams.New(image, params)
+	flags := flagparams.New(name, params)
 	flags.Usage = Usage(appSpec)
-	return appDef, flags, nil
+	return flags, nil
 }
 
 func Usage(app *v1.AppSpec) func() {

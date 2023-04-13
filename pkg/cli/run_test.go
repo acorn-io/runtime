@@ -124,17 +124,6 @@ func TestRun(t *testing.T) {
 			args: args{
 				args: []string{"-m found.container=256Miii", "found"},
 			},
-			prepare: func(t *testing.T, f *mocks.MockClient) {
-				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
-						},
-					}, nil)
-			},
 			wantErr: true,
 			wantOut: "invalid number \"256Miii\"",
 		},
@@ -147,34 +136,8 @@ func TestRun(t *testing.T) {
 			args: args{
 				args: []string{"-m found.container=notallowed", "found"},
 			},
-			prepare: func(t *testing.T, f *mocks.MockClient) {
-				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
-						},
-					}, nil)
-			},
 			wantErr: true,
 			wantOut: "illegal number start \"notallowed\"",
-		},
-		{
-			name: "acorn run app name already in use", fields: fields{
-				All:   false,
-				Force: true,
-			},
-
-			args: args{
-				args: []string{"-n=found", "run-name"},
-			},
-			prepare: func(t *testing.T, f *mocks.MockClient) {
-				t.Helper()
-			},
-			wantErr: true,
-			wantOut: "app \"found\" already exists",
 		},
 		{
 			name: "acorn run ./folder but folder doesn't exist", fields: fields{
@@ -197,7 +160,7 @@ func TestRun(t *testing.T) {
 					}, nil)
 			},
 			wantErr: true,
-			wantOut: "error: app ./folder does not exist",
+			wantOut: "directory ./folder does not exist",
 		},
 		{
 			name: "acorn_run_pointed_at_working_dir_without_acornfile", fields: fields{
@@ -266,59 +229,15 @@ func TestRun(t *testing.T) {
 			wantOut: "Acornfile_temp is not a directory",
 		},
 		{
-			name: "acorn run --update image-dne", fields: fields{
+			name: "acorn run --update --name dne", fields: fields{
 				All:   false,
 				Force: true,
 			},
 			args: args{
-				args: []string{"--update", "image-dne"},
+				args: []string{"--update", "--name", "dne"},
 			},
 			wantErr: true,
-			wantOut: "error: app image-dne does not exist",
-			prepare: func(t *testing.T, f *mocks.MockClient) {
-				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
-						},
-					}, nil)
-			},
-		},
-		{
-			name: "acorn run --update --replace", fields: fields{
-				All:   false,
-				Force: true,
-			},
-			args: args{
-				args: []string{"--update", "--replace"},
-			},
-			wantErr: true,
-			wantOut: "cannot combine --update/-u and --replace/-r",
-			prepare: func(t *testing.T, f *mocks.MockClient) {
-				t.Helper()
-				f.EXPECT().Info(gomock.Any()).Return(
-					[]apiv1.Info{
-						{
-							TypeMeta:   metav1.TypeMeta{},
-							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
-						},
-					}, nil)
-			},
-		},
-		{
-			name: "acorn run --update -i", fields: fields{
-				All:   false,
-				Force: true,
-			},
-			args: args{
-				args: []string{"--update", "-i"},
-			},
-			wantErr: true,
-			wantOut: "cannot use --update/-u or --replace/-r with --dev/-i",
+			wantOut: "error: app dne does not exist",
 			prepare: func(t *testing.T, f *mocks.MockClient) {
 				t.Helper()
 				f.EXPECT().Info(gomock.Any()).Return(

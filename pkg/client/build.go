@@ -6,8 +6,8 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/buildclient"
+	"github.com/acorn-io/acorn/pkg/vcs"
 	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -47,14 +47,12 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 		return nil, err
 	}
 
-	file = build.ResolveFile(file, opts.Cwd)
-
 	fileData, err := cue.ReadCUE(file)
 	if err != nil {
 		return nil, err
 	}
 
-	vcs := build.VCS(filepath.Dir(file))
+	vcs := vcs.VCS(filepath.Dir(file))
 
 	builder, err := c.getOrCreateBuilder(ctx, opts.BuilderName)
 	if err != nil {

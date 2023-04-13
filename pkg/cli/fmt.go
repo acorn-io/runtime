@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/spf13/cobra"
@@ -29,7 +29,7 @@ func (s *Fmt) Run(cmd *cobra.Command, args []string) error {
 		file string
 	)
 	if len(args) == 0 {
-		file = build.FindAcornCue(".")
+		file = "Acornfile"
 	} else if args[0] == "-" {
 		data, err := io.ReadAll(os.Stdin)
 		if err != nil {
@@ -44,7 +44,7 @@ func (s *Fmt) Run(cmd *cobra.Command, args []string) error {
 	} else {
 		file = args[0]
 		if s, err := os.Stat(file); err == nil && s.IsDir() {
-			file = build.FindAcornCue(file)
+			file = filepath.Join(file, "Acornfile")
 		}
 	}
 

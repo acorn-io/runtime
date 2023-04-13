@@ -10,6 +10,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
+	"github.com/acorn-io/acorn/pkg/imagesource"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"golang.org/x/sync/errgroup"
@@ -58,10 +59,8 @@ func TestDev(t *testing.T) {
 
 	eg := errgroup.Group{}
 	eg.Go(func() error {
-		return dev.Dev(subCtx, helper.BuilderClient(t, ns.Name), acornCueFile, &dev.Options{
-			Build: client.AcornImageBuildOptions{
-				Cwd: tmp,
-			},
+		return dev.Dev(subCtx, helper.BuilderClient(t, ns.Name), &dev.Options{
+			ImageSource: imagesource.NewImageSource(acornCueFile, []string{tmp}, nil, nil),
 			Run: client.AppRunOptions{
 				Name: "test-app",
 			},

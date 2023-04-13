@@ -1,8 +1,10 @@
-package build
+package imagesource
 
 import (
+	"context"
 	"testing"
 
+	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +14,8 @@ func TestParamsHelp(t *testing.T) {
 		file = "testdata/params/Acornfile"
 		cwd  = "testdata/params"
 	)
-	_, err := ParseParams(file, cwd, []string{
+	_, _, err := NewImageSource(file, []string{
+		cwd,
 		"image-name",
 		"--str=s",
 		"--str-default=d",
@@ -21,7 +24,7 @@ func TestParamsHelp(t *testing.T) {
 		"--i-default=3",
 		"--complex",
 		"@testdata/params/test.cue",
-	})
+	}, nil, nil).GetAppDefinition(context.Background(), nil)
 	assert.Equal(t, pflag.ErrHelp, err)
 }
 
@@ -30,7 +33,8 @@ func TestParams(t *testing.T) {
 		file = "testdata/params/Acornfile"
 		cwd  = "testdata/params"
 	)
-	params, err := ParseParams(file, cwd, []string{
+	_, params, err := NewImageSource(file, []string{
+		cwd,
 		"image-name",
 		"--str=s",
 		"--str-default=d",
@@ -38,12 +42,12 @@ func TestParams(t *testing.T) {
 		"--i-default=3",
 		"--complex",
 		"@testdata/params/test.cue",
-	})
+	}, nil, nil).GetAppDefinition(context.Background(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	def, err := ResolveAndParse(file, cwd)
+	def, err := build.ResolveAndParse(file)
 	if err != nil {
 		t.Fatal(err)
 	}

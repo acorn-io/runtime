@@ -18,6 +18,7 @@ import (
 func TestDev(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mClient := mocks.NewMockClient(ctrl)
+	mClient.EXPECT().AppList(gomock.Any()).Return(nil, nil)
 	mClient.EXPECT().AppGet(gomock.Any(), "dne").
 		Return(nil, fmt.Errorf("error: app dne does not exist")).AnyTimes()
 	mClient.EXPECT().Info(gomock.Any()).
@@ -62,26 +63,6 @@ func TestDev(t *testing.T) {
 			},
 			wantErr: true,
 			wantOut: "✗  ERROR:  GET https://index.docker.io/v2/library/image-dne/manifests/latest: UNAUTHORIZED: authentication required; [map[Action:pull Class: Name:library/image-dne Type:repository]]",
-		},
-		{
-			name: "acorn dev --name dne . ", fields: fields{
-				All:   false,
-				Type:  nil,
-				Force: true,
-			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactoryManual{
-					Client: mClient,
-				},
-				StdOut: w,
-				StdErr: w,
-				StdIn:  strings.NewReader("y\n"),
-			},
-			args: args{
-				args: []string{"--name", "dne", "."},
-			},
-			wantErr: true,
-			wantOut: "error: app dne does not exist",
 		},
 	}
 	for _, tt := range tests {
