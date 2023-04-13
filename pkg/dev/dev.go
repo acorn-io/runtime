@@ -2,8 +2,6 @@ package dev
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -14,14 +12,12 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build"
 	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/deployargs"
+	"github.com/acorn-io/acorn/pkg/digest"
+	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/log"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
-	"github.com/acorn-io/aml/pkg/cue"
 	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
@@ -32,33 +28,20 @@ import (
 )
 
 type Options struct {
-	Args              []string
-	Build             client.AcornImageBuildOptions
+	ImageSource       imagesource.ImageSource
 	Run               client.AppRunOptions
-	Log               client.LogOptions
+	Replace           bool
 	Dangerous         bool
 	BidirectionalSync bool
 }
 
-func (o *Options) complete() (*Options, error) {
-	var (
-		result Options
-	)
-
-	if o != nil {
-		result = *o
-	}
-
-	return &result, nil
-}
-
 type watcher struct {
-	file       string
-	cwd        string
-	args       []string
-	trigger    chan struct{}
-	watching   []string
-	watchingTS []time.Time
+	c            client.Client
+	imageAndArgs imagesource.ImageSource
+	trigger      chan struct{}
+	watching     []string
+	watchingTS   []time.Time
+	initOnce     sync.Once
 }
 
 func (w *watcher) Trigger() {
@@ -68,35 +51,16 @@ func (w *watcher) Trigger() {
 	}
 }
 
-func (w *watcher) readFiles() []string {
-	data, err := cue.ReadCUE(w.file)
+func (w *watcher) readFiles(ctx context.Context) []string {
+	files, err := w.imageAndArgs.WatchFiles(ctx, w.c)
 	if err != nil {
-		logrus.Errorf("failed to read %s: %v", w.file, err)
-		return []string{w.file}
+		logrus.Errorf("failed to resolve files to watch: %v", err)
 	}
-	app, err := appdefinition.NewAppDefinition(data)
-	if err != nil {
-		logrus.Errorf("failed to parse %s: %v", w.file, err)
-		return []string{w.file}
-	}
-	params, err := build.ParseParams(w.file, w.cwd, w.args)
-	if err != nil {
-		logrus.Errorf("failed to parse args %v: %v", w.args, err)
-		return []string{w.file}
-	}
-	app, _, err = app.WithArgs(params, []string{"dev?"})
-	if err != nil {
-		logrus.Errorf("failed to assign args %v: %v", w.args, err)
-	}
-	files, err := app.WatchFiles(w.cwd)
-	if err != nil {
-		logrus.Errorf("failed to parse additional files %s: %v", w.file, err)
-		return []string{w.file}
-	}
-	return append([]string{w.file}, files...)
+	return files
 }
 
 func (w *watcher) foundChanges() bool {
+	logrus.Debugf("Checking timestamp of %v", w.watching)
 	for i, f := range w.watching {
 		s, err := os.Stat(f)
 		if err == nil {
@@ -124,9 +88,21 @@ func timestamps(files []string) []time.Time {
 	return result
 }
 
+func (w *watcher) updateTimestamps(ctx context.Context) {
+	files := w.readFiles(ctx)
+	w.watching = files
+	w.watchingTS = timestamps(files)
+}
+
 func (w *watcher) Wait(ctx context.Context) error {
+	init := false
+	w.initOnce.Do(func() {
+		w.watching = w.readFiles(ctx)
+		init = true
+	})
+
 	for {
-		if !w.foundChanges() {
+		if !init && !w.foundChanges() {
 			select {
 			case <-w.trigger:
 			case <-ctx.Done():
@@ -136,14 +112,12 @@ func (w *watcher) Wait(ctx context.Context) error {
 			}
 		}
 
-		files := w.readFiles()
-		w.watching = files
-		w.watchingTS = timestamps(files)
+		w.updateTimestamps(ctx)
 		return nil
 	}
 }
 
-func buildLoop(ctx context.Context, client client.Client, file string, opts *Options) error {
+func buildLoop(ctx context.Context, client client.Client, hash string, opts *Options) error {
 	defer func() {
 		if err := stop(client, opts); err != nil {
 			logrus.Errorf("Failed to stop app: %v", err)
@@ -152,12 +126,9 @@ func buildLoop(ctx context.Context, client client.Client, file string, opts *Opt
 
 	var (
 		watcher = watcher{
-			file:       file,
-			cwd:        opts.Build.Cwd,
-			trigger:    make(chan struct{}, 1),
-			watching:   []string{file},
-			watchingTS: make([]time.Time, 1),
-			args:       opts.Args,
+			trigger:      make(chan struct{}, 1),
+			watchingTS:   make([]time.Time, 1),
+			imageAndArgs: opts.ImageSource,
 		}
 		startLock sync.Mutex
 		started   = false
@@ -172,39 +143,28 @@ outer:
 			return err
 		}
 
-		params, err := build.ParseParams(file, opts.Build.Cwd, opts.Args)
+		image, deployArgs, err := opts.ImageSource.GetImageAndDeployArgs(ctx, client)
 		if err == pflag.ErrHelp {
 			continue
 		} else if err != nil {
-			logrus.Errorf("Failed to parse build args %s: %v", file, err)
+			_, buildFile, _ := opts.ImageSource.ResolveImageAndFile()
+			if buildFile == "" {
+				return err
+			}
+			logrus.Errorf("Failed to build %s: %v", buildFile, err)
+			logrus.Infof("Build failed, touch [%s] to rebuild", buildFile)
+			go func() {
+				time.Sleep(120 * time.Second)
+				watcher.Trigger()
+			}()
 			continue
 		}
 
-		opts.Build.Args = params
-		var image *v1.AppImage
-		if !opts.Build.Attach {
-			image, err = client.AcornImageBuild(ctx, file, &opts.Build)
-			if err != nil {
-				logrus.Errorf("Failed to build %s: %v", file, err)
-				logrus.Infof("Build failed, touch [%s] to rebuild", file)
-				go func() {
-					time.Sleep(120 * time.Second)
-					watcher.Trigger()
-				}()
-				continue
-			}
-			opts.Build.ImageID = image.ID
-		}
-		//set attach back false to allow after dev mode has been attached for syncing to occur above
-		opts.Build.Attach = false
-		if opts.Build.AppName != "" {
-			opts.Run.Name = opts.Build.AppName
-		}
 		var (
 			app *apiv1.App
 		)
 		for {
-			app, err = runOrUpdate(ctx, client, file, opts.Build.ImageID, opts)
+			app, err = runOrUpdate(ctx, client, hash, image, deployArgs, opts)
 			if apierror.IsConflict(err) {
 				logrus.Errorf("Failed to run/update app: %v", err)
 				time.Sleep(time.Second)
@@ -225,7 +185,7 @@ outer:
 		opts.Run.Name = app.Name
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(func() error {
-			return LogLoop(ctx, client, app, &opts.Log)
+			return LogLoop(ctx, client, app, nil)
 		})
 		eg.Go(func() error {
 			return AppStatusLoop(ctx, client, app)
@@ -252,11 +212,6 @@ outer:
 	}
 }
 
-func getPathHash(acornCue string) string {
-	sum := sha256.Sum256([]byte(acornCue))
-	return hex.EncodeToString(sum[:])[:12]
-}
-
 func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image string, opts *Options) (err error) {
 	defer func() {
 		if err == nil && app.Spec.Stop != nil && *app.Spec.Stop {
@@ -268,24 +223,25 @@ func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image strin
 	// the defer above
 	update := opts.Run.ToUpdate()
 	update.Image = image
+	update.Replace = opts.Replace
 	logrus.Infof("Updating app [%s] to image [%s]", app.Name, image)
 	app, err = rulerequest.PromptUpdate(ctx, c, opts.Dangerous, app.Name, update)
 	return err
 }
 
-func createApp(ctx context.Context, client client.Client, acornCue, image string, opts *Options) (*apiv1.App, error) {
+func createApp(ctx context.Context, client client.Client, hash, image string, opts *Options) (*apiv1.App, error) {
 	opts.Run.Labels = append(opts.Run.Labels,
 		v1.ScopedLabel{
 			ResourceType: v1.LabelTypeMeta,
-			Key:          labels.AcornAppCuePath,
-			Value:        getPathHash(acornCue),
+			Key:          labels.AcornAppDevHash,
+			Value:        hash,
 		})
 
 	opts.Run.Annotations = append(opts.Run.Annotations,
 		v1.ScopedLabel{
 			ResourceType: v1.LabelTypeMeta,
-			Key:          labels.AcornAppCuePath,
-			Value:        acornCue,
+			Key:          labels.AcornAppDevHash,
+			Value:        hash,
 		})
 
 	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, opts.Run)
@@ -295,15 +251,14 @@ func createApp(ctx context.Context, client client.Client, acornCue, image string
 	return app, nil
 }
 
-func getAppName(ctx context.Context, client client.Client, acornCue string, opts *Options) (string, error) {
+func getAppName(ctx context.Context, client client.Client, hash string) (string, error) {
 	apps, err := client.AppList(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	hash := getPathHash(acornCue)
 	for _, app := range apps {
-		if app.Labels[labels.AcornAppCuePath] == hash {
+		if app.Labels[labels.AcornAppDevHash] == hash {
 			return app.Name, nil
 		}
 	}
@@ -341,24 +296,12 @@ func stop(c client.Client, opts *Options) error {
 	return c.AppStop(ctx, existingApp.Name)
 }
 
-func runOrUpdate(ctx context.Context, client client.Client, acornCue, image string, opts *Options) (*apiv1.App, error) {
-	_, flags, err := deployargs.ToFlagsFromImage(ctx, client, image)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(opts.Args) > 0 {
-		deployArgs, err := flags.Parse(opts.Args)
-		if err != nil {
-			return nil, err
-		}
-		opts.Run.DeployArgs = deployArgs
-	}
-
+func runOrUpdate(ctx context.Context, client client.Client, hash, image string, deployArgs map[string]any, opts *Options) (*apiv1.App, error) {
+	opts.Run.DeployArgs = deployArgs
 	opts.Run.DevMode = &[]bool{true}[0]
 	existingApp, err := getExistingApp(ctx, client, opts)
 	if apierror.IsNotFound(err) {
-		return createApp(ctx, client, acornCue, image, opts)
+		return createApp(ctx, client, hash, image, opts)
 	} else if err != nil {
 		return nil, err
 	}
@@ -447,43 +390,40 @@ func LogLoop(ctx context.Context, c client.Client, app *apiv1.App, opts *client.
 	}
 }
 
-func resolveAcornCueAndName(ctx context.Context, client client.Client, acornCue string, opts *Options) (string, *Options, error) {
-	nameWasSet := opts.Run.Name != ""
-	opts, err := opts.complete()
+func setAppNameAndGetHash(ctx context.Context, client client.Client, opts *Options) (string, *Options, error) {
+	image, hashSource, err := opts.ImageSource.ResolveImageAndFile()
 	if err != nil {
 		return "", nil, err
 	}
-
-	acornCue = build.ResolveFile(acornCue, opts.Build.Cwd)
-
-	if !filepath.IsAbs(acornCue) {
-		acornCue, err = filepath.Abs(acornCue)
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to resolve the location of %s: %w", acornCue, err)
-		}
+	if hashSource == "" {
+		hashSource = image
 	}
+	cwd, _ := os.Getwd()
+	hostname, _ := os.Hostname()
+	hashSource = filepath.Join(cwd, hashSource)
+	hash := digest.SHA256(hostname, hashSource)[:12]
 
-	if !nameWasSet {
-		existingName, err := getAppName(ctx, client, acornCue, opts)
+	if opts.Run.Name == "" {
+		existingName, err := getAppName(ctx, client, hash)
 		if err != nil {
 			return "", nil, err
 		}
 		opts.Run.Name = existingName
 	}
 
-	return acornCue, opts, nil
+	return hash, opts, nil
 }
 
-func Dev(ctx context.Context, client client.Client, file string, opts *Options) error {
-	acornCue, opts, err := resolveAcornCueAndName(ctx, client, file, opts)
+func Dev(ctx context.Context, client client.Client, opts *Options) error {
+	hash, opts, err := setAppNameAndGetHash(ctx, client, opts)
 	if err != nil {
 		return err
 	}
 
 	opts.Run.Profiles = append([]string{"dev?"}, opts.Run.Profiles...)
-	opts.Build.Profiles = append([]string{"dev?"}, opts.Build.Profiles...)
+	opts.ImageSource.Profiles = append([]string{"dev?"}, opts.ImageSource.Profiles...)
 
-	err = buildLoop(ctx, client, acornCue, opts)
+	err = buildLoop(ctx, client, hash, opts)
 	if errors.Is(err, context.Canceled) {
 		return nil
 	}

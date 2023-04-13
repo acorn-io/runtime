@@ -1,4 +1,4 @@
-package build
+package vcs
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"

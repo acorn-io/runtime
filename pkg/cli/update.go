@@ -14,6 +14,7 @@ func NewUpdate(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Update a deployed app",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		Args:              cobra.MinimumNArgs(1),
 	})
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
@@ -21,10 +22,13 @@ func NewUpdate(c CommandContext) *cobra.Command {
 }
 
 type Update struct {
-	Image          string `json:"image,omitempty"`
+	RunArgs
+	Image          string `usage:"Acorn image name"`
 	ConfirmUpgrade bool   `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
 	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
-	RunArgs
+	Replace        bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Wait           *bool  `usage:"Wait for app to become ready before command exiting (default true)"`
+	Quiet          bool   `usage:"Do not print status" short:"q"`
 
 	out    io.Writer
 	client ClientFactory
@@ -35,48 +39,42 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	name := ""
-	if len(args) > 0 {
-		name = args[0]
-	}
-	image := s.Image
-	if !s.ConfirmUpgrade && !s.Pull {
-		r := Run{
-			RunArgs:     s.RunArgs,
-			Interactive: false,
-			Update:      true,
-			Image:       s.Image,
-			out:         s.out,
-			client:      s.client,
-		}
-		err := r.Run(cmd, append([]string{}, args...))
-		return err
-	}
-	if s.ConfirmUpgrade {
-		if image != "" {
-			return fmt.Errorf("cannot set an image (%v) and confirm an upgrade at the same time", image)
-		}
 
+	name := args[0]
+	args = args[1:]
+
+	s.RunArgs.Name = name
+
+	if s.ConfirmUpgrade && s.Pull {
+		return fmt.Errorf("only --confirm-upgrade or --pull can be set at once")
+	}
+
+	if s.ConfirmUpgrade {
 		err := c.AppConfirmUpgrade(cmd.Context(), name)
 		if err != nil {
 			return err
 		}
+		fmt.Println(name)
+		return nil
 	}
 
-	app, err := c.AppGet(cmd.Context(), name)
-	if err != nil {
-		return err
-	}
-
-	if s.Pull || image == app.Spec.Image {
-		if s.Pull && image != "" && image != app.Spec.Image {
-			return fmt.Errorf("cannot change image (%v) and specify --pull at the same time", image)
-		}
-
+	if s.Pull {
 		err := c.AppPullImage(cmd.Context(), name)
 		if err != nil {
 			return err
 		}
+		fmt.Println(name)
+		return nil
 	}
-	return nil
+
+	r := Run{
+		RunArgs: s.RunArgs,
+		Wait:    s.Wait,
+		Quiet:   s.Quiet,
+		Update:  true,
+		Replace: s.Replace,
+		out:     s.out,
+		client:  s.client,
+	}
+	return r.Run(cmd, append([]string{s.Image}, args...))
 }

@@ -261,9 +261,6 @@ type AcornImageBuildOptions struct {
 	Args        map[string]any
 	Profiles    []string
 	Streams     *streams.Output
-	Attach      bool
-	ImageID     string
-	AppName     string
 }
 
 func (a *AcornImageBuildOptions) complete() (_ *AcornImageBuildOptions, err error) {

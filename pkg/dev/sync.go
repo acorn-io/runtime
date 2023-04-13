@@ -40,6 +40,20 @@ func containerSyncLoop(ctx context.Context, client client.Client, app *apiv1.App
 }
 
 func containerSync(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
+	if !opts.ImageSource.IsImageSet() {
+		return nil
+	}
+
+	cwd, file, err := opts.ImageSource.ResolveImageAndFile()
+	if err != nil {
+		return err
+	}
+
+	if file == "" {
+		// not a built image, no sync
+		return nil
+	}
+
 	syncLock := sync2.Mutex{}
 	syncing := map[string]bool{}
 	wc, err := client.GetClient()
@@ -61,7 +75,7 @@ func containerSync(ctx context.Context, client client.Client, app *apiv1.App, op
 					mount     = mount
 				)
 				go func() {
-					startSyncForPath(ctx, client, con, opts.Build.Cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
+					startSyncForPath(ctx, client, con, cwd, mount.ContextDir, remoteDir, opts.BidirectionalSync)
 					syncLock.Lock()
 					delete(syncing, con.Name)
 					syncLock.Unlock()

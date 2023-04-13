@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -27,26 +26,7 @@ import (
 	"github.com/opencontainers/go-digest"
 )
 
-func FindAcornCue(cwd string) string {
-	for _, ext := range []string{"cue", "yaml", "json"} {
-		f := filepath.Join(cwd, "acorn."+ext)
-		if _, err := os.Stat(f); err == nil {
-			return f
-		}
-	}
-	return filepath.Join(cwd, "Acornfile")
-}
-
-func ResolveFile(file, cwd string) string {
-	if file == "DIRECTORY/Acornfile" {
-		return FindAcornCue(cwd)
-	}
-	return file
-}
-
-func ResolveAndParse(file, cwd string) (*appdefinition.AppDefinition, error) {
-	file = ResolveFile(file, cwd)
-
+func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
 	fileData, err := cue.ReadCUE(file)
 	if err != nil {
 		return nil, err

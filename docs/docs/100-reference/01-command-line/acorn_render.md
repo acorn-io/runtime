@@ -14,7 +14,7 @@ acorn render [flags] DIRECTORY [acorn args]
 ```
   -f, --file string       Name of the dev file (default "DIRECTORY/Acornfile")
   -h, --help              help for render
-  -o, --output string     Output in JSON or YAML (default "json")
+  -o, --output string     Output in JSON or YAML (default "aml")
       --profile strings   Profile to assign default values
 ```
 
