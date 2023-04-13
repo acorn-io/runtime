@@ -79,11 +79,13 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 		}
 
 		// Add default toleration to taints.acorn.io/workload. This is so that when worker nodes are tainted
-		// with taints.acorn.io/workload, user app can still tolerate.
-		tolerations = append(tolerations, corev1.Toleration{
-			Key:      tl.WorkloadTolerationKey,
-			Operator: corev1.TolerationOpExists,
-		})
+		// with taints.acorn.io/workload, user app can still tolerate. Only add default toleration when toleration is not set
+		if len(tolerations) == 0 {
+			tolerations = append(tolerations, corev1.Toleration{
+				Key:      tl.WorkloadTolerationKey,
+				Operator: corev1.TolerationOpExists,
+			})
+		}
 
 		appInstance.Status.Scheduling[name] = v1.Scheduling{
 			Requirements: *requirements,
