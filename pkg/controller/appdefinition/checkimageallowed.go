@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
@@ -36,7 +35,7 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
-		targetImage := ref.Context().Digest(strings.TrimPrefix(appInstance.Status.AppImage.Digest, "sha256:")).Name()
+		targetImage := ref.Context().Digest(appInstance.Status.AppImage.Digest).Name()
 
 		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, remote.WithTransport(transport)); err != nil {
 			if errors.Is(err, &imageallowrules.ErrImageNotAllowed{}) {
