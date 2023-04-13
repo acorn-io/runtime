@@ -73,7 +73,7 @@ The config file can then be passed to the Acorn using
 
 ### Built-in
 
-To prevent the author from having to create a profile, Acorn provides the `args.dev` boolean value. It is set to `true` when running in dev mode (`acorn run -i`). Acorn authors can use this boolean with `if` statements to change dev vs. production runtime behaviors.
+To prevent the author from having to create a profile, Acorn provides the `args.dev` boolean value. It is set to `true` when running in dev mode (`acorn dev` or `acorn run -i`). Acorn authors can use this boolean with `if` statements to change dev vs. production runtime behaviors.
 
 ```acorn
 containers: {
@@ -104,6 +104,10 @@ profiles: {
     }
 }
 ```
+
+:::note
+Acorn automatically uses the `dev` profile when when running in dev mode (`acorn dev` or `acorn run -i`).
+:::
 
 In this case when an Acorn consumer deploys the Acorn in production, 3 replicas will be deployed. When the developer working on this app runs it locally with `acorn run --profile dev .` there will only be a single replica deployed by default.
 
