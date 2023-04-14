@@ -81,7 +81,13 @@ type PortBinding struct {
 	Protocol Protocol `json:"protocol,omitempty"`
 	Hostname string   `json:"hostname,omitempty"`
 	// Deprecated Use Hostname instead
-	ZZ_ServiceName    string `json:"serviceName,omitempty"`
+	ZZ_ServiceName string `json:"serviceName,omitempty"`
+	// Deprecated Has no meaning, publish=true is always assumed
+	Publish bool `json:"publish,omitempty"`
+	// Deprecated Has no meaning, all ports are exposed by default, if this is true
+	// The binding is ignored unless publish is also set to true (which is also deprecated)
+	Expose bool `json:"expose,omitempty"`
+	// Deprecated All ports are exposed by default
 	TargetPort        int32  `json:"targetPort,omitempty"`
 	TargetServiceName string `json:"targetServiceName,omitempty"`
 }

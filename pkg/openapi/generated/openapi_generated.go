@@ -6939,10 +6939,25 @@ func schema_pkg_apis_internalacornio_v1_PortBinding(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
+					"publish": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deprecated Has no meaning, publish=true is always assumed",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"expose": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deprecated Has no meaning, all ports are exposed by default, if this is true The binding is ignored unless publish is also set to true (which is also deprecated)",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"targetPort": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "Deprecated All ports are exposed by default",
+							Type:        []string{"integer"},
+							Format:      "int32",
 						},
 					},
 					"targetServiceName": {
