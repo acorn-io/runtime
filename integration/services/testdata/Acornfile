@@ -1,0 +1,27 @@
+services: build: {
+    build: "./service"
+    serviceArgs: {
+        data: "passed"
+        msg: "hello world"
+    }
+}
+
+jobs: test: {
+    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
+    command: "/init.sh"
+    files: "/init.sh": """
+    #!/bin/sh
+    set -e -x
+    [ "$(cat /run/secrets/msg)" = "hello world" ]
+    [ "$(cat /run/secrets/data)" = "passed" ]
+    [ $(cat /run/secrets/admin/username) = "user" ]
+    [ $(cat /run/secrets/admin-user) = "user" ]
+    [ $(cat /run/secrets/admin-pass) = "fpass" ]
+    [ $(cat /run/secrets/admin/password) = "pass" ]
+    """
+    files: "/run/secrets/data": "@{services.build.data.output}"
+    files: "/run/secrets/msg": "@{services.build.secrets.msg.key}"
+    files: "/run/secrets/admin-pass": "f@{secrets.build.admin.password}"
+    files: "/run/secrets/admin-user": "secret://build.admin/username"
+    dirs: "/run/secrets/admin": "secret://build.admin"
+}

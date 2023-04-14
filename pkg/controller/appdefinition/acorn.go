@@ -68,6 +68,9 @@ func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.Ser
 
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
 	image := images.ResolveTag(tag, acorn.Image)
+	if strings.HasPrefix(acorn.Image, "sha256:") {
+		image = strings.TrimPrefix(acorn.Image, "sha256:")
+	}
 
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
