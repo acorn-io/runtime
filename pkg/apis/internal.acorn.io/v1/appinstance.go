@@ -185,6 +185,7 @@ type AppColumns struct {
 
 type AppInstanceStatus struct {
 	ObservedGeneration     int64                      `json:"observedGeneration,omitempty"`
+	ObservedImageDigest    string                     `json:"observedImageDigest,omitempty"`
 	Columns                AppColumns                 `json:"columns,omitempty"`
 	ContainerStatus        map[string]ContainerStatus `json:"containerStatus,omitempty"`
 	JobsStatus             map[string]JobStatus       `json:"jobsStatus,omitempty"`

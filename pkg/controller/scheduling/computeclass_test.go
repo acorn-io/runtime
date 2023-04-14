@@ -45,6 +45,14 @@ func TestSameGenerationComputeClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/same-generation", Calculate)
 }
 
+func TestSameDigestGenerationComputeClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/same-digest-generation", Calculate)
+}
+
+func TestDifferentDigestGenerationComputeClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/different-digest-generation", Calculate)
+}
+
 func TestTwoCCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/computeclass/two-ccc-defaults-should-error")
 	if err != nil {

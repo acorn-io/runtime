@@ -5,8 +5,9 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 )
 
-func UpdateGeneration(req router.Request, resp router.Response) error {
+func UpdateObservedFields(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
+	app.Status.ObservedImageDigest = app.Status.AppImage.Digest
 	app.Status.ObservedGeneration = app.Generation
 	return nil
 }
