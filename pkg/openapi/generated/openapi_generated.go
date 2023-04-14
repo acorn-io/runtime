@@ -6745,6 +6745,20 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 							},
 						},
 					},
+					"clusterRules": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deprecated, use Rules with the 'scopes: [\"cluster\"]' field",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
