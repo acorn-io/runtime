@@ -9,7 +9,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    id: foo.io/test
+    name: foo.io/test
   appSpec:
     containers:
       oneimage:

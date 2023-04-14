@@ -40,7 +40,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    id: test
+    name: test
   appSpec:
     containers:
       oneimage:

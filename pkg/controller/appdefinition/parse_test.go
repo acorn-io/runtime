@@ -23,7 +23,7 @@ func TestParseAppImageBug(t *testing.T) {
 			Containers: map[string]v1.ContainerData{},
 		},
 		Acornfile: "",
-		ID:        "",
+		Name:      "",
 	}
 	app, err := appdefinition.FromAppImage(appImage)
 	if err != nil {

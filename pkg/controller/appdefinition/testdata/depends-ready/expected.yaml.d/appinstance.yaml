@@ -12,7 +12,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    id: "image-name"
+    name: "image-name"
   appSpec:
     containers:
       container-name:

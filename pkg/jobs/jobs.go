@@ -27,6 +27,12 @@ var (
 
 // GetOutputFor obj must be acorn internal v1.Secret, v1.Service, or string
 func GetOutputFor(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, name, serviceName string, obj interface{}) (job *batchv1.Job, err error) {
+	defer func() {
+		if err != nil && !errors.Is(err, ErrJobNoOutput) && !errors.Is(err, ErrJobNotDone) {
+			err = errors.Join(err, ErrJobNotDone)
+		}
+	}()
+
 	job, data, err := GetOutput(ctx, c, appInstance, name)
 	if err != nil {
 		return nil, err

@@ -105,7 +105,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize app image: %w", err)
 	}
-	appImage.ID = id
+	appImage.Name = id
 	appImage.Digest = "sha256:" + id
 
 	return appImage, nil

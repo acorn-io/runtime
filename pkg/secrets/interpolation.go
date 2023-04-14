@@ -35,7 +35,12 @@ var (
 		"hostname",
 		"port",
 		"ports",
-		"data")
+		"data",
+		"secrets",
+		"secret",
+		"endpoint",
+		"host",
+		"hostname")
 )
 
 type Interpolator struct {
@@ -142,10 +147,10 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	case "namespace":
 		return i.app.Namespace, true, nil
 	case "image":
-		if tags.IsLocalReference(i.app.Status.AppImage.ID) {
-			return i.app.Status.AppImage.ID, true, nil
-		} else if i.app.Status.AppImage.ID != "" && i.app.Status.AppImage.Digest != "" {
-			tag, err := name.NewTag(i.app.Status.AppImage.ID)
+		if tags.IsLocalReference(i.app.Status.AppImage.Name) {
+			return i.app.Status.AppImage.Name, true, nil
+		} else if i.app.Status.AppImage.Name != "" && i.app.Status.AppImage.Digest != "" {
+			tag, err := name.NewTag(i.app.Status.AppImage.Name)
 			if err != nil {
 				return "", false, err
 			}
@@ -188,15 +193,18 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 	case "secrets":
 		fallthrough
 	case "secret":
+		if len(extra) != 2 {
+			return "", fmt.Errorf("invalid secret lookup on service [%s] key must be at least two parts, go %v", svc.Name, extra)
+		}
 		secret := &corev1.Secret{}
-		err := ref.Lookup(i.ctx, i.client, secret, svc.Namespace, prop)
+		err := ref.Lookup(i.ctx, i.client, secret, svc.Namespace, extra[0])
 		if apierrors.IsNotFound(err) {
-			i.missing[i.serviceName] = append(i.missing[i.serviceName], prop)
+			i.missing[i.serviceName] = append(i.missing[i.serviceName], extra[0])
 			return "", nil
 		} else if err != nil {
 			return "", err
 		}
-		return string(secret.Data[strings.Join(extra, ".")]), nil
+		return string(secret.Data[extra[1]]), nil
 	case "endpoint":
 		if len(svc.Status.Endpoints) > 0 {
 			return svc.Status.Endpoints[0].Address, nil

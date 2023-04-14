@@ -160,6 +160,10 @@ func portMatches(binding v1.PortPublish, port v1.PortDef) bool {
 }
 
 func serviceMatches(serviceName string, binding v1.PortBinding) bool {
+	// deal with deprecated fields
+	if binding.Expose && !binding.Publish {
+		return false
+	}
 	return binding.TargetServiceName == "" || binding.TargetServiceName == serviceName
 }
 

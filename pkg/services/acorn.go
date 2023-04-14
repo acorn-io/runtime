@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	ports2 "github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,20 +35,26 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 			continue
 		}
 
+		annotations := map[string]string{}
+
 		// generated service, will be defined elsewhere
 		if service.GetJob() != "" {
 			service = *service.DeepCopy()
 			_, err := jobs.GetOutputFor(ctx, c, appInstance, service.GetJob(), serviceName, &service)
-			if err != nil && !apierror.IsNotFound(err) {
+			if errors.Is(err, jobs.ErrJobNotDone) || errors.Is(err, jobs.ErrJobNoOutput) || apierror.IsNotFound(err) {
+				annotations[apply.AnnotationUpdate] = "false"
+				annotations[apply.AnnotationCreate] = "false"
+			} else if err != nil && !apierror.IsNotFound(err) {
 				return nil, err
 			}
 		}
 
 		result = append(result, &v1.ServiceInstance{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      serviceName,
-				Namespace: appInstance.Status.Namespace,
-				Labels:    labels.Managed(appInstance, labels.AcornServiceName, serviceName),
+				Name:        serviceName,
+				Namespace:   appInstance.Status.Namespace,
+				Labels:      labels.Managed(appInstance, labels.AcornServiceName, serviceName),
+				Annotations: annotations,
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,

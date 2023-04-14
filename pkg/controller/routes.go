@@ -3,8 +3,6 @@ package controller
 import (
 	"net/http"
 
-	policyv1 "k8s.io/api/policy/v1"
-
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
@@ -12,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/config"
 	"github.com/acorn-io/acorn/pkg/controller/defaults"
 	"github.com/acorn-io/acorn/pkg/controller/gc"
+	"github.com/acorn-io/acorn/pkg/controller/images"
 	"github.com/acorn-io/acorn/pkg/controller/ingress"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
@@ -26,6 +25,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
@@ -42,7 +42,8 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.CheckImageAllowedHandler(registryTransport))
-	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.PullAppImage(registryTransport))
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport))
+	router.HandleFunc(&v1.AppInstance{}, images.CreateImages)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
 	router.Type(&v1.AppInstance{}).Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)

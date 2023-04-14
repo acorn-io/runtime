@@ -26,7 +26,7 @@ func depImage(t *testing.T, c client.Client) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return image.ID
+	return image.Name
 }
 
 func toRevision(t *testing.T, obj kclient.Object) int {

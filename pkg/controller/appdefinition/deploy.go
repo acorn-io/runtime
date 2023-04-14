@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"path"
 	"strings"
@@ -63,16 +64,21 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 			// yet to be created
 			interpolatorErr := interpolator.Err()
 			if interpolatorErr == nil {
-				status.Success()
+				missing := interpolator.Missing()
+				if len(missing) == 0 {
+					status.Success()
+				} else {
+					status.Unknown(fmt.Sprintf("waiting on missing secrets %v", missing))
+				}
 			} else {
-				status.Error(err)
+				status.Error(interpolatorErr)
 			}
 		} else {
 			status.Error(err)
 		}
 	}()
 
-	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
+	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.Name)
 	if err != nil {
 		return err
 	}
@@ -234,7 +240,7 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 		} else {
 			// file pointing to secret
 			result = append(result, corev1.VolumeMount{
-				Name:      "secret--" + entry.Value.Secret.Name + suffix,
+				Name:      secretPodVolName(entry.Value.Secret.Name + suffix),
 				MountPath: path.Join("/", entry.Key),
 				SubPath:   entry.Value.Secret.Key,
 			})
@@ -260,7 +266,7 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 			})
 		} else {
 			result = append(result, corev1.VolumeMount{
-				Name:      "secret--" + mount.Secret.Name,
+				Name:      secretPodVolName(mount.Secret.Name),
 				MountPath: path.Join("/", mountPath),
 			})
 		}

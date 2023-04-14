@@ -8,6 +8,7 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/tables"
 	tags2 "github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -31,6 +32,36 @@ func NewStrategy(getter strategy.Getter, c kclient.WithWatch) *Strategy {
 		client: c,
 		getter: getter,
 	}
+}
+
+func (s *Strategy) validateDelete(ctx context.Context, obj types.Object) error {
+	img := obj.(*apiv1.Image)
+	if img.Digest == "" {
+		return nil
+	}
+
+	apps := &v1.AppInstanceList{}
+	err := s.client.List(ctx, apps, &kclient.ListOptions{
+		Namespace: img.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+	for _, app := range apps.Items {
+		if app.Status.AppImage.Digest != "" && app.Status.AppImage.Digest == img.Digest {
+			name := publicname.Get(&app)
+			if app.Spec.GetStopped() {
+				name = name + " (stopped)"
+			}
+			return apierrors.NewInvalid(schema.GroupKind{
+				Group: api.Group,
+				Kind:  "Image",
+			}, img.Name, field.ErrorList{
+				field.Forbidden(field.NewPath("digest"), fmt.Sprintf("image is in use by app %s", name)),
+			})
+		}
+	}
+	return nil
 }
 
 func (s *Strategy) validateObject(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
@@ -119,6 +150,9 @@ func (s *Strategy) Update(ctx context.Context, obj types.Object) (types.Object, 
 }
 
 func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
+	if err := s.validateDelete(ctx, obj); err != nil {
+		return nil, err
+	}
 	image := obj.(*apiv1.Image)
 	imageToDelete := &v1.ImageInstance{}
 	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: image.Namespace, Name: image.Name}, imageToDelete)

@@ -18,7 +18,7 @@ func TestSecretDirsToMounts(t *testing.T) {
 		},
 		Status: v1.AppInstanceStatus{
 			AppImage: v1.AppImage{
-				ID: "test",
+				Name: "test",
 			},
 			AppSpec: v1.AppSpec{
 				Containers: map[string]v1.Container{

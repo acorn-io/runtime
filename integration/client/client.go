@@ -17,7 +17,7 @@ func NewImageWithSidecar(t *testing.T, namespace string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return image.ID
+	return image.Name
 }
 
 func NewImage2(t *testing.T, namespace string) string {
@@ -30,7 +30,7 @@ func NewImage2(t *testing.T, namespace string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return image.ID
+	return image.Name
 }
 
 func NewImage(t *testing.T, namespace string) string {
@@ -43,5 +43,5 @@ func NewImage(t *testing.T, namespace string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return image.ID
+	return image.Name
 }

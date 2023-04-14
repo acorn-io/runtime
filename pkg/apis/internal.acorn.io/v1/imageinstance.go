@@ -34,6 +34,10 @@ type ImageInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
+	// Remote indicates that this image has not been locally cached to the internal registry
+	// meaning that it may not exist at the location recorded in the Repo field if the user
+	// has deleted the image after the fact
+	Remote bool     `json:"remote,omitempty"`
 	Repo   string   `json:"repo,omitempty"`
 	Digest string   `json:"digest,omitempty"`
 	Tags   []string `json:"tags,omitempty"`
