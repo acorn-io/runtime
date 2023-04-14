@@ -2357,6 +2357,12 @@ func schema_pkg_apis_apiacornio_v1_Image(ref common.ReferenceCallback) common.Op
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
+					"remote": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"repo": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -4550,12 +4556,6 @@ func schema_pkg_apis_internalacornio_v1_AppImage(ref common.ReferenceCallback) c
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"id": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -6430,6 +6430,13 @@ func schema_pkg_apis_internalacornio_v1_ImageInstance(ref common.ReferenceCallba
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"remote": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Remote indicates that this image has not been locally cached to the internal registry meaning that it may not exist at the location recorded in the Repo field if the user has deleted the image after the fact",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"repo": {

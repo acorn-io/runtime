@@ -48,6 +48,9 @@ func GetTagsMatchingRepository(ctx context.Context, reference name.Reference, c 
 	}
 	var result []string
 	for _, image := range images.Items {
+		if image.Remote {
+			continue
+		}
 		for _, tag := range image.Tags {
 			r, err := name.ParseReference(tag, name.WithDefaultRegistry(defaultReg))
 			if err != nil {
@@ -64,6 +67,7 @@ func GetTagsMatchingRepository(ctx context.Context, reference name.Reference, c 
 // ResolveLocal determines if the image is local and if it is, resolves it to an image ID that can be pulled from the
 // local registry
 func ResolveLocal(ctx context.Context, c kclient.Client, namespace, image string) (string, bool, error) {
+	// use apiv1.Image here so that get logic does the resolution of names, tags, digests etc
 	localImage := &apiv1.Image{}
 
 	err := c.Get(ctx, kclient.ObjectKey{
@@ -77,7 +81,8 @@ func ResolveLocal(ctx context.Context, c kclient.Client, namespace, image string
 		}
 	} else if err != nil {
 		return "", false, err
-	} else {
+	} else if !localImage.Remote {
+		// The name will match the name we used to lookup, so trim the digest
 		return strings.TrimPrefix(localImage.Digest, "sha256:"), true, nil
 	}
 	return image, false, nil

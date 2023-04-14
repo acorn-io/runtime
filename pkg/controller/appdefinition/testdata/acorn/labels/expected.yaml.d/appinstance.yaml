@@ -167,7 +167,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    id: foo
+    name: foo
   appSpec:
     labels:
       global2: "value"

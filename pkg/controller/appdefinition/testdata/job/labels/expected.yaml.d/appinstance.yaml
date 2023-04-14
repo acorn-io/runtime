@@ -59,7 +59,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    id: test
+    name: test
   appSpec:
     labels:
       global2: "value"

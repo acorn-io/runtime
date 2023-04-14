@@ -189,7 +189,7 @@ func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client)
 		if err != nil {
 			return "", nil, err
 		}
-		i.Image = image.ID
+		i.Image = image.Name
 	}
 
 	_, deployArgs, err := i.GetAppDefinition(ctx, c)

@@ -40,7 +40,7 @@ func TestOpaque_Gen(t *testing.T) {
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
 			AppImage: v1.AppImage{
-				ID: "test",
+				Name: "test",
 			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
@@ -82,7 +82,7 @@ func TestBasic_Gen(t *testing.T) {
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
 			AppImage: v1.AppImage{
-				ID: "test",
+				Name: "test",
 			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
@@ -139,7 +139,7 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
 			AppImage: v1.AppImage{
-				ID: "image",
+				Name: "image",
 			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
@@ -179,7 +179,7 @@ func TestTemplateToken_Gen(t *testing.T) {
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
 			AppImage: v1.AppImage{
-				ID: "image",
+				Name: "image",
 			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
@@ -285,7 +285,7 @@ func TestSecretLabelsAnnotations(t *testing.T) {
 		Status: v1.AppInstanceStatus{
 			Namespace: "app-target-ns",
 			AppImage: v1.AppImage{
-				ID: "test",
+				Name: "test",
 			},
 			AppSpec: v1.AppSpec{
 				Labels: map[string]string{

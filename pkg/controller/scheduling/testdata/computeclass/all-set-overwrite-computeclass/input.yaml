@@ -18,7 +18,7 @@ status:
       oneimage:  2097152 # 2Mi
   namespace: app-created-namespace
   appImage:
-    id: test
+    name: test
   appSpec:
     containers:
       oneimage:

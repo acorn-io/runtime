@@ -62,7 +62,6 @@ func app(specImage, statusImageID, statusAvailableImage, statusConfirmUpgradeIma
 		},
 		Status: v1.AppInstanceStatus{
 			AppImage: v1.AppImage{
-				ID:   statusImageID,
 				Name: statusImageID,
 			},
 			AvailableAppImage:      statusAvailableImage,

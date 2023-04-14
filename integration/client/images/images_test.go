@@ -75,7 +75,7 @@ func TestImageTagMove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.ImageTag(ctx, image2.ID, "foo:latest")
+	err = c.ImageTag(ctx, image2.Name, "foo:latest")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestImageTagMove(t *testing.T) {
 	for _, image := range images {
 		if image.Name == imageID {
 			assert.Equal(t, []string([]string(nil)), image.Tags)
-		} else if image.Name == image2.ID {
+		} else if image.Name == image2.Name {
 			assert.Equal(t, "foo:latest", image.Tags[0])
 		} else {
 			t.Fatal(err, "invalid image")

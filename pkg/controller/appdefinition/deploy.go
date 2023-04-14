@@ -72,7 +72,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
+	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.Name)
 	if err != nil {
 		return err
 	}

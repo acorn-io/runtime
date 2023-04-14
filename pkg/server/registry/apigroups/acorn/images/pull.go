@@ -11,6 +11,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
+	"github.com/acorn-io/baaah/pkg/router"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -164,20 +165,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 
 		// don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex()
 		if err = remote.WriteIndex(repo.Digest(hash.Hex), index, opts...); err == nil {
-			img := &v1.ImageInstance{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      hash.Hex,
-					Namespace: namespace,
-				},
-				Repo:   recordRepo,
-				Digest: hash.String(),
-			}
-			if err := i.client.Create(ctx, img); err != nil && !apierror.IsAlreadyExists(err) {
-				progress2 <- ggcrv1.Update{
-					Error: err,
-				}
-			}
-			if err := i.clientFactory.Namespace("", namespace).ImageTag(ctx, hash.Hex, imageName); err != nil {
+			if err := i.recordImage(ctx, hash, namespace, imageName, recordRepo); err != nil {
 				progress2 <- ggcrv1.Update{
 					Error: err,
 				}
@@ -188,4 +176,29 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 	}()
 
 	return typed.Every(500*time.Millisecond, progress2), nil
+}
+
+func (i *ImagePull) recordImage(ctx context.Context, hash ggcrv1.Hash, namespace, imageName, recordRepo string) error {
+	img := &v1.ImageInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      hash.Hex,
+			Namespace: namespace,
+		},
+		Repo:   recordRepo,
+		Digest: hash.String(),
+	}
+	if err := i.client.Create(ctx, img); apierror.IsAlreadyExists(err) {
+		if err := i.client.Get(ctx, router.Key(namespace, hash.Hex), img); err != nil {
+			return err
+		}
+		img.Repo = recordRepo
+		img.Remote = false
+		if err := i.client.Update(ctx, img); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	return i.clientFactory.Namespace("", namespace).ImageTag(ctx, hash.Hex, imageName)
 }

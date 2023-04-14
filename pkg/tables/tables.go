@@ -128,7 +128,7 @@ var (
 
 	Build = [][]string{
 		{"Name", "Name"},
-		{"Image", "Status.AppImage.ID"},
+		{"Image", "Status.AppImage.Name"},
 		{"Message", "Status.BuildError"},
 	}
 	BuildConverter = MustConverter(Build)

@@ -34,7 +34,7 @@ func TestLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(context.Background(), image.ID, &client.AppRunOptions{
+	app, err := c.AppRun(context.Background(), image.Name, &client.AppRunOptions{
 		/* When running this test with the acorn-linkerd-plugin installed, the app inits too quickly, and
 		   the acorn controller does not have enough time to propagate the injection annotation to the
 		   test namespace before the app is created, so linkerd does not end up injecting the sidecar.
@@ -92,7 +92,7 @@ func TestContainerLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(context.Background(), image.ID, nil)
+	app, err := c.AppRun(context.Background(), image.Name, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestSidecarContainerLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(context.Background(), image.ID, nil)
+	app, err := c.AppRun(context.Background(), image.Name, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

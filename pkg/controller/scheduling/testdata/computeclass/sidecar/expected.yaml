@@ -14,7 +14,7 @@ status:
       left: 1048576 # 1Mi
   namespace: app-created-namespace
   appImage:
-    id: test
+    name: test
   scheduling:
     oneimage:
       tolerations:

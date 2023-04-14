@@ -302,7 +302,7 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 
 	if !imageSource.IsImageSet() {
 		// If there is no image set, then lookup the existing app and use the image of the current app
-		imageSource = imageSource.WithImage(app.Status.AppImage.ID)
+		imageSource = imageSource.WithImage(app.Status.AppImage.Name)
 	}
 
 	image, deployArgs, err := imageSource.GetImageAndDeployArgs(ctx, c)

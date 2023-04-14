@@ -19,7 +19,7 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 		WithGet(strategy).
 		WithUpdate(remoteResource).
 		WithList(remoteResource).
-		WithDelete(remoteResource).
+		WithDelete(strategy).
 		WithWatch(remoteResource).
 		WithValidateUpdate(strategy).
 		WithTableConverter(tables.ImageConverter).
