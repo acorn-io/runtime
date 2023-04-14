@@ -286,13 +286,26 @@ func (p PolicyRule) Namespaces() (result []string) {
 type Permissions struct {
 	ServiceName string       `json:"serviceName,omitempty"`
 	Rules       []PolicyRule `json:"rules,omitempty"`
+	// Deprecated, use Rules with the 'scopes: ["cluster"]' field
+	ZZ_ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
+}
+
+func (in Permissions) GetRules() []PolicyRule {
+	result := in.Rules
+	for _, rule := range in.ZZ_ClusterRules {
+		if len(rule.Scopes) == 0 {
+			rule.Scopes = append(rule.Scopes, "cluster")
+		}
+		result = append(result, rule)
+	}
+	return result
 }
 
 func (in *Permissions) HasRules() bool {
 	if in == nil {
 		return false
 	}
-	return len(in.Rules) > 0
+	return len(in.Rules) > 0 || len(in.ZZ_ClusterRules) > 0
 }
 
 func (in *Permissions) Get() Permissions {

@@ -744,29 +744,10 @@ func (in *PolicyRule) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type permissionsClusterRules struct {
-	ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
-}
-
 func (in *Permissions) UnmarshalJSON(data []byte) error {
 	if !isArray(data) {
 		type permissions Permissions
-		err := json.Unmarshal(data, (*permissions)(in))
-		if err != nil {
-			return err
-		}
-		var clusterRules permissionsClusterRules
-		err = json.Unmarshal(data, &clusterRules)
-		if err != nil {
-			return err
-		}
-		for _, rule := range clusterRules.ClusterRules {
-			if len(rule.Scopes) == 0 {
-				rule.Scopes = append(rule.Scopes, "cluster")
-			}
-			in.Rules = append(in.Rules, rule)
-		}
-		return nil
+		return json.Unmarshal(data, (*permissions)(in))
 	}
 
 	var rules []PolicyRule

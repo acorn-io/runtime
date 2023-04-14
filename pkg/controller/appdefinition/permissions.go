@@ -20,7 +20,7 @@ func toRBACPolicyRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
 func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object) {
 	byNamespace := map[string][]v1.PolicyRule{}
 
-	for _, rule := range permissions.Rules {
+	for _, rule := range permissions.GetRules() {
 		for _, ns := range rule.ResolveNamespaces(appInstance.Namespace) {
 			byNamespace[ns] = append(byNamespace[ns], rule)
 		}
