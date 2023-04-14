@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -97,7 +98,7 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 		} else if apiError := apierrors.APIStatus(nil); errors.As(err, &apiError) {
 			cond.Error(err)
 			return err
-		} else if errors.Is(err, secrets.ErrJobNotDone) {
+		} else if errors.Is(err, jobs.ErrJobNotDone) || errors.Is(err, jobs.ErrJobNoOutput) {
 			waiting = append(waiting, fmt.Sprintf("%s: %v", secretName, err))
 			continue
 		} else if err != nil {

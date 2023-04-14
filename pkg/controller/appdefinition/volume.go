@@ -8,6 +8,7 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
+	"github.com/acorn-io/baaah/pkg/name"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -317,6 +318,10 @@ func addFilesFileModesForContainer(fileModes map[string]bool, container v1.Conta
 	}
 }
 
+func secretPodVolName(secretName string) string {
+	return strings.ReplaceAll(name.SafeConcatName("secret-", secretName), ".", "-")
+}
+
 func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator) (result []corev1.Volume, _ error) {
 	volumeReferences := map[volumeReference]bool{}
 	addVolumeReferencesForContainer(appInstance, volumeReferences, container)
@@ -331,7 +336,7 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator
 				return nil, err
 			}
 			result = append(result, corev1.Volume{
-				Name: "secret--" + volume.secretName + volume.Suffix(),
+				Name: secretPodVolName(volume.secretName + volume.Suffix()),
 				VolumeSource: corev1.VolumeSource{
 					Secret: &corev1.SecretVolumeSource{
 						SecretName:  volume.secretName,

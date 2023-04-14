@@ -1,8 +1,8 @@
 package secrets
 
 import (
+	"context"
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"math/big"
 	"regexp"
@@ -52,11 +52,31 @@ func seedData(existing *corev1.Secret, from map[string]string, keys ...string) m
 }
 
 var (
-	ErrJobNotDone        = errors.New("job not complete")
-	ErrJobNoOutput       = errors.New("job has no output")
 	templateSecretRegexp = regexp.MustCompile(`\${secret://(.*?)/(.*?)}`)
 	imageSecretRegexp    = regexp.MustCompile(`\${image://(.*?)}`)
 )
+
+func getTextSecretData(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, secretRef v1.Secret, secretName string) (*v1.Secret, error) {
+	var output string
+	_, err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, &output)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.Secret{
+		Data: map[string]string{
+			"content": output,
+		},
+	}, nil
+}
+
+func getJSONSecretData(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, secretRef v1.Secret, secretName string) (*v1.Secret, error) {
+	newSecret := &v1.Secret{}
+	_, err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, newSecret)
+	if err != nil {
+		return nil, err
+	}
+	return newSecret, nil
+}
 
 func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName string, secretRef v1.Secret, existing *corev1.Secret) (*corev1.Secret, error) {
 	secret := &corev1.Secret{
@@ -70,32 +90,39 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 		Type: v1.SecretTypeGenerated,
 	}
 
-	format := convert.ToString(secretRef.Params["format"])
-	switch format {
-	case "text":
-		var output string
-		_, err := jobs.GetOutputFor(req.Ctx, req.Client, appInstance, convert.ToString(secretRef.Params["job"]), secretName, &output)
-		if err != nil {
-			return nil, err
-		}
+	var (
+		newSecret *v1.Secret
+		format    = convert.ToString(secretRef.Params["format"])
+		err       error
+	)
 
-		secret.Data["content"] = []byte(output)
+	switch format {
+	case "":
+		newSecret, err = getJSONSecretData(req.Ctx, req.Client, appInstance, secretRef, secretName)
+		if err != nil {
+			newSecret, err = getTextSecretData(req.Ctx, req.Client, appInstance, secretRef, secretName)
+		}
+	case "text":
+		newSecret, err = getTextSecretData(req.Ctx, req.Client, appInstance, secretRef, secretName)
 	case "aml":
 		fallthrough
 	case "json":
-		newSecret := &v1.Secret{}
-		_, err := jobs.GetOutputFor(req.Ctx, req.Client, appInstance, convert.ToString(secretRef.Params["job"]), secretName, newSecret)
-		if err != nil {
-			return nil, err
-		}
-		for k, v := range newSecret.Data {
-			secret.Data[k] = []byte(v)
-		}
-		if newSecret.Type != "" {
-			inType := corev1.SecretType(v1.SecretTypePrefix + newSecret.Type)
-			if v1.SecretTypes[inType] {
-				secret.Type = inType
-			}
+		newSecret, err = getJSONSecretData(req.Ctx, req.Client, appInstance, secretRef, secretName)
+	default:
+		return nil, fmt.Errorf("invalid generated secret format [%s]", format)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range newSecret.Data {
+		secret.Data[k] = []byte(v)
+	}
+	if newSecret.Type != "" {
+		inType := corev1.SecretType(v1.SecretTypePrefix + newSecret.Type)
+		if v1.SecretTypes[inType] {
+			secret.Type = inType
 		}
 	}
 
@@ -343,24 +370,30 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 		return sec, nil
 	}
 
-	externalRef := ""
+	secretRef := ""
+	refNamespace := appInstance.Namespace
 	for _, binding := range appInstance.Spec.Secrets {
 		if binding.Target == secretName {
-			externalRef = binding.Secret
+			secretRef = binding.Secret
 		}
 	}
 
-	if externalRef == "" {
+	if secretRef == "" {
 		secretDef := appInstance.Status.AppSpec.Secrets[secretName]
 		if secretDef.External != "" {
-			externalRef = secretDef.External
+			secretRef = secretDef.External
 		}
 	}
 
-	if externalRef != "" {
-		if strings.HasPrefix(externalRef, "context://") {
+	if secretRef == "" && strings.Contains(secretName, ".") {
+		refNamespace = appInstance.Status.Namespace
+		secretRef = secretName
+	}
+
+	if secretRef != "" {
+		if strings.HasPrefix(secretRef, "context://") {
 			existingSecret := &corev1.Secret{}
-			name := "context-" + strings.TrimPrefix(externalRef, "context://")
+			name := "context-" + strings.TrimPrefix(secretRef, "context://")
 			if err := req.Get(existingSecret, system.Namespace, name); err != nil {
 				return nil, err
 			}
@@ -371,7 +404,7 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 			return existingSecret, nil
 		}
 		existingSecret := &corev1.Secret{}
-		err := ref.Lookup(req.Ctx, req.Client, existingSecret, appInstance.Namespace, strings.Split(externalRef, ".")...)
+		err := ref.Lookup(req.Ctx, req.Client, existingSecret, refNamespace, strings.Split(secretRef, ".")...)
 		if err != nil {
 			return nil, err
 		}

@@ -273,6 +273,9 @@ func (in *VolumeBinding) UnmarshalJSON(data []byte) error {
 
 func impliedSecretsForContainer(app *AppSpec, container Container) {
 	for _, env := range container.Environment {
+		if strings.Contains(env.Secret.Name, ".") {
+			continue
+		}
 		if _, ok := app.Secrets[env.Secret.Name]; env.Secret.Name != "" && !ok {
 			app.Secrets[env.Secret.Name] = Secret{
 				Type: "opaque",
