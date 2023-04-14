@@ -112,7 +112,7 @@ func trimPermPrefix(perms []v1.Permissions, name string) (result []v1.Permission
 		if strings.HasPrefix(perm.ServiceName, prefix) {
 			result = append(result, v1.Permissions{
 				ServiceName: strings.TrimPrefix(perm.ServiceName, prefix),
-				Rules:       perm.Rules,
+				Rules:       perm.GetRules(),
 			})
 		}
 	}

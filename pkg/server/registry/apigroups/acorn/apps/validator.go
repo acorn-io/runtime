@@ -298,12 +298,12 @@ func (s *Validator) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions,
 
 	permsError := &client.ErrRulesNeeded{Permissions: []v1.Permissions{}}
 	for _, perm := range perms {
-		if len(perm.Rules) == 0 {
+		if len(perm.GetRules()) == 0 {
 			continue
 		}
 
 		if specPerms := v1.FindPermission(perm.ServiceName, requestedPerms); !specPerms.HasRules() ||
-			!equality.Semantic.DeepEqual(perm.Rules, specPerms.Get().Rules) {
+			!equality.Semantic.DeepEqual(perm.GetRules(), specPerms.Get().GetRules()) {
 			permsError.Permissions = append(permsError.Permissions, perm)
 			continue
 		}
@@ -339,7 +339,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 		}
 
 		ns, _ := request.NamespaceFrom(ctx)
-		if err := s.checkRules(ctx, sar, perm.Rules, ns); err != nil {
+		if err := s.checkRules(ctx, sar, perm.GetRules(), ns); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -514,11 +514,11 @@ func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
 	for _, entry := range typed.Sorted(containers) {
 		entryPermissions := v1.Permissions{
 			ServiceName: entry.Key,
-			Rules:       entry.Value.Permissions.Get().Rules,
+			Rules:       entry.Value.Permissions.Get().GetRules(),
 		}
 
 		for _, sidecar := range typed.Sorted(entry.Value.Sidecars) {
-			entryPermissions.Rules = append(entryPermissions.Rules, sidecar.Value.Permissions.Get().Rules...)
+			entryPermissions.Rules = append(entryPermissions.Rules, sidecar.Value.Permissions.Get().GetRules()...)
 		}
 
 		permissions = append(permissions, entryPermissions)

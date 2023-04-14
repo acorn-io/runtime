@@ -160,7 +160,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.acornAliases":                          schema_pkg_apis_internalacornio_v1_acornAliases(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.containerAliases":                      schema_pkg_apis_internalacornio_v1_containerAliases(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.envVal":                                schema_pkg_apis_internalacornio_v1_envVal(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.permissionsClusterRules":               schema_pkg_apis_internalacornio_v1_permissionsClusterRules(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.policyRuleAliases":                     schema_pkg_apis_internalacornio_v1_policyRuleAliases(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.routeTarget":                           schema_pkg_apis_internalacornio_v1_routeTarget(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.secretReference":                       schema_pkg_apis_internalacornio_v1_secretReference(ref),
@@ -6745,6 +6744,20 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 							},
 						},
 					},
+					"clusterRules": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deprecated, use Rules with the 'scopes: [\"cluster\"]' field",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -8524,33 +8537,6 @@ func schema_pkg_apis_internalacornio_v1_envVal(ref common.ReferenceCallback) com
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_permissionsClusterRules(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"clusterRules": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"},
 	}
 }
 

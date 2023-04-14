@@ -17,7 +17,7 @@ type RuleRequest struct {
 
 func ToRuleRequests(perms []v1.Permissions) (result []RuleRequest) {
 	for _, perm := range perms {
-		result = append(result, rulesToRequests(perm.ServiceName, perm.Rules)...)
+		result = append(result, rulesToRequests(perm.ServiceName, perm.GetRules())...)
 	}
 	return
 }
