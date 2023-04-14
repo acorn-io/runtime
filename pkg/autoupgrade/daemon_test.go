@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 )
 
 type mockDaemonClient struct {
@@ -58,7 +59,10 @@ func (m *mockDaemonClient) imageDigest(_ context.Context, namespace, name string
 	if m.remoteImageDigest != "" {
 		return m.remoteImageDigest, nil
 	}
-	return fmt.Sprintf("sha256:%s1234%sabcd", namespace, name), nil
+	if slices.Contains(m.remoteTags, name) {
+		return fmt.Sprintf("sha256:%s1234%sabcd", namespace, name), nil
+	}
+	return "", nil
 }
 
 func (m *mockDaemonClient) resolveLocalTag(context.Context, string, string) (string, bool, error) {
@@ -301,6 +305,15 @@ func TestRefreshImages(t *testing.T) {
 			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "acorn-1"): now},
 			appsUpdated:            map[string]string{"acorn-1": "docker.io/acorn/acorn-1:tag"},
 		},
+
+		{
+			name:                   "Auto refresh tag with remote digest unchanged and local digest changed, remote wins, no update",
+			client:                 &mockDaemonClient{remoteTags: []string{"docker.io/acorn/test-1:v1.0.0"}, remoteImageDigest: "sha256:acorn1234acorn/test-1abcd", resolvedLocalTag: "sha256:acorn4321docker.io/acorn/test-1dcba", localTagFound: true},
+			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): thirtySecondsAgo},
+			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "docker.io/acorn/test-1:v1.0.0", namespace: "acorn"}: {router.Key("acorn", "test-1")}},
+			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "test-1"): now},
+		},
+
 		{
 			name:                   "Auto refresh tag with no local digest found",
 			client:                 &mockDaemonClient{resolvedLocalTag: "sha256:acorn4321docker.io/acorn/acorn-1dcba"},
@@ -318,7 +331,7 @@ func TestRefreshImages(t *testing.T) {
 		},
 		{
 			name:                   "Auto refresh enabled with no local digest change",
-			client:                 &mockDaemonClient{localTagFound: true},
+			client:                 &mockDaemonClient{localTagFound: true, remoteTags: []string{"docker.io/acorn/enabled"}},
 			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "enabled-app"): thirtySecondsAgo},
 			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "docker.io/acorn/enabled", namespace: "acorn"}: {router.Key("acorn", "enabled-app")}},
 			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "enabled-app"): now},
@@ -341,7 +354,7 @@ func TestRefreshImages(t *testing.T) {
 		},
 		{
 			name:                   "Auto refresh notify with no local digest change",
-			client:                 &mockDaemonClient{localTagFound: true},
+			client:                 &mockDaemonClient{localTagFound: true, remoteTags: []string{"docker.io/acorn/notify"}},
 			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "notify-app"): thirtySecondsAgo},
 			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "docker.io/acorn/notify", namespace: "acorn"}: {router.Key("acorn", "notify-app")}},
 			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "notify-app"): now},

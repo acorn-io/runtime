@@ -216,9 +216,11 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 				if current.Context().RegistryStr() != defaultNoReg {
 					digest, pullErr = d.client.imageDigest(ctx, app.Namespace, imageKey.image)
 				}
-				// Whether or not we got a digest from a remote registry, check to see if there is a version of this tag locally
-				if localDigest, ok, _ := d.client.resolveLocalTag(ctx, app.Namespace, imageKey.image); ok && localDigest != "" {
-					digest = localDigest
+				// If we did not find the digest remotely, check to see if there is a version of this tag locally
+				if digest == "" {
+					if localDigest, ok, _ := d.client.resolveLocalTag(ctx, app.Namespace, imageKey.image); ok && localDigest != "" {
+						digest = localDigest
+					}
 				}
 				if digest == "" && pullErr != nil {
 					logrus.Errorf("Problem getting updated digest for image %v from remote. Error: %v", imageKey.image, pullErr)
