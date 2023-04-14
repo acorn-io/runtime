@@ -1,4 +1,4 @@
-package appdefinition
+package networkpolicy
 
 import (
 	"fmt"
