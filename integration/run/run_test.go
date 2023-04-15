@@ -46,7 +46,7 @@ func TestVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err = c.AppRun(ctx, image.Name, &client.AppRunOptions{
+	app, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
 				Volume: pv.Name,
@@ -108,7 +108,7 @@ func TestVolumeBadClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, nil)
+	_, err = c.AppRun(ctx, image.ID, nil)
 	if err == nil {
 		t.Fatal("expected app with bad volume class to error on run")
 	}
@@ -149,7 +149,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, &client.AppRunOptions{
+	app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
 				Target: "my-data",
@@ -209,7 +209,7 @@ func TestVolumeBoundBadClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, &client.AppRunOptions{
+	_, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
 				Target: "my-data",
@@ -250,7 +250,7 @@ func TestVolumeClassInactive(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, nil)
+	_, err = c.AppRun(ctx, image.ID, nil)
 	if err == nil {
 		t.Fatal("expected app with inactive volume class to error on run")
 	}
@@ -287,7 +287,7 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, &client.AppRunOptions{
+	_, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
 				Target: "my-data",
@@ -331,7 +331,7 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, &client.AppRunOptions{
+	_, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
 				Target: "my-data",
@@ -379,7 +379,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,7 +451,7 @@ func TestClusterVolumeClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -514,7 +514,7 @@ func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -573,7 +573,7 @@ func TestProjectVolumeClass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -639,7 +639,7 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -703,7 +703,7 @@ func TestProjectVolumeClassDefaultSizeBadValidation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, nil)
+	_, err = c.AppRun(ctx, image.ID, nil)
 	if err == nil {
 		t.Fatal("expected app with size too large for volume class to error on run")
 	}
@@ -750,7 +750,7 @@ func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -782,7 +782,7 @@ func TestImageNameAnnotation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -821,7 +821,7 @@ func TestSimple(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -862,7 +862,7 @@ func TestDeployParam(t *testing.T) {
 			Namespace: ns.Name,
 		},
 		Spec: v1.AppInstanceSpec{
-			Image: image.Name,
+			Image: image.ID,
 			DeployArgs: map[string]any{
 				"someInt": 5,
 			},
@@ -1109,7 +1109,7 @@ func TestUsingComputeClasses(t *testing.T) {
 				}
 
 				// Assign a name for the test case so no collisions occur
-				app, err := c.AppRun(ctx, image.Name, &client.AppRunOptions{Name: testcase})
+				app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{Name: testcase})
 				if err != nil {
 					if tt.fail {
 						return
@@ -1152,7 +1152,7 @@ func TestAppWithBadRegion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, &client.AppRunOptions{Region: "does-not-exist"})
+	_, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{Region: "does-not-exist"})
 	if err == nil || !strings.Contains(err.Error(), "is not supported for project") {
 		t.Fatalf("expected an invalid region error, got %v", err)
 	}
@@ -1197,7 +1197,7 @@ func TestAppWithBadDefaultRegion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.AppRun(ctx, image.Name, nil)
+	_, err = c.AppRun(ctx, image.ID, nil)
 	if err == nil || !strings.Contains(err.Error(), "is not a valid volume class") {
 		t.Fatalf("expected an invalid region error, got %v", err)
 	}
@@ -1276,7 +1276,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while building image:", err)
 	}
-	fooApp, err := proj1Client.AppRun(ctx, fooImage.Name, &client.AppRunOptions{
+	fooApp, err := proj1Client.AppRun(ctx, fooImage.ID, &client.AppRunOptions{
 		Name:            "foo",
 		TargetNamespace: proj1.Namespace,
 	})
@@ -1288,7 +1288,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while building image:", err)
 	}
-	barApp, err := proj2Client.AppRun(ctx, barImage.Name, &client.AppRunOptions{
+	barApp, err := proj2Client.AppRun(ctx, barImage.ID, &client.AppRunOptions{
 		Name:            "bar",
 		TargetNamespace: proj2.Namespace,
 	})
@@ -1329,14 +1329,14 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 			name:          "curl-foo-proj1",
 			client:        proj1Client,
 			podIP:         fooIP,
-			imageID:       curlImage1.Name,
+			imageID:       curlImage1.ID,
 			expectFailure: false,
 		},
 		{
 			name:    "curl-bar-proj1",
 			client:  proj1Client,
 			podIP:   barIP,
-			imageID: curlImage1.Name,
+			imageID: curlImage1.ID,
 			// even though bar has port 80 published, it should not be reachable from anything outside
 			// proj2 except for the ingress controller, so failure is expected here
 			expectFailure: true,
@@ -1345,14 +1345,14 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 			name:          "curl-foo-proj2",
 			client:        proj2Client,
 			podIP:         fooIP,
-			imageID:       curlImage2.Name,
+			imageID:       curlImage2.ID,
 			expectFailure: true,
 		},
 		{
 			name:          "curl-bar-proj2",
 			client:        proj2Client,
 			podIP:         barIP,
-			imageID:       curlImage2.Name,
+			imageID:       curlImage2.ID,
 			expectFailure: false,
 		},
 	}

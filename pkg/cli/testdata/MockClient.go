@@ -606,7 +606,7 @@ func (m *MockClient) ImageTag(ctx context.Context, image, tag string) error {
 
 func (m *MockClient) ImageDetails(ctx context.Context, imageName string, opts *client.ImageDetailsOptions) (*client.ImageDetails, error) {
 	return &client.ImageDetails{
-		AppImage: v1.AppImage{Name: imageName, ImageData: v1.ImagesData{
+		AppImage: v1.AppImage{ID: imageName, ImageData: v1.ImagesData{
 			Containers: map[string]v1.ContainerData{"test-image-running-container": v1.ContainerData{
 				Image:    "test-image-running-container",
 				Sidecars: nil,

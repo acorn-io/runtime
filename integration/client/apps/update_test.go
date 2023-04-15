@@ -36,10 +36,10 @@ func TestUpdatePull(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.AppImage.Name == imageID
+		return obj.Status.AppImage.ID == imageID
 	})
 	assert.NotEmpty(t, app.Status.Namespace)
-	assert.Equal(t, app.Status.AppImage.Name, imageID)
+	assert.Equal(t, app.Status.AppImage.ID, imageID)
 
 	imageID2 := client2.NewImage2(t, ns.Name)
 	err = c.ImageTag(ctx, imageID2, "foo:latest")
@@ -53,7 +53,7 @@ func TestUpdatePull(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.AppImage.Name == imageID2
+		return obj.Status.AppImage.ID == imageID2
 	})
-	assert.Equal(t, app.Status.AppImage.Name, imageID2)
+	assert.Equal(t, app.Status.AppImage.ID, imageID2)
 }

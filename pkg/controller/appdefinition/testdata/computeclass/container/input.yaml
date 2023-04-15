@@ -41,7 +41,7 @@ status:
       left: 1048576 # 1Mi
       oneimage: 1048576 # 1Mi
   appImage:
-    name: test
+    id: test
   appSpec:
     containers:
       oneimage:

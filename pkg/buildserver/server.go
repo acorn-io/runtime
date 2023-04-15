@@ -91,7 +91,7 @@ func (s *Server) serveHTTP(rw http.ResponseWriter, req *http.Request) error {
 		_ = m.Send(&buildclient.Message{
 			AppImage: image,
 		})
-		logrus.Infof("Build succeeded [%s/%s] [%s]: %v", token.Build.Namespace, token.Build.Name, token.Build.UID, image.Name)
+		logrus.Infof("Build succeeded [%s/%s] [%s]: %v", token.Build.Namespace, token.Build.Name, token.Build.UID, image.ID)
 	} else {
 		_ = m.Send(&buildclient.Message{
 			Error: err.Error(),
@@ -175,7 +175,7 @@ func (s *Server) recordBuild(ctx context.Context, recordRepo string, build *v1.A
 	}
 	err := apply.New(s.client).Ensure(ctx, &v1.ImageInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      image.Name,
+			Name:      image.ID,
 			Namespace: build.Namespace,
 		},
 		Repo:   recordRepo,

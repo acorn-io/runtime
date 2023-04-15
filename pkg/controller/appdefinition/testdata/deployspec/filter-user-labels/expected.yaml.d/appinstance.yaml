@@ -39,7 +39,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    name: test
+    id: test
   appSpec:
     annotations:
       allowed.io: test-allowed-app-spec-ann

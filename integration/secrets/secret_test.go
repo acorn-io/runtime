@@ -35,7 +35,7 @@ func TestText(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(context.Background(), image.Name, nil)
+	app, err := c.AppRun(context.Background(), image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestIssue552(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(context.Background(), image.Name, nil)
+	app, err := c.AppRun(context.Background(), image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +164,7 @@ func TestEncryptionEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c1.AppRun(context.Background(), image.Name, &client.AppRunOptions{
+	app, err := c1.AppRun(context.Background(), image.ID, &client.AppRunOptions{
 		DeployArgs: map[string]any{
 			"encdata": output,
 		},
@@ -199,7 +199,7 @@ func TestNamespacedDecryption(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c2.AppRun(context.Background(), image.Name, &client.AppRunOptions{
+	app, err := c2.AppRun(context.Background(), image.ID, &client.AppRunOptions{
 		DeployArgs: map[string]any{
 			"encdata": encdata,
 		},
@@ -235,7 +235,7 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c1.AppRun(context.Background(), image.Name, &client.AppRunOptions{
+	app, err := c1.AppRun(context.Background(), image.ID, &client.AppRunOptions{
 		DeployArgs: map[string]any{
 			"encdata": encdata,
 		},

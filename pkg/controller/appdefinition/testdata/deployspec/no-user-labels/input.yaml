@@ -57,7 +57,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    name: test
+    id: test
   appSpec:
     annotations:
       appSpecAnn: test-app-spec-ann

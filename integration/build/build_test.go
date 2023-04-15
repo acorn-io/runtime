@@ -78,7 +78,7 @@ func TestSimilarBuilds(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.NotEqual(t, image.Name, image2.Name)
+	assert.NotEqual(t, image.ID, image2.ID)
 }
 
 func TestJobBuild(t *testing.T) {

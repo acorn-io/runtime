@@ -68,7 +68,7 @@ spec:
 status:
   namespace: app-created-namespace
   appImage:
-    name: test
+    id: test
   appSpec:
     jobs:
       oneimage:

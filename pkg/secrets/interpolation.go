@@ -147,10 +147,10 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	case "namespace":
 		return i.app.Namespace, true, nil
 	case "image":
-		if tags.IsLocalReference(i.app.Status.AppImage.Name) {
-			return i.app.Status.AppImage.Name, true, nil
-		} else if i.app.Status.AppImage.Name != "" && i.app.Status.AppImage.Digest != "" {
-			tag, err := name.NewTag(i.app.Status.AppImage.Name)
+		if tags.IsLocalReference(i.app.Status.AppImage.ID) {
+			return i.app.Status.AppImage.ID, true, nil
+		} else if i.app.Status.AppImage.ID != "" && i.app.Status.AppImage.Digest != "" {
+			tag, err := name.NewTag(i.app.Status.AppImage.ID)
 			if err != nil {
 				return "", false, err
 			}
