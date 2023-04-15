@@ -23,8 +23,9 @@ import (
 func Calculate(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionScheduling)
-	// Only recalculate scheduling when a change is detected in generation
-	if appInstance.Generation != appInstance.Status.ObservedGeneration {
+
+	// Only recalculate scheduling when a change is detected in generation or image digest.
+	if appInstance.Generation != appInstance.Status.ObservedGeneration || appInstance.Status.AppImage.Digest != appInstance.Status.ObservedImageDigest {
 		if err := calculate(req, appInstance); err != nil {
 			status.Error(err)
 			resp.DisablePrune()

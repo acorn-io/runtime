@@ -63,7 +63,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
 	appRouter.HandlerFunc(appdefinition.NetworkPolicyForApp)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
-	appRouter.HandlerFunc(appdefinition.UpdateGeneration)
+	appRouter.HandlerFunc(appdefinition.UpdateObservedFields)
 
 	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.CLIStatus)
 

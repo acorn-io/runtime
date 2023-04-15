@@ -4942,6 +4942,12 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							Format: "int64",
 						},
 					},
+					"observedImageDigest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
