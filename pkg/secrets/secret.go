@@ -141,7 +141,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		Type: v1.SecretTypeTemplate,
 	}
 
-	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.Name)
+	tag, err := images.GetRuntimePullableImageReference(req.Ctx, req.Client, appInstance.Namespace, appInstance.Status.AppImage.ID)
 	if err != nil {
 		return nil, err
 	}

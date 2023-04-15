@@ -14,7 +14,7 @@ import (
 
 func CreateImages(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
-	if app.Status.AppImage.Name == "" || app.Status.AppImage.Digest == "" {
+	if app.Status.AppImage.ID == "" || app.Status.AppImage.Digest == "" {
 		return nil
 	}
 
@@ -61,7 +61,7 @@ func createImageForSelf(req router.Request, app *v1.AppInstance) (*v1.ImageInsta
 	var (
 		digest    = app.Status.AppImage.Digest
 		digestHex = strings.TrimPrefix(digest, "sha256:")
-		imageName = app.Status.AppImage.Name
+		imageName = app.Status.AppImage.ID
 		// update == false means create
 		update = true
 		image  = &v1.ImageInstance{}

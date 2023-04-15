@@ -42,7 +42,7 @@ status:
           memory: 10Mi
   namespace: app-created-namespace
   appImage:
-    name: test
+    id: test
     defaults:
   appSpec:
     containers:

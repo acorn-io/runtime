@@ -39,7 +39,7 @@ func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 			cond.Error(err)
 			return nil
 		}
-		appImage.Name = resolvedImage
+		appImage.Name = targetImage
 		appInstance.Status.AvailableAppImage = ""
 		appInstance.Status.ConfirmUpgradeAppImage = ""
 		appInstance.Status.AppImage = *appImage
@@ -61,7 +61,7 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 			} else {
 				// ConfirmUpgradeAppImage is not blank. Normally, we shouldn't get the desiredImage from it. That should
 				// be done explicitly by the user via the apps/confirmupgrade subresource (which would set it to the
-				// AvailableAppImage field). But if AppImage.Name is blank, this app has never had an image pulled. So, do the initial pull.
+				// AvailableAppImage field). But if AppImage.ID is blank, this app has never had an image pulled. So, do the initial pull.
 				if appInstance.Status.AppImage.Name == "" {
 					return appInstance.Status.ConfirmUpgradeAppImage, ""
 				} else {

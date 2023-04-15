@@ -71,6 +71,7 @@ func PullAppImage(ctx context.Context, c client.Reader, namespace, image string,
 		return nil, err
 	}
 
+	appImage.ID = image
 	return appImage, nil
 }
 
@@ -89,7 +90,7 @@ func ParseReferenceNoDefault(name string) (imagename.Reference, error) {
 }
 
 func ResolveTagForApp(ctx context.Context, c client.Client, app *v1.AppInstance, image string) (string, error) {
-	tag, err := GetRuntimePullableImageReference(ctx, c, app.Namespace, app.Status.AppImage.Name)
+	tag, err := GetRuntimePullableImageReference(ctx, c, app.Namespace, app.Status.AppImage.ID)
 	if err != nil {
 		return "", err
 	}

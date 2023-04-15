@@ -21,7 +21,7 @@ func TestServices(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app, err := c.AppRun(ctx, image.Name, nil)
+	app, err := c.AppRun(ctx, image.ID, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

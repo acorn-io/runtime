@@ -45,7 +45,7 @@ func TestAppsSSA(t *testing.T) {
 			Namespace: ns.Name,
 		},
 		Spec: v1.AppInstanceSpec{
-			Image: image.Name,
+			Image: image.ID,
 		},
 	})
 	if err != nil {
@@ -66,7 +66,7 @@ func TestAppsSSA(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, image.Name, app.Spec.Image)
+	assert.Equal(t, image.ID, app.Spec.Image)
 }
 
 func TestFriendlyNameInContainer(t *testing.T) {
@@ -96,7 +96,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 			},
 		},
 		Spec: v1.AppInstanceSpec{
-			Image: image.Name,
+			Image: image.ID,
 		},
 	}
 

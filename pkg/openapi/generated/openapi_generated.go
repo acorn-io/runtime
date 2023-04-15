@@ -4555,10 +4555,18 @@ func schema_pkg_apis_internalacornio_v1_AppImage(ref common.ReferenceCallback) c
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ID is the \"image ID\" that Name resolves to, which might be the same as Name or a string matching ImageInstance.Name",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Name is the image name requested by the user of any format",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"digest": {

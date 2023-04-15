@@ -1,6 +1,10 @@
 package v1
 
 type AppImage struct {
+	// ID is the "image ID" that Name resolves to, which might be the same as Name or a string matching
+	// ImageInstance.Name
+	ID string `json:"id,omitempty"`
+	// Name is the image name requested by the user of any format
 	Name      string     `json:"name,omitempty"`
 	Digest    string     `json:"digest,omitempty"`
 	Acornfile string     `json:"acornfile,omitempty"`
