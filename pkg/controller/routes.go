@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/images"
 	"github.com/acorn-io/acorn/pkg/controller/ingress"
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
+	"github.com/acorn-io/acorn/pkg/controller/networkpolicy"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
 	"github.com/acorn-io/acorn/pkg/controller/scheduling"
 	"github.com/acorn-io/acorn/pkg/controller/secrets"
@@ -61,7 +62,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(appdefinition.VolumeStatus)
 	appRouter.HandlerFunc(appdefinition.AcornStatus)
 	appRouter.HandlerFunc(appdefinition.ReadyStatus)
-	appRouter.HandlerFunc(appdefinition.NetworkPolicyForApp)
+	appRouter.HandlerFunc(networkpolicy.NetworkPolicyForApp)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
 	appRouter.HandlerFunc(appdefinition.UpdateObservedFields)
 
@@ -90,8 +91,8 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
-	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(appdefinition.NetworkPolicyForService)
-	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(appdefinition.NetworkPolicyForIngress)
+	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.NetworkPolicyForService)
+	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.NetworkPolicyForIngress)
 	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 
 	configRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName)
