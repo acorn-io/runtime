@@ -22,6 +22,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/tolerations"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -1244,7 +1245,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	}
 
 	// create two separate projects in which to run two Nginx apps
-	proj1, err := c.ProjectCreate(ctx, "proj1", "local")
+	proj1, err := c.ProjectCreate(ctx, "proj1", "local", []string{"local"})
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
@@ -1253,7 +1254,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 		t.Fatal("error creating client for proj1:", err)
 	}
 
-	proj2, err := c.ProjectCreate(ctx, "proj2", "local")
+	proj2, err := c.ProjectCreate(ctx, "proj2", "local", []string{"local"})
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
@@ -1408,4 +1409,62 @@ func getPodIPFromAppName(t *testing.T, ctx context.Context, kc *crClient.WithWat
 	}
 
 	return podIP
+}
+
+func TestProjectUpdate(t *testing.T) {
+	helper.StartController(t)
+
+	rc, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		t.Fatal("error while getting rest config:", err)
+	}
+	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndNamespace(t)
+	projectName := uuid.New().String()[:8]
+	proj1, err := c.ProjectCreate(ctx, projectName, "local", []string{"local"})
+	if err != nil {
+		t.Fatal("error while creating project:", err)
+	}
+	proj1Client, err := client.New(rc, proj1.Name, proj1.Status.Namespace)
+	if err != nil {
+		t.Fatal("error creating client for project:", err)
+	}
+	t.Cleanup(func() {
+		// clean up projects
+		_, err := proj1Client.ProjectDelete(ctx, projectName)
+		if err != nil {
+			t.Logf("failed to delete project '%s': %s", projectName, err)
+		}
+	})
+	// update default
+	updatedProj, err := proj1Client.ProjectUpdate(ctx, proj1, "new-default", []string{"local"})
+	if err != nil {
+		t.Fatal("error while updating project:", err)
+	}
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, "new-default")
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
+
+	// swap default from new-default to local
+	updatedProj, err = proj1Client.ProjectUpdate(ctx, proj1, "local", nil)
+	if err != nil {
+		t.Fatal("error while updating project:", err)
+	}
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
+
+	// remove new-default region
+	updatedProj, err = proj1Client.ProjectUpdate(ctx, proj1, "", []string{"local"})
+	if err != nil {
+		t.Fatal("error while updating project:", err)
+	}
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local"})
+
+	// set supported regions
+	updatedProj, err = proj1Client.ProjectUpdate(ctx, proj1, "", []string{"local", "local3", "local2"})
+	if err != nil {
+		t.Fatal("error while updating project:", err)
+	}
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "local3", "local2"})
 }

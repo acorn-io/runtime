@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -28,17 +29,39 @@ func (c *DefaultClient) ProjectList(ctx context.Context) ([]apiv1.Project, error
 	return result.Items, nil
 }
 
-func (c *DefaultClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
+func (c *DefaultClient) ProjectCreate(ctx context.Context, name, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
 	project := &apiv1.Project{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 	}
-	if region != "" {
-		project.Spec.DefaultRegion = region
-		project.Spec.SupportedRegions = []string{region}
+	if defaultRegion != "" {
+		project.Spec.DefaultRegion = defaultRegion
+		if !slices.Contains(supportedRegions, defaultRegion) {
+			supportedRegions = append([]string{defaultRegion}, supportedRegions...)
+		}
 	}
+	project.Spec.SupportedRegions = supportedRegions
 	return project, c.Client.Create(ctx, project)
+}
+
+func (c *DefaultClient) ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
+	if defaultRegion != "" {
+		project.Spec.DefaultRegion = defaultRegion
+	}
+	if len(supportedRegions) != 0 {
+		if len(supportedRegions) == 1 && supportedRegions[0] == "" {
+			// Clear supported regions
+			project.Spec.SupportedRegions = nil
+		} else {
+			project.Spec.SupportedRegions = supportedRegions
+		}
+	}
+	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) {
+		project.Spec.SupportedRegions = append(project.Spec.SupportedRegions, project.Spec.DefaultRegion)
+	}
+
+	return project, c.Client.Update(ctx, project)
 }
 
 func (c *DefaultClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {

@@ -263,9 +263,15 @@ func (c *IgnoreUninstalled) ProjectList(ctx context.Context) ([]apiv1.Project, e
 	return ignoreUninstalled(c.Client.ProjectList(ctx))
 }
 
-func (c *IgnoreUninstalled) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
+func (c *IgnoreUninstalled) ProjectCreate(ctx context.Context, name, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
 	return promptInstall(ctx, func() (*apiv1.Project, error) {
-		return c.Client.ProjectCreate(ctx, name, region)
+		return c.Client.ProjectCreate(ctx, name, defaultRegion, supportedRegions)
+	})
+}
+
+func (c *IgnoreUninstalled) ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
+	return promptInstall(ctx, func() (*apiv1.Project, error) {
+		return c.Client.ProjectUpdate(ctx, project, defaultRegion, supportedRegions)
 	})
 }
 

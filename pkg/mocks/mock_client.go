@@ -573,18 +573,18 @@ func (mr *MockClientMockRecorder) Info(arg0 interface{}) *gomock.Call {
 }
 
 // ProjectCreate mocks base method.
-func (m *MockClient) ProjectCreate(arg0 context.Context, arg1, arg2 string) (*v1.Project, error) {
+func (m *MockClient) ProjectCreate(arg0 context.Context, arg1, arg2 string, arg3 []string) (*v1.Project, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ProjectCreate", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ProjectCreate", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*v1.Project)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ProjectCreate indicates an expected call of ProjectCreate.
-func (mr *MockClientMockRecorder) ProjectCreate(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) ProjectCreate(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProjectCreate", reflect.TypeOf((*MockClient)(nil).ProjectCreate), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProjectCreate", reflect.TypeOf((*MockClient)(nil).ProjectCreate), arg0, arg1, arg2, arg3)
 }
 
 // ProjectDelete mocks base method.
@@ -630,6 +630,21 @@ func (m *MockClient) ProjectList(arg0 context.Context) ([]v1.Project, error) {
 func (mr *MockClientMockRecorder) ProjectList(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProjectList", reflect.TypeOf((*MockClient)(nil).ProjectList), arg0)
+}
+
+// ProjectUpdate mocks base method.
+func (m *MockClient) ProjectUpdate(arg0 context.Context, arg1 *v1.Project, arg2 string, arg3 []string) (*v1.Project, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ProjectUpdate", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*v1.Project)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ProjectUpdate indicates an expected call of ProjectUpdate.
+func (mr *MockClientMockRecorder) ProjectUpdate(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProjectUpdate", reflect.TypeOf((*MockClient)(nil).ProjectUpdate), arg0, arg1, arg2, arg3)
 }
 
 // RegionGet mocks base method.

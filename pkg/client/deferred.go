@@ -318,11 +318,18 @@ func (d *DeferredClient) ProjectList(ctx context.Context) ([]apiv1.Project, erro
 	return d.Client.ProjectList(ctx)
 }
 
-func (d *DeferredClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
+func (d *DeferredClient) ProjectCreate(ctx context.Context, name, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
 	if err := d.create(); err != nil {
 		return nil, err
 	}
-	return d.Client.ProjectCreate(ctx, name, region)
+	return d.Client.ProjectCreate(ctx, name, defaultRegion, supportedRegions)
+}
+
+func (d *DeferredClient) ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.ProjectUpdate(ctx, project, defaultRegion, supportedRegions)
 }
 
 func (d *DeferredClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
