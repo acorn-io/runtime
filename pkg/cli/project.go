@@ -84,26 +84,31 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	out := table.NewWriter(tables.ProjectClient, a.Quiet, a.Output)
-	projectDetails, err := project.GetDetails(cmd.Context(), a.client.Options(), projectNames)
-	if err != nil {
-		return err
-	}
+	projectDetails := project.GetDetails(cmd.Context(), a.client.Options(), projectNames)
+
 	sort.Slice(projectDetails, func(i, j int) bool {
 		return projectDetails[i].FullName < projectDetails[j].FullName
 	})
+
 	for _, projectItem := range projectDetails {
-		supportedRegions := projectItem.Project.GetSupportedRegions()
-		defaultRegion := projectItem.Project.GetRegion()
-		for i, supportedRegion := range supportedRegions {
-			if supportedRegion == defaultRegion {
-				supportedRegions[i] = supportedRegion + "*"
-			}
+		if projectItem.Err != nil {
+			logrus.Warnf("Could not list details of project [%s]: %v", projectItem.FullName, projectItem.Err)
+			continue
 		}
-		out.Write(projectEntry{
-			Name:    projectItem.FullName,
-			Default: defaultProject == projectItem.FullName,
-			Regions: supportedRegions,
-		})
+		if projectItem.Project != nil {
+			supportedRegions := projectItem.Project.GetSupportedRegions()
+			defaultRegion := projectItem.Project.GetRegion()
+			for i, supportedRegion := range supportedRegions {
+				if supportedRegion == defaultRegion {
+					supportedRegions[i] = supportedRegion + "*"
+				}
+			}
+			out.Write(projectEntry{
+				Name:    projectItem.FullName,
+				Default: defaultProject == projectItem.FullName,
+				Regions: supportedRegions,
+			})
+		}
 	}
 
 	return out.Err()

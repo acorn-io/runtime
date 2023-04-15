@@ -117,6 +117,7 @@ type listResult struct {
 type DetailProject struct {
 	FullName string
 	Project  *apiv1.Project
+	Err      error
 }
 
 func listHubServers(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
@@ -190,37 +191,45 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 	return projects, warnings, nil
 }
 
-func GetDetails(ctx context.Context, opts Options, projectNames []string) (result []DetailProject, err error) {
-	entryCh := make(chan DetailProject)
-	errCh := make(chan error)
+func GetDetails(ctx context.Context, opts Options, projectNames []string) (projects []DetailProject) {
+	var (
+		wg     sync.WaitGroup
+		result = make(chan DetailProject)
+	)
 
-	// Launch a goroutine for each project to retrieve its information
+	getProjectDetails(ctx, &wg, result, opts, projectNames)
+
+	go func() {
+		wg.Wait()
+		close(result)
+	}()
+
+	for detailProject := range result {
+		projects = append(projects, detailProject)
+	}
+
+	return projects
+}
+
+func getProjectDetails(ctx context.Context, wg *sync.WaitGroup, result chan<- DetailProject, opts Options, projectNames []string) {
 	for _, projectName := range projectNames {
-		go func(proj string, opts Options) {
-			opts.Project = proj
+		wg.Add(1)
+		go func(projectName string, opts Options) {
+			defer wg.Done()
+			// Launch a goroutine for each project to retrieve its information
+			opts.Project = projectName
 			c, err := Client(ctx, opts)
 			if err != nil {
-				errCh <- err
+				logrus.Warnf("unable to get client for %s: %s", projectName, err)
+				// just ignore invalid clients
+				return
 			}
 			project, err := c.ProjectGet(ctx, lastPart(opts.Project))
-			if err != nil {
-				errCh <- err
-			}
-			entryCh <- DetailProject{
-				FullName: proj,
+			result <- DetailProject{
+				FullName: projectName,
 				Project:  project,
+				Err:      err,
 			}
 		}(projectName, opts)
 	}
-
-	for i := 0; i < len(projectNames); i++ {
-		select {
-		case entry := <-entryCh:
-			result = append(result, entry)
-		case err := <-errCh:
-			return nil, err
-		}
-	}
-
-	return result, nil
 }
