@@ -1,0 +1,46 @@
+args: {
+    msg: "hello"
+    data: "input"
+}
+
+services: gen: {
+    generated: job: "genjob"
+}
+
+jobs: genjob: {
+    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
+    command: "/init2.sh"
+    files: "/init2.sh": """
+    #!/bin/sh
+    cat > /run/secrets/output << EOF
+    services: gen: {
+        address: "gen-address"
+        ports: [{
+            port: 3306
+            targetPort: 1234
+        }]
+        secrets: ["admin", "msg"]
+        data: {
+            output: "\(args.data)"
+        }
+    }
+    secrets: admin: {
+        type: "basic"
+        data: {
+            username: "user"
+            password: "pass"
+        }
+    }
+    EOF
+    """
+}
+
+
+secrets: msg: {
+    data: key: args.msg
+}
+
+secrets: admin: {
+    type: "generated"
+    params: job: "genjob"
+}
