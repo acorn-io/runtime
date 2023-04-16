@@ -53,20 +53,6 @@ func (c *ClusterVolumeClassInstance) EnsureRegion(region string) bool {
 	return true
 }
 
-// ForOtherRegions returns true if there are other regions that this instance is supported in.
-// The region passed here is removed for the supported regions.
-func (c *ClusterVolumeClassInstance) ForOtherRegions(region string) bool {
-	regions := make([]string, 0, len(c.SupportedRegions))
-	for _, r := range c.SupportedRegions {
-		if r != region {
-			regions = append(regions, r)
-		}
-	}
-
-	c.SupportedRegions = regions
-	return len(c.SupportedRegions) > 0
-}
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ClusterVolumeClassInstanceList struct {

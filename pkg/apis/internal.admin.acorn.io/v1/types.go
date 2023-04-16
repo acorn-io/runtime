@@ -26,20 +26,6 @@ func (in *ClusterComputeClassInstance) EnsureRegion(region string) bool {
 	return true
 }
 
-// ForOtherRegions returns true if there are other regions that this instance is supported in.
-// The region passed here is removed for the supported regions.
-func (in *ClusterComputeClassInstance) ForOtherRegions(region string) bool {
-	regions := make([]string, 0, len(in.SupportedRegions))
-	for _, r := range in.SupportedRegions {
-		if r != region {
-			regions = append(regions, r)
-		}
-	}
-
-	in.SupportedRegions = regions
-	return len(in.SupportedRegions) > 0
-}
-
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ClusterComputeClassInstanceList struct {

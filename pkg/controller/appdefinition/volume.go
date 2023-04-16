@@ -117,7 +117,7 @@ func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 }
 
 func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.Object, err error) {
-	volumeClasses, _, err := volume.GetVolumeClasses(req.Ctx, req.Client, appInstance.Namespace)
+	volumeClasses, _, err := volume.GetVolumeClassInstances(req.Ctx, req.Client, appInstance.Namespace)
 	if err != nil {
 		return nil, err
 	}

@@ -35,22 +35,22 @@ func (a *ComputeClass) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.ComputeClass, a.Quiet, a.Output)
 
 	if len(args) == 1 {
-		wc, err := c.ComputeClassGet(cmd.Context(), args[0])
+		cc, err := c.ComputeClassGet(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
-		out.Write(wc)
+		out.Write(cc)
 		return out.Err()
 	}
 
-	wcs, err := c.ComputeClassList(cmd.Context())
+	computeClasses, err := c.ComputeClassList(cmd.Context())
 	if err != nil {
 		return err
 	}
 
-	for _, wc := range wcs {
-		if len(args) == 0 || slices.Contains(args, wc.Name) {
-			out.Write(wc)
+	for _, cc := range computeClasses {
+		if len(args) == 0 || slices.Contains(args, cc.Name) {
+			out.Write(cc)
 		}
 	}
 

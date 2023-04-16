@@ -4,6 +4,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/computeclasses"
 	"github.com/acorn-io/baaah/pkg/router"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -29,15 +30,15 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 	}
 
 	appInstance.Status.Defaults.Memory[""] = cfg.WorkloadMemoryDefault
-	wc, err := adminv1.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultCC)
+	cc, err := computeclasses.GetAsProjectComputeClassInstance(req.Ctx, req.Client, appInstance.Status.Namespace, defaultCC)
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return err
 		}
 	}
 
-	if wc != nil {
-		parsedMemory, err := adminv1.ParseComputeClassMemory(wc.Memory)
+	if cc != nil {
+		parsedMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
 		if err != nil {
 			return err
 		}
@@ -59,13 +60,13 @@ func addDefaultMemory(req router.Request, cfg *apiv1.Config, appInstance *v1.App
 func addWorkloadMemoryDefault(req router.Request, appInstance *v1.AppInstance, configDefault *int64, containers map[string]v1.Container) error {
 	for name, container := range containers {
 		memory := configDefault
-		computeClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace)
+		computeClass, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace)
 		if err != nil {
 			return err
 		}
 
 		if computeClass != nil {
-			parsedMemory, err := adminv1.ParseComputeClassMemory(computeClass.Memory)
+			parsedMemory, err := computeclasses.ParseComputeClassMemory(computeClass.Memory)
 			if err != nil {
 				return err
 			}
