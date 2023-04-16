@@ -191,13 +191,16 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 	return projects, warnings, nil
 }
 
-func GetDetails(ctx context.Context, opts Options, projectNames []string) (projects []DetailProject) {
+func GetDetails(ctx context.Context, opts Options, projectNames []string) (projects []DetailProject, err error) {
 	var (
 		wg     sync.WaitGroup
 		result = make(chan DetailProject)
 	)
 
-	getProjectDetails(ctx, &wg, result, opts, projectNames)
+	err = getProjectDetails(ctx, &wg, result, opts, projectNames)
+	if err != nil {
+		return nil, err
+	}
 
 	go func() {
 		wg.Wait()
@@ -208,17 +211,21 @@ func GetDetails(ctx context.Context, opts Options, projectNames []string) (proje
 		projects = append(projects, detailProject)
 	}
 
-	return projects
+	return projects, nil
 }
 
-func getProjectDetails(ctx context.Context, wg *sync.WaitGroup, result chan<- DetailProject, opts Options, projectNames []string) {
+func getProjectDetails(ctx context.Context, wg *sync.WaitGroup, result chan<- DetailProject, opts Options, projectNames []string) error {
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return err
+	}
 	for _, projectName := range projectNames {
 		wg.Add(1)
 		go func(projectName string, opts Options) {
 			defer wg.Done()
 			// Launch a goroutine for each project to retrieve its information
 			opts.Project = projectName
-			c, err := Client(ctx, opts)
+			c, err := getClient(ctx, cfg, opts, projectName)
 			if err != nil {
 				logrus.Warnf("unable to get client for %s: %s", projectName, err)
 				// just ignore invalid clients
@@ -232,4 +239,5 @@ func getProjectDetails(ctx context.Context, wg *sync.WaitGroup, result chan<- De
 			}
 		}(projectName, opts)
 	}
+	return nil
 }
