@@ -17,10 +17,6 @@ func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 	return func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
-		// This is temparary to get all deployments working. Will be propmptly removed.
-		if appInstance.Status.AppImage.Name != "" && appInstance.Status.AppImage.ID == "" {
-			appInstance.Status.AppImage.Name = ""
-		}
 
 		targetImage, unknownReason := determineTargetImage(appInstance)
 		if targetImage == "" {
