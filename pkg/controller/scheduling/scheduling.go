@@ -2,6 +2,7 @@ package scheduling
 
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/computeclasses"
 	"github.com/acorn-io/acorn/pkg/condition"
 	tl "github.com/acorn-io/acorn/pkg/tolerations"
 
@@ -56,7 +57,7 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 			tolerations []corev1.Toleration
 		)
 
-		computeClass, err := adminv1.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace)
+		computeClass, err := computeclasses.GetClassForWorkload(req.Ctx, req.Client, appInstance.Spec.ComputeClasses, container, name, appInstance.Namespace)
 		if err != nil {
 			return err
 		}
@@ -146,7 +147,7 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 	}
 
 	if computeClass != nil {
-		cpuQuantity, err := adminv1.CalculateCPU(*computeClass, memDefault, memoryQuantity)
+		cpuQuantity, err := computeclasses.CalculateCPU(*computeClass, memDefault, memoryQuantity)
 		if err != nil {
 			return nil, err
 		}

@@ -1110,30 +1110,35 @@ func TestUsingComputeClasses(t *testing.T) {
 
 				// Assign a name for the test case so no collisions occur
 				app, err := c.AppRun(ctx, image.ID, &client.AppRunOptions{Name: testcase})
-				if err != nil {
-					if tt.fail {
-						return
+				if err == nil && tt.fail {
+					t.Fatal("expected error, got nil")
+				} else if err != nil {
+					if !tt.fail {
+						t.Fatal(err)
 					}
-					t.Fatal(err)
 				}
 
 				// Clean-up and gurantee the app doesn't exist after this test run
-				t.Cleanup(func() {
-					if err = kclient.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
-						t.Fatal(err)
-					}
-					err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
-						lookingFor := app
-						err := kclient.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
-						return lookingFor, err
+				if app != nil {
+					t.Cleanup(func() {
+						if err = kclient.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {
+							t.Fatal(err)
+						}
+						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
+							lookingFor := app
+							err := kclient.Get(ctx, router.Key(app.GetName(), app.GetNamespace()), lookingFor)
+							return lookingFor, err
+						})
+						if err != nil {
+							t.Fatal(err)
+						}
 					})
-					if err != nil {
-						t.Fatal(err)
-					}
-				})
+				}
 
-				app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, tt.waitFor)
-				assert.EqualValues(t, app.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
+				if tt.waitFor != nil {
+					app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, tt.waitFor)
+					assert.EqualValues(t, app.Status.Scheduling, tt.expected, "generated scheduling rules are incorrect")
+				}
 			})
 		}
 	}

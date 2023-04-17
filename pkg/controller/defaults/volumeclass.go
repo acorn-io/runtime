@@ -15,7 +15,7 @@ func addVolumeClassDefaults(ctx context.Context, c kclient.Client, app *v1.AppIn
 		return nil
 	}
 
-	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClasses(ctx, c, app.Namespace)
+	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClassInstances(ctx, c, app.Namespace)
 	if err != nil {
 		return err
 	}

@@ -65,7 +65,7 @@ func CreateEphemeralVolumeClass(req router.Request, resp router.Response) error 
 }
 
 func GetVolumeClassNames(ctx context.Context, c client.Client, namespace string, storageClassNames bool) ([]string, error) {
-	volumeClasses, _, err := GetVolumeClasses(ctx, c, namespace)
+	volumeClasses, _, err := GetVolumeClassInstances(ctx, c, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +73,10 @@ func GetVolumeClassNames(ctx context.Context, c client.Client, namespace string,
 	return getVolumeClassNames(volumeClasses, storageClassNames), nil
 }
 
-// GetVolumeClasses returns an array of all project and cluster volume classes available in the namespace. If a project
+// GetVolumeClassInstances returns an array of all project and cluster volume classes available in the namespace. If a project
 // volume class is set to default, this ensures that no cluster volume classes are default to avoid conflicts.
 // The class determined to be default, if it exists, is also returned.
-func GetVolumeClasses(ctx context.Context, c client.Client, namespace string) (map[string]adminv1.ProjectVolumeClassInstance, *adminv1.ProjectVolumeClassInstance, error) {
+func GetVolumeClassInstances(ctx context.Context, c client.Client, namespace string) (map[string]adminv1.ProjectVolumeClassInstance, *adminv1.ProjectVolumeClassInstance, error) {
 	volumeClasses := new(adminv1.ProjectVolumeClassInstanceList)
 	if err := c.List(ctx, volumeClasses, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, nil, err

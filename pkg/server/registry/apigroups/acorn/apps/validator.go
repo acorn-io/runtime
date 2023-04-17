@@ -8,9 +8,9 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/computeclasses"
 	apiv1config "github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
@@ -347,6 +347,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 	return merr.NewErrors(errs...)
 }
 
+// checkScheduling must use apiv1.ComputeCLass to validate the scheduling instead of the Instance counterparts.
 func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *apiv1.Project, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	var (
 		memory        = params.Spec.Memory
@@ -355,27 +356,32 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 	)
 
 	var validationErrors []*field.Error
+	computeClasses := new(apiv1.ComputeClassList)
+	if err := s.client.List(ctx, computeClasses, kclient.InNamespace(params.Namespace)); err != nil {
+		return append(validationErrors, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, fmt.Sprintf("error listing compute classes: %v", err)))
+	}
+
 	err := validateMemoryRunFlags(memory, workloads)
 	if err != nil {
 		validationErrors = append(validationErrors, err...)
 	}
 
 	for workload, container := range workloads {
-		wc, err := adminv1.GetClassForWorkload(ctx, s.client, computeClass, container, workload, params.Namespace)
+		cc, err := getClassForWorkload(computeClasses, computeClass, container, workload)
 		if err != nil {
 			validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", err.Error()))
 		}
 
-		if wc != nil {
-			if !slices.Contains(wc.SupportedRegions, params.Spec.Region) && !slices.Contains(wc.SupportedRegions, defaultRegion) {
-				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", fmt.Sprintf("computeclass %s does not support region %s", wc.Name, params.Spec.Region)))
+		if cc != nil {
+			if !slices.Contains(cc.SupportedRegions, params.Spec.Region) && !slices.Contains(cc.SupportedRegions, defaultRegion) {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", fmt.Sprintf("computeclass %s does not support region %s", cc.Name, params.Spec.Region)))
 				continue
 			}
 			// Parse the memory
-			wcMemory, err := adminv1.ParseComputeClassMemory(wc.Memory)
+			wcMemory, err := computeclasses.ParseComputeClassMemory(cc.Memory)
 			if err != nil {
-				if errors.Is(err, adminv1.ErrInvalidClass) {
-					validationErrors = append(validationErrors, field.Invalid(field.NewPath("spec", "memory"), wc.Memory, err.Error()))
+				if errors.Is(err, computeclasses.ErrInvalidClass) {
+					validationErrors = append(validationErrors, field.Invalid(field.NewPath("spec", "memory"), cc.Memory, err.Error()))
 				}
 			}
 
@@ -384,8 +390,7 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 		}
 
 		// Validate memory
-		memQuantity, err := v1.ValidateMemory(
-			memory, workload, container, specMemDefault, specMemMaximum)
+		memQuantity, err := v1.ValidateMemory(memory, workload, container, specMemDefault, specMemMaximum)
 
 		// Evaluate what caused the error if one exists
 		if err != nil {
@@ -401,15 +406,15 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 		}
 
 		// Need a ComputeClass to validate it
-		if wc == nil {
+		if cc == nil {
 			continue
 		}
 
-		err = adminv1.ValidateComputeClass(*wc, memQuantity, specMemDefault)
+		err = computeclasses.Validate(*cc, memQuantity, specMemDefault)
 		if err != nil {
-			if errors.Is(err, adminv1.ErrInvalidClass) {
-				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), wc.Name, err.Error()))
-			} else if errors.Is(err, adminv1.ErrInvalidMemoryForClass) {
+			if errors.Is(err, computeclasses.ErrInvalidClass) {
+				validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), cc.Name, err.Error()))
+			} else if errors.Is(err, computeclasses.ErrInvalidMemoryForClass) {
 				validationErrors = append(validationErrors, field.Invalid(field.NewPath("memory"), memQuantity.String(), err.Error()))
 			} else {
 				validationErrors = append(validationErrors, field.Invalid(field.NewPath("unknown"), "", err.Error()))
@@ -417,6 +422,23 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 		}
 	}
 	return validationErrors
+}
+
+func getClassForWorkload(computeClassList *apiv1.ComputeClassList, computeClasses v1.ComputeClassMap, container v1.Container, workload string) (*apiv1.ComputeClass, error) {
+	ccName := computeclasses.GetComputeClassNameForWorkload(workload, container, computeClasses)
+
+	for _, cc := range computeClassList.Items {
+		if cc.Name == ccName || (ccName == "" && cc.Default) {
+			return &cc, nil
+		}
+	}
+
+	if ccName == "" {
+		// No default compute class
+		return nil, nil
+	}
+
+	return nil, fmt.Errorf("computeclass %s not found", ccName)
 }
 
 func validateMemoryRunFlags(memory v1.MemoryMap, workloads map[string]v1.Container) []*field.Error {
@@ -438,10 +460,21 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 		return nil
 	}
 
-	defaultRegion := project.GetRegion()
-	volumeClasses, defaultVolumeClass, err := volume.GetVolumeClasses(ctx, c, namespace)
-	if err != nil {
-		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, err.Error())
+	var (
+		defaultRegion      = project.GetRegion()
+		volumeClassList    = new(apiv1.VolumeClassList)
+		defaultVolumeClass *apiv1.VolumeClass
+	)
+	if err := c.List(ctx, volumeClassList, kclient.InNamespace(namespace)); err != nil {
+		return field.Invalid(field.NewPath("spec", "image"), appInstanceSpec.Image, fmt.Sprintf("error checking volume classes: %v", err))
+	}
+
+	volumeClasses := make(map[string]apiv1.VolumeClass, len(volumeClassList.Items))
+	for _, volumeClass := range volumeClassList.Items {
+		if volumeClass.Default {
+			defaultVolumeClass = volumeClass.DeepCopy()
+		}
+		volumeClasses[volumeClass.Name] = volumeClass
 	}
 
 	volumeBindings := make(map[string]v1.VolumeBinding)
@@ -452,7 +485,7 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 		volumeBindings[vol.Target] = vol
 	}
 
-	var volClass adminv1.ProjectVolumeClassInstance
+	var volClass apiv1.VolumeClass
 	for volName, vol := range appSpec.Volumes {
 		calculatedVolumeRequest := volume.CopyVolumeDefaults(vol, volumeBindings[volName], v1.VolumeDefault{})
 		if calculatedVolumeRequest.Class != "" {

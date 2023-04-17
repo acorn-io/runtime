@@ -173,7 +173,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstanceList":  schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                 schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.memoryQuantities":                schema_pkg_apis_internaladminacornio_v1_memoryQuantities(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                           schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                                                   schema_k8sio_api_core_v1_Affinity(ref),
 		"k8s.io/api/core/v1.AttachedVolume":                                                             schema_k8sio_api_core_v1_AttachedVolume(ref),
@@ -9327,48 +9326,6 @@ func schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref common.Referenc
 				},
 			},
 		},
-	}
-}
-
-func schema_pkg_apis_internaladminacornio_v1_memoryQuantities(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"Max": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
-					"Min": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
-					"Def": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-						},
-					},
-					"Values": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Ref: ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"Max", "Min", "Def", "Values"},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 

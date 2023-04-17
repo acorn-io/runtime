@@ -32,3 +32,11 @@ type ClusterVolumeClassList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ClusterVolumeClass `json:"items"`
 }
+
+func (c *ClusterVolumeClassList) GetItems() []ClusterVolumeClass {
+	return c.Items
+}
+
+func (c *ClusterVolumeClassList) SetItems(items []ClusterVolumeClass) {
+	c.Items = items
+}
