@@ -45,7 +45,8 @@
                 "networkPolicies": null,
                 "ingressControllerNamespace": null,
                 "allowTrafficFromNamespace": null,
-                "serviceLBAnnotations": null
+                "serviceLBAnnotations": null,
+                "awsIdentityProviderArn": null
             },
             "userConfig": {
                 "ingressClassName": null,
@@ -76,7 +77,8 @@
                 "networkPolicies": null,
                 "ingressControllerNamespace": null,
                 "allowTrafficFromNamespace": null,
-                "serviceLBAnnotations": null
+                "serviceLBAnnotations": null,
+                "awsIdentityProviderArn": null
             }
         }
     }

@@ -289,9 +289,11 @@ type ImagePushOptions struct {
 }
 
 type ImageDetailsOptions struct {
-	Profiles   []string
-	DeployArgs map[string]any
+	NestedDigest string
+	Profiles     []string
+	DeployArgs   map[string]any
 }
+
 type ImageDeleteOptions struct {
 	Force bool `json:"force,omitempty"`
 }

@@ -26,6 +26,7 @@ acorn install
       --allow-user-label strings               Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --api-server-replicas int                acorn-api deployment replica count
       --auto-upgrade-interval string           For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
+      --aws-identity-provider-arn string       ARN of cluster's OpenID Connect provider registered in AWS
       --builder-per-project                    Create a dedicated builder per project
       --cluster-domain strings                 The externally addressable cluster domain (default .on-acorn.io)
       --controller-replicas int                acorn-controller deployment replica count

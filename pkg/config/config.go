@@ -98,6 +98,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.IngressControllerNamespace == nil {
 		c.IngressControllerNamespace = new(string)
 	}
+	if c.AWSIdentityProviderARN == nil {
+		c.AWSIdentityProviderARN = new(string)
+	}
 
 	return nil
 }
@@ -342,6 +345,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.IngressControllerNamespace != nil {
 		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
+	}
+
+	if newConfig.AWSIdentityProviderARN != nil {
+		mergedConfig.AWSIdentityProviderARN = newConfig.AWSIdentityProviderARN
 	}
 
 	return &mergedConfig

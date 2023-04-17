@@ -55,10 +55,17 @@ func ImageDigest(ctx context.Context, c client.Reader, namespace, image string, 
 	return descriptor.Digest.String(), nil
 }
 
-func PullAppImage(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) (*v1.AppImage, error) {
+func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error) {
 	tag, err := GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return nil, err
+	}
+
+	if nestedDigest != "" {
+		tag, err = imagename.NewDigest(tag.Context().String() + "@" + nestedDigest)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	opts, err = GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)

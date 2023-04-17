@@ -40,6 +40,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 	if opts != nil {
 		detailsResult.DeployArgs = opts.DeployArgs
 		detailsResult.Profiles = opts.Profiles
+		detailsResult.NestedDigest = opts.NestedDigest
 	}
 
 	err := c.RESTClient.Post().
