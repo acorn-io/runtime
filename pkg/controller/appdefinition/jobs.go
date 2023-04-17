@@ -30,7 +30,10 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if err != nil {
 			return nil, err
 		}
-		sa := toServiceAccount(job.GetName(), job.GetLabels(), job.GetAnnotations(), appInstance)
+		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), job.GetAnnotations(), appInstance)
+		if err != nil {
+			return nil, err
+		}
 		if perms := v1.FindPermission(job.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
 			result = append(result, toPermissions(perms, job.GetLabels(), job.GetAnnotations(), appInstance)...)
 		}

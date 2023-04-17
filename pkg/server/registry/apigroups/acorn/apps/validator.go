@@ -76,7 +76,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			}
 		}
 
-		imageDetails, err := s.getImageDetails(ctx, params, image)
+		imageDetails, err := s.getImageDetails(ctx, params.Namespace, params.Spec.Profiles, params.Spec.DeployArgs, image, "")
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 			return
@@ -118,7 +118,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
-		permsFromImage, err := s.getPermissions(imageDetails)
+		permsFromImage, err := s.getPermissions(ctx, "", params.Namespace, image, imageDetails)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
 			return
@@ -228,7 +228,7 @@ func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAc
 		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
 	if len(rule.Resources) == 0 {
-		return fmt.Errorf("can not deploy acorn due to requesting role with empty resources")
+		rule.Resources = []string{"*"}
 	}
 	for _, verb := range rule.Verbs {
 		for _, apiGroup := range rule.APIGroups {
@@ -520,11 +520,48 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 	return nil
 }
 
-func (s *Validator) getPermissions(details *client.ImageDetails) (result []v1.Permissions, _ error) {
-	result = append(result, buildPermissionsFrom(details.AppSpec.Containers)...)
-	result = append(result, buildPermissionsFrom(details.AppSpec.Jobs)...)
+func (s *Validator) getPermissions(ctx context.Context, servicePrefix, namespace, image string, details *client.ImageDetails) (result []v1.Permissions, _ error) {
+	result = append(result, buildPermissionsFrom(servicePrefix, details.AppSpec.Containers)...)
+	result = append(result, buildPermissionsFrom(servicePrefix, details.AppSpec.Jobs)...)
+
+	subResults, err := s.buildNestedPermissions(ctx, servicePrefix, details.AppSpec, namespace, image, details.AppImage.ImageData)
+	if err != nil {
+		return nil, err
+	}
+
+	result = append(result, subResults...)
 
 	return result, nil
+}
+
+func (s *Validator) buildNestedPermissions(ctx context.Context, servicePrefix string, app *v1.AppSpec, namespace, image string, imageData v1.ImagesData) (result []v1.Permissions, _ error) {
+	for _, entry := range typed.Sorted(imageData.Acorns) {
+		var (
+			profiles []string
+			args     map[string]any
+		)
+		if acorn, ok := app.Acorns[entry.Key]; ok {
+			profiles = acorn.Profiles
+			args = acorn.DeployArgs
+		} else if svc, ok := app.Services[entry.Key]; ok {
+			args = svc.ServiceArgs
+		} else {
+			continue
+		}
+
+		details, err := s.getImageDetails(ctx, namespace, profiles, args, image, entry.Value.Image)
+		if err != nil {
+			return nil, err
+		}
+
+		subResult, err := s.getPermissions(ctx, servicePrefix+entry.Key+".", namespace, image, details)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, subResult...)
+	}
+
+	return
 }
 
 func (s *Validator) getWorkloads(details *client.ImageDetails) (map[string]v1.Container, error) {
@@ -542,11 +579,11 @@ func (s *Validator) getWorkloads(details *client.ImageDetails) (map[string]v1.Co
 	return result, nil
 }
 
-func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
+func buildPermissionsFrom(servicePrefix string, containers map[string]v1.Container) []v1.Permissions {
 	var permissions []v1.Permissions
 	for _, entry := range typed.Sorted(containers) {
 		entryPermissions := v1.Permissions{
-			ServiceName: entry.Key,
+			ServiceName: servicePrefix + entry.Key,
 			Rules:       entry.Value.Permissions.Get().GetRules(),
 		}
 
@@ -554,7 +591,9 @@ func buildPermissionsFrom(containers map[string]v1.Container) []v1.Permissions {
 			entryPermissions.Rules = append(entryPermissions.Rules, sidecar.Value.Permissions.Get().GetRules()...)
 		}
 
-		permissions = append(permissions, entryPermissions)
+		if len(entryPermissions.GetRules()) > 0 {
+			permissions = append(permissions, entryPermissions)
+		}
 	}
 
 	return permissions
@@ -574,11 +613,12 @@ func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image stri
 	return image, false, nil
 }
 
-func (s *Validator) getImageDetails(ctx context.Context, app *apiv1.App, image string) (*client.ImageDetails, error) {
-	details, err := s.clientFactory.Namespace("", app.Namespace).ImageDetails(ctx, image,
+func (s *Validator) getImageDetails(ctx context.Context, namespace string, profiles []string, args map[string]any, image, nested string) (*client.ImageDetails, error) {
+	details, err := s.clientFactory.Namespace("", namespace).ImageDetails(ctx, image,
 		&client.ImageDetailsOptions{
-			Profiles:   app.Spec.Profiles,
-			DeployArgs: app.Spec.DeployArgs})
+			NestedDigest: nested,
+			Profiles:     profiles,
+			DeployArgs:   args})
 	if err != nil {
 		return nil, err
 	}

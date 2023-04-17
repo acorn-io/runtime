@@ -34,7 +34,7 @@ func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
-		appImage, err := images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, remote.WithTransport(transport))
+		appImage, err := images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, "", remote.WithTransport(transport))
 		if err != nil {
 			cond.Error(err)
 			return nil

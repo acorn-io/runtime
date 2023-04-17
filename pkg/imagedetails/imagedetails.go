@@ -16,7 +16,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, opts ...remote.Option) (*apiv1.ImageDetails, error) {
+func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
 
@@ -42,7 +42,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		imageName = image.Name
 	}
 
-	appImage, err := images.PullAppImage(ctx, c, namespace, imageName, opts...)
+	appImage, err := images.PullAppImage(ctx, c, namespace, imageName, nested, opts...)
 	if err != nil {
 		return nil, err
 	}

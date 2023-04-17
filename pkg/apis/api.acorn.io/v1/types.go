@@ -181,8 +181,9 @@ type ImageDetails struct {
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Input Params
-	DeployArgs v1.GenericMap `json:"deployArgs,omitempty"`
-	Profiles   []string      `json:"profiles,omitempty"`
+	NestedDigest string        `json:"nestedDigest,omitempty"`
+	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
+	Profiles     []string      `json:"profiles,omitempty"`
 
 	// Output Params
 	AppImage   v1.AppImage   `json:"appImage,omitempty"`
@@ -386,6 +387,7 @@ type Config struct {
 	IngressControllerNamespace     *string  `json:"ingressControllerNamespace" name:"ingress-controller-namespace" usage:"The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies."`
 	AllowTrafficFromNamespace      []string `json:"allowTrafficFromNamespace" name:"allow-traffic-from-namespace" usage:"Namespaces that are allowed to send network traffic to all Acorn apps"`
 	ServiceLBAnnotations           []string `json:"serviceLBAnnotations" name:"service-lb-annotation" usage:"Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)"`
+	AWSIdentityProviderARN         *string  `json:"awsIdentityProviderArn" name:"aws-identity-provider-arn" usage:"ARN of cluster's OpenID Connect provider registered in AWS"`
 }
 
 type EncryptionKey struct {

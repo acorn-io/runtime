@@ -653,7 +653,10 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		sa := toServiceAccount(dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance)
+		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance)
+		if err != nil {
+			return nil, err
+		}
 		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
 			result = append(result, toPermissions(perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)...)
 		}
