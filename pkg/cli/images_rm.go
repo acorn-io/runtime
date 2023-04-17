@@ -31,7 +31,7 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, image := range args {
-		deleted, err := c.ImageDelete(cmd.Context(), args[0], &client.ImageDeleteOptions{Force: a.Force})
+		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", image, err)
 		}
