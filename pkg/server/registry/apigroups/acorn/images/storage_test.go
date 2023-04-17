@@ -17,6 +17,9 @@ func TestFindMatchingImage(t *testing.T) {
 		},
 		{
 			Digest: "sha256:123409876",
+			Tags: []string{
+				"foo/bar",
+			},
 		},
 		{
 			Digest: "sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb",
@@ -49,4 +52,7 @@ func TestFindMatchingImage(t *testing.T) {
 	_, _, err = findImageMatch(il, "ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
 	assert.Error(t, err)
 	assert.Equal(t, "images.api.acorn.io \"ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb\" not found", err.Error())
+
+	_, _, err = findImageMatch(il, "foo/bar")
+	assert.Error(t, err)
 }
