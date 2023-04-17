@@ -84,8 +84,10 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	out := table.NewWriter(tables.ProjectClient, a.Quiet, a.Output)
-	projectDetails := project.GetDetails(cmd.Context(), a.client.Options(), projectNames)
-
+	projectDetails, err := project.GetDetails(cmd.Context(), a.client.Options(), projectNames)
+	if err != nil {
+		return err
+	}
 	sort.Slice(projectDetails, func(i, j int) bool {
 		return projectDetails[i].FullName < projectDetails[j].FullName
 	})

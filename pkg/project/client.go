@@ -205,6 +205,9 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 
 func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
 	projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
+	if err != nil {
+		return nil, err
+	}
 	if opts.AllProjects {
 		return projects, err
 	}
