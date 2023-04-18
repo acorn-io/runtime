@@ -19,6 +19,13 @@ type App struct {
 	Status v1.AppInstanceStatus `json:"status,omitempty"`
 }
 
+func (in *App) GetRegion() string {
+	if in.Spec.Region != "" {
+		return in.Spec.Region
+	}
+	return in.Status.Defaults.Region
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AppList struct {
