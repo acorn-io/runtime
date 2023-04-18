@@ -89,6 +89,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Annotations: appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
 		},
 		Spec: v1.AppInstanceSpec{
+			Region:      appInstance.GetRegion(),
 			Labels:      append(acorn.Labels, appInstance.Spec.Labels...),
 			Annotations: append(acorn.Annotations, appInstance.Spec.Annotations...),
 			Image:       image,
