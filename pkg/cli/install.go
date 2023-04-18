@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/install"
@@ -26,8 +29,9 @@ type Install struct {
 	Image  string `usage:"Override the default image used for the deployment"`
 	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 
-	APIServerReplicas  *int `usage:"acorn-api deployment replica count" name:"api-server-replicas"`
-	ControllerReplicas *int `usage:"acorn-controller deployment replica count"`
+	APIServerReplicas                  *int     `usage:"acorn-api deployment replica count" name:"api-server-replicas"`
+	ControllerReplicas                 *int     `usage:"acorn-controller deployment replica count"`
+	ControllerServiceAccountAnnotation []string `usage:"annotation to apply to the acorn-system service account"`
 
 	apiv1.Config
 	client ClientFactory
@@ -39,11 +43,21 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 		image = i.Image
 	}
 
+	annotations := map[string]string{}
+	for _, anno := range i.ControllerServiceAccountAnnotation {
+		k, v, ok := strings.Cut(anno, "=")
+		if !ok {
+			return fmt.Errorf("--controller-service-account-annotation must be in key=value format got [%s]", anno)
+		}
+		annotations[k] = v
+	}
+
 	return install.Install(cmd.Context(), image, &install.Options{
-		SkipChecks:         i.SkipChecks,
-		OutputFormat:       i.Output,
-		Config:             i.Config,
-		APIServerReplicas:  i.APIServerReplicas,
-		ControllerReplicas: i.ControllerReplicas,
+		SkipChecks:                          i.SkipChecks,
+		OutputFormat:                        i.Output,
+		Config:                              i.Config,
+		APIServerReplicas:                   i.APIServerReplicas,
+		ControllerReplicas:                  i.ControllerReplicas,
+		ControllerServiceAccountAnnotations: annotations,
 	})
 }
