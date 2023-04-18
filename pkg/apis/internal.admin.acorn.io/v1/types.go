@@ -5,6 +5,7 @@ package v1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -24,6 +25,10 @@ func (in *ClusterComputeClassInstance) EnsureRegion(region string) bool {
 	}
 	in.SupportedRegions = append(in.SupportedRegions, region)
 	return true
+}
+
+func (in *ClusterComputeClassInstance) HasRegion(region string) bool {
+	return slices.Contains(in.SupportedRegions, region)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -3,6 +3,7 @@ package v1
 import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -51,6 +52,10 @@ func (c *ClusterVolumeClassInstance) EnsureRegion(region string) bool {
 	}
 	c.SupportedRegions = append(c.SupportedRegions, region)
 	return true
+}
+
+func (c *ClusterVolumeClassInstance) HasRegion(region string) bool {
+	return slices.Contains(c.SupportedRegions, region)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
