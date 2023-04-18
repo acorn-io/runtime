@@ -106,6 +106,10 @@ func (in *ContainerReplica) EnsureRegion(region string) bool {
 	return in.Status.Region == region
 }
 
+func (in *ContainerReplica) HasRegion(region string) bool {
+	return in.Status.Region == region
+}
+
 func (in *ContainerReplica) GetRegion() string {
 	return in.Status.Region
 }
@@ -263,6 +267,10 @@ func (in *Volume) EnsureRegion(region string) bool {
 		in.Status.Region = region
 	}
 
+	return in.Status.Region == region
+}
+
+func (in *Volume) HasRegion(region string) bool {
 	return in.Status.Region == region
 }
 
