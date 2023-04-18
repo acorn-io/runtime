@@ -18,7 +18,7 @@ import (
 	testcontrollerclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func createMockedDefaultClient(t *testing.T, projectName string, namespace string) (client.DefaultClient, v12.InfoList, error) {
+func createMockedDefaultClientInfoLister(t *testing.T, projectName string, namespace string) (client.DefaultClient, v12.InfoList, error) {
 	t.Helper()
 	ns := corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -28,22 +28,11 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 				labels.AcornProject:       "true",
 			},
 		},
-		Spec:   corev1.NamespaceSpec{},
-		Status: corev1.NamespaceStatus{},
 	}
 
 	infoListObj := v12.InfoList{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "",
-			APIVersion: "",
-		},
-		ListMeta: metav1.ListMeta{},
 		Items: []v12.Info{
 			{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "",
-					APIVersion: "",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      projectName,
 					Namespace: namespace,
@@ -52,10 +41,6 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 		},
 	}
 	testingScheme := scheme2.Scheme
-	err := scheme2.AddToScheme(testingScheme)
-	if err != nil {
-		return client.DefaultClient{}, v12.InfoList{}, err
-	}
 
 	testK8ClientBuilder := testcontrollerclient.NewClientBuilder()
 	testK8ClientBuilder.WithScheme(testingScheme)
@@ -63,12 +48,9 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 	testK8ClientBuilder.WithLists(&infoListObj)
 	testK8Client := testK8ClientBuilder.Build()
 	defaultClient := client.DefaultClient{
-		Project:    projectName,
-		Namespace:  namespace,
-		Client:     testK8Client,
-		RESTConfig: nil,
-		RESTClient: nil,
-		Dialer:     nil,
+		Project:   projectName,
+		Namespace: namespace,
+		Client:    testK8Client,
 	}
 	return defaultClient, infoListObj, nil
 }
@@ -76,7 +58,7 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 func TestDefaultClientInfo(t *testing.T) {
 	ctx := context.Background()
 
-	defaultClient, infoListObj, err := createMockedDefaultClient(t, "test1", "test1")
+	defaultClient, infoListObj, err := createMockedDefaultClientInfoLister(t, "test1", "test1")
 	assert.NoError(t, err)
 
 	infoResp, err := defaultClient.Info(ctx)
@@ -90,10 +72,10 @@ func TestMultiClientInfo(t *testing.T) {
 	ctx := context.Background()
 	// Make two k8 clients and two default clients
 
-	defaultClient1, infoListObj1, err := createMockedDefaultClient(t, "test1", "test1")
+	defaultClient1, infoListObj1, err := createMockedDefaultClientInfoLister(t, "test1", "test1")
 	assert.NoError(t, err)
 
-	defaultClient2, infoListObj2, err := createMockedDefaultClient(t, "test2", "test2")
+	defaultClient2, infoListObj2, err := createMockedDefaultClientInfoLister(t, "test2", "test2")
 	assert.NoError(t, err)
 
 	// create factory that can list projects:
@@ -118,10 +100,10 @@ func TestMultiClientFQDNClobberingInfo(t *testing.T) {
 	ctx := context.Background()
 	// Make two k8 clients and two default clients
 
-	defaultClient1, infoListObj1, err := createMockedDefaultClient(t, "test1", "test1")
+	defaultClient1, infoListObj1, err := createMockedDefaultClientInfoLister(t, "test1", "test1")
 	assert.NoError(t, err)
 
-	defaultClient2, infoListObj2, err := createMockedDefaultClient(t, "acorn.io/jacob/test1", "test1")
+	defaultClient2, infoListObj2, err := createMockedDefaultClientInfoLister(t, "acorn.io/jacob/test1", "test1")
 	assert.NoError(t, err)
 
 	// create factory that can list projects:

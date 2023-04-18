@@ -14,7 +14,7 @@ func NewSecretDelete(c CommandContext) *cobra.Command {
 acorn secret rm my-secret`,
 		SilenceUsage:      true,
 		Short:             "Delete a secret",
-		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).checkProjectPrefix().complete,
 	})
 	return cmd
 }

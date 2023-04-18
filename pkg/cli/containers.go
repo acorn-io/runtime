@@ -19,7 +19,7 @@ func NewContainer(c CommandContext) *cobra.Command {
 acorn containers`,
 		SilenceUsage:      true,
 		Short:             "Manage containers",
-		ValidArgsFunction: newCompletion(c.ClientFactory, containersCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, containersCompletion).checkProjectPrefix().complete,
 	})
 	cmd.AddCommand(NewContainerDelete(c))
 	return cmd

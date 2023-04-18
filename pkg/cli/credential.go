@@ -18,7 +18,7 @@ func NewCredential(c CommandContext) *cobra.Command {
 acorn credential`,
 		SilenceUsage:      true,
 		Short:             "Manage registry credentials",
-		ValidArgsFunction: newCompletion(c.ClientFactory, credentialsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, credentialsCompletion).checkProjectPrefix().complete,
 	})
 	cmd.AddCommand(NewCredentialLogin(false, c))
 	cmd.AddCommand(NewCredentialLogout(false, c))

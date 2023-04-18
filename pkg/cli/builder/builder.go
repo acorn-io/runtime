@@ -78,7 +78,6 @@ func Main(cmd *cobra.Command) {
 // Command populates a cobra.Command object by extracting args from struct tags of the
 // Runnable obj passed.  Also the Run method is assigned to the RunE of the command.
 // name = Override the struct field with
-
 func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	var (
 		envs       []func()

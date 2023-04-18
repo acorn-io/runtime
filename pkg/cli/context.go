@@ -3,6 +3,7 @@ package cli
 import (
 	"io"
 	"os"
+	"strings"
 
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/project"
@@ -37,4 +38,35 @@ func (c *CommandClientFactory) Options() project.Options {
 
 func (c *CommandClientFactory) CreateDefault() (client.Client, error) {
 	return project.Client(c.cmd.Context(), c.Options())
+}
+
+func parseArgGetClient(factory ClientFactory, cmd *cobra.Command, arg string) (client.Client, string, error) {
+	parsedProject := ""
+	localClientFactory := factory
+	opts := factory.Options()
+	// project needs to be parsed out of arg before a call to name.ParseReference
+	parsedProject, arg = parseProjectOffString(arg)
+	if parsedProject != "" {
+		localAcorn := &Acorn{
+			Kubeconfig:  opts.Kubeconfig,
+			Project:     parsedProject,
+			AllProjects: opts.AllProjects,
+		}
+		localClientFactory = &CommandClientFactory{
+			cmd:   cmd,
+			acorn: localAcorn,
+		}
+	}
+	localClient, err := localClientFactory.CreateDefault()
+	if err != nil {
+		return nil, "", err
+	}
+	return localClient, arg, nil
+}
+
+func parseProjectOffString(name string) (string, string) {
+	if parsedProject, after, found := strings.Cut(name, "::"); found {
+		return parsedProject, after
+	}
+	return "", name
 }

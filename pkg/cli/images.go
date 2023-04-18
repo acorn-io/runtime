@@ -9,6 +9,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -25,7 +26,7 @@ acorn images`,
 		SilenceUsage:      true,
 		Short:             "Manage images",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(1)).checkProjectPrefix().complete,
 	})
 	cmd.AddCommand(NewImageDelete(c))
 	cmd.AddCommand(NewImageDetail(c))
@@ -47,12 +48,19 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	allProjects := a.client.Options().AllProjects
 	var images []apiv1.Image
 	var image *apiv1.Image
 	tagToMatch := ""
 	repoToMatch := ""
 
+	// Image was explicitly provided
 	if len(args) == 1 {
+		c, args[0], err = parseArgGetClient(a.client, cmd, args[0])
+		if err != nil {
+			return err
+		}
+
 		ref, err := name.ParseReference(args[0], name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return err
@@ -100,7 +108,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 				// > search by repository
 				// no tag or digest was provided, so we need to get all images and filter by repo
 				repoToMatch = ref.Context().Name()
-				il, err := c.ImageList(cmd.Context())
+				il, err := parseProjectsOffImages(c.ImageList(cmd.Context()))
 				if err != nil {
 					return err
 				}
@@ -121,20 +129,20 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 		a.All = true
 	} else {
 		// > No filter, list all
-		images, err = c.ImageList(cmd.Context())
+		images, err = parseProjectsOffImages(c.ImageList(cmd.Context()))
 		if err != nil {
 			return err
 		}
 	}
 
 	if a.Containers {
-		//only display first tag in -c <tag>
+		// only display first tag in -c <tag>
 		if image != nil && len(image.Tags) != 0 && tagToMatch == "" && len(args) != 0 {
 			args[0] = image.Tags[0]
 			tagToMatch = image.Tags[0]
 		}
 
-		return printContainerImages(images, cmd.Context(), c, a, args, tagToMatch)
+		return printContainerImages(images, cmd.Context(), c, a, args, tagToMatch, allProjects)
 	}
 
 	out := table.NewWriter(tables.ImageAcorn, false, a.Output)
@@ -157,6 +165,12 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			Digest:     image.Digest,
 			Tag:        "",
 			Repository: "",
+			Project:    "",
+		}
+
+		// Only add the project info if called with -A
+		if allProjects {
+			imagePrint.Project = image.Labels[labels.AcornProjectName]
 		}
 
 		// no tag set at all, so only print if --all is set
@@ -211,6 +225,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 }
 
 type imagePrint struct {
+	Project    string `json:"project,omitempty"`
 	Name       string `json:"name,omitempty"`
 	Digest     string `json:"digest,omitempty"`
 	Repository string `json:"repository,omitempty"`
@@ -218,45 +233,48 @@ type imagePrint struct {
 }
 
 type imageContainer struct {
-	Container string
-	Repo      string
-	Tags      []string
-	Digest    string
-	ImageID   string
+	Container  string
+	Repository string
+	Tags       []string
+	Digest     string
+	ImageID    string
 }
 
 type imageContainerPrint struct {
-	Container string
-	Repo      string
-	Tag       string
-	Digest    string
-	ImageID   string
+	Project    string
+	Container  string
+	Repository string
+	Tag        string
+	Digest     string
+	ImageID    string
 }
 
-func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image, args []string, tagToMatch string) error {
+func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Client, a *Image, args []string, tagToMatch string, allProjects bool) error {
 	out := table.NewWriter(tables.ImageContainer, a.Quiet, a.Output)
 
 	if a.Quiet {
 		out = table.NewWriter([][]string{
-			{"Name", "{{if ne .Repo \"\"}}{{.Repo}}:{{end}}{{.Tag}}@{{.Digest}}"},
+			{"Name", "{{if ne .Repository \"\"}}{{.Repository}}:{{end}}{{.Tag}}@{{.Digest}}"},
 		}, a.Quiet, a.Output)
 	}
 
 	for _, image := range images {
+		imageProject := image.Labels[labels.AcornProjectName]
 		containerImages, err := getImageContainers(c, ctx, image)
 		if err != nil {
 			return err
 		}
 		for _, imageContainer := range containerImages {
 			imageContainerPrint := imageContainerPrint{
-				Container: imageContainer.Container,
-				Repo:      imageContainer.Repo,
-				Digest:    imageContainer.Digest,
-				ImageID:   imageContainer.ImageID,
+				Container:  imageContainer.Container,
+				Repository: imageContainer.Repository,
+				Digest:     imageContainer.Digest,
+				ImageID:    imageContainer.ImageID,
+			}
+			if allProjects { // Same project for all container images
+				imageContainerPrint.Project = imageProject
 			}
 			if len(imageContainer.Tags) == 0 && a.All {
-				imageContainerPrint.Tag = "<none>"
-				imageContainerPrint.Repo = "<none>"
 				out.Write(imageContainerPrint)
 				continue
 			}
@@ -268,11 +286,11 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 				if tagToMatch == imageParsedTag.Name() || tagToMatch == "" {
 					imageContainerPrint.Tag = imageParsedTag.TagStr()
 					if imageParsedTag.RegistryStr() != "" {
-						imageContainerPrint.Repo = imageParsedTag.RegistryStr() + "/"
+						imageContainerPrint.Repository = imageParsedTag.RegistryStr() + "/"
 					}
-					imageContainerPrint.Repo += imageParsedTag.RepositoryStr()
+					imageContainerPrint.Repository += imageParsedTag.RepositoryStr()
 					out.Write(imageContainerPrint)
-					imageContainerPrint.Repo = ""
+					imageContainerPrint.Repository = ""
 				}
 			}
 		}
@@ -282,7 +300,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 }
 
 func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image) ([]imageContainer, error) {
-	imageContainers := []imageContainer{}
+	var imageContainers []imageContainer
 
 	imgDetails, err := c.ImageDetails(ctx, image.Name, nil)
 	if err != nil {
@@ -298,7 +316,7 @@ func getImageContainers(c client.Client, ctx context.Context, image apiv1.Image)
 }
 
 func newImageContainerList(image apiv1.Image, containers map[string]v1.ContainerData) []imageContainer {
-	imageContainers := []imageContainer{}
+	var imageContainers []imageContainer
 
 	for k, v := range containers {
 		imageContainerObject := imageContainer{
@@ -322,4 +340,22 @@ func newImageContainerList(image apiv1.Image, containers map[string]v1.Container
 	}
 
 	return imageContainers
+}
+
+// parseProjectsOffImages parses the projectName::actualName format off a
+// list of images, strips it, and adds it onto the AcornProjectName label
+func parseProjectsOffImages(images []apiv1.Image, err error) ([]apiv1.Image, error) {
+	if err != nil {
+		return []apiv1.Image{}, err
+	}
+	for i, image := range images {
+		if parsedProject, after, found := strings.Cut(image.Name, "::"); found {
+			images[i].Name = after
+			if images[i].Labels == nil {
+				images[i].Labels = make(map[string]string)
+			}
+			images[i].Labels[labels.AcornProjectName] = parsedProject
+		}
+	}
+	return images, nil
 }

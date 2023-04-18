@@ -40,6 +40,23 @@ func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 	return aggregateOptionalNaming[T, V](ctx, true, factory, cb)
 }
 
+// parseProject accepts a name string (in the form of resource or project::resource) and a ClientFactory.
+// If the name string is not of project::resource form, it returns a client for the default project, the name, and
+// nil. Otherwise, it parses off the project name and returns a client for that project, the name without project::,
+// and nil
+func parseProject(ctx context.Context, name string, factory ProjectClientFactory) (pc Client, parsedArg string, err error) {
+	var parsedProject string
+	if possibleProject, possibleArg, found := strings.Cut(name, "::"); found {
+		parsedProject = possibleProject
+		parsedArg = possibleArg
+	} else {
+		parsedProject = factory.DefaultProject()
+		parsedArg = name
+	}
+	pc, err = factory.ForProject(ctx, parsedProject)
+	return
+}
+
 func aggregateOptionalNaming[T any, V ObjectPointer[T]](ctx context.Context, appendProjectName bool, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
 	var result []T
 	clients, err := factory.List(ctx)
@@ -54,7 +71,7 @@ func aggregateOptionalNaming[T any, V ObjectPointer[T]](ctx context.Context, app
 		for i := range items {
 			if appendProjectName && client.GetProject() != factory.DefaultProject() {
 				p := (V)(&items[i])
-				p.SetName(client.GetProject() + "/" + p.GetName())
+				p.SetName(client.GetProject() + "::" + p.GetName())
 			}
 			result = append(result, items[i])
 		}
@@ -68,15 +85,10 @@ func isNil(obj kclient.Object) bool {
 
 func onOneList[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectClientFactory, name string, cb func(name string, client Client) ([]T, error)) ([]T, error) {
 	var (
-		result      []T
-		projectName = ""
+		result []T
 	)
-	i := strings.LastIndex(name, "/")
-	if i != -1 {
-		projectName = name[0:i]
-		name = name[i+1:]
-	}
-	client, err := factory.ForProject(ctx, projectName)
+	// parse the form project::resource
+	client, name, err := parseProject(ctx, name, factory)
 	if err != nil {
 		return result, err
 	}
@@ -85,10 +97,13 @@ func onOneList[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 	if err != nil {
 		return result, err
 	}
+	// if we changed the project by specifying it in the resource name
 	for i := range result {
 		obj := (V)(&result[i])
+		// the below check will fail
 		if client.GetProject() != factory.DefaultProject() {
-			obj.SetName(client.GetProject() + "/" + obj.GetName())
+			// so reassign the name and prepend project name in front
+			obj.SetName(client.GetProject() + "::" + obj.GetName())
 		}
 	}
 	return result, nil
@@ -96,15 +111,10 @@ func onOneList[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 
 func onOne[T kclient.Object](ctx context.Context, factory ProjectClientFactory, name string, cb func(name string, client Client) (T, error)) (T, error) {
 	var (
-		result      T
-		projectName = ""
+		result T
 	)
-	i := strings.LastIndex(name, "/")
-	if i != -1 {
-		projectName = name[0:i]
-		name = name[i+1:]
-	}
-	client, err := factory.ForProject(ctx, projectName)
+	// parse the form project::resource
+	client, name, err := parseProject(ctx, name, factory)
 	if err != nil {
 		return result, err
 	}
@@ -114,7 +124,7 @@ func onOne[T kclient.Object](ctx context.Context, factory ProjectClientFactory, 
 		return result, err
 	}
 	if client.GetProject() != factory.DefaultProject() {
-		result.SetName(client.GetProject() + "/" + result.GetName())
+		result.SetName(client.GetProject() + "::" + result.GetName())
 	}
 	return result, nil
 }
@@ -324,15 +334,13 @@ func (m *MultiClient) VolumeDelete(ctx context.Context, name string) (*apiv1.Vol
 }
 
 func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
-	if err != nil {
-		return nil, err
-	}
-	return c.ImageList(ctx)
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Image, error) {
+		return c.ImageList(ctx)
+	})
 }
 
 func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, name, err := parseProject(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +348,7 @@ func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, 
 }
 
 func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, name, err := parseProject(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +356,7 @@ func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageD
 }
 
 func (m *MultiClient) ImagePush(ctx context.Context, tagName string, opts *ImagePushOptions) (result <-chan ImageProgress, err error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, tagName, err := parseProject(ctx, tagName, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +364,7 @@ func (m *MultiClient) ImagePush(ctx context.Context, tagName string, opts *Image
 }
 
 func (m *MultiClient) ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (result <-chan ImageProgress, err error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, name, err := parseProject(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +372,7 @@ func (m *MultiClient) ImagePull(ctx context.Context, name string, opts *ImagePul
 }
 
 func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, image, err := parseProject(ctx, image, m.Factory)
 	if err != nil {
 		return err
 	}
@@ -372,15 +380,34 @@ func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
 }
 
 func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (result *ImageDetails, err error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	// Image may exist on any project within MultiClient
+	// Can't use onOne due to ImageDetails not conforming to type restraints
+	c, image, err := parseProject(ctx, imageName, m.Factory)
 	if err != nil {
 		return nil, err
 	}
-	return c.ImageDetails(ctx, imageName, opts)
+	// if we parsed project::image format, can just query the project's client
+	if image != imageName {
+		return c.ImageDetails(ctx, image, opts)
+	}
+	// otherwise search all projects
+	clients, err := m.Factory.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var details *ImageDetails
+	for _, client := range clients {
+		if details, err = client.ImageDetails(ctx, imageName, opts); err == nil {
+			// once a call to ImageDetails succeeds, return
+			return details, nil
+		}
+	}
+	// we never had a successful call to imageDetails, so return the last error
+	return nil, err
 }
 
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, name, err := parseProject(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +423,7 @@ func (m *MultiClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornIma
 }
 
 func (m *MultiClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	c, name, err := parseProject(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}

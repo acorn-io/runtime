@@ -58,6 +58,7 @@ require (
 	golang.org/x/sync v0.1.0
 	google.golang.org/grpc v1.53.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
+	gotest.tools/v3 v3.1.0
 	inet.af/tcpproxy v0.0.0-20221017015627-91f861402626
 	k8s.io/api v0.25.3
 	k8s.io/apiextensions-apiserver v0.25.2

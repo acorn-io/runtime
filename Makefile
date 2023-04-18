@@ -7,9 +7,6 @@ tidy:
 generate:
 	go generate
 
-mocks:
-	go run github.com/golang/mock/mockgen --build_flags=--mod=mod -destination=./pkg/mocks/mock_client.go -package=mocks github.com/acorn-io/acorn/pkg/client Client,ProjectClientFactory
-
 image:
 	docker build .
 

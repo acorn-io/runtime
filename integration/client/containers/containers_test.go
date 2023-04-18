@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/icmd"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -109,7 +110,7 @@ func TestContainerGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	ns := helper.TempProject(t, kclient)
 
 	c, err := client.New(restConfig, "", ns.Name)
 	if err != nil {
@@ -141,6 +142,19 @@ func TestContainerGet(t *testing.T) {
 	assert.Equal(t, cons[0].Name, con.Name)
 	assert.Equal(t, cons[0].Namespace, con.Namespace)
 	assert.Equal(t, cons[0].UID, con.UID)
+
+	// > Check project::container format
+	// Create a different project and client to run the commands from.
+	ns2 := helper.TempProject(t, kclient)
+	helper.SwitchCLIDefaultProjectWithSwitchbackAtCleanup(t, ns2.Name)
+
+	// Cross project command should error
+	result := icmd.RunCommand("acorn", "container", cons[0].Name)
+	assert.NotEqual(t, result.ExitCode, 0)
+	// use project::image format for cross project
+	result = icmd.RunCommand("acorn", "container", ns.Name+"::"+cons[0].Name, "-o=json")
+
+	assert.Equal(t, result.ExitCode, 0)
 }
 
 func TestContainerExec(t *testing.T) {

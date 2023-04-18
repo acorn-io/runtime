@@ -14,7 +14,7 @@ func NewImageDelete(c CommandContext) *cobra.Command {
 		Example:           `acorn image rm my-image`,
 		SilenceUsage:      true,
 		Short:             "Delete an Image",
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).checkProjectPrefix().complete,
 	})
 	return cmd
 }
@@ -25,12 +25,14 @@ type ImageDelete struct {
 }
 
 func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
-	c, err := a.client.CreateDefault()
-	if err != nil {
-		return err
-	}
-
 	for _, image := range args {
+		// if the image is of the form project::image,
+		// parse off project:: and change the client
+		c, image, err := parseArgGetClient(a.client, cmd, image)
+		if err != nil {
+			return err
+		}
+
 		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
 		if err != nil {
 			return fmt.Errorf("deleting %s: %w", image, err)

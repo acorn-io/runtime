@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/icmd"
 )
 
 func TestAppStartStop(t *testing.T) {
@@ -89,6 +90,43 @@ func TestAppDelete(t *testing.T) {
 	assert.Equal(t, app.UID, newApp.UID)
 
 	newApp, err = c.AppDelete(ctx, app.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Nil(t, newApp)
+}
+
+func TestAppDeleteWithCLIProjectCompletions(t *testing.T) {
+	helper.EnsureCRDs(t)
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempProject(t, kclient)
+
+	imageID := client2.NewImage(t, ns.Name)
+
+	c, err := client.New(restConfig, "", ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, imageID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a different project and client to run the commands from.
+	ns2 := helper.TempProject(t, kclient)
+
+	helper.SwitchCLIDefaultProjectWithSwitchbackAtCleanup(t, ns2.Name)
+	// use project::image format for cross project
+	result := icmd.RunCommand("acorn", "rm", ns.Name+"::"+app.Name, "--force")
+	assert.Equal(t, 0, result.ExitCode)
+	assert.Contains(t, result.Stdout(), "Removed:")
+
+	newApp, err := c.AppDelete(ctx, app.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

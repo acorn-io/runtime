@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	helperclient "github.com/acorn-io/acorn/integration/client"
 	"github.com/acorn-io/acorn/integration/helper"
 	adminapiv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -883,16 +884,9 @@ func TestDeployParam(t *testing.T) {
 }
 
 func TestUsingComputeClasses(t *testing.T) {
-	helper.StartController(t)
-	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
-	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	c, _ := helper.ClientAndNamespace(t)
 	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
 
 	checks := []struct {
 		name              string
@@ -1088,9 +1082,9 @@ func TestUsingComputeClasses(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					// Clean-up and gurantee the computeclass doesn't exist after this test run
+					// Clean-up and guarantee the computeclass doesn't exist after this test run
 					t.Cleanup(func() {
-						if err = kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
+						if err := kclient.Delete(context.Background(), computeClass); err != nil && !apierrors.IsNotFound(err) {
 							t.Fatal(err)
 						}
 						err := helper.EnsureDoesNotExist(ctx, func() (crClient.Object, error) {
@@ -1104,9 +1098,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					})
 				}
 
-				image, err := c.AcornImageBuild(ctx, tt.testDataDirectory+"/Acornfile", &client.AcornImageBuildOptions{
-					Cwd: tt.testDataDirectory,
-				})
+				image, err := helperclient.NewImageFromPath(t, ctx, c, tt.testDataDirectory)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -1121,7 +1113,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					}
 				}
 
-				// Clean-up and gurantee the app doesn't exist after this test run
+				// Clean-up and guarantee the app doesn't exist after this test run
 				if app != nil {
 					t.Cleanup(func() {
 						if err = kclient.Delete(context.Background(), app); err != nil && !apierrors.IsNotFound(err) {

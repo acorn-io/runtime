@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -83,6 +84,97 @@ func (a *completion) complete(cmd *cobra.Command, args []string, toComplete stri
 	}
 
 	return removeExistingArgs(result, args), a.successDirective
+}
+
+// checkProjectPrefix
+// called on a completion object, which already has the completion function defined
+// this function modifies that completion function, wraps it with some logic to handle projects
+func (a *completion) checkProjectPrefix() *completion {
+	currentCompletionFunc := a.completionFunc
+	// Get CLI Config, necessary for building new clients on different projects
+	options := a.client.Options()
+	if options.CLIConfig == nil {
+		cfg, err := config.ReadCLIConfig()
+		options.CLIConfig = cfg
+		if err != nil {
+			fmt.Printf("could not read CLI config.\n%+v", err)
+		}
+	}
+	newCompletionFunc := func(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+		if parsedProject, after, found := strings.Cut(toComplete, "::"); found {
+			// check that the provided project exists, return a helpful error otherwise
+			foundProject, err := c.ProjectGet(ctx, parsedProject)
+			if foundProject == nil || err != nil {
+				return []string{}, nil
+			}
+
+			// > completion for the string after the ::
+			// create a new client scoped for the provided project name
+			options.Project = parsedProject
+			options.AllProjects = false
+			parsedProjectScopedClient, err := project.Client(ctx, options)
+
+			if err != nil {
+				return nil, err
+			}
+			// complete using the original function on what was after :: using the project scoped client
+			completions, err := currentCompletionFunc(ctx, parsedProjectScopedClient, after)
+			if err != nil {
+				return []string{}, err
+			}
+			// add back on projectName:: to the original completion
+			// If we were doing a list operation cross project, all values except those that match the current project
+			// would already have project::resource format. However, since we specify a specific project, we know
+			// it will only have the resource form and no project.
+			if len(completions) > 0 {
+				for i := range completions {
+					completions[i] = parsedProject + "::" + completions[i]
+				}
+			}
+			return completions, nil
+		}
+		// > The provided value may be the start of a project. There was no ::
+		// > That means we can complete either resources, or project::resources
+		foundCompletions := make([]string, 0)
+		// List all possible projects
+		options.AllProjects = true
+		projects, _, err := project.List(ctx, options)
+		if err != nil {
+			return []string{}, nil
+		}
+		// check that the provided name matches the beginning of the project
+		for _, possibleProject := range projects {
+			projectScopedCompletions := make([]string, 0)
+			if strings.HasPrefix(possibleProject, toComplete) {
+				// Create project scoped client
+				options.AllProjects = false
+				options.Project = possibleProject
+				parsedProjectScopedClient, err := project.Client(ctx, options)
+				if err != nil {
+					return nil, err
+				}
+				// toComplete was the prefix of a project, so there will be no resource value for completion
+				// So, we complete on a blank string
+				projectScopedCompletions, err = currentCompletionFunc(ctx, parsedProjectScopedClient, "")
+				if err != nil {
+					return nil, err
+				}
+				// The above provided completions without project appended in front, so it is added
+				for i := range projectScopedCompletions {
+					projectScopedCompletions[i] = possibleProject + "::" + projectScopedCompletions[i]
+				}
+			}
+			foundCompletions = append(foundCompletions, projectScopedCompletions...)
+		}
+
+		// Combine the completions we found after matching on projectName,
+		// with completions after calling the original completion function with
+		// the provided name
+		completionsWithoutProject, err := currentCompletionFunc(ctx, c, toComplete)
+		return append(completionsWithoutProject, foundCompletions...), err
+	}
+	a.completionFunc = newCompletionFunc
+	return a
 }
 
 func appsThenContainersCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
@@ -267,16 +359,17 @@ func projectsCompletion(ctx context.Context, c client.Client, toComplete string)
 	}
 
 	projects, _, err := project.List(ctx, project.Options{
-		CLIConfig: cfg,
+		CLIConfig:   cfg,
+		AllProjects: true,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	var result []string
-	for _, project := range projects {
-		if strings.HasPrefix(project, toComplete) {
-			result = append(result, project)
+	for _, foundProject := range projects {
+		if strings.HasPrefix(foundProject, toComplete) {
+			result = append(result, foundProject)
 		}
 	}
 

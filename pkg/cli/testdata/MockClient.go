@@ -19,11 +19,12 @@ import (
 )
 
 type MockClientFactoryManual struct {
-	Client client.Client
+	Client         client.Client
+	ProjectOptions project.Options
 }
 
 func (dc *MockClientFactoryManual) Options() project.Options {
-	return project.Options{}
+	return dc.ProjectOptions
 }
 
 func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
@@ -196,14 +197,14 @@ func (m *MockClient) AppRun(ctx context.Context, image string, opts *client.AppR
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{Ready: true},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	}
@@ -221,14 +222,14 @@ func (m *MockClient) AppUpdate(ctx context.Context, name string, opts *client.Ap
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	}
@@ -440,6 +441,8 @@ func (m *MockClient) ContainerReplicaDelete(ctx context.Context, name string) (*
 		return nil, nil
 	case "found.container":
 		return &apiv1.ContainerReplica{}, nil
+	case "container":
+		return &apiv1.ContainerReplica{}, nil
 	}
 	return nil, nil
 }
@@ -607,7 +610,7 @@ func (m *MockClient) ImageTag(ctx context.Context, image, tag string) error {
 func (m *MockClient) ImageDetails(ctx context.Context, imageName string, opts *client.ImageDetailsOptions) (*client.ImageDetails, error) {
 	return &client.ImageDetails{
 		AppImage: v1.AppImage{ID: imageName, ImageData: v1.ImagesData{
-			Containers: map[string]v1.ContainerData{"test-image-running-container": v1.ContainerData{
+			Containers: map[string]v1.ContainerData{"test-image-running-container": {
 				Image:    "test-image-running-container",
 				Sidecars: nil,
 			}},
@@ -714,7 +717,11 @@ func (m *MockClient) GetProject() string {
 
 func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Project, error) {
 	if m.ProjectItem != nil {
-		return m.ProjectItem, nil
+		if m.ProjectItem.Name == name {
+			return m.ProjectItem, nil
+		} else {
+			return nil, nil
+		}
 	}
 	return nil, nil
 }

@@ -20,6 +20,9 @@ var (
 type WatchFunc func(ctx context.Context, obj client.ObjectList, opts ...client.ListOption) (watch.Interface, error)
 type watchFunc func() (watch.Interface, error)
 
+// doWatch performs a watch operation on the object, executes the
+// callback function on the object, and returns a boolean value
+// based on the execution of the callback function.
 func doWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj T) bool) bool {
 	t.Helper()
 
@@ -80,6 +83,9 @@ func retryWatch[T client.Object](t *testing.T, watchFunc watchFunc, cb func(obj 
 	}
 }
 
+// Wait repeatedly calls retryWatch and executes the callback function
+// on the object until the callback function returns true. It returns
+// the last object on which the callback function was executed.
 func Wait[T client.Object](t *testing.T, watchFunc WatchFunc, list client.ObjectList, cb func(obj T) bool) T {
 	t.Helper()
 

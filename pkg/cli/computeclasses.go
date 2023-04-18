@@ -16,7 +16,7 @@ func NewComputeClasses(c CommandContext) *cobra.Command {
 acorn computeclasses`,
 		SilenceUsage:      true,
 		Short:             "List available ComputeClasses",
-		ValidArgsFunction: newCompletion(c.ClientFactory, computeClassCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, computeClassCompletion).checkProjectPrefix().complete,
 	})
 }
 

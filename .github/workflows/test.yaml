@@ -30,4 +30,4 @@ jobs:
       - run: docker buildx install
       - run: make setup-ci-image
       - run: ./bin/acorn install --image acorn:v-ci --skip-checks --acorn-dns=disabled
-      - run: TEST_ACORN_CONTROLLER=external make test
+      - run: export PATH=$PATH:$(pwd)/bin && TEST_ACORN_CONTROLLER=external make test

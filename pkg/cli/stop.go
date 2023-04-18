@@ -16,7 +16,7 @@ acorn stop my-app
 acorn stop my-app1 my-app2`,
 		SilenceUsage:      true,
 		Short:             "Stop an app",
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).checkProjectPrefix().complete,
 	})
 }
 

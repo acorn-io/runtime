@@ -20,7 +20,7 @@ acorn logout ghcr.io`,
 		SilenceUsage:      true,
 		Short:             "Remove registry credentials",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, credentialsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, credentialsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).checkProjectPrefix().complete,
 	})
 	if root {
 		cmd.Aliases = nil

@@ -17,6 +17,62 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestProjectPrefixCompletions(t *testing.T) {
+	appNames := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
+	apps := make([]apiv1.App, 0, len(appNames))
+	for _, name := range appNames {
+		apps = append(apps, apiv1.App{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	}
+
+	mockClientFactory := &testdata.MockClientFactory{
+		AppList: apps,
+		ProjectItem: &apiv1.Project{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "project",
+			},
+		},
+	}
+	cmd := new(cobra.Command)
+	cmd.SetContext(context.Background())
+
+	tests := []struct {
+		name          string
+		args          []string
+		toComplete    string
+		wantNames     []string
+		wantDirective cobra.ShellCompDirective
+	}{
+		{
+			name:          "Project Prefix Doesn't Exist",
+			toComplete:    "nonexist::tatatat",
+			wantNames:     []string{},
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		{
+			name:          "Project Prefix Doesn't Exist, no resource",
+			toComplete:    "nonexist::",
+			wantNames:     []string{}, // unsure why this is returning
+			wantDirective: cobra.ShellCompDirectiveNoFileComp,
+		},
+		// Would like to add more tests here for success conditions
+		// Testing project completion is difficult because it creates new clients based off CLI config.
+	}
+
+	comp := newCompletion(mockClientFactory, appsThenContainersCompletion).checkProjectPrefix()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
+			if len(tt.wantNames) > 0 {
+				assert.Contains(t, tt.wantNames, got, "appsThenContainersCompletion(_, _, %v, %v) want: %v, got: %v", tt.args, tt.toComplete, tt.wantNames, got)
+			} else {
+				assert.Len(t, got, 0)
+			}
+			assert.Equalf(t, tt.wantDirective, got1, "appsThenContainersCompletion(_, _, %v, %v) want: %v, got: %v", tt.args, tt.toComplete, tt.wantDirective, got1)
+		})
+	}
+}
+
 func TestAppsThenContainersCompletion(t *testing.T) {
 	appNames := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
 	containerNames := []string{"test-1.container-1", "acorn-1.container-1", "acorn-2.container-1", "hub.container", "hub.other-container", "test-2.container-1"}
