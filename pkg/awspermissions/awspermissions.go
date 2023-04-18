@@ -161,7 +161,7 @@ outer:
 					"Federated": identityProviderARN,
 				},
 				Condition: map[string]any{
-					"StringLike": map[string]any{
+					"StringEquals": map[string]any{
 						subName: fmt.Sprintf("system:serviceaccount:%s:%s", app.Status.Namespace, serviceName),
 					},
 				},
