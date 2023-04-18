@@ -296,7 +296,6 @@ func (s *Validator) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions,
 		return nil
 	}
 
-	permsError := &client.ErrRulesNeeded{Permissions: []v1.Permissions{}}
 	for _, perm := range perms {
 		if len(perm.GetRules()) == 0 {
 			continue
@@ -304,14 +303,13 @@ func (s *Validator) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions,
 
 		if specPerms := v1.FindPermission(perm.ServiceName, requestedPerms); !specPerms.HasRules() ||
 			!equality.Semantic.DeepEqual(perm.GetRules(), specPerms.Get().GetRules()) {
-			permsError.Permissions = append(permsError.Permissions, perm)
-			continue
+			// If any perm doesn't match then return all perms
+			return &client.ErrRulesNeeded{
+				Permissions: perms,
+			}
 		}
 	}
 
-	if len(permsError.Permissions) != 0 {
-		return permsError
-	}
 	return nil
 }
 
