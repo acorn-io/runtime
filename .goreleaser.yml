@@ -21,8 +21,6 @@ builds:
         goarch: arm64
       - goos: windows
         goarch: arm
-    flags:
-      - -tags netgo
     ldflags:
       - -s
       - -w
