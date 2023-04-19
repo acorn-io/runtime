@@ -165,7 +165,7 @@ func useLocalWildcardDomain(ctx context.Context, getter kclient.Reader) (bool, e
 	var nodes corev1.NodeList
 	if err := getter.List(ctx, &nodes); err != nil {
 		if meta.IsNoMatchError(err) {
-			// Node type doesn't exist probably because we are running against huhb
+			// Node type doesn't exist probably because we are running against hub
 			return false, nil
 		}
 		return false, err

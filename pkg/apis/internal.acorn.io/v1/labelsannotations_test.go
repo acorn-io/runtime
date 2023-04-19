@@ -14,7 +14,7 @@ func TestParseScopedLabels(t *testing.T) {
 		// with the resourceType specified. Example: --label container:k=v
 		simpleTest(t, rt+":k=v", ScopedLabel{ResourceType: rt, Key: "k", Value: "v"})
 		simpleTest(t, rt+"s:k=v", ScopedLabel{ResourceType: rt, Key: "k", Value: "v"})
-		// with the resourceType and resouceName specified. Example: --label container:n:k=v
+		// with the resourceType and resourceName specified. Example: --label container:n:k=v
 		simpleTest(t, rt+":n:k=v", ScopedLabel{ResourceType: rt, ResourceName: "n", Key: "k", Value: "v"})
 		simpleTest(t, rt+"s:n:k=v", ScopedLabel{ResourceType: rt, ResourceName: "n", Key: "k", Value: "v"})
 	}

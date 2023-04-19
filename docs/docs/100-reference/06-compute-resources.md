@@ -50,7 +50,7 @@ You can configure Acorn apps to have a set compute class upon startup.
 
 Setting a compute class allows you to define what the infrastructure providing your Acorn workloads should look like. Things that compute classes control include:
 
-- What OS/Architecure your workloads will run on
+- What OS/Architecture your workloads will run on
 - How much memory is minimal, maximal, default and allowed
 - How many vCPUs should be allocated
 
@@ -78,7 +78,7 @@ Breaking this down:
     1. `-` denotes a range and any value within it can be specified.
     2. `,` denotes specific values that are the only ones allowed.
 
-Specifying compute classes can be done in the Acornfile (using the [class property](03-acornfile.md#class) for containers) or at runtime (using the [--compute-class flag](50-running/55-compute-resources.md#compute-class)). If you do not specify a compute class, the default compute class for the project will be used. If there is no default for the project, the default for the cluster will be used. Finally, if there is no cluster default then no compute class will be used. Depending on the compute class that is used, the memory that you specify may be in contention with its requirements. Should that happen Acorn will provide a descriptive error message to ammend any issues.
+Specifying compute classes can be done in the Acornfile (using the [class property](03-acornfile.md#class) for containers) or at runtime (using the [--compute-class flag](50-running/55-compute-resources.md#compute-class)). If you do not specify a compute class, the default compute class for the project will be used. If there is no default for the project, the default for the cluster will be used. Finally, if there is no cluster default then no compute class will be used. Depending on the compute class that is used, the memory that you specify may be in contention with its requirements. Should that happen Acorn will provide a descriptive error message to amend any issues.
 
 :::note
 Looking to manage a compute class? This should only be done if you are (or are in communication with) an administrator of Acorn. You can read more information about managing compute classes [here](02-admin/03-computeclasses.md)

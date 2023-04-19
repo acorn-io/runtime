@@ -41,6 +41,6 @@ affinity: # The same affinity fields for Pods
 If `memory.min`, `memory.max`, `memory.values`, `affinity`, and `tolerations` are not given, then there are no scheduling rules for workloads using the compute class. 
 
 ## Cluster Compute Classes
-Cluster Compute Classes are exactly the same as Project Compute Classes except that they are not namespaced. This means that Cluster Woerkload Classes are available to every app running in your cluster.
+Cluster Compute Classes are exactly the same as Project Compute Classes except that they are not namespaced. This means that Cluster Workload Classes are available to every app running in your cluster.
 
 Similar to Project Compute Classes, there can be only one default for the entire cluster. However, there can be a default Cluster Compute Class and a default Project Compute Class for any project; the Project Compute Class default will take precedence in this situation. Similarly, if a Cluster Compute Class and a Project Compute Class exist with the same name, then the Project Compute Class will take precedence. These rules are applied when deploying apps and also when using the [`acorn offerings volumeclasses`](100-reference/01-command-line/acorn_offerings_computeclasses.md) command.

@@ -55,7 +55,7 @@ acorn login index.docker.io
 acorn login ghcr.io
 ```
 
-You will be prompted for your username and password to login. If your company has an internal registry you can login subtituting `ghcr.io` for your organizations registry domain.
+You will be prompted for your username and password to login. If your company has an internal registry you can login substituting `ghcr.io` for your organizations registry domain.
 
 ### Push the image
 

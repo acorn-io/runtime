@@ -255,7 +255,7 @@ containers: db: {
 `ports` defines which ports are available on the container and the default level of access. Ports
 are defined with three different access modes: internal, expose, publish. Internal ports are only available
 to the containers within an Acorn. Expose(d) ports are available to services within the cluster. And
-publish ports are available publically outside the cluster. The access mode defined in the Acornfile is
+publish ports are available publicly outside the cluster. The access mode defined in the Acornfile is
 just the default behavior and can be changed at deploy time.
 ```acorn
 containers: web: {
@@ -450,7 +450,7 @@ containers: web: {
 ```
 
 ### memory
-`memory` allows you to specify how much memory the container should run with. It can be abreviated to `mem`. If 
+`memory` allows you to specify how much memory the container should run with. It can be abbreviated to `mem`. If 
 left unspecified, it will be defaulted to the installation default (see the [reference documentation for memory](06-memory.md)
 for more information).
 

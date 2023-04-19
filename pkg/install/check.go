@@ -65,7 +65,7 @@ func (copts *CheckOptions) setDefaults() {
 }
 
 // PreInstallChecks is a list of all checks that are run before the installation.
-// They are crictial and will make the installation fail.
+// They are critical and will make the installation fail.
 func PreInstallChecks(ctx context.Context, opts CheckOptions) []CheckResult {
 	return RunChecks(ctx, opts,
 		CheckRBAC,
@@ -408,7 +408,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
  * CheckNodesReady checks if all nodes are ready.
  * -> This is a critical check, which "could" affect the installation.
  * TODO: We only need to check if the cluster is operational.
- * -> A single malfunctiuning node should not prevent the installation.
+ * -> A single malfunctioning node should not prevent the installation.
  */
 func CheckNodesReady(ctx context.Context, opts CheckOptions) CheckResult {
 	result := CheckResult{

@@ -120,7 +120,7 @@ Acorn makes multiple types of secrets available to the Acorn author.
  1. **Template:** Used to store configuration files that contain sensitive information.
  1. **Token:** Used to generate and/or store long secret strings.
  1. **Generated:** Used to take the output of a `job` and pass along as a secret bit of info.
- 1. **Opaque:** A generic secret that can store defaults in the Acorn, or is meant to be overriden by the user to pass unknown/unstructured sensitive data.
+ 1. **Opaque:** A generic secret that can store defaults in the Acorn, or is meant to be overridden by the user to pass unknown/unstructured sensitive data.
 
 ### Basic secrets
 

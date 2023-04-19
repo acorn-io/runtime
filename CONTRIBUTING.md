@@ -27,7 +27,7 @@ When your PR is ready for review and merging, ensure your commit messages and st
 
 Regarding the commit message: follow best practices. Here are two good resources for writing good commit messages:
 - [How to Write a Git Commit Message](https://cbea.ms/git-commit/)
-- [Git-scm.com's "Commit guildelines"](ttps://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project#_commit_guidelines)
+- [Git-scm.com's "Commit guidelines"](ttps://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project#_commit_guidelines)
 
 From the first resource, here are the seven rules of a great commit message:
 
