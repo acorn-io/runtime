@@ -47,4 +47,4 @@ routers: {
 }
 ```
 
-Running the above Acornfile will result in three sevice accounts named `my-app-container`, `my-app-job`, and `my-app-router` being created.
+Running the above Acornfile will result in three service accounts named `my-app-container`, `my-app-job`, and `my-app-router` being created.

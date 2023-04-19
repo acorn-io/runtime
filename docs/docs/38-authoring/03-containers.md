@@ -363,7 +363,7 @@ The `memory` property can be abbreviated to `mem` in the file.
 
 ## Compute Classes
 
-When you want to specify what infrastructure your Acorn's workload will run on, you use Compute Classes. You can set the class of a workload by defining by the `class` property defineable on all workloads (`containers` and `jobs`). Check out the [compute class documemtation](100-reference/06-compute-resources.md#compute-classes) for more information.
+When you want to specify what infrastructure your Acorn's workload will run on, you use Compute Classes. You can set the class of a workload by defining by the `class` property definable on all workloads (`containers` and `jobs`). Check out the [compute class documentation](100-reference/06-compute-resources.md#compute-classes) for more information.
 
 ```acorn
 containers: {

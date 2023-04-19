@@ -113,7 +113,7 @@ localData: {
 
 Strings can be a single line or multiline.  A single line string is surrounded by `"` quotes.
 
-Multiline strings are enclosed in triple quotes `"""`. The opening `"""` must be followed by a newline. The closing `"""` must also be on it's own line. The whitespace directly preceding the closing quotles must match the preceding whitespace on all other lines and is not included in the value.  This allows you to indent the text to match current level without the indenting becoming part of the actual value.
+Multiline strings are enclosed in triple quotes `"""`. The opening `"""` must be followed by a newline. The closing `"""` must also be on it's own line. The whitespace directly preceding the closing quotes must match the preceding whitespace on all other lines and is not included in the value.  This allows you to indent the text to match current level without the indenting becoming part of the actual value.
 
 ```acorn
 singleLine: "Hi!"
@@ -278,10 +278,10 @@ All the basic math and comparison operators you'd find in a typical programming 
 | :--------|:--------|:--------|:-------|
 | Addition | `+` | `1 + 1` | `2` |
 | Subtraction | `-` | `4 - 1` | `3` |
-| Muliplication | `*` | `4 * 2` | `8` |
+| Multiplication | `*` | `4 * 2` | `8` |
 | Division | `/` | `5 / 2` | `2.5`|
 | Greater than | `>` | `2 > 1` | `true` |
-| Grather than or equal | `>=` | `2 >= 2` | `true` |
+| Greater than or equal | `>=` | `2 >= 2` | `true` |
 | Less than | `<` | `1 < 1` | `false` |
 | Less than or equal | `<=` | `1 <= 1` | `true` |
 | Equals | `==` | `1 == 2` | `false` |
@@ -363,7 +363,7 @@ containers: {
 }
 ```
 
-See the [function libarary](../reference/functions#ifelse) for more information.
+See the [function library](../reference/functions#ifelse) for more information.
 
 ## For loops
 

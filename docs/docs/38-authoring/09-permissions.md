@@ -65,7 +65,7 @@ Physically defining the permissions of your application, `rules` get converted i
 Similar to `rules`, `clusterRules` define permissions in the application's namespace but with the added benefit of working in other ones as well. Instead of creating a `Role` that gets attached to your application's `ServiceAccount`, you get a `ClusterRole`. If you would like to allow your application to perform the defined rules in any namespace on the cluster then `clusterRules` are the way to go.
 
 ## Verbs
-To define what actions your application can perform on a given resource, you define a `verb`. These `verbs` are words that allow you to declaritively define what actions your application can perform on given resources.
+To define what actions your application can perform on a given resource, you define a `verb`. These `verbs` are words that allow you to declaratively define what actions your application can perform on given resources.
 
 :::info
 Wondering what verbs are available? Take a look!

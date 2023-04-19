@@ -291,7 +291,7 @@ func TestRefreshImages(t *testing.T) {
 			appsUpdated:            map[string]string{"acorn-1": "docker.io/acorn/acorn-1:tag"},
 		},
 		{
-			name:                   "Auto refresh tag with remote digest change but new image is disallowed", // Note: this is not 100% accurate, since imageAllowRules check against image digests, but it's good enought to test the logic
+			name:                   "Auto refresh tag with remote digest change but new image is disallowed", // Note: this is not 100% accurate, since imageAllowRules check against image digests, but it's good enough to test the logic
 			client:                 &mockDaemonClient{remoteImageDigest: "sha256:acorn4321docker.io/acorn/acorn-1dcba", imageDenyList: map[string]struct{}{"docker.io/acorn/acorn-1": {}}},
 			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "acorn-1"): thirtySecondsAgo},
 			imagesToRefresh:        map[imageAndNamespaceKey][]kclient.ObjectKey{{image: "docker.io/acorn/acorn-1", namespace: "acorn"}: {router.Key("acorn", "acorn-1")}},

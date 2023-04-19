@@ -255,7 +255,7 @@ containers: db: {
 `ports` defines which ports are available on the container and the default level of access. Ports
 are defined with three different access modes: internal, expose, publish. Internal ports are only available
 to the containers within an Acorn. Expose(d) ports are available to services within the cluster. And
-publish ports are available publically outside the cluster. The access mode defined in the Acornfile is
+publish ports are available publicly outside the cluster. The access mode defined in the Acornfile is
 just the default behavior and can be changed at deploy time.
 ```acorn
 containers: web: {
@@ -639,7 +639,7 @@ secrets: "my-token": {
 }
 ```
 ### data
-`data` defines the keys and non-senstive values that will be used by the secret.
+`data` defines the keys and non-sensitive values that will be used by the secret.
 Refer to [the secrets documentation](38-authoring/05-secrets.md) for
 descriptions of the different secret types and how to use data keys and values.
 

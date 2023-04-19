@@ -136,7 +136,7 @@ func TestCreatingComputeClasses(t *testing.T) {
 
 	for _, tt := range checks {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a non-instanced ComputeClass to trigger Mink valdiation
+			// Create a non-instanced ComputeClass to trigger Mink validation
 			computeClass := adminapiv1.ProjectComputeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					GenerateName: "acorn-test-custom",
