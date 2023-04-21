@@ -12,3 +12,5 @@ spec:
   appName: app-name
   appNamespace: app-namespace
   external: con-link
+  labels:
+    acorn.io/link-name: con-link
