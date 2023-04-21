@@ -95,34 +95,34 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 		set.Insert(imageRef.Context().Name())
 	} else {
 		if set.Has(imageRef.Context().Name()) {
-			// we're inserting a tag, so we can remove any digest-only entry
+			// we're inserting a tag, so we can remove any repo-only entry
 			set.Delete(imageRef.Context().Name())
 		}
 		set.Insert(imageRef.Name())
-	}
 
-	// remove the tag from any other image
-	hasChanged := false
-	for _, img := range imageList.Items {
-		if img.Name == image.Name {
-			continue
-		}
-		res, err = normalizeTags(img.Tags, false)
-		if err != nil {
-			return nil, err
-		}
-		for i, tag := range res {
-			if set.Has(tag) {
-				img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
-				hasChanged = true
+		// remove the tag from any other image (not if it's a repo-only reference, e.g. pulled by digest, as those can be duplicated)
+		hasChanged := false
+		for _, img := range imageList.Items {
+			if img.Name == image.Name {
+				continue
 			}
-		}
-		if hasChanged {
-			err = t.client.Update(ctx, &img)
+			res, err = normalizeTags(img.Tags, false)
 			if err != nil {
 				return nil, err
 			}
-			hasChanged = false
+			for i, tag := range res {
+				if set.Has(tag) {
+					img.Tags = append(img.Tags[:i], img.Tags[i+1:]...)
+					hasChanged = true
+				}
+			}
+			if hasChanged {
+				err = t.client.Update(ctx, &img)
+				if err != nil {
+					return nil, err
+				}
+				hasChanged = false
+			}
 		}
 	}
 

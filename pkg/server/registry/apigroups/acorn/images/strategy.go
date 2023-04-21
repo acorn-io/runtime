@@ -191,29 +191,31 @@ func (s *Strategy) findImage(ctx context.Context, namespace, imageName string) (
 // - tag name (with default): <registry>/<repo> or <repo> -> Will be matched against the default tag (:latest)
 //   - Note: if we get some string here, that matches the SHAPermissivePrefixPattern, it could be both a digest or a name without a tag
 //     so we will try to match it against the default tag (:latest) first and if that fails, we treat it as a digest(-prefix)
-func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, string, error) {
+func findImageMatch(images apiv1.ImageList, search string) (*apiv1.Image, string, error) {
 	var (
 		repoDigest     name.Digest
 		digest         string
 		digestPrefix   string
 		tagName        string
 		tagNameDefault string
+		canBeMultiple  bool // if true, we will not return on first match
 	)
-	if strings.HasPrefix(imageName, "sha256:") {
-		digest = imageName
-	} else if tags2.SHAPattern.MatchString(imageName) {
-		digest = "sha256:" + imageName
-		tagNameDefault = imageName
-	} else if tags2.SHAPermissivePrefixPattern.MatchString(imageName) {
-		digestPrefix = "sha256:" + imageName
-		tagNameDefault = imageName
+	if strings.HasPrefix(search, "sha256:") {
+		digest = search
+	} else if tags2.SHAPattern.MatchString(search) {
+		digest = "sha256:" + search
+		tagNameDefault = search // this could as well be some name without registry/repo path and tag
+	} else if tags2.SHAPermissivePrefixPattern.MatchString(search) {
+		digestPrefix = "sha256:" + search
+		tagNameDefault = search // this could as well be some name without registry/repo path and tag
 	} else {
-		ref, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+		ref, err := name.ParseReference(search, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			return nil, "", err
 		}
 		if ref.Identifier() == "" {
-			tagNameDefault = ref.Name()
+			tagNameDefault = ref.Name() // some name without a tag, so we will try to match it against the default tag (:latest)
+			canBeMultiple = true
 		} else if dig, ok := ref.(name.Digest); ok {
 			repoDigest = dig
 		} else {
@@ -231,28 +233,31 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 	}
 
 	var matchedImage apiv1.Image
+	var matchedTag string
 	for _, image := range images.Items {
+		// >>> match by tag name with default tag (:latest)
 		if tagNameDefault != "" {
 			for _, tag := range image.Tags {
 				if tag == tagNameDefault {
-					return &image, "", nil
+					return &image, tag, nil
 				}
 			}
 		}
 
+		// >>> match by digest or digest prefix
 		if image.Digest == digest {
 			return &image, "", nil
 		} else if digestPrefix != "" && strings.HasPrefix(image.Digest, digestPrefix) {
 			if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
-				reason := fmt.Sprintf("Image identifier %v is not unique", imageName)
-				return nil, "", apierrors.NewBadRequest(reason)
+				return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
 			}
 			matchedImage = image
 		}
 
+		// >>> match by repo digest
+		// this returns an image which matches the digest and has at least one tag
+		// which matches the repo part of the repo digest.
 		if repoDigest.Name() != "" && image.Digest == repoDigest.DigestStr() {
-			// Matching by repo digest returns an image which matches the digest and has at least one tag
-			// which matches the repo part of the repo digest.
 			for _, tag := range image.Tags {
 				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
 				if err != nil {
@@ -264,27 +269,42 @@ func findImageMatch(images apiv1.ImageList, imageName string) (*apiv1.Image, str
 			}
 		}
 
-		for i, tag := range image.Tags {
-			if tag == imageName {
-				return &image, image.Tags[i], nil
+		// >>> match by tag name
+		for _, tag := range image.Tags {
+			if tag == search {
+				if !canBeMultiple {
+					return &image, tag, nil
+				}
+				if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
+					return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
+				}
+				matchedImage = image
+				matchedTag = tag
 			} else if tag != "" {
-				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""))
+				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""), name.WithDefaultTag("")) // no default here, as we also have repo-only tag items
 				if err != nil {
 					continue
 				}
 				if imageParsedTag.Name() == tagName {
-					return &image, tag, nil
+					if !canBeMultiple {
+						return &image, tag, nil
+					}
+					if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
+						return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
+					}
+					matchedImage = image
+					matchedTag = tag
 				}
 			}
 		}
 	}
 
 	if matchedImage.Digest != "" {
-		return &matchedImage, "", nil
+		return &matchedImage, matchedTag, nil
 	}
 
 	return nil, "", apierrors.NewNotFound(schema.GroupResource{
 		Group:    api.Group,
 		Resource: "images",
-	}, imageName)
+	}, search)
 }
