@@ -274,13 +274,12 @@ func findImageMatch(images apiv1.ImageList, search string) (*apiv1.Image, string
 			if tag == search {
 				if !canBeMultiple {
 					return &image, tag, nil
-				} else {
-					if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
-						return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
-					}
-					matchedImage = image
-					matchedTag = tag
 				}
+				if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
+					return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
+				}
+				matchedImage = image
+				matchedTag = tag
 			} else if tag != "" {
 				imageParsedTag, err := name.NewTag(tag, name.WithDefaultRegistry(""), name.WithDefaultTag("")) // no default here, as we also have repo-only tag items
 				if err != nil {
@@ -289,13 +288,12 @@ func findImageMatch(images apiv1.ImageList, search string) (*apiv1.Image, string
 				if imageParsedTag.Name() == tagName {
 					if !canBeMultiple {
 						return &image, tag, nil
-					} else {
-						if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
-							return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
-						}
-						matchedImage = image
-						matchedTag = tag
 					}
+					if matchedImage.Digest != "" && matchedImage.Digest != image.Digest {
+						return nil, "", apierrors.NewBadRequest(fmt.Sprintf("Image identifier %v is not unique", search))
+					}
+					matchedImage = image
+					matchedTag = tag
 				}
 			}
 		}
