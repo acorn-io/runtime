@@ -187,6 +187,9 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 				PublishMode:  publishMode(app),
 				Publish:      ports2.PortPublishForService(link.Target, app.Spec.Publish),
 				External:     link.Service,
+				Labels: map[string]string{
+					labels.AcornLinkName: link.Service,
+				},
 			},
 		}
 		result = append(result, newService)
