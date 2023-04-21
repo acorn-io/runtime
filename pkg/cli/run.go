@@ -115,6 +115,7 @@ type Run struct {
 	Quiet             bool  `usage:"Do not print status" short:"q"`
 	Update            bool  `usage:"Update the app if it already exists" short:"u"`
 	Replace           bool  `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Refresh           bool  `usage:"Refresh the app even if no changes have occurred"`
 
 	out    io.Writer
 	client ClientFactory
@@ -314,6 +315,13 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 	updateOpts.Replace = s.Replace
 	updateOpts.Image = image
 	updateOpts.DeployArgs = deployArgs
+	if s.Refresh {
+		refreshAnnotation, err := v1.ParseScopedLabels("acorn.io/refresh=true")
+		if err != nil {
+			return nil, false, err
+		}
+		updateOpts.Annotations = append(updateOpts.Annotations, refreshAnnotation...)
+	}
 	app, err = rulerequest.PromptUpdate(ctx, c, s.Dangerous, app.Name, updateOpts)
 	if err != nil {
 		return nil, false, err

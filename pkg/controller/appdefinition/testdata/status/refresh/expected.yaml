@@ -1,0 +1,221 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "oneimage"
+        "acorn.io/managed": "true"
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      enableServiceLinks: false
+      serviceAccountName: oneimage
+      hostname: oneimage
+      imagePullSecrets:
+        - name: oneimage-pull-1234567890ab
+      containers:
+        - name: oneimage
+          image: "image-name"
+          ports:
+          - containerPort: 81
+            protocol: "TCP"
+          readinessProbe:
+            tcpSocket:
+              port: 81
+        - name: left
+          image: "foo"
+          ports:
+          - containerPort: 91
+            protocol: "TCP"
+          readinessProbe:
+            tcpSocket:
+              port: 91
+---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "oneimage"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "buildimage"
+      "acorn.io/managed": "true"
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        "acorn.io/container-name": "buildimage"
+        "acorn.io/managed": "true"
+      annotations:
+        "acorn.io/container-spec": '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","probes":null}'
+    spec:
+      terminationGracePeriodSeconds: 5
+      serviceAccountName: buildimage
+      enableServiceLinks: false
+      hostname: buildimage
+      imagePullSecrets:
+        - name: buildimage-pull-1234567890ab
+      containers:
+        - name: buildimage
+          image: "sha256:build-image"
+---
+kind: PodDisruptionBudget
+apiVersion: policy/v1
+metadata:
+  name: buildimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "buildimage"
+    "acorn.io/managed": "true"
+spec:
+  selector:
+    matchLabels:
+      "acorn.io/app-namespace": "app-namespace"
+      "acorn.io/app-name": "app-name"
+      "acorn.io/container-name": "buildimage"
+      "acorn.io/managed": "true"
+  maxUnavailable: 25%
+---
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/container-name": "oneimage"
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/managed": "true"
+    "acorn.io/container-name": "oneimage"
+  default: true
+  container: oneimage
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 81
+      protocol: http
+      name: "80"
+    - port: 90
+      targetPort: 91
+      protocol: tcp
+      name: "90"
+---
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    containers:
+      oneimage:
+        sidecars:
+          left:
+            image: "foo"
+            ports:
+              - port: 90
+                targetPort: 91
+                protocol: tcp
+        ports:
+          - port: 80
+            targetPort: 81
+            protocol: http
+        image: "image-name"
+        build:
+          dockerfile: "Dockerfile"
+          context: "."
+      buildimage:
+        image: "sha256:build-image"
+        build:
+          dockerfile: "custom-dockerfile"
+          context: "."
+  conditions:
+    - type: defined
+      reason: Success
+      status: "True"
+      success: true
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: buildimage-pull-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: oneimage-pull-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19

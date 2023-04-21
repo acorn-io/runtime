@@ -36,3 +36,11 @@ func TestCheckStatus(t *testing.T) {
 
 	assert.True(t, called, "router handler call expected")
 }
+
+func TestRefreshStatus(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/status/refresh", RefreshStatus(router.HandlerFunc(DeploySpec)).Handle)
+}
+
+func TestRefreshStatusMulti(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/status/refresh-multi", RefreshStatus(router.HandlerFunc(DeploySpec)).Handle)
+}
