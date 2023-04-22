@@ -12,3 +12,5 @@ spec:
   external: foo
   appName: app-name
   appNamespace: app-namespace
+  labels:
+    acorn.io/link-name: foo
