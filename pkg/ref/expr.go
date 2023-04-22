@@ -121,7 +121,7 @@ func (r *resolver) getService(svc *v1.ServiceInstance, namespace, name string) e
 	}
 
 	ns := &corev1.Namespace{}
-	err := r.req.Get(r.ctx, router.Key("", svc.Namespace), nil)
+	err := r.req.Get(r.ctx, router.Key("", svc.Namespace), ns)
 	if err != nil {
 		return err
 	}

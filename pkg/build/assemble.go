@@ -140,6 +140,7 @@ func digestOnly(imageData v1.ImagesData) (result v1.ImagesData, err error) {
 	}
 
 	result.Acorns, err = digestOnlyImages(imageData.Acorns)
+	result.Builds = imageData.Builds
 	return
 }
 

@@ -12,6 +12,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/pkg/cue"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,10 +24,11 @@ const (
 )
 
 type AppDefinition struct {
-	data       []byte
-	imageDatas []v1.ImagesData
-	args       map[string]any
-	profiles   []string
+	data         []byte
+	imageDatas   []v1.ImagesData
+	hasImageData bool
+	args         map[string]any
+	profiles     []string
 }
 
 func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
@@ -41,15 +43,17 @@ func FromAppImage(appImage *v1.AppImage) (*AppDefinition, error) {
 
 func (a *AppDefinition) clone() AppDefinition {
 	return AppDefinition{
-		data:       a.data,
-		imageDatas: a.imageDatas,
-		args:       a.args,
-		profiles:   a.profiles,
+		data:         a.data,
+		imageDatas:   a.imageDatas,
+		hasImageData: a.hasImageData,
+		args:         a.args,
+		profiles:     a.profiles,
 	}
 }
 
 func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 	result := a.clone()
+	result.hasImageData = true
 	result.imageDatas = append(result.imageDatas, imageData)
 	return &result
 }
@@ -113,8 +117,8 @@ func (a *AppDefinition) YAML() (string, error) {
 }
 
 func (a *AppDefinition) JSON() (string, error) {
-	appSpec := &v1.AppSpec{}
-	if err := a.newDecoder().Decode(&appSpec); err != nil {
+	appSpec, err := a.AppSpec()
+	if err != nil {
 		return "", err
 	}
 	app, err := json.MarshalIndent(appSpec, "", "  ")
@@ -128,57 +132,95 @@ func (a *AppDefinition) newDecoder() *aml.Decoder {
 	})
 }
 
+func (a *AppDefinition) imagesData() (result v1.ImagesData) {
+	for _, imageData := range a.imageDatas {
+		result.Containers = typed.Concat(result.Containers, imageData.Containers)
+		result.Jobs = typed.Concat(result.Jobs, imageData.Jobs)
+		result.Images = typed.Concat(result.Images, imageData.Images)
+		result.Acorns = typed.Concat(result.Acorns, imageData.Acorns)
+		result.Builds = append(result.Builds, imageData.Builds...)
+	}
+	return
+}
+
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	spec := &v1.AppSpec{}
 	if err := a.newDecoder().Decode(spec); err != nil {
 		return nil, err
 	}
 
-	for _, imageData := range a.imageDatas {
-		for c, con := range imageData.Containers {
-			if conSpec, ok := spec.Containers[c]; ok {
-				conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-				spec.Containers[c] = conSpec
-			}
-			for s, con := range con.Sidecars {
-				if conSpec, ok := spec.Containers[c].Sidecars[s]; ok {
-					conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-					spec.Containers[c].Sidecars[s] = conSpec
-				}
+	if !a.hasImageData {
+		return spec, nil
+	}
+
+	imagesData := a.imagesData()
+
+	for containerName, conSpec := range spec.Containers {
+		if image, ok := GetImageReferenceForServiceName(containerName, spec, imagesData); ok {
+			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
+		} else {
+			return nil, fmt.Errorf("failed to find image for container [%s] in Acornfile", containerName)
+		}
+		for sidecarName, sidecarSpec := range conSpec.Sidecars {
+			if image, ok := GetImageReferenceForServiceName(containerName+"."+sidecarName, spec, imagesData); ok {
+				sidecarSpec.Image, sidecarSpec.Build = assignImage(sidecarSpec.Image, sidecarSpec.Build, image)
+				conSpec.Sidecars[sidecarName] = sidecarSpec
+			} else {
+				return nil, fmt.Errorf("failed to find image for sidecar [%s] in container [%s] in Acornfile", sidecarName, containerName)
 			}
 		}
-		for c, con := range imageData.Jobs {
-			if conSpec, ok := spec.Jobs[c]; ok {
-				conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-				spec.Jobs[c] = conSpec
-			}
-			for s, con := range con.Sidecars {
-				if conSpec, ok := spec.Jobs[c].Sidecars[s]; ok {
-					conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, con.Image)
-					spec.Jobs[c].Sidecars[s] = conSpec
-				}
+		spec.Containers[containerName] = conSpec
+	}
+
+	for containerName, conSpec := range spec.Jobs {
+		if image, ok := GetImageReferenceForServiceName(containerName, spec, imagesData); ok {
+			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
+		} else {
+			return nil, fmt.Errorf("failed to find image for job [%s] in Acornfile", containerName)
+		}
+		for sidecarName, sidecarSpec := range conSpec.Sidecars {
+			if image, ok := GetImageReferenceForServiceName(containerName+"."+sidecarName, spec, imagesData); ok {
+				sidecarSpec.Image, sidecarSpec.Build = assignImage(sidecarSpec.Image, sidecarSpec.Build, image)
+				conSpec.Sidecars[sidecarName] = sidecarSpec
+			} else {
+				return nil, fmt.Errorf("failed to find image for sidecar [%s] in job [%s] in Acornfile", sidecarName, containerName)
 			}
 		}
-		for i, img := range imageData.Images {
-			if imgSpec, ok := spec.Images[i]; ok {
-				if imgSpec.AcornBuild != nil {
-					imgSpec.Image, imgSpec.AcornBuild = assignAcornImage(imgSpec.Image, imgSpec.AcornBuild, img.Image)
-				} else {
-					imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, img.Image)
-				}
-				spec.Images[i] = imgSpec
+		spec.Jobs[containerName] = conSpec
+	}
+
+	for imageName, imgSpec := range spec.Images {
+		if image, ok := GetImageReferenceForServiceName(imageName, spec, imagesData); ok {
+			if imgSpec.AcornBuild != nil {
+				imgSpec.Image, imgSpec.AcornBuild = assignAcornImage(imgSpec.Image, imgSpec.AcornBuild, image)
+			} else {
+				imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, image)
 			}
+		} else {
+			return nil, fmt.Errorf("failed to find image for image definition [%s] in Acornfile", imageName)
 		}
-		for i, acorn := range imageData.Acorns {
-			if acornSpec, ok := spec.Acorns[i]; ok {
-				acornSpec.Image, acornSpec.Build = assignAcornImage(acornSpec.Image, acornSpec.Build, acorn.Image)
-				spec.Acorns[i] = acornSpec
-			}
-			if svcSpec, ok := spec.Services[i]; ok {
-				svcSpec.Image, svcSpec.Build = assignAcornImage(svcSpec.Image, svcSpec.Build, acorn.Image)
-				spec.Services[i] = svcSpec
-			}
+		spec.Images[imageName] = imgSpec
+	}
+
+	for acornName, acornSpec := range spec.Acorns {
+		if image, ok := GetImageReferenceForServiceName(acornName, spec, imagesData); ok {
+			acornSpec.Image, acornSpec.Build = assignAcornImage(acornSpec.Image, acornSpec.Build, image)
+		} else {
+			return nil, fmt.Errorf("failed to find image for acorn [%s] in Acornfile", acornName)
 		}
+		spec.Acorns[acornName] = acornSpec
+	}
+
+	for serviceName, serviceSpec := range spec.Services {
+		if serviceSpec.Image == "" && serviceSpec.Build == nil {
+			continue
+		}
+		if image, ok := GetImageReferenceForServiceName(serviceName, spec, imagesData); ok {
+			serviceSpec.Image, serviceSpec.Build = assignAcornImage(serviceSpec.Image, serviceSpec.Build, image)
+		} else {
+			return nil, fmt.Errorf("failed to find image for service [%s] in Acornfile", serviceName)
+		}
+		spec.Services[serviceName] = serviceSpec
 	}
 
 	return spec, nil

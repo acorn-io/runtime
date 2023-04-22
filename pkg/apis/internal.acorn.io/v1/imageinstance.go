@@ -18,6 +18,15 @@ type ImagesData struct {
 	Jobs       map[string]ContainerData `json:"jobs,omitempty"`
 	Images     map[string]ImageData     `json:"images,omitempty"`
 	Acorns     map[string]ImageData     `json:"acorns,omitempty"`
+	Builds     []BuildRecord            `json:"builds,omitempty"`
+}
+
+type BuildRecord struct {
+	AcornBuild     *AcornBuilderSpec          `json:"acornBuild,omitempty"`
+	AcornAppImage  *AppImage                  `json:"acornAppImage,omitempty"`
+	ContainerBuild *ContainerImageBuilderSpec `json:"containerBuild,omitempty"`
+	ImageBuild     *ImageBuilderSpec          `json:"imageBuild,omitempty"`
+	ImageKey       string                     `json:"imageKey,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

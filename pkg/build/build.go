@@ -111,14 +111,15 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 	return appImage, nil
 }
 
-func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, error) {
+func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[string]v1.ContainerImageBuilderSpec) (map[string]v1.ContainerData, []v1.BuildRecord, error) {
+	var builds []v1.BuildRecord
 	result := map[string]v1.ContainerData{}
 
 	for _, entry := range typed.Sorted(containers) {
 		key, container := entry.Key, entry.Value
 
 		if container.Image == "" && container.Build == nil {
-			return nil, fmt.Errorf("either image or build field must be set")
+			return nil, nil, fmt.Errorf("either image or build field must be set")
 		}
 
 		if container.Image != "" && container.Build == nil {
@@ -130,13 +131,18 @@ func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[s
 
 		id, err := fromBuild(ctx, buildCache, *container.Build)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		result[key] = v1.ContainerData{
 			Image:    id,
 			Sidecars: map[string]v1.ImageData{},
 		}
+
+		builds = append(builds, v1.BuildRecord{
+			ContainerBuild: container.Normalize(),
+			ImageKey:       key,
+		})
 
 		var sidecarKeys []string
 		for k := range container.Sidecars {
@@ -159,33 +165,46 @@ func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[s
 
 			id, err := fromBuild(ctx, buildCache, *sidecar.Build)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			result[key].Sidecars[sidecarKey] = v1.ImageData{
 				Image: id,
 			}
+			builds = append(builds, v1.BuildRecord{
+				ContainerBuild: sidecar.Normalize(),
+				ImageKey:       key + "." + sidecarKey,
+			})
 		}
 	}
 
-	return result, nil
+	return result, builds, nil
 }
 
-func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, error) {
+func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[string]v1.ImageData, []v1.BuildRecord, error) {
+	var builds []v1.BuildRecord
 	result := map[string]v1.ImageData{}
 
 	for _, entry := range typed.Sorted(acorns) {
 		key, acornImage := entry.Key, entry.Value
 		if acornImage.Image != "" {
 			if _, auto := autoupgrade.AutoUpgradePattern(acornImage.Image); auto || acornImage.AutoUpgrade {
+				// This is the one situation where ImageKey is not set
+				builds = append(builds, v1.BuildRecord{
+					AcornBuild: &acornImage,
+				})
 				continue
 			}
 			id, err := pullImage(ctx, acornImage.Image)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			result[key] = v1.ImageData{
 				Image: id,
 			}
+			builds = append(builds, v1.BuildRecord{
+				AcornBuild: acornImage.Normalize(),
+				ImageKey:   key,
+			})
 		} else if acornImage.Build != nil {
 			newCtx := *ctx
 			newCtx.opts.Args = acornImage.Build.BuildArgs
@@ -194,22 +213,28 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 			newCtx.cwd = filepath.Join(newCtx.cwd, acornImage.Build.Context)
 			appImage, err := build(&newCtx)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			repo, err := imagename.NewRepository(ctx.pushRepo)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			result[key] = v1.ImageData{
 				Image: repo.Digest(appImage.Digest).String(),
 			}
+			builds = append(builds, v1.BuildRecord{
+				AcornBuild:    acornImage.Normalize(),
+				AcornAppImage: appImage,
+				ImageKey:      key,
+			})
 		}
 	}
 
-	return result, nil
+	return result, builds, nil
 }
 
-func buildImages(ctx *buildContext, buildCache *buildCache, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, error) {
+func buildImages(ctx *buildContext, buildCache *buildCache, images map[string]v1.ImageBuilderSpec) (map[string]v1.ImageData, []v1.BuildRecord, error) {
+	var builds []v1.BuildRecord
 	result := map[string]v1.ImageData{}
 	acornBuilds := map[string]v1.AcornBuilderSpec{}
 
@@ -229,21 +254,25 @@ func buildImages(ctx *buildContext, buildCache *buildCache, images map[string]v1
 
 			id, err := fromBuild(ctx, buildCache, *image.ContainerBuild)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
 			result[key] = v1.ImageData{
 				Image: id,
 			}
+			builds = append(builds, v1.BuildRecord{
+				ImageBuild: image.Normalize(),
+				ImageKey:   key,
+			})
 		}
 	}
 
-	acornImages, err := buildAcorns(ctx, acornBuilds)
+	acornImages, acornBuildRecords, err := buildAcorns(ctx, acornBuilds)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return typed.Concat(result, acornImages), nil
+	return typed.Concat(result, acornImages), append(builds, acornBuildRecords...), nil
 }
 
 func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
@@ -252,29 +281,34 @@ func fromSpec(ctx *buildContext, spec v1.BuilderSpec) (v1.ImagesData, error) {
 		data = v1.ImagesData{
 			Images: map[string]v1.ImageData{},
 		}
+		builds []v1.BuildRecord
 	)
 
 	buildCache := &buildCache{}
 
-	data.Containers, err = buildContainers(ctx, buildCache, spec.Containers)
+	data.Containers, builds, err = buildContainers(ctx, buildCache, spec.Containers)
 	if err != nil {
 		return data, err
 	}
+	data.Builds = append(data.Builds, builds...)
 
-	data.Jobs, err = buildContainers(ctx, buildCache, spec.Jobs)
+	data.Jobs, builds, err = buildContainers(ctx, buildCache, spec.Jobs)
 	if err != nil {
 		return data, err
 	}
+	data.Builds = append(data.Builds, builds...)
 
-	data.Images, err = buildImages(ctx, buildCache, spec.Images)
+	data.Images, builds, err = buildImages(ctx, buildCache, spec.Images)
 	if err != nil {
 		return data, err
 	}
+	data.Builds = append(data.Builds, builds...)
 
-	data.Acorns, err = buildAcorns(ctx, typed.Concat(spec.Acorns, spec.Services))
+	data.Acorns, builds, err = buildAcorns(ctx, typed.Concat(spec.Acorns, spec.Services))
 	if err != nil {
 		return data, err
 	}
+	data.Builds = append(data.Builds, builds...)
 
 	return data, nil
 }

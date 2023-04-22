@@ -40,10 +40,6 @@ func containerSyncLoop(ctx context.Context, client client.Client, app *apiv1.App
 }
 
 func containerSync(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
-	if !opts.ImageSource.IsImageSet() {
-		return nil
-	}
-
 	cwd, file, err := opts.ImageSource.ResolveImageAndFile()
 	if err != nil {
 		return err

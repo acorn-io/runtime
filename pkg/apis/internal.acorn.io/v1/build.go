@@ -15,16 +15,47 @@ type ContainerImageBuilderSpec struct {
 	Sidecars map[string]ContainerImageBuilderSpec `json:"sidecars,omitempty"`
 }
 
+func (in *ContainerImageBuilderSpec) Normalize() *ContainerImageBuilderSpec {
+	out := *in
+	if out.Image != "" {
+		out.Build = nil
+	}
+	if len(in.Sidecars) > 0 {
+		out.Sidecars = map[string]ContainerImageBuilderSpec{}
+		for k, v := range in.Sidecars {
+			out.Sidecars[k] = *v.Normalize()
+		}
+	}
+	return &out
+}
+
 type ImageBuilderSpec struct {
 	Image          string      `json:"image,omitempty"`
 	ContainerBuild *Build      `json:"containerBuild,omitempty"`
 	AcornBuild     *AcornBuild `json:"acornBuild,omitempty"`
 }
 
+func (in *ImageBuilderSpec) Normalize() *ImageBuilderSpec {
+	out := *in
+	if out.Image != "" {
+		out.ContainerBuild = nil
+		out.AcornBuild = nil
+	}
+	return &out
+}
+
 type AcornBuilderSpec struct {
 	AutoUpgrade bool        `json:"autoUpgrade,omitempty"`
 	Image       string      `json:"image,omitempty"`
 	Build       *AcornBuild `json:"build,omitempty"`
+}
+
+func (in *AcornBuilderSpec) Normalize() *AcornBuilderSpec {
+	out := *in
+	if out.Image != "" {
+		out.Build = nil
+	}
+	return &out
 }
 
 type BuilderSpec struct {
