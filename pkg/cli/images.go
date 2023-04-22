@@ -28,6 +28,7 @@ acorn images`,
 		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 	cmd.AddCommand(NewImageDelete(c))
+	cmd.AddCommand(NewImageDetail(c))
 	return cmd
 }
 
