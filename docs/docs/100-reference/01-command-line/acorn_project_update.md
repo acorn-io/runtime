@@ -3,10 +3,10 @@ title: "acorn project update"
 ---
 ## acorn project update
 
-Update projects
+Update project
 
 ```
-acorn project update [flags] PROJECT_NAME [PROJECT_NAME...]
+acorn project update [flags] PROJECT_NAME
 ```
 
 ### Examples
