@@ -61,6 +61,9 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 
 	if serverAddress == "" {
 		return cmd.Help()
+	} else if strings.HasPrefix(serverAddress, "gchr.io") {
+		// protect users from this typo
+		return fmt.Errorf("blocking login attempt to gchr.io (did you mean to type ghcr.io?)")
 	}
 
 	if a.PasswordStdin {
