@@ -1,23 +1,19 @@
 ---
-title: "acorn project create"
+title: "acorn project update"
 ---
-## acorn project create
+## acorn project update
 
-Create new project
+Update project
 
 ```
-acorn project create [flags] PROJECT_NAME [PROJECT_NAME...]
+acorn project update [flags] PROJECT_NAME
 ```
 
 ### Examples
 
 ```
 
-# Create a project locally
-acorn project create my-new-project
-
-# Create a project on remote service acorn.io
-acorn project create acorn.io/username/new-project
+acorn project update my-project
 
 ```
 
@@ -25,8 +21,8 @@ acorn project create acorn.io/username/new-project
 
 ```
       --default-region string      Default region for project resources
-  -h, --help                       help for create
-      --supported-region strings   Supported regions for created project
+  -h, --help                       help for update
+      --supported-region strings   Supported regions for the created project
 ```
 
 ### Options inherited from parent commands

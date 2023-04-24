@@ -720,12 +720,17 @@ func (m *MockClient) ProjectGet(ctx context.Context, name string) (*apiv1.Projec
 	return nil, nil
 }
 
-func (m *MockClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
+func (m *MockClient) ProjectCreate(ctx context.Context, name string, region string, supportedRegions []string) (*apiv1.Project, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
 func (m *MockClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
 	// TODO implement me
 	panic("implement me")
 }

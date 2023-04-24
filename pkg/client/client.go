@@ -232,7 +232,8 @@ type Client interface {
 
 	ProjectGet(ctx context.Context, name string) (*apiv1.Project, error)
 	ProjectList(ctx context.Context) ([]apiv1.Project, error)
-	ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error)
+	ProjectCreate(ctx context.Context, name, defaultRegion string, supportedRegions []string) (*apiv1.Project, error)
+	ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error)
 	ProjectDelete(ctx context.Context, name string) (*apiv1.Project, error)
 
 	VolumeClassList(ctx context.Context) ([]apiv1.VolumeClass, error)

@@ -39,5 +39,6 @@ acorn project
 * [acorn](acorn.md)	 - 
 * [acorn project create](acorn_project_create.md)	 - Create new project
 * [acorn project rm](acorn_project_rm.md)	 - Deletes projects
+* [acorn project update](acorn_project_update.md)	 - Update project
 * [acorn project use](acorn_project_use.md)	 - Set current project
 

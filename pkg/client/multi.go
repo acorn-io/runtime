@@ -437,12 +437,20 @@ func (m *MultiClient) ProjectDelete(ctx context.Context, name string) (*apiv1.Pr
 	return c.ProjectDelete(ctx, name)
 }
 
-func (m *MultiClient) ProjectCreate(ctx context.Context, name, region string) (*apiv1.Project, error) {
+func (m *MultiClient) ProjectCreate(ctx context.Context, name, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
 		return nil, err
 	}
-	return c.ProjectCreate(ctx, name, region)
+	return c.ProjectCreate(ctx, name, defaultRegion, supportedRegions)
+}
+
+func (m *MultiClient) ProjectUpdate(ctx context.Context, project *apiv1.Project, defaultRegion string, supportedRegions []string) (*apiv1.Project, error) {
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	if err != nil {
+		return nil, err
+	}
+	return c.ProjectUpdate(ctx, project, defaultRegion, supportedRegions)
 }
 
 func (m *MultiClient) ProjectList(ctx context.Context) ([]apiv1.Project, error) {

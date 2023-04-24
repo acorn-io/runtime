@@ -8,19 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewProjectCreate(c CommandContext) *cobra.Command {
-	cmd := cli.Command(&ProjectCreate{client: c.ClientFactory}, cobra.Command{
-		Use: "create [flags] PROJECT_NAME [PROJECT_NAME...]",
+func NewProjectUpdate(c CommandContext) *cobra.Command {
+	cmd := cli.Command(&ProjectUpdate{client: c.ClientFactory}, cobra.Command{
+		Use: "update [flags] PROJECT_NAME",
 		Example: `
-# Create a project locally
-acorn project create my-new-project
-
-# Create a project on remote service acorn.io
-acorn project create acorn.io/username/new-project
+acorn project update my-project
 `,
 		SilenceUsage:      true,
-		Short:             "Create new project",
-		Args:              cobra.MinimumNArgs(1),
+		Short:             "Update project",
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
 	})
 	// This will produce an error if the region flag doesn't exist or a completion function has already
@@ -34,19 +30,21 @@ acorn project create acorn.io/username/new-project
 	return cmd
 }
 
-type ProjectCreate struct {
+type ProjectUpdate struct {
 	client           ClientFactory
 	DefaultRegion    string   `usage:"Default region for project resources"`
-	SupportedRegions []string `name:"supported-region" usage:"Supported regions for created project"`
+	SupportedRegions []string `name:"supported-region" usage:"Supported regions for the created project"`
 }
 
-func (a *ProjectCreate) Run(cmd *cobra.Command, args []string) error {
-	for _, projectName := range args {
-		if err := project.Create(cmd.Context(), a.client.Options(), projectName, a.DefaultRegion, a.SupportedRegions); err != nil {
-			return err
-		} else {
-			fmt.Println(projectName)
-		}
+func (a *ProjectUpdate) Run(cmd *cobra.Command, args []string) error {
+	projectsDetails, err := project.GetDetails(cmd.Context(), project.Options{}, []string{args[0]})
+	if err != nil {
+		return err
+	}
+	if err := project.Update(cmd.Context(), a.client.Options(), projectsDetails[0], a.DefaultRegion, a.SupportedRegions); err != nil {
+		return err
+	} else {
+		fmt.Println(projectsDetails[0].FullName)
 	}
 	return nil
 }

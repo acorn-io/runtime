@@ -28,6 +28,7 @@ acorn project`,
 	cmd.AddCommand(NewProjectCreate(c))
 	cmd.AddCommand(NewProjectRm(c))
 	cmd.AddCommand(NewProjectUse(c))
+	cmd.AddCommand(NewProjectUpdate(c))
 	return cmd
 }
 
