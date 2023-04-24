@@ -1955,6 +1955,12 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"dirs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -2176,12 +2182,6 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref common.ReferenceCa
 					"started": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"region": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
 							Format: "",
 						},
 					},
@@ -3866,6 +3866,12 @@ func schema_pkg_apis_apiacornio_v1_VolumeSpec(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -3914,12 +3920,6 @@ func schema_pkg_apis_apiacornio_v1_VolumeStatus(ref common.ReferenceCallback) co
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
 							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeColumns"),
-						},
-					},
-					"region": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
 						},
 					},
 				},
