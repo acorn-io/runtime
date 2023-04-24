@@ -29,7 +29,6 @@ type Update struct {
 	Replace        bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
 	Wait           *bool  `usage:"Wait for app to become ready before command exiting (default true)"`
 	Quiet          bool   `usage:"Do not print status" short:"q"`
-	Refresh        bool   `usage:"Refresh the app even if no changes have occurred"`
 
 	out    io.Writer
 	client ClientFactory
@@ -76,7 +75,6 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		Replace: s.Replace,
 		out:     s.out,
 		client:  s.client,
-		Refresh: s.Refresh,
 	}
 	return r.Run(cmd, append([]string{s.Image}, args...))
 }

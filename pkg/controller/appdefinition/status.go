@@ -588,25 +588,3 @@ func endpoints(req router.Request, cfg *apiv1.Config, app *v1.AppInstance) (stri
 
 	return strings.Join(endpointStrings, ", "), nil
 }
-
-func RefreshStatus(h router.Handler) router.Handler {
-	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
-		appInstance := req.Object.(*v1.AppInstance)
-
-		if appInstance.Annotations["acorn.io/refresh"] == "true" {
-			delete(appInstance.Annotations, "acorn.io/refresh")
-			for i := len(appInstance.Spec.Annotations) - 1; i >= 0; i-- {
-				if appInstance.Spec.Annotations[i].Key == "acorn.io/refresh" {
-					appInstance.Spec.Annotations = append(appInstance.Spec.Annotations[:i], appInstance.Spec.Annotations[i+1:]...)
-				}
-			}
-
-			err := req.Client.Update(req.Ctx, req.Object)
-			if err != nil {
-				return err
-			}
-		}
-
-		return h.Handle(req, resp)
-	})
-}

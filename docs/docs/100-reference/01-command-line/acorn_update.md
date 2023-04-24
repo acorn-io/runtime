@@ -32,7 +32,6 @@ acorn update [flags] APP_NAME [deploy flags]
   -P, --publish-all               Publish all (true) or none (false) of the defined ports of application
       --pull                      Re-pull the app's image, which will cause the app to re-deploy if the image has changed
   -q, --quiet                     Do not print status
-      --refresh                   Refresh the app even if no changes have occurred
       --region string             Region in which to deploy the app, immutable
       --replace                   Replace the app with only defined values, resetting undefined fields to default values
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
