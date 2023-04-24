@@ -19,7 +19,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20230418220934-5635aac007d1
 	github.com/acorn-io/baaah v0.0.0-20230410050548-f08516abc5c3
-	github.com/acorn-io/mink v0.0.0-20230420172810-2d840529cb63
+	github.com/acorn-io/mink v0.0.0-20230424190003-9a32355ec823
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/adrg/xdg v0.4.0
 	github.com/aws/aws-sdk-go-v2 v1.17.8
@@ -45,7 +45,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.49
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
-	github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a
+	github.com/rancher/wrangler v1.0.2
 	github.com/sigstore/cosign v1.13.1
 	github.com/sigstore/sigstore v1.5.2
 	github.com/sirupsen/logrus v1.9.0

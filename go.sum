@@ -170,8 +170,8 @@ github.com/acorn-io/etcd/server/v3 v3.6.0-ot-1 h1:oumHTN5G2L/DjJaB7liN5I2hB3MRm5
 github.com/acorn-io/etcd/server/v3 v3.6.0-ot-1/go.mod h1:khTpELqJBbFyzmrQi3xz/m9COJFJM2uBO/y8HP2iRFc=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf h1:y2vkS4R2O+iRDUP8QLvS10i7RoVaMP4spSPGdM93jXo=
 github.com/acorn-io/lasso v0.0.0-20220519152917-47b14aceb5cf/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
-github.com/acorn-io/mink v0.0.0-20230420172810-2d840529cb63 h1:obfyLFpxKiVgo9ZvTz9n+hMwwZ/H3hoPO67qfkMge38=
-github.com/acorn-io/mink v0.0.0-20230420172810-2d840529cb63/go.mod h1:vhGespZm+y5YRTQ9L/zDFrOuzIbouVbA8sbykaPbzhE=
+github.com/acorn-io/mink v0.0.0-20230424190003-9a32355ec823 h1:+gLQI9eCXeqiZbJZU3L7bhHXWcqi7EZQnv3Fl0R2SX4=
+github.com/acorn-io/mink v0.0.0-20230424190003-9a32355ec823/go.mod h1:PQi6wKsMuEe3ZUpjcBARXUgtfytI7NW86Mm6V5E3Xsg=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
 github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
@@ -1175,8 +1175,8 @@ github.com/pterm/pterm v0.12.49/go.mod h1:D4OBoWNqAfXkm5QLTjIgjNiMXPHemLJHnIreGU
 github.com/qur/ar v0.0.0-20130629153254-282534b91770/go.mod h1:SjlYv2m9lpV0UW6K7lDqVJwEIIvSjaHbGk7nIfY8Hxw=
 github.com/rancher/lasso/controller-runtime v0.0.0-20220412224715-5f3517291ad4 h1:DwzlNzjGj00sGyYFKifqLX0ZeH1vu5/mvy6X0Lqum94=
 github.com/rancher/lasso/controller-runtime v0.0.0-20220412224715-5f3517291ad4/go.mod h1:ObsWVtqMsTmIL1xeM2WGvwV4XTHLL8LuB9vDc+uUXtk=
-github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a h1:vkH6CA+ennCzgSP5BDbAsmVXQRVfYsQvxUcR4iHEGJQ=
-github.com/rancher/wrangler v1.0.1-0.20220520195731-8eeded9bae2a/go.mod h1:8jRLk3G7CWp2Huu+SzDkcdg/F5qWPESGsKG2bIiThNM=
+github.com/rancher/wrangler v1.0.2 h1:0JGv62gF2OkYUoR0fsr99Za63fquFeKTHE2z9kAFVsE=
+github.com/rancher/wrangler v1.0.2/go.mod h1:Blhan9LdaIJjC9w+xGteSrHHEiIFIdPEHEMrtx82dPk=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
