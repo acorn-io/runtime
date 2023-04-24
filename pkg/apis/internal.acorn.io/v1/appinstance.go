@@ -100,6 +100,7 @@ type AppInstanceSpec struct {
 	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
 	ComputeClasses      ComputeClassMap  `json:"computeClass,omitempty"`
 	Memory              MemoryMap        `json:"memory,omitempty"`
+	Generation          int              `json:"generation,omitempty"`
 }
 
 func (in *AppInstanceSpec) GetStopped() bool {
