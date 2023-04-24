@@ -1,0 +1,49 @@
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  generation: 2
+  image: test
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      oneimage:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: image-name
+        ports:
+          - port: 80
+            protocol: http
+            targetPort: 81
+        probes: null
+        sidecars:
+          left:
+            image: foo
+            ports:
+              - port: 90
+                protocol: tcp
+                targetPort: 91
+            probes: null
+  columns: {}
+  conditions:
+    - reason: Success
+      status: "True"
+      success: true
+      type: defaults
+  defaults:
+    memory:
+      "": 2097152
+      left: 2097152
+      oneimage: 2097152
+    region: local
+  namespace: app-created-namespace
+  observedGeneration: 1

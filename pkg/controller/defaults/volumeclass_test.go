@@ -37,6 +37,10 @@ func TestFillVolumeClassDefaultsWithVolumeBinding(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/volumeclass/volume-class-fill-defaults-with-bind", Calculate)
 }
 
+func TestCalculateForcedGeneration(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/volumeclass/volume-class-forced-generation", Calculate)
+}
+
 func TestTwoClusterDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/volumeclass/volume-class-two-cluster-defaults")
 	if err != nil {

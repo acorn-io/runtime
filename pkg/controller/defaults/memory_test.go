@@ -45,6 +45,10 @@ func TestMemorySameGeneration(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/same-generation", Calculate)
 }
 
+func TestComputeClassForcedGeneration(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/memory/compute-class-forced-generation", Calculate)
+}
+
 func TestTwoCCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/memory/two-ccc-defaults-should-error")
 	if err != nil {
