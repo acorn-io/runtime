@@ -476,7 +476,6 @@ type Service struct {
 	Environment         NameValues        `json:"environment,omitempty"`
 	Secrets             SecretBindings    `json:"secrets,omitempty"`
 	Links               ServiceBindings   `json:"links,omitempty"`
-	Permissions         []Permissions     `json:"permissions,omitempty"`
 	AutoUpgrade         *bool             `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade       *bool             `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string            `json:"autoUpgradeInterval,omitempty"`

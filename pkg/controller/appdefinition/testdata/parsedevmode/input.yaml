@@ -15,6 +15,6 @@ status:
       }
     imageData:
       containers:
-        buildimage: {
+        oneimage: {
           image: "sha256:build-image"
         }

@@ -163,13 +163,13 @@ containers: {
 }
 
 images: {
-  file: {
+  ifile: {
     acornBuild: "sub/dir1"
   }
-  none: {
+  inone: {
     image: "done"
   }
-  full: {
+  ifull: {
     containerBuild: {
       context: "sub/dir2"	
       dockerfile: "sub/dir3/Dockerfile"
@@ -229,14 +229,14 @@ acorns: {
 	assert.Equal(t, "./foo/bar", buildSpec.Containers["file"].Sidecars["right"].Build.ContextDirs["/var/tmp"])
 
 	assert.Len(t, buildSpec.Images, 3)
-	assert.Equal(t, "", buildSpec.Images["file"].Image)
-	assert.Equal(t, "sub/dir1", buildSpec.Images["file"].AcornBuild.Context)
-	assert.Equal(t, filepath.Join("sub", "dir1", "Acornfile"), buildSpec.Images["file"].AcornBuild.Acornfile)
+	assert.Equal(t, "", buildSpec.Images["ifile"].Image)
+	assert.Equal(t, "sub/dir1", buildSpec.Images["ifile"].AcornBuild.Context)
+	assert.Equal(t, filepath.Join("sub", "dir1", "Acornfile"), buildSpec.Images["ifile"].AcornBuild.Acornfile)
 	assert.Equal(t, "", buildSpec.Images["full"].Image)
-	assert.Equal(t, "sub/dir2", buildSpec.Images["full"].ContainerBuild.Context)
-	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["full"].ContainerBuild.Dockerfile)
-	assert.Equal(t, "other", buildSpec.Images["full"].ContainerBuild.Target)
-	assert.Equal(t, "done", buildSpec.Images["none"].Image)
+	assert.Equal(t, "sub/dir2", buildSpec.Images["ifull"].ContainerBuild.Context)
+	assert.Equal(t, "sub/dir3/Dockerfile", buildSpec.Images["ifull"].ContainerBuild.Dockerfile)
+	assert.Equal(t, "other", buildSpec.Images["ifull"].ContainerBuild.Target)
+	assert.Equal(t, "done", buildSpec.Images["inone"].Image)
 
 	assert.Len(t, buildSpec.Acorns, 3)
 	assert.Equal(t, "", buildSpec.Acorns["afile"].Image)
@@ -277,16 +277,16 @@ containers: {
 }
 
 images: {
-  file: {
+  ifile: {
     acornBuild: "sub/dir2"
   }
-  none: {
+  inone: {
     image: "done"
   }
-  two: {
+  itwo: {
     acornBuild: {}
   }
-  full: {
+  ifull: {
     containerBuild: {
       dockerfile: "sub/dir3/bockerfile"
     }
@@ -983,10 +983,10 @@ containers: {
 	}
 }
 images: {
-	build: {
+	ibuild: {
       acornBuild: {}
     }
-    image: {
+    iimage: {
       image: "images-image-image"
 	}
 }`))
@@ -1075,14 +1075,14 @@ images: {
 			},
 		},
 		Images: map[string]v1.ImageBuilderSpec{
-			"build": {
+			"ibuild": {
 				AcornBuild: &v1.AcornBuild{
 					BuildArgs: v1.GenericMap{},
 					Context:   ".",
 					Acornfile: "Acornfile",
 				},
 			},
-			"image": {
+			"iimage": {
 				Image: "images-image-image",
 			},
 		},
@@ -1125,10 +1125,10 @@ images: {
 			},
 		},
 		Images: map[string]v1.ImageData{
-			"build": {
+			"ibuild": {
 				Image: "images-build-image",
 			},
-			"image": {
+			"iimage": {
 				Image: "images-image-image",
 			},
 		},

@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	ports2 "github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -30,16 +31,19 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 			continue
 		}
 
-		// service acorn, skip because acorn will be defined
 		if service.Image != "" {
-			continue
+			// Setup external service to the default service of the app
+			service = v1.Service{
+				Default:  service.Default,
+				External: publicname.ForChild(appInstance, serviceName),
+			}
 		}
 
 		annotations := map[string]string{}
 
-		// generated service, will be defined elsewhere
 		if service.GetJob() != "" {
 			service = *service.DeepCopy()
+			// Populate service from job output
 			_, err := jobs.GetOutputFor(ctx, c, appInstance, service.GetJob(), serviceName, &service)
 			if errors.Is(err, jobs.ErrJobNotDone) || errors.Is(err, jobs.ErrJobNoOutput) || apierror.IsNotFound(err) {
 				annotations[apply.AnnotationUpdate] = "false"
@@ -51,9 +55,11 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 
 		result = append(result, &v1.ServiceInstance{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        serviceName,
-				Namespace:   appInstance.Status.Namespace,
-				Labels:      labels.Managed(appInstance, labels.AcornServiceName, serviceName),
+				Name:      serviceName,
+				Namespace: appInstance.Status.Namespace,
+				Labels: labels.Managed(appInstance,
+					labels.AcornPublicName, publicname.ForChild(appInstance, serviceName),
+					labels.AcornServiceName, serviceName),
 				Annotations: annotations,
 			},
 			Spec: v1.ServiceInstanceSpec{
@@ -110,7 +116,9 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      routerName,
 				Namespace: appInstance.Status.Namespace,
-				Labels:    labels.Managed(appInstance, labels.AcornRouterName, routerName),
+				Labels: labels.Managed(appInstance,
+					labels.AcornPublicName, publicname.ForChild(appInstance, routerName),
+					labels.AcornRouterName, routerName),
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,
@@ -134,6 +142,48 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object) {
 	return
 }
 
+func forAcorns(appInstance *v1.AppInstance) (result []kclient.Object) {
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
+		acornName, acorn := entry.Key, entry.Value
+
+		if ports2.IsLinked(appInstance, acornName) {
+			continue
+		}
+
+		result = append(result, &v1.ServiceInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      acornName,
+				Namespace: appInstance.Status.Namespace,
+				Labels: labels.Managed(appInstance,
+					labels.AcornPublicName, publicname.ForChild(appInstance, acornName),
+					labels.AcornAcornName, acornName),
+			},
+			Spec: v1.ServiceInstanceSpec{
+				AppName:      appInstance.Name,
+				AppNamespace: appInstance.Namespace,
+				External:     publicname.ForChild(appInstance, acornName),
+				Labels: labels.Merge(labels.Managed(appInstance, labels.AcornAcornName, acornName),
+					labels.GatherScoped(acornName, v1.LabelTypeAcorn,
+						appInstance.Status.AppSpec.Labels, selfScope(acorn.Labels), appInstance.Spec.Labels)),
+				Annotations: labels.GatherScoped(acornName, v1.LabelTypeAcorn,
+					appInstance.Status.AppSpec.Annotations, selfScope(acorn.Annotations), appInstance.Spec.Annotations),
+			},
+		})
+	}
+
+	return
+}
+
+func selfScope(scopedLabels v1.ScopedLabels) map[string]string {
+	labelMap := make(map[string]string)
+	for _, s := range scopedLabels {
+		if s.ResourceType == v1.LabelTypeMeta || (s.ResourceType == "" && s.ResourceName == "") {
+			labelMap[s.Key] = s.Value
+		}
+	}
+	return labelMap
+}
+
 func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
 		containerName, container := entry.Key, entry.Value
@@ -151,7 +201,9 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      containerName,
 				Namespace: appInstance.Status.Namespace,
-				Labels:    labels.Managed(appInstance, labels.AcornContainerName, containerName),
+				Labels: labels.Managed(appInstance,
+					labels.AcornPublicName, publicname.ForChild(appInstance, containerName),
+					labels.AcornContainerName, containerName),
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,
@@ -179,6 +231,7 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 				Name:      link.Target,
 				Namespace: app.Status.Namespace,
 				Labels: labels.Managed(app,
+					labels.AcornPublicName, publicname.ForChild(app, link.Target),
 					labels.AcornLinkName, link.Service),
 			},
 			Spec: v1.ServiceInstanceSpec{
@@ -204,6 +257,7 @@ func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppI
 		return nil, err
 	}
 	result = append(result, objs...)
+	result = append(result, forAcorns(appInstance)...)
 	result = append(result, forContainers(appInstance)...)
 	result = append(result, forRouters(appInstance)...)
 	// determine default before adding linked services

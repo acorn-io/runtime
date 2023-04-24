@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 )
 
 func findImageInImageData(imageData v1.ImagesData, imageKey string) (string, bool) {

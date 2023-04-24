@@ -18,7 +18,11 @@ status:
     containers:
       oneimage:
         dirs: {}
-        image: "foo"
+        build:
+          baseImage: foo
+          context: .
+          dockerfile: Dockerfile
+        image: "sha256:build-image"
         command: []
         workingDir: ""
         entrypoint: []
@@ -37,6 +41,6 @@ status:
       }
     imageData:
       containers:
-        buildimage: {
+        oneimage: {
           image: "sha256:build-image"
         }

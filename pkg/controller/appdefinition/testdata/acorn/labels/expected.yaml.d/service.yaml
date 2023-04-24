@@ -1,0 +1,31 @@
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: acorn-name
+  namespace: app-created-namespace
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/acorn-name": "acorn-name"
+    "acorn.io/managed": "true"
+    "acorn.io/public-name": "app-name.acorn-name"
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  default: true
+  external: app-name.acorn-name
+  annotations:
+    allacornsa: value
+    global2a: value
+    globala: value
+    override2: outervalue
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    allacorns: value
+    global: value
+    global2: value
+    nestedglobal: value
+    override1: outervalue
