@@ -16,7 +16,7 @@ acorn project update my-project
 `,
 		SilenceUsage:      true,
 		Short:             "Update project",
-		Args:              cobra.MaximumNArgs(1),
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
 	})
 	// This will produce an error if the region flag doesn't exist or a completion function has already
@@ -37,9 +37,6 @@ type ProjectUpdate struct {
 }
 
 func (a *ProjectUpdate) Run(cmd *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("project update requires a project name to be specified")
-	}
 	projectsDetails, err := project.GetDetails(cmd.Context(), project.Options{}, []string{args[0]})
 	if err != nil {
 		return err
