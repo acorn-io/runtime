@@ -16,7 +16,7 @@ func NewRegions(c CommandContext) *cobra.Command {
 acorn offering regions`,
 		SilenceUsage:      true,
 		Short:             "List available regions",
-		ValidArgsFunction: newCompletion(c.ClientFactory, regionsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, regionsCompletion).withoutProjectCompletion().complete,
 	})
 }
 

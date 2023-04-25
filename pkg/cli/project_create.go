@@ -21,7 +21,7 @@ acorn project create acorn.io/username/new-project
 		SilenceUsage:      true,
 		Short:             "Create new project",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).withoutProjectCompletion().complete,
 	})
 	// This will produce an error if the region flag doesn't exist or a completion function has already
 	// been registered for this flag. Not returning the error since neither of these is likely occur.

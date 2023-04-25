@@ -21,7 +21,7 @@ func (c *DefaultClient) ImageTag(ctx context.Context, imageName, tag string) err
 		return err
 	}
 	tagResult := &apiv1.ImageTag{}
-	err = c.RESTClient.Post().
+	err = (*c.RESTClient).Post().
 		Namespace(image.Namespace).
 		Resource("images").
 		Name(image.Name).
@@ -43,7 +43,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 		detailsResult.NestedDigest = opts.NestedDigest
 	}
 
-	err := c.RESTClient.Post().
+	err := (*c.RESTClient).Post().
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(imageName).
@@ -68,7 +68,7 @@ func (c *DefaultClient) ImagePull(ctx context.Context, imageName string, opts *I
 		body.Auth = opts.Auth
 	}
 
-	url := c.RESTClient.Get().
+	url := (*c.RESTClient).Get().
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(strings.ReplaceAll(imageName, "/", "+")).
@@ -124,7 +124,7 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 		return nil, err
 	}
 
-	url := c.RESTClient.Get().
+	url := (*c.RESTClient).Get().
 		Namespace(image.Namespace).
 		Resource("images").
 		Name(strings.ReplaceAll(imageName, "/", "+")).
@@ -221,7 +221,7 @@ func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts 
 	}
 	if len(remainingTags) != len(image.Tags) {
 		image.Tags = remainingTags
-		err = c.RESTClient.Put().
+		err = (*c.RESTClient).Put().
 			Namespace(image.Namespace).
 			Resource("images").
 			Name(image.Name).

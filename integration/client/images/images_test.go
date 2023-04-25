@@ -1,7 +1,6 @@
 package images
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -11,7 +10,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/client"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
-	"gotest.tools/v3/icmd"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -410,55 +408,4 @@ func TestImageBadTag(t *testing.T) {
 
 	err = c.ImageTag(ctx, image.Name, "foo@@:badtag")
 	assert.Equal(t, "could not parse reference: foo@@:badtag", err.Error())
-}
-
-func TestCrossProjectFormat(t *testing.T) {
-	helper.StartController(t)
-	restConfig := helper.StartAPI(t)
-
-	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempProject(t, kclient)
-
-	c, err := client.New(restConfig, ns.Name, ns.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_ = client2.NewImage(t, ns.Name)
-	images, err := c.ImageList(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Len(t, images, 1)
-
-	image := images[0]
-
-	// Create a different project and client to run the commands from.
-	ns2 := helper.TempProject(t, kclient)
-
-	helper.SwitchCLIDefaultProjectWithSwitchbackAtCleanup(t, ns2.Name)
-
-	// Cross project command should error
-	result := icmd.RunCommand("acorn", "tag", image.Name, "foo:v1")
-	assert.NotEqual(t, 0, result.ExitCode)
-
-	// use project::image format for cross project
-	result = icmd.RunCommand("acorn", "tag", ns.Name+"::"+image.Name, "foo:latest")
-
-	assert.Equal(t, 0, result.ExitCode)
-
-	// test fetching image by project::repo:tag
-	result = icmd.RunCommand("acorn", "images", ns.Name+"::"+"foo:latest", "-o=json")
-	assert.Equal(t, result.ExitCode, 0)
-	imageData := helper.TestImage{}
-	err = json.Unmarshal([]byte(result.Stdout()), &imageData)
-	assert.NoError(t, err)
-
-	// test fetching image by project::ID
-	result = icmd.RunCommand("acorn", "images", ns.Name+"::"+image.Name, "-o=json")
-	assert.Equal(t, 0, result.ExitCode)
-	err = json.Unmarshal([]byte(result.Stdout()), &imageData)
-	assert.NoError(t, err)
 }

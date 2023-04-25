@@ -16,7 +16,7 @@ func NewVolumeClasses(c CommandContext) *cobra.Command {
 acorn offering volumeclasses`,
 		SilenceUsage:      true,
 		Short:             "List available volume classes",
-		ValidArgsFunction: newCompletion(c.ClientFactory, volumeClassCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, volumeClassCompletion).complete,
 	})
 	return cmd
 }

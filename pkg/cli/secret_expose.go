@@ -17,7 +17,7 @@ acorn secret`,
 		SilenceUsage:      true,
 		Short:             "Manage secrets",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})
 	return cmd
 }

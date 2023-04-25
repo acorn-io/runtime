@@ -16,7 +16,7 @@ func NewLogs(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Log all workloads from an app",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).withShouldCompleteOptions(onlyNumArgs(1)).withoutProjectCompletion().complete,
 	})
 }
 

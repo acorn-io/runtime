@@ -16,7 +16,7 @@ acorn start my-app
 acorn start my-app1 my-app2`,
 		SilenceUsage:      true,
 		Short:             "Start an app",
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 

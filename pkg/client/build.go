@@ -83,7 +83,7 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 	dialer := buildclient.WebSocketDialer(websocket.DefaultDialer.DialContext)
 	if build.Status.BuildURL == "" {
 		dialer = c.Dialer.DialWebsocket
-		build.Status.BuildURL = c.RESTClient.Get().
+		build.Status.BuildURL = (*c.RESTClient).Get().
 			Namespace(builder.Namespace).
 			Resource("builders").
 			Name(builder.Name).

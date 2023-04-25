@@ -16,6 +16,7 @@ import (
 )
 
 type ImageSource struct {
+	Project   string
 	Image     string
 	File      string
 	Args      []string
@@ -25,7 +26,7 @@ type ImageSource struct {
 
 func NewImageSource(file string, args, profiles, platforms []string) (result ImageSource) {
 	result.File = file
-	result.Image, result.Args = splitImageAndArgs(args)
+	result.Project, result.Image, result.Args = splitImageAndArgs(args)
 	result.Profiles = profiles
 	result.Platforms = platforms
 	return
@@ -209,15 +210,18 @@ func GetCreds(c client.Client) (client.CredentialLookup, error) {
 	return creds.Get, nil
 }
 
-func splitImageAndArgs(args []string) (string, []string) {
+func splitImageAndArgs(args []string) (string, string, []string) {
 	if len(args) == 0 {
-		return "", nil
+		return "", "", nil
 	}
 	if args[0] == "--" || args[0] == "" {
-		return "", args[1:]
+		return "", "", args[1:]
 	}
 	if strings.HasPrefix(args[0], "-") {
-		return "", args
+		return "", "", args
 	}
-	return args[0], args[1:]
+	if parsedProject, after, found := strings.Cut(args[0], "::"); found {
+		return parsedProject, after, args[1:]
+	}
+	return "", args[0], args[1:]
 }

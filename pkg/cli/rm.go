@@ -13,7 +13,7 @@ acorn rm APP_NAME
 acorn rm -t volume,container APP_NAME`,
 		SilenceUsage:      true,
 		Short:             "Delete an app, container, secret or volume",
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 		Args:              cobra.MinimumNArgs(1),
 	})
 }

@@ -189,7 +189,7 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 		opts.ContainerReplica = name
 	}
 
-	url := c.RESTClient.Get().
+	url := (*c.RESTClient).Get().
 		Namespace(app.Namespace).
 		Resource("apps").
 		Name(app.Name).
@@ -456,7 +456,7 @@ func (c *DefaultClient) AppConfirmUpgrade(ctx context.Context, name string) erro
 		return err
 	}
 
-	return c.RESTClient.Post().
+	return (*c.RESTClient).Post().
 		Namespace(app.Namespace).
 		Resource("apps").
 		Name(app.Name).
@@ -474,7 +474,7 @@ func (c *DefaultClient) AppPullImage(ctx context.Context, name string) error {
 		return err
 	}
 
-	return c.RESTClient.Post().
+	return (*c.RESTClient).Post().
 		Namespace(app.Namespace).
 		Resource("apps").
 		Name(app.Name).

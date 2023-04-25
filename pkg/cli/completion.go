@@ -28,7 +28,8 @@ type completion struct {
 	completionFunc   completionFunc
 	successDirective cobra.ShellCompDirective
 
-	noCompletionOptions []noCompletionOption
+	skipProjectCompletion bool
+	noCompletionOptions   []noCompletionOption
 }
 
 func removeExistingArgs(result, args []string) []string {
@@ -51,9 +52,10 @@ func onlyNumArgs(n int) noCompletionOption {
 
 func newCompletion(c ClientFactory, cf completionFunc) *completion {
 	return &completion{
-		client:           c,
-		completionFunc:   cf,
-		successDirective: cobra.ShellCompDirectiveNoFileComp,
+		client:                c,
+		completionFunc:        cf,
+		successDirective:      cobra.ShellCompDirectiveNoFileComp,
+		skipProjectCompletion: false,
 	}
 }
 
@@ -67,6 +69,11 @@ func (a *completion) withSuccessDirective(d cobra.ShellCompDirective) *completio
 	return a
 }
 
+func (a *completion) withoutProjectCompletion() *completion {
+	a.skipProjectCompletion = true
+	return a
+}
+
 func (a *completion) complete(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	for _, o := range a.noCompletionOptions {
 		if o(args) {
@@ -76,6 +83,10 @@ func (a *completion) complete(cmd *cobra.Command, args []string, toComplete stri
 	c, err := a.client.CreateDefault()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
+	}
+
+	if !a.skipProjectCompletion {
+		a.checkProjectPrefix()
 	}
 
 	result, err := a.completionFunc(cmd.Context(), c, toComplete)

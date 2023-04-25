@@ -16,7 +16,7 @@ func NewVolume(c CommandContext) *cobra.Command {
 acorn volume`,
 		SilenceUsage:      true,
 		Short:             "Manage volumes",
-		ValidArgsFunction: newCompletion(c.ClientFactory, volumesCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, volumesCompletion).complete,
 	})
 	cmd.AddCommand(NewVolumeDelete(c))
 	return cmd

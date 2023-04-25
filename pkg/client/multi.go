@@ -31,20 +31,11 @@ type ProjectClientFactory interface {
 	DefaultProject() string
 }
 
-type ObjectPointer[T any] interface {
-	kclient.Object
-	*T
-}
-
-func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
-	return aggregateOptionalNaming[T, V](ctx, true, factory, cb)
-}
-
-// parseProject accepts a name string (in the form of resource or project::resource) and a ClientFactory.
+// getResourceAndClient accepts a name string (in the form of resource or project::resource) and a ClientFactory.
 // If the name string is not of project::resource form, it returns a client for the default project, the name, and
 // nil. Otherwise, it parses off the project name and returns a client for that project, the name without project::,
 // and nil
-func parseProject(ctx context.Context, name string, factory ProjectClientFactory) (pc Client, parsedArg string, err error) {
+func getResourceAndClient(ctx context.Context, name string, factory ProjectClientFactory) (pc Client, parsedArg string, err error) {
 	var parsedProject string
 	if possibleProject, possibleArg, found := strings.Cut(name, "::"); found {
 		parsedProject = possibleProject
@@ -55,6 +46,15 @@ func parseProject(ctx context.Context, name string, factory ProjectClientFactory
 	}
 	pc, err = factory.ForProject(ctx, parsedProject)
 	return
+}
+
+type ObjectPointer[T any] interface {
+	kclient.Object
+	*T
+}
+
+func aggregate[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
+	return aggregateOptionalNaming[T, V](ctx, true, factory, cb)
 }
 
 func aggregateOptionalNaming[T any, V ObjectPointer[T]](ctx context.Context, appendProjectName bool, factory ProjectClientFactory, cb func(client Client) ([]T, error)) ([]T, error) {
@@ -88,7 +88,7 @@ func onOneList[T any, V ObjectPointer[T]](ctx context.Context, factory ProjectCl
 		result []T
 	)
 	// parse the form project::resource
-	client, name, err := parseProject(ctx, name, factory)
+	client, name, err := getResourceAndClient(ctx, name, factory)
 	if err != nil {
 		return result, err
 	}
@@ -114,7 +114,7 @@ func onOne[T kclient.Object](ctx context.Context, factory ProjectClientFactory, 
 		result T
 	)
 	// parse the form project::resource
-	client, name, err := parseProject(ctx, name, factory)
+	client, name, err := getResourceAndClient(ctx, name, factory)
 	if err != nil {
 		return result, err
 	}
@@ -340,7 +340,7 @@ func (m *MultiClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 }
 
 func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, error) {
-	c, name, err := parseProject(ctx, name, m.Factory)
+	c, name, err := getResourceAndClient(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +348,7 @@ func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, 
 }
 
 func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
-	c, name, err := parseProject(ctx, name, m.Factory)
+	c, name, err := getResourceAndClient(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +356,7 @@ func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageD
 }
 
 func (m *MultiClient) ImagePush(ctx context.Context, tagName string, opts *ImagePushOptions) (result <-chan ImageProgress, err error) {
-	c, tagName, err := parseProject(ctx, tagName, m.Factory)
+	c, tagName, err := getResourceAndClient(ctx, tagName, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func (m *MultiClient) ImagePush(ctx context.Context, tagName string, opts *Image
 }
 
 func (m *MultiClient) ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (result <-chan ImageProgress, err error) {
-	c, name, err := parseProject(ctx, name, m.Factory)
+	c, name, err := getResourceAndClient(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +372,7 @@ func (m *MultiClient) ImagePull(ctx context.Context, name string, opts *ImagePul
 }
 
 func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
-	c, image, err := parseProject(ctx, image, m.Factory)
+	c, image, err := getResourceAndClient(ctx, image, m.Factory)
 	if err != nil {
 		return err
 	}
@@ -382,7 +382,7 @@ func (m *MultiClient) ImageTag(ctx context.Context, image, tag string) error {
 func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (result *ImageDetails, err error) {
 	// Image may exist on any project within MultiClient
 	// Can't use onOne due to ImageDetails not conforming to type restraints
-	c, image, err := parseProject(ctx, imageName, m.Factory)
+	c, image, err := getResourceAndClient(ctx, imageName, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +407,7 @@ func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *
 }
 
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	c, name, err := parseProject(ctx, name, m.Factory)
+	c, name, err := getResourceAndClient(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}
@@ -423,7 +423,7 @@ func (m *MultiClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornIma
 }
 
 func (m *MultiClient) AcornImageBuildDelete(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
-	c, name, err := parseProject(ctx, name, m.Factory)
+	c, name, err := getResourceAndClient(ctx, name, m.Factory)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ func NewSecret(c CommandContext) *cobra.Command {
 acorn secret`,
 		SilenceUsage:      true,
 		Short:             "Manage secrets",
-		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, secretsCompletion).complete,
 	})
 	cmd.AddCommand(NewSecretCreate(c))
 	cmd.AddCommand(NewSecretDelete(c))

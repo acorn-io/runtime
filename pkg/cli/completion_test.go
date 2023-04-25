@@ -59,7 +59,7 @@ func TestProjectPrefixCompletions(t *testing.T) {
 		// Testing project completion is difficult because it creates new clients based off CLI config.
 	}
 
-	comp := newCompletion(mockClientFactory, appsThenContainersCompletion).checkProjectPrefix()
+	comp := newCompletion(mockClientFactory, appsThenContainersCompletion)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -174,7 +174,7 @@ func TestAppsThenContainersCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, appsThenContainersCompletion)
+	comp := newCompletion(mockClientFactory, appsThenContainersCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -248,7 +248,7 @@ func TestAppsCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, appsCompletion)
+	comp := newCompletion(mockClientFactory, appsCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -339,7 +339,7 @@ func TestContainersCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, containersCompletion)
+	comp := newCompletion(mockClientFactory, containersCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -388,7 +388,7 @@ func TestWithSuccessDirective(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, cf)
+	comp := newCompletion(mockClientFactory, cf).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.withSuccessDirective(tt.successDirective).complete(cmd, nil, tt.toComplete)
@@ -463,7 +463,7 @@ func TestOnlyNumArgsCompletion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := newCompletion(mockClientFactory, cf).withShouldCompleteOptions(onlyNumArgs(tt.numArgs)).complete(cmd, tt.args, "")
+			got, got1 := newCompletion(mockClientFactory, cf).withShouldCompleteOptions(onlyNumArgs(tt.numArgs)).withoutProjectCompletion().complete(cmd, tt.args, "")
 			assert.Equalf(t, tt.wantNames, got, "onlyNumArgs returned names %v, wanted %v", got, tt.wantNames)
 			assert.Equalf(t, tt.wantDirective, got1, "onlyNumArgs returned directive %v, wanted %v", got1, tt.wantDirective)
 		})
@@ -525,7 +525,7 @@ func TestAcornContainerCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, acornContainerCompletion)
+	comp := newCompletion(mockClientFactory, acornContainerCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, nil, tt.toComplete)
@@ -649,7 +649,7 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := newCompletion(mockClientFactory, onlyAppsWithAcornContainer(tt.container)).complete(cmd, tt.args, tt.toComplete)
+			got, got1 := newCompletion(mockClientFactory, onlyAppsWithAcornContainer(tt.container)).withoutProjectCompletion().complete(cmd, tt.args, tt.toComplete)
 			assert.Equalf(t, tt.wantNames, got, "onlyAppsWithAcornContainer(_, _, nil, %v)", tt.toComplete)
 			assert.Equalf(t, tt.wantDirective, got1, "onlyAppsWithAcornContainer(_, _, nil, %v)", tt.toComplete)
 		})
@@ -728,7 +728,7 @@ func TestImagesCompletion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := newCompletion(mockClientFactory, imagesCompletion(tt.allowDigest)).complete(cmd, tt.args, tt.toComplete)
+			got, got1 := newCompletion(mockClientFactory, imagesCompletion(tt.allowDigest)).withoutProjectCompletion().complete(cmd, tt.args, tt.toComplete)
 			assert.Equalf(t, tt.wantNames, got, "imagesCompletion(%v)(_, _, nil, %v)", tt.allowDigest, tt.toComplete)
 			assert.Equalf(t, tt.wantDirective, got1, "imagesCompletion(%v)(_, _, nil, %v)", tt.allowDigest, tt.toComplete)
 		})
@@ -799,7 +799,7 @@ func TestCredentialsCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, credentialsCompletion)
+	comp := newCompletion(mockClientFactory, credentialsCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -873,7 +873,7 @@ func TestVolumesCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, volumesCompletion)
+	comp := newCompletion(mockClientFactory, volumesCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -947,7 +947,7 @@ func TestSecretsCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, secretsCompletion)
+	comp := newCompletion(mockClientFactory, secretsCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -1027,7 +1027,7 @@ func TestVolumeClassCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, volumeClassCompletion)
+	comp := newCompletion(mockClientFactory, volumeClassCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -1088,7 +1088,7 @@ func TestVolumeClassFlagCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, volumeFlagClassCompletion)
+	comp := newCompletion(mockClientFactory, volumeFlagClassCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -1162,7 +1162,7 @@ func TestComputeClassCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, computeClassCompletion)
+	comp := newCompletion(mockClientFactory, computeClassCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -1205,7 +1205,7 @@ func TestComputeClassFlagCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, computeClassFlagCompletion)
+	comp := newCompletion(mockClientFactory, computeClassFlagCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)
@@ -1265,7 +1265,7 @@ func TestProjectRegionFlagCompletion(t *testing.T) {
 		},
 	}
 
-	comp := newCompletion(mockClientFactory, regionsCompletion)
+	comp := newCompletion(mockClientFactory, regionsCompletion).withoutProjectCompletion()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := comp.complete(cmd, tt.args, tt.toComplete)

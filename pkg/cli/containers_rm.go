@@ -16,7 +16,7 @@ acorn container kill app-name.containername-generated-hash`,
 		SilenceUsage:      true,
 		Short:             "Delete a container",
 		Aliases:           []string{"rm"},
-		ValidArgsFunction: newCompletion(c.ClientFactory, containersCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, containersCompletion).complete,
 	})
 	return cmd
 }

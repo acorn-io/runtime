@@ -12,7 +12,7 @@ func NewDev(c CommandContext) *cobra.Command {
 		Use:               "dev [flags] IMAGE|DIRECTORY [acorn args]",
 		SilenceUsage:      true,
 		Short:             "Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app",
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).withoutProjectCompletion().complete,
 		Example: `
 acorn dev <IMAGE>
 acorn dev .

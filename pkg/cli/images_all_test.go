@@ -141,7 +141,7 @@ func TestImages(t *testing.T) {
 				args: []string{"-c"},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY                      TAG       IMAGE-ID          CONTAINER                      DIGEST\nproject1::testtag               latest    image-1-9102390   test-image-running-container   test-image-running-container\nproject2::testtag2              latest2   image-2-2198031   test-image-running-container   test-image-running-container\nexample.com/acc/Name3::testtag3   latest3   image-3-129394    test-image-running-container   test-image-running-container\n",
+			wantOut: "REPOSITORY                        TAG       IMAGE-ID          CONTAINER                      DIGEST\nproject1::testtag                 latest    image-1-9102390   test-image-running-container   test-image-running-container\nproject2::testtag2                latest2   image-2-2198031   test-image-running-container   test-image-running-container\nexample.com/acc/Name3::testtag3   latest3   image-3-129394    test-image-running-container   test-image-running-container\n",
 		},
 		{
 			name: "acorn images -A -c, one tagged, both have containers", fields: fields{

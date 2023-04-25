@@ -37,7 +37,7 @@ func (c *DefaultClient) SecretGet(ctx context.Context, name string) (*apiv1.Secr
 
 func (c *DefaultClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secret, error) {
 	result := &apiv1.Secret{}
-	err := c.RESTClient.Get().
+	err := (*c.RESTClient).Get().
 		Namespace(c.Namespace).
 		Resource("secrets").
 		Name(name).

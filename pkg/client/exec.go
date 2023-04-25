@@ -11,7 +11,7 @@ import (
 )
 
 func (c *DefaultClient) execContainer(ctx context.Context, container *apiv1.ContainerReplica, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error) {
-	req := c.RESTClient.Get().
+	req := (*c.RESTClient).Get().
 		Namespace(container.Namespace).
 		Resource("containerreplicas").
 		Name(container.Name).

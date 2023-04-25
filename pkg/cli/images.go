@@ -26,7 +26,7 @@ acorn images`,
 		SilenceUsage:      true,
 		Short:             "Manage images",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(1)).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 	cmd.AddCommand(NewImageDelete(c))
 	cmd.AddCommand(NewImageDetail(c))

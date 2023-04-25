@@ -28,7 +28,7 @@ func NewRun(c CommandContext) *cobra.Command {
 		SilenceUsage: true,
 		Short:        "Run an app from an image or Acornfile",
 		// TODO: Jacob: Autocompleting a function may turn 1 arg into 2
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).withoutProjectCompletion().complete,
 		Example: `# Publish and Expose Port Syntax
   # Publish port 80 for any containers that define it as a port
   acorn run -p 80 .

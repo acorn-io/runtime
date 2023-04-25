@@ -22,7 +22,7 @@ func NewExec(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Run a command in a container",
 		Long:              "Run a command in a container",
-		ValidArgsFunction: newCompletion(c.ClientFactory, onlyAppsWithAcornContainer(exec.Container)).withShouldCompleteOptions(exec.debugImageNoComplete).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, onlyAppsWithAcornContainer(exec.Container)).withShouldCompleteOptions(exec.debugImageNoComplete).withoutProjectCompletion().complete,
 	})
 	cmd.Flags().SetInterspersed(false)
 

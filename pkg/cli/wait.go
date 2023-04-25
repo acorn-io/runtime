@@ -12,7 +12,7 @@ func NewWait(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Wait an app to be ready then exit with status code 0",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 }
 

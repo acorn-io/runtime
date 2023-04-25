@@ -16,7 +16,7 @@ func NewApp(c CommandContext) *cobra.Command {
 acorn app`,
 		SilenceUsage:      true,
 		Short:             "List or get apps",
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).checkProjectPrefix().complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 

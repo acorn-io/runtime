@@ -20,7 +20,7 @@ import (
 type Factory struct {
 	client     kclient.WithWatch
 	restConfig *rest.Config
-	restClient *rest.RESTClient
+	restClient *rest.Interface
 	dialer     *k8schannel.Dialer
 }
 
@@ -55,11 +55,12 @@ func NewClientFactory(restConfig *rest.Config) (*Factory, error) {
 	if err != nil {
 		return nil, err
 	}
+	restInterface := rest.Interface(restClient)
 
 	return &Factory{
 		client:     k8sclient,
 		restConfig: restConfig,
-		restClient: restClient,
+		restClient: &restInterface,
 		dialer:     dialer,
 	}, nil
 }
@@ -312,7 +313,7 @@ type DefaultClient struct {
 	Namespace  string
 	Client     kclient.WithWatch
 	RESTConfig *rest.Config
-	RESTClient *rest.RESTClient
+	RESTClient *rest.Interface
 	Dialer     *k8schannel.Dialer
 }
 
