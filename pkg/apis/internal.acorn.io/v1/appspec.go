@@ -385,16 +385,21 @@ type Image struct {
 }
 
 type AppSpec struct {
-	Labels      map[string]string        `json:"labels,omitempty"`
-	Annotations map[string]string        `json:"annotations,omitempty"`
-	Containers  map[string]Container     `json:"containers,omitempty"`
-	Jobs        map[string]Container     `json:"jobs,omitempty"`
-	Images      map[string]Image         `json:"images,omitempty"`
-	Volumes     map[string]VolumeRequest `json:"volumes,omitempty"`
-	Secrets     map[string]Secret        `json:"secrets,omitempty"`
-	Acorns      map[string]Acorn         `json:"acorns,omitempty"`
-	Routers     map[string]Router        `json:"routers,omitempty"`
-	Services    map[string]Service       `json:"services,omitempty"`
+	Labels          map[string]string         `json:"labels,omitempty"`
+	Annotations     map[string]string         `json:"annotations,omitempty"`
+	Containers      map[string]Container      `json:"containers,omitempty"`
+	Jobs            map[string]Container      `json:"jobs,omitempty"`
+	Images          map[string]Image          `json:"images,omitempty"`
+	Volumes         map[string]VolumeRequest  `json:"volumes,omitempty"`
+	Secrets         map[string]Secret         `json:"secrets,omitempty"`
+	Acorns          map[string]Acorn          `json:"acorns,omitempty"`
+	Routers         map[string]Router         `json:"routers,omitempty"`
+	Services        map[string]Service        `json:"services,omitempty"`
+	ImageAllowRules map[string]ImageAllowRule `json:"imageAllowRules,omitempty"`
+}
+
+type ImageAllowRule struct {
+	Signatures ImageAllowRuleSignatures `json:"signatures,omitempty"`
 }
 
 type Route struct {

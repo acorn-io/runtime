@@ -114,6 +114,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GeneratedService":                      schema_pkg_apis_internalacornio_v1_GeneratedService(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.HTTPProbe":                             schema_pkg_apis_internalacornio_v1_HTTPProbe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image":                                 schema_pkg_apis_internalacornio_v1_Image(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRule":                        schema_pkg_apis_internalacornio_v1_ImageAllowRule(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance":                schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstanceList":            schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures":              schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref),
@@ -5259,11 +5260,25 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 							},
 						},
 					},
+					"imageAllowRules": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRule"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRule", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
 	}
 }
 
@@ -6264,6 +6279,26 @@ func schema_pkg_apis_internalacornio_v1_Image(ref common.ReferenceCallback) comm
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_ImageAllowRule(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"signatures": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"},
 	}
 }
 

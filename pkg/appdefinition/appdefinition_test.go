@@ -12,7 +12,92 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func TestParseImageAllowRules(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+imageAllowRules: {
+	qa: {
+		signatures: {
+			rules: [
+				{
+					signedBy: {
+						allOf: [
+							"""
+							-----BEGIN PUBLIC KEY-----
+							MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEo9QMl0ilxrBNFqOpifkhmKVZ14D8
+							cUSzwOtALU9owM2ZRzE55OP4je2y9sTVvlNr59eZQ/Q4gsxHfo4EETEuog==
+							-----END PUBLIC KEY-----
+							""",
+							"""
+							-----BEGIN PUBLIC KEY-----
+							MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVBjU5t1UXLdIOB2kwRoBq0vGiMmP
+							KD9OuACca3P87MN0ct5vmXckhPxJM03ER0cka8neWnVZWHdbTaOJaeVIRg==
+							-----END PUBLIC KEY-----
+							"""
+						]
+					}
+					annotations: {
+						match: {
+							"staging": "approved"
+						}
+						expressions: [
+							{
+								key: "staging"
+								operator: "In"
+								values: ["approved", "accepted"]
+							}
+						]
+					}
+				}
+			]
+		}
+	}
+}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	spec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v1.ImageAllowRule{
+		Signatures: v1.ImageAllowRuleSignatures{
+			Rules: []v1.SignatureRules{
+				{
+					SignedBy: v1.SignedBy{
+						AllOf: []string{
+							`-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEo9QMl0ilxrBNFqOpifkhmKVZ14D8
+cUSzwOtALU9owM2ZRzE55OP4je2y9sTVvlNr59eZQ/Q4gsxHfo4EETEuog==
+-----END PUBLIC KEY-----`,
+							`-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEVBjU5t1UXLdIOB2kwRoBq0vGiMmP
+KD9OuACca3P87MN0ct5vmXckhPxJM03ER0cka8neWnVZWHdbTaOJaeVIRg==
+-----END PUBLIC KEY-----`,
+						},
+						AnyOf: []string{},
+					},
+					Annotations: v1.SignatureAnnotations{
+						Match: map[string]string{
+							"staging": "approved",
+						},
+						Expressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "staging",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"approved", "accepted"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, spec.ImageAllowRules["qa"])
+}
 
 func TestParseRouters(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
