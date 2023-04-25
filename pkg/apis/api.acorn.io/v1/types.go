@@ -57,6 +57,7 @@ type ContainerReplicaSpec struct {
 	JobName       string `json:"jobName,omitempty"`
 	ContainerName string `json:"containerName,omitempty"`
 	SidecarName   string `json:"sidecarName,omitempty"`
+	Region        string `json:"region,omitempty"`
 
 	Dirs        map[string]v1.VolumeMount `json:"dirs,omitempty"`
 	Files       map[string]v1.File        `json:"files,omitempty"`
@@ -96,8 +97,6 @@ type ContainerReplicaStatus struct {
 	Image                string                  `json:"image"`
 	ImageID              string                  `json:"imageID"`
 	Started              *bool                   `json:"started,omitempty"`
-
-	Region string `json:"region,omitempty"`
 }
 
 // EnsureRegion checks or sets the region of a ContainerReplica.
@@ -106,19 +105,19 @@ type ContainerReplicaStatus struct {
 func (in *ContainerReplica) EnsureRegion(region string) bool {
 	// If the region of a Container Replica is not set, then it hasn't been synced yet. In this case, we assume that it is in
 	// the same region as the app, and return true.
-	if in.Status.Region == "" {
-		in.Status.Region = region
+	if in.Spec.Region == "" {
+		in.Spec.Region = region
 	}
 
-	return in.Status.Region == region
+	return in.Spec.Region == region
 }
 
 func (in *ContainerReplica) HasRegion(region string) bool {
-	return in.Status.Region == region
+	return in.Spec.Region == region
 }
 
 func (in *ContainerReplica) GetRegion() string {
-	return in.Status.Region
+	return in.Spec.Region
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -248,6 +247,7 @@ type VolumeSpec struct {
 	Capacity    *resource.Quantity `json:"capacity,omitempty"`
 	AccessModes []v1.AccessMode    `json:"accessModes,omitempty"`
 	Class       string             `json:"class,omitempty"`
+	Region      string             `json:"region,omitempty"`
 }
 
 type VolumeStatus struct {
@@ -257,7 +257,6 @@ type VolumeStatus struct {
 	VolumeName    string        `json:"volumeName,omitempty"`
 	Status        string        `json:"status,omitempty"`
 	Columns       VolumeColumns `json:"columns,omitempty"`
-	Region        string        `json:"region,omitempty"`
 }
 
 type VolumeColumns struct {
@@ -270,15 +269,15 @@ type VolumeColumns struct {
 func (in *Volume) EnsureRegion(region string) bool {
 	// If the region of a volume is not set, then it hasn't been synced yet. In this case, we assume that the volume is in
 	// the same region as the app, and return true.
-	if in.Status.Region == "" {
-		in.Status.Region = region
+	if in.Spec.Region == "" {
+		in.Spec.Region = region
 	}
 
-	return in.Status.Region == region
+	return in.Spec.Region == region
 }
 
 func (in *Volume) HasRegion(region string) bool {
-	return in.Status.Region == region
+	return in.Spec.Region == region
 }
 
 // +k8s:conversion-gen:explicit-from=net/url.Values
