@@ -1442,6 +1442,7 @@ func TestProjectUpdate(t *testing.T) {
 		}
 	})
 	var latestProject *apiv1.Project
+	var updatedProj *apiv1.Project
 	latestProject, err = watcher.New[*apiv1.Project](watchClient).ByObject(ctx, proj1, func(latestProject *apiv1.Project) (bool, error) {
 		if latestProject != nil && latestProject.Status.Namespace != "" {
 			return true, nil
@@ -1452,34 +1453,70 @@ func TestProjectUpdate(t *testing.T) {
 		t.Fatal("error while waiting for project to be created:", err)
 	}
 	// update default
-	updatedProj, err := proj1Client.ProjectUpdate(ctx, latestProject, "new-default", []string{"local"})
-	if err != nil {
-		t.Fatal("error while updating project:", err)
+	for i := 0; i < 10; i++ {
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "new-default", []string{"local"})
+		if err == nil {
+			break
+		}
+		if !apierrors.IsConflict(err) {
+			t.Fatal("error while updating project:", err)
+		}
+		latestProject, err = proj1Client.ProjectGet(ctx, projectName)
+		if err != nil {
+			t.Fatal("error while getting project:", err)
+		}
 	}
 
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "new-default")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
 
 	// swap default from new-default to local
-	updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "local", nil)
-	if err != nil {
-		t.Fatal("error while updating project:", err)
+	for i := 0; i < 10; i++ {
+		updatedProj, err = proj1Client.ProjectGet(ctx, projectName)
+		if err != nil {
+			t.Fatal("error while getting project:", err)
+		}
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "local", nil)
+		if err == nil {
+			break
+		}
+		if !apierrors.IsConflict(err) {
+			t.Fatal("error while updating project:", err)
+		}
 	}
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
 
 	// remove new-default region
-	updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local"})
-	if err != nil {
-		t.Fatal("error while updating project:", err)
+	for i := 0; i < 10; i++ {
+		updatedProj, err = proj1Client.ProjectGet(ctx, projectName)
+		if err != nil {
+			t.Fatal("error while getting project:", err)
+		}
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local"})
+		if err == nil {
+			break
+		}
+		if !strings.Contains(err.Error(), "please apply your changes to the latest version and try again") {
+			t.Fatal("error while updating project:", err)
+		}
 	}
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local"})
 
 	// set supported regions
-	updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local", "local3", "local2"})
-	if err != nil {
-		t.Fatal("error while updating project:", err)
+	for i := 0; i < 10; i++ {
+		updatedProj, err = proj1Client.ProjectGet(ctx, projectName)
+		if err != nil {
+			t.Fatal("error while getting project:", err)
+		}
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local", "local3", "local2"})
+		if err == nil {
+			break
+		}
+		if !apierrors.IsConflict(err) {
+			t.Fatal("error while updating project:", err)
+		}
 	}
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "local3", "local2"})
