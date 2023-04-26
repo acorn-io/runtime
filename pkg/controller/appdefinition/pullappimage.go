@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -11,9 +12,17 @@ import (
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
+	i := &imagePuller{
+		transport: transport,
+	}
+	return pullAppImage(i)
+}
+
+func pullAppImage(i imageClient) router.HandlerFunc {
 	return func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
@@ -34,15 +43,24 @@ func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
-		appImage, err := images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, "", remote.WithTransport(transport))
+		remoteDigest, err := i.remoteImageDigest(req.Ctx, req.Client, appInstance.Namespace, resolvedImage)
 		if err != nil {
 			cond.Error(err)
 			return nil
 		}
-		appImage.Name = targetImage
+
+		// No pull needed if the remote digest matches the current digest
+		if remoteDigest != appInstance.Status.AppImage.Digest {
+			appImage, err := i.imagePullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, "")
+			if err != nil {
+				cond.Error(err)
+				return nil
+			}
+			appImage.Name = targetImage
+			appInstance.Status.AppImage = *appImage
+		}
 		appInstance.Status.AvailableAppImage = ""
 		appInstance.Status.ConfirmUpgradeAppImage = ""
-		appInstance.Status.AppImage = *appImage
 
 		cond.Success()
 		return nil
@@ -95,4 +113,21 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 			return "", ""
 		}
 	}
+}
+
+func (i *imagePuller) remoteImageDigest(ctx context.Context, c client.Reader, namespace, image string) (string, error) {
+	return images.ImageDigest(ctx, c, namespace, image, remote.WithTransport(i.transport))
+}
+
+func (i *imagePuller) imagePullAppImage(ctx context.Context, c client.Reader, namespace, image, nestedDigest string) (*v1.AppImage, error) {
+	return images.PullAppImage(ctx, c, namespace, image, nestedDigest, remote.WithTransport(i.transport))
+}
+
+type imageClient interface {
+	remoteImageDigest(ctx context.Context, c client.Reader, namespace, image string) (string, error)
+	imagePullAppImage(ctx context.Context, c client.Reader, namespace, image, nestedDigest string) (*v1.AppImage, error)
+}
+
+type imagePuller struct {
+	transport http.RoundTripper
 }
