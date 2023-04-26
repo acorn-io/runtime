@@ -22,6 +22,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/tolerations"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -1429,6 +1430,10 @@ func TestProjectUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal("error creating client for project:", err)
 	}
+	watchClient, err := proj1Client.GetClient()
+	if err != nil {
+		t.Fatal("error creating watch client for project:", err)
+	}
 	t.Cleanup(func() {
 		// clean up projects
 		_, err := proj1Client.ProjectDelete(ctx, projectName)
@@ -1436,48 +1441,43 @@ func TestProjectUpdate(t *testing.T) {
 			t.Logf("failed to delete project '%s': %s", projectName, err)
 		}
 	})
-	latestProject, err := proj1Client.ProjectGet(ctx, projectName)
+	var latestProject *apiv1.Project
+	latestProject, err = watcher.New[*apiv1.Project](watchClient).ByObject(ctx, proj1, func(latestProject *apiv1.Project) (bool, error) {
+		if latestProject != nil && latestProject.Status.Namespace != "" {
+			return true, nil
+		}
+		return false, nil
+	})
 	if err != nil {
-		t.Fatal("error while getting project:", err)
+		t.Fatal("error while waiting for project to be created:", err)
 	}
 	// update default
 	updatedProj, err := proj1Client.ProjectUpdate(ctx, latestProject, "new-default", []string{"local"})
 	if err != nil {
 		t.Fatal("error while updating project:", err)
 	}
+
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "new-default")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
 
-	latestProject, err = proj1Client.ProjectGet(ctx, projectName)
-	if err != nil {
-		t.Fatal("error while getting project:", err)
-	}
 	// swap default from new-default to local
-	updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "local", nil)
+	updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "local", nil)
 	if err != nil {
 		t.Fatal("error while updating project:", err)
 	}
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
 
-	latestProject, err = proj1Client.ProjectGet(ctx, projectName)
-	if err != nil {
-		t.Fatal("error while getting project:", err)
-	}
 	// remove new-default region
-	updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "", []string{"local"})
+	updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local"})
 	if err != nil {
 		t.Fatal("error while updating project:", err)
 	}
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local"})
 
-	latestProject, err = proj1Client.ProjectGet(ctx, projectName)
-	if err != nil {
-		t.Fatal("error while getting project:", err)
-	}
 	// set supported regions
-	updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "", []string{"local", "local3", "local2"})
+	updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local", "local3", "local2"})
 	if err != nil {
 		t.Fatal("error while updating project:", err)
 	}
