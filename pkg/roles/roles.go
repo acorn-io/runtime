@@ -147,9 +147,14 @@ var (
 					"clustervolumeclasses",
 					"projectcomputeclasses",
 					"clustercomputeclasses",
-					"imageallowrules",
 				},
 				APIGroups: []string{admin_acorn_io.Group},
+			},
+			{
+				Verbs: []string{"*"},
+				Resources: []string{
+					"imageallowrules",
+				},
 			},
 		},
 	}
@@ -200,7 +205,7 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: Admin,
 			},
-			Rules: concat(View, ViewLogs, Edit, Build),
+			Rules: concat(View, ViewLogs, Edit, Build, Admin),
 		},
 		{
 			ObjectMeta: metav1.ObjectMeta{

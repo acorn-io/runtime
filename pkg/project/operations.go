@@ -24,7 +24,6 @@ func lastPart(s string) string {
 
 func Create(ctx context.Context, opts Options, name, defaultRegion string, supportedRegions []string) error {
 	opts.Project = name
-	opts.Create = true
 	c, err := Client(ctx, opts)
 	if err != nil {
 		return err
@@ -79,7 +78,6 @@ func Exists(ctx context.Context, opts Options, name string) error {
 
 func Update(ctx context.Context, opts Options, project DetailProject, defaultRegion string, supportedRegions []string) error {
 	opts.Project = project.FullName
-	opts.Create = false
 	c, err := Client(ctx, opts)
 	if err != nil {
 		return err

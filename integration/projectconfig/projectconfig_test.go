@@ -118,8 +118,6 @@ func TestCLIConfig(t *testing.T) {
 			wantRestConfigHost: "https://foo.example.com",
 			wantNamespace:      "bar",
 			wantToken:          "pass",
-			wantErr:            fmt.Errorf("project \"example.com/foo/bar\" does not exist within the current context"),
-			wantError:          true,
 		},
 		{
 			name: "Project arg overrides current project",
@@ -166,8 +164,6 @@ func TestCLIConfig(t *testing.T) {
 			wantProject:        "example.com/foo/bar",
 			wantNamespace:      "bar",
 			wantToken:          "pass",
-			wantError:          true,
-			wantErr:            fmt.Errorf("project \"example.com/foo/bar\" does not exist within the current context"),
 		},
 		{
 			name:          "Use alias",
