@@ -367,7 +367,7 @@ func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, proj
 	for workload, container := range workloads {
 		cc, err := getClassForWorkload(computeClasses, computeClass, container, workload)
 		if err != nil {
-			validationErrors = append(validationErrors, field.Invalid(field.NewPath("computeclass"), "", err.Error()))
+			validationErrors = append(validationErrors, field.NotFound(field.NewPath("computeclass"), err.Error()))
 		}
 
 		if cc != nil {

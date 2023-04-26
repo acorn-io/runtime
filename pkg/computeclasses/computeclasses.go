@@ -91,10 +91,9 @@ func Validate(cc apiv1.ComputeClass, memory resource.Quantity, memDefault *int64
 		wcDefault := parsedMemory.Def.Value()
 		memDefault = &wcDefault
 	}
-
 	if !memoryInValues(parsedMemory, memory) {
-		return fmt.Errorf("defined memory %v is not an allowed value for the ComputeClass %v. allowed values: %v",
-			memory.String(), cc.Name, cc.Memory.Values)
+		return fmt.Errorf("%w: defined memory %v is not an allowed value for the ComputeClass %v. allowed values: %v",
+			ErrInvalidMemoryForClass, memory.String(), cc.Name, cc.Memory.Values)
 	}
 
 	memBytes := memory.Value()
