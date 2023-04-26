@@ -22,3 +22,7 @@ func TestNetworkPolicyForIngressExternalName(t *testing.T) {
 func TestNetworkPolicyForService(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/service", PolicyForService)
 }
+
+func TestNetworkPolicyForBuilder(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/builder", PolicyForBuilder)
+}
