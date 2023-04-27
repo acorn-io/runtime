@@ -1007,6 +1007,11 @@ func (in *ImageAllowRule) DeepCopyInto(out *ImageAllowRule) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
+	if in.Scope != nil {
+		in, out := &in.Scope, &out.Scope
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	in.Signatures.DeepCopyInto(&out.Signatures)
 }
 

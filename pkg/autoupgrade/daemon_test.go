@@ -71,7 +71,7 @@ func (m *mockDaemonClient) resolveLocalTag(context.Context, string, string) (str
 
 func (m *mockDaemonClient) checkImageAllowed(_ context.Context, _ string, img string) error {
 	if _, ok := m.imageDenyList[img]; ok {
-		return &imageallowrules.ErrImageNotAllowed{Image: img, Rule: "MockRule", SubruleType: "MockRule", SubrulePath: ".*"}
+		return &imageallowrules.ErrImageNotAllowed{Image: img}
 	}
 	return nil
 }
