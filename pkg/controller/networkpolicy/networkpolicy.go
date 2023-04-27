@@ -325,10 +325,8 @@ func PolicyForService(req router.Request, resp router.Response) error {
 // It also only allows outgoing traffic to CoreDNS, the Acorn registry, and the Internet.
 func PolicyForBuilder(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
-	if err != nil {
+	if err != nil || !*cfg.NetworkPolicies {
 		return err
-	} else if !*cfg.NetworkPolicies {
-		return nil
 	}
 
 	deployment := req.Object.(*appsv1.Deployment)
