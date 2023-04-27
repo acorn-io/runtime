@@ -94,26 +94,6 @@ func TestAcornProject(t *testing.T) {
 		commandContext CommandContext
 	}{
 		{
-			name: "acorn image -j noproject",
-			fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
-			},
-			args: args{
-				args:   []string{"image", "-j", "noproject"},
-				client: &testdata.MockClient{},
-			},
-			wantErr: true,
-			wantOut: "project \"noproject\" does not exist within the current context",
-		},
-		{
 			name: "acorn image -j 12.badname",
 			fields: fields{
 				All:    false,
@@ -131,27 +111,7 @@ func TestAcornProject(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: true,
-			wantOut: "project \"12.badname\" does not exist within the current context",
-		},
-		{
-			name: "acorn image -j badname/projectname/here",
-			fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
-			},
-			args: args{
-				args:   []string{"image", "-j", "badname/projectname/here"},
-				client: &testdata.MockClient{},
-			},
-			wantErr: true,
-			wantOut: "project \"badname/projectname/here\" does not exist within the current context",
+			wantOut: "invalid project name [12.badname]: can not contain \".\"",
 		},
 	}
 	for _, tt := range tests {

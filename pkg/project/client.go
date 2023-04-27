@@ -13,7 +13,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/strings/slices"
 )
 
 var (
@@ -25,7 +24,6 @@ type Options struct {
 	Kubeconfig  string
 	ContextEnv  string
 	AllProjects bool
-	Create      bool
 	CLIConfig   *config.CLIConfig
 }
 
@@ -204,11 +202,8 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 }
 
 func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
-	projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
-	if err != nil {
-		return nil, err
-	}
 	if opts.AllProjects {
+		projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
 		return projects, err
 	}
 	p := strings.TrimSpace(opts.Project)
@@ -217,9 +212,6 @@ func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options
 	}
 	if strings.TrimSpace(p) == "" {
 		return nil, nil
-	}
-	if !opts.Create && len(projects) != 0 && !slices.Contains(projects, p) {
-		return nil, fmt.Errorf("project \"%s\" does not exist within the current context", p)
 	}
 	for _, project := range csvSplit.Split(p, -1) {
 		if target := cfg.ProjectAliases[project]; target == "" {
