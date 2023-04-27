@@ -8,21 +8,21 @@ import (
 )
 
 func TestNetworkPolicyForApp(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/appinstance", PolicyForApp)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/appinstance", ForApp)
 }
 
 func TestNetworkPolicyForIngress(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/ingress", PolicyForIngress)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/ingress", ForIngress)
 }
 
 func TestNetworkPolicyForIngressExternalName(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/externalname", PolicyForIngress)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/externalname", ForIngress)
 }
 
 func TestNetworkPolicyForService(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/service", PolicyForService)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/service", ForService)
 }
 
 func TestNetworkPolicyForBuilder(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/builder", PolicyForBuilder)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/networkpolicy/builder", ForBuilder)
 }

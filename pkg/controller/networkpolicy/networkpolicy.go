@@ -27,9 +27,9 @@ const (
 	awsEC2cidrV6 = "fd00:ec2::254/64"
 )
 
-// PolicyForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
+// ForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
 // to all pods in an app, so that they cannot be reached by pods from other projects.
-func PolicyForApp(req router.Request, resp router.Response) error {
+func ForApp(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -98,10 +98,10 @@ func PolicyForApp(req router.Request, resp router.Response) error {
 	return nil
 }
 
-// PolicyForIngress creates Kubernetes NetworkPolicies to allow traffic to exposed HTTP ports on
+// ForIngress creates Kubernetes NetworkPolicies to allow traffic to exposed HTTP ports on
 // Acorn apps from the ingress controller. If the ingress controller namespace is not defined, traffic from
 // all namespaces will be allowed instead.
-func PolicyForIngress(req router.Request, resp router.Response) error {
+func ForIngress(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -236,9 +236,9 @@ func PolicyForIngress(req router.Request, resp router.Response) error {
 	return nil
 }
 
-// PolicyForService creates a Kubernetes NetworkPolicy to allow traffic to published TCP/UDP ports
+// ForService creates a Kubernetes NetworkPolicy to allow traffic to published TCP/UDP ports
 // on Acorn apps that are exposed with LoadBalancer Services.
-func PolicyForService(req router.Request, resp router.Response) error {
+func ForService(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -321,9 +321,9 @@ func PolicyForService(req router.Request, resp router.Response) error {
 	return nil
 }
 
-// PolicyForBuilder creates a Kubernetes NetworkPolicy to allow traffic to the buildkitd pods from the acorn-api only.
+// ForBuilder creates a Kubernetes NetworkPolicy to allow traffic to the buildkitd pods from the acorn-api only.
 // It also only allows outgoing traffic to CoreDNS, the Acorn registry, and the Internet.
-func PolicyForBuilder(req router.Request, resp router.Response) error {
+func ForBuilder(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil || !*cfg.NetworkPolicies {
 		return err
