@@ -29,6 +29,12 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// do not allow cross project args
+	args, err = noCrossProjectArgs(args, c.GetProject())
+	if err != nil {
+		return err
+	}
+
 	ref, err := name.ParseReference(args[0])
 	if err != nil {
 		return err

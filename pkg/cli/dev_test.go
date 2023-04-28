@@ -23,6 +23,8 @@ func TestDev(t *testing.T) {
 		Return(nil, fmt.Errorf("error: app dne does not exist")).AnyTimes()
 	mClient.EXPECT().Info(gomock.Any()).
 		Return(nil, nil).AnyTimes()
+	mClient.EXPECT().GetProject().
+		Return("ClientOne").AnyTimes()
 	mClient.EXPECT().ImageDetails(gomock.Any(), "image-dne", gomock.Any()).
 		Return(nil, fmt.Errorf("✗  ERROR:  GET https://index.docker.io/v2/library/image-dne/manifests/latest: UNAUTHORIZED: authentication required; [map[Action:pull Class: Name:library/image-dne Type:repository]]")).AnyTimes()
 

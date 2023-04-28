@@ -25,6 +25,12 @@ func (s *Tag) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// do not allow cross project args
+	args, err = noCrossProjectArgs(args, client.GetProject())
+	if err != nil {
+		return err
+	}
+
 	src, tag := args[0], args[1]
 
 	return client.ImageTag(cmd.Context(), src, tag)

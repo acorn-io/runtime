@@ -62,6 +62,7 @@ func TestRun(t *testing.T) {
 				}
 				return nil, nil
 			}).AnyTimes()
+		f.EXPECT().GetProject().Return("project").AnyTimes()
 		f.EXPECT().AppRun(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 			func(ctx context.Context, image string, opts *client.AppRunOptions) (*apiv1.App, error) {
 				switch image {

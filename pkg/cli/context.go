@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -64,9 +65,24 @@ func parseArgGetClient(factory ClientFactory, cmd *cobra.Command, arg string) (c
 	return localClient, arg, nil
 }
 
+// parseProjectOffString parses a project off of a string of the potential form project::resource
+// and returns the project (or "" if none is found) and the resource
 func parseProjectOffString(name string) (string, string) {
-	if parsedProject, after, found := strings.Cut(name, "::"); found {
-		return parsedProject, after
+	if parsedProject, parsedResource, found := strings.Cut(name, "::"); found {
+		return parsedProject, parsedResource
 	}
 	return "", name
+}
+
+// noCrossProjectArgs returns an error if any of the args are specifying a different project
+// and converts any args of project::resource form to resource form if it is of the current project
+func noCrossProjectArgs(args []string, currentProject string) ([]string, error) {
+	var parsedProject string
+	for i := range args {
+		parsedProject, args[i] = parseProjectOffString(args[i])
+		if len(parsedProject) > 0 && parsedProject != currentProject {
+			return nil, fmt.Errorf("cannot cross project boundaries with acorn run")
+		}
+	}
+	return args, nil
 }

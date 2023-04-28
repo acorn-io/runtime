@@ -30,6 +30,12 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// do not allow cross project args
+	args, err = noCrossProjectArgs(args, c.GetProject())
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.ReadCLIConfig()
 	if err != nil {
 		return err

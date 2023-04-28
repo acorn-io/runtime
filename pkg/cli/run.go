@@ -221,6 +221,12 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
+	// do not allow cross project args
+	args, err = noCrossProjectArgs(args, c.GetProject())
+	if err != nil {
+		return err
+	}
+
 	var (
 		imageSource = imagesource.NewImageSource(s.File, args, s.Profile, nil)
 		app         *apiv1.App
