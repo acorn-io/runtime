@@ -273,9 +273,9 @@ type VolumeColumns struct {
 	AccessModes string `json:"accessModes,omitempty"`
 }
 
-// EnsureRegion checks or sets the region of a ContainerReplica.
-// If a ContainerReplica's region is unset, EnsureRegion sets it to the given region and returns true.
-// Otherwise, it returns true if and only if the ContainerReplica belongs to the given region.
+// EnsureRegion checks or sets the region of a Volume.
+// If a Volume's region is unset, EnsureRegion sets it to the given region and returns true.
+// Otherwise, it returns true if and only if the Volume belongs to the given region.
 func (in *Volume) EnsureRegion(region string) bool {
 	// If the region of a volume is not set, then it hasn't been synced yet. In this case, we assume that the volume is in
 	// the same region as the app, and return true.

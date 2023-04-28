@@ -3,6 +3,7 @@ package secrets
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/publicname"
+	"github.com/acorn-io/acorn/pkg/server/registry/middleware"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
@@ -12,11 +13,13 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c kclient.WithWatch) rest.Storage {
+func NewStorage(c kclient.WithWatch, middlewares ...middleware.CompleteStrategy) rest.Storage {
 	translated := translation.NewTranslationStrategy(&Translator{
 		c: c,
 	}, remote.NewRemote(&corev1.Secret{}, c))
 	remoteResource := publicname.NewStrategy(translated)
+	remoteResource = middleware.ForCompleteStrategy(remoteResource, middlewares...)
+
 	validator := &Validator{}
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.Secret{}).

@@ -1554,3 +1554,85 @@ func TestProjectUpdate(t *testing.T) {
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, apiv1.LocalRegion)
 	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{apiv1.LocalRegion, "local3", "local2"})
 }
+
+func TestEnforcedQuota(t *testing.T) {
+	ctx := helper.GetCTX(t)
+
+	helper.StartController(t)
+	restConfig, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		t.Fatal("error while getting rest config:", err)
+	}
+	// Create a project.
+	kclient := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kclient)
+
+	// Create a client for the project.
+	c, err := client.New(restConfig, project.Name, project.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Update the project to enforce quota.
+	if project.Annotations == nil {
+		project.Annotations = make(map[string]string)
+	}
+	project.Annotations[labels.ProjectEnforcedQuotaAnnotation] = "true"
+	if err := kclient.Update(ctx, project); err != nil {
+		t.Fatal(err)
+	}
+
+	// Run a simple app.
+	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/volume",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		_, err = c.AppDelete(ctx, app.Name)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	// Wait for the app to set the AppInstanceQuotaAllocated condition to be transitioning and for the namespace
+	// to be ready.
+	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionNamespace).Success &&
+			obj.Status.Condition(v1.AppInstanceConditionQuotaAllocated).Transitioning
+	})
+
+	// Grab the app's QuotaRequest and check that it has the appropriate values set.
+	quotaRequest := &adminv1.QuotaRequestInstance{}
+	err = kclient.Get(ctx, router.Key(app.Namespace, app.Name), quotaRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, quotaRequest.Spec.Resources.Containers, 1)
+
+	// Update the status of the QuotaRequest to communicate readiness.
+	quotaRequest.Status = adminv1.QuotaRequestInstanceStatus{
+		ObservedGeneration: quotaRequest.Generation,
+		Conditions: []v1.Condition{{
+			ObservedGeneration: quotaRequest.Generation,
+			Type:               adminv1.QuotaRequestCondition,
+			Status:             metav1.ConditionTrue,
+			Success:            true,
+		}},
+		AllocatedResources: quotaRequest.Spec.Resources,
+	}
+	err = kclient.Status().Update(ctx, quotaRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the app to set the AppInstanceQuotaAllocated condition to success.
+	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Condition(v1.AppInstanceConditionQuotaAllocated).Success
+	})
+}

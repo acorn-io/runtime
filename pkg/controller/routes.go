@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
 	"github.com/acorn-io/acorn/pkg/controller/appstatus"
@@ -17,6 +18,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
 	"github.com/acorn-io/acorn/pkg/controller/networkpolicy"
 	"github.com/acorn-io/acorn/pkg/controller/pvc"
+	"github.com/acorn-io/acorn/pkg/controller/quota"
 	"github.com/acorn-io/acorn/pkg/controller/scheduling"
 	"github.com/acorn-io/acorn/pkg/controller/secrets"
 	"github.com/acorn-io/acorn/pkg/controller/service"
@@ -58,6 +60,8 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
 	appRouter.HandlerFunc(defaults.Calculate)
 	appRouter.HandlerFunc(scheduling.Calculate)
+	appRouter.HandlerFunc(quota.EnsureQuotaRequest)
+	appRouter.HandlerFunc(quota.WaitForAllocation)
 	appRouter = appRouter.Middleware(appstatus.CheckStatus)
 	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)

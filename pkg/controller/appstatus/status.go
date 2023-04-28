@@ -38,6 +38,7 @@ func CheckStatus(h router.Handler) router.Handler {
 		conditionsToCheck := []string{
 			v1.AppInstanceConditionDefaults,
 			v1.AppInstanceConditionScheduling,
+			v1.AppInstanceConditionQuotaAllocated,
 		}
 
 		for _, cond := range conditionsToCheck {

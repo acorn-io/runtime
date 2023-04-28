@@ -14,6 +14,7 @@ import (
 func NewStorage(c kclient.WithWatch) rest.Storage {
 	remoteResource := translation.NewSimpleTranslationStrategy(&Translator{},
 		remote.NewRemote(&v1.ImageInstance{}, c))
+
 	strategy := NewStrategy(remoteResource, c)
 	return stores.NewBuilder(c.Scheme(), &apiv1.Image{}).
 		WithGet(strategy).
