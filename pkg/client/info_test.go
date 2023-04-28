@@ -48,7 +48,6 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 					Name:      projectName,
 					Namespace: namespace,
 				},
-				Spec: v12.InfoSpec{},
 			},
 		},
 	}

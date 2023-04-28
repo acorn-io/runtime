@@ -79,8 +79,10 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		for _, info := range fullInfo {
-			for _, key := range info.Spec.PublicKeys {
-				e.PublicKey = append(e.PublicKey, key.KeyID)
+			for _, region := range info.Regions {
+				for _, key := range region.PublicKeys {
+					e.PublicKey = append(e.PublicKey, key.KeyID)
+				}
 			}
 		}
 	}

@@ -27,7 +27,7 @@ func TestRegions(t *testing.T) {
 			existingRegions: []apiv1.Region{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:              "local",
+						Name:              apiv1.LocalRegion,
 						CreationTimestamp: metav1.NewTime(tenYearsAgo),
 					},
 					Spec: apiv1.RegionSpec{
@@ -46,7 +46,7 @@ func TestRegions(t *testing.T) {
 			existingRegions: []apiv1.Region{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:              "local",
+						Name:              apiv1.LocalRegion,
 						CreationTimestamp: metav1.NewTime(tenYearsAgo),
 						OwnerReferences: []metav1.OwnerReference{
 							{
@@ -70,7 +70,7 @@ func TestRegions(t *testing.T) {
 			existingRegions: []apiv1.Region{
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:              "local",
+						Name:              apiv1.LocalRegion,
 						CreationTimestamp: metav1.NewTime(tenYearsAgo),
 					},
 					Spec: apiv1.RegionSpec{
@@ -80,7 +80,7 @@ func TestRegions(t *testing.T) {
 				},
 				{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:              "local",
+						Name:              apiv1.LocalRegion,
 						CreationTimestamp: metav1.NewTime(tenYearsAgo),
 					},
 					Spec: apiv1.RegionSpec{

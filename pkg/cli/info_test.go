@@ -10,7 +10,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/cli/testdata"
 	"github.com/acorn-io/acorn/pkg/mocks"
 	"github.com/golang/mock/gomock"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -21,14 +20,10 @@ func TestInfo(t *testing.T) {
 		Output string
 		All    bool
 	}
-	type args struct {
-		cmd  *cobra.Command
-		args []string
-	}
 	tests := []struct {
 		name    string
 		fields  fields
-		args    args
+		args    []string
 		wantErr bool
 		wantOut string
 		prepare func(f *mocks.MockClient)
@@ -42,20 +37,20 @@ func TestInfo(t *testing.T) {
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					[]apiv1.Info{
-						{TypeMeta: metav1.TypeMeta{},
+						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "NameOne",
 								Namespace: "NameOne",
 							},
-							Spec: apiv1.InfoSpec{
-								Tag: "OneTag",
+							Regions: map[string]apiv1.InfoSpec{
+								apiv1.LocalRegion: {
+									Tag: "OneTag",
+								},
 							},
 						},
 					}, nil)
 			},
-			args: args{
-				args: []string{},
-			},
+			args:    []string{},
 			wantErr: false,
 			wantOut: "./testdata/info/info_test.txt",
 		},
@@ -69,9 +64,7 @@ func TestInfo(t *testing.T) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					nil, nil)
 			},
-			args: args{
-				args: []string{},
-			},
+			args:    []string{},
 			wantErr: false,
 			wantOut: "./testdata/info/info_test_empty.txt",
 		},
@@ -85,29 +78,31 @@ func TestInfo(t *testing.T) {
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					[]apiv1.Info{
-						{TypeMeta: metav1.TypeMeta{},
+						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "NameOne",
 								Namespace: "NameOne",
 							},
-							Spec: apiv1.InfoSpec{
-								Tag: "OneTag",
+							Regions: map[string]apiv1.InfoSpec{
+								apiv1.LocalRegion: {
+									Tag: "OneTag",
+								},
 							},
 						},
-						{TypeMeta: metav1.TypeMeta{},
+						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "NameTwo",
 								Namespace: "NameTwo",
 							},
-							Spec: apiv1.InfoSpec{
-								Tag: "TwoTag",
+							Regions: map[string]apiv1.InfoSpec{
+								apiv1.LocalRegion: {
+									Tag: "TwoTag",
+								},
 							},
 						},
 					}, nil)
 			},
-			args: args{
-				args: []string{},
-			},
+			args:    []string{},
 			wantErr: false,
 			wantOut: "./testdata/info/info_test-a.txt",
 		},
@@ -119,20 +114,20 @@ func TestInfo(t *testing.T) {
 			},
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{
-					{TypeMeta: metav1.TypeMeta{},
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "NameOne",
 							Namespace: "NameOne",
 						},
-						Spec: apiv1.InfoSpec{
-							Tag: "OneTag",
+						Regions: map[string]apiv1.InfoSpec{
+							apiv1.LocalRegion: {
+								Tag: "OneTag",
+							},
 						},
 					},
 				}, nil)
 			},
-			args: args{
-				args: []string{"-oyaml"},
-			},
+			args:    []string{"-oyaml"},
 			wantErr: false,
 			wantOut: "./testdata/info/info_test.txt",
 		},
@@ -145,20 +140,20 @@ func TestInfo(t *testing.T) {
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					[]apiv1.Info{
-						{TypeMeta: metav1.TypeMeta{},
+						{
 							ObjectMeta: metav1.ObjectMeta{
 								Name:      "NameOne",
 								Namespace: "NameOne",
 							},
-							Spec: apiv1.InfoSpec{
-								Tag: "OneTag",
+							Regions: map[string]apiv1.InfoSpec{
+								apiv1.LocalRegion: {
+									Tag: "OneTag",
+								},
 							},
 						},
 					}, nil)
 			},
-			args: args{
-				args: []string{"-ojson"},
-			},
+			args:    []string{"-ojson"},
 			wantErr: false,
 			wantOut: "./testdata/info/info_test_json.txt",
 		},
@@ -174,8 +169,9 @@ func TestInfo(t *testing.T) {
 
 			r, w, _ := os.Pipe()
 			os.Stdout = w
+
 			// Mock client factory just returns the gomock client.
-			tt.args.cmd = NewInfo(CommandContext{
+			cmd := NewInfo(CommandContext{
 				ClientFactory: &testdata.MockClientFactoryManual{
 					Client: mClient,
 				},
@@ -183,9 +179,9 @@ func TestInfo(t *testing.T) {
 				StdErr: w,
 				StdIn:  strings.NewReader(""),
 			})
-			tt.args.cmd.SetArgs(tt.args.args)
-			err := tt.args.cmd.Execute()
+			cmd.SetArgs(tt.args)
 
+			err := cmd.Execute()
 			if err != nil && !tt.wantErr {
 				assert.Failf(t, "got err when err not expected", "got err: %s", err.Error())
 			} else if err != nil && tt.wantErr {

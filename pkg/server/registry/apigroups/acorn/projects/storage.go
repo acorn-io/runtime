@@ -11,10 +11,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const localRegion = "local"
-
 func NewStorage(c kclient.WithWatch) rest.Storage {
-	remoteResource := translation.NewTranslationStrategy(&Translator{localRegion},
+	remoteResource := translation.NewTranslationStrategy(&Translator{apiv1.LocalRegion},
 		remote.NewRemote(&corev1.Namespace{}, c))
 	strategy := &Strategy{
 		c:       c,
@@ -23,7 +21,7 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 		updater: remoteResource,
 		deleter: remoteResource,
 	}
-	validator := &Validator{localRegion}
+	validator := &Validator{apiv1.LocalRegion}
 	return stores.NewBuilder(c.Scheme(), &apiv1.Project{}).
 		WithCreate(strategy).
 		WithUpdate(strategy).

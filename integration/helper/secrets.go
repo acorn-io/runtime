@@ -18,8 +18,10 @@ func EncryptData(t *testing.T, client client.Client, keys []string, data string)
 			return ""
 		}
 		for _, info := range fullInfo {
-			for _, key := range info.Spec.PublicKeys {
-				pubKeys = append(pubKeys, key.KeyID)
+			for _, region := range info.Regions {
+				for _, key := range region.PublicKeys {
+					pubKeys = append(pubKeys, key.KeyID)
+				}
 			}
 		}
 	} else {
@@ -51,8 +53,10 @@ func GetEncryptionKeys(t *testing.T, clients []client.Client) []string {
 			return nil
 		}
 		for _, info := range fullInfo {
-			for _, key := range info.Spec.PublicKeys {
-				pubKeys = append(pubKeys, key.KeyID)
+			for _, region := range info.Regions {
+				for _, key := range region.PublicKeys {
+					pubKeys = append(pubKeys, key.KeyID)
+				}
 			}
 		}
 	}

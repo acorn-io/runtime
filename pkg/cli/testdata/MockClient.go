@@ -638,7 +638,6 @@ func (m *MockClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 		{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{},
-			Spec:       apiv1.InfoSpec{},
 		},
 	}, nil
 }
