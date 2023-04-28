@@ -149,7 +149,8 @@ const sidebars = {
       "reference/acornfile",
       "reference/functions",
       "reference/compute-resources",
-      "reference/encryption"
+      "reference/encryption",
+      "reference/advanced"
     ],
     "collapsed": true
   },
