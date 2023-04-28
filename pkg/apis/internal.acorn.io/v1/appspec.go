@@ -371,6 +371,9 @@ type Container struct {
 	// Schedule is only available on jobs
 	Schedule string `json:"schedule,omitempty"`
 
+	// OnDelete is only available on jobs
+	OnDelete bool `json:"onDelete,omitempty"`
+
 	// Init is only available on sidecars
 	Init bool `json:"init,omitempty"`
 

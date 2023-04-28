@@ -3,6 +3,7 @@ package containers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -225,8 +226,14 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 				// is a secret.  We need a secure implementation that doesn't put the secret in the
 				// termination message.
 				result.Status.Columns.State = "stopped"
-			} else {
+			} else if status.State.Terminated.ExitCode == 0 && status.State.Terminated.Message != "" {
 				result.Status.Columns.State = "stopped: " + status.State.Terminated.Message
+			} else {
+				msg := status.State.Terminated.Message
+				if msg != "" {
+					msg = ": " + msg
+				}
+				result.Status.Columns.State = fmt.Sprintf("%s: exit code (%d)%s", strings.ToLower(status.State.Terminated.Reason), status.State.Terminated.ExitCode, msg)
 			}
 		}
 

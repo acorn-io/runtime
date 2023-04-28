@@ -125,10 +125,16 @@ func WaitForObject[T client.Object](t *testing.T, watchFunc WatchFunc, list clie
 }
 
 func EnsureDoesNotExist(ctx context.Context, getter func() (client.Object, error)) error {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(WatchTimeoutSeconds)*time.Second)
 	defer cancel()
+
+	_, err := getter()
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+
 	for {
 		select {
 		case <-ctx.Done():

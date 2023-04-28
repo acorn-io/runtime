@@ -78,6 +78,9 @@ func IgnoreTerminatingNamespace(h router.Handler) router.Handler {
 
 func RequireNamespace(h router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
+		if req.Object == nil {
+			return nil
+		}
 		appInstance := req.Object.(*v1.AppInstance)
 		if appInstance.Status.Namespace == "" {
 			return nil

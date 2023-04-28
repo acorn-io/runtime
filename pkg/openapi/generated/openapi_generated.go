@@ -5876,6 +5876,13 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
+					"onDelete": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OnDelete is only available on jobs",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"init": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Init is only available on sidecars",

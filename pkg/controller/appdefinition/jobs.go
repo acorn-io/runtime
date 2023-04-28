@@ -42,6 +42,20 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 	return result, nil
 }
 
+func setDestroy(containers []corev1.Container, destroy bool) (result []corev1.Container) {
+	if !destroy {
+		return containers
+	}
+	for _, c := range containers {
+		c.Env = append(c.Env, corev1.EnvVar{
+			Name:  "ACORN_EVENT",
+			Value: "onDelete",
+		})
+		result = append(result, c)
+	}
+	return
+}
+
 func setTerminationPath(containers []corev1.Container) (result []corev1.Container) {
 	for _, c := range containers {
 		c.TerminationMessagePath = "/run/secrets/output"
@@ -68,6 +82,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
 		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
 
+	destroy := !appInstance.DeletionTimestamp.IsZero() && container.OnDelete
+
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
@@ -84,8 +100,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				EnableServiceLinks:            new(bool),
 				RestartPolicy:                 corev1.RestartPolicyNever,
-				Containers:                    setTerminationPath(containers),
-				InitContainers:                setTerminationPath(initContainers),
+				Containers:                    setDestroy(setTerminationPath(containers), destroy),
+				InitContainers:                setDestroy(setTerminationPath(initContainers), destroy),
 				Volumes:                       volumes,
 				ServiceAccountName:            name,
 			},
