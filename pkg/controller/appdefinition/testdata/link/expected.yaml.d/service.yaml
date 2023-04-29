@@ -8,6 +8,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/link-name: con-link
     acorn.io/managed: "true"
+    "acorn.io/public-name": "app-name.con"
 spec:
   appName: app-name
   appNamespace: app-namespace

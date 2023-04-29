@@ -16,6 +16,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -38,6 +39,9 @@ var (
 		},
 		Spec: apiv1.ContainerReplicaSpec{AppName: "found"},
 		Status: apiv1.ContainerReplicaStatus{
+			State: corev1.ContainerState{
+				Terminated: &corev1.ContainerStateTerminated{},
+			},
 			Columns: apiv1.ContainerReplicaColumns{
 				State: "stopped",
 			},

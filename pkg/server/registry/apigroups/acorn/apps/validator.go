@@ -8,6 +8,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/computeclasses"
@@ -532,30 +533,69 @@ func (s *Validator) getPermissions(ctx context.Context, servicePrefix, namespace
 	return result, nil
 }
 
-func (s *Validator) buildNestedPermissions(ctx context.Context, servicePrefix string, app *v1.AppSpec, namespace, image string, imageData v1.ImagesData) (result []v1.Permissions, _ error) {
-	for _, entry := range typed.Sorted(imageData.Acorns) {
+func (s *Validator) getImagePermissions(ctx context.Context, servicePrefix string, profiles []string, args map[string]any, namespace, image, nestedDigest string) (result []v1.Permissions, _ error) {
+	details, err := s.getImageDetails(ctx, namespace, profiles, args, image, nestedDigest)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.getPermissions(ctx, servicePrefix, namespace, image, details)
+}
+
+func (s *Validator) buildNestedPermissions(ctx context.Context, servicePrefix string, app *v1.AppSpec, namespace, image string, imageData v1.ImagesData) (result []v1.Permissions, err error) {
+	for _, entry := range typed.Sorted(app.Acorns) {
 		var (
-			profiles []string
-			args     map[string]any
+			acornName, acorn = entry.Key, entry.Value
+			subResult        []v1.Permissions
 		)
-		if acorn, ok := app.Acorns[entry.Key]; ok {
-			profiles = acorn.Profiles
-			args = acorn.DeployArgs
-		} else if svc, ok := app.Services[entry.Key]; ok {
-			args = svc.ServiceArgs
+
+		acornImage, ok := appdefinition.GetImageReferenceForServiceName(acornName, app, imageData)
+		if !ok {
+			return nil, fmt.Errorf("failed to find image information for nested acorn [%s]", acornName)
+		}
+
+		if tags.IsImageDigest(acornImage) {
+			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, image, acornImage)
+			if err != nil {
+				return nil, err
+			}
 		} else {
+			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, acornImage, "")
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		result = append(result, subResult...)
+	}
+
+	for _, entry := range typed.Sorted(app.Services) {
+		var (
+			serviceName, service = entry.Key, entry.Value
+			subResult            []v1.Permissions
+		)
+
+		if service.Image == "" && service.Build == nil {
 			continue
 		}
 
-		details, err := s.getImageDetails(ctx, namespace, profiles, args, image, entry.Value.Image)
-		if err != nil {
-			return nil, err
+		acornImage, ok := appdefinition.GetImageReferenceForServiceName(serviceName, app, imageData)
+		if !ok {
+			return nil, fmt.Errorf("failed to find image information for service [%s]", serviceName)
 		}
 
-		subResult, err := s.getPermissions(ctx, servicePrefix+entry.Key+".", namespace, image, details)
-		if err != nil {
-			return nil, err
+		if tags.IsImageDigest(acornImage) {
+			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, image, acornImage)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, acornImage, "")
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		result = append(result, subResult...)
 	}
 

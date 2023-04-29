@@ -387,6 +387,11 @@ func checkForDuplicateNames(in *AppSpec) error {
 			return err
 		}
 	}
+	for name := range in.Images {
+		if err := addName(names, name, "image"); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

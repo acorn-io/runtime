@@ -8,6 +8,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
+    "acorn.io/public-name": "app-name.con1"
 spec:
   appName: app-name
   appNamespace: app-namespace
@@ -43,6 +44,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "con2"
     "acorn.io/managed": "true"
+    "acorn.io/public-name": "app-name.con2"
 spec:
   appName: app-name
   appNamespace: app-namespace
@@ -79,6 +81,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "con3"
     "acorn.io/managed": "true"
+    "acorn.io/public-name": "app-name.con3"
 spec:
   appName: app-name
   appNamespace: app-namespace

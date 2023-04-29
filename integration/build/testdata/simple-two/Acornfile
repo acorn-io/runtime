@@ -20,7 +20,7 @@ images: {
 			context: "two/subdir/subdir2"
 		}
 	}
-	three: {
+	ithree: {
 	    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
 	}
 }

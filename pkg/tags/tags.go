@@ -16,7 +16,12 @@ import (
 var (
 	SHAPermissivePrefixPattern = regexp.MustCompile(`^[a-f\d]{3,64}$`)
 	SHAPattern                 = regexp.MustCompile(`^[a-f\d]{64}$`)
+	DigestPattern              = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 )
+
+func IsImageDigest(s string) bool {
+	return DigestPattern.MatchString(s)
+}
 
 func IsLocalReference(image string) bool {
 	if strings.HasPrefix(image, "sha256:") {

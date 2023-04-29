@@ -8,6 +8,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
     "acorn.io/container-name": "oneimage"
+    "acorn.io/public-name": "app-name.oneimage"
 spec:
   appName: app-name
   appNamespace: app-namespace
@@ -37,6 +38,7 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
     "acorn.io/container-name": "twoimage"
+    "acorn.io/public-name": "app-name.twoimage"
 spec:
   appName: app-name
   appNamespace: app-namespace

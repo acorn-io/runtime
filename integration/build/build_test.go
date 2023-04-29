@@ -153,7 +153,7 @@ func TestSimpleTwo(t *testing.T) {
 	assert.Len(t, image.ImageData.Images, 3)
 	assert.True(t, len(image.ImageData.Images["ione"].Image) > 0)
 	assert.True(t, len(image.ImageData.Images["itwo"].Image) > 0)
-	assert.True(t, len(image.ImageData.Images["three"].Image) > 0)
+	assert.True(t, len(image.ImageData.Images["ithree"].Image) > 0)
 	// This isn't always true, no idea why, one day maybe we'll know
 	//assert.Equal(t, image.ImageData.Containers["two"].Image, image.ImageData.Images["itwo"].Image)
 }
