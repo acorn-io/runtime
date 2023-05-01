@@ -3,6 +3,7 @@ package defaults
 import (
 	"context"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +28,7 @@ func AddDefaultRegion(ctx context.Context, c client.Client, obj RegionGetterSett
 			if r := ns.Annotations[labels.AcornCalculatedProjectDefaultRegion]; r != "" {
 				region = r
 			} else {
-				region = "local"
+				region = apiv1.LocalRegion
 			}
 		}
 

@@ -64,16 +64,18 @@ func Get(ctx context.Context, c kclient.Reader) (*apiv1.Info, error) {
 	}
 
 	return &apiv1.Info{
-		Spec: apiv1.InfoSpec{
-			Version:                v.String(),
-			Tag:                    v.Tag,
-			GitCommit:              v.Commit,
-			Dirty:                  v.Dirty,
-			ControllerImage:        controllerImage,
-			APIServerImage:         apiServerImage,
-			Config:                 *cfg,
-			UserConfig:             *raw,
-			LetsEncryptCertificate: letsEncryptCert,
+		Regions: map[string]apiv1.InfoSpec{
+			apiv1.LocalRegion: {
+				Version:                v.String(),
+				Tag:                    v.Tag,
+				GitCommit:              v.Commit,
+				Dirty:                  v.Dirty,
+				ControllerImage:        controllerImage,
+				APIServerImage:         apiServerImage,
+				Config:                 *cfg,
+				UserConfig:             *raw,
+				LetsEncryptCertificate: letsEncryptCert,
+			},
 		},
 	}, nil
 }

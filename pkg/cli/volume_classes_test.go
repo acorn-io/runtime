@@ -162,13 +162,13 @@ func TestVolumeClass(t *testing.T) {
 				{
 					ObjectMeta:       metav1.ObjectMeta{Name: "local-path-class"},
 					StorageClassName: "local-path",
-					SupportedRegions: []string{"local", "other-region"},
+					SupportedRegions: []string{apiv1.LocalRegion, "other-region"},
 				},
 				{
 					ObjectMeta:       metav1.ObjectMeta{Name: "magic-class"},
 					StorageClassName: "magic",
 					Default:          true,
-					SupportedRegions: []string{"local", "another-region"},
+					SupportedRegions: []string{apiv1.LocalRegion, "another-region"},
 				},
 			},
 			args:    []string{},

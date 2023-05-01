@@ -134,7 +134,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		StorageClassName: getStorageClassName(t, storageClasses),
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -193,7 +193,7 @@ func TestVolumeBoundBadClass(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		StorageClassName: getStorageClassName(t, storageClasses),
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
@@ -235,7 +235,7 @@ func TestVolumeClassInactive(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		Inactive:         true,
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -272,7 +272,7 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 			Min: "10Gi",
 			Max: "100Gi",
 		},
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -316,7 +316,7 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 			Min: "10Gi",
 			Max: "100Gi",
 		},
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -364,7 +364,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
 		StorageClassName: getStorageClassName(t, storageClasses),
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -436,7 +436,7 @@ func TestClusterVolumeClass(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("9G"),
 		},
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -499,7 +499,7 @@ func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("9G"),
 		},
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -558,7 +558,7 @@ func TestProjectVolumeClass(t *testing.T) {
 			Min:     v1.Quantity("1G"),
 			Max:     v1.Quantity("3G"),
 		},
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -624,7 +624,7 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 			Max:     v1.Quantity("9G"),
 		},
 		Default:          true,
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -735,7 +735,7 @@ func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
 			Min:     v1.Quantity("2G"),
 			Max:     v1.Quantity("6G"),
 		},
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	}
 	if err = kclient.Create(ctx, &volumeClass); err != nil {
 		t.Fatal(err)
@@ -916,7 +916,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					Min: "512Mi",
 					Max: "1Gi",
 				},
-				SupportedRegions: []string{"local"},
+				SupportedRegions: []string{apiv1.LocalRegion},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -951,7 +951,7 @@ func TestUsingComputeClasses(t *testing.T) {
 				Memory: adminv1.ComputeClassMemory{
 					Max: "1Gi",
 				},
-				SupportedRegions: []string{"local"},
+				SupportedRegions: []string{apiv1.LocalRegion},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -989,7 +989,7 @@ func TestUsingComputeClasses(t *testing.T) {
 						"2Gi",
 					},
 				},
-				SupportedRegions: []string{"local"},
+				SupportedRegions: []string{apiv1.LocalRegion},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -1027,7 +1027,7 @@ func TestUsingComputeClasses(t *testing.T) {
 					Max:     "1Gi",
 					Min:     "512Mi",
 				},
-				SupportedRegions: []string{"local"},
+				SupportedRegions: []string{apiv1.LocalRegion},
 			},
 			expected: map[string]v1.Scheduling{"simple": {
 				Requirements: corev1.ResourceRequirements{
@@ -1279,7 +1279,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	}
 
 	// create two separate projects in which to run two Nginx apps
-	proj1, err := c.ProjectCreate(ctx, "proj1", "local", []string{"local"})
+	proj1, err := c.ProjectCreate(ctx, "proj1", apiv1.LocalRegion, []string{apiv1.LocalRegion})
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
@@ -1288,7 +1288,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 		t.Fatal("error creating client for proj1:", err)
 	}
 
-	proj2, err := c.ProjectCreate(ctx, "proj2", "local", []string{"local"})
+	proj2, err := c.ProjectCreate(ctx, "proj2", apiv1.LocalRegion, []string{apiv1.LocalRegion})
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
@@ -1455,7 +1455,7 @@ func TestProjectUpdate(t *testing.T) {
 	ctx := helper.GetCTX(t)
 	c, _ := helper.ClientAndNamespace(t)
 	projectName := uuid.New().String()[:8]
-	proj1, err := c.ProjectCreate(ctx, projectName, "local", []string{"local"})
+	proj1, err := c.ProjectCreate(ctx, projectName, apiv1.LocalRegion, []string{apiv1.LocalRegion})
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
@@ -1487,7 +1487,7 @@ func TestProjectUpdate(t *testing.T) {
 	}
 	// update default
 	for i := 0; i < 10; i++ {
-		updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "new-default", []string{"local"})
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "new-default", []string{apiv1.LocalRegion})
 		if err == nil {
 			break
 		}
@@ -1501,7 +1501,7 @@ func TestProjectUpdate(t *testing.T) {
 	}
 
 	assert.Equal(t, updatedProj.Spec.DefaultRegion, "new-default")
-	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{apiv1.LocalRegion, "new-default"})
 
 	// swap default from new-default to local
 	for i := 0; i < 10; i++ {
@@ -1509,7 +1509,7 @@ func TestProjectUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal("error while getting project:", err)
 		}
-		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "local", nil)
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, apiv1.LocalRegion, nil)
 		if err == nil {
 			break
 		}
@@ -1517,8 +1517,8 @@ func TestProjectUpdate(t *testing.T) {
 			t.Fatal("error while updating project:", err)
 		}
 	}
-	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
-	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "new-default"})
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, apiv1.LocalRegion)
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{apiv1.LocalRegion, "new-default"})
 
 	// remove new-default region
 	for i := 0; i < 10; i++ {
@@ -1526,7 +1526,7 @@ func TestProjectUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal("error while getting project:", err)
 		}
-		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local"})
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{apiv1.LocalRegion})
 		if err == nil {
 			break
 		}
@@ -1534,8 +1534,8 @@ func TestProjectUpdate(t *testing.T) {
 			t.Fatal("error while updating project:", err)
 		}
 	}
-	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
-	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local"})
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, apiv1.LocalRegion)
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{apiv1.LocalRegion})
 
 	// set supported regions
 	for i := 0; i < 10; i++ {
@@ -1543,7 +1543,7 @@ func TestProjectUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal("error while getting project:", err)
 		}
-		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{"local", "local3", "local2"})
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, updatedProj, "", []string{apiv1.LocalRegion, "local3", "local2"})
 		if err == nil {
 			break
 		}
@@ -1551,6 +1551,6 @@ func TestProjectUpdate(t *testing.T) {
 			t.Fatal("error while updating project:", err)
 		}
 	}
-	assert.Equal(t, updatedProj.Spec.DefaultRegion, "local")
-	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{"local", "local3", "local2"})
+	assert.Equal(t, updatedProj.Spec.DefaultRegion, apiv1.LocalRegion)
+	assert.Equal(t, updatedProj.Spec.SupportedRegions, []string{apiv1.LocalRegion, "local3", "local2"})
 }

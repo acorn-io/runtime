@@ -17,7 +17,7 @@ type strategy struct {
 }
 
 func (s *strategy) Get(_ context.Context, _, name string) (types.Object, error) {
-	if name != "local" {
+	if name != apiv1.LocalRegion {
 		return nil, apierrors.NewNotFound(schema.GroupResource{
 			Group:    apiv1.SchemeGroupVersion.Group,
 			Resource: "regions",
@@ -26,17 +26,17 @@ func (s *strategy) Get(_ context.Context, _, name string) (types.Object, error) 
 
 	return &apiv1.Region{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:              "local",
+			Name:              apiv1.LocalRegion,
 			CreationTimestamp: s.startTime,
 			OwnerReferences: []metav1.OwnerReference{
 				{
-					Name: "local",
+					Name: apiv1.LocalRegion,
 				},
 			},
 		},
 		Spec: apiv1.RegionSpec{
 			Description: "Local Region",
-			RegionName:  "local",
+			RegionName:  apiv1.LocalRegion,
 		},
 		Status: apiv1.RegionStatus{
 			Conditions: []v1.Condition{
@@ -52,7 +52,7 @@ func (s *strategy) Get(_ context.Context, _, name string) (types.Object, error) 
 }
 
 func (s *strategy) List(_ context.Context, _ string, _ storage.ListOptions) (types.ObjectList, error) {
-	region, _ := s.Get(context.Background(), "", "local")
+	region, _ := s.Get(context.Background(), "", apiv1.LocalRegion)
 	return &apiv1.RegionList{
 		Items: []apiv1.Region{*(region.(*apiv1.Region))},
 	}, nil

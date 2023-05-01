@@ -155,7 +155,6 @@ func TestRun(t *testing.T) {
 						{
 							TypeMeta:   metav1.TypeMeta{},
 							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
 						},
 					}, nil)
 			},
@@ -178,7 +177,6 @@ func TestRun(t *testing.T) {
 						{
 							TypeMeta:   metav1.TypeMeta{},
 							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
 						},
 					}, nil)
 			},
@@ -221,7 +219,6 @@ func TestRun(t *testing.T) {
 						{
 							TypeMeta:   metav1.TypeMeta{},
 							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
 						},
 					}, nil)
 			},
@@ -245,7 +242,6 @@ func TestRun(t *testing.T) {
 						{
 							TypeMeta:   metav1.TypeMeta{},
 							ObjectMeta: metav1.ObjectMeta{},
-							Spec:       apiv1.InfoSpec{},
 						},
 					}, nil)
 			},

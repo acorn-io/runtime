@@ -3,6 +3,7 @@ package volume
 import (
 	"context"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -41,7 +42,7 @@ func SyncVolumeClasses(req router.Request, resp router.Response) error {
 		Description:      "Acorn-generated volume class representing the storage class " + storageClass.Name,
 		StorageClassName: storageClass.Name,
 		Default:          storageClass.Annotations[storage.IsDefaultStorageClassAnnotation] == "true",
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	})
 
 	return nil
@@ -58,7 +59,7 @@ func CreateEphemeralVolumeClass(req router.Request, resp router.Response) error 
 			Name: "ephemeral",
 		},
 		Description:      "Acorn-generated volume class representing ephemeral volumes not backed by a storage class",
-		SupportedRegions: []string{"local"},
+		SupportedRegions: []string{apiv1.LocalRegion},
 	})
 
 	return nil

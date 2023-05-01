@@ -105,8 +105,9 @@ var (
 	SecretConverter = MustConverter(Secret)
 
 	Info = [][]string{
-		{"Version", "Version"},
-		{"Controller-Image", "ControllerImage"},
+		{"Version", "Client.Version"},
+		{"Current Project", "Client.CLI.CurrentProject"},
+		{"Hub Servers", "{{ arrayNoSpace .Client.CLI.HubServers }}"},
 	}
 	InfoConverter = MustConverter(Info)
 

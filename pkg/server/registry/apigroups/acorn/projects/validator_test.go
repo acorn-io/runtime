@@ -9,7 +9,7 @@ import (
 )
 
 func TestProjectCreateValidation(t *testing.T) {
-	validator := &Validator{localRegion}
+	validator := &Validator{apiv1.LocalRegion}
 
 	tests := []struct {
 		name      string
@@ -82,7 +82,7 @@ func TestProjectCreateValidation(t *testing.T) {
 }
 
 func TestProjectUpdateValidation(t *testing.T) {
-	validator := &Validator{localRegion}
+	validator := &Validator{apiv1.LocalRegion}
 	tests := []struct {
 		name       string
 		newProject apiv1.Project

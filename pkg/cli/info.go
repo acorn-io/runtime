@@ -1,12 +1,16 @@
 package cli
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"encoding/json"
+	"reflect"
+
+	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/acorn/pkg/version"
+	"github.com/acorn-io/baaah/pkg/typed"
 	bversion "github.com/acorn-io/baaah/pkg/version"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -32,10 +36,10 @@ type InfoCLIResponse struct {
 		Version bversion.Version  `json:"version,omitempty"`
 		CLI     *config.CLIConfig `json:"cli,omitempty"`
 	} `json:"client,omitempty"`
-	Projects map[string]apiv1.InfoSpec `json:"projects,omitempty"`
+	Projects map[string]any `json:"projects,omitempty"`
 }
 
-func (s *Info) Run(cmd *cobra.Command, args []string) error {
+func (s *Info) Run(cmd *cobra.Command, _ []string) error {
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
@@ -52,11 +56,21 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		logrus.Errorf("failed to read CLI config: %v", err)
 		cfg = nil
 	}
-	projectInfo := make(map[string]apiv1.InfoSpec)
 
+	projectInfo := make(map[string]any, len(info))
 	// Format data from info response into map of project name to info response
 	for _, subInfo := range info {
-		projectInfo[subInfo.Name] = subInfo.Spec
+		// Remove unset fields in the config and userConfig
+		regionInfo := make(map[string]any, len(subInfo.Regions))
+		for region, spec := range subInfo.Regions {
+			specMap, err := removeUnsetFields(spec, "config", "userConfig")
+			if err != nil {
+				return err
+			}
+			regionInfo[region] = specMap
+		}
+
+		projectInfo[subInfo.Name] = regionInfo
 	}
 
 	out := table.NewWriter(tables.Info, false, s.Output)
@@ -71,4 +85,31 @@ func (s *Info) Run(cmd *cobra.Command, args []string) error {
 		Projects: projectInfo,
 	})
 	return out.Err()
+}
+
+func removeUnsetFields(spec v1.InfoSpec, configKeys ...string) (map[string]any, error) {
+	b, err := json.Marshal(spec)
+	if err != nil {
+		return nil, err
+	}
+
+	var specMap map[string]any
+	if err := json.Unmarshal(b, &specMap); err != nil {
+		return nil, err
+	}
+
+	for _, key := range configKeys {
+		if cfg, ok := specMap[key].(map[string]any); ok {
+			for _, entry := range typed.Sorted(cfg) {
+				if entry.Value == nil || reflect.ValueOf(entry.Value).IsZero() {
+					delete(cfg, entry.Key)
+				}
+			}
+			if len(cfg) == 0 {
+				delete(specMap, key)
+			}
+		}
+	}
+
+	return specMap, nil
 }

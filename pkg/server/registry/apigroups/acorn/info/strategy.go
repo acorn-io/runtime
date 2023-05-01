@@ -50,7 +50,10 @@ func (s *Strategy) List(ctx context.Context, namespace string, options storage.L
 		return nil, err
 	}
 
-	i.Spec.PublicKeys = publicKeys
+	for key, regionInfo := range i.Regions {
+		regionInfo.PublicKeys = publicKeys
+		i.Regions[key] = regionInfo
+	}
 
 	return &apiv1.InfoList{
 		Items: []apiv1.Info{
