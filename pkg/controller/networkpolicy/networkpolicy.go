@@ -51,6 +51,7 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 
 	// create the NetworkPolicy for the whole app
 	// this allows traffic only from within the project
+	// it also blocks ec2 metadata traffic with an egress policy
 	resp.Objects(&networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
@@ -66,7 +67,17 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
 				From: allowedNamespaceSelectors,
 			}},
-			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+			Egress: []networkingv1.NetworkPolicyEgressRule{{
+				To: []networkingv1.NetworkPolicyPeer{{
+					IPBlock: &networkingv1.IPBlock{
+						CIDR: "0.0.0.0/0",
+						Except: []string{
+							"169.254.169.254/32",
+						},
+					},
+				}},
+			}},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
 		},
 	})
 	return nil
