@@ -1657,8 +1657,8 @@ func (in *ImageAllowRuleInstance) DeepCopyInto(out *ImageAllowRuleInstance) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	if in.Scope != nil {
-		in, out := &in.Scope, &out.Scope
+	if in.Images != nil {
+		in, out := &in.Images, &out.Images
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

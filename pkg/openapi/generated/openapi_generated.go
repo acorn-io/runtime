@@ -2890,7 +2890,7 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref common.ReferenceCallback) 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"scope": {
+					"images": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
@@ -7595,7 +7595,7 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref common.Refere
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"scope": {
+					"images": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{

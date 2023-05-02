@@ -41,7 +41,7 @@ type ImageAllowRuleInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Scope      []string                 `json:"scope,omitempty"` // list of patterns to match against image names
+	Images     []string                 `json:"images,omitempty"` // list of patterns to match against image names
 	Signatures ImageAllowRuleSignatures `json:"signatures,omitempty"`
 }
 
