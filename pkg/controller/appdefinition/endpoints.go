@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/controller/appstatus"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/publish"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -139,7 +140,7 @@ func AppEndpointsStatus(req router.Request, _ router.Response) error {
 
 	eps := append(ingressEndpoints, serviceEndpoints...)
 
-	ingressTLSHosts, err := IngressTLSHosts(req.Ctx, req.Client, app)
+	ingressTLSHosts, err := appstatus.IngressTLSHosts(req.Ctx, req.Client, app)
 	if err != nil {
 		return err
 	}

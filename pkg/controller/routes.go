@@ -6,6 +6,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
+	"github.com/acorn-io/acorn/pkg/controller/appstatus"
 	"github.com/acorn-io/acorn/pkg/controller/builder"
 	"github.com/acorn-io/acorn/pkg/controller/config"
 	"github.com/acorn-io/acorn/pkg/controller/defaults"
@@ -55,20 +56,20 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
 	appRouter.HandlerFunc(defaults.Calculate)
 	appRouter.HandlerFunc(scheduling.Calculate)
-	appRouter = appRouter.Middleware(appdefinition.CheckStatus)
+	appRouter = appRouter.Middleware(appstatus.CheckStatus)
 	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
-	appRouter.HandlerFunc(appdefinition.AppStatus)
+	appRouter.HandlerFunc(appstatus.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
-	appRouter.HandlerFunc(appdefinition.JobStatus)
-	appRouter.HandlerFunc(appdefinition.VolumeStatus)
-	appRouter.HandlerFunc(appdefinition.AcornStatus)
-	appRouter.HandlerFunc(appdefinition.ReadyStatus)
+	appRouter.HandlerFunc(appstatus.JobStatus)
+	appRouter.HandlerFunc(appstatus.VolumeStatus)
+	appRouter.HandlerFunc(appstatus.AcornStatus)
+	appRouter.HandlerFunc(appstatus.ReadyStatus)
 	appRouter.HandlerFunc(networkpolicy.NetworkPolicyForApp)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
 	appRouter.HandlerFunc(appdefinition.UpdateObservedFields)
 
-	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.CLIStatus)
+	router.Type(&v1.AppInstance{}).HandlerFunc(appstatus.CLIStatus)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 

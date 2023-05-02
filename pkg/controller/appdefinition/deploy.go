@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pdb"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/volume"
@@ -594,7 +595,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
-	podLabels := containerLabels(appInstance, container, name)
+	podLabels := containerLabels(appInstance, container, name, labels.AcornAppPublicName, publicname.Get(appInstance))
 	deploymentLabels := containerLabels(appInstance, container, name)
 	matchLabels := selectorMatchLabels(appInstance, name)
 

@@ -1,4 +1,4 @@
-package appdefinition
+package appstatus
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/merr"
+	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	appsv1 "k8s.io/api/apps/v1"
@@ -113,6 +114,12 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 	return nil
 }
 
+func acornNames(app *v1.AppInstance) (result []string) {
+	result = append(result, typed.SortedKeys(app.Status.AppSpec.Acorns)...)
+	result = append(result, typed.SortedKeys(app.Status.AppSpec.Services)...)
+	return
+}
+
 func AcornStatus(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	cond := condition.Setter(app, resp, v1.AppInstanceConditionAcorns)
@@ -131,9 +138,9 @@ func AcornStatus(req router.Request, resp router.Response) error {
 		waitingMessage string
 	)
 
-	for _, acornName := range typed.SortedKeys(app.Status.AppSpec.Acorns) {
+	for _, acornName := range acornNames(app) {
 		appInstance := &v1.AppInstance{}
-		err := req.Get(appInstance, app.Status.Namespace, acornName)
+		err := req.Get(appInstance, app.Namespace, name2.SafeHashConcatName(app.Name, acornName))
 		if apierrors.IsNotFound(err) {
 			continue
 		} else if err != nil {

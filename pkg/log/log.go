@@ -15,6 +15,7 @@ import (
 	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	applabels "github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/sirupsen/logrus"
@@ -383,21 +384,21 @@ func matchesPod(pod *corev1.Pod, options *Options) bool {
 	if options == nil || options.ContainerReplica == "" {
 		return true
 	}
-	parts := strings.SplitN(options.ContainerReplica, ".", 3)
-	return len(parts) > 1 && pod.Name == parts[1]
+	podName, _ := publicname.SplitPodContainerName(options.ContainerReplica)
+	return pod.Name == podName
 }
 
 func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Options) bool {
 	if options != nil && options.ContainerReplica != "" {
-		parts := strings.SplitN(options.ContainerReplica, ".", 3)
-		if len(parts) == 3 {
-			return pod.Name == parts[1] && container.Name == parts[2]
-		} else if len(parts) == 2 {
+		podName, containerName := publicname.SplitPodContainerName(options.ContainerReplica)
+		if containerName == "" {
 			if pod.Labels[applabels.AcornContainerName] != "" {
-				return pod.Name == parts[1] && container.Name == pod.Labels[applabels.AcornContainerName]
+				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornContainerName]
 			} else {
-				return pod.Name == parts[1] && container.Name == pod.Labels[applabels.AcornJobName]
+				return pod.Name == podName && container.Name == pod.Labels[applabels.AcornJobName]
 			}
+		} else {
+			return pod.Name == podName && container.Name == containerName
 		}
 	}
 
@@ -455,11 +456,33 @@ func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Op
 	podSelector := labels.SelectorFromSet(labels.Set{
 		applabels.AcornManaged: "true",
 	})
+	parentSelector := labels.SelectorFromSet(labels.Set{
+		applabels.AcornParentAcornName: app.Name,
+	})
 
 	// Ensure that if once func finishes they are all canceled
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	eg := errgroup.Group{}
+	eg.Go(func() error {
+		defer cancel()
+		_, err := appWatcher.BySelector(ctx, app.Namespace, parentSelector, func(app *apiv1.App) (bool, error) {
+			if watching.shouldWatch("App", app.Namespace, app.Name) {
+				eg.Go(func() error {
+					err := App(ctx, app, output, options)
+					if err != nil {
+						output <- Message{
+							Time: time.Now(),
+							Err:  err,
+						}
+					}
+					return err
+				})
+			}
+			return false, nil
+		})
+		return err
+	})
 	eg.Go(func() error {
 		defer cancel()
 		_, err := podWatcher.BySelector(ctx, app.Status.Namespace, podSelector, func(pod *corev1.Pod) (bool, error) {
@@ -476,7 +499,7 @@ func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Op
 							Err:  err,
 						}
 					}
-					return nil
+					return err
 				})
 			}
 			return false, nil

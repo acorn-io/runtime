@@ -111,7 +111,7 @@ func TestMatchesContainer(t *testing.T) {
 				pod:       appWithLinkerdProxy,
 				container: corev1.Container{Name: "nginx"},
 				options: &Options{
-					ContainerReplica: "app-name.app-with-linkerd-pod.nginx",
+					ContainerReplica: "app-name.app-with-linkerd-pod:nginx",
 				},
 			},
 			expectedResult: true,
@@ -122,7 +122,7 @@ func TestMatchesContainer(t *testing.T) {
 				pod:       appWithLinkerdProxy,
 				container: corev1.Container{Name: "sidecar"},
 				options: &Options{
-					ContainerReplica: "app-name.app-with-linkerd-pod.sidecar",
+					ContainerReplica: "app-name.app-with-linkerd-pod:sidecar",
 				},
 			},
 			expectedResult: true,
@@ -168,12 +168,12 @@ func TestMatchesContainer(t *testing.T) {
 			expectedResult: true,
 		},
 		{
-			name: "app-with-job.job-with-linkerd-pod.busybox-match",
+			name: "app-with-job.job-with-linkerd-pod:busybox-match",
 			args: args{
 				pod:       jobWithLinkerdProxy,
 				container: corev1.Container{Name: "busybox"},
 				options: &Options{
-					ContainerReplica: "app-with-job.job-with-linkerd-pod.busybox",
+					ContainerReplica: "app-with-job.job-with-linkerd-pod:busybox",
 				},
 			},
 			expectedResult: true,

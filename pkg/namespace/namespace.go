@@ -45,8 +45,8 @@ func NormalizedName(obj metav1.ObjectMeta) (string, string) {
 	if rootNS != "" {
 		ns = rootNS
 	}
-	if len(obj.Labels[labels.AcornAppName]) > 0 {
-		name = obj.Labels[labels.AcornAppName] + "." + obj.Name
+	if len(obj.Labels[labels.AcornAppPublicName]) > 0 {
+		name = obj.Labels[labels.AcornAppPublicName] + "." + obj.Name
 	}
 	return ns, name
 }

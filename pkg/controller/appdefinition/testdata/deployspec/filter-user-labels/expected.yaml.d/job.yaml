@@ -6,6 +6,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
+    acorn.io/app-public-name: "app-name"
     "acorn.io/job-name": "job-name"
     "acorn.io/managed": "true"
     allowed-job.io: test-allowed-job-label
@@ -23,6 +24,7 @@ spec:
       labels:
         "acorn.io/app-namespace": "app-namespace"
         "acorn.io/app-name": "app-name"
+        acorn.io/app-public-name: "app-name"
         "acorn.io/job-name": "job-name"
         "acorn.io/managed": "true"
         allowed-job.io: test-allowed-job-label

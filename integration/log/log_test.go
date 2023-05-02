@@ -196,5 +196,5 @@ func TestSidecarContainerLog(t *testing.T) {
 
 	sort.Strings(lines)
 	assert.Equal(t, "line 1-3\nline 1-4", strings.Join(lines, "\n"))
-	assert.Len(t, strings.Split(replicas[1].Name, "."), 3)
+	assert.Len(t, strings.Split(replicas[1].Name, ":"), 2)
 }

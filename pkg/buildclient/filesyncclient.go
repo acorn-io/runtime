@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/moby/buildkit/session/filesync"
 	"github.com/sirupsen/logrus"
@@ -125,7 +126,11 @@ func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPat
 					}
 					f := filepath.Join(d, followPath)
 					if _, err := os.Stat(f); os.IsNotExist(err) {
-						err := os.MkdirAll(f, 0755)
+						if strings.Contains(f, "*") || strings.Contains(f, "?") {
+							err = nil
+						} else {
+							err = os.MkdirAll(f, 0755)
+						}
 						if err != nil {
 							return nil, err
 						}
