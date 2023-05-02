@@ -3,11 +3,11 @@ package imageallowrules
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cosign"
+	"github.com/acorn-io/acorn/pkg/imagepattern"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -152,65 +152,68 @@ iarLoop:
 }
 
 func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
-	for _, pattern := range iar.Scope {
+	for _, pattern := range iar.Images {
+		// empty pattern? skip (should've been caught by IAR validation already)
 		if strings.TrimSpace(pattern) == "" {
 			continue
 		}
 
-		p := strings.Split(pattern, ":")
-		if len(p) > 2 {
-			logrus.Warnf("invalid pattern %s", pattern) // FIXME: should be catched by IAR validation already or we have a context/tag pattern split at CR level already
-			continue
+		// not a pattern and image name is not an exact match? skip
+		if !imagepattern.IsImagePattern(pattern) {
+			if image.Name() != pattern {
+				logrus.Infof("@@@ not a pattern and name is not an exact match")
+				continue
+			}
 		}
 
-		contextPattern := p[0]
+		parts := strings.Split(pattern, ":")
+		contextPattern := parts[0]
 		tagPattern := ""
-		if len(p) == 2 {
-			tagPattern = p[1]
+		if len(parts) > 1 && !strings.Contains(parts[len(parts)-1], "/") {
+			tagPattern = parts[len(parts)-1]
 		}
 
 		if err := matchContext(contextPattern, image.Context().String()); err != nil {
-			logrus.Errorf("[context] image %s not in scope of %s/%s: %v", image, iar.Namespace, iar.Name, err)
+			logrus.Errorf("image %s not in scope of %s/%s: %v", image, iar.Namespace, iar.Name, err)
 			continue
 		}
 
-		if err := matchTag(tagPattern, image.Identifier()); err != nil {
-			logrus.Errorf("[tag] image %s not in scope of %s/%s: %v", image, iar.Namespace, iar.Name, err)
-			continue
+		if tagPattern != "" {
+			if err := matchTag(tagPattern, image.Identifier()); err != nil {
+				logrus.Errorf("image %s not in scope of %s/%s: %v", image, iar.Namespace, iar.Name, err)
+				continue
+			}
 		}
+
+		return true
 	}
 	return false
 }
 
 // matchContext matches the image context against the context pattern, similar to globbing
 func matchContext(contextPattern string, imageContext string) error {
-	var matched bool
-	var err error
-	if strings.ContainsAny(contextPattern, "*?[") {
-		// Globbing
-		matched, err = filepath.Match(contextPattern, imageContext)
-		if err != nil {
-			return err
-		}
-	} else {
-		// Prefix match (e.g. "mycontext*")
-		matched = strings.HasPrefix(imageContext, contextPattern)
+	re, _, err := imagepattern.NewMatcher(contextPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_.-/:]{0,}`})
+	if err != nil {
+		return fmt.Errorf("error parsing context pattern %s: %w", contextPattern, err)
 	}
 
-	if !matched {
-		return fmt.Errorf("image context %s does not match pattern %s", imageContext, contextPattern)
+	if re.MatchString(imageContext) {
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("image context %s does not match pattern %s", imageContext, contextPattern)
 }
 
 // matchTag matches the image tag against the tag pattern, similar to auto-upgrade pattern
 func matchTag(tagPattern string, imageTag string) error {
-	// Prefix match (e.g. "mytag*")
-	if strings.HasSuffix(tagPattern, "*") {
-		if strings.HasPrefix(imageTag, strings.TrimSuffix(tagPattern, "*")) {
-			return nil
-		}
+	re, _, err := imagepattern.NewMatcher(tagPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_.-/:]{0,}`})
+	if err != nil {
+		return fmt.Errorf("error parsing tag pattern %s: %w", tagPattern, err)
 	}
+
+	if re.MatchString(imageTag) {
+		return nil
+	}
+
 	return fmt.Errorf("image tag %s does not match pattern %s", imageTag, tagPattern)
 }
