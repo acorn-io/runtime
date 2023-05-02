@@ -75,16 +75,10 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		CraneOpts:          []crane.Option{crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain)},
 	}
 
-	if err := cosign.EnsureReferences(ctx, c, image, &verifyOpts); err != nil {
-		return fmt.Errorf("error ensuring references for image %s: %w", image, err)
-	}
-
 	ref, err := name.ParseReference(image)
 	if err != nil {
 		return fmt.Errorf("error parsing image reference %s: %w", image, err)
 	}
-
-	allowed := false
 
 iarLoop:
 	for _, imageAllowRule := range imageAllowRules {
@@ -94,7 +88,12 @@ iarLoop:
 		}
 
 		// > Signatures
+		// Any verification error or failed verification issue will skip on to the next IAR
 		for _, rule := range imageAllowRule.Signatures.Rules {
+			if err := cosign.EnsureReferences(ctx, c, image, &verifyOpts); err != nil {
+				return fmt.Errorf("error ensuring references for image %s: %w", image, err)
+			}
+
 			verifyOpts.AnnotationRules = rule.Annotations
 
 			// allOf: all signatures must pass verification
@@ -142,13 +141,11 @@ iarLoop:
 				}
 			}
 		}
+
+		return nil
 	}
 
-	if !allowed {
-		return &ErrImageNotAllowed{Image: image}
-	}
-
-	return nil
+	return &ErrImageNotAllowed{Image: image}
 }
 
 func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
@@ -192,7 +189,7 @@ func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
 
 // matchContext matches the image context against the context pattern, similar to globbing
 func matchContext(contextPattern string, imageContext string) error {
-	re, _, err := imagepattern.NewMatcher(contextPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_.-/:]{0,}`})
+	re, _, err := imagepattern.NewMatcher(contextPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_./:-]{0,}`})
 	if err != nil {
 		return fmt.Errorf("error parsing context pattern %s: %w", contextPattern, err)
 	}
@@ -201,12 +198,12 @@ func matchContext(contextPattern string, imageContext string) error {
 		return nil
 	}
 
-	return fmt.Errorf("image context %s does not match pattern %s", imageContext, contextPattern)
+	return fmt.Errorf("image context %s does not match pattern %s (regex: `%s`)", imageContext, contextPattern, re.String())
 }
 
 // matchTag matches the image tag against the tag pattern, similar to auto-upgrade pattern
 func matchTag(tagPattern string, imageTag string) error {
-	re, _, err := imagepattern.NewMatcher(tagPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_.-/:]{0,}`})
+	re, _, err := imagepattern.NewMatcher(tagPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_./:-]{0,}`})
 	if err != nil {
 		return fmt.Errorf("error parsing tag pattern %s: %w", tagPattern, err)
 	}
@@ -215,5 +212,5 @@ func matchTag(tagPattern string, imageTag string) error {
 		return nil
 	}
 
-	return fmt.Errorf("image tag %s does not match pattern %s", imageTag, tagPattern)
+	return fmt.Errorf("image tag %s does not match pattern %s (regex: `%s`)", imageTag, tagPattern, re.String())
 }

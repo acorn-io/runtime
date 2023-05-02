@@ -44,29 +44,37 @@ type VerifyOpts struct {
 // It's outsourced here, so we can ensure that it's used as few times as possible to reduce the number of potential
 // GET requests to the registry which would count against potential rate limits.
 func EnsureReferences(ctx context.Context, c client.Reader, img string, opts *VerifyOpts) error {
-	// --- image name to digest hash
-	imgRef, err := name.ParseReference(img)
-	if err != nil {
-		return fmt.Errorf("failed to parse image %s: %w", img, err)
+	if opts == nil {
+		opts = &VerifyOpts{}
 	}
 
-	// in the best case, we have a digest ref already, so we don't need to do any external request
-	if imgDigest, ok := imgRef.(name.Digest); ok {
-		opts.ImageRef = imgDigest
-	} else {
-		imgDigest, err := crane.Digest(imgRef.Name(), opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+	if opts.ImageRef.Name() == "" {
+		// --- image name to digest hash
+		imgRef, err := name.ParseReference(img)
 		if err != nil {
-			return fmt.Errorf("failed to resolve image digest: %w", err)
+			return fmt.Errorf("failed to parse image %s: %w", img, err)
 		}
 
-		opts.ImageRef = imgRef.Context().Digest(imgDigest)
+		// in the best case, we have a digest ref already, so we don't need to do any external request
+		if imgDigest, ok := imgRef.(name.Digest); ok {
+			opts.ImageRef = imgDigest
+		} else {
+			imgDigest, err := crane.Digest(imgRef.Name(), opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+			if err != nil {
+				return fmt.Errorf("failed to resolve image digest: %w", err)
+			}
+
+			opts.ImageRef = imgRef.Context().Digest(imgDigest)
+		}
 	}
 
-	signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.OciRemoteOpts, opts.CraneOpts)
-	if err != nil {
-		return fmt.Errorf("failed to ensure signature artifact: %w", err)
+	if opts.SignatureRef.Name() == "" {
+		signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.OciRemoteOpts, opts.CraneOpts)
+		if err != nil {
+			return fmt.Errorf("failed to ensure signature artifact: %w", err)
+		}
+		opts.SignatureRef = signatureRef
 	}
-	opts.SignatureRef = signatureRef
 
 	return nil
 }
