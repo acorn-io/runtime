@@ -171,13 +171,13 @@ func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
 		}
 
 		if err := matchContext(contextPattern, image.Context().String()); err != nil {
-			logrus.Errorf("image %s not in scope of %s/%s: %v", image, iar.Namespace, iar.Name, err)
+			logrus.Debugf("image %s not in scope of ImageAllowRule %s/%s: %v", image, iar.Namespace, iar.Name, err)
 			continue
 		}
 
 		if tagPattern != "" {
 			if err := matchTag(tagPattern, image.Identifier()); err != nil {
-				logrus.Errorf("image %s not in scope of %s/%s: %v", image, iar.Namespace, iar.Name, err)
+				logrus.Debugf("image %s not in scope of ImageAllowRule %s/%s: %v", image, iar.Namespace, iar.Name, err)
 				continue
 			}
 		}

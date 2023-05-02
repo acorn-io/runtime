@@ -48,7 +48,7 @@ func EnsureReferences(ctx context.Context, c client.Reader, img string, opts *Ve
 		opts = &VerifyOpts{}
 	}
 
-	if opts.ImageRef.Name() == "" {
+	if opts.ImageRef.Identifier() == "" {
 		// --- image name to digest hash
 		imgRef, err := name.ParseReference(img)
 		if err != nil {
@@ -68,7 +68,7 @@ func EnsureReferences(ctx context.Context, c client.Reader, img string, opts *Ve
 		}
 	}
 
-	if opts.SignatureRef.Name() == "" {
+	if opts.SignatureRef == nil || opts.SignatureRef.Identifier() == "" {
 		signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.OciRemoteOpts, opts.CraneOpts)
 		if err != nil {
 			return fmt.Errorf("failed to ensure signature artifact: %w", err)
