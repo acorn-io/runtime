@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router/tester"
@@ -13,7 +14,7 @@ import (
 )
 
 func TestFromPublicName(t *testing.T) {
-	app := &v1.AppInstance{
+	app := &apiv1.App{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "app",
 			Namespace: "appNs",
@@ -40,7 +41,7 @@ func TestFromPublicName(t *testing.T) {
 			expectedErr:          nil,
 		},
 		{
-			containerPublicName:      "app.pod.container",
+			containerPublicName:      "app.pod:container",
 			containerPublicNamespace: app.Namespace,
 
 			expectedPodName:      "pod",
@@ -49,18 +50,18 @@ func TestFromPublicName(t *testing.T) {
 		},
 
 		{
-			containerPublicName:      "nonExistingApp.pod.container",
+			containerPublicName:      "nonExistingApp.pod:container",
 			containerPublicNamespace: app.Namespace,
 
-			expectedPodName:      "nonExistingApp.pod.container",
+			expectedPodName:      "nonExistingApp.pod:container",
 			expectedPodNamespace: app.Namespace,
 			expectedErr:          fmt.Errorf("\"nonExistingApp\" not found"),
 		},
 		{
-			containerPublicName:      "app.pod.container",
+			containerPublicName:      "app.pod:container",
 			containerPublicNamespace: "nonExistingNamespace",
 
-			expectedPodName:      "app.pod.container",
+			expectedPodName:      "app.pod:container",
 			expectedPodNamespace: "nonExistingNamespace",
 			expectedErr:          fmt.Errorf("\"app\" not found"),
 		},
@@ -87,7 +88,7 @@ func TestFromPublicName(t *testing.T) {
 		tc := tests[i]
 		tcName := tc.containerPublicNamespace + "/" + tc.containerPublicName
 		t.Run(tcName, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 
 			req := tester.NewRequest(t, scheme.Scheme, app)
 			translator := &Translator{req.Client}

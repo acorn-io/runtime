@@ -22,6 +22,7 @@ metadata:
     "global2a": "value"
     "allacornsa": "value"
     "override2": "outervalue"
+    acorn.io/original-image: foo
 spec:
   # The labels and annotations in this spec should be a combination of the "inner" acorn's definition and the outer
   # appInstance's scoped label and annotations.

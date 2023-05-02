@@ -1,4 +1,4 @@
-package appdefinition
+package appstatus
 
 import (
 	"testing"

@@ -15,6 +15,7 @@ const (
 	AcornAppNamespace                   = Prefix + "app-namespace"
 	AcornAppName                        = Prefix + "app-name"
 	AcornParentAcornName                = Prefix + "parent-acorn-name"
+	AcornAppPublicName                  = Prefix + "app-public-name"
 	AcornPublicName                     = Prefix + "public-name"
 	AcornAcornName                      = Prefix + "acorn-name"
 	AcornServiceName                    = Prefix + "service-name"
@@ -34,6 +35,7 @@ const (
 	AcornManaged                        = Prefix + "managed"
 	AcornContainerSpec                  = Prefix + "container-spec"
 	AcornImageMapping                   = Prefix + "image-mapping"
+	AcornOriginalImage                  = Prefix + "original-image"
 	AcornPortNumberPrefix               = "port-number." + Prefix
 	AcornCredential                     = Prefix + "credential"
 	AcornPullSecret                     = Prefix + "pull-secret"

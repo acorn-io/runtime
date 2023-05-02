@@ -45,6 +45,8 @@ metadata:
     acorn.io/managed: "true"
     acorn.io/parent-acorn-name: app-name
     acorn.io/public-name: app-name.acorn-name
+  annotations:
+    acorn.io/original-image: acorn-image-name
 spec:
   image: acorn-image-name
   environment:

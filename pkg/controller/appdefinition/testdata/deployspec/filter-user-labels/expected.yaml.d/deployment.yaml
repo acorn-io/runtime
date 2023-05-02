@@ -34,6 +34,7 @@ spec:
       labels:
         "acorn.io/app-namespace": "app-namespace"
         "acorn.io/app-name": "app-name"
+        "acorn.io/app-public-name": "app-name"
         "acorn.io/container-name": "container-name"
         "acorn.io/managed": "true"
         allowed-global.io: test-global

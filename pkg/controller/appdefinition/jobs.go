@@ -5,6 +5,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -89,6 +90,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: jobLabels(appInstance, container, name,
 					labels.AcornManaged, "true",
+					labels.AcornAppPublicName, publicname.Get(appInstance),
 					labels.AcornJobName, name,
 					labels.AcornContainerName, ""),
 				Annotations: labels.Merge(podAnnotations(appInstance, name, container), baseAnnotations),
