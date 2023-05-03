@@ -123,10 +123,13 @@ type ImageProgress struct {
 }
 
 func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ggcrv1.Update, error) {
+	logrus.Warnf("image: %v\n", image)
+	logrus.Warnf("tagName: %v\n", tagName)
 	pushTag, err := name.NewTag(tagName, name.WithDefaultRegistry(DefaultRegistry))
 	if err != nil {
 		return nil, nil, err
 	}
+	logrus.Warnf("pushTag: %v\n", tagName)
 
 	if pushTag.Registry.RegistryStr() == DefaultRegistry {
 		return nil, nil, apierrors.NewInvalid(schema.GroupKind{
@@ -150,16 +153,19 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 	if err != nil {
 		return nil, nil, err
 	}
+	logrus.Warnf("opts: %v\n", opts)
 
 	repo, _, err := imagesystem.GetInternalRepoForNamespace(ctx, i.client, image.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}
+	logrus.Warnf("repo: %v\n", repo)
 
 	remoteImage, err := remote.Index(repo.Digest(image.Digest), opts...)
 	if err != nil {
 		return nil, nil, err
 	}
+	logrus.Warnf("repoImage: %v\n", repo)
 
 	progress := make(chan ggcrv1.Update)
 	opts = append(opts, remote.WithProgress(progress))
