@@ -8,6 +8,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -70,7 +71,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 
 func (c *DefaultClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
 	app := ToApp(c.Namespace, image, opts)
-	return app, translatePermissions(c.Client.Create(ctx, app))
+	return app, translateErr(c.Client.Create(ctx, app))
 }
 
 func (c *DefaultClient) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (result *apiv1.App, err error) {
@@ -201,13 +202,34 @@ func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpd
 		}))
 	}
 
-	return app, translatePermissions(c.Client.Update(ctx, app))
+	return app, translateErr(c.Client.Update(ctx, app))
 }
 
-func translatePermissions(err error) error {
+func translateErr(err error) error {
 	if err == nil {
 		return err
 	}
+
+	if e := translatePermissions(err); e != nil {
+		return e
+	}
+
+	if e := translateNotAllowed(err); e != nil {
+		return e
+	}
+
+	return err
+}
+
+func translateNotAllowed(err error) error {
+	if strings.Contains(err.Error(), imageallowrules.ErrImageNotAllowedIdentifier) {
+		return &imageallowrules.ErrImageNotAllowed{} // we could actually extract the full error (including) image here, but that's probably not required
+	}
+
+	return nil
+}
+
+func translatePermissions(err error) error {
 	if i := strings.Index(err.Error(), PrefixErrRulesNeeded); i != -1 {
 		var perms []v1.Permissions
 		marshalErr := json.Unmarshal([]byte(err.Error()[i+len(PrefixErrRulesNeeded):]), &perms)
@@ -217,7 +239,7 @@ func translatePermissions(err error) error {
 			}
 		}
 	}
-	return err
+	return nil
 }
 
 func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {

@@ -10,10 +10,6 @@ func IsImagePattern(image string) bool {
 	return strings.ContainsAny(image, "#*")
 }
 
-type MatcherOpts struct {
-	DoubleStarPattern string
-}
-
 // We need to know two things about a matching group: it's name and whether it should be sorted alphabetically or
 // numerically. pType will be either "alpha" or "numeric"
 type namedMatchingGroup struct {
@@ -34,16 +30,12 @@ type namedMatchingGroup struct {
 // - "v#.#" - Matches: "v1.0", "v2.0" (return as latest). Doesn't match: "v1.alpha", "1.0", "v1.0.0"
 // - "v1.0-*" - Matches: "v1.0-alpha", "v1.0-beta" (returned as latest). Doesn't match: "v1.0"
 // - "v1.#-**" - Matches: "v1.0-cv23jkha", "v1.1-2020-01-01" (returned as latest).
-func NewMatcher(pattern string, opts *MatcherOpts) (*regexp.Regexp, []namedMatchingGroup, error) {
+func NewMatcher(pattern string) (*regexp.Regexp, []namedMatchingGroup, error) {
 	pattern = "^" + pattern + "$"
 
 	// ** denotes a part of the tag that should be completely ignored for both matching and sorting. Replace it with
-	// a regexp expression that matches all valid tag characters
-	doubleStarPattern := "[0-9A-Za-z_.-]{0,}"
-	if opts != nil && opts.DoubleStarPattern != "" {
-		doubleStarPattern = opts.DoubleStarPattern
-	}
-	pattern = strings.ReplaceAll(pattern, "**", fmt.Sprintf(`(%s)`, doubleStarPattern))
+	// a regexp expression that matches all valid tag characters (and / and :)
+	pattern = strings.ReplaceAll(pattern, "**", `([0-9A-Za-z_./:-]{0,})`)
 
 	index := 0
 	var namedMatchingGroups []namedMatchingGroup

@@ -81,7 +81,7 @@ func FindLatestTagForImageWithPattern(ctx context.Context, c kclient.Client, cur
 
 // FindLatest returns the tag from the tags slice that sorts as the "latest" according to the supplied pattern.
 func FindLatest(current, pattern string, tags []string) (string, error) {
-	re, namedMatchingGroups, err := imagepattern.NewMatcher(pattern, nil)
+	re, namedMatchingGroups, err := imagepattern.NewMatcher(pattern)
 	if err != nil {
 		return "", err
 	}

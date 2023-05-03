@@ -24,13 +24,15 @@ type ErrImageNotAllowed struct {
 	Image string
 }
 
+const ErrImageNotAllowedIdentifier = "not allowed by any ImageAllowRule"
+
 func (e *ErrImageNotAllowed) Error() string {
-	return fmt.Sprintf("image %s is not allowed by any ImageAllowRule in this project", e.Image)
+	return fmt.Sprintf("image %s is %s in this project", e.Image, ErrImageNotAllowedIdentifier)
 }
 
 func (e *ErrImageNotAllowed) Is(target error) bool {
-	_, ok := target.(*ErrImageNotAllowed)
-	return ok
+	er, ok := target.(*ErrImageNotAllowed)
+	return ok && er.Image != ""
 }
 
 // CheckImageAllowed checks if the image is allowed by the ImageAllowRules on cluster and project level
@@ -158,7 +160,6 @@ func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
 		// not a pattern and image name is not an exact match? skip
 		if !imagepattern.IsImagePattern(pattern) {
 			if image.Name() != pattern {
-				logrus.Infof("@@@ not a pattern and name is not an exact match")
 				continue
 			}
 		}
@@ -189,7 +190,7 @@ func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
 
 // matchContext matches the image context against the context pattern, similar to globbing
 func matchContext(contextPattern string, imageContext string) error {
-	re, _, err := imagepattern.NewMatcher(contextPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_./:-]{0,}`})
+	re, _, err := imagepattern.NewMatcher(contextPattern)
 	if err != nil {
 		return fmt.Errorf("error parsing context pattern %s: %w", contextPattern, err)
 	}
@@ -203,7 +204,7 @@ func matchContext(contextPattern string, imageContext string) error {
 
 // matchTag matches the image tag against the tag pattern, similar to auto-upgrade pattern
 func matchTag(tagPattern string, imageTag string) error {
-	re, _, err := imagepattern.NewMatcher(tagPattern, &imagepattern.MatcherOpts{DoubleStarPattern: `[0-9A-Za-z_./:-]{0,}`})
+	re, _, err := imagepattern.NewMatcher(tagPattern)
 	if err != nil {
 		return fmt.Errorf("error parsing tag pattern %s: %w", tagPattern, err)
 	}

@@ -9,6 +9,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/pterm/pterm"
@@ -21,6 +22,15 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 		} else if ok {
 			opts.Permissions = permErr.Permissions
+			app, err = c.AppRun(ctx, image, &opts)
+		}
+	}
+	if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
+		err.(*imageallowrules.ErrImageNotAllowed).Image = image
+		if ok, promptErr := handleNotAllowed(dangerous, image); promptErr != nil {
+			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
+		} else if ok {
+			// TODO: add image to allow rules
 			app, err = c.AppRun(ctx, image, &opts)
 		}
 	}
@@ -64,4 +74,18 @@ application. If you are unsure say no.`)
 
 	pterm.Println()
 	return prompt.Bool("Do you want to allow this app to have these (POTENTIALLY DANGEROUS) permissions?", false)
+}
+
+func handleNotAllowed(dangerous bool, image string) (bool, error) {
+	if dangerous {
+		return true, nil
+	}
+
+	pterm.Warning.Printfln(
+		`This application would like to use the image '%s'.
+This could be VERY DANGEROUS to the cluster if you do not trust this
+application. If you are unsure say no.`, image)
+
+	pterm.Println()
+	return prompt.Bool("Do you want to allow this app to use this (POTENTIALLY DANGEROUS) image?", false)
 }
