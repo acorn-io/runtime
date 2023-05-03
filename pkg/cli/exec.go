@@ -80,14 +80,14 @@ func appAndArgs(ctx context.Context, c client.Client, args []string) (string, []
 	return appName, nil, err
 }
 
-func (s *Exec) filterContainers(containers []apiv1.ContainerReplica) (result []apiv1.ContainerReplica) {
+func filterContainers(containerName string, containers []apiv1.ContainerReplica) (result []apiv1.ContainerReplica) {
 	for _, c := range containers {
-		if s.Container == "" {
+		if containerName == "" {
 			result = append(result, c)
-		} else if c.Spec.ContainerName == s.Container {
+		} else if c.Spec.ContainerName == containerName {
 			result = append(result, c)
 			break
-		} else if c.Spec.ContainerName+"."+c.Spec.SidecarName == s.Container {
+		} else if c.Name == containerName {
 			result = append(result, c)
 			break
 		}
@@ -95,12 +95,12 @@ func (s *Exec) filterContainers(containers []apiv1.ContainerReplica) (result []a
 	return result
 }
 
-func (s *Exec) execApp(ctx context.Context, c client.Client, app *apiv1.App, args []string) error {
+func getContainerForApp(ctx context.Context, c client.Client, app *apiv1.App, containerName string, first bool) (string, error) {
 	containers, err := c.ContainerReplicaList(ctx, &client.ContainerReplicaListOptions{
 		App: app.Name,
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var (
@@ -108,22 +108,31 @@ func (s *Exec) execApp(ctx context.Context, c client.Client, app *apiv1.App, arg
 		names        = map[string]string{}
 	)
 
-	containers = s.filterContainers(containers)
+	containers = filterContainers(containerName, containers)
 
 	for _, container := range containers {
+		if container.Status.Columns.State == "stopped" {
+			continue
+		}
 		displayName := fmt.Sprintf("%s (%s %s)", container.Name, container.Status.Columns.State, table.FormatCreated(container.CreationTimestamp))
 		displayNames = append(displayNames, displayName)
 		names[displayName] = container.Name
 	}
 
+	if first && containerName != "" && len(containers) > 0 {
+		for _, name := range names {
+			return name, nil
+		}
+	}
+
 	if len(containers) == 0 {
-		return fmt.Errorf("failed to find any containers for app %s", app.Name)
+		return "", fmt.Errorf("failed to find any containers for app %s", app.Name)
 	}
 
 	var choice string
 	switch len(displayNames) {
 	case 0:
-		return fmt.Errorf("failed to find any containers for app %s", app.Name)
+		return "", fmt.Errorf("failed to find any containers for app %s", app.Name)
 	case 1:
 		choice = displayNames[0]
 	default:
@@ -133,11 +142,11 @@ func (s *Exec) execApp(ctx context.Context, c client.Client, app *apiv1.App, arg
 			Default: displayNames[0],
 		}, &choice)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	return s.execContainer(ctx, c, names[choice], args)
+	return names[choice], nil
 }
 
 func (s *Exec) execContainer(ctx context.Context, c client.Client, containerName string, args []string) error {
@@ -171,7 +180,10 @@ func (s *Exec) Run(cmd *cobra.Command, args []string) error {
 
 	app, appErr := c.AppGet(ctx, name)
 	if appErr == nil {
-		return s.execApp(ctx, c, app, args)
+		name, err = getContainerForApp(ctx, c, app, s.Container, false)
+		if err != nil {
+			return err
+		}
 	}
 	return s.execContainer(ctx, c, name, args)
 }

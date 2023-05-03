@@ -47,6 +47,7 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ContainerReplica{},
 		&ContainerReplicaList{},
 		&ContainerReplicaExecOptions{},
+		&ContainerReplicaPortForwardOptions{},
 		&Secret{},
 		&SecretList{},
 		&Service{},
@@ -70,6 +71,9 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		// Add the watch version that applies
 		metav1.AddToGroupVersion(scheme, schemeGroupVersion)
 
+		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaPortForwardOptions)(nil), Convert_url_Values_To__ContainerReplicaPortForwardOptions); err != nil {
+			return err
+		}
 		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions); err != nil {
 			return err
 		}
