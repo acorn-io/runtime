@@ -206,6 +206,13 @@ func (d *DeferredClient) ContainerReplicaExec(ctx context.Context, name string, 
 	return d.Client.ContainerReplicaExec(ctx, name, args, tty, opts)
 }
 
+func (d *DeferredClient) ContainerReplicaPortForward(ctx context.Context, containerName string, port int) (PortForwardDialer, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.ContainerReplicaPortForward(ctx, containerName, port)
+}
+
 func (d *DeferredClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	if err := d.create(); err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net"
 	"os"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -183,6 +184,8 @@ type ImageDetails struct {
 	ParseError string        `json:"parseError,omitempty"`
 }
 
+type PortForwardDialer func(ctx context.Context) (net.Conn, error)
+
 type Client interface {
 	AppList(ctx context.Context) ([]apiv1.App, error)
 	AppDelete(ctx context.Context, name string) (*apiv1.App, error)
@@ -212,6 +215,7 @@ type Client interface {
 	ContainerReplicaGet(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
 	ContainerReplicaDelete(ctx context.Context, name string) (*apiv1.ContainerReplica, error)
 	ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error)
+	ContainerReplicaPortForward(ctx context.Context, name string, port int) (PortForwardDialer, error)
 
 	VolumeList(ctx context.Context) ([]apiv1.Volume, error)
 	VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error)

@@ -58,3 +58,18 @@ func convert_url_Values_To__LogOptions(in *url.Values, out *LogOptions, s conver
 func Convert_url_Values_To__LogOptions(in, out interface{}, s conversion.Scope) error {
 	return convert_url_Values_To__LogOptions(in.(*url.Values), out.(*LogOptions), s)
 }
+
+func convert_url_Values_To__ContainerReplicaPortForwardOptions(in *url.Values, out *ContainerReplicaPortForwardOptions, s conversion.Scope) error {
+	if values, ok := map[string][]string(*in)["port"]; ok && len(values) > 0 {
+		if err := runtime.Convert_Slice_string_To_int(&values, &out.Port, s); err != nil {
+			return err
+		}
+	} else {
+		out.Port = 0
+	}
+	return nil
+}
+
+func Convert_url_Values_To__ContainerReplicaPortForwardOptions(in, out interface{}, s conversion.Scope) error {
+	return convert_url_Values_To__ContainerReplicaPortForwardOptions(in.(*url.Values), out.(*ContainerReplicaPortForwardOptions), s)
+}
