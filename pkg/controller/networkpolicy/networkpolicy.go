@@ -18,7 +18,7 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-// These IP addresses iare what workloads running on AWS EC2 instances use to access the instance metadata service.
+// These IP addresses are what workloads running on AWS EC2 instances use to access the instance metadata service.
 // We block them with a NetworkPolicy in each app.
 const (
 	awsEC2cidrV4 = "169.254.169.254/32"
