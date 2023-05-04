@@ -18,6 +18,10 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
+// This IP address is what workloads running on AWS EC2 instances use to access the instance metadata service.
+// We block it with a NetworkPolicy in each app.
+const awsEC2cidr = "169.254.169.254/32"
+
 // NetworkPolicyForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
 // to all pods in an app, so that they cannot be reached by pods from other projects.
 func NetworkPolicyForApp(req router.Request, resp router.Response) error {
@@ -70,10 +74,8 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 			Egress: []networkingv1.NetworkPolicyEgressRule{{
 				To: []networkingv1.NetworkPolicyPeer{{
 					IPBlock: &networkingv1.IPBlock{
-						CIDR: "0.0.0.0/0",
-						Except: []string{
-							"169.254.169.254/32",
-						},
+						CIDR:   "0.0.0.0/0",
+						Except: []string{awsEC2cidr},
 					},
 				}},
 			}},
