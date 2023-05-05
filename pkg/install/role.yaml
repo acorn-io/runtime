@@ -22,6 +22,7 @@ rules:
       - secrets
       - namespaces
       - services
+      - endpoints
       - serviceaccounts
       - persistentvolumes
       - persistentvolumeclaims
