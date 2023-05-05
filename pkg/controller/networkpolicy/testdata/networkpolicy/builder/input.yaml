@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildkitd
+  namespace: acorn-image-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: buildkitd
+        another: label
