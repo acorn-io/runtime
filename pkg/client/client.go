@@ -247,6 +247,8 @@ type Client interface {
 	RegionList(ctx context.Context) ([]apiv1.Region, error)
 	RegionGet(ctx context.Context, name string) (*apiv1.Region, error)
 
+	EventList(ctx context.Context) ([]apiv1.Event, error) // TODO(njhale): Handle filtering, watches, etc
+
 	GetProject() string
 	GetNamespace() string
 	GetClient() (kclient.WithWatch, error)

@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/builds"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/containers"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/credentials"
+	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/events"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/images"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/info"
@@ -90,6 +91,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"computeclasses":         computeclass.NewAggregateStorage(c),
 		"regions":                regions.NewStorage(c),
 		"imageallowrules":        imageallowrules.NewStorage(c),
+		"events":                 events.NewStorage(c),
 	}
 
 	return stores, nil

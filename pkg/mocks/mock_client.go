@@ -410,6 +410,21 @@ func (mr *MockClientMockRecorder) CredentialUpdate(arg0, arg1, arg2, arg3, arg4 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredentialUpdate", reflect.TypeOf((*MockClient)(nil).CredentialUpdate), arg0, arg1, arg2, arg3, arg4)
 }
 
+// EventList mocks base method.
+func (m *MockClient) EventList(arg0 context.Context) ([]v1.Event, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EventList", arg0)
+	ret0, _ := ret[0].([]v1.Event)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EventList indicates an expected call of EventList.
+func (mr *MockClientMockRecorder) EventList(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EventList", reflect.TypeOf((*MockClient)(nil).EventList), arg0)
+}
+
 // GetClient mocks base method.
 func (m *MockClient) GetClient() (client0.WithWatch, error) {
 	m.ctrl.T.Helper()

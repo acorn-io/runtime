@@ -167,4 +167,10 @@ var (
 		{"Resource", "Resource"},
 		{"Scope", "Scope"},
 	}
+
+	Event = [][]string{
+		{"Name", "{{ . | name }}"},
+		// TODO(njhale): Implement me!
+	}
+	EventConverter = MustConverter(App)
 )

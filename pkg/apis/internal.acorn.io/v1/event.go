@@ -14,28 +14,28 @@ type EventInstanceList struct {
 
 type EventInstance struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Type is a short, machine-readable string that describes the kind of Event that took place.
 	// +required
-	Type string `json:"action,omitempty" protobuf:"bytes,12,opt,name=action"`
+	Type string `json:"type,omitempty"`
 
 	// Actor is the ID of the entity that generated the Event.
 	// This can be the name of a particular user or controller.
 	// +required
-	Actor string `json:"actor" protobuf:"bytes,14,opt,name=reportingComponent"`
+	Actor string `json:"actor"`
 
 	// Subject is the object the Event is regarding.
 	// +optional
-	Subject *EventSubject `json:"result,omitempty" protobuf:"bytes,13,opt,name=related"`
+	Subject *EventSubject `json:"subject,omitempty"`
 
 	// Details is a human-readable description of the Event.
 	// +optional
-	Details string `json:"message,omitempty" protobuf:"bytes,4,opt,name=message"`
+	Details string `json:"details,omitempty"`
 
 	// Time represents the time the Event was first observed.
 	// +optional
-	Time *metav1.MicroTime `json:"eventTime,omitempty" protobuf:"bytes,10,opt,name=eventTime"`
+	Time *metav1.MicroTime `json:"time,omitempty"`
 }
 
 // EventSubject describes an object related to an Event.

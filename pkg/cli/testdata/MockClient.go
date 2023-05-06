@@ -775,3 +775,9 @@ func (m *MockClient) RegionGet(_ context.Context, name string) (*apiv1.Region, e
 		Resource: "regions",
 	}, name)
 }
+
+func (m *MockClient) EventList(context.Context) ([]apiv1.Event, error) {
+	// TODO(njhale): Implement me!
+	panic("implement me")
+	return nil, nil
+}

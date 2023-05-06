@@ -388,6 +388,13 @@ func (d *DeferredClient) RegionGet(ctx context.Context, name string) (*apiv1.Reg
 	return d.Client.RegionGet(ctx, name)
 }
 
+func (d *DeferredClient) EventList(ctx context.Context) ([]apiv1.Event, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.EventList(ctx)
+}
+
 func (d *DeferredClient) GetProject() string {
 	return d.Project
 }

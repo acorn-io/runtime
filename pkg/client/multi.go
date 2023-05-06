@@ -503,6 +503,12 @@ func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 	})
 }
 
+func (m *MultiClient) EventList(ctx context.Context) ([]apiv1.Event, error) {
+	return aggregate(ctx, m.Factory, func(client Client) ([]apiv1.Event, error) {
+		return client.EventList(ctx)
+	})
+}
+
 func (m *MultiClient) GetProject() string {
 	return m.project
 }
