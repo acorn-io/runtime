@@ -1,19 +1,78 @@
 package jobs
 
 import (
+	"sort"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/sirupsen/logrus"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
 	DestroyJobFinalizer = "jobs.acorn.io/destroy"
 )
+
+func JobPodOrphanCleanup(req router.Request, resp router.Response) error {
+	pod := req.Object.(*corev1.Pod)
+	// pods with "controller-uid" and "job-name" on them are created by batchv1.Job
+	if pod.Labels[labels.AcornJobName] != "" &&
+		pod.Labels["controller-uid"] != "" &&
+		pod.Labels["job-name"] != "" &&
+		len(pod.OwnerReferences) == 0 {
+		return req.Client.Delete(req.Ctx, pod)
+	}
+	return nil
+}
+
+func JobCleanup(req router.Request, resp router.Response) error {
+	job := req.Object.(*batchv1.Job)
+	if job.Status.Failed == 0 || job.Spec.Selector == nil {
+		return nil
+	}
+
+	pods := &corev1.PodList{}
+	sel, err := metav1.LabelSelectorAsSelector(job.Spec.Selector)
+	if err != nil {
+		return err
+	}
+	err = req.List(pods, &kclient.ListOptions{
+		LabelSelector: sel,
+	})
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(pods.Items, func(i, j int) bool {
+		return pods.Items[i].CreationTimestamp.Before(&pods.Items[j].CreationTimestamp)
+	})
+
+	keep := 3
+	if job.Status.Succeeded > 0 {
+		keep = 0
+	}
+	if len(pods.Items) > keep {
+		for _, pod := range pods.Items[:len(pods.Items)-keep] {
+			if pod.Status.Phase != corev1.PodFailed {
+				continue
+			}
+
+			logrus.Infof("Purging failed job %s/%s", pod.Namespace, pod.Name)
+			if err := req.Client.Delete(req.Ctx, &pod); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 
 func NeedsDestroyJobFinalization(next router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {

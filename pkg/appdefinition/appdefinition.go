@@ -127,8 +127,9 @@ func (a *AppDefinition) JSON() (string, error) {
 
 func (a *AppDefinition) newDecoder() *aml.Decoder {
 	return aml.NewDecoder(bytes.NewReader(a.data), aml.Options{
-		Args:     a.args,
-		Profiles: a.profiles,
+		Args:      a.args,
+		Profiles:  a.profiles,
+		Acornfile: true,
 	})
 }
 
@@ -233,6 +234,7 @@ func addContainerFiles(fileSet map[string]bool, builds map[string]v1.ContainerIm
 			continue
 		}
 		fileSet[filepath.Join(cwd, build.Build.Dockerfile)] = true
+		fileSet[filepath.Join(filepath.Dir(filepath.Join(cwd, build.Build.Dockerfile)), ".dockerignore")] = true
 	}
 }
 

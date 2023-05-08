@@ -47,13 +47,14 @@ type buildContext struct {
 }
 
 func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+	remoteKc := NewRemoteKeyChain(messages, keychain)
 	buildContext := &buildContext{
 		ctx:        ctx,
 		cwd:        "",
 		pushRepo:   pushRepo,
 		opts:       opts,
-		keychain:   NewRemoteKeyChain(messages, keychain),
-		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(keychain), remote.WithContext(ctx)),
+		keychain:   remoteKc,
+		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
 		messages:   messages,
 	}
 
@@ -209,8 +210,8 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 			newCtx := *ctx
 			newCtx.opts.Args = acornImage.Build.BuildArgs
 			newCtx.opts.Acornfile = ""
-			newCtx.acornfilePath = acornImage.Build.Acornfile
-			newCtx.cwd = filepath.Join(newCtx.cwd, acornImage.Build.Context)
+			newCtx.acornfilePath = filepath.Join(ctx.cwd, acornImage.Build.Acornfile)
+			newCtx.cwd = filepath.Join(ctx.cwd, acornImage.Build.Context)
 			appImage, err := build(&newCtx)
 			if err != nil {
 				return nil, nil, err

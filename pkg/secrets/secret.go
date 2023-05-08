@@ -385,6 +385,14 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 		}
 	}
 
+	if secretRef == "" {
+		secretDef := appInstance.Status.AppSpec.Secrets[secretName]
+		if secretDef.Alias != "" {
+			secretRef = secretDef.Alias
+			refNamespace = appInstance.Status.Namespace
+		}
+	}
+
 	if secretRef == "" && strings.Contains(secretName, ".") {
 		refNamespace = appInstance.Status.Namespace
 		secretRef = secretName

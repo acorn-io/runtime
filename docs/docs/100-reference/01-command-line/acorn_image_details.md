@@ -1,24 +1,24 @@
 ---
-title: "acorn image detail"
+title: "acorn image details"
 ---
-## acorn image detail
+## acorn image details
 
 Show details of an Image
 
 ```
-acorn image detail IMAGE_NAME [NESTED DIGEST] [flags]
+acorn image details IMAGE_NAME [NESTED DIGEST] [flags]
 ```
 
 ### Examples
 
 ```
-acorn image detail my-image
+acorn image details my-image
 ```
 
 ### Options
 
 ```
-  -h, --help            help for detail
+  -h, --help            help for details
   -o, --output string   Output format (json, yaml, aml) (default "aml")
 ```
 

@@ -19,6 +19,7 @@ metadata:
     allowed.io: test-allowed-app-spec-ann
     admit.io: test-admit-app-spec-ann
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:

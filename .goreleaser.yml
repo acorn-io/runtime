@@ -23,6 +23,8 @@ builds:
         goarch: arm
     tags:
       - netgo
+    flags:
+      - -trimpath
     ldflags:
       - -s
       - -w

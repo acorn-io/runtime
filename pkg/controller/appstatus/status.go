@@ -73,6 +73,9 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 	}
 
 	if len(errs) > 0 {
+		if transitioning.Len() > 0 {
+			errs = append(errs, errors.New(strings.Join(transitioning.List(), ", ")))
+		}
 		cond.Error(merr.NewErrors(errs...))
 		return nil
 	}
@@ -107,9 +110,11 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		app.Status.Condition(v1.AppInstanceConditionJobs).Success &&
 		app.Status.Condition(v1.AppInstanceConditionAcorns).Success &&
 		app.Status.Condition(v1.AppInstanceConditionSecrets).Success &&
+		app.Status.Condition(v1.AppInstanceConditionServices).Success &&
 		app.Status.Condition(v1.AppInstanceConditionPulled).Success &&
 		app.Status.Condition(v1.AppInstanceConditionController).Success &&
 		app.Status.Condition(v1.AppInstanceConditionDefined).Success &&
+		app.Status.Condition(v1.AppInstanceConditionDependencies).Success &&
 		app.Status.Condition(v1.AppInstanceConditionVolumes).Success
 	return nil
 }
@@ -118,6 +123,58 @@ func acornNames(app *v1.AppInstance) (result []string) {
 	result = append(result, typed.SortedKeys(app.Status.AppSpec.Acorns)...)
 	result = append(result, typed.SortedKeys(app.Status.AppSpec.Services)...)
 	return
+}
+
+func ServiceStatus(req router.Request, resp router.Response) error {
+	app := req.Object.(*v1.AppInstance)
+	cond := condition.Setter(app, resp, v1.AppInstanceConditionServices)
+
+	services := &v1.ServiceInstanceList{}
+	err := req.List(services, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+	})
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(services.Items, func(i, j int) bool {
+		return services.Items[i].Name < services.Items[j].Name
+	})
+
+	var (
+		failed         bool
+		failedName     string
+		failedMessage  string
+		waiting        bool
+		waitingName    string
+		waitingMessage string
+	)
+
+	for _, service := range services.Items {
+		for _, condition := range service.Status.Conditions {
+			if condition.Error {
+				failed = true
+				failedName = service.Name
+				failedMessage = condition.Message
+			} else if condition.Transitioning || !condition.Success {
+				waiting = true
+				waitingName = service.Name
+				waitingMessage = condition.Message
+			}
+		}
+	}
+
+	switch {
+	case failed:
+		cond.Error(fmt.Errorf("%s: failed [%s]", failedName, failedMessage))
+	case waiting:
+		cond.Unknown(fmt.Sprintf("%s: waiting [%s]", waitingName, waitingMessage))
+	default:
+		cond.Success()
+	}
+
+	resp.Objects(app)
+	return nil
 }
 
 func AcornStatus(req router.Request, resp router.Response) error {

@@ -6,6 +6,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +28,7 @@ func CreateImages(req router.Request, resp router.Response) error {
 }
 
 func createNestedReferences(req router.Request, app *v1.AppInstance, self *v1.ImageInstance) error {
-	for _, imageData := range app.Status.AppImage.ImageData.Acorns {
+	for _, imageData := range typed.Concat(app.Status.AppImage.ImageData.Acorns, app.Status.AppImage.ImageData.Images) {
 		if !tags.IsLocalReference(imageData.Image) {
 			continue
 		}

@@ -87,6 +87,11 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			labels.AcornParentAcornName, appInstance.Name,
 			labels.AcornPublicName, publicname.ForChild(appInstance, acornName)))
 
+	publishMode := appInstance.Spec.PublishMode
+	if publishMode == "" {
+		publishMode = acorn.PublishMode
+	}
+
 	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name2.SafeHashConcatName(appInstance.Name, acornName),
@@ -104,7 +109,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Image:       image,
 			Volumes:     acorn.Volumes,
 			Secrets:     scopeSecrets(appInstance, acorn.Secrets),
-			PublishMode: appInstance.Spec.PublishMode,
+			PublishMode: publishMode,
 			Links:       scopeLinks(appInstance, acorn.Links),
 			Profiles:    acorn.Profiles,
 			DevMode:     appInstance.Spec.DevMode,

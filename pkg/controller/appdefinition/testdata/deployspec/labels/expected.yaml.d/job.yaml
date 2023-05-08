@@ -17,6 +17,7 @@ metadata:
     "global-scoped-ann": test-global
     jobAnn: test-job-ann
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:

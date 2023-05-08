@@ -70,7 +70,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 
 	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
 
-	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
+	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +113,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	interpolator.AddMissingAnnotations(baseAnnotations)
 
 	if container.Schedule == "" {
+		jobSpec.BackoffLimit = &[]int32{1000}[0]
 		return &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        name,
@@ -131,7 +132,10 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), baseAnnotations),
 		},
 		Spec: batchv1.CronJobSpec{
-			Schedule: toCronJobSchedule(container.Schedule),
+			FailedJobsHistoryLimit:     &[]int32{3}[0],
+			SuccessfulJobsHistoryLimit: &[]int32{1}[0],
+			ConcurrencyPolicy:          batchv1.ReplaceConcurrent,
+			Schedule:                   toCronJobSchedule(container.Schedule),
 			JobTemplate: batchv1.JobTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: jobSpec.Template.Labels,

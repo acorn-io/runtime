@@ -2585,6 +2585,11 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 							},
 						},
 					},
+					"auth": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
 					"appImage": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Output Params",
@@ -2612,7 +2617,7 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ParamSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ParamSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -4105,6 +4110,12 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 									},
 								},
 							},
+						},
+					},
+					"publishMode": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"environment": {
@@ -7516,6 +7527,12 @@ func schema_pkg_apis_internalacornio_v1_Secret(ref common.ReferenceCallback) com
 							Format: "",
 						},
 					},
+					"alias": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"labels": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -7680,6 +7697,12 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 						},
 					},
 					"external": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"alias": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -7995,6 +8018,12 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref common.Reference
 						},
 					},
 					"external": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"alias": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

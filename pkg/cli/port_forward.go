@@ -20,7 +20,7 @@ func NewPortForward(c CommandContext) *cobra.Command {
 		SilenceUsage:      true,
 		Short:             "Forward a container port locally",
 		Long:              "Forward a container port locally",
-		ValidArgsFunction: newCompletion(c.ClientFactory, onlyAppsWithAcornContainer(exec.Container)).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, appsThenContainersCompletion).complete,
 		Args:              cobra.ExactArgs(2),
 	})
 

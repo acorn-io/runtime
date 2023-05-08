@@ -18,6 +18,9 @@ type reflector struct {
 }
 
 func (r *reflector) Conditions() *[]v1.Condition {
+	if c, ok := r.Object.(Conditions); ok {
+		return c.Conditions()
+	}
 	ptr := reflect.ValueOf(r.Object).Elem().FieldByName("Status").FieldByName("Conditions").Addr()
 	v := ptr.Interface().(*[]v1.Condition)
 	return v
