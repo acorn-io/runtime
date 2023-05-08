@@ -231,12 +231,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 			}
 		}
 
-		if result.Spec.JobName != "" {
-			result.Status.Columns.App = result.Spec.JobName
-		} else {
-			result.Status.Columns.App = result.Spec.AppName
-		}
-
+		result.Status.Columns.App = result.Spec.AppName
 		break
 	}
 

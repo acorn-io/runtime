@@ -12,7 +12,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/digest"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
-	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ref"
 	"github.com/acorn-io/acorn/pkg/tags"
@@ -23,6 +22,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/name"
+	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,15 +61,15 @@ type Ref struct {
 	Key        string
 }
 
-func NewInterpolator(req router.Request, app *v1.AppInstance) *Interpolator {
+func NewInterpolator(ctx context.Context, c kclient.Client, app *v1.AppInstance) *Interpolator {
 	errs := make([]error, 0)
 	return &Interpolator{
 		secretName: "secrets-" + app.ShortID(),
 		app:        app,
 		data:       map[string][]byte{},
 		missing:    map[string][]string{},
-		client:     req.Client,
-		ctx:        req.Ctx,
+		client:     c,
+		ctx:        ctx,
 		namespace:  app.Status.Namespace,
 		errs:       &errs,
 	}
@@ -115,14 +115,14 @@ func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.Volum
 	data, err := base64.StdEncoding.DecodeString(file.Content)
 	if err != nil {
 		*i.errs = append(*i.errs, err)
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], err.Error())
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], "error: "+err.Error())
 		return corev1.VolumeMount{}
 	}
 
 	newValue, err := i.replace(string(data))
 	if err != nil {
 		*i.errs = append(*i.errs, err)
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], err.Error())
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], "error: "+err.Error())
 		return corev1.VolumeMount{}
 	}
 
@@ -160,11 +160,18 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	return "", false, nil
 }
 
+func (i *Interpolator) AddMissingSecretName(secretName string) {
+	msg := "secret: " + secretName
+	if !slices.Contains(i.missing[i.serviceName], msg) {
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], msg)
+	}
+}
+
 func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (string, bool, error) {
 	secret := &corev1.Secret{}
 	err := ref.Lookup(i.ctx, i.client, secret, i.namespace, secretName...)
 	if apierrors.IsNotFound(err) {
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], strings.Join(secretName, "."))
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], "secret: "+strings.Join(secretName, "."))
 		return "", false, nil
 	} else if err != nil {
 		return "", false, err
@@ -182,12 +189,19 @@ func splitServiceProperty(parts []string) (head []string, tail []string, err err
 		strings.Join(parts, "."), strings.Join(serviceTokens.List(), ","))
 }
 
-func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, extra []string) (string, error) {
+func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, extra []string) (resolved string, err error) {
 	// sanity check that our serviceToken map is complete, because this will fail if you add
 	// a new case but don't add to the serviceToken set then it won't get to the switch
 	if !serviceTokens.Has(prop) {
 		return "", fmt.Errorf("invalid property [%s] to lookup on service [%s]", prop, svc.Name)
 	}
+
+	defer func() {
+		if err != nil {
+			return
+		}
+		resolved, err = i.resolveNestedData(svc, resolved)
+	}()
 
 	switch prop {
 	case "secrets":
@@ -199,7 +213,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		secret := &corev1.Secret{}
 		err := ref.Lookup(i.ctx, i.client, secret, svc.Namespace, extra[0])
 		if apierrors.IsNotFound(err) {
-			i.missing[i.serviceName] = append(i.missing[i.serviceName], extra[0])
+			i.missing[i.serviceName] = append(i.missing[i.serviceName], "secret "+extra[0])
 			return "", nil
 		} else if err != nil {
 			return "", err
@@ -209,6 +223,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		if len(svc.Status.Endpoints) > 0 {
 			return svc.Status.Endpoints[0].Address, nil
 		}
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], "service endpoint "+svc.Name)
 		return "<pending>", nil
 	case "address":
 		fallthrough
@@ -239,10 +254,24 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 	case "data":
 		expr := "@{" + strings.Join(extra, ".") + "}"
 		v, err := aml.Interpolate(svc.Spec.Data, expr)
-		return fmt.Sprint(v), err
+		return v, err
 	default:
 		return "", fmt.Errorf("invalid property [%s] to lookup on service [%s]", prop, svc.Name)
 	}
+}
+
+func (i *Interpolator) resolveNestedData(svc *v1.ServiceInstance, val string) (string, error) {
+	if !strings.Contains(val, "@{") {
+		return val, nil
+	}
+
+	var app v1.AppInstance
+	if err := i.client.Get(i.ctx, router.Key(svc.Labels[labels.AcornAppNamespace], svc.Labels[labels.AcornAppName]), &app); err != nil {
+		return "", err
+	}
+
+	val, _, err := NewInterpolator(i.ctx, i.client, &app).resolve(val)
+	return val, err
 }
 
 func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
@@ -254,7 +283,7 @@ func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
 	svc := &v1.ServiceInstance{}
 	err = ref.Lookup(i.ctx, i.client, svc, i.namespace, serviceName...)
 	if apierrors.IsNotFound(err) {
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], strings.Join(serviceName, "."))
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], "service: "+strings.Join(serviceName, "."))
 		return "", false, nil
 	}
 	if err != nil {
@@ -319,8 +348,8 @@ func (i *Interpolator) resolveImages(imageName string) (string, bool, error) {
 	if !ok {
 		return "", false, nil
 	}
-	tag, err := images.ResolveTagForApp(i.ctx, i.client, i.app, img.Image)
-	return tag, true, err
+	result := strings.TrimPrefix(img.Image, "sha256:")
+	return result, result != "", nil
 }
 
 func (i *Interpolator) Err() error {
@@ -342,7 +371,7 @@ func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
 	newValue, err := i.replace(value)
 	if err != nil {
 		*i.errs = append(*i.errs, err)
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], err.Error())
+		i.missing[i.serviceName] = append(i.missing[i.serviceName], "error: "+err.Error())
 		return corev1.EnvVar{}
 	}
 	if value == newValue {

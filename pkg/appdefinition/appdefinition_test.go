@@ -303,10 +303,13 @@ images: {
 	}
 
 	assert.Equal(t, []string{
+		filepath.Join("root-path", ".dockerignore"),
 		filepath.Join("root-path", "Acornfile"),
 		filepath.Join("root-path", "Dockerfile"),
+		filepath.Join("root-path", "asdf", ".dockerignore"),
 		filepath.Join("root-path", "asdf", "dockerfile"),
 		filepath.Join("root-path", "dockerfile.sidecar"),
+		filepath.Join("root-path", "sub", "dir1", ".dockerignore"),
 		filepath.Join("root-path", "sub", "dir1", "Dockerfile"),
 		filepath.Join("root-path", "sub", "dir2", "Acornfile"),
 		filepath.Join("root-path", "sub", "dir3", "bockerfile"),

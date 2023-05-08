@@ -21,6 +21,7 @@ metadata:
     "globala": "value"
     "global2a": "value"
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:

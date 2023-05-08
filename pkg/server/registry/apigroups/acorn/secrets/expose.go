@@ -2,6 +2,7 @@ package secrets
 
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
@@ -12,10 +13,11 @@ import (
 )
 
 func NewReveal(c kclient.WithWatch) rest.Storage {
-	remoteResource := translation.NewTranslationStrategy(&Translator{
+	translated := translation.NewTranslationStrategy(&Translator{
 		c:      c,
 		reveal: true,
 	}, remote.NewRemote(&corev1.Secret{}, c))
+	remoteResource := publicname.NewStrategy(translated)
 	return stores.NewBuilder(c.Scheme(), &apiv1.Secret{}).
 		WithGet(remoteResource).
 		WithTableConverter(tables.SecretConverter).

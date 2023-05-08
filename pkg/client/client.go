@@ -297,6 +297,7 @@ type ImageDetailsOptions struct {
 	NestedDigest string
 	Profiles     []string
 	DeployArgs   map[string]any
+	Auth         *apiv1.RegistryAuth
 }
 
 type ImageDeleteOptions struct {

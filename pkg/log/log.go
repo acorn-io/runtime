@@ -377,6 +377,23 @@ func appNoFollow(ctx context.Context, app *apiv1.App, output chan<- Message, opt
 		}
 	}
 
+	apps := &apiv1.AppList{}
+	err = options.Client.List(ctx, apps, &client.ListOptions{
+		Namespace:     app.Namespace,
+		LabelSelector: podSelector,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, child := range apps.Items {
+		if strings.HasPrefix(child.Name, app.Name+".") {
+			if err := appNoFollow(ctx, &child, output, options); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

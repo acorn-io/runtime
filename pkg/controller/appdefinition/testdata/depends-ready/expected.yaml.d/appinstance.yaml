@@ -30,4 +30,8 @@ status:
       reason: Success
       status: "True"
       success: true
+    - type: dependencies
+      reason: Success
+      status: "True"
+      success: true
 ---

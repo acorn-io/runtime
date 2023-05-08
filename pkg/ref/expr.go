@@ -7,6 +7,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
@@ -45,12 +46,11 @@ func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespa
 			case *corev1.Secret:
 				return r.getSecret(v, namespace, name, validSecrets)
 			case *v1.ServiceInstance:
-				err := r.getService(v, namespace, name)
+				app, err := r.getAcorn(namespace, name)
 				if apierrors.IsNotFound(err) {
-					app, appErr := r.getAcorn(namespace, name)
-					if appErr == nil {
-						err = r.getServiceForAcorn(v, app)
-					}
+					err = r.getService(v, namespace, name)
+				} else if err == nil {
+					err = r.getServiceForAcorn(v, app)
 				}
 				return err
 			default:
@@ -116,17 +116,19 @@ func (r *resolver) getService(svc *v1.ServiceInstance, namespace, name string) e
 		return err
 	}
 
-	if svc.Spec.External == "" {
-		return nil
+	if svc.Spec.External != "" {
+		if publicname.Get(svc) == svc.Spec.External {
+			return nil
+		}
+		return Lookup(r.ctx, r.req, svc, svc.Spec.AppNamespace, strings.Split(svc.Spec.External, ".")...)
+	} else if svc.Spec.Alias != "" {
+		if svc.Name == svc.Spec.Alias {
+			return nil
+		}
+		return Lookup(r.ctx, r.req, svc, svc.Namespace, strings.Split(svc.Spec.Alias, ".")...)
 	}
 
-	ns := &corev1.Namespace{}
-	err := r.req.Get(r.ctx, router.Key("", svc.Namespace), ns)
-	if err != nil {
-		return err
-	}
-
-	return Lookup(r.ctx, r.req, svc, ns.Labels[labels.AcornAppNamespace], svc.Spec.External)
+	return nil
 }
 
 func (r *resolver) getSecret(secret *corev1.Secret, namespace, name string, validSecrets *[]string) error {

@@ -22,7 +22,7 @@ func ForChild(parent kclient.Object, childName string) string {
 func Split(name string) (string, string) {
 	i := strings.LastIndex(name, ".")
 	if i == -1 || i == len(name)-1 || strings.HasPrefix(name, ".") {
-		return "", name
+		return name, ""
 	}
 	return name[:i], name[i+1:]
 }

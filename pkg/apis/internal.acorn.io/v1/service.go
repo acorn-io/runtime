@@ -43,6 +43,7 @@ type ServiceInstanceSpec struct {
 	Annotations     map[string]string `json:"annotations,omitempty"`
 	Default         bool              `json:"default"`
 	External        string            `json:"external,omitempty"`
+	Alias           string            `json:"alias,omitempty"`
 	Address         string            `json:"address,omitempty"`
 	Ports           Ports             `json:"ports,omitempty"`
 	Container       string            `json:"container,omitempty"`

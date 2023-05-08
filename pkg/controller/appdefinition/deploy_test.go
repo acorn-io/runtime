@@ -76,7 +76,7 @@ func ToDeploymentsTest(t *testing.T, appInstance *v1.AppInstance, tag name.Refer
 	t.Helper()
 
 	req := tester.NewRequest(t, scheme.Scheme, appInstance)
-	interpolator := secrets.NewInterpolator(req, appInstance)
+	interpolator := secrets.NewInterpolator(req.Ctx, req.Client, appInstance)
 	deps, err := ToDeployments(req, appInstance, tag, pullSecrets, interpolator)
 	if err != nil {
 		t.Fatal(err)

@@ -26,6 +26,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -64,6 +65,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter.HandlerFunc(appstatus.JobStatus)
 	appRouter.HandlerFunc(appstatus.VolumeStatus)
 	appRouter.HandlerFunc(appstatus.AcornStatus)
+	appRouter.HandlerFunc(appstatus.ServiceStatus)
 	appRouter.HandlerFunc(appstatus.ReadyStatus)
 	appRouter.HandlerFunc(networkpolicy.ForApp)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
@@ -80,6 +82,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)
+	router.Type(&batchv1.Job{}).Selector(managedSelector).HandlerFunc(jobs.JobCleanup)
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
@@ -90,6 +93,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&policyv1.PodDisruptionBudget{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobs.JobPodOrphanCleanup)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert

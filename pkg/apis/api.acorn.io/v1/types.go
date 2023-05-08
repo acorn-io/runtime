@@ -203,6 +203,7 @@ type ImageDetails struct {
 	NestedDigest string        `json:"nestedDigest,omitempty"`
 	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
 	Profiles     []string      `json:"profiles,omitempty"`
+	Auth         *RegistryAuth `json:"auth,omitempty"`
 
 	// Output Params
 	AppImage   v1.AppImage   `json:"appImage,omitempty"`

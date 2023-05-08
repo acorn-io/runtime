@@ -10,6 +10,7 @@ metadata:
     "acorn.io/job-name": "job-name"
     "acorn.io/managed": "true"
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:

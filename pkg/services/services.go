@@ -108,20 +108,28 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 }
 
 func toExternalService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
+	return toRefService(ctx, c, cfg, service, service.Spec.AppNamespace, service.Spec.External)
+}
+
+func toAliasService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, service *v1.ServiceInstance) (result []kclient.Object, missing []string, err error) {
+	return toRefService(ctx, c, cfg, service, service.Namespace, service.Spec.Alias)
+}
+
+func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, service *v1.ServiceInstance, refNamespace, refName string) (result []kclient.Object, missing []string, err error) {
 	var (
 		servicePorts  []corev1.ServicePort
 		targetService = &v1.ServiceInstance{}
 	)
 
-	err = ref.Lookup(ctx, c, targetService, service.Spec.AppNamespace, strings.Split(service.Spec.External, ".")...)
+	err = ref.Lookup(ctx, c, targetService, refNamespace, strings.Split(refName, ".")...)
 	if apierrors.IsNotFound(err) {
 		k8sService := &corev1.Service{}
-		if err := c.Get(ctx, router.Key(service.Spec.AppNamespace, service.Spec.External), k8sService); err == nil {
+		if err := c.Get(ctx, router.Key(refNamespace, refName), k8sService); err == nil {
 			servicePorts = ports.CopyServicePorts(k8sService.Spec.Ports)
 			targetService.Name = k8sService.Name
 			targetService.Namespace = k8sService.Namespace
 		} else {
-			missing = append(missing, service.Spec.External)
+			missing = append(missing, refName)
 		}
 	} else if err != nil {
 		return nil, nil, err
@@ -206,6 +214,8 @@ func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kcl
 
 	if service.Spec.External != "" {
 		return toExternalService(req.Ctx, req.Client, cfg, service)
+	} else if service.Spec.Alias != "" {
+		return toAliasService(req.Ctx, req.Client, cfg, service)
 	} else if service.Spec.Address != "" {
 		return toAddressService(service), nil, nil
 	} else if service.Spec.Container != "" {

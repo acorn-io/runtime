@@ -11,6 +11,7 @@ type AppInstanceCondition string
 
 var (
 	AppInstanceConditionDefined      = "defined"
+	AppInstanceConditionDependencies = "dependencies"
 	AppInstanceConditionDefaults     = "defaults"
 	AppInstanceConditionScheduling   = "scheduling"
 	AppInstanceConditionNamespace    = "namespace"
@@ -18,6 +19,7 @@ var (
 	AppInstanceConditionController   = "controller"
 	AppInstanceConditionPulled       = "image-pull"
 	AppInstanceConditionSecrets      = "secrets"
+	AppInstanceConditionServices     = "services"
 	AppInstanceConditionContainers   = "containers"
 	AppInstanceConditionJobs         = "jobs"
 	AppInstanceConditionAcorns       = "acorns"

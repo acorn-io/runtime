@@ -867,6 +867,11 @@ func (in *ImageDetails) DeepCopyInto(out *ImageDetails) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Auth != nil {
+		in, out := &in.Auth, &out.Auth
+		*out = new(RegistryAuth)
+		**out = **in
+	}
 	in.AppImage.DeepCopyInto(&out.AppImage)
 	if in.AppSpec != nil {
 		in, out := &in.AppSpec, &out.AppSpec
