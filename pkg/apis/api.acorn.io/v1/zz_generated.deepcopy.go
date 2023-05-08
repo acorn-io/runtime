@@ -754,8 +754,8 @@ func (in *Event) DeepCopyInto(out *Event) {
 		*out = new(internal_acorn_iov1.EventSubject)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Time != nil {
-		in, out := &in.Time, &out.Time
+	if in.Observed != nil {
+		in, out := &in.Observed, &out.Observed
 		*out = (*in).DeepCopy()
 	}
 }

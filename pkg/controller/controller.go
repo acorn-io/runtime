@@ -89,7 +89,7 @@ func (c *Controller) Start(ctx context.Context) error {
 			}
 		}
 		if !success {
-			panic("couldn't initial cached client")
+			panic("couldn't initialize client cache")
 		}
 		dnsInit := dns.NewDaemon(c.Router.Backend())
 		go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriodHours)

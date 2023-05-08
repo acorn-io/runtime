@@ -2399,7 +2399,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 					},
 					"time": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Time represents the time the Event was first observed.",
+							Description: "Observed represents the time the Event was first observed.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
@@ -6364,7 +6364,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 					},
 					"time": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Time represents the time the Event was first observed.",
+							Description: "Observed represents the time the Event was first observed.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},

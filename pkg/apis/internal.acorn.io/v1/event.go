@@ -33,9 +33,9 @@ type EventInstance struct {
 	// +optional
 	Details string `json:"details,omitempty"`
 
-	// Time represents the time the Event was first observed.
+	// Observed represents the time the Event was first observed.
 	// +optional
-	Time *metav1.MicroTime `json:"time,omitempty"`
+	Observed *metav1.MicroTime `json:"time,omitempty"`
 }
 
 // EventSubject describes an object related to an Event.

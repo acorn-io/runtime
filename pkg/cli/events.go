@@ -2,6 +2,7 @@ package cli
 
 import (
 	// "fmt"
+	"time"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	// "github.com/acorn-io/acorn/pkg/client"
@@ -24,7 +25,7 @@ func NewEvent(c CommandContext) *cobra.Command {
 		SilenceUsage: true,
 		Short:        "List Acorn events",
 		// TODO(njhale): better long description
-		Long: "List events about acorn resources",
+		Long: "List events about Acorn resources",
 		// Args: cobra.MinimumNArgs(1),
 	})
 	// cmd.Flags().SetInterspersed(false)
@@ -32,14 +33,12 @@ func NewEvent(c CommandContext) *cobra.Command {
 }
 
 type Events struct {
-	// TODO(njhale): Add flags/options
-	// Push     bool     `usage:"Push image after build"`
-	// File     string   `short:"f" usage:"Name of the build file (default \"DIRECTORY/Acornfile\")"`
-	// Tag      []string `short:"t" usage:"Apply a tag to the final build"`
-	// Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
-	// Profile  []string `usage:"Profile to assign default values"`
-	Quiet  bool   `usage:"Output only names" short:"q"`
-	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	// TODO(njhale): Fix flags/options
+	Filter string         `usage:"Filter output based on conditions provided" short:"f"`
+	Since  *time.Duration `usage:"Show all events created since timestamp" short:"s"`
+	Until  *time.Duration `usage:"Stream events until this timestamp" short:"u"`
+	Quiet  bool           `usage:"Output only names" short:"q"`
+	Output string         `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client ClientFactory
 }
 

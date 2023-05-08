@@ -1211,8 +1211,8 @@ func (in *EventInstance) DeepCopyInto(out *EventInstance) {
 		*out = new(EventSubject)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Time != nil {
-		in, out := &in.Time, &out.Time
+	if in.Observed != nil {
+		in, out := &in.Observed, &out.Observed
 		*out = (*in).DeepCopy()
 	}
 }
