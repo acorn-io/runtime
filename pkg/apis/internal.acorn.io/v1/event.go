@@ -17,63 +17,42 @@ type EventInstance struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Type is a short, machine-readable string that describes the kind of Event that took place.
-	// +required
-	Type string `json:"type,omitempty"`
+	Type string `json:"type"`
 
 	// Actor is the ID of the entity that generated the Event.
 	// This can be the name of a particular user or controller.
-	// +required
 	Actor string `json:"actor"`
 
-	// Subject is the object the Event is regarding.
-	// +optional
-	Subject *EventSubject `json:"subject,omitempty"`
+	// Subject identifies the object the Event is regarding.
+	Subject EventSubject `json:"subject"`
 
-	// Details is a human-readable description of the Event.
+	// Context provides additional information about the cluster at the time the Event occurred.
+	//
+	// It's typically used to embed the subject resource, in its entirety, at the time the Event occurred,
+	// but can be used to hold any data related to the event.
+	//
 	// +optional
-	Details string `json:"details,omitempty"`
+	Context GenericMap `json:"context,omitempty"`
+
+	// Description is a human-readable description of the Event.
+	// +optional
+	Description *string `json:"description,omitempty"`
 
 	// Observed represents the time the Event was first observed.
-	// +optional
-	Observed *metav1.MicroTime `json:"time,omitempty"`
+	Observed metav1.MicroTime `json:"observed"`
 }
 
-// EventSubject describes an object related to an Event.
-// It can contain one of:
-// - a reference to the object
-// - the object in its entirety
+// EventSubject identifies an object related to an Event.
+//
+// The referenced object may or may not exist.
 //
 // Note: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged.
 // See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919
 // for more details.
 type EventSubject struct {
-	// Type identifies the type of the EventSubject.
-	// +unionDiscriminator
-	Type EventSubjectType `json:"type"`
+	// Kind is the kind of the subject.
+	Kind string `json:"kind"`
 
-	// Reference is a reference to the event EventSubject's object.
-	// +optional
-	Reference *EventSubjectReference `json:"reference,omitempty"`
-
-	// Object is a reference to the event EventSubject's object.
-	// +optional
-	Object *EventSubjectObject `json:"object,omitempty"`
-}
-
-// EventSubjectType identifies a type of EventSubject.
-type EventSubjectType string
-
-const (
-	// EventSubjectTypeReference identifies a reference to an object.
-	EventSubjectTypeReference EventSubjectType = "Reference"
-
-	EventSubjectTypeObject EventSubjectType = "Object"
-)
-
-type EventSubjectReference struct {
-	// TODO(njhale): Implement me!
-}
-
-type EventSubjectObject struct {
-	// TODO(njhale): Implement me!
+	// Name is the name of the subject.
+	Name string `json:"name"`
 }

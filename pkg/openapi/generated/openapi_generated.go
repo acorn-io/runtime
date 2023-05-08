@@ -115,8 +115,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance":                         schema_pkg_apis_internalacornio_v1_EventInstance(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstanceList":                     schema_pkg_apis_internalacornio_v1_EventInstanceList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject":                          schema_pkg_apis_internalacornio_v1_EventSubject(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubjectObject":                    schema_pkg_apis_internalacornio_v1_EventSubjectObject(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubjectReference":                 schema_pkg_apis_internalacornio_v1_EventSubjectReference(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExecProbe":                             schema_pkg_apis_internalacornio_v1_ExecProbe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File":                                  schema_pkg_apis_internalacornio_v1_File(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GeneratedService":                      schema_pkg_apis_internalacornio_v1_GeneratedService(ref),
@@ -2372,6 +2370,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Type is a short, machine-readable string that describes the kind of Event that took place.",
+							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2386,25 +2385,42 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 					},
 					"subject": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Subject is the object the Event is regarding.",
+							Description: "Subject identifies the object the Event is regarding.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject"),
 						},
 					},
-					"details": {
+					"context": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details is a human-readable description of the Event.",
+							Description: "Context provides additional information about the cluster at the time the Event occurred.\n\nIt's typically used to embed the subject resource, in its entirety, at the time the Event occurred, but can be used to hold any data related to the event.",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"object"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description of the Event.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"time": {
+					"observed": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 				},
-				Required: []string{"actor"},
+				Required: []string{"type", "actor", "subject", "observed"},
 			},
 		},
 		Dependencies: []string{
@@ -6337,6 +6353,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 					"type": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Type is a short, machine-readable string that describes the kind of Event that took place.",
+							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -6351,25 +6368,42 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 					},
 					"subject": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Subject is the object the Event is regarding.",
+							Description: "Subject identifies the object the Event is regarding.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject"),
 						},
 					},
-					"details": {
+					"context": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Details is a human-readable description of the Event.",
+							Description: "Context provides additional information about the cluster at the time the Event occurred.\n\nIt's typically used to embed the subject resource, in its entirety, at the time the Event occurred, but can be used to hold any data related to the event.",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"object"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description of the Event.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"time": {
+					"observed": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
+							Default:     map[string]interface{}{},
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
 						},
 					},
 				},
-				Required: []string{"actor"},
+				Required: []string{"type", "actor", "subject", "observed"},
 			},
 		},
 		Dependencies: []string{
@@ -6429,53 +6463,27 @@ func schema_pkg_apis_internalacornio_v1_EventSubject(ref common.ReferenceCallbac
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EventSubject describes an object related to an Event. It can contain one of: - a reference to the object - the object in its entirety\n\nNote: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged. See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919 for more details.",
+				Description: "EventSubject identifies an object related to an Event.\n\nThe referenced object may or may not exist.\n\nNote: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged. See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919 for more details.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"type": {
+					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type identifies the type of the EventSubject.",
+							Description: "Kind is the kind of the subject.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"reference": {
+					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Reference is a reference to the event EventSubject's object.",
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubjectReference"),
-						},
-					},
-					"object": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Object is a reference to the event EventSubject's object.",
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubjectObject"),
+							Description: "Name is the name of the subject.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
-				Required: []string{"type"},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubjectObject", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubjectReference"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_EventSubjectObject(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-			},
-		},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_EventSubjectReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Required: []string{"kind", "name"},
 			},
 		},
 	}
