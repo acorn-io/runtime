@@ -21,7 +21,8 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 		updater: remoteResource,
 		deleter: remoteResource,
 	}
-	validator := &Validator{apiv1.LocalRegion}
+
+	validator := &Validator{DefaultRegion: apiv1.LocalRegion, Client: c}
 	return stores.NewBuilder(c.Scheme(), &apiv1.Project{}).
 		WithCreate(strategy).
 		WithUpdate(strategy).
