@@ -16,7 +16,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/acorn-io/acorn/pkg/wait"
-	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -325,10 +324,6 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 		return nil, false, nil
 	} else if err != nil {
 		return nil, false, err
-	}
-
-	if s.Region != "" && app.GetRegion() != s.Region {
-		pterm.Warning.Println("The region of an app can not be changed, ignoring --region")
 	}
 
 	if !imageSource.IsImageSet() {
