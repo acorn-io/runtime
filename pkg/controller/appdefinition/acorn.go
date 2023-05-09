@@ -37,6 +37,7 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 			Labels:              service.Labels,
 			Annotations:         service.Annotations,
 			Image:               service.Image,
+			Build:               service.Build,
 			DeployArgs:          service.ServiceArgs,
 			Environment:         service.Environment,
 			Secrets:             service.Secrets,
@@ -72,6 +73,11 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 		image = strings.TrimPrefix(acorn.Image, "sha256:")
 	}
 
+	originalImage := acorn.Image
+	if acorn.Build != nil && acorn.Build.OriginalImage != "" {
+		originalImage = acorn.Build.OriginalImage
+	}
+
 	// Ensure secret gets copied
 	pullSecrets.ForAcorn(acornName, image)
 
@@ -81,12 +87,20 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			labels.AcornParentAcornName, appInstance.Name,
 			labels.AcornPublicName, publicname.ForChild(appInstance, acornName)))
 
+	publishMode := appInstance.Spec.PublishMode
+	if publishMode == "" {
+		publishMode = acorn.PublishMode
+	}
+
 	acornInstance := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name2.SafeHashConcatName(appInstance.Name, acornName),
-			Namespace:   appInstance.Namespace,
-			Labels:      labelMap,
-			Annotations: appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
+			Name:      name2.SafeHashConcatName(appInstance.Name, acornName),
+			Namespace: appInstance.Namespace,
+			Labels:    labelMap,
+			Annotations: labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
+				map[string]string{
+					labels.AcornOriginalImage: originalImage,
+				}),
 		},
 		Spec: v1.AppInstanceSpec{
 			Region:      appInstance.GetRegion(),
@@ -95,7 +109,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Image:       image,
 			Volumes:     acorn.Volumes,
 			Secrets:     scopeSecrets(appInstance, acorn.Secrets),
-			PublishMode: appInstance.Spec.PublishMode,
+			PublishMode: publishMode,
 			Links:       scopeLinks(appInstance, acorn.Links),
 			Profiles:    acorn.Profiles,
 			DevMode:     appInstance.Spec.DevMode,

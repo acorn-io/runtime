@@ -335,6 +335,21 @@ func (mr *MockClientMockRecorder) ContainerReplicaList(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerReplicaList", reflect.TypeOf((*MockClient)(nil).ContainerReplicaList), arg0, arg1)
 }
 
+// ContainerReplicaPortForward mocks base method.
+func (m *MockClient) ContainerReplicaPortForward(arg0 context.Context, arg1 string, arg2 int) (client.PortForwardDialer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ContainerReplicaPortForward", arg0, arg1, arg2)
+	ret0, _ := ret[0].(client.PortForwardDialer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ContainerReplicaPortForward indicates an expected call of ContainerReplicaPortForward.
+func (mr *MockClientMockRecorder) ContainerReplicaPortForward(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ContainerReplicaPortForward", reflect.TypeOf((*MockClient)(nil).ContainerReplicaPortForward), arg0, arg1, arg2)
+}
+
 // CredentialCreate mocks base method.
 func (m *MockClient) CredentialCreate(arg0 context.Context, arg1, arg2, arg3 string, arg4 bool) (*v1.Credential, error) {
 	m.ctrl.T.Helper()

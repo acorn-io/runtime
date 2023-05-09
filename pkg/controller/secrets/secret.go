@@ -90,7 +90,9 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 		secret, err := secrets.GetOrCreateSecret(allSecrets, req, appInstance, secretName)
 		if apierrors.IsNotFound(err) {
 			if status := (*apierrors.StatusError)(nil); errors.As(err, &status) && status.ErrStatus.Details != nil {
-				missing = append(missing, status.ErrStatus.Details.Name)
+				if status.ErrStatus.Details.Name != "" {
+					missing = append(missing, status.ErrStatus.Details.Name)
+				}
 			} else {
 				missing = append(missing, secretName)
 			}

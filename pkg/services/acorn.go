@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/jobs"
@@ -13,6 +14,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -74,6 +76,7 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 					appInstance.Status.AppSpec.Annotations, asMap(service.Annotations), appInstance.Spec.Annotations),
 				Default:   service.Default,
 				External:  service.External,
+				Alias:     service.Alias,
 				Address:   service.Address,
 				Ports:     service.Ports,
 				Container: service.Container,
@@ -104,12 +107,37 @@ func asMap(s v1.ScopedLabels) map[string]string {
 	return result
 }
 
-func forRouters(appInstance *v1.AppInstance) (result []kclient.Object) {
+func serviceNames(appInstance *v1.AppInstance) sets.String {
+	result := sets.NewString()
+	for k := range appInstance.Status.AppSpec.Services {
+		result.Insert(k)
+	}
+	for k := range appInstance.Status.AppSpec.Containers {
+		result.Insert(k)
+	}
+	for k := range appInstance.Status.AppSpec.Routers {
+		result.Insert(k)
+	}
+	for k := range appInstance.Status.AppSpec.Acorns {
+		result.Insert(k)
+	}
+	return result
+}
+
+func forRouters(appInstance *v1.AppInstance) (result []kclient.Object, err error) {
+	serviceNames := serviceNames(appInstance)
+
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Routers) {
 		routerName, router := entry.Key, entry.Value
 
 		if ports2.IsLinked(appInstance, routerName) {
 			continue
+		}
+
+		for _, router := range router.Routes {
+			if router.TargetServiceName != "" && !serviceNames.Has(router.TargetServiceName) {
+				return nil, fmt.Errorf("router [%s] references unknown service [%s]", routerName, router.TargetServiceName)
+			}
 		}
 
 		result = append(result, &v1.ServiceInstance{
@@ -259,7 +287,13 @@ func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppI
 	result = append(result, objs...)
 	result = append(result, forAcorns(appInstance)...)
 	result = append(result, forContainers(appInstance)...)
-	result = append(result, forRouters(appInstance)...)
+
+	routers, err := forRouters(appInstance)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, routers...)
+
 	// determine default before adding linked services
 	if len(result) == 1 {
 		result[0].(*v1.ServiceInstance).Spec.Default = true

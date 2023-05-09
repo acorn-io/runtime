@@ -8,9 +8,11 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -18,9 +20,16 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-// NetworkPolicyForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
+// These IP addresses are what workloads running on AWS EC2 instances use to access the instance metadata service.
+// We block them with a NetworkPolicy in each app.
+const (
+	awsEC2cidrV4 = "169.254.169.254/32"
+	awsEC2cidrV6 = "fd00:ec2::254/64"
+)
+
+// ForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
 // to all pods in an app, so that they cannot be reached by pods from other projects.
-func NetworkPolicyForApp(req router.Request, resp router.Response) error {
+func ForApp(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -51,6 +60,7 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 
 	// create the NetworkPolicy for the whole app
 	// this allows traffic only from within the project
+	// it also blocks ec2 metadata traffic with an egress policy
 	resp.Objects(&networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
@@ -66,16 +76,32 @@ func NetworkPolicyForApp(req router.Request, resp router.Response) error {
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
 				From: allowedNamespaceSelectors,
 			}},
-			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+			Egress: []networkingv1.NetworkPolicyEgressRule{{
+				To: []networkingv1.NetworkPolicyPeer{
+					{
+						IPBlock: &networkingv1.IPBlock{
+							CIDR:   "0.0.0.0/0",
+							Except: []string{awsEC2cidrV4},
+						},
+					},
+					{
+						IPBlock: &networkingv1.IPBlock{
+							CIDR:   "::/0",
+							Except: []string{awsEC2cidrV6},
+						},
+					},
+				},
+			}},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
 		},
 	})
 	return nil
 }
 
-// NetworkPolicyForIngress creates Kubernetes NetworkPolicies to allow traffic to exposed HTTP ports on
+// ForIngress creates Kubernetes NetworkPolicies to allow traffic to exposed HTTP ports on
 // Acorn apps from the ingress controller. If the ingress controller namespace is not defined, traffic from
 // all namespaces will be allowed instead.
-func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
+func ForIngress(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -210,9 +236,9 @@ func NetworkPolicyForIngress(req router.Request, resp router.Response) error {
 	return nil
 }
 
-// NetworkPolicyForService creates a Kubernetes NetworkPolicy to allow traffic to published TCP/UDP ports
+// ForService creates a Kubernetes NetworkPolicy to allow traffic to published TCP/UDP ports
 // on Acorn apps that are exposed with LoadBalancer Services.
-func NetworkPolicyForService(req router.Request, resp router.Response) error {
+func ForService(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -237,20 +263,9 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	}
 
 	// build the ipBlock for the NetPol
-	ipBlock := networkingv1.IPBlock{
-		CIDR: "0.0.0.0/0",
-	}
-	// get pod CIDRs from the nodes so that we can only allow traffic from IP addresses outside the cluster
-	nodes := corev1.NodeList{}
-	if err = req.Client.List(req.Ctx, &nodes); err != nil {
-		return fmt.Errorf("failed to list nodes: %w", err)
-	}
-	for _, node := range nodes.Items {
-		for _, cidr := range node.Spec.PodCIDRs {
-			if !slices.Contains(ipBlock.Except, cidr) {
-				ipBlock.Except = append(ipBlock.Except, cidr)
-			}
-		}
+	ipBlock, err := buildExternalIPBlock(req)
+	if err != nil {
+		return err
 	}
 
 	// build the port slice for the NetPol
@@ -280,7 +295,7 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
 				From: []networkingv1.NetworkPolicyPeer{
 					{
-						IPBlock: &ipBlock,
+						IPBlock: ipBlock,
 					},
 					{
 						NamespaceSelector: &metav1.LabelSelector{
@@ -304,4 +319,110 @@ func NetworkPolicyForService(req router.Request, resp router.Response) error {
 	})
 
 	return nil
+}
+
+// ForBuilder creates a Kubernetes NetworkPolicy to allow traffic to the buildkitd pods from the acorn-api only.
+// It also only allows outgoing traffic to CoreDNS, the Acorn registry, and the Internet.
+func ForBuilder(req router.Request, resp router.Response) error {
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil || !*cfg.NetworkPolicies {
+		return err
+	}
+
+	deployment := req.Object.(*appsv1.Deployment)
+	if deployment.Name != "buildkitd" && !strings.HasPrefix(deployment.Name, "bld-") {
+		// this is not a builder deployment
+		return nil
+	}
+
+	podLabels := deployment.Spec.Template.ObjectMeta.Labels
+	externalIPBlock, err := buildExternalIPBlock(req)
+	if err != nil {
+		return err
+	}
+
+	// build the NetPol
+	resp.Objects(&networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deployment.Name,
+			Namespace: deployment.Namespace,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: podLabels,
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{{
+				From: []networkingv1.NetworkPolicyPeer{{
+					// allow access from the acorn-apiserver
+					NamespaceSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"kubernetes.io/metadata.name": system.Namespace,
+						},
+					},
+					PodSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"app": system.APIServerName,
+						},
+					},
+				}},
+			}},
+			Egress: []networkingv1.NetworkPolicyEgressRule{{
+				To: []networkingv1.NetworkPolicyPeer{
+					{
+						IPBlock: externalIPBlock, // allow traffic to the Internet
+					},
+					{
+						NamespaceSelector: &metav1.LabelSelector{
+							// allow traffic to kube-system for CoreDNS
+							MatchLabels: map[string]string{
+								"kubernetes.io/metadata.name": "kube-system",
+							},
+						},
+						PodSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"k8s-app": "kube-dns",
+							},
+						},
+					},
+					{
+						PodSelector: &metav1.LabelSelector{
+							// allow traffic to the registry for pushing images
+							MatchLabels: map[string]string{
+								"app": system.RegistryName,
+							},
+						},
+					},
+				},
+			}},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
+		},
+	})
+
+	return nil
+}
+
+// buildExternalIPBlock creates a NetworkPolicy IPBlock with the CIDR set to 0.0.0.0/0
+// and the Except set to the pod CIDRs of the nodes.
+func buildExternalIPBlock(req router.Request) (*networkingv1.IPBlock, error) {
+	ipBlock := networkingv1.IPBlock{
+		CIDR: "0.0.0.0/0",
+	}
+
+	// get pod CIDRs from the nodes so that we can only allow IP addresses outside the cluster
+	nodes := corev1.NodeList{}
+	if err := req.Client.List(req.Ctx, &nodes); err != nil {
+		return nil, fmt.Errorf("failed to list nodes: %w", err)
+	}
+	for _, node := range nodes.Items {
+		for _, cidr := range node.Spec.PodCIDRs {
+			if !slices.Contains(ipBlock.Except, cidr) {
+				ipBlock.Except = append(ipBlock.Except, cidr)
+			}
+		}
+	}
+
+	return &ipBlock, nil
 }

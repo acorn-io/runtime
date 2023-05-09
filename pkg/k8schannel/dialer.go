@@ -46,6 +46,14 @@ func (d *Dialer) DialWebsocket(ctx context.Context, url string, headers http.Hea
 	return conn, resp, nil
 }
 
+func (d *Dialer) DialMultiplexed(ctx context.Context, url string, headers http.Header) (*Connection, error) {
+	conn, _, err := d.DialWebsocket(ctx, url, headers)
+	if err != nil {
+		return nil, err
+	}
+	return NewConnection(conn, true), nil
+}
+
 func (d *Dialer) DialContext(ctx context.Context, url string, headers http.Header) (*Connection, error) {
 	conn, _, err := d.DialWebsocket(ctx, url, headers)
 	if err != nil {

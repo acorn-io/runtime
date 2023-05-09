@@ -83,8 +83,8 @@ func printContainerReplicas(ctx context.Context, c client.Client, opts *client.C
 		return err
 	}
 	for _, c := range cs {
-		if all || c.Status.State.Terminated == nil {
-			(*out).Write(c)
+		if all || c.Status.State.Terminated == nil || c.Status.State.Terminated.ExitCode != 0 {
+			(*out).Write(&c)
 		}
 	}
 	return nil

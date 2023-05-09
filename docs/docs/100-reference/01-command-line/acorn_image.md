@@ -40,6 +40,6 @@ acorn images
 ### SEE ALSO
 
 * [acorn](acorn.md)	 - 
-* [acorn image detail](acorn_image_detail.md)	 - Show details of an Image
+* [acorn image details](acorn_image_details.md)	 - Show details of an Image
 * [acorn image rm](acorn_image_rm.md)	 - Delete an Image
 

@@ -6,6 +6,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
+	"github.com/acorn-io/acorn/pkg/controller/appstatus"
 	"github.com/acorn-io/acorn/pkg/controller/builder"
 	"github.com/acorn-io/acorn/pkg/controller/config"
 	"github.com/acorn-io/acorn/pkg/controller/defaults"
@@ -25,6 +26,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/router"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -55,20 +57,21 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
 	appRouter.HandlerFunc(defaults.Calculate)
 	appRouter.HandlerFunc(scheduling.Calculate)
-	appRouter = appRouter.Middleware(appdefinition.CheckStatus)
+	appRouter = appRouter.Middleware(appstatus.CheckStatus)
 	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
 	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
-	appRouter.HandlerFunc(appdefinition.AppStatus)
+	appRouter.HandlerFunc(appstatus.AppStatus)
 	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
-	appRouter.HandlerFunc(appdefinition.JobStatus)
-	appRouter.HandlerFunc(appdefinition.VolumeStatus)
-	appRouter.HandlerFunc(appdefinition.AcornStatus)
-	appRouter.HandlerFunc(appdefinition.ReadyStatus)
-	appRouter.HandlerFunc(networkpolicy.NetworkPolicyForApp)
+	appRouter.HandlerFunc(appstatus.JobStatus)
+	appRouter.HandlerFunc(appstatus.VolumeStatus)
+	appRouter.HandlerFunc(appstatus.AcornStatus)
+	appRouter.HandlerFunc(appstatus.ServiceStatus)
+	appRouter.HandlerFunc(appstatus.ReadyStatus)
+	appRouter.HandlerFunc(networkpolicy.ForApp)
 	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
 	appRouter.HandlerFunc(appdefinition.UpdateObservedFields)
 
-	router.Type(&v1.AppInstance{}).HandlerFunc(appdefinition.CLIStatus)
+	router.Type(&v1.AppInstance{}).HandlerFunc(appstatus.CLIStatus)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 
@@ -79,6 +82,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)
+	router.Type(&batchv1.Job{}).Selector(managedSelector).HandlerFunc(jobs.JobCleanup)
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
@@ -89,12 +93,14 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&policyv1.PodDisruptionBudget{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobs.JobPodOrphanCleanup)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
-	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.NetworkPolicyForService)
-	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.NetworkPolicyForIngress)
+	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForService)
+	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForIngress)
+	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(networkpolicy.ForBuilder)
 	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 
 	configRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName)

@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pdb"
 	"github.com/acorn-io/acorn/pkg/ports"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/volume"
@@ -58,7 +59,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
-	interpolator := secrets.NewInterpolator(req, appInstance)
+	interpolator := secrets.NewInterpolator(req.Ctx, req.Client, appInstance)
 
 	defer func() {
 		if err == nil {
@@ -73,7 +74,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 				if len(missing) == 0 {
 					status.Success()
 				} else {
-					status.Unknown(fmt.Sprintf("waiting on missing secrets %v", missing))
+					status.Unknown(fmt.Sprintf("waiting %v", missing))
 				}
 			} else {
 				status.Error(interpolatorErr)
@@ -536,7 +537,7 @@ func getRevision(req router.Request, namespace, secretName string) (string, erro
 	return hex.EncodeToString(d[:]), nil
 }
 
-func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, container v1.Container) (map[string]string, error) {
+func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator) (map[string]string, error) {
 	var (
 		secrets []string
 		result  = map[string]string{}
@@ -564,6 +565,7 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 		}
 		rev, err := getRevision(req, appInstance.Status.Namespace, secret)
 		if apierror.IsNotFound(err) {
+			interpolator.AddMissingSecretName(secret)
 			result[apply.AnnotationUpdate] = "false"
 			result[apply.AnnotationCreate] = "false"
 		} else if err != nil {
@@ -584,7 +586,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 
 	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
 
-	secretAnnotations, err := getSecretAnnotations(req, appInstance, container)
+	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
 		return nil, err
 	}
@@ -594,7 +596,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
-	podLabels := containerLabels(appInstance, container, name)
+	podLabels := containerLabels(appInstance, container, name, labels.AcornAppPublicName, publicname.Get(appInstance))
 	deploymentLabels := containerLabels(appInstance, container, name)
 	matchLabels := selectorMatchLabels(appInstance, name)
 
@@ -632,8 +634,6 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		},
 	}
 
-	interpolator.AddMissingAnnotations(dep.Annotations)
-
 	if stateful {
 		dep.Spec.Replicas = &[]int32{1}[0]
 		dep.Spec.Template.Spec.Hostname = dep.Name
@@ -644,6 +644,8 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		dep.Spec.Replicas = new(int32)
+	} else {
+		interpolator.AddMissingAnnotations(dep.Annotations)
 	}
 
 	return dep, nil

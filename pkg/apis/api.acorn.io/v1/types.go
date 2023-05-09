@@ -170,6 +170,15 @@ type LogOptions struct {
 	Since            string `json:"since,omitempty"`
 }
 
+type PortForwardOptions struct {
+	metav1.TypeMeta `json:",inline"`
+
+	Tail             *int64 `json:"tailLines,omitempty"`
+	Follow           bool   `json:"follow,omitempty"`
+	ContainerReplica string `json:"containerReplica,omitempty"`
+	Since            string `json:"since,omitempty"`
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AppPullImage struct {
@@ -194,6 +203,7 @@ type ImageDetails struct {
 	NestedDigest string        `json:"nestedDigest,omitempty"`
 	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
 	Profiles     []string      `json:"profiles,omitempty"`
+	Auth         *RegistryAuth `json:"auth,omitempty"`
 
 	// Output Params
 	AppImage   v1.AppImage   `json:"appImage,omitempty"`
@@ -289,6 +299,15 @@ type ContainerReplicaExecOptions struct {
 	Command    []string `json:"command,omitempty"`
 	TTY        bool     `json:"tty,omitempty"`
 	DebugImage string   `json:"debugImage,omitempty"`
+}
+
+// +k8s:conversion-gen:explicit-from=net/url.Values
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ContainerReplicaPortForwardOptions struct {
+	metav1.TypeMeta `json:",inline"`
+
+	Port int `json:"port,omitempty"`
 }
 
 const (
@@ -441,7 +460,10 @@ func (in *Project) NamespaceScoped() bool {
 }
 
 func (in *Project) HasRegion(region string) bool {
-	return region == "" || in.Status.DefaultRegion == region || slices.Contains(in.Spec.SupportedRegions, region)
+	if region == "" || slices.Contains(in.Spec.SupportedRegions, region) {
+		return true
+	}
+	return in.Spec.DefaultRegion == "" && in.Status.DefaultRegion == region
 }
 
 func (in *Project) GetRegion() string {

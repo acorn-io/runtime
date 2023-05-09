@@ -32,6 +32,7 @@ spec:
       labels:
         "acorn.io/app-namespace": "app-namespace"
         "acorn.io/app-name": "app-name"
+        "acorn.io/app-public-name": "app-name"
         "acorn.io/container-name": "con1"
         "acorn.io/managed": "true"
         "allconsl1": "value"

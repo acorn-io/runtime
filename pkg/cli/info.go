@@ -61,7 +61,10 @@ func (s *Info) Run(cmd *cobra.Command, _ []string) error {
 	// Format data from info response into map of project name to info response
 	for _, subInfo := range info {
 		// Remove unset fields in the config and userConfig
-		regionInfo := make(map[string]any, len(subInfo.Regions))
+		regionInfo := make(map[string]any, len(subInfo.Regions)+1)
+		if len(subInfo.ExtraData) > 0 {
+			regionInfo["extraData"] = subInfo.ExtraData
+		}
 		for region, spec := range subInfo.Regions {
 			specMap, err := removeUnsetFields(spec, "config", "userConfig")
 			if err != nil {

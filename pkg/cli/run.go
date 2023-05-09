@@ -24,73 +24,49 @@ import (
 
 func NewRun(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Run{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
-		Use:          "run [flags] IMAGE|DIRECTORY [acorn args]",
-		SilenceUsage: true,
-		Short:        "Run an app from an image or Acornfile",
-		// TODO: Jacob: Autocompleting a function may turn 1 arg into 2
-		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).withoutProjectCompletion().complete,
-		Example: `# Publish and Expose Port Syntax
-  # Publish port 80 for any containers that define it as a port
-  acorn run -p 80 .
+		Use:               "run [flags] IMAGE|DIRECTORY [acorn args]",
+		SilenceUsage:      true,
+		Short:             "Run an app from an image or Acornfile",
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		Example: `
+ # Build and run from a directory
+   acorn run .
 
-  # Publish container "myapp" using the hostname app.example.com
-  acorn run --publish app.example.com:myapp .
+ # Run from an image
+   acorn run ghcr.io/acorn-io/library/hello-world
 
-  # Expose port 80 to the rest of the cluster as port 8080
-  acorn run --expose 8080:80/http .
+ # Automatic upgrades
+   # Automatic upgrade for an app will be enabled if '#', '*', or '**' appears in the image's tag. Tags will be sorted according to the rules for these special characters described below. The newest tag will be selected for upgrade.
+   
+   # '#' denotes a segment of the image tag that should be sorted numerically when finding the newest tag.
 
-# Labels and Annotations Syntax
-  # Add a label to all resources created by the app
-  acorn run --label key=value .
+   # This example deploys the hello-world app with auto-upgrade enabled and matching all major, minor, and patch versions:
+   acorn run myorg/hello-world:v#.#.#
 
-  # Add a label to resources created for all containers
-  acorn run --label containers:key=value .
+   # '*' denotes a segment of the image tag that should sorted alphabetically when finding the latest tag.
+  
+   # In this example, if you had a tag named alpha and a tag named zeta, zeta would be recognized as the newest:
+   acorn run myorg/hello-world:*
 
-  # Add a label to the resources created for the volume named "myvolume"
-  acorn run --label volumes:myvolume:key=value .
+   # '**' denotes a wildcard. This segment of the image tag won't be considered when sorting. This is useful if your tags have a segment that is unpredictable.
+   
+   # This example would sort numerically according to major and minor version (i.e. v1.2) and ignore anything following the "-":
+   acorn run myorg/hello-world:v#.#-**
 
-# Link Syntax
-  # Link the running acorn application named "mydatabase" into the current app, replacing the container named "db"
-  acorn run --link mydatabase:db .
+   # NOTE: Depending on your shell, you may see errors when using '*' and '**'. Using quotes will tell the shell to ignore them so acorn can parse them:
+   acorn run "myorg/hello-world:v#.#-**"
 
-# Secret Syntax
-  # Bind the acorn secret named "mycredentials" into the current app, replacing the secret named "creds". See "acorn secrets --help" for more info
-  acorn run --secret mycredentials:creds .
+   # Automatic upgrades can be configured explicitly via a flag.
 
-# Volume Syntax
-  # Create the volume named "mydata" with a size of 5 gigabyes and using the "fast" storage class
-  acorn run --volume mydata,size=5G,class=fast .
+   # In this example, the tag will always be "latest", but acorn will periodically check to see if new content has been pushed to that tag:
+   acorn run --auto-upgrade myorg/hello-world:latest
 
-  # Bind the acorn volume named "mydata" into the current app, replacing the volume named "data", See "acorn volumes --help for more info"
-  acorn run --volume mydata:data .
+   # To have acorn notify you that an app has an upgrade available and require confirmation before proceeding, set the notify-upgrade flag:
+   acorn run --notify-upgrade myorg/hello-world:v#.#.# myapp
 
-# Automatic upgrades
-  # Automatic upgrade for an app will be enabled if '#', '*', or '**' appears in the image's tag. Tags will sorted according to the rules for these special characters described below. The newest tag will be selected for upgrade.
-
-  # '#' denotes a segment of the image tag that should be sorted numerically when finding the newest tag.
-  # This example deploys the hello-world app with auto-upgrade enabled and matching all major, minor, and patch versions:
-  acorn run myorg/hello-world:v#.#.#
-
-  # '*' denotes a segment of the image tag that should sorted alphabetically when finding the latest tag.
-  # In this example, if you had a tag named alpha and a tag named zeta, zeta would be recognized as the newest:
-  acorn run myorg/hello-world:*
-
-  # '**' denotes a wildcard. This segment of the image tag won't be considered when sorting. This is useful if your tags have a segment that is unpredictable.
-  # This example would sort numerically according to major and minor version (ie v1.2) and ignore anything following the "-":
-  acorn run myorg/hello-world:v#.#-**
-
-  # NOTE: Depending on your shell, you may see errors when using '*' and '**'. Using quotes will tell the shell to ignore them so Acorn can parse them:
-  acorn run "myorg/hello-world:v#.#-**"
-
-  # Automatic upgrades can be configured explicitly via a flag.
-  # In this example, the tag will always be "latest", but acorn will periodically check to see if new content has been pushed to that tag:
-  acorn run --auto-upgrade myorg/hello-world:latest
-
-  # To have acorn notify you that an app has an upgrade available and require confirmation before proceeding, set the notify-upgrade flag:
-  acorn run --notify-upgrade myorg/hello-world:v#.#.# myapp
-  # To proceed with an upgrade you've been notified of:
-  acorn update --confirm-upgrade myapp
-`})
+   # To proceed with an upgrade you've been notified of:
+   acorn update --confirm-upgrade myapp`,
+	})
 
 	// These will produce an error if the flag doesn't exist or a completion function has already been registered for the
 	// flag. Not returning the error since neither of these is likely occur.
@@ -103,19 +79,64 @@ func NewRun(c CommandContext) *cobra.Command {
 	if err := cmd.RegisterFlagCompletionFunc("region", newCompletion(c.ClientFactory, regionsCompletion).complete); err != nil {
 		cmd.Printf("Error registering completion function for --region flag: %v\n", err)
 	}
-	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
 	cmd.Flags().SetInterspersed(false)
+	toggleHiddenFlags(cmd, hideRunFlags, true)
+
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		fmt.Println(cmd.Short + "\n")
+		fmt.Println(cmd.UsageString())
+	})
 	return cmd
 }
+
+const AdvancedHelp = `    
+More Usages:
+     # Publish and Expose Port Syntax
+     - Publish port 80 for any containers that define it as a port
+      	acorn run -p 80 .
+
+     - Publish container "myapp" using the hostname app.example.com
+      	acorn run --publish app.example.com:myapp .
+
+     - Expose port 80 to the rest of the cluster as port 8080
+      	acorn run --expose 8080:80/http .
+
+     # Labels and Annotations Syntax
+     - Add a label to all resources created by the app
+       	acorn run --label key=value .
+
+     - Add a label to resources created for all containers
+      	acorn run --label containers:key=value .
+
+     - Add a label to the resources created for the volume named "myvolume"
+      	acorn run --label volumes:myvolume:key=value .
+
+     # Link Syntax
+     - Link the running acorn application named "mydatabase" into the current app, replacing the container named "db"
+       	acorn run --link mydatabase:db .
+
+     # Secret Syntax
+     - Bind the acorn secret named "mycredentials" into the current app, replacing the secret named "creds". See "acorn secrets --help" for more info
+         acorn run --secret mycredentials:creds .
+
+     # Volume Syntax
+     - Create the volume named "mydata" with a size of 5 gigabyes and using the "fast" storage class
+        acorn run --volume mydata,size=5G,class=fast .
+     - Bind the acorn volume named "mydata" into the current app, replacing the volume named "data", See "acorn volumes --help for more info"
+        acorn run --volume mydata:data .`
+
+var hideRunFlags = []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
+	"publish", "link", "label", "interval", "env", "compute-class", "annotation", "dev", "bidirectional-sync"}
 
 type Run struct {
 	RunArgs
 	Dev               bool  `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i"`
 	BidirectionalSync bool  `usage:"In interactive mode download changes in addition to uploading" short:"b"`
-	Wait              *bool `usage:"Wait for app to become ready before command exiting (default true)"`
+	Wait              *bool `usage:"Wait for app to become ready before command exiting (default: true)"`
 	Quiet             bool  `usage:"Do not print status" short:"q"`
 	Update            bool  `usage:"Update the app if it already exists" short:"u"`
 	Replace           bool  `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	HelpAdvanced      bool  `usage:"Show verbose help text"`
 
 	out    io.Writer
 	client ClientFactory
@@ -210,6 +231,10 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 }
 
 func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
+	if s.HelpAdvanced {
+		setAdvancedHelp(cmd)
+		return cmd.Help()
+	}
 	defer func() {
 		if errors.Is(err, pflag.ErrHelp) {
 			err = nil
@@ -361,4 +386,20 @@ func outputApp(out io.Writer, format string, app *apiv1.App) error {
 		_, err = out.Write(data)
 	}
 	return err
+}
+
+func toggleHiddenFlags(cmd *cobra.Command, flagsToHide []string, hide bool) {
+	for _, flag := range flagsToHide {
+		cmd.PersistentFlags().Lookup(flag).Hidden = hide
+	}
+}
+
+func setAdvancedHelp(cmd *cobra.Command) {
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		fmt.Println(cmd.Short + "\n")
+		// toggle advanced flags on before printing flags out in cmd.UsageString
+		toggleHiddenFlags(cmd, hideRunFlags, false)
+		fmt.Println(cmd.UsageString())
+		fmt.Println(AdvancedHelp)
+	})
 }

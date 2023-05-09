@@ -29,28 +29,22 @@ type Translator struct {
 	client kclient.Client
 }
 
-// name can be <app-name>+"."+<pod-name> or <app-name>+"."+<pod-name>+"."+<container-name>
 func (t *Translator) FromPublicName(ctx context.Context, namespace, name string) (string, string, error) {
-	for {
-		prefix, suffix, ok := strings.Cut(name, ".")
-		if !ok {
-			break
-		}
-		app := &v1.AppInstance{}
-		err := t.client.Get(ctx, router.Key(namespace, prefix), app)
-		if err != nil {
-			return namespace, name, err
-		}
-
-		name = suffix
-		namespace = app.Status.Namespace
-		// stop when name becomes <pod-name> or <pod-name>+"."+<container-name>
-		if strings.Count(name, ".") < 2 {
-			break
-		}
+	parts := strings.Split(name, ".")
+	if len(parts) == 1 {
+		return namespace, name, nil
 	}
-	// return <pod-name> with <container-name> stripped if any
-	return namespace, strings.Split(name, ".")[0], nil
+	appName := strings.Join(parts[:len(parts)-1], ".")
+	containerName := parts[len(parts)-1]
+
+	app := &apiv1.App{}
+	err := t.client.Get(ctx, router.Key(namespace, appName), app)
+	if err != nil {
+		return namespace, name, err
+	}
+
+	namespace = app.Status.Namespace
+	return namespace, strings.Split(containerName, ":")[0], nil
 }
 
 func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storage.ListOptions) (string, storage.ListOptions, error) {
@@ -157,7 +151,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 
 	if sidecarName != "" {
 		containerSpec = containerSpec.Sidecars[sidecarName]
-		name += "." + sidecarName
+		name += ":" + sidecarName
 		containerStatusName = sidecarName
 		uid = types.UID(string(uid) + "-" + sidecarName)
 	} else {
@@ -180,7 +174,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 	result.Namespace = namespace
 	result.OwnerReferences = nil
 	result.UID = uid
-	result.Spec.AppName = pod.Labels[labels.AcornAppName]
+	result.Spec.AppName = pod.Labels[labels.AcornAppPublicName]
 	result.Spec.JobName = jobName
 	result.Spec.ContainerName = containerName
 	result.Spec.SidecarName = sidecarName
@@ -237,12 +231,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 			}
 		}
 
-		if result.Spec.JobName != "" {
-			result.Status.Columns.App = result.Spec.JobName
-		} else {
-			result.Status.Columns.App = result.Spec.AppName
-		}
-
+		result.Status.Columns.App = result.Spec.AppName
 		break
 	}
 

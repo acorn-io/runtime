@@ -315,6 +315,14 @@ func (m *MultiClient) ContainerReplicaExec(ctx context.Context, name string, arg
 	return exec, err
 }
 
+func (m *MultiClient) ContainerReplicaPortForward(ctx context.Context, name string, port int) (dialer PortForwardDialer, err error) {
+	_, err = onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.ContainerReplica, error) {
+		dialer, err = c.ContainerReplicaPortForward(ctx, name, port)
+		return &apiv1.ContainerReplica{}, err
+	})
+	return dialer, err
+}
+
 func (m *MultiClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Volume, error) {
 		return c.VolumeList(ctx)

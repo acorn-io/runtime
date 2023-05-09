@@ -56,6 +56,11 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		return nil, err
 	}
 
+	portForward, err := containers.NewPortForward(c, cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	appsStorage := apps.NewStorage(c, clientFactory)
 
 	logsStorage, err := apps.NewLogs(c, cfg)
@@ -66,30 +71,31 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 	volumesStorage := volumes.NewStorage(c)
 
 	stores := map[string]rest.Storage{
-		"acornimagebuilds":       buildsStorage,
-		"apps":                   appsStorage,
-		"apps/log":               logsStorage,
-		"apps/confirmupgrade":    apps.NewConfirmUpgrade(c),
-		"apps/pullimage":         apps.NewPullAppImage(c),
-		"builders":               buildersStorage,
-		"builders/port":          buildersPort,
-		"images":                 imagesStorage,
-		"images/tag":             images.NewTagStorage(c),
-		"images/push":            images.NewImagePush(c, transport),
-		"images/pull":            images.NewImagePull(c, clientFactory, transport),
-		"images/details":         images.NewImageDetails(c, transport),
-		"projects":               projects.NewStorage(c),
-		"volumes":                volumesStorage,
-		"volumeclasses":          class.NewClassStorage(c),
-		"containerreplicas":      containersStorage,
-		"containerreplicas/exec": containerExec,
-		"credentials":            credentials.NewStore(c),
-		"secrets":                secrets.NewStorage(c),
-		"secrets/reveal":         secrets.NewReveal(c),
-		"infos":                  info.NewStorage(c),
-		"computeclasses":         computeclass.NewAggregateStorage(c),
-		"regions":                regions.NewStorage(c),
-		"imageallowrules":        imageallowrules.NewStorage(c),
+		"acornimagebuilds":              buildsStorage,
+		"apps":                          appsStorage,
+		"apps/log":                      logsStorage,
+		"apps/confirmupgrade":           apps.NewConfirmUpgrade(c),
+		"apps/pullimage":                apps.NewPullAppImage(c),
+		"builders":                      buildersStorage,
+		"builders/port":                 buildersPort,
+		"images":                        imagesStorage,
+		"images/tag":                    images.NewTagStorage(c),
+		"images/push":                   images.NewImagePush(c, transport),
+		"images/pull":                   images.NewImagePull(c, clientFactory, transport),
+		"images/details":                images.NewImageDetails(c, transport),
+		"projects":                      projects.NewStorage(c),
+		"volumes":                       volumesStorage,
+		"volumeclasses":                 class.NewClassStorage(c),
+		"containerreplicas":             containersStorage,
+		"containerreplicas/exec":        containerExec,
+		"containerreplicas/portforward": portForward,
+		"credentials":                   credentials.NewStore(c),
+		"secrets":                       secrets.NewStorage(c),
+		"secrets/reveal":                secrets.NewReveal(c),
+		"infos":                         info.NewStorage(c),
+		"computeclasses":                computeclass.NewAggregateStorage(c),
+		"regions":                       regions.NewStorage(c),
+		"imageallowrules":               imageallowrules.NewStorage(c),
 	}
 
 	return stores, nil

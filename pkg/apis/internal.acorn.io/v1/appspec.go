@@ -423,6 +423,7 @@ type Acorn struct {
 	Profiles            []string        `json:"profiles,omitempty"`
 	DeployArgs          GenericMap      `json:"deployArgs,omitempty"`
 	Publish             PortBindings    `json:"publish,omitempty"`
+	PublishMode         PublishMode     `json:"publishMode,omitempty"`
 	Environment         NameValues      `json:"environment,omitempty"`
 	Secrets             SecretBindings  `json:"secrets,omitempty"`
 	Volumes             VolumeBindings  `json:"volumes,omitempty"`
@@ -436,6 +437,7 @@ type Acorn struct {
 
 type Secret struct {
 	External    string            `json:"external,omitempty"`
+	Alias       string            `json:"alias,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Type        string            `json:"type,omitempty"`
@@ -468,6 +470,7 @@ type Service struct {
 	Annotations         ScopedLabels      `json:"annotations,omitempty"`
 	Default             bool              `json:"default,omitempty"`
 	External            string            `json:"external,omitempty"`
+	Alias               string            `json:"alias,omitempty"`
 	Address             string            `json:"address,omitempty"`
 	Ports               Ports             `json:"ports,omitempty"`
 	Container           string            `json:"container,omitempty"`

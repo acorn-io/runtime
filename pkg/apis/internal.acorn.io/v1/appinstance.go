@@ -11,6 +11,7 @@ type AppInstanceCondition string
 
 var (
 	AppInstanceConditionDefined      = "defined"
+	AppInstanceConditionDependencies = "dependencies"
 	AppInstanceConditionDefaults     = "defaults"
 	AppInstanceConditionScheduling   = "scheduling"
 	AppInstanceConditionNamespace    = "namespace"
@@ -18,6 +19,7 @@ var (
 	AppInstanceConditionController   = "controller"
 	AppInstanceConditionPulled       = "image-pull"
 	AppInstanceConditionSecrets      = "secrets"
+	AppInstanceConditionServices     = "services"
 	AppInstanceConditionContainers   = "containers"
 	AppInstanceConditionJobs         = "jobs"
 	AppInstanceConditionAcorns       = "acorns"
@@ -57,7 +59,9 @@ func (in *AppInstance) GetRegion() string {
 
 func (in *AppInstance) SetDefaultRegion(region string) {
 	if in.Spec.Region == "" {
-		in.Status.Defaults.Region = region
+		if in.Status.Defaults.Region == "" {
+			in.Status.Defaults.Region = region
+		}
 	} else {
 		in.Status.Defaults.Region = ""
 	}

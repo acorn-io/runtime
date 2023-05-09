@@ -3,12 +3,15 @@ package images
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/imagedetails"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/acorn-io/mink/pkg/validator"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -45,7 +48,15 @@ func (s *ImageDetailStrategy) Create(ctx context.Context, obj types.Object) (typ
 		}
 	}
 	ns, _ := request.NamespaceFrom(ctx)
-	return imagedetails.GetImageDetails(ctx, s.client, ns, details.Name, details.Profiles, details.DeployArgs, details.NestedDigest, s.remoteOpt)
+	opts := []remote.Option{s.remoteOpt}
+	if details.Auth != nil {
+		imageName := strings.ReplaceAll(details.Name, "+", "/")
+		ref, err := name.ParseReference(imageName)
+		if err == nil {
+			opts = append(opts, remote.WithAuthFromKeychain(images.NewSimpleKeychain(ref.Context(), *details.Auth, nil)))
+		}
+	}
+	return imagedetails.GetImageDetails(ctx, s.client, ns, details.Name, details.Profiles, details.DeployArgs, details.NestedDigest, opts...)
 }
 
 func (s *ImageDetailStrategy) New() types.Object {

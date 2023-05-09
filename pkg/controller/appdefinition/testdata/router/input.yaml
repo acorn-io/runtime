@@ -12,6 +12,9 @@ status:
   appImage:
     id: test
   appSpec:
+    services:
+      foo-target: {}
+      zzz-target: {}
     routers:
       router-name:
         routes:

@@ -451,6 +451,10 @@ func (m *MockClient) ContainerReplicaExec(ctx context.Context, name string, args
 	return nil, nil
 }
 
+func (m *MockClient) ContainerReplicaPortForward(ctx context.Context, name string, port int) (client.PortForwardDialer, error) {
+	return nil, nil
+}
+
 func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	if m.Volumes != nil {
 		return m.Volumes, nil

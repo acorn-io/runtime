@@ -41,6 +41,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 		detailsResult.DeployArgs = opts.DeployArgs
 		detailsResult.Profiles = opts.Profiles
 		detailsResult.NestedDigest = opts.NestedDigest
+		detailsResult.Auth = opts.Auth
 	}
 
 	err := (*c.RESTClient).Post().

@@ -215,12 +215,7 @@ func appsCompletion(ctx context.Context, c client.Client, toComplete string) ([]
 
 func containersCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
 	var result []string
-	var opts *client.ContainerReplicaListOptions
-	if strings.Contains(toComplete, ".") {
-		opts = &client.ContainerReplicaListOptions{App: strings.Split(toComplete, ".")[0]}
-	}
-
-	containers, err := c.ContainerReplicaList(ctx, opts)
+	containers, err := c.ContainerReplicaList(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

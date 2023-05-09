@@ -13,7 +13,7 @@ spec:
   appName: app-name
   appNamespace: app-namespace
   publishMode: all
-  default: true
+  default: false
   routes:
   - pathType: exact
     path: /foo
@@ -39,3 +39,49 @@ spec:
     acorn.io/router-name: router-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
+
+---
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: foo-target
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: foo-target
+    "acorn.io/public-name": "app-name.foo-target"
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  publishMode: all
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: foo-target
+
+---
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: zzz-target
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: zzz-target
+    "acorn.io/public-name": "app-name.zzz-target"
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  publishMode: all
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: zzz-target

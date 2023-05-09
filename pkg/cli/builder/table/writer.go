@@ -6,7 +6,9 @@ import (
 	"text/tabwriter"
 	"text/template"
 
+	"github.com/acorn-io/aml"
 	"golang.org/x/exp/maps"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	yaml2 "sigs.k8s.io/yaml"
 )
 
@@ -58,6 +60,9 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 	case "yaml":
 		t.HeaderFormat = ""
 		t.ValueFormat = "yaml"
+	case "aml":
+		t.HeaderFormat = ""
+		t.ValueFormat = "aml"
 	case "raw":
 	case "table":
 	default:
@@ -91,6 +96,10 @@ func (t *writer) writeHeader() {
 func (t *writer) Write(obj any) {
 	if t.err != nil {
 		return
+	}
+
+	if obj, ok := obj.(kclient.Object); ok {
+		obj.SetManagedFields(nil)
 	}
 
 	t.writeHeader()
@@ -129,6 +138,13 @@ func (t *writer) Write(obj any) {
 			return
 		}
 		_, t.err = t.Writer.Write(append(converted, []byte("\n")...))
+	case "aml":
+		content, err := aml.Marshal(obj)
+		t.err = err
+		if t.err != nil {
+			return
+		}
+		_, t.err = t.Writer.Write([]byte(string(content) + "\n"))
 	default:
 		t.err = t.printTemplate(t.Writer, t.ValueFormat, obj)
 	}

@@ -6,6 +6,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
+    acorn.io/app-public-name: "app-name"
     "acorn.io/job-name": "job-name"
     "acorn.io/managed": "true"
     allowed-job.io: test-allowed-job-label
@@ -18,11 +19,13 @@ metadata:
     allowed.io: test-allowed-app-spec-ann
     admit.io: test-admit-app-spec-ann
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:
         "acorn.io/app-namespace": "app-namespace"
         "acorn.io/app-name": "app-name"
+        acorn.io/app-public-name: "app-name"
         "acorn.io/job-name": "job-name"
         "acorn.io/managed": "true"
         allowed-job.io: test-allowed-job-label

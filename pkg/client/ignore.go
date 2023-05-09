@@ -143,6 +143,10 @@ func (c IgnoreUninstalled) ContainerReplicaExec(ctx context.Context, name string
 	return c.Client.ContainerReplicaExec(ctx, name, args, tty, opts)
 }
 
+func (c IgnoreUninstalled) ContainerReplicaPortForward(ctx context.Context, name string, port int) (PortForwardDialer, error) {
+	return c.Client.ContainerReplicaPortForward(ctx, name, port)
+}
+
 func (c IgnoreUninstalled) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	return ignoreUninstalled(c.Client.VolumeList(ctx))
 }

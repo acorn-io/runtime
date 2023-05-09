@@ -8,6 +8,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -145,6 +146,9 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	if len(opts.ComputeClasses) != 0 {
 		app.Spec.ComputeClasses = opts.ComputeClasses
 	}
+	if opts.Region != "" {
+		app.Spec.Region = opts.Region
+	}
 
 	return app, nil
 }
@@ -174,9 +178,13 @@ func translatePermissions(err error) error {
 }
 
 func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
-	appName, _, _ := strings.Cut(name, ".")
+	appName := name
 
 	app, err := c.AppGet(ctx, appName)
+	if apierrors.IsNotFound(err) {
+		appName, _ = publicname.Split(name)
+		app, err = c.AppGet(ctx, appName)
+	}
 	if err != nil {
 		return nil, err
 	}

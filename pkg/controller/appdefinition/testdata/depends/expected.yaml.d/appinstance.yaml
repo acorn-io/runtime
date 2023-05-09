@@ -30,4 +30,9 @@ status:
       reason: Success
       status: "True"
       success: true
+    - type: dependencies
+      reason: InProgress
+      status: "Unknown"
+      transitioning: true
+      message: waiting for ready [container-name]
 ---

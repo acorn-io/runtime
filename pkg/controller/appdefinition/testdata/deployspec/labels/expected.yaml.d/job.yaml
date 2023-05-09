@@ -6,6 +6,7 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
+    acorn.io/app-public-name: "app-name"
     "acorn.io/job-name": "job-name"
     "acorn.io/managed": "true"
     appSpecLabel: test-app-spec-label
@@ -16,11 +17,13 @@ metadata:
     "global-scoped-ann": test-global
     jobAnn: test-job-ann
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:
         "acorn.io/app-namespace": "app-namespace"
         "acorn.io/app-name": "app-name"
+        acorn.io/app-public-name: "app-name"
         "acorn.io/job-name": "job-name"
         "acorn.io/managed": "true"
         appSpecLabel: test-app-spec-label

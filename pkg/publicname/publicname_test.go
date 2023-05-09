@@ -12,8 +12,8 @@ func TestSplit(t *testing.T) {
 		{
 			name:   "no child",
 			input:  "foo",
-			prefix: "",
-			suffix: "foo",
+			prefix: "foo",
+			suffix: "",
 		},
 		{
 			name:   "one child",
@@ -30,14 +30,14 @@ func TestSplit(t *testing.T) {
 		{
 			name:   "start with .",
 			input:  ".bar.baz",
-			prefix: "",
-			suffix: ".bar.baz",
+			prefix: ".bar.baz",
+			suffix: "",
 		},
 		{
 			name:   "start end with .",
 			input:  "bar.baz.",
-			prefix: "",
-			suffix: "bar.baz.",
+			prefix: "bar.baz.",
+			suffix: "",
 		},
 	}
 	for _, tt := range tests {

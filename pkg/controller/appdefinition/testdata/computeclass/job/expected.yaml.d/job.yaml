@@ -6,13 +6,16 @@ metadata:
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
+    "acorn.io/app-public-name": "app-name"
     "acorn.io/job-name": "oneimage"
     "acorn.io/managed": "true"
 spec:
+  backoffLimit: 1000
   template:
     metadata:
       labels:
         "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-public-name": "app-name"
         "acorn.io/app-name": "app-name"
         "acorn.io/job-name": "oneimage"
         "acorn.io/managed": "true"

@@ -16,7 +16,10 @@ func NewUpdate(c CommandContext) *cobra.Command {
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 		Args:              cobra.MinimumNArgs(1),
 	})
-	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
+	hideUpdateFlags := []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
+		"publish", "link", "label", "interval", "image", "env", "compute-class", "annotation"}
+
+	toggleHiddenFlags(cmd, hideUpdateFlags, true)
 	cmd.Flags().SetInterspersed(false)
 	return cmd
 }
@@ -27,7 +30,7 @@ type Update struct {
 	ConfirmUpgrade bool   `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
 	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
 	Replace        bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	Wait           *bool  `usage:"Wait for app to become ready before command exiting (default true)"`
+	Wait           *bool  `usage:"Wait for app to become ready before command exiting (default: true)"`
 	Quiet          bool   `usage:"Do not print status" short:"q"`
 
 	out    io.Writer
