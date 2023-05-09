@@ -98,6 +98,7 @@ type AppUpdateOptions struct {
 	AutoUpgradeInterval string
 	Memory              v1.MemoryMap
 	ComputeClasses      v1.ComputeClassMap
+	Region              string
 }
 
 type LogOptions apiv1.LogOptions
@@ -145,6 +146,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		AutoUpgradeInterval: a.AutoUpgradeInterval,
 		Memory:              a.Memory,
 		ComputeClasses:      a.ComputeClasses,
+		Region:              a.Region,
 	}
 }
 

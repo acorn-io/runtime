@@ -460,7 +460,10 @@ func (in *Project) NamespaceScoped() bool {
 }
 
 func (in *Project) HasRegion(region string) bool {
-	return region == "" || in.Status.DefaultRegion == region || slices.Contains(in.Spec.SupportedRegions, region)
+	if region == "" || slices.Contains(in.Spec.SupportedRegions, region) {
+		return true
+	}
+	return in.Spec.DefaultRegion == "" && in.Status.DefaultRegion == region
 }
 
 func (in *Project) GetRegion() string {

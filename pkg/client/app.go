@@ -146,6 +146,9 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	if len(opts.ComputeClasses) != 0 {
 		app.Spec.ComputeClasses = opts.ComputeClasses
 	}
+	if opts.Region != "" {
+		app.Spec.Region = opts.Region
+	}
 
 	return app, nil
 }
