@@ -170,7 +170,12 @@ var (
 
 	Event = [][]string{
 		{"Name", "{{ . | name }}"},
-		// TODO(njhale): Implement me!
+		{"Type", "Type"},
+		{"Actor", "Actor"},
+		{"Subject", "Subject"},
+		{"Observed", "{{ ago .Observed }}"},
+		{"Description", "Description"},
 	}
+
 	EventConverter = MustConverter(App)
 )
