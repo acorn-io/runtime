@@ -17,6 +17,6 @@ func NewVersion(c CommandContext) *cobra.Command {
 		},
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	}
-	cmd.PersistentFlags().BoolP("verbose", "v", false, "Print verbose output")
+
 	return cmd
 }
