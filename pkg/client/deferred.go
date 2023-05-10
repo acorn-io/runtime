@@ -248,9 +248,9 @@ func (d *DeferredClient) ImageGet(ctx context.Context, name string) (*apiv1.Imag
 	return d.Client.ImageGet(ctx, name)
 }
 
-func (d *DeferredClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
+func (d *DeferredClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, []string, error) {
 	if err := d.create(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return d.Client.ImageDelete(ctx, name, opts)
 }

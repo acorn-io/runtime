@@ -47,7 +47,7 @@ func TestImageListGetDelete(t *testing.T) {
 
 	assert.Equal(t, image.Name, newImage.Name)
 
-	delImage, err := c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: false})
+	delImage, _, err := c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: false})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -363,11 +363,11 @@ func TestImageDeleteTwoTags(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: false})
+	_, _, err = c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: false})
 	expectedErr := fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", image.Name)
 	assert.Equal(t, expectedErr, err)
 
-	_, err = c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: true})
+	_, _, err = c.ImageDelete(ctx, image.Name, &client.ImageDeleteOptions{Force: true})
 	if err != nil {
 		t.Fatal(err)
 	}

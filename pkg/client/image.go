@@ -7,12 +7,11 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/images"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/slices"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/utils/strings/slices"
 )
 
 func (c *DefaultClient) ImageTag(ctx context.Context, imageName, tag string) error {
@@ -170,70 +169,45 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 	return result, nil
 }
 
-func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
+// ImageDelete handles two use cases: remove a tag from an image or delete an image entirely. Both may go hand in hand when deleting the last remaining tag.
+func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, []string, error) {
 	image, err := c.ImageGet(ctx, imageName)
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	} else if err != nil {
-		return nil, err
-	}
-	var remainingTags []string
-
-	imageParsedRef, err := name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 	if err != nil {
-		return nil, err
-	}
-	tagToDelete := ""
-	repoToDelete := ""
-
-	if _, ok := imageParsedRef.(name.Digest); ok {
-		// if the image is referenced by digest, we need to delete the tag with only registry/repository
-		repoToDelete = imageParsedRef.Context().Name()
-	} else if tag, err := name.NewTag(imageName, name.StrictValidation); err == nil {
-		tagToDelete = tag.Name()
+		return nil, nil, err
 	}
 
-	// Getting an image, auto-suffixed with :latest also returns images that don't have that tag (explicit :latest) at all, potentially yielding errors down the line
-	if tagToDelete != "" && !slices.Contains(image.Tags, tagToDelete) {
-		return image, fmt.Errorf("image tag %s not found", imageName)
+	image, tagToDelete, err := images.FindImageMatch(apiv1.ImageList{Items: []apiv1.Image{*image}}, imageName)
+	if err != nil {
+		return nil, nil, err
 	}
 
+	// Shortcut if there is only one tag
 	if len(image.Tags) == 1 {
-		return image, c.Client.Delete(ctx, image)
+		return image, image.Tags, c.Client.Delete(ctx, image)
 	}
 
-	for _, tag := range image.Tags {
-		if tag == tagToDelete {
-			logrus.Debugf("Delete: %s", tag)
-			continue
-		}
+	// If a tag was specified, delete only that tag
+	if tagToDelete != "" {
+		remainingTags := slices.Filter(nil, image.Tags, func(tag string) bool { return tag != tagToDelete })
 
-		ref, err := name.ParseReference(tag, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
-		if err != nil {
-			return nil, err
+		if len(remainingTags) != len(image.Tags) {
+			image.Tags = remainingTags
+			err = c.RESTClient.Put().
+				Namespace(image.Namespace).
+				Resource("images").
+				Name(image.Name).
+				Body(image).
+				Do(ctx).Into(image)
+			return nil, []string{tagToDelete}, err
 		}
-		if ref.Context().Name() == repoToDelete {
-			logrus.Infof("Delete: %s", tag)
-			continue
-		}
+	}
 
-		// not filtered out, keep it safe
-		remainingTags = append(remainingTags, tag)
-	}
-	if len(remainingTags) != len(image.Tags) {
-		image.Tags = remainingTags
-		err = c.RESTClient.Put().
-			Namespace(image.Namespace).
-			Resource("images").
-			Name(image.Name).
-			Body(image).
-			Do(ctx).Into(image)
-		return image, err
-	}
+	// We only delete an image with >1 tags if the force flag is set
 	if !opts.Force && len(image.Tags) > 1 {
-		return nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", imageName)
+		return nil, nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", imageName)
 	}
-	return image, c.Client.Delete(ctx, image)
+
+	return image, image.Tags, c.Client.Delete(ctx, image)
 }
 
 func (c *DefaultClient) ImageGet(ctx context.Context, imageName string) (*apiv1.Image, error) {

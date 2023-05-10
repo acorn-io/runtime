@@ -225,7 +225,7 @@ type Client interface {
 
 	ImageList(ctx context.Context) ([]apiv1.Image, error)
 	ImageGet(ctx context.Context, name string) (*apiv1.Image, error)
-	ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error)
+	ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, []string, error) // returns the modified/deleted image and a list of deleted tags
 	ImagePush(ctx context.Context, tagName string, opts *ImagePushOptions) (<-chan ImageProgress, error)
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (<-chan ImageProgress, error)
 	ImageTag(ctx context.Context, image, tag string) error

@@ -48,7 +48,7 @@ func TestFindMatchingImage(t *testing.T) {
 	// err: ambiguous digest prefix
 	_, _, err = findImageMatch(il, "123")
 	assert.Error(t, err)
-	assert.Equal(t, "Image identifier 123 is not unique", err.Error())
+	assert.Equal(t, "image identifier not unique: 123", err.Error())
 
 	// pass: full digest reference
 	image, ref, err = findImageMatch(il, "foo/bar@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
@@ -66,7 +66,7 @@ func TestFindMatchingImage(t *testing.T) {
 	// err: ambiguous reg/repo reference
 	_, _, err = findImageMatch(il, "foo/bar")
 	assert.Error(t, err)
-	assert.Equal(t, "Image identifier foo/bar is not unique", err.Error())
+	assert.Equal(t, "image identifier not unique: foo/bar", err.Error())
 
 	// pass: full tag reference
 	image, ref, err = findImageMatch(il, "spam/eggs:v1")

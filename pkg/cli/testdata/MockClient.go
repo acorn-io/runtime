@@ -541,25 +541,36 @@ func (m *MockClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, e
 	if m.ImageItem != nil {
 		return m.ImageItem, nil
 	}
-	return nil, nil
+	return &apiv1.Image{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
+		Tags:       []string{"testtag:latest"},
+		Digest:     "1234567890asdfghkl",
+	}, nil
 }
 
-func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.ImageDeleteOptions) (*apiv1.Image, error) {
+func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.ImageDeleteOptions) (*apiv1.Image, []string, error) {
 	if m.ImageItem != nil {
-		return m.ImageItem, nil
+		return m.ImageItem, m.ImageItem.Tags, nil
 	}
+
+	img := &apiv1.Image{TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "ff12345"},
+		Tags:       []string{"testtag1:latest", "testtag2:latest", "foo:v1", "foo:v2"},
+	}
+
 	switch name {
 	case "ff12345":
 		if !opts.Force {
-			return nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", name)
+			return nil, nil, fmt.Errorf("unable to delete %s (must be forced) - image is referenced in multiple repositories", name)
 		} else {
-			return &apiv1.Image{TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{Name: "ff12345"},
-				Tags:       []string{"testtag1:latest", "testtag2:latest"},
-			}, nil
+
+			return img, img.Tags, nil
 		}
+	case "foo:v1": // just remove a tag
+		return nil, []string{"foo:v1"}, nil
 	}
-	return nil, nil
+	return nil, nil, apierrors.NewNotFound(schema.GroupResource{Group: "acorn", Resource: "images"}, name)
 }
 
 func (m *MockClient) ImagePush(ctx context.Context, tagName string, opts *client.ImagePushOptions) (<-chan client.ImageProgress, error) {

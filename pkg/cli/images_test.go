@@ -351,27 +351,6 @@ func TestImage(t *testing.T) {
 			wantOut: "index.docker.io/subdir/test:v1@test-image-running-container\n",
 		},
 		{
-			name: "acorn image rm found-image1234567", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{
-					ImageItem: &apiv1.Image{},
-				},
-				StdOut: w,
-				StdErr: w,
-				StdIn:  strings.NewReader("y\n"),
-			},
-			args: args{
-				args:   []string{"rm", "found-image1234567"},
-				client: &testdata.MockClient{},
-			},
-			wantErr: true,
-			wantOut: "found-image1234567\n",
-		},
-		{
 			name: "acorn image rm dne-image", fields: fields{
 				All:    false,
 				Quiet:  false,
@@ -426,7 +405,26 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "ff12345\n",
+			wantOut: "Untagged testtag1:latest\nUntagged testtag2:latest\nUntagged foo:v1\nUntagged foo:v2\nDeleted ff12345\n",
+		},
+		{
+			name: "acorn image rm foo:v1", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"rm", "foo:v1"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "Untagged foo:v1\n",
 		},
 	}
 

@@ -5,7 +5,9 @@ import (
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func NewImageDelete(c CommandContext) *cobra.Command {
@@ -31,14 +33,24 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, image := range args {
-		deleted, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
+		img, removedTags, err := c.ImageDelete(cmd.Context(), image, &client.ImageDeleteOptions{Force: a.Force})
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				fmt.Printf("Error: No such image: %s\n", image)
+				continue
+			}
 			return fmt.Errorf("deleting %s: %w", image, err)
 		}
-		if deleted != nil {
-			fmt.Println(image)
-		} else {
-			fmt.Printf("Error: No such image: %s\n", image)
+
+		if img == nil && len(removedTags) == 0 {
+			logrus.Infof("No image found for %s", image)
+			continue // no idea how this could happen anyway
+		}
+		for _, tag := range removedTags {
+			fmt.Printf("Untagged %s\n", tag)
+		}
+		if img != nil {
+			fmt.Printf("Deleted %s\n", img.Name)
 		}
 	}
 
