@@ -10,7 +10,7 @@ import (
 func NewVersion(c CommandContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "version",
-		Short:   "version for acorn",
+		Short:   "Version information for acorn",
 		Example: "acorn version",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("acorn version %s\n", version.Get().String())
