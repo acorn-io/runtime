@@ -16,6 +16,7 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 		return nil
 	}
 
+	// TODO(njhale): Add ParseAppImage* event
 	appDef, err := appdefinition.FromAppImage(&appImage)
 	if err != nil {
 		status.Error(err)

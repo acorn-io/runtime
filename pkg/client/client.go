@@ -248,6 +248,8 @@ type Client interface {
 	RegionGet(ctx context.Context, name string) (*apiv1.Region, error)
 
 	EventList(ctx context.Context) ([]apiv1.Event, error) // TODO(njhale): Handle filtering, watches, etc
+	// EventStream(ctx context.Context, opts ...ClientOption[EventStreamOptions]) (<-chan apiv1.Event, error)
+	EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error)
 
 	GetProject() string
 	GetNamespace() string
@@ -307,6 +309,41 @@ type ContainerReplicaExecOptions struct {
 
 type ContainerReplicaListOptions struct {
 	App string `json:"app,omitempty"`
+}
+
+type EventStreamOptions struct {
+	Filter  string `json:"filter,omitempty"`
+	Context bool   `json:"context,omitempty"`
+	Watch   bool   `json:"withContext,omitempty"`
+	// TODO(njhale): Add since, until, tail
+}
+
+func applyOptions[O any](o *O, opts []ClientOption[O]) *O {
+	for _, opt := range opts {
+		opt(o)
+	}
+
+	return o
+}
+
+type ClientOption[O any] func(opts *O)
+
+func WithFilter(filter string) ClientOption[EventStreamOptions] {
+	return func(o *EventStreamOptions) {
+		o.Filter = filter
+	}
+}
+
+func WithContext() ClientOption[EventStreamOptions] {
+	return func(o *EventStreamOptions) {
+		o.Context = true
+	}
+}
+
+func WithWatch() ClientOption[EventStreamOptions] {
+	return func(o *EventStreamOptions) {
+		o.Watch = true
+	}
 }
 
 type DefaultClient struct {

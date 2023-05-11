@@ -28,6 +28,7 @@ func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
+		// TODO(njhale): Emit AppPull* related events
 		resolvedImage, _, err := tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
 		if err != nil {
 			cond.Error(err)

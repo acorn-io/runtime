@@ -43,6 +43,11 @@ func NewEvent(c CommandContext) *cobra.Command {
   # List events related to any volume in the current project
   acorn events vol 
 
+# Filtering by Name 
+  # If FILTER doesn't have a '/name' suffix and isn't a known Acorn kind, it's value is intepreted as an event name prefix.
+  # List events with names starting with '175d849699e0d4c5' in the current project
+  acorn events 175d849699e0d4c5
+
 # Filtering by Time
   # The --since and --until options can be Unix timestamps, date formatted timestamps, or Go duration strings (relative to system time).
   # List events observed within the last 15 minutes 

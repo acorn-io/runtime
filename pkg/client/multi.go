@@ -509,6 +509,16 @@ func (m *MultiClient) EventList(ctx context.Context) ([]apiv1.Event, error) {
 	})
 }
 
+// func (m *MultiClient) EventStream(ctx context.Context, opts ...ClientOption[EventStreamOptions]) (<-chan apiv1.Event, error) {
+// 	// TODO(njhale): Implement me!
+// 	return nil, nil
+// }
+
+func (m *MultiClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
+	// TODO(njhale): Implement me!
+	return nil, nil
+}
+
 func (m *MultiClient) GetProject() string {
 	return m.project
 }

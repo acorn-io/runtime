@@ -751,11 +751,6 @@ func (in *Event) DeepCopyInto(out *Event) {
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	out.Subject = in.Subject
 	out.Context = in.Context.DeepCopy()
-	if in.Description != nil {
-		in, out := &in.Description, &out.Description
-		*out = new(string)
-		**out = **in
-	}
 	in.Observed.DeepCopyInto(&out.Observed)
 }
 

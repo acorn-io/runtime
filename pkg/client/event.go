@@ -17,3 +17,13 @@ func (c *DefaultClient) EventList(ctx context.Context) ([]apiv1.Event, error) {
 	}
 	return result.Items, nil
 }
+
+// func (c *DefaultClient) EventStream(ctx context.Context, opts ...ClientOption[EventStreamOptions]) (<-chan apiv1.Event, error) {
+// 	// TODO(njhale): Implement me!
+// 	return nil, nil
+// }
+
+func (c *DefaultClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
+	// TODO(njhale): Implement me!
+	return nil, nil
+}

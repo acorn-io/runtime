@@ -395,6 +395,16 @@ func (d *DeferredClient) EventList(ctx context.Context) ([]apiv1.Event, error) {
 	return d.Client.EventList(ctx)
 }
 
+// func (d *DeferredClient) EventStream(ctx context.Context, opts ...ClientOption[EventStreamOptions]) (<-chan apiv1.Event, error) {
+// 	// TODO(njhale): Implement me!
+// 	return nil, nil
+// }
+
+func (d *DeferredClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
+	// TODO(njhale): Implement me!
+	return nil, nil
+}
+
 func (d *DeferredClient) GetProject() string {
 	return d.Project
 }

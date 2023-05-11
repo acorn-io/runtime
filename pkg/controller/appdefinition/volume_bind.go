@@ -32,6 +32,7 @@ func ReleaseVolume(req router.Request, resp router.Response) error {
 		}
 		if pvc.DeletionTimestamp.IsZero() && pvc.Spec.VolumeName == pv.Name {
 			pv.Spec.ClaimRef = nil
+			// TODO(njhale): Emit VolumeReleased event
 			return req.Client.Update(req.Ctx, pv)
 		}
 	}

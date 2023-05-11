@@ -2375,6 +2375,13 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 							Format:      "",
 						},
 					},
+					"severity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Severity indicates the severity of the event.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"actor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
@@ -2416,7 +2423,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 				},
@@ -2424,7 +2431,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject", "k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -6358,6 +6365,13 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
+					"severity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Severity indicates the severity of the event.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"actor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
@@ -6399,7 +6413,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 				},
@@ -6407,7 +6421,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject", "k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSubject", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

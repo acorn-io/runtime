@@ -1,6 +1,10 @@
 package v1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -19,6 +23,10 @@ type EventInstance struct {
 	// Type is a short, machine-readable string that describes the kind of Event that took place.
 	Type string `json:"type"`
 
+	// Severity indicates the severity of the event.
+	// +optional
+	Severity EventSeverity `json:"severity,omitempty"`
+
 	// Actor is the ID of the entity that generated the Event.
 	// This can be the name of a particular user or controller.
 	Actor string `json:"actor"`
@@ -36,11 +44,20 @@ type EventInstance struct {
 
 	// Description is a human-readable description of the Event.
 	// +optional
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 
 	// Observed represents the time the Event was first observed.
-	Observed metav1.MicroTime `json:"observed"`
+	// TODO(njhale): Switch to metav1.MicroTime if I can get openapi-gen to work for it.
+	Observed metav1.Time `json:"observed"`
 }
+
+const (
+	EventSeverityInfo EventSeverity = "info"
+	EventSeverityWarn EventSeverity = "warn"
+)
+
+// EventSeverity indicates the severity of an event.
+type EventSeverity string
 
 // EventSubject identifies an object related to an Event.
 //
@@ -55,4 +72,8 @@ type EventSubject struct {
 
 	// Name is the name of the subject.
 	Name string `json:"name"`
+}
+
+func (e EventSubject) String() string {
+	return fmt.Sprintf("%s/%s", e.Kind, e.Name)
 }

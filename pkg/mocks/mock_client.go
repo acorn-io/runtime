@@ -425,6 +425,21 @@ func (mr *MockClientMockRecorder) EventList(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EventList", reflect.TypeOf((*MockClient)(nil).EventList), arg0)
 }
 
+// EventStream mocks base method.
+func (m *MockClient) EventStream(arg0 context.Context, arg1 *client.EventStreamOptions) (<-chan v1.Event, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EventStream", arg0, arg1)
+	ret0, _ := ret[0].(<-chan v1.Event)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EventStream indicates an expected call of EventStream.
+func (mr *MockClientMockRecorder) EventStream(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EventStream", reflect.TypeOf((*MockClient)(nil).EventStream), arg0, arg1)
+}
+
 // GetClient mocks base method.
 func (m *MockClient) GetClient() (client0.WithWatch, error) {
 	m.ctrl.T.Helper()
