@@ -484,7 +484,7 @@ func AppStatus(req router.Request, resp router.Response) error {
 		if dep.Spec.Replicas != nil {
 			status.ReadyDesired = *dep.Spec.Replicas
 		} else {
-			status.ReadyDesired = 0
+			status.ReadyDesired = 1
 		}
 		status.UpToDate = dep.Status.UpdatedReplicas
 		status.Created = true
