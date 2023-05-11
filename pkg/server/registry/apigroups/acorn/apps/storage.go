@@ -18,6 +18,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -68,6 +69,7 @@ func (s *eventingStrategy) Update(ctx context.Context, obj types.Object) (types.
 	}
 
 	defer func() {
+		// TODO(njhale): Should I just shove these into a GenericMap directly? i.e. w/o Mapify and the anonymous struct?
 		eventContext, err := v1.Mapify(struct {
 			Old   types.Object `json:"old"`
 			Patch []byte       `json:"patch"`
@@ -80,13 +82,22 @@ func (s *eventingStrategy) Update(ctx context.Context, obj types.Object) (types.
 			return
 		}
 
+		var actor string
+		if user, ok := request.UserFrom(ctx); ok {
+			actor = user.GetName()
+		} else {
+			logrus.Warn("Failed to get event actor, generating anonymous event")
+		}
+
+		// TODO(njhale): Check for spec-specific change before continuing.
+		//
 		if err := s.recorder.Record(ctx, &apiv1.Event{
 			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: "e-", // TODO(njhale): Autogenerate names on Create.
-				Namespace:    obj.GetNamespace(),
+				Namespace: obj.GetNamespace(),
 			},
 			Type:     EventTypeAppSpecUpdate,
 			Severity: v1.EventSeverityInfo,
+			Actor:    actor,
 			Context:  eventContext,
 			Subject: v1.EventSubject{
 				Kind: obj.GetObjectKind().GroupVersionKind().Kind,
@@ -98,6 +109,7 @@ func (s *eventingStrategy) Update(ctx context.Context, obj types.Object) (types.
 			logrus.Warn("Failed to record event: %w", err)
 		}
 	}()
+
 	return updated, nil
 }
 
