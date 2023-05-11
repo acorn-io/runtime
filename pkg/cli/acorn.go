@@ -67,6 +67,7 @@ func New() *cobra.Command {
 		NewTag(cmdContext),
 		NewVolume(cmdContext),
 		NewWait(cmdContext),
+		NewVersion(cmdContext),
 	)
 	// This will produce an error if the project flag doesn't exist or a completion function has already
 	// been registered for this flag. Not returning the error since neither of these is likely occur.

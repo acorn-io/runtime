@@ -35,6 +35,7 @@ Available Commands:
   tag          Tag an image
   uninstall    Uninstall acorn and associated resources
   update       Update a deployed app
+  version      Version information for acorn
   volume       Manage volumes
   wait         Wait an app to be ready then exit with status code 0
 
