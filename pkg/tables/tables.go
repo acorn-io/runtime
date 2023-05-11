@@ -177,5 +177,5 @@ var (
 		{"Description", "Description"},
 	}
 
-	EventConverter = MustConverter(App)
+	EventConverter = MustConverter(Event)
 )

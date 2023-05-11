@@ -55,6 +55,7 @@ type eventingStrategy struct {
 const EventTypeAppSpecUpdate = "AppSpecUpdate"
 
 func (s *eventingStrategy) Update(ctx context.Context, obj types.Object) (types.Object, error) {
+	logrus.Warn("In EventingStrategy.Update")
 	old, err := s.Get(ctx, obj.GetNamespace(), obj.GetName())
 	if err != nil {
 		logrus.Warn("Failed to get old object, event recording disabled for request: %w", err)

@@ -16,6 +16,9 @@ func (r RecorderFunc) Record(ctx context.Context, e *apiv1.Event) error {
 
 func NewBlockingRecorder(c kclient.Client) RecorderFunc {
 	return func(ctx context.Context, e *apiv1.Event) error {
+		if e.Name == "" && e.GenerateName == "" { // TODO(njhale): This is really kludgey
+			e.Name = "placeholder"
+		}
 		return c.Create(ctx, e)
 	}
 }
