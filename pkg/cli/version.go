@@ -15,7 +15,7 @@ func NewVersion(c CommandContext) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("acorn version %s\n", version.Get().String())
 		},
-		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		Args: cobra.NoArgs,
 	}
 
 	return cmd
