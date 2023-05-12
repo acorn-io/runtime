@@ -242,3 +242,50 @@ secrets: {
     }
 }
 ```
+
+## External secrets
+
+External secrets are defined in the Acornfile to specify a specific secret must be present in the cluster before the Acorn can be deployed. The definition must include the field `external` with the value of the expected name of the secret in the cluster.
+
+```acorn
+containers: app: {
+    image: ubuntu
+    entrypoint: ["sleep"]
+    command: ["3600"]
+    env: {
+        USER: "secret://foo/user"
+        PASS: "secret://foo/pass"
+    }
+}
+
+secrets: foo:{
+    external: "basic-creds"
+}
+```
+
+The above example requires a secret named `basic-creds` to be present in the cluster before the Acorn can be deployed.
+
+For readability and documentation purposes, the best practice to define the type and data fields that the external secret is expected to have. This is optional and the values will be ignored by Acorn.
+
+```acorn
+containers: app: {
+    image: ubuntu
+    entrypoint: ["sleep"]
+    command: ["3600"]
+    env: {
+        USER: "secret://foo/user"
+        PASS: "secret://foo/pass"
+    }
+}
+
+secrets: foo: {
+    external: "basic-creds"
+    type: "opaque"
+    data: {
+        user: "username"
+        pass: "password"
+    }
+}
+```
+
+Looking at the above example a user knows they must create a secret named `basic-creds` with keys/values for `user` and `pass` before the Acorn can be deployed.
