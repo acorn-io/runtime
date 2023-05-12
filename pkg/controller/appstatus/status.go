@@ -481,7 +481,11 @@ func AppStatus(req router.Request, resp router.Response) error {
 
 		status := container[containerName]
 		status.Ready = dep.Status.ReadyReplicas
-		status.ReadyDesired = dep.Status.Replicas
+		if dep.Spec.Replicas != nil {
+			status.ReadyDesired = *dep.Spec.Replicas
+		} else {
+			status.ReadyDesired = 1
+		}
 		status.UpToDate = dep.Status.UpdatedReplicas
 		status.Created = true
 		container[containerName] = status
