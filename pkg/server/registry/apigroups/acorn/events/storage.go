@@ -140,14 +140,18 @@ func (q query) on(list *apiv1.EventList) (*apiv1.EventList, error) {
 	}
 
 	result := make([]apiv1.Event, 0, tail)
-	for _, item := range list.Items {
+	for _, event := range list.Items {
 		if len(result) == cap(result) {
 			break
 		}
 
+		if q.matches(&event) {
+			result = append(result, event)
+		}
 	}
 
-	//
+	list.Items = result // TODO(njhale): Will this cause an inconsistent metav1.ListMeta?
+
 	return list, nil
 }
 
@@ -158,17 +162,10 @@ func (q query) matches(e *apiv1.Event) bool {
 			// Kind doesn't match filter
 			return false
 		}
-
 	}
+	// TODO(njhale): Finish me
 
 	return true
-}
-
-func min(a, b int) int {
-	if a <= b {
-		return a
-	}
-	return b
 }
 
 func parseFilter(f string) (*filter, error) {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/client"
 	// "github.com/acorn-io/acorn/pkg/client"
 	// "github.com/acorn-io/acorn/pkg/imagesource"
 	// "github.com/acorn-io/acorn/pkg/progressbar"
@@ -17,11 +18,11 @@ import (
 
 func NewEvent(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Events{client: c.ClientFactory}, cobra.Command{
-		Use:          "events [flags] FILTER",
-		SilenceUsage: true,
-		Short:        "List events about Acorn resources",
-		Args:         cobra.MaximumNArgs(1),
-		// ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).complete,
+		Use:               "events [flags] FILTER",
+		SilenceUsage:      true,
+		Short:             "List events about Acorn resources",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).withSuccessDirective(cobra.ShellCompDirectiveDefault).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 		Example: `# List all events in the current project
   acorn events
 
@@ -65,13 +66,13 @@ func NewEvent(c CommandContext) *cobra.Command {
 }
 
 type Events struct {
-	// TODO(njhale): Fix flags/options
-	Since       *time.Duration `usage:"Show all events created since timestamp" short:"s"`
-	Until       *time.Duration `usage:"Stream events until this timestamp" short:"u"`
-	WithContext bool           `usage:"Don't strip the event context from response" short:"c"`
-	Watch       bool           `usage:"Stream events" short:"w"`
-	Tail        *int           `usage:"Return this number of latest events" short:"t"`
-	Output      string         `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	// TODO(njhale): Fix validate/parse flags/options
+	Since       *time.Time `usage:"Show all events created since timestamp" short:"s"`
+	Until       *time.Time `usage:"Stream events until this timestamp" short:"u"`
+	Tail        *int       `usage:"Return this number of latest events" short:"t"`
+	WithContext bool       `usage:"Don't strip the event context from response" short:"c"`
+	Watch       bool       `usage:"Stream events" short:"w"`
+	Output      string     `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client      ClientFactory
 }
 
@@ -81,16 +82,35 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// TODO(njhale): Implement filters, watch, etc
-	out := table.NewWriter(tables.Event, false, e.Output)
-	events, err := c.EventList(cmd.Context())
-	if err != nil {
-		out.Write(err)
-	} else {
-		for _, event := range events {
-			out.Write(event)
-		}
+	// TODO(njhale): Factor out EventStreamOption construction (this validation should be happening elsewhere)
+	// TODO(njhale): There's lots of duplication between EventStreamOption and Event, can we be DRYer?
+	opts := &client.EventStreamOptions{
+		Since:       e.Since,
+		Until:       e.Until,
+		Tail:        e.Tail,
+		WithContext: e.WithContext,
 	}
+	if len(args) > 0 {
+		opts.Filter = args[0]
+	}
+
+	events, err := c.EventStream(cmd.Context(), opts)
+	if err != nil {
+		return err
+	}
+
+	out := table.NewWriter(tables.Event, false, e.Output)
+	for event := range events {
+		out.Write(event)
+	}
+	// events, err := c.EventList(cmd.Context())
+	// if err != nil {
+	// 	out.Write(err)
+	// } else {
+	// 	for _, event := range events {
+	// 		out.Write(event)
+	// 	}
+	// }
 
 	return out.Err()
 }

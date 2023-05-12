@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"os"
+	"strconv"
+	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -13,6 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -312,38 +315,36 @@ type ContainerReplicaListOptions struct {
 }
 
 type EventStreamOptions struct {
-	Filter  string `json:"filter,omitempty"`
-	Context bool   `json:"context,omitempty"`
-	Watch   bool   `json:"withContext,omitempty"`
-	// TODO(njhale): Add since, until, tail
+	Filter      string     `json:"filter,omitempty"`
+	Since       *time.Time `json:"since,omitempty"`
+	Until       *time.Time `json:"until,omitempty"`
+	WithContext bool       `json:"withContext,omitempty"`
+	Watch       bool       `json:"watch,omitempty"`
+	Tail        *int       `json:"tail,omitempty"`
 }
 
-func applyOptions[O any](o *O, opts []ClientOption[O]) *O {
-	for _, opt := range opts {
-		opt(o)
+func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
+	var listOpts kclient.ListOptions
+	if o.Tail != nil {
+		listOpts.Limit = int64(*o.Tail)
 	}
 
-	return o
-}
-
-type ClientOption[O any] func(opts *O)
-
-func WithFilter(filter string) ClientOption[EventStreamOptions] {
-	return func(o *EventStreamOptions) {
-		o.Filter = filter
+	// TODO(njhale): Only "withContext" needs to be sent to the server.
+	fs := fields.Set{
+		"filter":      o.Filter,
+		"withContext": strconv.FormatBool(o.WithContext),
 	}
-}
-
-func WithContext() ClientOption[EventStreamOptions] {
-	return func(o *EventStreamOptions) {
-		o.Context = true
+	// TODO(njhale): These may need to be hex-encoded, in which case, why not just serialize 'o' and send a single base64 encoded field value.
+	if o.Since != nil {
+		fs["since"] = o.Since.String()
 	}
-}
-
-func WithWatch() ClientOption[EventStreamOptions] {
-	return func(o *EventStreamOptions) {
-		o.Watch = true
+	if o.Until != nil {
+		fs["until"] = o.Until.String()
 	}
+
+	listOpts.FieldSelector = fs.AsSelector()
+
+	return &listOpts
 }
 
 type DefaultClient struct {
