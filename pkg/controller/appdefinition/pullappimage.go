@@ -4,16 +4,42 @@ import (
 	"fmt"
 	"net/http"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/event"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
+const (
+	AppImageResolutionFailureEventType = "AppImageResolutionFailure"
+	AppImageResolutionSuccessEventType = "AppImageResolutionSuccess"
+)
+
+// AppImageResolutionEventDetails captures additional info about App image resolution.
+type AppImageResolutionEventDetails struct {
+	// AppResourceVersion is the resourceVersion of the App the image is being resolved for.
+	AppResourceVersion string `json:"appResourceVersion"`
+
+	// TargetImage is the image being resolved.
+	TargetImage string `json:"targetImage,omitempty"`
+
+	// ResolvedImage is the image, post resolution.
+	// +optional
+	ResolvedImage string `json:"resolvedImage,omitempty"`
+
+	// Err the error that occurred during resolution, if any.
+	// +optional
+	Err string `json:"err,omitempty"`
+}
+
+func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
 	return func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
@@ -28,14 +54,61 @@ func PullAppImage(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
-		// TODO(njhale): Emit AppPull* related events
-		resolvedImage, _, err := tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
+		var (
+			err           error
+			resolvedImage string
+		)
+		defer func() {
+			details := AppImageResolutionEventDetails{
+				AppResourceVersion: req.Object.GetResourceVersion(),
+				TargetImage:        targetImage,
+				ResolvedImage:      resolvedImage,
+			}
+			e := apiv1.Event{
+				Type:     AppImageResolutionSuccessEventType,
+				Severity: v1.EventSeverityInfo,
+				// Actor: req.Ctx, TODO(njhale): Set default automatically from context in the event recorder
+				Description: fmt.Sprintf("Pulled %s (resolved from %s)", resolvedImage, targetImage),
+				Source: v1.EventSource{
+					Kind: req.GVK.Kind,
+					Name: req.Name,
+					UID:  req.Object.GetUID(),
+				},
+				Observed: metav1.Now(),
+			}
+
+			if err != nil {
+				// Capture the error
+				details.Err = err.Error()
+
+				e.Type = AppImageResolutionFailureEventType
+				e.Severity = v1.EventSeverityWarn
+				if resolvedImage == "" {
+					// Failed to resolve the target image
+					e.Description = fmt.Sprintf("Failed to resolve %s", targetImage)
+				} else {
+					// The target image was resolved, but we failed to pull the result
+					e.Description = fmt.Sprintf("Failed to pull %s (resolved from %s)", resolvedImage, targetImage)
+				}
+			}
+
+			if e.Details, err = v1.Mapify(details); err != nil {
+				logrus.Warnf("Failed to mapify event details: [%w]", err)
+			}
+
+			if err := recorder.Record(req.Ctx, &e); err != nil {
+				logrus.Warnf("Failed to record event: [%w]", err)
+			}
+		}()
+
+		resolvedImage, _, err = tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
 		if err != nil {
 			cond.Error(err)
 			return nil
 		}
 
-		appImage, err := images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, "", remote.WithTransport(transport))
+		var appImage *v1.AppImage
+		appImage, err = images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, "", remote.WithTransport(transport))
 		if err != nil {
 			cond.Error(err)
 			return nil

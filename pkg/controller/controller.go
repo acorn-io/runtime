@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/crds"
 	"github.com/acorn-io/acorn/pkg/dns"
+	"github.com/acorn-io/acorn/pkg/event"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -56,7 +57,7 @@ func New() (*Controller, error) {
 		return nil, err
 	}
 
-	routes(router, registryTransport)
+	routes(router, registryTransport, event.NewRecorder(client))
 
 	return &Controller{
 		Router: router,

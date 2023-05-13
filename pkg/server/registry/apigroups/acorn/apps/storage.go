@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/event"
 	"github.com/acorn-io/acorn/pkg/publicname"
@@ -29,7 +29,7 @@ func NewStorage(c kclient.WithWatch, clientFactory *client.Factory) rest.Storage
 	strategy = publicname.NewStrategy(strategy)
 	strategy = &eventingStrategy{ // TODO(njhale): Use constructor instead
 		CompleteStrategy: strategy,
-		recorder:         event.NewBlockingRecorder(c), // TODO(njhale): plumb into NewStorage
+		recorder:         event.NewRecorder(c), // TODO(njhale): plumb into NewStorage
 	}
 	validator := NewValidator(c, clientFactory)
 
@@ -99,8 +99,8 @@ func (s *eventingStrategy) Update(ctx context.Context, obj types.Object) (types.
 			Type:     EventTypeAppSpecUpdate,
 			Severity: v1.EventSeverityInfo,
 			Actor:    actor,
-			Context:  eventContext,
-			Subject: v1.EventSubject{
+			Details:  eventContext,
+			Source: v1.EventSource{
 				Kind: obj.GetObjectKind().GroupVersionKind().Kind,
 				Name: obj.GetName(),
 			},

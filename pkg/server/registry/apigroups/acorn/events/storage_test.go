@@ -26,12 +26,12 @@ func TestEventID(t *testing.T) {
 			name:  "Equal/Diff/Context",
 			equal: true,
 			a: apiv1.Event{
-				Context: v1.GenericMap{
+				Details: v1.GenericMap{
 					"info": "1",
 				},
 			},
 			b: apiv1.Event{
-				Context: v1.GenericMap{
+				Details: v1.GenericMap{
 					"info": 1,
 				},
 			},
