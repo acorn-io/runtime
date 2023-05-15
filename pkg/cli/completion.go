@@ -370,3 +370,5 @@ func regionsCompletion(ctx context.Context, c client.Client, toComplete string) 
 
 	return result, nil
 }
+
+// TODO(njhale): Add completions for Event filter arguments

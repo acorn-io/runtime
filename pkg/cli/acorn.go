@@ -46,6 +46,7 @@ func New() *cobra.Command {
 		NewRender(cmdContext),
 		NewExec(cmdContext),
 		NewPortForward(cmdContext),
+		NewEvent(cmdContext),
 		NewFmt(cmdContext),
 		NewImage(cmdContext),
 		NewInstall(cmdContext),

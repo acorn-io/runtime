@@ -8,6 +8,8 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -509,6 +511,43 @@ func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 		}
 		return infos, err
 	})
+}
+
+func (m *MultiClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
+	clients, err := m.Factory.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	all := make(chan apiv1.Event)
+	g, gCtx := errgroup.WithContext(ctx)
+	for _, client := range clients {
+		c := client
+		g.Go(func() error {
+			stream, err := c.EventStream(gCtx, opts)
+			if err != nil {
+				return err
+			}
+
+			for e := range stream {
+				select {
+				case <-gCtx.Done():
+					return gCtx.Err()
+				case all <- e:
+				}
+			}
+
+			return nil
+		})
+	}
+	go func() {
+		defer close(all)
+		if err := g.Wait(); err != nil {
+			logrus.Errorf("Error streaming events: %s", err.Error())
+		}
+	}()
+
+	return all, nil
 }
 
 func (m *MultiClient) GetProject() string {
