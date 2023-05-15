@@ -167,4 +167,15 @@ var (
 		{"Resource", "Resource"},
 		{"Scope", "Scope"},
 	}
+
+	Event = [][]string{
+		{"Name", "{{ . | name }}"},
+		{"Type", "Type"},
+		{"Actor", "Actor"},
+		{"Source", "Source"},
+		{"Observed", "{{ ago .Observed }}"},
+		{"Description", "Description"},
+	}
+
+	EventConverter = MustConverter(Event)
 )
