@@ -29,6 +29,7 @@ require (
 	github.com/containerd/containerd v1.6.10
 	github.com/docker/cli v20.10.21+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
+	github.com/evanphx/json-patch v4.12.0+incompatible
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
@@ -131,7 +132,6 @@ require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.10.3 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
-	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fujiwara/shapeio v1.0.0 // indirect
