@@ -98,6 +98,9 @@ func TestProjectUpdateValidation(t *testing.T) {
 			name:      "Update project to have default region, no supported regions",
 			wantError: true,
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion: "my-region",
 				},
@@ -106,11 +109,17 @@ func TestProjectUpdateValidation(t *testing.T) {
 		{
 			name: "Update project to have default region and supported region",
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Status: apiv1.ProjectStatus{
 					DefaultRegion: "my-region",
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
@@ -120,11 +129,17 @@ func TestProjectUpdateValidation(t *testing.T) {
 		{
 			name: "Update project to have default region and non-existent supported regions",
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Status: apiv1.ProjectStatus{
 					DefaultRegion: "my-region",
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "dne-region"},
@@ -135,6 +150,9 @@ func TestProjectUpdateValidation(t *testing.T) {
 			name:      "Remove default region as supported region",
 			wantError: true,
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-other-region"},
@@ -144,12 +162,18 @@ func TestProjectUpdateValidation(t *testing.T) {
 		{
 			name: "Update project remove a supported region, no apps",
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
@@ -160,12 +184,18 @@ func TestProjectUpdateValidation(t *testing.T) {
 		{
 			name: "Update project remove a supported region, no apps in project",
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
@@ -190,12 +220,18 @@ func TestProjectUpdateValidation(t *testing.T) {
 		{
 			name: "Update project remove a supported region, no apps in removed region",
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
@@ -206,7 +242,8 @@ func TestProjectUpdateValidation(t *testing.T) {
 					Items: []apiv1.App{
 						{
 							ObjectMeta: metav1.ObjectMeta{
-								Name: "my-app",
+								Name:      "my-app",
+								Namespace: "my-project",
 							},
 							Spec: v1.AppInstanceSpec{
 								Region: "my-region",
@@ -220,12 +257,18 @@ func TestProjectUpdateValidation(t *testing.T) {
 			name:      "Update project remove a supported region with apps in removed region",
 			wantError: true,
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
@@ -236,9 +279,47 @@ func TestProjectUpdateValidation(t *testing.T) {
 					Items: []apiv1.App{
 						{
 							ObjectMeta: metav1.ObjectMeta{
-								Name: "my-app",
+								Name:      "my-app",
+								Namespace: "my-project",
 							},
 							Spec: v1.AppInstanceSpec{
+								Region: "my-other-region",
+							},
+						},
+					},
+				},
+			).Build(),
+		},
+		{
+			name:      "Update project remove a supported region with volumes in removed region",
+			wantError: true,
+			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: apiv1.ProjectSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+			},
+			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: apiv1.ProjectSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region"},
+				},
+			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithLists(
+				&apiv1.VolumeList{
+					Items: []apiv1.Volume{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "my-volume",
+								Namespace: "my-project",
+							},
+							Spec: apiv1.VolumeSpec{
 								Region: "my-other-region",
 							},
 						},
@@ -250,12 +331,18 @@ func TestProjectUpdateValidation(t *testing.T) {
 			name:      "Update project remove a supported region with apps defaulted to removed region",
 			wantError: true,
 			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
 			},
 			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
 				Spec: apiv1.ProjectSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
@@ -266,7 +353,8 @@ func TestProjectUpdateValidation(t *testing.T) {
 					Items: []apiv1.App{
 						{
 							ObjectMeta: metav1.ObjectMeta{
-								Name: "my-app",
+								Name:      "my-app",
+								Namespace: "my-project",
 							},
 							Status: v1.AppInstanceStatus{
 								Defaults: v1.Defaults{

@@ -290,6 +290,10 @@ func (in *Volume) HasRegion(region string) bool {
 	return in.Spec.Region == region
 }
 
+func (in *Volume) GetRegion() string {
+	return in.Spec.Region
+}
+
 // +k8s:conversion-gen:explicit-from=net/url.Values
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
