@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"net/url"
 
 	api_acorn_io "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
@@ -62,6 +63,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&RegionList{},
 		&ImageAllowRule{},
 		&ImageAllowRuleList{},
+		&Event{},
+		&EventList{},
 	)
 
 	// Add common types
@@ -77,7 +80,21 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		if err := scheme.AddConversionFunc((*url.Values)(nil), (*ContainerReplicaExecOptions)(nil), Convert_url_Values_To__ContainerReplicaExecOptions); err != nil {
 			return err
 		}
-		return scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), Convert_url_Values_To__LogOptions)
+		if err := scheme.AddConversionFunc((*url.Values)(nil), (*LogOptions)(nil), Convert_url_Values_To__LogOptions); err != nil {
+			return err
+		}
+
+		gvk := schemeGroupVersion.WithKind("Event")
+		flcf := func(label, value string) (string, string, error) {
+			switch label {
+			case "details":
+				return label, value, nil
+			}
+			return "", "", fmt.Errorf("unsupported field selection [%s]", label)
+		}
+		if err := scheme.AddFieldLabelConversionFunc(gvk, flcf); err != nil {
+			return err
+		}
 	}
 
 	return nil
