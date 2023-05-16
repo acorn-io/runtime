@@ -6,11 +6,17 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+type regionNamer interface {
+	GetRegion() string
+	GetName() string
+}
 
 type Validator struct {
 	DefaultRegion string
@@ -52,30 +58,43 @@ func (v *Validator) ValidateUpdate(ctx context.Context, new, old runtime.Object)
 	}
 
 	if len(removedRegions) > 0 {
-		var (
-			appList              apiv1.AppList
-			appsInRemovedRegions []string
-		)
-		if err := v.Client.List(ctx, &appList, kclient.InNamespace(newProject.Name)); err != nil {
-			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
-		}
-
-		for _, app := range appList.Items {
-			if slices.Contains(removedRegions, app.GetRegion()) {
-				appsInRemovedRegions = append(appsInRemovedRegions, app.Name)
-			}
-		}
-
-		if len(appsInRemovedRegions) > 0 {
-			return field.ErrorList{
-				field.Invalid(
-					field.NewPath("spec", "supportedRegions"),
-					newProject.GetSupportedRegions(),
-					fmt.Sprintf("cannot remove regions %v that have apps: %v", removedRegions, strings.Join(appsInRemovedRegions, ", ")),
-				),
-			}
-		}
+		return v.ensureNoObjectsExistInRegions(ctx, newProject.Name, removedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
 	}
 
 	return nil
+}
+
+func (v *Validator) ensureNoObjectsExistInRegions(ctx context.Context, namespace string, regions []string, objList ...kclient.ObjectList) field.ErrorList {
+	var result field.ErrorList
+	for _, obj := range objList {
+		objectsInRemoveRegions := make([]string, 0)
+		if err := v.Client.List(ctx, obj, kclient.InNamespace(namespace)); err != nil {
+			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
+		}
+
+		if err := meta.EachListItem(obj, func(object runtime.Object) error {
+			regionObject, ok := object.(regionNamer)
+			if ok && slices.Contains(regions, regionObject.GetRegion()) {
+				objectsInRemoveRegions = append(objectsInRemoveRegions, regionObject.GetName())
+			}
+			return nil
+		}); err != nil {
+			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
+		}
+
+		if len(objectsInRemoveRegions) > 0 {
+			result = append(result, field.Invalid(
+				field.NewPath("spec", "supportedRegions"),
+				regions,
+				fmt.Sprintf(
+					"cannot remove regions %v that have %s: %v",
+					regions,
+					strings.TrimSuffix(strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind), "list"),
+					strings.Join(objectsInRemoveRegions, ", "),
+				),
+			))
+		}
+	}
+
+	return result
 }
