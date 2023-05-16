@@ -104,7 +104,7 @@ spec:
   image: test
   volumes:
     - target: foo
-      volume: existing-foo
+      volume: other-app.foo
 
 status:
   namespace: app-created-namespace

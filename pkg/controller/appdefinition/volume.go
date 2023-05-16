@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/name"
+	"k8s.io/apimachinery/pkg/selection"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/labels"
@@ -155,7 +156,31 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 
 		if bind {
 			pvc.Name = bindName(vol)
-			pvc.Spec.VolumeName = volumeBinding.Volume
+
+			// We need to get the real PersistentVolume that will be bound.
+			// Its public name is volumeBinding.Volume, so we will use that in the label selector.
+			// In subsequent calls to this same function, the public name label will have been changed to the new AppInstance,
+			// so we also need to account for that in the label selector.
+			requirement, err := klabels.NewRequirement(labels.AcornPublicName, selection.In, []string{
+				volumeBinding.Volume,
+				publicname.ForChild(appInstance, volumeBinding.Target),
+			})
+			if err != nil {
+				return nil, err
+			}
+			selector := klabels.SelectorFromSet(map[string]string{
+				labels.AcornAppNamespace: appInstance.Namespace,
+			}).Add(*requirement)
+
+			pvList := new(corev1.PersistentVolumeList)
+			if err := req.Client.List(req.Ctx, pvList, &kclient.ListOptions{LabelSelector: selector}); err != nil {
+				return nil, err
+			}
+			if len(pvList.Items) != 1 {
+				return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", volumeBinding.Volume, len(pvList.Items))
+			}
+
+			pvc.Spec.VolumeName = pvList.Items[0].Name
 			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MinSize
 
 			if volumeBinding.Class != "" {
@@ -168,11 +193,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 				}
 			} else {
 				// User did not specify a class with the binding, so get the class from the existing volume.
-				pv := new(corev1.PersistentVolume)
-				if err = req.Get(pv, "", volumeBinding.Volume); err != nil {
-					return nil, err
-				}
-				pvc.Labels[labels.AcornVolumeClass] = pv.Labels[labels.AcornVolumeClass]
+				pvc.Labels[labels.AcornVolumeClass] = pvList.Items[0].Labels[labels.AcornVolumeClass]
 			}
 
 			if volumeBinding.Size != "" {
