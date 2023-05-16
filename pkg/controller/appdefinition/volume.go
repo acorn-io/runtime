@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/name"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -155,32 +156,13 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		}
 
 		if bind {
-			pvc.Name = bindName(vol)
-
-			// We need to get the real PersistentVolume that will be bound.
-			// Its public name is volumeBinding.Volume, so we will use that in the label selector.
-			// In subsequent calls to this same function, the public name label will have been changed to the new AppInstance,
-			// so we also need to account for that in the label selector.
-			requirement, err := klabels.NewRequirement(labels.AcornPublicName, selection.In, []string{
-				volumeBinding.Volume,
-				publicname.ForChild(appInstance, volumeBinding.Target),
-			})
+			pv, err := getPVForVolumeBinding(req, appInstance, volumeBinding)
 			if err != nil {
 				return nil, err
 			}
-			selector := klabels.SelectorFromSet(map[string]string{
-				labels.AcornAppNamespace: appInstance.Namespace,
-			}).Add(*requirement)
 
-			pvList := new(corev1.PersistentVolumeList)
-			if err := req.Client.List(req.Ctx, pvList, &kclient.ListOptions{LabelSelector: selector}); err != nil {
-				return nil, err
-			}
-			if len(pvList.Items) != 1 {
-				return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", volumeBinding.Volume, len(pvList.Items))
-			}
-
-			pvc.Spec.VolumeName = pvList.Items[0].Name
+			pvc.Name = bindName(vol)
+			pvc.Spec.VolumeName = pv.Name
 			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MinSize
 
 			if volumeBinding.Class != "" {
@@ -193,7 +175,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 				}
 			} else {
 				// User did not specify a class with the binding, so get the class from the existing volume.
-				pvc.Labels[labels.AcornVolumeClass] = pvList.Items[0].Labels[labels.AcornVolumeClass]
+				pvc.Labels[labels.AcornVolumeClass] = pv.Labels[labels.AcornVolumeClass]
 			}
 
 			if volumeBinding.Size != "" {
@@ -225,6 +207,51 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		result = append(result, &pvc)
 	}
 	return
+}
+
+func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, binding v1.VolumeBinding) (*corev1.PersistentVolume, error) {
+	// binding.Volume can either be the actual name of the PersistentVolume, or its public name in Acorn.
+	// Check for the actual name first.
+	pv := new(corev1.PersistentVolume)
+	if err := req.Client.Get(req.Ctx, kclient.ObjectKey{Name: binding.Volume}, pv); err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	} else if err == nil {
+		// make sure this PV doesn't have an acorn.io/app-namespace label on it that points to a different project than the appInstance
+		// if it does, then we need to block this cross-project binding attempt
+		appNamespace, ok := pv.Labels[labels.AcornAppNamespace]
+		if ok && appNamespace != appInstance.Namespace {
+			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "v1", Resource: "persistentvolumes"}, binding.Volume)
+		}
+		return pv, nil
+	}
+
+	// If we didn't find it by name, then look for it by public name.
+	// After the binding happens, the public name label will have been changed to the new AppInstance,
+	// so we also need to account for that in the label selector.
+	requirement, err := klabels.NewRequirement(labels.AcornPublicName, selection.In, []string{
+		binding.Volume,
+		publicname.ForChild(appInstance, binding.Target),
+	})
+	if err != nil {
+		return nil, err
+	}
+	selector := klabels.SelectorFromSet(map[string]string{
+		// also make sure we only list volumes that are part of the same Acorn project
+		labels.AcornAppNamespace: appInstance.Namespace,
+	}).Add(*requirement)
+
+	pvList := new(corev1.PersistentVolumeList)
+	if err := req.Client.List(req.Ctx, pvList, &kclient.ListOptions{LabelSelector: selector}); err != nil {
+		return nil, err
+	}
+	if len(pvList.Items) != 1 {
+		if len(pvList.Items) == 0 {
+			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "v1", Resource: "persistentvolumes"}, binding.Volume)
+		}
+		return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", binding.Volume, len(pvList.Items))
+	}
+
+	return &pvList.Items[0], nil
 }
 
 func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.VolumeRequest) map[string]string {
