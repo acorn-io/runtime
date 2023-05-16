@@ -77,6 +77,14 @@ func (d *depCheckingResponse) Objects(objs ...kclient.Object) {
 				d.waiting.Insert(depName)
 			}
 		}
+		if acorn, ok := obj.(*v1.AppInstance); ok {
+			existingApp := &v1.AppInstance{}
+			err := d.req.Get(existingApp, acorn.Namespace, acorn.Name)
+			if !apierrors.IsNotFound(err) && existingApp.Status.GetDevMode() {
+				objAnnotations[apply.AnnotationUpdate] = "false"
+				obj.SetAnnotations(objAnnotations)
+			}
+		}
 	}
 	d.resp.Objects(objs...)
 }

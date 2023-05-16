@@ -25,7 +25,7 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_ = dev.AppStatusLoop(ctx, c, app)
+			_ = dev.AppStatusLoop(ctx, c, app.Name)
 		}()
 	}
 

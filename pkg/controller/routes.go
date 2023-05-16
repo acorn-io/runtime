@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/controller/devsession"
 
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
@@ -47,36 +48,40 @@ var (
 func routes(router *router.Router, registryTransport http.RoundTripper, recorder event.Recorder) {
 	router.OnErrorHandler = appdefinition.OnError
 
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.CheckImageAllowedHandler(registryTransport))
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport, recorder))
-	router.HandleFunc(&v1.AppInstance{}, images.CreateImages)
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
-	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
-	router.Type(&v1.AppInstance{}).Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)
-	router.Type(&v1.AppInstance{}).Middleware(jobs.NeedsDestroyJobFinalization).FinalizeFunc(jobs.DestroyJobFinalizer, jobs.FinalizeDestroyJob)
+	appRouter := router.Type(&v1.AppInstance{}).Middleware(devsession.OverlayDevSession)
+	appRouter.HandlerFunc(appdefinition.AssignNamespace)
+	appRouter.HandlerFunc(appdefinition.CheckImageAllowedHandler(registryTransport))
+	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
+	appRouter.HandlerFunc(images.CreateImages)
+	appRouter.HandlerFunc(appdefinition.ParseAppImage)
+	appRouter.HandlerFunc(tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
+	appRouter.Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)
+	appRouter.Middleware(jobs.NeedsDestroyJobFinalization).FinalizeFunc(jobs.DestroyJobFinalizer, jobs.FinalizeDestroyJob)
 
 	// DeploySpec will create the namespace, so ensure it runs before anything that requires a namespace
-	appRouter := router.Type(&v1.AppInstance{}).Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
-	appRouter.HandlerFunc(defaults.Calculate)
-	appRouter.HandlerFunc(scheduling.Calculate)
-	appRouter.HandlerFunc(quota.EnsureQuotaRequest)
-	appRouter.HandlerFunc(quota.WaitForAllocation)
-	appRouter = appRouter.Middleware(appstatus.CheckStatus)
-	appRouter.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
-	appRouter.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
-	appRouter.HandlerFunc(appstatus.AppStatus)
-	appRouter.HandlerFunc(appdefinition.AppEndpointsStatus)
-	appRouter.HandlerFunc(appstatus.JobStatus)
-	appRouter.HandlerFunc(appstatus.VolumeStatus)
-	appRouter.HandlerFunc(appstatus.AcornStatus)
-	appRouter.HandlerFunc(appstatus.ServiceStatus)
-	appRouter.HandlerFunc(appstatus.ReadyStatus)
-	appRouter.HandlerFunc(networkpolicy.ForApp)
-	appRouter.HandlerFunc(appdefinition.AddAcornProjectLabel)
-	appRouter.HandlerFunc(appdefinition.UpdateObservedFields)
+	appHasNamespace := appRouter.Middleware(appdefinition.RequireNamespace, appdefinition.IgnoreTerminatingNamespace, appdefinition.FilterLabelsAndAnnotationsConfig)
+	appHasNamespace.HandlerFunc(defaults.Calculate)
+	appHasNamespace.HandlerFunc(scheduling.Calculate)
+	appHasNamespace.HandlerFunc(quota.EnsureQuotaRequest)
+	appHasNamespace.HandlerFunc(quota.WaitForAllocation)
 
-	router.Type(&v1.AppInstance{}).HandlerFunc(appstatus.CLIStatus)
+	appMeetsPreconditions := appHasNamespace.Middleware(appstatus.CheckStatus)
+	appMeetsPreconditions.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
+	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
+	appMeetsPreconditions.HandlerFunc(appstatus.AppStatus)
+	appMeetsPreconditions.HandlerFunc(appdefinition.AppEndpointsStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.JobStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.VolumeStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.AcornStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.ServiceStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.ReadyStatus)
+	appMeetsPreconditions.HandlerFunc(networkpolicy.ForApp)
+	appMeetsPreconditions.HandlerFunc(appdefinition.AddAcornProjectLabel)
+	appMeetsPreconditions.HandlerFunc(appdefinition.UpdateObservedFields)
+
+	appRouter.HandlerFunc(appstatus.CLIStatus)
+
+	router.Type(&v1.DevSessionInstance{}).HandlerFunc(devsession.ExpireDevSession)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 

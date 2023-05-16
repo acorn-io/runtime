@@ -78,7 +78,7 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 				External:  service.External,
 				Alias:     service.Alias,
 				Address:   service.Address,
-				Ports:     service.Ports,
+				Ports:     ports2.FilterDevPorts(service.Ports, appInstance.Status.GetDevMode()),
 				Container: service.Container,
 				Secrets:   asSlice(service.Secrets),
 				Data:      service.Data,
@@ -220,7 +220,7 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 			continue
 		}
 
-		ports := ports2.CollectContainerPorts(&container)
+		ports := ports2.CollectContainerPorts(&container, appInstance.Status.GetDevMode())
 		if len(ports) == 0 {
 			continue
 		}
@@ -298,6 +298,7 @@ func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppI
 	if len(result) == 1 {
 		result[0].(*v1.ServiceInstance).Spec.Default = true
 	}
+
 	result = append(result, forLinkedServices(appInstance)...)
 	return
 }

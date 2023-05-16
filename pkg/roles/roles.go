@@ -45,6 +45,7 @@ var (
 					"apps",
 					"acornimagebuilds",
 					"builders",
+					"devsessions",
 					"images",
 					"volumes",
 					"containerreplicas",
@@ -89,6 +90,7 @@ var (
 				Verbs: []string{"create", "update", "delete", "patch"},
 				Resources: []string{
 					"apps",
+					"devsessions",
 					"credentials",
 					"secrets",
 				},

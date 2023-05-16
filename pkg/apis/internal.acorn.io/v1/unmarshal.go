@@ -819,6 +819,11 @@ func (in *Ports) UnmarshalJSON(data []byte) error {
 		}
 		for _, port := range ports["publish"] {
 			port.Publish = true
+			port.Dev = false
+			*in = append(*in, port)
+		}
+		for _, port := range ports["dev"] {
+			port.Dev = true
 			*in = append(*in, port)
 		}
 		return nil

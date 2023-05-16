@@ -103,7 +103,6 @@ func (in PortBinding) Complete() PortBinding {
 }
 
 func (in PortDef) FormatString(serviceName string) string {
-	//in = in.Complete(in.ServiceName)
 	buf := &strings.Builder{}
 	if serviceName != "" {
 		buf.WriteString(serviceName)
@@ -128,6 +127,7 @@ type PortDef struct {
 	Hostname   string   `json:"hostname,omitempty"`
 	Protocol   Protocol `json:"protocol,omitempty"`
 	Publish    bool     `json:"publish,omitempty"`
+	Dev        bool     `json:"dev,omitempty"`
 	Port       int32    `json:"port,omitempty"`
 	TargetPort int32    `json:"targetPort,omitempty"`
 }

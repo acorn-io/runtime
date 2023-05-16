@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,13 +42,6 @@ func GetOutputFor(ctx context.Context, c kclient.Client, appInstance *v1.AppInst
 		*v = string(data)
 	case *v1.Secret:
 		if err := json.Unmarshal(data, v); err == nil && (v.Type != "" || len(v.Data) > 0) {
-			for key, value := range v.Data {
-				d, err := base64.StdEncoding.DecodeString(value)
-				if err != nil {
-					return nil, err
-				}
-				v.Data[key] = string(d)
-			}
 			return job, nil
 		}
 		appSpec, err := asAppSpec(data)

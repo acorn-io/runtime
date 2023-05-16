@@ -191,7 +191,7 @@ func toContainers(app *v1.AppInstance, tag name.Reference, name string, containe
 		initContainers []corev1.Container
 	)
 
-	if app.Spec.GetDevMode() && hasContextDir(container) {
+	if app.Status.GetDevMode() && hasContextDir(container) {
 		initContainers = append(initContainers, corev1.Container{
 			Name:            "acorn-helper",
 			Image:           system.DefaultImage(),
@@ -257,7 +257,7 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 		mountPath := entry.Key
 		mount := entry.Value
 		if mount.ContextDir != "" {
-			if !helperMounted && app.Spec.GetDevMode() {
+			if !helperMounted && app.Status.GetDevMode() {
 				result = append(result, corev1.VolumeMount{
 					Name:      sanitizeVolumeName(AcornHelper),
 					MountPath: AcornHelperPath,
@@ -384,7 +384,7 @@ func toProbe(container v1.Container, probeType v1.ProbeType) *corev1.Probe {
 	if probeType == v1.ReadinessProbeType &&
 		container.Probes == nil {
 		for _, port := range container.Ports {
-			if port.Protocol == v1.ProtocolUDP {
+			if port.Protocol == v1.ProtocolUDP || port.Dev {
 				continue
 			}
 			return &corev1.Probe{

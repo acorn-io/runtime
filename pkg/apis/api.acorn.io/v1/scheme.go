@@ -65,6 +65,8 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ImageAllowRuleList{},
 		&Event{},
 		&EventList{},
+		&DevSession{},
+		&DevSessionList{},
 	)
 
 	// Add common types

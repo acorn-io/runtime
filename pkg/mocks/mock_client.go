@@ -425,6 +425,34 @@ func (mr *MockClientMockRecorder) CredentialUpdate(arg0, arg1, arg2, arg3, arg4 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredentialUpdate", reflect.TypeOf((*MockClient)(nil).CredentialUpdate), arg0, arg1, arg2, arg3, arg4)
 }
 
+// DevSessionRelease mocks base method.
+func (m *MockClient) DevSessionRelease(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DevSessionRelease", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DevSessionRelease indicates an expected call of DevSessionRelease.
+func (mr *MockClientMockRecorder) DevSessionRelease(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DevSessionRelease", reflect.TypeOf((*MockClient)(nil).DevSessionRelease), arg0, arg1)
+}
+
+// DevSessionRenew mocks base method.
+func (m *MockClient) DevSessionRenew(arg0 context.Context, arg1 string, arg2 v10.DevSessionInstanceClient) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DevSessionRenew", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DevSessionRenew indicates an expected call of DevSessionRenew.
+func (mr *MockClientMockRecorder) DevSessionRenew(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DevSessionRenew", reflect.TypeOf((*MockClient)(nil).DevSessionRenew), arg0, arg1, arg2)
+}
+
 // EventStream mocks base method.
 func (m *MockClient) EventStream(arg0 context.Context, arg1 *client.EventStreamOptions) (<-chan v1.Event, error) {
 	m.ctrl.T.Helper()

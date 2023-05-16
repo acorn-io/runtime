@@ -180,8 +180,11 @@ func matches(binding v1.PortPublish, port v1.PortDef) bool {
 		portMatches(binding, port)
 }
 
-func collectPorts(seen map[int32]struct{}, ports []v1.PortDef) (result []v1.PortDef) {
+func collectPorts(seen map[int32]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 	for _, port := range ports {
+		if !devMode && port.Dev {
+			continue
+		}
 		if _, ok := seen[port.Port]; ok {
 			continue
 		}
@@ -191,12 +194,22 @@ func collectPorts(seen map[int32]struct{}, ports []v1.PortDef) (result []v1.Port
 	return
 }
 
-func CollectContainerPorts(container *v1.Container) (result []v1.PortDef) {
+func FilterDevPorts(ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
+	for _, port := range ports {
+		if port.Dev && !devMode {
+			continue
+		}
+		result = append(result, port)
+	}
+	return
+}
+
+func CollectContainerPorts(container *v1.Container, devMode bool) (result []v1.PortDef) {
 	seen := map[int32]struct{}{}
 
-	result = append(result, collectPorts(seen, container.Ports)...)
+	result = append(result, collectPorts(seen, container.Ports, devMode)...)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		result = append(result, collectPorts(seen, entry.Value.Ports)...)
+		result = append(result, collectPorts(seen, entry.Value.Ports, devMode)...)
 	}
 
 	return

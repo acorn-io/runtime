@@ -25,9 +25,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-func containerSyncLoop(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
+func containerSyncLoop(ctx context.Context, client client.Client, appName string, opts *Options) error {
 	for {
-		err := containerSync(ctx, client, app, opts)
+		err := containerSync(ctx, client, appName, opts)
 		if err != nil && !errors.Is(err, context.Canceled) {
 			logrus.Errorf("failed to run container sync: %s", err)
 		}
@@ -39,7 +39,7 @@ func containerSyncLoop(ctx context.Context, client client.Client, app *apiv1.App
 	}
 }
 
-func containerSync(ctx context.Context, client client.Client, app *apiv1.App, opts *Options) error {
+func containerSync(ctx context.Context, client client.Client, appName string, opts *Options) error {
 	cwd, file, err := opts.ImageSource.ResolveImageAndFile()
 	if err != nil {
 		return err
@@ -57,8 +57,8 @@ func containerSync(ctx context.Context, client client.Client, app *apiv1.App, op
 		return err
 	}
 	w := objwatcher.New[*apiv1.ContainerReplica](wc)
-	_, err = w.BySelector(ctx, app.Namespace, labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
-		if con.Spec.AppName == app.Name && con.Spec.JobName == "" && con.Status.Phase == corev1.PodRunning && !syncing[con.Name] {
+	_, err = w.BySelector(ctx, client.GetNamespace(), labels.Everything(), func(con *apiv1.ContainerReplica) (bool, error) {
+		if con.Spec.AppName == appName && con.Spec.JobName == "" && con.Status.Phase == corev1.PodRunning && !syncing[con.Name] {
 			if con.Spec.Init {
 				return false, nil
 			}
@@ -158,7 +158,7 @@ func newLogger() logpkg.Logger {
 		Out: os.Stdout,
 	}, &ignore{
 		Out: os.Stderr,
-	}, logrus.InfoLevel)
+	}, logrus.GetLevel())
 }
 
 type ignore struct {

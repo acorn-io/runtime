@@ -22,7 +22,7 @@ func NewStorage(c kclient.WithWatch, clientFactory *client.Factory, recorder eve
 	strategy = newEventRecordingStrategy(strategy, recorder)
 	strategy = middleware.ForCompleteStrategy(strategy, middlewares...)
 
-	validator := NewValidator(c, clientFactory)
+	validator := NewValidator(c, clientFactory, strategy)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.App{}).
 		WithCompleteCRUD(strategy).

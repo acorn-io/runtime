@@ -101,6 +101,20 @@ func (d *DeferredClient) AppPullImage(ctx context.Context, name string) error {
 	return d.Client.AppPullImage(ctx, name)
 }
 
+func (d *DeferredClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
+	if err := d.create(); err != nil {
+		return err
+	}
+	return d.Client.DevSessionRenew(ctx, name, client)
+}
+
+func (d *DeferredClient) DevSessionRelease(ctx context.Context, name string) error {
+	if err := d.create(); err != nil {
+		return err
+	}
+	return d.Client.DevSessionRelease(ctx, name)
+}
+
 func (d *DeferredClient) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
 	if err := d.create(); err != nil {
 		return nil, err

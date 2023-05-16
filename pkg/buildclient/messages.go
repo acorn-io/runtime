@@ -68,6 +68,8 @@ type WebsocketMessages struct {
 	conn        *websocket.Conn
 	messages    chan *Message
 	handler     func(*Message) error
+	ctx         context.Context
+	cancel      func()
 	broadcaster *channel.Broadcaster[*Message]
 }
 
@@ -90,6 +92,10 @@ func (m *WebsocketMessages) OnMessage(handler func(message *Message) error) {
 }
 
 func (m *WebsocketMessages) Start(ctx context.Context) {
+	ctx, cancel := context.WithCancel(ctx)
+	m.cancel = cancel
+	m.ctx = ctx
+
 	go m.broadcaster.Start(ctx)
 	go func() {
 		err := m.run(ctx)
@@ -122,8 +128,16 @@ func (m *WebsocketMessages) run(ctx context.Context) error {
 }
 
 func (m *WebsocketMessages) Close() {
-	// Shutdown here, don't close as shutdown will ensure all subscribers still get their messages
-	go m.broadcaster.Shutdown()
+	if m.cancel != nil {
+		m.cancel()
+	}
+	go func() {
+		if m.ctx != nil {
+			<-m.ctx.Done()
+		}
+		// Shutdown here, don't close as shutdown will ensure all subscribers still get their messages
+		m.broadcaster.Shutdown()
+	}()
 	m.conn.Close()
 }
 

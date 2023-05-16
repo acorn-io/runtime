@@ -89,7 +89,6 @@ type AppInstanceSpec struct {
 	Annotations         []ScopedLabel    `json:"annotations,omitempty"`
 	Image               string           `json:"image,omitempty"`
 	Stop                *bool            `json:"stop,omitempty"`
-	DevMode             *bool            `json:"devMode,omitempty"`
 	Profiles            []string         `json:"profiles,omitempty"`
 	Volumes             []VolumeBinding  `json:"volumes,omitempty"`
 	Secrets             []SecretBinding  `json:"secrets,omitempty"`
@@ -119,12 +118,8 @@ func (in *AppInstanceSpec) GetNotifyUpgrade() bool {
 	return in.NotifyUpgrade != nil && *in.NotifyUpgrade
 }
 
-func (in *AppInstanceSpec) GetDevMode() bool {
-	return in.DevMode != nil && *in.DevMode
-}
-
-func (in *AppInstanceSpec) GetProfiles() []string {
-	if in.GetDevMode() {
+func (in *AppInstanceSpec) GetProfiles(devMode bool) []string {
+	if devMode {
 		found := false
 		for _, profile := range in.Profiles {
 			if profile == "dev?" {
@@ -190,7 +185,12 @@ type AppColumns struct {
 	Created   string `json:"created,omitempty" column:"name=Created,jsonpath=.metadata.creationTimestamp"`
 }
 
+func (a AppInstanceStatus) GetDevMode() bool {
+	return a.DevSession != nil
+}
+
 type AppInstanceStatus struct {
+	DevSession             *DevSessionInstanceSpec    `json:"devSession,omitempty"`
 	ObservedGeneration     int64                      `json:"observedGeneration,omitempty"`
 	ObservedImageDigest    string                     `json:"observedImageDigest,omitempty"`
 	Columns                AppColumns                 `json:"columns,omitempty"`

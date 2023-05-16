@@ -208,6 +208,7 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 			})
 		} else if acornImage.Build != nil {
 			newCtx := *ctx
+			newCtx.opts.Profiles = nil
 			newCtx.opts.Args = acornImage.Build.BuildArgs
 			newCtx.opts.Acornfile = ""
 			newCtx.acornfilePath = filepath.Join(ctx.cwd, acornImage.Build.Acornfile)

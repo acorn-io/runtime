@@ -219,7 +219,7 @@ func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.V
 }
 
 func isEphemeral(appInstance *v1.AppInstance, volume string) (v1.VolumeRequest, bool) {
-	if volume == AcornHelper && appInstance.Spec.GetDevMode() {
+	if volume == AcornHelper && appInstance.Status.GetDevMode() {
 		return v1.VolumeRequest{
 			Class: v1.VolumeRequestTypeEphemeral,
 		}, true
@@ -256,7 +256,7 @@ func addVolumeReferencesForContainer(app *v1.AppInstance, volumeReferences map[v
 	for _, entry := range typed.Sorted(container.Dirs) {
 		volume := entry.Value
 		if volume.ContextDir != "" {
-			if app.Spec.GetDevMode() {
+			if app.Status.GetDevMode() {
 				volumeReferences[volumeReference{name: AcornHelper}] = true
 			}
 		} else if volume.Secret.Name == "" {

@@ -147,6 +147,28 @@ func ParseProject(project string, kubeconfigs map[string]string) (serverOrKubeco
 	panic(fmt.Sprintf("unreachable: parts len of %d not handled in %s", len(parts), project))
 }
 
+func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
+	if opts.AllProjects {
+		projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
+		return projects, err
+	}
+	p := strings.TrimSpace(opts.Project)
+	if p == "" {
+		p = strings.TrimSpace(cfg.CurrentProject)
+	}
+	if strings.TrimSpace(p) == "" {
+		return nil, nil
+	}
+	for _, project := range csvSplit.Split(p, -1) {
+		if target := cfg.ProjectAliases[project]; target == "" {
+			result = append(result, project)
+		} else {
+			result = append(result, csvSplit.Split(strings.TrimSpace(target), -1)...)
+		}
+	}
+	return result, nil
+}
+
 func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project string) (client.Client, error) {
 	serverOrKubeconfig, account, namespace, isKubeconfig, err := ParseProject(project, cfg.Kubeconfigs)
 	if err != nil {
@@ -199,26 +221,4 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 			}, project, namespace)
 		},
 	}, nil
-}
-
-func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
-	if opts.AllProjects {
-		projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
-		return projects, err
-	}
-	p := strings.TrimSpace(opts.Project)
-	if p == "" {
-		p = strings.TrimSpace(cfg.CurrentProject)
-	}
-	if strings.TrimSpace(p) == "" {
-		return nil, nil
-	}
-	for _, project := range csvSplit.Split(p, -1) {
-		if target := cfg.ProjectAliases[project]; target == "" {
-			result = append(result, project)
-		} else {
-			result = append(result, csvSplit.Split(strings.TrimSpace(target), -1)...)
-		}
-	}
-	return result, nil
 }
