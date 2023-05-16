@@ -469,12 +469,13 @@ func (mr *MockClientMockRecorder) GetProject() *gomock.Call {
 }
 
 // ImageDelete mocks base method.
-func (m *MockClient) ImageDelete(arg0 context.Context, arg1 string, arg2 *client.ImageDeleteOptions) (*v1.Image, error) {
+func (m *MockClient) ImageDelete(arg0 context.Context, arg1 string, arg2 *client.ImageDeleteOptions) (*v1.Image, []string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ImageDelete", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Image)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].([]string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ImageDelete indicates an expected call of ImageDelete.

@@ -347,10 +347,10 @@ func (m *MultiClient) ImageGet(ctx context.Context, name string) (*apiv1.Image, 
 	return c.ImageGet(ctx, name)
 }
 
-func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, error) {
+func (m *MultiClient) ImageDelete(ctx context.Context, name string, opts *ImageDeleteOptions) (*apiv1.Image, []string, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return c.ImageDelete(ctx, name, opts)
 }
