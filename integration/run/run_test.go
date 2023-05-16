@@ -67,8 +67,6 @@ func TestVolume(t *testing.T) {
 	}
 	assert.EqualValues(t, "1G", app.Status.AppSpec.Volumes["my-data"].Size, "volume my-data has size different than expected")
 
-	volName := fmt.Sprintf("%s.%s", app.Name, "external")
-
 	_, err = c.AppDelete(ctx, app.Name)
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +75,7 @@ func TestVolume(t *testing.T) {
 	app, err = c.AppRun(ctx, image.ID, &client.AppRunOptions{
 		Volumes: []v1.VolumeBinding{
 			{
-				Volume: volName,
+				Volume: pv.Name,
 				Target: "external",
 			},
 		},
