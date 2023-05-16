@@ -1,6 +1,10 @@
 name: Validate docs build
 on:
-  push: {}
+  push:
+    paths:
+    - docs/**
+    branches:
+    - main
   pull_request:
     paths:
       - docs/**
