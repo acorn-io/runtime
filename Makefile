@@ -39,8 +39,9 @@ validate-code: tidy generate lint gen-docs
 		exit 1 \
 	;fi
 
+GOTESTSUM_VERSION ?= v1.10.0
 test:
-	go test $(TEST_FLAGS) ./...
+	go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) $(TEST_FLAGS) ./...
 
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist
