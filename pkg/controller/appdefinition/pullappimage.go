@@ -24,8 +24,8 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
 
-		targetImage, unknownReason := determineTargetImage(appInstance)
-		if targetImage == "" {
+		target, unknownReason := determineTargetImage(appInstance)
+		if target == "" {
 			if unknownReason != "" {
 				cond.Unknown(unknownReason)
 			} else {
@@ -34,31 +34,36 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 			return nil
 		}
 
+		resolved, _, err := tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, target)
+		if err != nil {
+			cond.Error(err)
+			return nil
+		}
+
 		var (
-			err           error
-			resolvedImage string
+			_, autoUpgradeOn = autoupgrade.Mode(appInstance.Spec)
+			previousImage    = appInstance.Status.AppImage
+			targetImage      *v1.AppImage
 		)
 		defer func() {
 			// Record the results as an event
-			recordResolutionEvent(req.Ctx, recorder, req.Object, err, targetImage, resolvedImage)
+			if err != nil {
+				targetImage = &v1.AppImage{
+					Name: resolved,
+				}
+			}
+			recordPullEvent(req.Ctx, recorder, req.Object, autoUpgradeOn, err, previousImage, *targetImage)
 		}()
 
-		resolvedImage, _, err = tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, targetImage)
+		targetImage, err = images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolved, "", remote.WithTransport(transport))
 		if err != nil {
 			cond.Error(err)
 			return nil
 		}
-
-		var appImage *v1.AppImage
-		appImage, err = images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolvedImage, "", remote.WithTransport(transport))
-		if err != nil {
-			cond.Error(err)
-			return nil
-		}
-		appImage.Name = targetImage
+		targetImage.Name = target
 		appInstance.Status.AvailableAppImage = ""
 		appInstance.Status.ConfirmUpgradeAppImage = ""
-		appInstance.Status.AppImage = *appImage
+		appInstance.Status.AppImage = *targetImage
 
 		cond.Success()
 		return nil
@@ -114,53 +119,68 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 }
 
 const (
-	AppImageResolutionFailureEventType = "AppImageResolutionFailure"
-	AppImageResolutionSuccessEventType = "AppImageResolutionSuccess"
+	AppImagePullFailureEventType = "AppImagePullFailure"
+	AppImagePullSuccessEventType = "AppImagePullSuccess"
 )
 
-// AppImageResolutionEventDetails captures additional info about App image resolution.
-type AppImageResolutionEventDetails struct {
-	// AppResourceVersion is the resourceVersion of the App the image is being resolved for.
-	AppResourceVersion string `json:"appResourceVersion"`
+// AppImagePullEventDetails captures additional info about an App image pull.
+type AppImagePullEventDetails struct {
+	// ResourceVersion is the resourceVersion of the App the image is being pulled for.
+	ResourceVersion string `json:"resourceVersion"`
 
-	// TargetImage is the image being resolved.
-	TargetImage string `json:"targetImage,omitempty"`
+	// AutoUpgrade is true if the pull was triggered by an auto-upgrade, false otherwise.
+	AutoUpgrade bool `json:"autoUpgrade"`
 
-	// ResolvedImage is the image, post resolution.
+	// Previous is the App image before pulling, if any.
 	// +optional
-	ResolvedImage string `json:"resolvedImage,omitempty"`
+	Previous ImageSummary `json:"previous,omitempty"`
 
-	// Err the error that occurred during resolution, if any.
+	// Target is the image being pulled.
+	Target ImageSummary `json:"target"`
+
+	// Err is an error that occurred during the pull, if any.
 	// +optional
 	Err string `json:"err,omitempty"`
 }
 
-func recordResolutionEvent(ctx context.Context, recorder event.Recorder, obj kclient.Object, err error, targetImage, resolvedImage string) {
+type ImageSummary struct {
+	Name   string `json:"name,omitempty"`
+	Digest string `json:"digest,omitempty"`
+	VCS    v1.VCS `json:"vcs,omitempty"`
+}
+
+func newImageSummary(appImage v1.AppImage) ImageSummary {
+	return ImageSummary{
+		Name:   appImage.Name,
+		Digest: appImage.Digest,
+		VCS:    appImage.VCS,
+	}
+}
+
+func recordPullEvent(ctx context.Context, recorder event.Recorder, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage) {
 	// Initialize with values for a success event
+	previous, target := newImageSummary(previousImage), newImageSummary(targetImage)
 	e := apiv1.Event{
-		Type:        AppImageResolutionSuccessEventType,
+		Type:        AppImagePullSuccessEventType,
 		Severity:    v1.EventSeverityInfo,
-		Description: fmt.Sprintf("Pulled %s (resolved from %s)", resolvedImage, targetImage),
+		Description: fmt.Sprintf("Pulled %s", target.Name),
 		Source:      event.ObjectSource(obj),
 		Observed:    metav1.Now(),
 	}
-	details := AppImageResolutionEventDetails{
-		AppResourceVersion: obj.GetResourceVersion(),
-		TargetImage:        targetImage,
-		ResolvedImage:      resolvedImage,
+
+	details := AppImagePullEventDetails{
+		ResourceVersion: obj.GetResourceVersion(),
+		AutoUpgrade:     autoUpgradeOn,
+		Previous:        previous,
+		Target:          target,
 	}
 
 	if err != nil {
 		// It's a failure, overwrite with failure event values
-		e.Type = AppImageResolutionFailureEventType
+		e.Type = AppImagePullFailureEventType
 		e.Severity = v1.EventSeverityWarn
-		if resolvedImage == "" {
-			// Failed to resolve the target image
-			e.Description = fmt.Sprintf("Failed to resolve %s", targetImage)
-		} else {
-			// The target image was resolved, but we failed to pull the result
-			e.Description = fmt.Sprintf("Failed to pull %s (resolved from %s)", resolvedImage, targetImage)
-		}
+		e.Description = fmt.Sprintf("Failed to pull %s", target.Name)
+		details.Err = err.Error()
 	}
 
 	if e.Details, err = v1.Mapify(details); err != nil {
