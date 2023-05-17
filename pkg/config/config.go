@@ -100,6 +100,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.AWSIdentityProviderARN == nil {
 		c.AWSIdentityProviderARN = new(string)
 	}
+	if c.ImageAllowRulesStrictMode == nil {
+		c.ImageAllowRulesStrictMode = new(bool)
+	}
 
 	return nil
 }
@@ -312,6 +315,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.UseCustomCABundle != nil {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
+	}
+	if newConfig.ImageAllowRulesStrictMode != nil {
+		mergedConfig.ImageAllowRulesStrictMode = newConfig.ImageAllowRulesStrictMode
 	}
 
 	if len(newConfig.PropagateProjectAnnotations) > 0 && newConfig.PropagateProjectAnnotations[0] == "" {

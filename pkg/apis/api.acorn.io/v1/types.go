@@ -427,6 +427,7 @@ type Config struct {
 	AllowTrafficFromNamespace      []string `json:"allowTrafficFromNamespace" name:"allow-traffic-from-namespace" usage:"Namespaces that are allowed to send network traffic to all Acorn apps"`
 	ServiceLBAnnotations           []string `json:"serviceLBAnnotations" name:"service-lb-annotation" usage:"Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)"`
 	AWSIdentityProviderARN         *string  `json:"awsIdentityProviderArn" name:"aws-identity-provider-arn" usage:"ARN of cluster's OpenID Connect provider registered in AWS"`
+	ImageAllowRulesStrictMode      *bool    `json:"imageAllowRulesStrictMode" name:"image-allow-rules-strict-mode" usage:"If true, deny-by-default will be enforced for all projects. If false, projects allow all images unless someone adds an explicit ImageAllowRule to it. (default=false)"`
 }
 
 type EncryptionKey struct {

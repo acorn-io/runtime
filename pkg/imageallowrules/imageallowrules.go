@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/cosign"
 	"github.com/acorn-io/acorn/pkg/imagepattern"
 	"github.com/acorn-io/acorn/pkg/images"
@@ -57,12 +58,30 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image st
 }
 
 // CheckImageAgainstRules checks if the image is allowed by the given ImageAllowRules
-// If no rules are given, the image is DENIED (secure by default)
+// If no rules are given, the image is
+// - DENIED if strict mode (deny-by-default) is enabled
+// - ALLOWED if strict mode is disabled (the default)
 // ! Only one single rule has to allow the image for this to pass !
 func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRuleInstance, keychain authn.Keychain, opts ...remote.Option) error {
+	cfg, err := config.Get(ctx, c)
+	if err != nil {
+		return err
+	}
+
+	// Check if strict mode is enabled
+	var strictMode bool
+	if cfg.ImageAllowRulesStrictMode != nil && *cfg.ImageAllowRulesStrictMode {
+		strictMode = true
+	}
+
 	if len(imageAllowRules) == 0 {
-		// No ImageAllowRules found, so DENY the image
-		return &ErrImageNotAllowed{Image: image}
+		// No ImageAllowRules found. Check if strict mode is enabled.
+		if strictMode {
+			// Strict mode: DENY the image
+			return &ErrImageNotAllowed{Image: image}
+		}
+		// No Strict Mode: ALLOW the image
+		return nil
 	}
 
 	logrus.Debugf("Checking image %s against %d rules", image, len(imageAllowRules))

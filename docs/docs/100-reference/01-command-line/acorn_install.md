@@ -35,6 +35,7 @@ acorn install
       --http-endpoint-pattern string                    Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations              Don't propagate user-defined labels and annotations to dependent objects
       --image string                                    Override the default image used for the deployment
+      --image-allow-rules-strict-mode                   If true, deny-by-default will be enforced for all projects. If false, projects allow all images unless someone adds an explicit ImageAllowRule to it. (default=false)
       --ingress-class-name string                       The ingress class name to assign to all created ingress resources (default '')
       --ingress-controller-namespace string             The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies.
       --internal-cluster-domain string                  The Kubernetes internal cluster domain (default svc.cluster.local)
