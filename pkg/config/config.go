@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ClusterDomainDefault         = ".oss-acorn.io"
+	ClusterDomainDefault         = "local.oss-acorn.io"
 	InternalClusterDomainDefault = "svc.cluster.local"
 
 	// AcornDNSEndpointDefault will be overridden at build time for releases
