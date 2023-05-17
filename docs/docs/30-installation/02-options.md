@@ -13,7 +13,7 @@ $ acorn run -P ghcr.io/acorn-io/library/hello-world
 
 $ acorn ps
 NAME       IMAGE          HEALTHY   UP-TO-DATE   CREATED   ENDPOINTS                                                                     MESSAGE
-black-sea   ghcr.io/acorn-io/library/hello-world   1         1            6s ago    http://webapp-black-sea-4232beae.qnrzq5.alpha.on-acorn.io => webapp:80      OK
+black-sea   ghcr.io/acorn-io/library/hello-world   1         1            6s ago    http://webapp-black-sea-4232beae.qnrzq5.alpha.oss-acorn.io => webapp:80      OK
 ```
 By default, endpoints are `http`. To have acorn automatically generate a [Let's Encrypt](https://letsencrypt.org/) certificate and secure your endpoints, you can enable acorn's Let's Encrypt integration like this:
 ```bash
@@ -25,7 +25,7 @@ acorn install --lets-encrypt enabled --lets-encrypt-tos-agree=true --lets-encryp
 ```
 
 :::info
-Let's Encrypt integration is only useful if you are running a non-local Kubernetes cluster. If you are running acorn on a local cluster such as Docker Desktop, Rancher Desktop, or minikube, enabling Let's Encrypt will have no effect. We don't issue certificates for the `.local.on-acorn.io` domains that are used in this scenario.
+Let's Encrypt integration is only useful if you are running a non-local Kubernetes cluster. If you are running acorn on a local cluster such as Docker Desktop, Rancher Desktop, or minikube, enabling Let's Encrypt will have no effect. We don't issue certificates for the `.local.oss-acorn.io` domains that are used in this scenario.
 :::
 
 ## Endpoint domain names

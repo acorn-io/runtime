@@ -183,7 +183,7 @@ k3d cluster create --api-port 6550 -p "8081:80@loadbalancer"
 then you must reflect that in the `acorn install` command by specifying the port with the `--cluster-domain` flag:
 
 ```shell
-acorn install --cluster-domain '.local.on-acorn.io:8081'
+acorn install --cluster-domain '.local.oss-acorn.io:8081'
 ```
 
 **Kind** comes with a working storage class by default, but you need to take some extra steps to get ingress and service loadbalancer capabilities:

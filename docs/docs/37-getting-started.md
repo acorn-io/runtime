@@ -266,7 +266,7 @@ acorn apps
 ```bash
 $ acorn apps
 NAME            IMAGE          HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS                                                             MESSAGE
-awesome-acorn   2d73c8a0493f   3         3            121m ago   http://app-awesome-acorn-56d50c8c0915.local.on-acorn.io => app:5000   OK
+awesome-acorn   2d73c8a0493f   3         3            121m ago   http://app-awesome-acorn-56d50c8c0915.local.oss-acorn.io => app:5000   OK
 ```
 
 You probably already noticed the link right there in the `ENDPOINTS` column. It will take you to your Python Flask App.
