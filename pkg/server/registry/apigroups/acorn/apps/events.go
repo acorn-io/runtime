@@ -138,7 +138,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 	}
 
 	defer func() {
-		oldSpec, newSpec := old.(*v1.AppInstance).Spec, updated.(*v1.AppInstance).Spec
+		oldSpec, newSpec := old.(*apiv1.App).Spec, updated.(*apiv1.App).Spec
 		patch, err := mergePatch(oldSpec, newSpec)
 		if err != nil {
 			logrus.Warnf("Failed to generate app spec patch, event recording disabled for request: %s", err)
@@ -153,7 +153,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 
 		details, err := v1.Mapify(AppSpecUpdateEventDetails{
 			ResourceVersion: updated.GetResourceVersion(),
-			OldSpec:         obj.(*v1.AppInstance).Spec,
+			OldSpec:         oldSpec,
 			Patch:           patch,
 		})
 		if err != nil {
