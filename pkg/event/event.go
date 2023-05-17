@@ -7,6 +7,7 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -45,9 +46,35 @@ func NewRecorder(c kclient.Client) RecorderFunc {
 	}
 }
 
+var (
+	scheme = runtime.NewScheme()
+)
+
+func init() {
+	must := func(err error) {
+		if err != nil {
+			panic(fmt.Sprintf("failed to add to scheme: %s", err.Error()))
+		}
+	}
+	must(apiv1.AddToScheme(scheme))
+	must(v1.AddToScheme(scheme))
+}
+
+func publicKind(obj runtime.Object) string {
+	kinds, _, _ := scheme.ObjectKinds(obj)
+	for _, k := range kinds {
+		switch k.Kind {
+		case "App", "AppInstance":
+			return "App"
+		}
+
+	}
+	return ""
+}
+
 func ObjectSource(obj kclient.Object) v1.EventSource {
 	return v1.EventSource{
-		Kind: obj.GetObjectKind().GroupVersionKind().Kind,
+		Kind: publicKind(obj),
 		Name: obj.GetName(),
 		UID:  obj.GetUID(),
 	}

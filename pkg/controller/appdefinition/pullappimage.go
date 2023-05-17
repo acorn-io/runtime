@@ -20,6 +20,26 @@ import (
 )
 
 func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
+	return pullAppImage(transport, pullClient{
+		recorder: recorder,
+		resolve:  tags.ResolveLocal,
+		pull:     images.PullAppImage,
+		now:      metav1.Now,
+	})
+}
+
+type resolveImageFunc func(ctx context.Context, c kclient.Client, namespace, image string) (resolved string, isLocal bool, error error)
+
+type pullImageFunc func(ctx context.Context, c kclient.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error)
+
+type pullClient struct {
+	recorder event.Recorder
+	resolve  resolveImageFunc
+	pull     pullImageFunc
+	now      func() metav1.Time
+}
+
+func pullAppImage(transport http.RoundTripper, client pullClient) router.HandlerFunc {
 	return func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
@@ -34,7 +54,7 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 			return nil
 		}
 
-		resolved, _, err := tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, target)
+		resolved, _, err := client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
 		if err != nil {
 			cond.Error(err)
 			return nil
@@ -52,10 +72,10 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 					Name: resolved,
 				}
 			}
-			recordPullEvent(req.Ctx, recorder, req.Object, autoUpgradeOn, err, previousImage, *targetImage)
+			recordPullEvent(req.Ctx, client.recorder, client.now(), req.Object, autoUpgradeOn, err, previousImage, *targetImage)
 		}()
 
-		targetImage, err = images.PullAppImage(req.Ctx, req.Client, appInstance.Namespace, resolved, "", remote.WithTransport(transport))
+		targetImage, err = client.pull(req.Ctx, req.Client, appInstance.Namespace, resolved, "", remote.WithTransport(transport))
 		if err != nil {
 			cond.Error(err)
 			return nil
@@ -157,7 +177,7 @@ func newImageSummary(appImage v1.AppImage) ImageSummary {
 	}
 }
 
-func recordPullEvent(ctx context.Context, recorder event.Recorder, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage) {
+func recordPullEvent(ctx context.Context, recorder event.Recorder, observed metav1.Time, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage) {
 	// Initialize with values for a success event
 	previous, target := newImageSummary(previousImage), newImageSummary(targetImage)
 	e := apiv1.Event{
@@ -165,7 +185,7 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, obj kclient.O
 		Severity:    v1.EventSeverityInfo,
 		Description: fmt.Sprintf("Pulled %s", target.Name),
 		Source:      event.ObjectSource(obj),
-		Observed:    metav1.Now(),
+		Observed:    observed,
 	}
 
 	details := AppImagePullEventDetails{
