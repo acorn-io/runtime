@@ -1,0 +1,5 @@
+containers: {
+	simple: {
+		build: "."
+	}
+}
