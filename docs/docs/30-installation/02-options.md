@@ -13,7 +13,7 @@ $ acorn run -P ghcr.io/acorn-io/library/hello-world
 
 $ acorn ps
 NAME       IMAGE          HEALTHY   UP-TO-DATE   CREATED   ENDPOINTS                                                                     MESSAGE
-black-sea   ghcr.io/acorn-io/library/hello-world   1         1            6s ago    http://webapp-black-sea-4232beae.qnrzq5.alpha.oss-acorn.io => webapp:80      OK
+black-sea   ghcr.io/acorn-io/library/hello-world   1         1            6s ago    http://webapp-black-sea-4232beae.qnrzq5.oss-acorn.io => webapp:80      OK
 ```
 By default, endpoints are `http`. To have acorn automatically generate a [Let's Encrypt](https://letsencrypt.org/) certificate and secure your endpoints, you can enable acorn's Let's Encrypt integration like this:
 ```bash
