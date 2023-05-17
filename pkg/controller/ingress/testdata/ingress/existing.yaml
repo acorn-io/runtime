@@ -7,10 +7,9 @@ metadata:
   namespace: acorn-system
 ---
 apiVersion: v1
-data:
-  # base64 encoded. Values are "test.oss-acorn.io" and "token"
-  domain: dGVzdC5vbi1hY29ybi5pbw==
-  token: dG9rZW4=
+stringData:
+  domain: test.oss-acorn.io
+  token: token
 kind: Secret
 metadata:
   name: acorn-dns
