@@ -96,7 +96,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper) {
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobs.JobPodOrphanCleanup)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
-	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the on-acorn.io wildcard cert
+	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the oss-acorn.io wildcard cert
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForService)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForIngress)

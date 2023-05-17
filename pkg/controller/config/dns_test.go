@@ -43,7 +43,7 @@ func TestBasicInit(t *testing.T) {
 	assert.Equal(t, "acorn-dns", secret.Name)
 	assert.Equal(t, "acorn-system", secret.Namespace)
 	assert.Equal(t, "enabled", secret.Annotations[labels.AcornDNSState])
-	assert.Equal(t, []byte("test.on-acorn.io"), secret.Data["domain"])
+	assert.Equal(t, []byte("test.oss-acorn.io"), secret.Data["domain"])
 	assert.Equal(t, []byte("token"), secret.Data["token"])
 
 	// Test when AcornDNS set to "auto" and no cluster domains
@@ -56,7 +56,7 @@ func TestBasicInit(t *testing.T) {
 	assert.Len(t, resp.Client.Updated, 0)
 	secret = resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "auto", secret.Annotations[labels.AcornDNSState])
-	assert.Equal(t, []byte("test.on-acorn.io"), secret.Data["domain"])
+	assert.Equal(t, []byte("test.oss-acorn.io"), secret.Data["domain"])
 	assert.Equal(t, []byte("token"), secret.Data["token"])
 
 	// Test when AcornDNS set to "auto" and there is cluster domains
@@ -69,7 +69,7 @@ func TestBasicInit(t *testing.T) {
 	assert.Len(t, resp.Client.Updated, 0)
 	secret = resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "auto", secret.Annotations[labels.AcornDNSState])
-	assert.Equal(t, []byte("test.on-acorn.io"), secret.Data["domain"])
+	assert.Equal(t, []byte("test.oss-acorn.io"), secret.Data["domain"])
 	assert.Equal(t, []byte("token"), secret.Data["token"])
 
 	// Test when AcornDNS set to "disabled"
@@ -115,7 +115,7 @@ func TestDisabling(t *testing.T) {
 			},
 		},
 		Data: map[string][]byte{
-			"domain": []byte("test.on-acorn.io"),
+			"domain": []byte("test.oss-acorn.io"),
 			"token":  []byte("token"),
 		},
 	})
@@ -131,7 +131,7 @@ func TestDisabling(t *testing.T) {
 	assert.Equal(t, "acorn-dns", secret.Name)
 	assert.Equal(t, "acorn-system", secret.Namespace)
 	assert.Equal(t, "disabled", secret.Annotations[labels.AcornDNSState])
-	assert.Equal(t, []byte("test.on-acorn.io"), secret.Data["domain"])
+	assert.Equal(t, []byte("test.oss-acorn.io"), secret.Data["domain"])
 	assert.Equal(t, []byte("token"), secret.Data["token"])
 }
 
@@ -144,7 +144,7 @@ func (t *mockClient) CreateRecords(endpoint, domain, token string, records []dns
 }
 
 func (t *mockClient) ReserveDomain(endpoint string) (string, string, error) {
-	return "test.on-acorn.io", "token", nil
+	return "test.oss-acorn.io", "token", nil
 }
 
 func (t *mockClient) Renew(endpoint, domain, token string, renew dns.RenewRequest) (dns.RenewResponse, error) {

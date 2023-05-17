@@ -26,7 +26,7 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
-// ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.on-acorn.io
+// ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.oss-acorn.io
 func ProvisionWildcardCert(req router.Request, resp router.Response, domain, token string) error {
 	logrus.Debugf("Provisioning wildcard cert for %v", domain)
 	// Ensure that we have a Let's Encrypt account ready
@@ -166,7 +166,7 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 }
 
 func prov(req router.Request, leUser *LEUser, domain, appname, segment, namespace string) error {
-	if domain == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, domain)) > 0 || strings.HasSuffix(domain, "on-acorn.io") {
+	if domain == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, domain)) > 0 || strings.HasSuffix(domain, "oss-acorn.io") {
 		logrus.Debugf("Skipping cert provisioning for %s", domain)
 		return nil
 	}

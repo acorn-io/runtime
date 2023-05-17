@@ -7,7 +7,7 @@ concurrency:
 on:
   push:
     branches:
-    - main
+      - main
 
 permissions:
   contents: write
@@ -56,7 +56,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          ACORN_DNS_ENDPOINT: https://staging-dns.acrn.io/v1
       - name: Push Docker Images
         run: |
           VERSION=v$(cat releases/metadata.json | jq -r .version)
@@ -83,8 +82,7 @@ jobs:
         id: slack-failure
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: '${{ secrets.SLACK_BOT_FAILURE_CHANNEL }}'
+          channel-id: "${{ secrets.SLACK_BOT_FAILURE_CHANNEL }}"
           slack-message: "❌ Main-Release failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-

@@ -9,10 +9,10 @@ metadata:
     "acorn.io/container-name": "app1"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"app1-app-name-04396c88.local.on-acorn.io":{"port":81,"service":"app1"},"ci1.acorn.not":{"port":81,"service":"app1"}}'
+    acorn.io/targets: '{"app1-app-name-04396c88.local.oss-acorn.io":{"port":81,"service":"app1"},"ci1.acorn.not":{"port":81,"service":"app1"}}'
 spec:
   rules:
-    - host: app1-app-name-04396c88.local.on-acorn.io
+    - host: app1-app-name-04396c88.local.oss-acorn.io
       http:
         paths:
           - backend:
