@@ -184,20 +184,6 @@ func TestFindPVForBinding(t *testing.T) {
 		extraPV             *corev1.PersistentVolume
 	}{
 		{
-			name: "Bind PV created outside of Acorn",
-			appInstance: v1.AppInstance{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "myApp",
-					Namespace: "proj1",
-				},
-			},
-			volumeBinding: v1.VolumeBinding{
-				Volume: "external-pv",
-				Target: "targetVol",
-			},
-			expectedPVName: "external-pv",
-		},
-		{
 			name: "Bind nonexistent PV",
 			appInstance: v1.AppInstance{
 				ObjectMeta: metav1.ObjectMeta{
@@ -240,7 +226,7 @@ func TestFindPVForBinding(t *testing.T) {
 			expectNotFoundError: true,
 		},
 		{
-			name: "Bind PV created outside of Acorn without the Acorn managed label",
+			name: "Bind PV created outside of Acorn",
 			appInstance: v1.AppInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "myApp",
@@ -309,16 +295,6 @@ func buildPVs(t *testing.T) []kclient.Object {
 	pvList := []corev1.PersistentVolume{
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "pv1",
-				Labels: map[string]string{
-					labels.AcornAppNamespace: "proj1",
-					labels.AcornPublicName:   "app1.volume",
-					labels.AcornManaged:      "true",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
 				Name: "pv2",
 				Labels: map[string]string{
 					labels.AcornAppNamespace: "proj1",
@@ -334,14 +310,6 @@ func buildPVs(t *testing.T) []kclient.Object {
 					labels.AcornAppNamespace: "other-project",
 					labels.AcornPublicName:   "app3.volume",
 					labels.AcornManaged:      "true",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "external-pv",
-				Labels: map[string]string{
-					labels.AcornManaged: "true",
 				},
 			},
 		},
