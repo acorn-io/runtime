@@ -28,7 +28,7 @@ func ContentID(e *apiv1.Event) (string, error) {
 		return "", err
 	}
 
-	digest := h.Sum([]byte{})
+	digest := h.Sum(nil)
 	encoded := hex.EncodeToString(digest)
 
 	// Trim to 63 characters
