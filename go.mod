@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.10
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.10
-	github.com/docker/cli v20.10.21+incompatible
+	github.com/docker/cli v20.10.25+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/golang/mock v1.6.0
