@@ -12,7 +12,9 @@ import (
 	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestVolumeController(t *testing.T) {
@@ -164,4 +166,198 @@ func TestVolumeLabelsAnnotations(t *testing.T) {
 	assert.NotContains(t, pvc2.Annotations, "con")
 	assert.Contains(t, pvc2.Annotations, "globalfromacornfilea")
 	assert.NotContains(t, pvc2.Annotations, "vol1fromacornfilea")
+}
+
+func TestFindPVForBinding(t *testing.T) {
+	pvList := buildPVs(t)
+	err := scheme.AddToScheme(scheme.Scheme)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name                string
+		appInstance         v1.AppInstance
+		volumeBinding       v1.VolumeBinding
+		expectedPVName      string
+		expectNotFoundError bool
+		extraPV             *corev1.PersistentVolume
+	}{
+		{
+			name: "Bind PV created outside of Acorn",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "external-pv",
+				Target: "targetVol",
+			},
+			expectedPVName: "external-pv",
+		},
+		{
+			name: "Bind nonexistent PV",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "dne",
+				Target: "targetVol",
+			},
+			expectNotFoundError: true,
+		},
+		{
+			name: "Bind PV created by another app, same project",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "app2.volume",
+				Target: "targetVol",
+			},
+			expectedPVName: "pv2",
+		},
+		{
+			name: "Bind PV created by another app, different project",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "app3.volume",
+				Target: "targetVol",
+			},
+			expectNotFoundError: true,
+		},
+		{
+			name: "Bind PV created outside of Acorn without the Acorn managed label",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "not-acorn-managed",
+				Target: "targetVol",
+			},
+			expectNotFoundError: true,
+		},
+		{
+			name: "Bind PV that was already bound and changed to the new public name",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "app4.volume",
+				Target: "targetVol",
+			},
+			extraPV: &corev1.PersistentVolume{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "pv4",
+					Labels: map[string]string{
+						labels.AcornAppNamespace: "proj1",
+						labels.AcornPublicName:   "myApp.targetVol",
+						labels.AcornManaged:      "true",
+					},
+				},
+			},
+			expectedPVName: "pv4",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := tester.NewRequest(t, scheme.Scheme, &tt.appInstance, pvList...)
+
+			if tt.extraPV != nil {
+				if err := req.Client.Create(req.Ctx, tt.extraPV); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			pv, err := getPVForVolumeBinding(req, &tt.appInstance, tt.volumeBinding)
+			if err != nil {
+				if (apierrors.IsNotFound(err) && !tt.expectNotFoundError) || !apierrors.IsNotFound(err) {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+			} else if tt.expectNotFoundError {
+				t.Fatalf("Found PersistentVolume [%s] when none was expected", pv.Name)
+			} else if pv.Name != tt.expectedPVName {
+				t.Fatalf("Expected PersistentVolume [%s] but found [%s]", tt.expectedPVName, pv.Name)
+			}
+		})
+	}
+}
+
+func buildPVs(t *testing.T) []kclient.Object {
+	t.Helper()
+
+	pvList := []corev1.PersistentVolume{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "pv1",
+				Labels: map[string]string{
+					labels.AcornAppNamespace: "proj1",
+					labels.AcornPublicName:   "app1.volume",
+					labels.AcornManaged:      "true",
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "pv2",
+				Labels: map[string]string{
+					labels.AcornAppNamespace: "proj1",
+					labels.AcornPublicName:   "app2.volume",
+					labels.AcornManaged:      "true",
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "pv3",
+				Labels: map[string]string{
+					labels.AcornAppNamespace: "other-project",
+					labels.AcornPublicName:   "app3.volume",
+					labels.AcornManaged:      "true",
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "external-pv",
+				Labels: map[string]string{
+					labels.AcornManaged: "true",
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   "not-acorn-managed",
+				Labels: map[string]string{},
+			},
+		},
+	}
+
+	// I don't know of a better way to convert this to generic kclient.Object
+	var objList []kclient.Object
+	for _, pv := range pvList {
+		objList = append(objList, pv.DeepCopy())
+	}
+
+	return objList
 }

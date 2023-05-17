@@ -216,11 +216,16 @@ func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 	if err := req.Client.Get(req.Ctx, kclient.ObjectKey{Name: binding.Volume}, pv); err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	} else if err == nil {
+		// make sure this PV is managed by acorn
+		if _, ok := pv.Labels[labels.AcornManaged]; !ok {
+			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "persistentvolumes"}, binding.Volume)
+		}
+
 		// make sure this PV doesn't have an acorn.io/app-namespace label on it that points to a different project than the appInstance
 		// if it does, then we need to block this cross-project binding attempt
 		appNamespace, ok := pv.Labels[labels.AcornAppNamespace]
 		if ok && appNamespace != appInstance.Namespace {
-			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "v1", Resource: "persistentvolumes"}, binding.Volume)
+			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "persistentvolumes"}, binding.Volume)
 		}
 		return pv, nil
 	}
@@ -238,6 +243,7 @@ func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 	selector := klabels.SelectorFromSet(map[string]string{
 		// also make sure we only list volumes that are part of the same Acorn project
 		labels.AcornAppNamespace: appInstance.Namespace,
+		labels.AcornManaged:      "true",
 	}).Add(*requirement)
 
 	pvList := new(corev1.PersistentVolumeList)
@@ -246,7 +252,7 @@ func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 	}
 	if len(pvList.Items) != 1 {
 		if len(pvList.Items) == 0 {
-			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "v1", Resource: "persistentvolumes"}, binding.Volume)
+			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "persistentvolumes"}, binding.Volume)
 		}
 		return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", binding.Volume, len(pvList.Items))
 	}
