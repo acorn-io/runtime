@@ -19,7 +19,6 @@ var (
 	ClusterDomainDefault         = ".local.oss-acorn.io"
 	InternalClusterDomainDefault = "svc.cluster.local"
 
-	// AcornDNSEndpointDefault will be overridden at build time for releases
 	AcornDNSEndpointDefault = "https://oss-dns.acrn.io/v1"
 	AcornDNSStateDefault    = "auto"
 
