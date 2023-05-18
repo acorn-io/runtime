@@ -143,9 +143,13 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	case "name":
 		return i.app.Name, true, nil
 	case "project":
-		fallthrough
-	case "namespace":
+		project := i.app.Labels[labels.AcornProjectName]
+		if project != "" {
+			return project, true, nil
+		}
 		return i.app.Namespace, true, nil
+	case "namespace":
+		return i.app.Status.Namespace, true, nil
 	case "image":
 		if tags.IsLocalReference(i.app.Status.AppImage.ID) {
 			return i.app.Status.AppImage.ID, true, nil
