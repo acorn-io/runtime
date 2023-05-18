@@ -703,5 +703,5 @@ func (s *Validator) getImageDetails(ctx context.Context, namespace string, profi
 }
 
 func (s *Validator) checkImageAllowed(ctx context.Context, namespace, image string) error {
-	return imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image)
+	return imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image, "")
 }

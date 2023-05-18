@@ -37,7 +37,7 @@ func (e *ErrImageNotAllowed) Is(target error) bool {
 }
 
 // CheckImageAllowed checks if the image is allowed by the ImageAllowRules on cluster and project level
-func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image string, opts ...remote.Option) error {
+func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image, digest string, opts ...remote.Option) error {
 	// Get ImageAllowRules in the same namespace as the AppInstance
 	rulesList := &v1.ImageAllowRuleInstanceList{}
 	if err := c.List(ctx, rulesList, &client.ListOptions{Namespace: namespace}); err != nil {
@@ -54,7 +54,7 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image st
 		return err
 	}
 
-	return CheckImageAgainstRules(ctx, c, namespace, image, rulesList.Items, keychain, opts...)
+	return CheckImageAgainstRules(ctx, c, namespace, image, digest, rulesList.Items, keychain, opts...)
 }
 
 // CheckImageAgainstRules checks if the image is allowed by the given ImageAllowRules
@@ -62,7 +62,7 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image st
 // - DENIED if strict mode (deny-by-default) is enabled
 // - ALLOWED if strict mode is disabled (the default)
 // ! Only one single rule has to allow the image for this to pass !
-func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, imageAllowRules []v1.ImageAllowRuleInstance, keychain authn.Keychain, opts ...remote.Option) error {
+func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, digest string, imageAllowRules []v1.ImageAllowRuleInstance, keychain authn.Keychain, opts ...remote.Option) error {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		return nil
 	}
 
-	logrus.Debugf("Checking image %s against %d rules", image, len(imageAllowRules))
+	logrus.Debugf("Checking image %s (%s) against %d rules", image, digest, len(imageAllowRules))
 
 	// Check if the image is allowed
 	verifyOpts := cosign.VerifyOpts{
@@ -101,10 +101,19 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		return fmt.Errorf("error parsing image reference %s: %w", image, err)
 	}
 
+	var digestRef name.Digest
+	if digest != "" {
+		digestRef = ref.Context().Digest(digest)
+		if err != nil {
+			return fmt.Errorf("error parsing image digest reference %s: %w", image, err)
+		}
+		image = digestRef.Name()
+	}
+
 iarLoop:
 	for _, imageAllowRule := range imageAllowRules {
 		// Check if the image is in scope of the ImageAllowRule
-		if !imageCovered(ref, imageAllowRule) {
+		if !imageCovered(ref, digestRef, imageAllowRule) {
 			continue
 		}
 
@@ -169,7 +178,7 @@ iarLoop:
 	return &ErrImageNotAllowed{Image: image}
 }
 
-func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
+func imageCovered(image name.Reference, digest name.Digest, iar v1.ImageAllowRuleInstance) bool {
 	for _, pattern := range iar.Images {
 		// empty pattern? skip (should've been caught by IAR validation already)
 		if strings.TrimSpace(pattern) == "" {
@@ -178,7 +187,7 @@ func imageCovered(image name.Reference, iar v1.ImageAllowRuleInstance) bool {
 
 		// not a pattern and image name is not an exact match? skip
 		if !imagepattern.IsImagePattern(pattern) {
-			if image.Name() != pattern {
+			if image.Name() != pattern && (digest.Identifier() != "" && digest.Name() != pattern) {
 				continue
 			}
 		}

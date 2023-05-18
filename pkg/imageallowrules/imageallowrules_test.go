@@ -91,7 +91,7 @@ func TestImageCovered(t *testing.T) {
 				t.Fatalf("failed to parse image %s: %v", tc.image, err)
 			}
 
-			match := imageCovered(ref, v1.ImageAllowRuleInstance{
+			match := imageCovered(ref, name.Digest{}, v1.ImageAllowRuleInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "testns",

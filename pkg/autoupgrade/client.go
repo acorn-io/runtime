@@ -60,5 +60,5 @@ func (c *client) resolveLocalTag(ctx context.Context, namespace, name string) (s
 }
 
 func (c *client) checkImageAllowed(ctx context.Context, namespace, name string) error {
-	return imageallowrules.CheckImageAllowed(ctx, c.client, namespace, name)
+	return imageallowrules.CheckImageAllowed(ctx, c.client, namespace, name, "")
 }
