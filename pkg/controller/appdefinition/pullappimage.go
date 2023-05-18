@@ -187,6 +187,7 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 		Source:      event.ObjectSource(obj),
 		Observed:    observed,
 	}
+	e.SetNamespace(obj.GetNamespace())
 
 	details := AppImagePullEventDetails{
 		ResourceVersion: obj.GetResourceVersion(),
