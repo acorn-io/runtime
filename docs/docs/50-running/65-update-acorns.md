@@ -39,7 +39,7 @@ awesome-acorn
 
 $ acorn app                   
 NAME             IMAGE          HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS                                                            MESSAGE
-awesome-acorn    3e23d225e777   1         1            10s ago    http://nginx-awesome-acorn-9ca4278a.local.on-acorn.io => nginx:80    OK
+awesome-acorn    3e23d225e777   1         1            10s ago    http://nginx-awesome-acorn-9ca4278a.local.oss-acorn.io => nginx:80    OK
 
 #update the msg arg and add a label
 acorn run --update --label label=new -n awesome-acorn -- --msg 2

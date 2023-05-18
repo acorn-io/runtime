@@ -13,7 +13,7 @@ metadata:
     acorn.io/container-name: con1
 spec:
   rules:
-    - host: con1.app-name.app-namespace.test.on-acorn.io
+    - host: con1.app-name.app-namespace.test.oss-acorn.io
       http:
         paths:
           - backend:

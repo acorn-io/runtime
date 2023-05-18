@@ -9,11 +9,11 @@ metadata:
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/dns-hash: "5dedee4fb5aca80f3520412b7db02c0d6ada7bbb"
+    acorn.io/dns-hash: "73bf5777c6437485fd801fefe6b5ef37d8b76a9e"
     acorn.io/container-name: con1
 spec:
   rules:
-    - host: con1.app-name.app-namespace.test.on-acorn.io
+    - host: con1.app-name.app-namespace.test.oss-acorn.io
       http:
         paths:
           - backend:

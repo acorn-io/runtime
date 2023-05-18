@@ -26,9 +26,9 @@ func TestToEndpoint(t *testing.T) {
 		wantErr      error
 	}{
 		{
-			name: "\"on-acorn.io no -\" pattern set",
+			name: "\"oss-acorn.io no -\" pattern set",
 			args: args{
-				domain:      "domain.on-acorn.io",
+				domain:      "domain.oss-acorn.io",
 				serviceName: "app-test",
 				pattern:     "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}",
 				appInstance: &v1.AppInstance{
@@ -38,12 +38,12 @@ func TestToEndpoint(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantEndpoint: "app-test-green-star-b19d0b34.domain.on-acorn.io",
+			wantEndpoint: "app-test-green-star-b19d0b34.domain.oss-acorn.io",
 		},
 		{
-			name: "\"on-acorn.io no -\" pattern set with 12 characters",
+			name: "\"oss-acorn.io no -\" pattern set with 12 characters",
 			args: args{
-				domain:      "domain.on-acorn.io",
+				domain:      "domain.oss-acorn.io",
 				serviceName: "app-test",
 				pattern:     "{{hashConcat 12 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}",
 				appInstance: &v1.AppInstance{
@@ -53,12 +53,12 @@ func TestToEndpoint(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantEndpoint: "app-test-green-star-b19d0b346674.domain.on-acorn.io",
+			wantEndpoint: "app-test-green-star-b19d0b346674.domain.oss-acorn.io",
 		},
 		{
-			name: "\"on-acorn.io no -\" pattern set with less than two parameters should return empty string",
+			name: "\"oss-acorn.io no -\" pattern set with less than two parameters should return empty string",
 			args: args{
-				domain:      "domain.on-acorn.io",
+				domain:      "domain.oss-acorn.io",
 				serviceName: "app-test",
 				pattern:     "{{hashConcat 8 .Container | truncate}}.{{.ClusterDomain}}",
 				appInstance: &v1.AppInstance{
@@ -68,7 +68,7 @@ func TestToEndpoint(t *testing.T) {
 					Status:     v1.AppInstanceStatus{},
 				},
 			},
-			wantEndpoint: ".domain.on-acorn.io",
+			wantEndpoint: ".domain.oss-acorn.io",
 		},
 		{
 			name: "\"custom domain\" pattern set",

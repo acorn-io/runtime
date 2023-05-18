@@ -24,7 +24,6 @@ builds:
       - -s
       - -w
       - -X "github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}"
-      - -X "github.com/acorn-io/acorn/pkg/config.AcornDNSEndpointDefault={{ .Env.ACORN_DNS_ENDPOINT }}"
 
 universal_binaries:
   - id: mac
@@ -48,7 +47,7 @@ archives:
     builds:
       - default
       - mac
-    name_template: "{{ .ProjectName }}-v{{ .Version }}-{{ if eq .Os \"darwin\" }}macOS-universal{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}"
+    name_template: '{{ .ProjectName }}-v{{ .Version }}-{{ if eq .Os "darwin" }}macOS-universal{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}'
     format_overrides:
       - goos: windows
         format: zip
@@ -62,7 +61,8 @@ signs:
   - id: cosign
     cmd: cosign
     stdin: "{{ .Env.COSIGN_PASSWORD }}"
-    args: ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
+    args:
+      ["sign-blob", "--key=cosign.key", "--output=${signature}", "${artifact}"]
     artifacts: checksum
 
 changelog:

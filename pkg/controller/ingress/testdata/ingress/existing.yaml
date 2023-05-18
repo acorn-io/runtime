@@ -8,8 +8,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  # base64 encoded. Values are "test.on-acorn.io" and "token"
-  domain: dGVzdC5vbi1hY29ybi5pbw==
+  # base64 encoded. Values are "test.oss-acorn.io" and "token"
+  domain: dGVzdC5vc3MtYWNvcm4uaW8=
   token: dG9rZW4=
 kind: Secret
 metadata:

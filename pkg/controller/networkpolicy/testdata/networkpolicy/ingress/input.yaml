@@ -10,7 +10,7 @@ metadata:
   namespace: my-app-namespace
 spec:
   rules:
-    - host: myhostname.on-acorn.io
+    - host: myhostname.oss-acorn.io
       http:
         paths:
           - backend:

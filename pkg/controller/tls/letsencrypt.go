@@ -377,8 +377,8 @@ func (u *LEUser) mustRenew(sec *corev1.Secret) bool {
 }
 
 func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.Resource, error) {
-	if !strings.HasSuffix(domain, "on-acorn.io") {
-		return nil, fmt.Errorf("ACME DNS challenge is only supported for on-acorn.io subdomains, not for %s", domain)
+	if !strings.HasSuffix(domain, "oss-acorn.io") {
+		return nil, fmt.Errorf("ACME DNS challenge is only supported for oss-acorn.io subdomains, not for %s", domain)
 	}
 
 	client, err := u.leClient()

@@ -9,10 +9,10 @@ metadata:
     "acorn.io/container-name": "oneimage"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/targets: '{"oneimage.app-name.app-namespace.local.on-acorn.io:8081":{"port":81,"service":"oneimage"}}'
+    acorn.io/targets: '{"oneimage.app-name.app-namespace.local.oss-acorn.io:8081":{"port":81,"service":"oneimage"}}'
 spec:
   rules:
-    - host: oneimage.app-name.app-namespace.local.on-acorn.io
+    - host: oneimage.app-name.app-namespace.local.oss-acorn.io
       http:
         paths:
           - backend:

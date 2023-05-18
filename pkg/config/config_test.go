@@ -60,7 +60,7 @@ func TestAcornDNSStates(t *testing.T) {
 			conf: &apiv1.Config{
 				AcornDNS: &[]string{"auto"}[0],
 			},
-			expectedClusterDomains: []string{".local.on-acorn.io"},
+			expectedClusterDomains: []string{".local.oss-acorn.io"},
 			prepare: func(f *mocks.MockReader) {
 				f.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				f.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil)

@@ -396,7 +396,7 @@ type Config struct {
 	// See ClusterDomains as an example.
 
 	IngressClassName               *string  `json:"ingressClassName" usage:"The ingress class name to assign to all created ingress resources (default '')"`
-	ClusterDomains                 []string `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .on-acorn.io)"`
+	ClusterDomains                 []string `json:"clusterDomains" name:"cluster-domain" usage:"The externally addressable cluster domain (default .oss-acorn.io)"`
 	LetsEncrypt                    *string  `json:"letsEncrypt" name:"lets-encrypt" usage:"enabled|disabled|staging. If enabled, acorn generated endpoints will be secured using TLS certificate from Let's Encrypt. Staging uses Let's Encrypt's staging environment. (default disabled)"`
 	LetsEncryptEmail               string   `json:"letsEncryptEmail" name:"lets-encrypt-email" usage:"Required if --lets-encrypt=enabled. The email address to use for Let's Encrypt registration(default '')"`
 	LetsEncryptTOSAgree            *bool    `json:"letsEncryptTOSAgree" name:"lets-encrypt-tos-agree" usage:"Required if --lets-encrypt=enabled. If true, you agree to the Let's Encrypt terms of service (default false)"`

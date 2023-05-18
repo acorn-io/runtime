@@ -16,11 +16,10 @@ import (
 )
 
 var (
-	ClusterDomainDefault         = ".local.on-acorn.io"
+	ClusterDomainDefault         = ".local.oss-acorn.io"
 	InternalClusterDomainDefault = "svc.cluster.local"
 
-	// AcornDNSEndpointDefault will be overridden at build time for releases
-	AcornDNSEndpointDefault = "https://staging-dns.acrn.io/v1"
+	AcornDNSEndpointDefault = "https://oss-dns.acrn.io/v1"
 	AcornDNSStateDefault    = "auto"
 
 	// LetsEncryptOptionDefault is the default state for the Let's Encrypt integration

@@ -61,14 +61,13 @@ jobs:
           AC_P12: ${{ secrets.AC_P12 }}
           AC_P12_PASSWORD: ${{ secrets.AC_P12_PASSWORD }}
           KEYCHAIN: ${{ steps.keychain.outputs['keychain-name'] }}
-          ACORN_DNS_ENDPOINT: https://alpha-dns.acrn.io/v1
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
       - name: report failure to slack
         if: failure()
         id: slack-failure
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: '${{ secrets.SLACK_BOT_FAILURE_CHANNEL }}'
+          channel-id: "${{ secrets.SLACK_BOT_FAILURE_CHANNEL }}"
           slack-message: "❌ Release failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -76,7 +75,7 @@ jobs:
         id: slack-success
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: '${{ secrets.USERS_SLACK_BOT_RELEASE_CHANNEL }}'
+          channel-id: "${{ secrets.USERS_SLACK_BOT_RELEASE_CHANNEL }}"
           slack-message: " ✅ Release ${{ github.ref_name }} is now available: ${{ github.server_url }}/${{ github.repository }}/releases/${{ github.ref_name }}"
         env:
-          SLACK_BOT_TOKEN: '${{ secrets.USERS_SLACK_BOT_TOKEN }}'
+          SLACK_BOT_TOKEN: "${{ secrets.USERS_SLACK_BOT_TOKEN }}"
