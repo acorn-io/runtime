@@ -169,10 +169,10 @@ var (
 	}
 
 	Event = [][]string{
+		{"Source", "Source"},
 		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},
 		{"Actor", "Actor"},
-		{"Source", "Source"},
 		{"Observed", "{{ ago .Observed }}"},
 		{"Description", "Description"},
 	}
