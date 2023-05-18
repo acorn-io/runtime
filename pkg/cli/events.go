@@ -32,7 +32,7 @@ func NewEvent(c CommandContext) *cobra.Command {
 }
 
 type Events struct {
-	Tail    *int   `usage:"Return this number of latest events" short:"t"`
+	Tail    int    `usage:"Return this number of latest events" short:"t"`
 	Details bool   `usage:"Don't strip event details from response" short:"d"`
 	Output  string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client  ClientFactory

@@ -320,22 +320,16 @@ type ContainerReplicaListOptions struct {
 
 type EventStreamOptions struct {
 	Details bool `json:"details,omitempty"`
-	Tail    *int `json:"tail,omitempty"`
+	Tail    int  `json:"tail,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
-	var listOpts kclient.ListOptions
-	if o.Tail != nil {
-		listOpts.Limit = int64(*o.Tail)
+	return &kclient.ListOptions{
+		Limit: int64(o.Tail),
+		FieldSelector: fields.Set{
+			"details": strconv.FormatBool(o.Details),
+		}.AsSelector(),
 	}
-
-	fs := fields.Set{
-		"details": strconv.FormatBool(o.Details),
-	}
-
-	listOpts.FieldSelector = fs.AsSelector()
-
-	return &listOpts
 }
 
 type DefaultClient struct {
