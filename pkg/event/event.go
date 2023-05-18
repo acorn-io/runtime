@@ -65,7 +65,7 @@ func publicKind(obj runtime.Object) string {
 	for _, k := range kinds {
 		switch k.Kind {
 		case "App", "AppInstance":
-			return "App"
+			return "app"
 		}
 
 	}

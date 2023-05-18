@@ -3,14 +3,15 @@ package apps
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/event"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
-	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/sirupsen/logrus"
+	"github.com/wI2L/jsondiff"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,8 +41,8 @@ type AppSpecUpdateEventDetails struct {
 	// OldSpec is the spec of the App before the update.
 	OldSpec v1.AppInstanceSpec `json:"oldSpec"`
 
-	// Patch is a JSON Merge Patch that describes all changes made to OldSpec by the respective update.
-	// See: https://datatracker.ietf.org/doc/html/rfc7386
+	// Patch is a JSON Patch that describes all changes made to OldSpec by the respective update.
+	// See: https://datatracker.ietf.org/doc/html/rfc6902
 	Patch json.RawMessage `json:"patch"`
 }
 
@@ -77,11 +78,12 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: obj.GetNamespace(),
 		},
-		Type:     AppCreateEventType,
-		Severity: v1.EventSeverityInfo,
-		Details:  details,
-		Source:   event.ObjectSource(obj),
-		Observed: metav1.Now(),
+		Type:        AppCreateEventType,
+		Severity:    v1.EventSeverityInfo,
+		Details:     details,
+		Description: fmt.Sprintf("App %s/%s created", obj.GetNamespace(), obj.GetName()),
+		Source:      event.ObjectSource(obj),
+		Observed:    metav1.Now(),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
@@ -109,11 +111,12 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: obj.GetNamespace(),
 		},
-		Type:     AppDeleteEventType,
-		Severity: v1.EventSeverityInfo,
-		Details:  details,
-		Source:   event.ObjectSource(obj),
-		Observed: metav1.Now(),
+		Type:        AppDeleteEventType,
+		Severity:    v1.EventSeverityInfo,
+		Details:     details,
+		Description: fmt.Sprintf("App %s/%s deleted", obj.GetNamespace(), obj.GetName()),
+		Source:      event.ObjectSource(obj),
+		Observed:    metav1.Now(),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
@@ -136,7 +139,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 	}
 
 	oldSpec, newSpec := old.(*apiv1.App).Spec, updated.(*apiv1.App).Spec
-	patch, err := mergePatch(oldSpec, newSpec)
+	patch, err := jsonPatch(oldSpec, newSpec)
 	if err != nil {
 		logrus.Warnf("Failed to generate app spec patch, event recording disabled for request: %s", err)
 		return updated, nil
@@ -162,11 +165,12 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: obj.GetNamespace(),
 		},
-		Type:     AppSpecUpdateEventType,
-		Severity: v1.EventSeverityInfo,
-		Details:  details,
-		Source:   event.ObjectSource(obj),
-		Observed: metav1.Now(),
+		Type:        AppSpecUpdateEventType,
+		Severity:    v1.EventSeverityInfo,
+		Details:     details,
+		Description: fmt.Sprintf("Spec field updated for App %s/%s", obj.GetNamespace(), obj.GetName()),
+		Source:      event.ObjectSource(obj),
+		Observed:    metav1.Now(),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err)
 	}
@@ -174,21 +178,11 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 	return updated, nil
 }
 
-func mergePatch(from, to any) (json.RawMessage, error) {
-	fromBytes, err := json.Marshal(from)
+func jsonPatch(from, to any) (json.RawMessage, error) {
+	patch, err := jsondiff.Compare(from, to)
 	if err != nil {
 		return nil, err
 	}
 
-	toBytes, err := json.Marshal(to)
-	if err != nil {
-		return nil, err
-	}
-
-	patch, err := jsonpatch.CreateMergePatch(fromBytes, toBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return patch, nil
+	return json.Marshal(patch)
 }
