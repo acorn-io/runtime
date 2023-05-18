@@ -25,10 +25,10 @@ func (validator) ValidateName(_ context.Context, obj runtime.Object) (result fie
 	}
 
 	if e.Name != id {
-		result = append(result, field.NotSupported(
+		result = append(result, field.Invalid(
 			field.NewPath("metadata", "name"),
 			e.Name,
-			[]string{id},
+			fmt.Sprintf("name should be %q", id),
 		))
 	}
 
