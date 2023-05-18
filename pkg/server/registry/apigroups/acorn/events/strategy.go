@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"sort"
 	"strconv"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
@@ -33,6 +34,7 @@ func (s *eventStrategy) List(ctx context.Context, namespace string, opts storage
 		return nil, err
 	}
 	opts.Predicate.Field = stripped
+	q.tail, opts.Predicate.Limit = opts.Predicate.Limit, 0
 
 	full, err := s.CompleteStrategy.List(ctx, namespace, opts)
 	if err != nil {
@@ -46,12 +48,29 @@ type query struct {
 	// details determines if the details field is elided from query results.
 	// If true keep details, otherwise strip them.
 	details bool
+
+	// tail when > 0, determines the number of latest events to return.
+	tail int64
 }
 
 func (q query) on(list *apiv1.EventList) (*apiv1.EventList, error) {
-	if q.details {
+	// Sort in descending order
+	items := list.Items
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Observed.After(items[j].Observed.Time)
+	})
+
+	tail := len(items)
+	if q.tail > 0 && q.tail < int64(tail) {
+		tail = int(q.tail)
+	}
+
+	list.Items = items[:tail]
+
+	if q.details && q.tail < 1 {
 		return list, nil
 	}
+
 	for i, event := range list.Items {
 		event.Details = nil
 		list.Items[i] = event
