@@ -329,7 +329,6 @@ func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
 		listOpts.Limit = int64(*o.Tail)
 	}
 
-	// TODO(njhale): Only "withContext" needs to be sent to the server.
 	fs := fields.Set{
 		"details": strconv.FormatBool(o.Details),
 	}

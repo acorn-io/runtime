@@ -61,31 +61,30 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 	created, err := s.CompleteStrategy.Create(ctx, obj)
 	if err != nil {
 		// Return created because CompleteStrategy.Create is a black box; i.e. we can't assume
-		// updated is nil when err is non-nil.
+		// created is nil when err is non-nil.
 		return created, err
 	}
 
-	defer func() {
-		details, err := v1.Mapify(AppSpecCreateEventDetails{
-			ResourceVersion: created.GetResourceVersion(),
-		})
-		if err != nil {
-			logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err.Error())
-			return
-		}
-		if err := s.recorder.Record(ctx, &apiv1.Event{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: obj.GetNamespace(),
-			},
-			Type:     AppCreateEventType,
-			Severity: v1.EventSeverityInfo,
-			Details:  details,
-			Source:   event.ObjectSource(obj),
-			Observed: metav1.Now(),
-		}); err != nil {
-			logrus.Warnf("Failed to record event: %s", err.Error())
-		}
-	}()
+	details, err := v1.Mapify(AppSpecCreateEventDetails{
+		ResourceVersion: created.GetResourceVersion(),
+	})
+	if err != nil {
+		logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err.Error())
+		return created, nil
+	}
+
+	if err := s.recorder.Record(ctx, &apiv1.Event{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: obj.GetNamespace(),
+		},
+		Type:     AppCreateEventType,
+		Severity: v1.EventSeverityInfo,
+		Details:  details,
+		Source:   event.ObjectSource(obj),
+		Observed: metav1.Now(),
+	}); err != nil {
+		logrus.Warnf("Failed to record event: %s", err.Error())
+	}
 
 	return created, nil
 }
@@ -94,31 +93,30 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 	deleted, err := s.CompleteStrategy.Delete(ctx, obj)
 	if err != nil {
 		// Return deleted because CompleteStrategy.Delete is a black box; i.e. we can't assume
-		// updated is nil when err is non-nil.
+		// deleted is nil when err is non-nil.
 		return deleted, err
 	}
 
-	defer func() {
-		details, err := v1.Mapify(AppSpecDeleteEventDetails{
-			ResourceVersion: deleted.GetResourceVersion(),
-		})
-		if err != nil {
-			logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err.Error())
-			return
-		}
-		if err := s.recorder.Record(ctx, &apiv1.Event{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: obj.GetNamespace(),
-			},
-			Type:     AppDeleteEventType,
-			Severity: v1.EventSeverityInfo,
-			Details:  details,
-			Source:   event.ObjectSource(obj),
-			Observed: metav1.Now(),
-		}); err != nil {
-			logrus.Warnf("Failed to record event: %s", err.Error())
-		}
-	}()
+	details, err := v1.Mapify(AppSpecDeleteEventDetails{
+		ResourceVersion: deleted.GetResourceVersion(),
+	})
+	if err != nil {
+		logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err.Error())
+		return deleted, nil
+	}
+
+	if err := s.recorder.Record(ctx, &apiv1.Event{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: obj.GetNamespace(),
+		},
+		Type:     AppDeleteEventType,
+		Severity: v1.EventSeverityInfo,
+		Details:  details,
+		Source:   event.ObjectSource(obj),
+		Observed: metav1.Now(),
+	}); err != nil {
+		logrus.Warnf("Failed to record event: %s", err.Error())
+	}
 
 	return deleted, nil
 }
@@ -137,43 +135,41 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 		return updated, err
 	}
 
-	defer func() {
-		oldSpec, newSpec := old.(*apiv1.App).Spec, updated.(*apiv1.App).Spec
-		patch, err := mergePatch(oldSpec, newSpec)
-		if err != nil {
-			logrus.Warnf("Failed to generate app spec patch, event recording disabled for request: %s", err)
-			return
-		}
+	oldSpec, newSpec := old.(*apiv1.App).Spec, updated.(*apiv1.App).Spec
+	patch, err := mergePatch(oldSpec, newSpec)
+	if err != nil {
+		logrus.Warnf("Failed to generate app spec patch, event recording disabled for request: %s", err)
+		return updated, nil
+	}
 
-		if len(patch) < 1 {
-			// Update did not change spec, don't record an event
-			logrus.Infof("Update did not change app spec, event recording disabled for request")
-			return
-		}
+	if len(patch) < 1 {
+		// Update did not change spec, don't record an event
+		logrus.Infof("Update did not change app spec, event recording disabled for request")
+		return updated, nil
+	}
 
-		details, err := v1.Mapify(AppSpecUpdateEventDetails{
-			ResourceVersion: updated.GetResourceVersion(),
-			OldSpec:         oldSpec,
-			Patch:           patch,
-		})
-		if err != nil {
-			logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err)
-			return
-		}
+	details, err := v1.Mapify(AppSpecUpdateEventDetails{
+		ResourceVersion: updated.GetResourceVersion(),
+		OldSpec:         oldSpec,
+		Patch:           patch,
+	})
+	if err != nil {
+		logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err)
+		return updated, nil
+	}
 
-		if err := s.recorder.Record(ctx, &apiv1.Event{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: obj.GetNamespace(),
-			},
-			Type:     AppSpecUpdateEventType,
-			Severity: v1.EventSeverityInfo,
-			Details:  details,
-			Source:   event.ObjectSource(obj),
-			Observed: metav1.Now(),
-		}); err != nil {
-			logrus.Warnf("Failed to record event: %s", err)
-		}
-	}()
+	if err := s.recorder.Record(ctx, &apiv1.Event{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: obj.GetNamespace(),
+		},
+		Type:     AppSpecUpdateEventType,
+		Severity: v1.EventSeverityInfo,
+		Details:  details,
+		Source:   event.ObjectSource(obj),
+		Observed: metav1.Now(),
+	}); err != nil {
+		logrus.Warnf("Failed to record event: %s", err)
+	}
 
 	return updated, nil
 }

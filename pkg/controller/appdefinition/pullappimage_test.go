@@ -198,7 +198,6 @@ func TestPullAppImageEvents(t *testing.T) {
 		now,
 		nil,
 	)
-	// testTargetImage(t, app("acorn.io/img:#", "acorn.io/img:1", "", "acorn.io/img:2", false, true), "", "confirm upgrade to acorn.io/img:2")
 
 	testRecordPullEvent(t,
 		"Pattern/2",
@@ -269,21 +268,3 @@ func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInsta
 		assert.EqualValues(t, expect, recording[0])
 	})
 }
-
-// func testRecordPullEvent(t *testing.T, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage, expect *apiv1.Event) {
-// 	var recording []*apiv1.Event
-// 	fakeRecorder := func(_ context.Context, e *apiv1.Event) error {
-// 		recording = append(recording, e)
-// 		return nil
-// 	}
-//
-// 	recordPullEvent(context.Background(), event.RecorderFunc(fakeRecorder), obj, autoUpgradeOn, err, previousImage, targetImage)
-// 	if expect == nil {
-// 		assert.Empty(t, recording)
-// 		return
-// 	}
-//
-// 	assert.Len(t, recording, 1)
-// 	assert.EqualValues(t, expect, recording[0])
-//
-// }

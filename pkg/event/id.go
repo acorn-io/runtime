@@ -12,8 +12,6 @@ import (
 // ContentID returns a deterministic ID based on the content of a given event.
 // The returned ID is a valid kubernetes resource name (metadata.name).
 func ContentID(e *apiv1.Event) (string, error) {
-	// TODO: Reduce the field set used to generate when composite events are added.
-	// TODO: Find a better way of selecting and encoding field sets. Maybe a multi-layered io.Writer.
 	fieldSet := strings.Join([]string{
 		e.Type,
 		string(e.Severity),
