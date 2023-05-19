@@ -53,3 +53,13 @@ func (in *GenericMap) DeepCopyInto(out *GenericMap) {
 		(*out)[k] = v
 	}
 }
+
+func Mapify(obj any) (GenericMap, error) {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	gm := make(GenericMap)
+	return gm, gm.UnmarshalJSON(data)
+}

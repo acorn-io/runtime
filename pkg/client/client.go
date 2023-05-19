@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"os"
+	"strconv"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -14,6 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -253,6 +255,8 @@ type Client interface {
 	RegionList(ctx context.Context) ([]apiv1.Region, error)
 	RegionGet(ctx context.Context, name string) (*apiv1.Region, error)
 
+	EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error)
+
 	GetProject() string
 	GetNamespace() string
 	GetClient() (kclient.WithWatch, error)
@@ -312,6 +316,20 @@ type ContainerReplicaExecOptions struct {
 
 type ContainerReplicaListOptions struct {
 	App string `json:"app,omitempty"`
+}
+
+type EventStreamOptions struct {
+	Details bool `json:"details,omitempty"`
+	Tail    int  `json:"tail,omitempty"`
+}
+
+func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
+	return &kclient.ListOptions{
+		Limit: int64(o.Tail),
+		FieldSelector: fields.Set{
+			"details": strconv.FormatBool(o.Details),
+		}.AsSelector(),
+	}
 }
 
 type DefaultClient struct {

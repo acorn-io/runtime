@@ -21,6 +21,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/secrets"
 	"github.com/acorn-io/acorn/pkg/controller/service"
 	"github.com/acorn-io/acorn/pkg/controller/tls"
+	"github.com/acorn-io/acorn/pkg/event"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/acorn/pkg/volume"
@@ -41,12 +42,12 @@ var (
 	})
 )
 
-func routes(router *router.Router, registryTransport http.RoundTripper) {
+func routes(router *router.Router, registryTransport http.RoundTripper, recorder event.Recorder) {
 	router.OnErrorHandler = appdefinition.OnError
 
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.AssignNamespace)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.CheckImageAllowedHandler(registryTransport))
-	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport))
+	router.HandleFunc(&v1.AppInstance{}, appdefinition.PullAppImage(registryTransport, recorder))
 	router.HandleFunc(&v1.AppInstance{}, images.CreateImages)
 	router.HandleFunc(&v1.AppInstance{}, appdefinition.ParseAppImage)
 	router.HandleFunc(&v1.AppInstance{}, tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains

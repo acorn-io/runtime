@@ -1,0 +1,1 @@
+FROM ghcr.io/acorn-io/images-mirror/nginx:latest

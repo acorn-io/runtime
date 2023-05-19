@@ -51,6 +51,8 @@ type MockClientFactory struct {
 	ComputeClassItem *apiv1.ComputeClass
 	RegionList       []apiv1.Region
 	RegionItem       *apiv1.Region
+	EventList        []apiv1.Event
+	EventItem        *apiv1.Event
 }
 
 func (dc *MockClientFactory) Options() project.Options {
@@ -79,6 +81,8 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		ComputeClassItem: dc.ComputeClassItem,
 		Regions:          dc.RegionList,
 		RegionItem:       dc.RegionItem,
+		Events:           dc.EventList,
+		EventItem:        dc.EventItem,
 	}, nil
 }
 
@@ -103,6 +107,8 @@ type MockClient struct {
 	ComputeClassItem *apiv1.ComputeClass
 	Regions          []apiv1.Region
 	RegionItem       *apiv1.Region
+	Events           []apiv1.Event
+	EventItem        *apiv1.Event
 }
 
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
@@ -789,4 +795,9 @@ func (m *MockClient) RegionGet(_ context.Context, name string) (*apiv1.Region, e
 		Group:    "api.acorn.io",
 		Resource: "regions",
 	}, name)
+}
+
+func (m *MockClient) EventStream(context.Context, *client.EventStreamOptions) (<-chan apiv1.Event, error) {
+	// TODO: Implement me
+	return nil, nil
 }

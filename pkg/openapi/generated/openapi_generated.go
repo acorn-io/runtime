@@ -46,6 +46,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Credential":                                 schema_pkg_apis_apiacornio_v1_Credential(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.CredentialList":                             schema_pkg_apis_apiacornio_v1_CredentialList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey":                              schema_pkg_apis_apiacornio_v1_EncryptionKey(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event":                                      schema_pkg_apis_apiacornio_v1_Event(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EventList":                                  schema_pkg_apis_apiacornio_v1_EventList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Image":                                      schema_pkg_apis_apiacornio_v1_Image(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageAllowRule":                             schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageAllowRuleList":                         schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref),
@@ -112,6 +114,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency":                            schema_pkg_apis_internalacornio_v1_Dependency(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint":                              schema_pkg_apis_internalacornio_v1_Endpoint(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar":                                schema_pkg_apis_internalacornio_v1_EnvVar(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance":                         schema_pkg_apis_internalacornio_v1_EventInstance(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstanceList":                     schema_pkg_apis_internalacornio_v1_EventInstanceList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource":                           schema_pkg_apis_internalacornio_v1_EventSource(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExecProbe":                             schema_pkg_apis_internalacornio_v1_ExecProbe(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File":                                  schema_pkg_apis_internalacornio_v1_File(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GeneratedService":                      schema_pkg_apis_internalacornio_v1_GeneratedService(ref),
@@ -2367,6 +2372,148 @@ func schema_pkg_apis_apiacornio_v1_EncryptionKey(ref common.ReferenceCallback) c
 				Required: []string{"keyID"},
 			},
 		},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type is a short, machine-readable string that describes the kind of Event that took place.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"severity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Severity indicates the severity of the event.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"actor": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"source": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Source identifies the object the Event is regarding.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource"),
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description of the Event.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"observed": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Observed represents the time the Event was first observed.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"details": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Details provides additional information about the cluster at the time the Event occurred.\n\nIt's typically used to embed the subject resource, in its entirety, at the time the Event occurred, but can be used to hold any data related to the event.",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"object"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"type", "actor", "source", "observed"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_EventList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -6276,6 +6423,186 @@ func schema_pkg_apis_internalacornio_v1_EnvVar(ref common.ReferenceCallback) com
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type is a short, machine-readable string that describes the kind of Event that took place.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"severity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Severity indicates the severity of the event.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"actor": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"source": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Source identifies the object the Event is regarding.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource"),
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a human-readable description of the Event.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"observed": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Observed represents the time the Event was first observed.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"details": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Details provides additional information about the cluster at the time the Event occurred.\n\nIt's typically used to embed the subject resource, in its entirety, at the time the Event occurred, but can be used to hold any data related to the event.",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"object"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"type", "actor", "source", "observed"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_EventInstanceList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_EventSource(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EventSource identifies an object related to an Event.\n\nThe referenced object may or may not exist.\n\nNote: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged. See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919 for more details.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is the source object kind.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the source object.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"uuid": {
+						SchemaProps: spec.SchemaProps{
+							Description: "UID uniquely identifies the source object.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"kind", "name", "uuid"},
+			},
+		},
 	}
 }
 

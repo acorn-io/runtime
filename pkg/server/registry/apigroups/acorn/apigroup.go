@@ -4,6 +4,7 @@ import (
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/event"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/apps"
@@ -11,6 +12,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/builds"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/containers"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/credentials"
+	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/events"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/images"
 	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/info"
@@ -61,7 +63,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		return nil, err
 	}
 
-	appsStorage := apps.NewStorage(c, clientFactory)
+	appsStorage := apps.NewStorage(c, clientFactory, event.NewRecorder(c))
 
 	logsStorage, err := apps.NewLogs(c, cfg)
 	if err != nil {
@@ -96,6 +98,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"computeclasses":                computeclass.NewAggregateStorage(c),
 		"regions":                       regions.NewStorage(c),
 		"imageallowrules":               imageallowrules.NewStorage(c),
+		"events":                        events.NewStorage(c),
 	}
 
 	return stores, nil

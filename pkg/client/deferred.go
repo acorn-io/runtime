@@ -395,6 +395,13 @@ func (d *DeferredClient) RegionGet(ctx context.Context, name string) (*apiv1.Reg
 	return d.Client.RegionGet(ctx, name)
 }
 
+func (d *DeferredClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.EventStream(ctx, opts)
+}
+
 func (d *DeferredClient) GetProject() string {
 	return d.Project
 }
