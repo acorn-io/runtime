@@ -12,6 +12,7 @@ Available Commands:
   container    Manage containers
   credential   Manage registry credentials
   dev          Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
+  events       List events about Acorn resources
   exec         Run a command in a container
   fmt          Format an Acornfile
   help         Help about any command
