@@ -240,8 +240,7 @@ func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Cl
 		mustUpdate = true
 	} else if !apierrors.IsNotFound(findSecretErr) {
 		// Not found is ok, we'll create the secret below.. other errors are bad
-		logrus.Errorf("Error getting certificate secret %s/%s: %v", namespace, secretName, findSecretErr)
-		return findSecretErr
+		return fmt.Errorf("Error getting certificate secret %s/%s: %w", namespace, secretName, findSecretErr)
 	}
 
 	if !mustUpdate {
@@ -278,8 +277,7 @@ func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Cl
 			}
 
 			if err := client.Create(ctx, copiedSecret); err != nil {
-				logrus.Errorf("Error creating TLS secret %s/%s: %v", copiedSecret.Namespace, copiedSecret.Name, err)
-				return err
+				return fmt.Errorf("Error creating TLS secret %s/%s: %w", copiedSecret.Namespace, copiedSecret.Name, err)
 			}
 			return nil
 		}
