@@ -32,7 +32,7 @@ func CheckDependencies(h router.Handler) router.Handler {
 			app:     req.Object.(*v1.AppInstance),
 			req:     req,
 			resp:    resp,
-			waiting: sets.NewString(),
+			waiting: sets.New[string](),
 		}
 
 		if err := h.Handle(req, depResp); err != nil {
@@ -41,7 +41,7 @@ func CheckDependencies(h router.Handler) router.Handler {
 
 		cond := condition.ForName(req.Object, v1.AppInstanceConditionDependencies)
 		if depResp.waiting.Len() > 0 {
-			cond.Unknown(fmt.Sprintf("waiting for ready %v", depResp.waiting.List()))
+			cond.Unknown(fmt.Sprintf("waiting for ready %v", sets.List(depResp.waiting)))
 		} else {
 			cond.Success()
 		}
@@ -54,7 +54,7 @@ type depCheckingResponse struct {
 	app     *v1.AppInstance
 	req     router.Request
 	resp    router.Response
-	waiting sets.String
+	waiting sets.Set[string]
 }
 
 func (d *depCheckingResponse) DisablePrune() {

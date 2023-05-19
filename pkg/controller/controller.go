@@ -16,8 +16,10 @@ import (
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah"
 	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/log"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -26,6 +28,10 @@ import (
 var (
 	dnsRenewPeriodHours = 24 * time.Hour
 )
+
+func init() {
+	log.SetLogger(logrus.StandardLogger())
+}
 
 type Controller struct {
 	Router *router.Router

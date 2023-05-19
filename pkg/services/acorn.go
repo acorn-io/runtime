@@ -107,8 +107,8 @@ func asMap(s v1.ScopedLabels) map[string]string {
 	return result
 }
 
-func serviceNames(appInstance *v1.AppInstance) sets.String {
-	result := sets.NewString()
+func serviceNames(appInstance *v1.AppInstance) sets.Set[string] {
+	result := sets.New[string]()
 	for k := range appInstance.Status.AppSpec.Services {
 		result.Insert(k)
 	}
