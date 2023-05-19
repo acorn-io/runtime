@@ -91,9 +91,7 @@ func withMeta[T kclient.Object](name, uid, resourceVersion string, obj T) T {
 }
 
 func TestPullAppImageEvents(t *testing.T) {
-
 	// Test cases below this comment ensure the handler produces the correct events
-
 	now := metav1.Now()
 	// Manual upgrade should record an event
 	testRecordPullEvent(t,

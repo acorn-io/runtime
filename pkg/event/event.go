@@ -67,7 +67,6 @@ func publicKind(obj runtime.Object) string {
 		case "App", "AppInstance":
 			return "app"
 		}
-
 	}
 	return ""
 }
