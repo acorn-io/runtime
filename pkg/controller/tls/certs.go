@@ -225,55 +225,64 @@ func findExistingCertSecret(ctx context.Context, client kclient.Client, target s
 }
 
 func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Client, domain string, namespace string, secretName string) error {
-	// Find existing secret if exists
+	// Find existing secret by expected name
 	existingSecret := &corev1.Secret{}
 	findSecretErr := client.Get(ctx, router.Key(namespace, secretName), existingSecret)
+	var mustUpdate bool
 	if findSecretErr == nil {
-		// Skip: TLS secret already exists, nothing to do here, renewal will be handled elsewhere
-		return nil
+		if existingSecret.Annotations[labels.AcornDomain] == domain {
+			// Skip: TLS secret already exists and matches the domain, nothing to do here, renewal will be handled elsewhere
+			logrus.Debugf("No need to provision cert for domain %s, secret for that domain already exists: %s/%s", domain, existingSecret.Namespace, existingSecret.Name)
+			return nil
+		}
+		// There's an existing secret with a different domain but matching the expected name, so we'll update it
+		logrus.Debugf("Updating existing secret %s/%s with domain %s to %s", existingSecret.Namespace, existingSecret.Name, existingSecret.Annotations[labels.AcornDomain], domain)
+		mustUpdate = true
 	} else if !apierrors.IsNotFound(findSecretErr) {
 		// Not found is ok, we'll create the secret below.. other errors are bad
-		logrus.Errorf("Error getting secret %s/%s: %v", namespace, secretName, findSecretErr)
+		logrus.Errorf("Error getting certificate secret %s/%s: %v", namespace, secretName, findSecretErr)
 		return findSecretErr
 	}
 
-	// Let's see if we have some existing certificate that matches the domain
-	existingSecret, err := findExistingCertSecret(ctx, client, domain)
-	if err != nil {
-		return err
-	}
-	if existingSecret != nil {
-		// We found an existing certificate
-		// 1. It's in the same namespace, so it will be picked up automatically
-		if existingSecret.Namespace == namespace {
-			logrus.Debugf("Found existing TLS secret %s/%s for domain %s", existingSecret.Namespace, existingSecret.Name, domain)
-			// Skip: TLS secret already exists, nothing to do here, renewal will be handled elsewhere
-			return nil
-		}
-
-		logrus.Debugf("Found existing TLS secret %s/%s for domain %s, copying to %s/%s", existingSecret.Namespace, existingSecret.Name, domain, namespace, secretName)
-
-		// 2. Copy secret to new namespace
-		copiedSecret := &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: namespace,
-				Labels: map[string]string{
-					labels.AcornManaged: "true",
-				},
-				Annotations: map[string]string{
-					labels.AcornDomain: domain,
-				},
-			},
-			Data: existingSecret.Data,
-			Type: existingSecret.Type,
-		}
-
-		if err := client.Create(ctx, copiedSecret); err != nil {
-			logrus.Errorf("Error creating TLS secret %s/%s: %v", copiedSecret.Namespace, copiedSecret.Name, err)
+	if !mustUpdate {
+		// Let's see if we have some existing certificate that matches the domain
+		existingSecret, err := findExistingCertSecret(ctx, client, domain)
+		if err != nil {
 			return err
 		}
-		return nil
+		if existingSecret != nil {
+			// We found an existing certificate
+			// 1. It's in the same namespace, so it will be picked up automatically
+			if existingSecret.Namespace == namespace {
+				logrus.Debugf("Found existing TLS secret %s/%s for domain %s", existingSecret.Namespace, existingSecret.Name, domain)
+				// Skip: TLS secret already exists, nothing to do here, renewal will be handled elsewhere
+				return nil
+			}
+
+			logrus.Debugf("Found existing TLS secret %s/%s for domain %s, copying to %s/%s", existingSecret.Namespace, existingSecret.Name, domain, namespace, secretName)
+
+			// 2. Copy secret to new namespace
+			copiedSecret := &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      secretName,
+					Namespace: namespace,
+					Labels: map[string]string{
+						labels.AcornManaged: "true",
+					},
+					Annotations: map[string]string{
+						labels.AcornDomain: domain,
+					},
+				},
+				Data: existingSecret.Data,
+				Type: existingSecret.Type,
+			}
+
+			if err := client.Create(ctx, copiedSecret); err != nil {
+				logrus.Errorf("Error creating TLS secret %s/%s: %v", copiedSecret.Namespace, copiedSecret.Name, err)
+				return err
+			}
+			return nil
+		}
 	}
 
 	go func() {
@@ -284,16 +293,25 @@ func (u *LEUser) provisionCertIfNotExists(ctx context.Context, client kclient.Cl
 		}
 		defer unlockDomain(domain)
 
-		logrus.Infof("Provisioning TLS cert for %v in secret %s/%s", domain, namespace, secretName)
+		logrus.Infof("Provisioning TLS cert for %s in secret %s/%s", domain, namespace, secretName)
 		cert, err := u.getCert(ctx, domain)
 		if err != nil {
-			logrus.Errorf("Error getting cert for %v: %v", domain, err)
+			logrus.Errorf("Error getting cert for %s: %v", domain, err)
 			return
 		}
 
 		newSec, err := u.certToSecret(cert, domain, namespace, secretName)
 		if err != nil {
 			logrus.Errorf("Error converting cert to secret: %v", err)
+			return
+		}
+
+		if mustUpdate {
+			if err := client.Update(ctx, newSec); err != nil {
+				logrus.Errorf("error updating TLS secret %s/%s: %v", namespace, secretName, err)
+				return
+			}
+			logrus.Infof("TLS secret %s/%s updated for domain %s", namespace, secretName, domain)
 			return
 		}
 
