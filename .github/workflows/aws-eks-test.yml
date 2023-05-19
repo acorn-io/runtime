@@ -61,7 +61,7 @@ jobs:
 
       - name: Build test summary
         uses: test-summary/action@v1
-        if: always()
+        if: success() || failure()
         with:
           paths: test-summary.xml
 

@@ -33,6 +33,6 @@ jobs:
       - run: TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile test-summary.xml" make test
       - name: Build test summary
         uses: test-summary/action@v1
-        if: always()
+        if: success() || failure()
         with:
           paths: test-summary.xml
