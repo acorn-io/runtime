@@ -67,7 +67,7 @@ func (q query) on(list *apiv1.EventList) (*apiv1.EventList, error) {
 
 	list.Items = items[:tail]
 
-	if q.details && q.tail < 1 {
+	if q.details {
 		return list, nil
 	}
 
