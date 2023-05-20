@@ -26,6 +26,8 @@ func (in *App) GetRegion() string {
 	return in.Status.Defaults.Region
 }
 
+type Acornfile v1.AppSpec
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type AppList struct {

@@ -11,6 +11,7 @@ import (
 
 const (
 	Prefix                              = "acorn.io/"
+	AcornAccountID                      = Prefix + "account-id"
 	AcornAppGeneration                  = Prefix + "app-generation"
 	AcornAppNamespace                   = Prefix + "app-namespace"
 	AcornAppName                        = Prefix + "app-name"
