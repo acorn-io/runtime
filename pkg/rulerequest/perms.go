@@ -12,7 +12,6 @@ type RuleRequest struct {
 	Verbs        string
 	Resource     string
 	ResourceName string
-	Namespace    string
 }
 
 func ToRuleRequests(perms []v1.Permissions) (result []RuleRequest) {
@@ -52,11 +51,6 @@ func ruleToRequests(serviceName string, rule v1.PolicyRule, scope string) (resul
 		return
 	}
 
-	namespace := "<APP>"
-	if scope == "cluster" {
-		namespace = "*"
-	}
-
 	for _, apiGroup := range rule.APIGroups {
 		for _, resource := range rule.Resources {
 			if apiGroup != "" {
@@ -65,20 +59,18 @@ func ruleToRequests(serviceName string, rule v1.PolicyRule, scope string) (resul
 
 			if len(rule.ResourceNames) == 0 {
 				result = append(result, RuleRequest{
-					Namespace: namespace,
-					Service:   serviceName,
-					Scope:     scope,
-					Resource:  resource,
-					Verbs:     verbs,
+					Service:  serviceName,
+					Scope:    scope,
+					Resource: resource,
+					Verbs:    verbs,
 				})
 			} else {
 				for _, resourceName := range rule.ResourceNames {
 					result = append(result, RuleRequest{
-						Namespace: namespace,
-						Service:   serviceName,
-						Scope:     scope,
-						Resource:  resource + "/" + resourceName,
-						Verbs:     verbs,
+						Service:  serviceName,
+						Scope:    scope,
+						Resource: resource + "/" + resourceName,
+						Verbs:    verbs,
 					})
 				}
 			}
