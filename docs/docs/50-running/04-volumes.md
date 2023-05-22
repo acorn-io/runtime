@@ -30,14 +30,27 @@ The volume class used, including the default, may have restrictions on the size 
 
 You can see a list of available volume classes and their restrictions, if any, with the [`acorn offerings volumeclasses`](100-reference/01-command-line/acorn_offerings_volumeclasses.md) command.
 
-## Using precreated volumes
+## Using pre-existing volumes
 
-You can use a precreated volumes by binding the volume at runtime.
+You can use a pre-existing volumes by binding the volume at runtime.
+The volume can be referenced either by its PersistentVolume name in Kubernetes, or by its name in Acorn (displayed in the output of `acorn volume`).
+In this example, the new Acorn app uses an old volume called `data` that an app called `db` used. It uses it as its `my-data` volume.
 
-```shell
-acorn run -v db-data:my-data [IMAGE]
+```
+$ acorn volume
+NAME      APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
+db.data   db.data    data           1G         local-path     bound     RWO            23s ago
+
+$ acorn run -v "db.data:my-data" -n my-new-app [IMAGE]
 ```
 
-This Acorn app will use the volume named `db-data` as its `my-data` volume.
+The volume will match the size and class of the pre-existing volume `db.data`.
+Once the old volume is consumed by the new app, it will be renamed.
 
-The volume will match the size and class of the pre-created PV `db-data`.
+```
+$ acorn volume
+NAME                 APP-NAME             BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
+my-new-app.my-data   my-new-app.my-data   my-data-bind   1G         local-path     bound     RWO            2m16s ago
+```
+
+A pre-existing volume can only be bound to a new app if the new app is created in the same Acorn project as the old app that previously used the volume.
