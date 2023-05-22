@@ -275,7 +275,7 @@ func TestFindPVForBinding(t *testing.T) {
 				}
 			}
 
-			pv, err := getPVForVolumeBinding(req, &tt.appInstance, tt.volumeBinding)
+			pv, err := GetPVForVolumeBinding(req, &tt.appInstance, tt.volumeBinding)
 			if err != nil {
 				if (apierrors.IsNotFound(err) && !tt.expectNotFoundError) || !apierrors.IsNotFound(err) {
 					t.Fatalf("Unexpected error: %v", err)

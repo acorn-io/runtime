@@ -156,7 +156,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		}
 
 		if bind {
-			pv, err := getPVForVolumeBinding(req, appInstance, volumeBinding)
+			pv, err := GetPVForVolumeBinding(req, appInstance, volumeBinding)
 			if err != nil {
 				return nil, err
 			}
@@ -209,7 +209,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 	return
 }
 
-func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, binding v1.VolumeBinding) (*corev1.PersistentVolume, error) {
+func GetPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, binding v1.VolumeBinding) (*corev1.PersistentVolume, error) {
 	// binding.Volume can either be the actual name of the PersistentVolume, or its public name in Acorn.
 	// Check for the actual name first.
 	pv := new(corev1.PersistentVolume)
