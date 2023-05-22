@@ -54,6 +54,7 @@ const (
 	AcornProjectDefaultRegion           = Prefix + "project-default-region"
 	AcornProjectSupportedRegions        = Prefix + "project-supported-regions"
 	AcornCalculatedProjectDefaultRegion = Prefix + "calculated-project-default-region"
+	ProjectEnforcedQuotaAnnotation      = Prefix + "enforced-quota"
 )
 
 func Merge(base, overlay map[string]string) map[string]string {

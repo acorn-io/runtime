@@ -180,6 +180,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstanceList": schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstanceList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstanceList":  schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance":            schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstance(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceList":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus":      schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources":                       schema_pkg_apis_internaladminacornio_v1_Resources(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                 schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                           schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                                                   schema_k8sio_api_core_v1_Affinity(ref),
@@ -9804,6 +9809,239 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref 
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstance(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"resources": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"allocatedResources": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+						},
+					},
+					"failedResources": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+						},
+					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_Resources(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Resources is a struct separate from the QuotaRequestInstanceSpec to allow for external controllers to programmatically set the resources easier. Calls to its functions are mutating.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"apps": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"containers": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"jobs": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"volumes": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"secrets": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"images": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"volumeStorage": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"memory": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"cpu": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
 	}
 }
 
