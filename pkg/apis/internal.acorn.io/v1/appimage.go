@@ -14,8 +14,9 @@ type AppImage struct {
 }
 
 type VCS struct {
-	Revision string `json:"revision,omitempty"`
-	Modified bool   `json:"modified,omitempty"`
+	Remotes  []string `json:"remotes,omitempty"`
+	Revision string   `json:"revision,omitempty"`
+	Modified bool     `json:"modified,omitempty"`
 }
 
 type Platform struct {
