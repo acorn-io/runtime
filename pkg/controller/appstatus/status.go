@@ -255,10 +255,13 @@ func JobStatus(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	app.Status.JobsStatus = map[string]v1.JobStatus{}
+	newJobs := map[string]v1.JobStatus{}
 	for jobName := range app.Status.AppSpec.Jobs {
-		app.Status.JobsStatus[jobName] = v1.JobStatus{}
+		newJobs[jobName] = v1.JobStatus{
+			CreateDone: app.Status.JobsStatus[jobName].CreateDone,
+		}
 	}
+	app.Status.JobsStatus = newJobs
 
 	var (
 		running     bool
@@ -297,6 +300,7 @@ func JobStatus(req router.Request, resp router.Response) error {
 		}
 		if job.Status.Succeeded > 0 {
 			jobStatus.Succeed = true
+			jobStatus.CreateDone = true
 		} else if job.Status.Failed > 0 {
 			jobStatus.Failed = true
 			failed = true

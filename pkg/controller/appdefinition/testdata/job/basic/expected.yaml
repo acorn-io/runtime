@@ -3,6 +3,8 @@ apiVersion: batch/v1
 metadata:
   name: oneimage
   namespace: app-created-namespace
+  annotations:
+    apply.acorn.io/prune: "false"
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
@@ -38,7 +40,13 @@ spec:
             - containerPort: 81
               protocol: "TCP"
           terminationMessagePath: "/run/secrets/output"
+          env:
+            - name: ACORN_EVENT
+              value: "create"
         - name: left
+          env:
+            - name: ACORN_EVENT
+              value: "create"
           image: "foo"
           readinessProbe:
             tcpSocket:

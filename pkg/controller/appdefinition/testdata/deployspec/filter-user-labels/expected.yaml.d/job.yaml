@@ -14,6 +14,7 @@ metadata:
     permit.io: test-permit-app-spec-label
     allowed-global.io: test-global
   annotations:
+    apply.acorn.io/prune: "false"
     admit-job.io: test-admit-job-ann
     allowed-global.io: test-global
     allowed.io: test-allowed-app-spec-ann
@@ -47,6 +48,9 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
         - name: job-name
+          env:
+            - name: ACORN_EVENT
+              value: "create"
           image: "image-name"
           readinessProbe:
             tcpSocket:
