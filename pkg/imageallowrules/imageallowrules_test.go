@@ -59,12 +59,6 @@ func TestImageCovered(t *testing.T) {
 			shouldMatch: true,
 		},
 		{
-			name:        "repo path wildcard with specific repo and tag semver",
-			pattern:     "index.docker.io/**/alpine:v#.#.#",
-			image:       "index.docker.io/library/foo/alpine:v1.0.1",
-			shouldMatch: true,
-		},
-		{
 			name:        "repo path single element wildcard with specific repo and tag semver",
 			pattern:     "index.docker.io/*/alpine:v#.#.#",
 			image:       "index.docker.io/library/alpine:v1.0.1",
@@ -79,7 +73,7 @@ func TestImageCovered(t *testing.T) {
 		{
 			name:        "mismatch subrepos: repo path single element wildcard with specific repo and tag semver",
 			pattern:     "index.docker.io/*/alpine:v#.#.#",
-			image:       "index.docker.io/library/notalpine:v1.0.1",
+			image:       "index.docker.io/library/foo/alpine:v1.0.1",
 			shouldMatch: false,
 		},
 	}

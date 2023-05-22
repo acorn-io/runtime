@@ -87,12 +87,13 @@ func handleNotAllowed(dangerous bool, image string) (string, error) {
 
 	pterm.Warning.Printfln(
 		`This application would like to use the image '%s'.
+This image is not trusted by any image allow rules in this project.
 This could be VERY DANGEROUS to the cluster if you do not trust this
 application. If you are unsure say no.`, image)
 
 	choiceMap := map[string]string{
 		"yes (this image only)":                  string(imageallowrules.SimpleImageScopeExact),
-		"NO":                                     "no",
+		"NO":                                     "NO",
 		"registry (all images in this registry)": string(imageallowrules.SimpleImageScopeRegistry),
 		"repository (all images in this repository)": string(imageallowrules.SimpleImageScopeRepository),
 		"all (all images out there)":                 string(imageallowrules.SimpleImageScopeAll),
