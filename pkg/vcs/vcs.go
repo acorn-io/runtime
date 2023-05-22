@@ -25,8 +25,20 @@ func VCS(path string) (result v1.VCS) {
 		return
 	}
 
-	return v1.VCS{
+	result = v1.VCS{
 		Revision: head.Hash().String(),
 		Modified: !s.IsClean(),
 	}
+
+	// Set optional remotes field
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return
+	}
+
+	for _, remote := range remotes {
+		result.Remotes = append(result.Remotes, remote.Config().URLs...)
+	}
+
+	return
 }
