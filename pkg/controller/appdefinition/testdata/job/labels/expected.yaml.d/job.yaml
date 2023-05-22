@@ -15,6 +15,7 @@ metadata:
     "global": "value"
     "global2": "value"
   annotations:
+    apply.acorn.io/prune: "false"
     "alljobsa": "value"
     "job1a": "value"
     "job3a": "value"
@@ -51,6 +52,9 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
         - name: job1
+          env:
+            - name: ACORN_EVENT
+              value: "create"
           image: "image-name"
           readinessProbe:
             tcpSocket:

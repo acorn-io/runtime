@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -117,7 +118,7 @@ func FinalizeDestroyJob(req router.Request, resp router.Response) error {
 	}
 
 	for jobName, jobDef := range app.Status.AppSpec.Jobs {
-		if !jobDef.OnDelete || jobDef.Schedule != "" {
+		if !slices.Contains(jobDef.Events, "delete") {
 			continue
 		}
 
@@ -146,7 +147,7 @@ func done(job *batchv1.Job) bool {
 	foundEnv := false
 	for _, container := range job.Spec.Template.Spec.Containers {
 		for _, env := range container.Env {
-			if env.Name == "ACORN_EVENT" && env.Value == "onDelete" {
+			if env.Name == "ACORN_EVENT" && env.Value == "delete" {
 				foundEnv = true
 			}
 		}
@@ -160,7 +161,7 @@ func done(job *batchv1.Job) bool {
 
 func shouldFinalize(app *v1.AppInstance) bool {
 	for _, job := range app.Status.AppSpec.Jobs {
-		if job.OnDelete {
+		if slices.Contains(job.Events, "delete") {
 			return true
 		}
 	}

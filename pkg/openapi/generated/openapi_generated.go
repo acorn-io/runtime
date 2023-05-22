@@ -6131,11 +6131,19 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"onDelete": {
+					"events": {
 						SchemaProps: spec.SchemaProps{
-							Description: "OnDelete is only available on jobs",
-							Type:        []string{"boolean"},
-							Format:      "",
+							Description: "Events is only available on jobs",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 					"init": {
@@ -7138,6 +7146,12 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 					"message": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"createDone": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
 							Format: "",
 						},
 					},

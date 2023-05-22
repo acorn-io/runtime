@@ -997,6 +997,11 @@ func (in *Container) DeepCopyInto(out *Container) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.Events != nil {
+		in, out := &in.Events, &out.Events
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Sidecars != nil {
 		in, out := &in.Sidecars, &out.Sidecars
 		*out = make(map[string]Container, len(*in))

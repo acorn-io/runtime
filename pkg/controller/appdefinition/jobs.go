@@ -7,9 +7,11 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
+	"golang.org/x/exp/slices"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,32 +27,40 @@ func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference
 	return nil
 }
 
+func stripPrune(annotations map[string]string) map[string]string {
+	result := map[string]string{}
+	for k, v := range annotations {
+		if k == apply.AnnotationPrune {
+			continue
+		}
+		result[k] = v
+	}
+	return result
+}
+
 func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, interpolator *secrets.Interpolator) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
 		job, err := toJob(req, appInstance, pullSecrets, tag, entry.Key, entry.Value, interpolator)
-		if err != nil {
+		if err != nil || job == nil {
 			return nil, err
 		}
-		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), job.GetAnnotations(), appInstance)
+		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPrune(job.GetAnnotations()), appInstance)
 		if err != nil {
 			return nil, err
 		}
 		if perms := v1.FindPermission(job.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
-			result = append(result, toPermissions(perms, job.GetLabels(), job.GetAnnotations(), appInstance)...)
+			result = append(result, toPermissions(perms, job.GetLabels(), stripPrune(job.GetAnnotations()), appInstance)...)
 		}
 		result = append(result, sa, job)
 	}
 	return result, nil
 }
 
-func setDestroy(containers []corev1.Container, destroy bool) (result []corev1.Container) {
-	if !destroy {
-		return containers
-	}
+func setJobEventName(containers []corev1.Container, eventName string) (result []corev1.Container) {
 	for _, c := range containers {
 		c.Env = append(c.Env, corev1.EnvVar{
 			Name:  "ACORN_EVENT",
-			Value: "onDelete",
+			Value: eventName,
 		})
 		result = append(result, c)
 	}
@@ -65,8 +75,30 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
+func matchesJobEvent(eventName string, container v1.Container) bool {
+	if len(container.Events) == 0 {
+		return slices.Contains([]string{"create", "update"}, eventName)
+	}
+	return slices.Contains(container.Events, eventName)
+}
+
+func getJobEvent(jobName string, appInstance *v1.AppInstance) string {
+	if !appInstance.DeletionTimestamp.IsZero() {
+		return "delete"
+	}
+	if appInstance.Status.JobsStatus[jobName].CreateDone {
+		return "update"
+	}
+	return "create"
+}
+
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) (kclient.Object, error) {
 	interpolator = interpolator.ForService(name)
+	jobEventName := getJobEvent(name, appInstance)
+
+	if !matchesJobEvent(jobEventName, container) {
+		return nil, nil
+	}
 
 	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
 
@@ -82,8 +114,6 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 
 	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
 		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
-
-	destroy := !appInstance.DeletionTimestamp.IsZero() && container.OnDelete
 
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
@@ -102,8 +132,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				EnableServiceLinks:            new(bool),
 				RestartPolicy:                 corev1.RestartPolicyNever,
-				Containers:                    setDestroy(setTerminationPath(containers), destroy),
-				InitContainers:                setDestroy(setTerminationPath(initContainers), destroy),
+				Containers:                    setTerminationPath(containers),
+				InitContainers:                setTerminationPath(initContainers),
 				Volumes:                       volumes,
 				ServiceAccountName:            name,
 			},
@@ -114,7 +144,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 
 	if container.Schedule == "" {
 		jobSpec.BackoffLimit = &[]int32{1000}[0]
-		return &batchv1.Job{
+		job := &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        name,
 				Namespace:   appInstance.Status.Namespace,
@@ -122,7 +152,11 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), baseAnnotations),
 			},
 			Spec: jobSpec,
-		}, nil
+		}
+		job.Spec.Template.Spec.Containers = setJobEventName(setTerminationPath(containers), jobEventName)
+		job.Spec.Template.Spec.InitContainers = setJobEventName(setTerminationPath(initContainers), jobEventName)
+		job.Annotations[apply.AnnotationPrune] = "false"
+		return job, nil
 	}
 	return &batchv1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{

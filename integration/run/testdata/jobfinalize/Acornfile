@@ -1,6 +1,6 @@
 jobs: delete: {
     image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
-    onDelete: true
+    events: ["create", "delete"]
     dirs: "/app": "./scripts"
     command: "/app/run.sh"
 }
