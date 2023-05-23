@@ -24,7 +24,7 @@ For the basics on how to contribute to acorn, checkout [CONTRIBUTING.md](CONTRIB
 More details can also be found in our [developer wiki](https://github.com/acorn-io/acorn/wiki).
 
 ## License
-Copyright (c) 2022 [Acorn Labs, Inc.](http://acorn.io)
+Copyright (c) 2023 [Acorn Labs, Inc.](http://acorn.io)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
