@@ -41,7 +41,7 @@ validate-code: tidy generate lint gen-docs
 
 GOTESTSUM_VERSION ?= v1.10.0
 test:
-	go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) $(TEST_FLAGS) ./...
+	go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format testname $(TEST_FLAGS) ./...
 
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist
