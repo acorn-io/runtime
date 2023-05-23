@@ -12,7 +12,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/router/tester"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -275,9 +274,9 @@ func TestFindPVForBinding(t *testing.T) {
 				}
 			}
 
-			pv, err := GetPVForVolumeBinding(req, &tt.appInstance, tt.volumeBinding)
+			pv, err := getPVForVolumeBinding(req, &tt.appInstance, tt.volumeBinding)
 			if err != nil {
-				if (apierrors.IsNotFound(err) && !tt.expectNotFoundError) || !apierrors.IsNotFound(err) {
+				if !strings.Contains(err.Error(), "no Acorn-managed volume found") || !tt.expectNotFoundError {
 					t.Fatalf("Unexpected error: %v", err)
 				}
 			} else if tt.expectNotFoundError {
@@ -292,8 +291,8 @@ func TestFindPVForBinding(t *testing.T) {
 func buildPVs(t *testing.T) []kclient.Object {
 	t.Helper()
 
-	pvList := []corev1.PersistentVolume{
-		{
+	pvList := []kclient.Object{
+		&corev1.PersistentVolume{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "pv2",
 				Labels: map[string]string{
@@ -303,7 +302,7 @@ func buildPVs(t *testing.T) []kclient.Object {
 				},
 			},
 		},
-		{
+		&corev1.PersistentVolume{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "pv3",
 				Labels: map[string]string{
@@ -313,7 +312,7 @@ func buildPVs(t *testing.T) []kclient.Object {
 				},
 			},
 		},
-		{
+		&corev1.PersistentVolume{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   "not-acorn-managed",
 				Labels: map[string]string{},
@@ -321,11 +320,5 @@ func buildPVs(t *testing.T) []kclient.Object {
 		},
 	}
 
-	// I don't know of a better way to convert this to generic kclient.Object
-	var objList []kclient.Object
-	for _, pv := range pvList {
-		objList = append(objList, pv.DeepCopy())
-	}
-
-	return objList
+	return pvList
 }

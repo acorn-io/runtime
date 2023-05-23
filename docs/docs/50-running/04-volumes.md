@@ -54,3 +54,5 @@ my-new-app.my-data   my-new-app.my-data   my-data-bind   1G         local-path  
 ```
 
 A pre-existing volume can only be bound to a new app if the new app is created in the same Acorn project as the old app that previously used the volume.
+
+At this time, volumes created outside of Acorn cannot be bound to an Acorn app.

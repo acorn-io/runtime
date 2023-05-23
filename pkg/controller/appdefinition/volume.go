@@ -9,7 +9,6 @@ import (
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/name"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -156,7 +155,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 		}
 
 		if bind {
-			pv, err := GetPVForVolumeBinding(req, appInstance, volumeBinding)
+			pv, err := getPVForVolumeBinding(req, appInstance, volumeBinding)
 			if err != nil {
 				return nil, err
 			}
@@ -209,7 +208,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 	return
 }
 
-func GetPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, binding v1.VolumeBinding) (*corev1.PersistentVolume, error) {
+func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, binding v1.VolumeBinding) (*corev1.PersistentVolume, error) {
 	// binding.Volume can either be the actual name of the PersistentVolume, or its public name in Acorn.
 	// Check for the actual name first.
 	pv := new(corev1.PersistentVolume)
@@ -218,12 +217,12 @@ func GetPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 	} else if err == nil {
 		// make sure this PV is managed by acorn
 		if _, ok := pv.Labels[labels.AcornManaged]; !ok {
-			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "persistentvolumes"}, binding.Volume)
+			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
 		}
 
 		// make sure this PV has the Acorn app namespace label with the same value as the AppInstance's namespace
 		if appNamespace, ok := pv.Labels[labels.AcornAppNamespace]; !ok || appNamespace != appInstance.Namespace {
-			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "persistentvolumes"}, binding.Volume)
+			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
 		}
 		return pv, nil
 	}
@@ -250,7 +249,7 @@ func GetPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 	}
 	if len(pvList.Items) != 1 {
 		if len(pvList.Items) == 0 {
-			return nil, apierrors.NewNotFound(schema.GroupResource{Group: "", Resource: "persistentvolumes"}, binding.Volume)
+			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
 		}
 		return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", binding.Volume, len(pvList.Items))
 	}
