@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/baaah/pkg/name"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -16,7 +17,7 @@ func Get(obj kclient.Object) string {
 }
 
 func ForChild(parent kclient.Object, childName string) string {
-	return Get(parent) + "." + childName
+	return name.SafeConcatName(Get(parent) + "." + childName)
 }
 
 func Split(name string) (string, string) {
