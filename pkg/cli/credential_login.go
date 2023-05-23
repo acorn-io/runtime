@@ -158,7 +158,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 			if def == "" {
 				def = fmt.Sprintf("%s/%s/acorn", serverAddress, a.Username)
 			}
-			pterm.Info.Printf("Run \"acorn projects %s\" to list available projects\n", serverAddress)
+			pterm.Info.Printf("Run \"acorn projects\" to list available projects\n")
 			pterm.Info.Printf("Run \"acorn project use %s\" to set default project\n", def)
 		}
 	}
