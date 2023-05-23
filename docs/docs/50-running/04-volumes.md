@@ -32,7 +32,7 @@ You can see a list of available volume classes and their restrictions, if any, w
 
 ## Using pre-existing volumes
 
-You can use a pre-existing volumes by binding the volume at runtime.
+You can use a pre-existing volume by binding the volume at runtime.
 The volume can be referenced either by its PersistentVolume name in Kubernetes, or by its name in Acorn (displayed in the output of `acorn volume`).
 In this example, the new Acorn app uses an old volume called `data` that an app called `db` used. It uses it as its `my-data` volume.
 
