@@ -16,6 +16,7 @@ metadata:
     "global2": "value"
   annotations:
     apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
     "alljobsa": "value"
     "job1a": "value"
     "job3a": "value"

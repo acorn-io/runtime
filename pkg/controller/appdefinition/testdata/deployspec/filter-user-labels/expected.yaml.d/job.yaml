@@ -15,6 +15,7 @@ metadata:
     allowed-global.io: test-global
   annotations:
     apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
     admit-job.io: test-admit-job-ann
     allowed-global.io: test-global
     allowed.io: test-allowed-app-spec-ann

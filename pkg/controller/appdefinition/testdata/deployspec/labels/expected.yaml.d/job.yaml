@@ -14,6 +14,7 @@ metadata:
     jobLabel: test-job-label
   annotations:
     "apply.acorn.io/prune": "false"
+    apply.acorn.io/update: "true"
     appSpecAnn: test-app-spec-ann
     "global-scoped-ann": test-global
     jobAnn: test-job-ann

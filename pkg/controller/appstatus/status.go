@@ -93,7 +93,8 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		}
 	}
 	for _, v := range app.Status.JobsStatus {
-		if !v.Succeed {
+		// If the job is skipped (i.e. not running for this event), then don't worry about its status.
+		if !v.Succeed && !v.Skipped {
 			ready = false
 		}
 	}
@@ -258,7 +259,8 @@ func JobStatus(req router.Request, resp router.Response) error {
 	newJobs := map[string]v1.JobStatus{}
 	for jobName := range app.Status.AppSpec.Jobs {
 		newJobs[jobName] = v1.JobStatus{
-			CreateDone: app.Status.JobsStatus[jobName].CreateDone,
+			CreateEventSucceeded: app.Status.JobsStatus[jobName].CreateEventSucceeded,
+			Skipped:              app.Status.JobsStatus[jobName].Skipped,
 		}
 	}
 	app.Status.JobsStatus = newJobs
@@ -300,7 +302,7 @@ func JobStatus(req router.Request, resp router.Response) error {
 		}
 		if job.Status.Succeeded > 0 {
 			jobStatus.Succeed = true
-			jobStatus.CreateDone = true
+			jobStatus.CreateEventSucceeded = true
 		} else if job.Status.Failed > 0 {
 			jobStatus.Failed = true
 			failed = true

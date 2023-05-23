@@ -7149,7 +7149,13 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 							Format: "",
 						},
 					},
-					"createDone": {
+					"createEventSucceeded": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"skipped": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
