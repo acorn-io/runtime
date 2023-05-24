@@ -123,6 +123,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
 
 	jobSpec := batchv1.JobSpec{
+		Suspend: appInstance.Spec.Stop,
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: jobLabels(appInstance, container, name,

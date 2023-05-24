@@ -27,3 +27,7 @@ func TestCronJobs(t *testing.T) {
 func TestDeleteJob(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/job/delete-job", DeploySpec)
 }
+
+func TestJobAppStopped(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/job/stopped-app", DeploySpec)
+}
