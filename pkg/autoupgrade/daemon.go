@@ -243,19 +243,23 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 				mode, _ := Mode(app.Spec)
 				switch mode {
 				case "enabled":
-					if app.Status.AvailableAppImage == nextAppImage {
+					if app.Status.AvailableAppImage == nextAppImage && app.Status.AvailableAppImageDigest == digest {
 						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.AvailableAppImage = nextAppImage
+					app.Status.AvailableAppImageDigest = digest
 					app.Status.ConfirmUpgradeAppImage = ""
+					app.Status.ConfirmUpgradeAppImageDigest = ""
 				case "notify":
-					if app.Status.ConfirmUpgradeAppImage == nextAppImage {
+					if app.Status.ConfirmUpgradeAppImage == nextAppImage && app.Status.ConfirmUpgradeAppImageDigest == digest {
 						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.ConfirmUpgradeAppImage = nextAppImage
+					app.Status.ConfirmUpgradeAppImageDigest = digest
 					app.Status.AvailableAppImage = ""
+					app.Status.AvailableAppImageDigest = ""
 				default:
 					logrus.Warnf("Unrecognized auto-upgrade mode %v for %v", mode, app.Name)
 					continue
