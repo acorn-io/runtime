@@ -51,6 +51,7 @@ var (
 					"credentials",
 					"secrets",
 					"services",
+					"events",
 				},
 			},
 			{
