@@ -59,7 +59,7 @@ func TestDetermineDesiredImage(t *testing.T) {
 
 func testTargetImage(t *testing.T, appInstance *v1.AppInstance, expectedTargetImage string, expectedUnknownReason string) {
 	t.Helper()
-	actualTargetImage, _, actualUnknownReason := determineTargetImage(appInstance)
+	actualTargetImage, actualUnknownReason := determineTargetImage(appInstance)
 	assert.Equal(t, expectedTargetImage, actualTargetImage)
 	assert.Equal(t, expectedUnknownReason, actualUnknownReason)
 }

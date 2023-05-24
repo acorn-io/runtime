@@ -38,7 +38,6 @@ func (s *ConfirmUpgradeStrategy) Create(ctx context.Context, obj types.Object) (
 		return nil, err
 	}
 	app.Status.AvailableAppImage = app.Status.ConfirmUpgradeAppImage
-	app.Status.AvailableAppImageDigest = app.Status.ConfirmUpgradeAppImageDigest
 
 	err = s.client.Status().Update(ctx, app)
 	if err != nil {

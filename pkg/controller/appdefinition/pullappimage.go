@@ -44,7 +44,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
 
-		target, digest, unknownReason := determineTargetImage(appInstance)
+		target, unknownReason := determineTargetImage(appInstance)
 		if target == "" {
 			if unknownReason != "" {
 				cond.Unknown(unknownReason)
@@ -54,19 +54,10 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 			return nil
 		}
 
-		var (
-			resolved string
-			err      error
-		)
-		// If we already have the digest, we don't need to resolve the image
-		if digest != "" {
-			resolved = fmt.Sprintf("%s@%s", target, digest)
-		} else {
-			resolved, _, err = client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
-			if err != nil {
-				cond.Error(err)
-				return nil
-			}
+		resolved, _, err := client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
+		if err != nil {
+			cond.Error(err)
+			return nil
 		}
 
 		var (
@@ -91,9 +82,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 		}
 		targetImage.Name = target
 		appInstance.Status.AvailableAppImage = ""
-		appInstance.Status.AvailableAppImageDigest = ""
 		appInstance.Status.ConfirmUpgradeAppImage = ""
-		appInstance.Status.ConfirmUpgradeAppImageDigest = ""
 		appInstance.Status.AppImage = *targetImage
 
 		cond.Success()
@@ -101,7 +90,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 	}
 }
 
-func determineTargetImage(appInstance *v1.AppInstance) (string, string, string) {
+func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 	_, on := autoupgrade.Mode(appInstance.Spec)
 	pattern, isPattern := autoupgrade.AutoUpgradePattern(appInstance.Spec.Image)
 
@@ -109,19 +98,15 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string, string) 
 		if appInstance.Status.AvailableAppImage != "" || appInstance.Status.ConfirmUpgradeAppImage != "" {
 			if appInstance.Status.AvailableAppImage != "" {
 				// AvailableAppImage is not blank, use it and reset the other fields
-				return appInstance.Status.AvailableAppImage, appInstance.Status.AvailableAppImageDigest, ""
+				return appInstance.Status.AvailableAppImage, ""
 			} else {
 				// ConfirmUpgradeAppImage is not blank. Normally, we shouldn't get the desiredImage from it. That should
 				// be done explicitly by the user via the apps/confirmupgrade subresource (which would set it to the
 				// AvailableAppImage field). But if AppImage.ID is blank, this app has never had an image pulled. So, do the initial pull.
 				if appInstance.Status.AppImage.Name == "" {
-					return appInstance.Status.ConfirmUpgradeAppImage, appInstance.Status.ConfirmUpgradeAppImageDigest, ""
+					return appInstance.Status.ConfirmUpgradeAppImage, ""
 				} else {
-					if appInstance.Status.ConfirmUpgradeAppImageDigest != "" {
-						return "", "", fmt.Sprintf("confirm upgrade to %v@%v", appInstance.Status.ConfirmUpgradeAppImage, appInstance.Status.ConfirmUpgradeAppImageDigest)
-					} else {
-						return "", "", fmt.Sprintf("confirm upgrade to %v", appInstance.Status.ConfirmUpgradeAppImage)
-					}
+					return "", fmt.Sprintf("confirm upgrade to %v", appInstance.Status.ConfirmUpgradeAppImage)
 				}
 			}
 		} else {
@@ -130,15 +115,15 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string, string) 
 				if appInstance.Status.AppImage.Name == "" {
 					// Need to trigger a sync since this app has never had a concrete image set
 					autoupgrade.Sync()
-					return "", "", fmt.Sprintf("waiting for image to satisfy auto-upgrade tag %v", pattern)
+					return "", fmt.Sprintf("waiting for image to satisfy auto-upgrade tag %v", pattern)
 				} else {
-					return "", "", ""
+					return "", ""
 				}
 			} else {
 				if appInstance.Spec.Image == appInstance.Status.AppImage.Name {
-					return "", "", ""
+					return "", ""
 				} else {
-					return appInstance.Spec.Image, "", ""
+					return appInstance.Spec.Image, ""
 				}
 			}
 		}
@@ -146,9 +131,9 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string, string) 
 		// Auto-upgrade is off. Only need to pull if spec and status are not equal or we're trying to trigger a repull
 		if appInstance.Spec.Image != appInstance.Status.AppImage.Name ||
 			appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
-			return appInstance.Spec.Image, "", ""
+			return appInstance.Spec.Image, ""
 		} else {
-			return "", "", ""
+			return "", ""
 		}
 	}
 }
