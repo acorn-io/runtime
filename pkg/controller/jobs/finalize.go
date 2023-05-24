@@ -109,12 +109,8 @@ func NeedsDestroyJobFinalization(next router.Handler) router.Handler {
 func FinalizeDestroyJob(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	ns := &corev1.Namespace{}
-	if err := req.Get(ns, "", app.Namespace); err != nil {
+	if err := req.Get(ns, "", app.Namespace); err != nil || !ns.DeletionTimestamp.IsZero() {
 		return err
-	}
-
-	if !ns.DeletionTimestamp.IsZero() {
-		return nil
 	}
 
 	for jobName, jobDef := range app.Status.AppSpec.Jobs {

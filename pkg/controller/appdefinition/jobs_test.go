@@ -23,3 +23,7 @@ func TestJobsLabelsNamespace(t *testing.T) {
 func TestCronJobs(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/cronjob", DeploySpec)
 }
+
+func TestDeleteJob(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/job/delete-job", DeploySpec)
+}

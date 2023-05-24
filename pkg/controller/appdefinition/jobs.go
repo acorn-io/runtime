@@ -27,10 +27,10 @@ func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference
 	return nil
 }
 
-func stripPrune(annotations map[string]string) map[string]string {
+func stripPruneAndUpdate(annotations map[string]string) map[string]string {
 	result := map[string]string{}
 	for k, v := range annotations {
-		if k == apply.AnnotationPrune {
+		if k == apply.AnnotationPrune || k == apply.AnnotationUpdate {
 			continue
 		}
 		result[k] = v
@@ -44,12 +44,12 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if err != nil || job == nil {
 			return nil, err
 		}
-		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPrune(job.GetAnnotations()), appInstance)
+		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance)
 		if err != nil {
 			return nil, err
 		}
 		if perms := v1.FindPermission(job.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
-			result = append(result, toPermissions(perms, job.GetLabels(), stripPrune(job.GetAnnotations()), appInstance)...)
+			result = append(result, toPermissions(perms, job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance)...)
 		}
 		result = append(result, sa, job)
 	}
@@ -86,7 +86,7 @@ func getJobEvent(jobName string, appInstance *v1.AppInstance) string {
 	if !appInstance.DeletionTimestamp.IsZero() {
 		return "delete"
 	}
-	if appInstance.Status.JobsStatus[jobName].CreateDone {
+	if appInstance.Generation > 1 && appInstance.Status.JobsStatus[jobName].CreateEventSucceeded {
 		return "update"
 	}
 	return "create"
@@ -96,7 +96,14 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	interpolator = interpolator.ForService(name)
 	jobEventName := getJobEvent(name, appInstance)
 
-	if !matchesJobEvent(jobEventName, container) {
+	jobStatus := appInstance.Status.JobsStatus[name]
+	if appInstance.Status.JobsStatus == nil {
+		appInstance.Status.JobsStatus = make(map[string]v1.JobStatus)
+	}
+	jobStatus.Skipped = !matchesJobEvent(jobEventName, container)
+	appInstance.Status.JobsStatus[name] = jobStatus
+
+	if jobStatus.Skipped {
 		return nil, nil
 	}
 
@@ -156,6 +163,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		job.Spec.Template.Spec.Containers = setJobEventName(setTerminationPath(containers), jobEventName)
 		job.Spec.Template.Spec.InitContainers = setJobEventName(setTerminationPath(initContainers), jobEventName)
 		job.Annotations[apply.AnnotationPrune] = "false"
+		job.Annotations[apply.AnnotationUpdate] = "true"
 		return job, nil
 	}
 	return &batchv1.CronJob{

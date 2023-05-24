@@ -50,3 +50,5 @@ status:
     reason: Success
     status: "True"
     success: true
+  jobsStatus:
+    oneimage: {}

@@ -174,11 +174,12 @@ type ContainerStatus struct {
 }
 
 type JobStatus struct {
-	Succeed    bool   `json:"succeed,omitempty"`
-	Failed     bool   `json:"failed,omitempty"`
-	Running    bool   `json:"running,omitempty"`
-	Message    string `json:"message,omitempty"`
-	CreateDone bool   `json:"createDone,omitempty"`
+	Succeed              bool   `json:"succeed,omitempty"`
+	Failed               bool   `json:"failed,omitempty"`
+	Running              bool   `json:"running,omitempty"`
+	Message              string `json:"message,omitempty"`
+	CreateEventSucceeded bool   `json:"createEventSucceeded,omitempty"`
+	Skipped              bool   `json:"skipped,omitempty"`
 }
 
 type AppColumns struct {

@@ -94,4 +94,6 @@ status:
       reason: Success
       status: "True"
       success: true
+  jobsStatus:
+    job-name: {}
 ---

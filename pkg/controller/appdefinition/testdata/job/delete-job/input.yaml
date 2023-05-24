@@ -6,22 +6,6 @@ metadata:
   uid: 1234567890abcdef
 spec:
   image: test
-  permissions:
-    - serviceName: oneimage
-      rules:
-        - verbs:
-            - create
-          apiGroups:
-            - "foo.io"
-          resources:
-            - "bar"
-          scope: "account"
-        - verbs:
-            - patch
-          apiGroups:
-            - "bar.io"
-          resources:
-            - "foo"
 status:
   namespace: app-created-namespace
   appImage:
@@ -29,6 +13,7 @@ status:
   appSpec:
     jobs:
       oneimage:
+        events: ["delete"]
         sidecars:
           left:
             image: "foo"
@@ -44,10 +29,3 @@ status:
         build:
           dockerfile: "Dockerfile"
           context: "."
-  conditions:
-  - type: defined
-    reason: Success
-    status: "True"
-    success: true
-  jobsStatus:
-    oneimage: {}

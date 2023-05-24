@@ -208,9 +208,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 	}()
 
 	switch prop {
-	case "secrets":
-		fallthrough
-	case "secret":
+	case "secret", "secrets":
 		if len(extra) != 2 {
 			return "", fmt.Errorf("invalid secret lookup on service [%s] key must be at least two parts, go %v", svc.Name, extra)
 		}
@@ -229,11 +227,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		}
 		i.missing[i.serviceName] = append(i.missing[i.serviceName], "service endpoint "+svc.Name)
 		return "<pending>", nil
-	case "address":
-		fallthrough
-	case "host":
-		fallthrough
-	case "hostname":
+	case "address", "host", "hostname":
 		if svc.Spec.Address != "" {
 			return svc.Spec.Address, nil
 		}
@@ -242,9 +236,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 			return "", err
 		}
 		return fmt.Sprintf("%s.%s.%s", svc.Name, svc.Namespace, cfg.InternalClusterDomain), nil
-	case "port":
-		fallthrough
-	case "ports":
+	case "port", "ports":
 		if len(extra) != 1 {
 			return "", fmt.Errorf("can not lookup ports expecting single number, got [%s]", strings.Join(extra, "."))
 		}
@@ -302,9 +294,7 @@ func (i *Interpolator) resolve(token string) (string, bool, error) {
 	scheme, tail, ok := strings.Cut(token, "://")
 	if ok {
 		switch scheme {
-		case "secret":
-			fallthrough
-		case "secrets":
+		case "secret", "secrets":
 			parts := strings.Split(tail, "/")
 			if len(parts) == 2 {
 				return i.resolveSecrets([]string{parts[0]}, parts[1])
@@ -314,30 +304,22 @@ func (i *Interpolator) resolve(token string) (string, bool, error) {
 
 	parts := strings.Split(strings.TrimSpace(token), ".")
 	switch parts[0] {
-	case "service":
-		fallthrough
-	case "services":
+	case "service", "services":
 		if len(parts) < 3 {
 			return "", false, fmt.Errorf("invalid expression [%s], must have at least three parts separated by \".\"", token)
 		}
 		return i.resolveServices(parts[1:])
-	case "secret":
-		fallthrough
-	case "secrets":
+	case "secret", "secrets":
 		if len(parts) < 3 {
 			return "", false, fmt.Errorf("invalid expression [%s], must have at least three parts separated by \".\"", token)
 		}
 		return i.resolveSecrets(parts[1:len(parts)-1], parts[len(parts)-1])
-	case "acorn":
-		fallthrough
-	case "app":
+	case "acorn", "app":
 		if len(parts) != 2 {
 			return "", false, fmt.Errorf("invalid expression [%s], must have two parts separated by \".\"", token)
 		}
 		return i.resolveApp(parts[1])
-	case "image":
-		fallthrough
-	case "images":
+	case "image", "images":
 		if len(parts) != 2 {
 			return "", false, fmt.Errorf("invalid expression [%s], must have two parts separated by \".\"", token)
 		}

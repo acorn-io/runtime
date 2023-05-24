@@ -5,6 +5,7 @@ metadata:
   namespace: app-created-namespace
   annotations:
     apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
@@ -63,6 +64,7 @@ metadata:
   namespace: app-created-namespace
   annotations:
     apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
