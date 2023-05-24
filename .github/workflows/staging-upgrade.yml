@@ -2,8 +2,6 @@ name: Update Staging
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '00 10 * * *'   # time in UTC
 
 jobs:
   copy-main-to-staging:
