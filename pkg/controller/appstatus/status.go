@@ -293,7 +293,9 @@ func JobStatus(req router.Request, resp router.Response) error {
 			messageSet.Insert(message...)
 		}
 		jobStatus := v1.JobStatus{
-			Message: strings.Join(messageSet.List(), "; "),
+			Message:              strings.Join(messageSet.List(), "; "),
+			CreateEventSucceeded: app.Status.JobsStatus[job.Name].CreateEventSucceeded,
+			Skipped:              app.Status.JobsStatus[job.Name].Skipped,
 		}
 		if job.Status.Active > 0 {
 			jobStatus.Running = true
