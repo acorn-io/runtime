@@ -279,6 +279,57 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 	return
 }
 
+func findDefaultServiceName(appInstance *v1.AppInstance) (string, error) {
+	// I don't like the behavior. It should be more explicit and not magically pick a default if one doesn't exist.
+	// But right now there's too much going on to change the behavior. Maybe we can do better in the future.
+	defaultName := ""
+	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
+		if entry.Value.Default {
+			if defaultName != "" {
+				return "", fmt.Errorf("multiple default services specified [%s] and [%s]", defaultName, entry.Key)
+			}
+			defaultName = entry.Key
+		}
+	}
+
+	if defaultName != "" {
+		return defaultName, nil
+	}
+
+	containers := sets.New[string]()
+	for name, container := range appInstance.Status.AppSpec.Containers {
+		if len(ports2.CollectContainerPorts(&container, appInstance.Status.GetDevMode())) > 0 {
+			containers.Insert(name)
+		}
+	}
+
+	// just pick the first one we find now if there is only one choice
+	if containers.Len()+
+		len(appInstance.Status.AppSpec.Services)+
+		len(appInstance.Status.AppSpec.Acorns)+
+		len(appInstance.Status.AppSpec.Routers) != 1 {
+		return "", nil
+	}
+
+	for _, name := range typed.SortedKeys(appInstance.Status.AppSpec.Services) {
+		return name, nil
+	}
+
+	for _, name := range typed.SortedKeys(appInstance.Status.AppSpec.Acorns) {
+		return name, nil
+	}
+
+	for _, name := range sets.List(containers) {
+		return name, nil
+	}
+
+	for _, name := range typed.SortedKeys(appInstance.Status.AppSpec.Routers) {
+		return name, nil
+	}
+
+	return "", nil
+}
+
 func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	objs, err := forDefined(ctx, c, appInstance)
 	if err != nil {
@@ -293,12 +344,20 @@ func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppI
 		return nil, err
 	}
 	result = append(result, routers...)
+	result = append(result, forLinkedServices(appInstance)...)
 
-	// determine default before adding linked services
-	if len(result) == 1 {
-		result[0].(*v1.ServiceInstance).Spec.Default = true
+	defaultName, err := findDefaultServiceName(appInstance)
+	if err != nil {
+		return nil, err
 	}
 
-	result = append(result, forLinkedServices(appInstance)...)
+	for _, service := range result {
+		if service.GetName() == defaultName {
+			service.(*v1.ServiceInstance).Spec.Default = true
+		} else {
+			service.(*v1.ServiceInstance).Spec.Default = false
+		}
+	}
+
 	return
 }
