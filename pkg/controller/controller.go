@@ -21,6 +21,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	// Enabled logrus logging in baaah
+	_ "github.com/acorn-io/baaah/pkg/logrus"
 )
 
 var (

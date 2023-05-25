@@ -21,6 +21,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/server"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	minkserver "github.com/acorn-io/mink/pkg/server"
 	"github.com/google/go-containerregistry/pkg/registry"
 	uuid2 "github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -126,13 +127,8 @@ func StartAPI(t *testing.T) *rest.Config {
 		t.Fatal(err)
 	}
 
-	srv := server.New()
-	srv.Options.SecureServing.Listener = l
-	srv.Options.Authentication.TolerateInClusterLookupFailure = true
-	cfg, err := srv.NewConfig("dev")
-	if err != nil {
-		t.Fatal(err)
-	}
+	opts := minkserver.DefaultOpts()
+	opts.SecureServing.Listener = l
 
 	kubeconfig := clientcmdapi.Config{
 		Clusters: map[string]*clientcmdapi.Cluster{
@@ -158,13 +154,19 @@ func StartAPI(t *testing.T) *rest.Config {
 	restConfig = restconfig.SetScheme(restConfig, scheme.Scheme)
 	restConfig.GroupVersion = &apiv1.SchemeGroupVersion
 
-	if err == nil {
-		go func() {
-			cfg.LocalRestConfig = restConfig
-			err := srv.Run(context.Background(), cfg)
-			t.Log("failed to start api", err)
-		}()
+	s, err := server.New(server.Config{
+		LocalRestConfig:    restConfig,
+		DefaultOpts:        opts,
+		IgnoreStartFailure: true,
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	go func() {
+		err := s.Run(context.Background())
+		t.Log("failed to start api", err)
+	}()
 
 	restClient, err := rest.RESTClientFor(restConfig)
 	if err != nil {

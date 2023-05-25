@@ -14,6 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	MaxLength = 1024 * 1024
+)
+
 func NewSecretEncrypt(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Encrypt{client: c.ClientFactory}, cobra.Command{
 		Use:          "encrypt [flags] STRING",
@@ -53,8 +57,8 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no args can be provided if using stdin")
 	}
 
-	if len(args) == 1 && len(args[0]) > 4096 {
-		logrus.Fatal("Length of string data is too long to encrypt. Must be less than 4096 bytes.")
+	if len(args) == 1 && len(args[0]) > MaxLength {
+		logrus.Fatalf("Length of string data is too long to encrypt. Must be less than %d bytes.", MaxLength)
 	}
 
 	var q []*survey.Question
@@ -62,7 +66,7 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 		q = append(q, &survey.Question{
 			Name:     "plaintext",
 			Prompt:   &survey.Password{Message: "Data to encrypt"},
-			Validate: survey.MaxLength(4096),
+			Validate: survey.MaxLength(MaxLength),
 		})
 	}
 

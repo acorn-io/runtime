@@ -41,7 +41,7 @@ func (d *Daemon) RenewAndSync(ctx context.Context) {
 		Factor:   2,
 		Steps:    10,
 		Cap:      300 * time.Second,
-	}, func() (done bool, err error) {
+	}, func(ctx context.Context) (done bool, err error) {
 		return d.internal(ctx)
 	})
 	if err != nil {

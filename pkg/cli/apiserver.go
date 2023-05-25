@@ -3,11 +3,12 @@ package cli
 import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/server"
+	minkserver "github.com/acorn-io/mink/pkg/server"
 	"github.com/spf13/cobra"
 )
 
 var (
-	apiServer = server.New()
+	opts = minkserver.DefaultOpts()
 )
 
 func NewApiServer(c CommandContext) *cobra.Command {
@@ -18,7 +19,7 @@ func NewApiServer(c CommandContext) *cobra.Command {
 		Short:        "Run api-server",
 		Hidden:       true,
 	})
-	apiServer.AddFlags(cmd.Flags())
+	opts.AddFlags(cmd.Flags())
 	return cmd
 }
 
@@ -27,10 +28,18 @@ type APIServer struct {
 }
 
 func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
-	cfg, err := apiServer.NewConfig(cmd.Version)
+	cfg, err := server.New(server.Config{
+		Version:     cmd.Version,
+		DefaultOpts: opts,
+	})
 	if err != nil {
 		return err
 	}
 
-	return apiServer.Run(cmd.Context(), cfg)
+	if err := cfg.Run(cmd.Context()); err != nil {
+		return err
+	}
+
+	<-cmd.Context().Done()
+	return cmd.Context().Err()
 }

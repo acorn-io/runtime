@@ -9,7 +9,6 @@ import (
 
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/nacl/box"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -245,7 +244,6 @@ func (k *NaclKey) toSecretData(existingData map[string][]byte) (map[string][]byt
 		}
 	}
 	stringKey := KeyBytesToB64String(k.PublicKey)
-	logrus.Errorf("StringKey: %s", stringKey)
 	store[stringKey] = naclStoredKey{
 		AcornNamespace:    k.AcornNamespace,
 		Primary:           k.Primary,

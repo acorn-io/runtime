@@ -1,92 +1,45 @@
 package server
 
 import (
-	"context"
-	"fmt"
-	"net"
-
 	adminapi "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	openapi2 "github.com/acorn-io/acorn/pkg/openapi"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/acorn/pkg/openapi"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/acorn/pkg/server/registry"
 	"github.com/acorn-io/baaah/pkg/clientaggregator"
 	"github.com/acorn-io/baaah/pkg/restconfig"
-	"github.com/rancher/wrangler/pkg/merr"
-	"github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apiserver/pkg/endpoints/openapi"
-	"k8s.io/apiserver/pkg/server"
-	"k8s.io/apiserver/pkg/server/filters"
+	"github.com/acorn-io/mink/pkg/server"
+	apiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/options"
 	"k8s.io/client-go/rest"
-	netutils "k8s.io/utils/net"
 )
 
-type Server struct {
-	Options *options.RecommendedOptions
-}
-
 type Config struct {
-	server.RecommendedConfig
-	LocalRestConfig *rest.Config
+	Version            string
+	DefaultOpts        *options.RecommendedOptions
+	LocalRestConfig    *rest.Config
+	IgnoreStartFailure bool
 }
 
-func (s *Server) AddFlags(fs *pflag.FlagSet) {
-	s.Options.AddFlags(fs)
-}
-
-func (s *Server) NewConfig(version string) (*Config, error) {
-	if err := s.Options.SecureServing.MaybeDefaultWithSelfSignedCerts("localhost", nil, []net.IP{netutils.ParseIPSloppy("127.0.0.1")}); err != nil {
-		return nil, fmt.Errorf("error creating self-signed certificates: %v", err)
-	}
-
-	serverConfig := server.NewRecommendedConfig(scheme.Codecs)
-	serverConfig.OpenAPIConfig = server.DefaultOpenAPIConfig(openapi2.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(scheme.Scheme))
-	serverConfig.OpenAPIConfig.Info.Title = "Acorn"
-	serverConfig.OpenAPIConfig.Info.Version = version
-	serverConfig.LongRunningFunc = filters.BasicLongRunningRequestCheck(
-		sets.NewString("watch", "proxy"),
-		sets.NewString("exec", "proxy", "log", "registryport", "port", "push", "pull"),
-	)
-
-	if err := s.Options.ApplyTo(serverConfig); err != nil {
+func apiGroups(serverConfig Config) ([]*apiserver.APIGroupInfo, error) {
+	restConfig, err := restconfig.New(scheme.Scheme)
+	if err != nil {
 		return nil, err
 	}
 
-	return &Config{
-		RecommendedConfig: *serverConfig,
-	}, nil
-}
-
-func (s *Server) Run(ctx context.Context, config *Config) error {
-	if errs := s.Options.Validate(); len(errs) > 0 {
-		return merr.NewErrors(errs...)
-	}
-
-	server, err := config.Complete().New("acorn", server.NewEmptyDelegate())
+	c, err := k8sclient.New(restConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	cfg, err := restconfig.New(scheme.Scheme)
-	if err != nil {
-		return err
-	}
-
-	c, err := kclient.New(cfg)
-	if err != nil {
-		return err
-	}
-
-	localCfg := config.LocalRestConfig
+	localCfg := serverConfig.LocalRestConfig
 	if localCfg == nil {
-		localCfg = cfg
+		localCfg = restConfig
 	} else {
-		localClient, err := kclient.New(localCfg)
+		localClient, err := k8sclient.New(localCfg)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		aggr := clientaggregator.New(c)
 		aggr.AddGroup(api.Group, localClient)
@@ -94,29 +47,27 @@ func (s *Server) Run(ctx context.Context, config *Config) error {
 		c = aggr
 	}
 
-	apiGroups, err := registry.APIGroups(c, cfg, localCfg)
-	if err != nil {
-		return err
-	}
-
-	if err := server.InstallAPIGroups(apiGroups...); err != nil {
-		return err
-	}
-
-	return server.PrepareRun().Run(ctx.Done())
+	return registry.APIGroups(c, restConfig, localCfg)
 }
 
-func New() *Server {
-	opts := options.NewRecommendedOptions("", nil)
-	opts.Audit = nil
-	opts.Etcd = nil
-	opts.CoreAPI = nil
-	opts.Authorization = nil
-	opts.Features = nil
-	opts.Admission = nil
-	opts.SecureServing.BindPort = 7443
-	opts.Authentication.RemoteKubeConfigFileOptional = true
-	return &Server{
-		Options: opts,
+func New(cfg Config) (*server.Server, error) {
+	apiGroups, err := apiGroups(cfg)
+	if err != nil {
+		return nil, err
 	}
+
+	return server.New(&server.Config{
+		Name:                  "Acorn",
+		Version:               cfg.Version,
+		HTTPSListenPort:       7443,
+		LongRunningVerbs:      []string{"watch", "proxy"},
+		LongRunningResources:  []string{"exec", "proxy", "log", "registryport", "port", "push", "pull", "portforward"},
+		OpenAPIConfig:         openapi.GetOpenAPIDefinitions,
+		Scheme:                scheme.Scheme,
+		CodecFactory:          &scheme.Codecs,
+		APIGroups:             apiGroups,
+		DefaultOptions:        cfg.DefaultOpts,
+		SupportAPIAggregation: cfg.LocalRestConfig == nil,
+		IgnoreStartFailure:    cfg.IgnoreStartFailure,
+	})
 }

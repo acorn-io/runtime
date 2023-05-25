@@ -70,7 +70,7 @@ func (w *watcher) foundChanges() bool {
 				}
 				return true
 			}
-		} else {
+		} else if !os.IsNotExist(err) {
 			logrus.Errorf("failed to read %s: %v", f, err)
 		}
 	}
@@ -117,13 +117,7 @@ func (w *watcher) Wait(ctx context.Context) error {
 	}
 }
 
-func buildLoop(ctx context.Context, client client.Client, hash string, opts *Options) error {
-	defer func() {
-		if err := stop(client, opts); err != nil {
-			logrus.Errorf("Failed to stop app: %v", err)
-		}
-	}()
-
+func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts *Options) error {
 	var (
 		watcher = watcher{
 			trigger:      make(chan struct{}, 1),
@@ -132,7 +126,15 @@ func buildLoop(ctx context.Context, client client.Client, hash string, opts *Opt
 		}
 		startLock sync.Mutex
 		started   = false
+		appName   string
+		lockOnce  sync.Once
 	)
+
+	defer func() {
+		if err := releaseDevSession(client, appName); err != nil {
+			logrus.Errorf("Failed to release dev session app: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -160,11 +162,8 @@ outer:
 			continue
 		}
 
-		var (
-			app *apiv1.App
-		)
 		for {
-			app, err = runOrUpdate(ctx, client, hash, image, deployArgs, opts)
+			appName, err = runOrUpdate(ctx, client, hash, image, deployArgs, opts)
 			if apierror.IsConflict(err) {
 				logrus.Errorf("Failed to run/update app: %v", err)
 				time.Sleep(time.Second)
@@ -172,6 +171,13 @@ outer:
 			} else if err != nil {
 				logrus.Errorf("Failed to run/update app: %v", err)
 				continue outer
+			} else {
+				lockOnce.Do(func() {
+					go func() {
+						renewDevSession(ctx, client, appName, hash.Client)
+						cancel()
+					}()
+				})
 			}
 			break
 		}
@@ -182,19 +188,22 @@ outer:
 			continue
 		}
 
-		opts.Run.Name = app.Name
+		opts.Run.Name = appName
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(func() error {
-			return LogLoop(ctx, client, app, nil)
+			return DevPorts(ctx, client, appName)
 		})
 		eg.Go(func() error {
-			return AppStatusLoop(ctx, client, app)
+			return LogLoop(ctx, client, appName, nil)
 		})
 		eg.Go(func() error {
-			return containerSyncLoop(ctx, client, app, opts)
+			return AppStatusLoop(ctx, client, appName)
 		})
 		eg.Go(func() error {
-			return appDeleteStop(ctx, client, app, cancel)
+			return containerSyncLoop(ctx, client, appName, opts)
+		})
+		eg.Go(func() error {
+			return appDeleteStop(ctx, client, appName, cancel)
 		})
 		go func() {
 			err := eg.Wait()
@@ -212,43 +221,45 @@ outer:
 	}
 }
 
-func updateApp(ctx context.Context, c client.Client, app *apiv1.App, image string, opts *Options) (err error) {
-	defer func() {
-		if err == nil && app.Spec.Stop != nil && *app.Spec.Stop {
-			err = c.AppStart(ctx, app.Name)
-		}
-	}()
-	// It is possible the the current app.spec.image points to something that is missing, so we need to ensure
-	// we update the app.spec.image before we touch anything else, like app.Spec.Stop.  That is why start is in
-	// the defer above
+func updateApp(ctx context.Context, c client.Client, appName string, client v1.DevSessionInstanceClient, image string, deployArgs map[string]any, opts *Options) (_ string, err error) {
 	update := opts.Run.ToUpdate()
+	update.DevSessionClient = &client
 	update.Image = image
+	update.DeployArgs = deployArgs
 	update.Replace = opts.Replace
-	logrus.Infof("Updating app [%s] to image [%s]", app.Name, image)
-	app, err = rulerequest.PromptUpdate(ctx, c, opts.Dangerous, app.Name, update)
-	return err
+	update.Stop = new(bool)
+	logrus.Infof("Updating app [%s] to image [%s]", appName, image)
+	app, err := rulerequest.PromptUpdate(ctx, c, opts.Dangerous, appName, update)
+	if err != nil {
+		return "", err
+	}
+	return app.Name, nil
 }
 
-func createApp(ctx context.Context, client client.Client, hash, image string, opts *Options) (*apiv1.App, error) {
+func createApp(ctx context.Context, client client.Client, hash clientHash, image string, deployArgs map[string]any, opts *Options) (string, error) {
 	opts.Run.Labels = append(opts.Run.Labels,
 		v1.ScopedLabel{
 			ResourceType: v1.LabelTypeMeta,
 			Key:          labels.AcornAppDevHash,
-			Value:        hash,
+			Value:        hash.Hash,
 		})
 
 	opts.Run.Annotations = append(opts.Run.Annotations,
 		v1.ScopedLabel{
 			ResourceType: v1.LabelTypeMeta,
 			Key:          labels.AcornAppDevHash,
-			Value:        hash,
+			Value:        hash.Hash,
 		})
 
-	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, opts.Run)
+	runArgs := opts.Run
+	runArgs.DeployArgs = deployArgs
+	runArgs.Stop = &[]bool{true}[0]
+
+	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, runArgs)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return app, nil
+	return app.Name, nil
 }
 
 func getAppName(ctx context.Context, client client.Client, hash string) (string, error) {
@@ -266,67 +277,76 @@ func getAppName(ctx context.Context, client client.Client, hash string) (string,
 	return "", nil
 }
 
-func getExistingApp(ctx context.Context, client client.Client, opts *Options) (*apiv1.App, error) {
+func getExistingApp(ctx context.Context, client client.Client, opts *Options) (string, error) {
 	name := opts.Run.Name
 	if name == "" {
-		return nil, apierror.NewNotFound(schema.GroupResource{
+		return "", apierror.NewNotFound(schema.GroupResource{
 			Group:    api.Group,
 			Resource: "apps",
 		}, name)
 	}
 
-	return client.AppGet(ctx, name)
+	app, err := client.AppGet(ctx, name)
+	if err != nil {
+		return "", err
+	}
+
+	return app.Name, nil
 }
 
-func stop(c client.Client, opts *Options) error {
+func releaseDevSession(c client.Client, appName string) error {
+	if appName == "" {
+		return nil
+	}
+
 	// Don't use a passed context, because it will be canceled already
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	existingApp, err := getExistingApp(ctx, c, opts)
-	if apierror.IsNotFound(err) {
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	_, _ = c.AppUpdate(ctx, existingApp.Name, &client.AppUpdateOptions{
-		DevMode: new(bool),
-	})
-	return c.AppStop(ctx, existingApp.Name)
+	return c.DevSessionRelease(ctx, appName)
 }
 
-func runOrUpdate(ctx context.Context, client client.Client, hash, image string, deployArgs map[string]any, opts *Options) (*apiv1.App, error) {
-	opts.Run.DeployArgs = deployArgs
-	opts.Run.DevMode = &[]bool{true}[0]
-	existingApp, err := getExistingApp(ctx, client, opts)
+func runOrUpdate(ctx context.Context, client client.Client, hash clientHash, image string, deployArgs map[string]any, opts *Options) (string, error) {
+	appName, err := getExistingApp(ctx, client, opts)
 	if apierror.IsNotFound(err) {
-		return createApp(ctx, client, hash, image, opts)
-	} else if err != nil {
-		return nil, err
+		appName, err = createApp(ctx, client, hash, image, deployArgs, opts)
 	}
-	return existingApp, updateApp(ctx, client, existingApp, image, opts)
+	if err != nil {
+		return "", err
+	}
+	return updateApp(ctx, client, appName, hash.Client, image, deployArgs, opts)
 }
 
-func appDeleteStop(ctx context.Context, c client.Client, app *apiv1.App, cancel func()) error {
+func appDeleteStop(ctx context.Context, c client.Client, appName string, cancel func()) error {
 	wc, err := c.GetClient()
 	if err != nil {
 		return err
 	}
 	w := objwatcher.New[*apiv1.App](wc)
-	_, err = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+	_, err = w.ByName(ctx, c.GetNamespace(), appName, func(app *apiv1.App) (bool, error) {
 		if !app.DeletionTimestamp.IsZero() {
 			pterm.Println(pterm.FgCyan.Sprintf("app %s deleted, exiting", app.Name))
 			cancel()
 			return true, nil
 		}
-		if app.Spec.Stop != nil && *app.Spec.Stop {
-			pterm.Println(pterm.FgCyan.Sprintf("starting app %s", app.Name))
-			_ = c.AppStart(ctx, app.Name)
-		}
 		return false, nil
 	})
 	return err
+}
+
+func renewDevSession(ctx context.Context, c client.Client, appName string, client v1.DevSessionInstanceClient) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(20 * time.Second):
+		}
+
+		if err := c.DevSessionRenew(ctx, appName, client); err != nil {
+			logrus.Errorf("Failed to lock app [%s]: %v", appName, err)
+			return
+		}
+	}
 }
 
 func appStatusMessage(app *apiv1.App) (string, bool) {
@@ -352,14 +372,14 @@ func PrintAppStatus(app *apiv1.App) {
 	}
 }
 
-func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
+func AppStatusLoop(ctx context.Context, c client.Client, appName string) error {
 	wc, err := c.GetClient()
 	if err != nil {
 		return err
 	}
 	w := objwatcher.New[*apiv1.App](wc)
 	msg, ready := "", false
-	_, err = w.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
+	_, err = w.ByName(ctx, c.GetNamespace(), appName, func(app *apiv1.App) (bool, error) {
 		newMsg, newReady := appStatusMessage(app)
 		logrus.Debugf("app status loop %s/%s rev=%s, generation=%d, observed=%d: newMsg=%s, newReady=%v", app.Namespace, app.Name,
 			app.ResourceVersion, app.Generation, app.Status.ObservedGeneration, newMsg, newReady)
@@ -374,13 +394,13 @@ func AppStatusLoop(ctx context.Context, c client.Client, app *apiv1.App) error {
 	return err
 }
 
-func LogLoop(ctx context.Context, c client.Client, app *apiv1.App, opts *client.LogOptions) error {
+func LogLoop(ctx context.Context, c client.Client, appName string, opts *client.LogOptions) error {
 	for {
 		if opts == nil {
 			opts = &client.LogOptions{}
 		}
 		opts.Follow = true
-		_ = log.Output(ctx, c, app.Name, opts)
+		_ = log.Output(ctx, c, appName, opts)
 
 		select {
 		case <-ctx.Done():
@@ -390,11 +410,17 @@ func LogLoop(ctx context.Context, c client.Client, app *apiv1.App, opts *client.
 	}
 }
 
-func setAppNameAndGetHash(ctx context.Context, client client.Client, opts *Options) (string, *Options, error) {
-	image, hashSource, err := opts.ImageSource.ResolveImageAndFile()
+type clientHash struct {
+	Client v1.DevSessionInstanceClient
+	Hash   string
+}
+
+func setAppNameAndGetHash(ctx context.Context, client client.Client, opts *Options) (clientHash, *Options, error) {
+	image, file, err := opts.ImageSource.ResolveImageAndFile()
 	if err != nil {
-		return "", nil, err
+		return clientHash{}, nil, err
 	}
+	hashSource := file
 	if hashSource == "" {
 		hashSource = image
 	}
@@ -406,12 +432,21 @@ func setAppNameAndGetHash(ctx context.Context, client client.Client, opts *Optio
 	if opts.Run.Name == "" {
 		existingName, err := getAppName(ctx, client, hash)
 		if err != nil {
-			return "", nil, err
+			return clientHash{}, nil, err
 		}
 		opts.Run.Name = existingName
 	}
 
-	return hash, opts, nil
+	return clientHash{
+		Client: v1.DevSessionInstanceClient{
+			Hostname: hostname,
+			ImageSource: v1.DevSessionImageSource{
+				Image: image,
+				File:  file,
+			},
+		},
+		Hash: hash,
+	}, opts, nil
 }
 
 func Dev(ctx context.Context, client client.Client, opts *Options) error {
@@ -420,10 +455,10 @@ func Dev(ctx context.Context, client client.Client, opts *Options) error {
 		return err
 	}
 
-	opts.Run.Profiles = append([]string{"dev?"}, opts.Run.Profiles...)
-	opts.ImageSource.Profiles = append([]string{"dev?"}, opts.ImageSource.Profiles...)
+	optsCopy := *opts
+	optsCopy.ImageSource.Profiles = append([]string{"dev?"}, opts.ImageSource.Profiles...)
 
-	err = buildLoop(ctx, client, hash, opts)
+	err = buildLoop(ctx, client, hash, &optsCopy)
 	if errors.Is(err, context.Canceled) {
 		return nil
 	}

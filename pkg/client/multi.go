@@ -209,6 +209,20 @@ func (m *MultiClient) AppPullImage(ctx context.Context, name string) error {
 	return err
 }
 
+func (m *MultiClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
+		return &apiv1.App{}, c.DevSessionRenew(ctx, name, client)
+	})
+	return err
+}
+
+func (m *MultiClient) DevSessionRelease(ctx context.Context, name string) error {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
+		return &apiv1.App{}, c.DevSessionRelease(ctx, name)
+	})
+	return err
+}
+
 func (m *MultiClient) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {
 	return onOne(ctx, m.Factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
 		return c.CredentialCreate(ctx, name, username, password, skipChecks)
@@ -555,6 +569,14 @@ func (m *MultiClient) GetProject() string {
 }
 
 func (m *MultiClient) GetNamespace() string {
+	if m.namespace == "" {
+		c, err := m.Factory.ForProject(context.Background(), m.Factory.DefaultProject())
+		if err != nil {
+			panic(err)
+		}
+		return c.GetNamespace()
+	}
+
 	return m.namespace
 }
 

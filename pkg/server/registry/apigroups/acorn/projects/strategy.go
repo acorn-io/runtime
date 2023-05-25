@@ -92,7 +92,7 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 	return s.deleter.Delete(ctx, obj)
 }
 
-func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
+func (s *Strategy) allowed(ctx context.Context) (sets.Set[string], bool, error) {
 	user, ok := request.UserFrom(ctx)
 	if !ok {
 		return nil, false, nil
@@ -104,9 +104,9 @@ func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
 		return nil, false, err
 	}
 
-	result := sets.NewString()
+	result := sets.New[string]()
 
-	rulesName := sets.NewString()
+	rulesName := sets.New[string]()
 	for _, crb := range crbs.Items {
 		for _, subject := range crb.Subjects {
 			switch subject.Kind {
@@ -126,7 +126,7 @@ func (s *Strategy) allowed(ctx context.Context) (sets.String, bool, error) {
 		}
 	}
 
-	for _, ruleName := range rulesName.List() {
+	for _, ruleName := range sets.List(rulesName) {
 		rule := &rbacv1.ClusterRole{}
 		err := s.c.Get(ctx, router.Key("", ruleName), rule)
 		if apierrors.IsNotFound(err) {

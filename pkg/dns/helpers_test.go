@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	v12 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/networking/v1"
 )
 
@@ -46,21 +45,21 @@ func ing(specRulesHosts, statusIPv4s, statusIPv6s, statusHosts []string) *v1.Ing
 	}
 
 	stat := v1.IngressStatus{
-		LoadBalancer: v12.LoadBalancerStatus{
-			Ingress: []v12.LoadBalancerIngress{},
+		LoadBalancer: v1.IngressLoadBalancerStatus{
+			Ingress: []v1.IngressLoadBalancerIngress{},
 		},
 	}
 
 	for _, ip := range statusIPv4s {
-		stat.LoadBalancer.Ingress = append(stat.LoadBalancer.Ingress, v12.LoadBalancerIngress{IP: ip})
+		stat.LoadBalancer.Ingress = append(stat.LoadBalancer.Ingress, v1.IngressLoadBalancerIngress{IP: ip})
 	}
 
 	for _, ip := range statusIPv6s {
-		stat.LoadBalancer.Ingress = append(stat.LoadBalancer.Ingress, v12.LoadBalancerIngress{IP: ip})
+		stat.LoadBalancer.Ingress = append(stat.LoadBalancer.Ingress, v1.IngressLoadBalancerIngress{IP: ip})
 	}
 
 	for _, host := range statusHosts {
-		stat.LoadBalancer.Ingress = append(stat.LoadBalancer.Ingress, v12.LoadBalancerIngress{Hostname: host})
+		stat.LoadBalancer.Ingress = append(stat.LoadBalancer.Ingress, v1.IngressLoadBalancerIngress{Hostname: host})
 	}
 
 	return &v1.Ingress{

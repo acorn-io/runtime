@@ -91,7 +91,7 @@ type AppUpdateOptions struct {
 	Profiles            []string
 	Permissions         []v1.Permissions
 	DeployArgs          map[string]any
-	DevMode             *bool
+	Stop                *bool
 	Image               string
 	TargetNamespace     string
 	Replace             bool // Replace is used to indicate whether the update should be a patch (replace=false: only change specified fields) or a full update (replace=true: reset unspecified fields to defaults)
@@ -101,6 +101,7 @@ type AppUpdateOptions struct {
 	Memory              v1.MemoryMap
 	ComputeClasses      v1.ComputeClassMap
 	Region              string
+	DevSessionClient    *v1.DevSessionInstanceClient
 }
 
 type LogOptions apiv1.LogOptions
@@ -119,7 +120,7 @@ type AppRunOptions struct {
 	Profiles            []string
 	TargetNamespace     string
 	DeployArgs          map[string]any
-	DevMode             *bool
+	Stop                *bool
 	Permissions         []v1.Permissions
 	AutoUpgrade         *bool
 	NotifyUpgrade       *bool
@@ -138,7 +139,7 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		Links:               a.Links,
 		Publish:             a.Publish,
 		DeployArgs:          a.DeployArgs,
-		DevMode:             a.DevMode,
+		Stop:                a.Stop,
 		Profiles:            a.Profiles,
 		Permissions:         a.Permissions,
 		Env:                 a.Env,
@@ -162,7 +163,6 @@ func (a AppUpdateOptions) ToRun() AppRunOptions {
 		Links:               a.Links,
 		Publish:             a.Publish,
 		DeployArgs:          a.DeployArgs,
-		DevMode:             a.DevMode,
 		Profiles:            a.Profiles,
 		Permissions:         a.Permissions,
 		Env:                 a.Env,
@@ -201,6 +201,9 @@ type Client interface {
 	AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error)
 	AppConfirmUpgrade(ctx context.Context, name string) error
 	AppPullImage(ctx context.Context, name string) error
+
+	DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error
+	DevSessionRelease(ctx context.Context, name string) error
 
 	CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error)
 	CredentialList(ctx context.Context) ([]apiv1.Credential, error)

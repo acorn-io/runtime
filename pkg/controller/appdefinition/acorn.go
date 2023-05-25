@@ -112,7 +112,6 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			PublishMode: publishMode,
 			Links:       scopeLinks(appInstance, acorn.Links),
 			Profiles:    acorn.Profiles,
-			DevMode:     appInstance.Spec.DevMode,
 			DeployArgs:  acorn.DeployArgs,
 			Publish:     acorn.Publish,
 			Stop:        appInstance.Spec.Stop,

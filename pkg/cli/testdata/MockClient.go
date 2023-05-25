@@ -111,6 +111,16 @@ type MockClient struct {
 	EventItem        *apiv1.Event
 }
 
+func (m *MockClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockClient) DevSessionRelease(ctx context.Context, name string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
 	return nil
 }

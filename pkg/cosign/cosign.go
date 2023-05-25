@@ -15,11 +15,11 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	"github.com/sigstore/cosign/pkg/cosign"
-	"github.com/sigstore/cosign/pkg/oci"
-	ociremote "github.com/sigstore/cosign/pkg/oci/remote"
-	"github.com/sigstore/cosign/pkg/oci/static"
-	cosignature "github.com/sigstore/cosign/pkg/signature"
+	"github.com/sigstore/cosign/v2/pkg/cosign"
+	"github.com/sigstore/cosign/v2/pkg/oci"
+	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
+	"github.com/sigstore/cosign/v2/pkg/oci/static"
+	cosignature "github.com/sigstore/cosign/v2/pkg/signature"
 	"github.com/sigstore/sigstore/pkg/cryptoutils"
 	"github.com/sigstore/sigstore/pkg/signature"
 	"github.com/sigstore/sigstore/pkg/signature/payload"
@@ -83,7 +83,9 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 		var terr *transport.Error
 		if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
 			// signature artifact not found -> that's an actual verification error
-			return nil, fmt.Errorf("%w: expected signature artifact %s not found", cosign.ErrNoMatchingSignatures, sigTag.Name())
+			cerr := cosign.NewVerificationError(cosign.ErrNoSignaturesFoundMessage)
+			cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoSignaturesFoundType)
+			return nil, fmt.Errorf("%w: expected signature artifact %s not found", cerr, sigTag.Name())
 		}
 		return nil, fmt.Errorf("failed to get signature digest: %w", err)
 	}
@@ -160,6 +162,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		Annotations:        map[string]interface{}{},
 		ClaimVerifier:      cosign.SimpleClaimVerifier,
 		RegistryClientOpts: opts.OciRemoteOpts,
+		IgnoreTlog:         true,
 	}
 
 	// --- parse key
@@ -282,17 +285,19 @@ func verifySignatures(ctx context.Context, sigs oci.Signatures, h ggcrv1.Hash, c
 			validationErrs = append(validationErrs, err.Error())
 			continue
 		}
-		verified, err := cosign.VerifyImageSignature(ctx, sig, h, co)
-		bundleVerified = bundleVerified || verified
-		if err != nil {
-			validationErrs = append(validationErrs, err.Error())
+		var verr error
+		bundleVerified, verr = cosign.VerifyImageSignature(ctx, sig, h, co)
+		if verr != nil {
+			validationErrs = append(validationErrs, verr.Error())
 			continue
 		}
 
 		checkedSignatures = append(checkedSignatures, sig)
 	}
 	if len(checkedSignatures) == 0 {
-		return nil, false, fmt.Errorf("%w:\n%s", cosign.ErrNoMatchingSignatures, strings.Join(validationErrs, "\n "))
+		cerr := cosign.NewVerificationError(cosign.ErrNoMatchingSignaturesMessage)
+		cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+		return nil, false, fmt.Errorf("%w:\n%s", cerr, strings.Join(validationErrs, "\n "))
 	}
 	return checkedSignatures, bundleVerified, nil
 }

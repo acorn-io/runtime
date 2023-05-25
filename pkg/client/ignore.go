@@ -127,6 +127,14 @@ func (c *IgnoreUninstalled) AppLog(ctx context.Context, name string, opts *LogOp
 	return c.Client.AppLog(ctx, name, opts)
 }
 
+func (c *IgnoreUninstalled) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
+	return c.Client.DevSessionRenew(ctx, name, client)
+}
+
+func (c *IgnoreUninstalled) DevSessionRelease(ctx context.Context, name string) error {
+	return c.Client.DevSessionRelease(ctx, name)
+}
+
 func (c IgnoreUninstalled) ContainerReplicaList(ctx context.Context, opts *ContainerReplicaListOptions) ([]apiv1.ContainerReplica, error) {
 	return ignoreUninstalled(c.Client.ContainerReplicaList(ctx, opts))
 }

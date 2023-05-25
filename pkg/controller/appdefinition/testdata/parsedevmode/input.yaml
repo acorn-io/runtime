@@ -3,9 +3,8 @@ apiVersion: internal.acorn.io/v1
 metadata:
   name: default
   namespace: random
-spec:
-  devMode: true
 status:
+  devSession: {}
   appImage:
     acornfile: |
       args: image: "not-foo"

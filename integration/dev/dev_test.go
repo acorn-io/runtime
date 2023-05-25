@@ -81,7 +81,7 @@ func TestDev(t *testing.T) {
 	}
 
 	_, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
-		return app.Spec.Image != oldImage && app.Spec.Image != "", nil
+		return app.Spec.Image == oldImage && app.Status.DevSession != nil && app.Status.DevSession.SpecOverride.Image != "", nil
 	})
 	if err != nil {
 		t.Fatal(err)

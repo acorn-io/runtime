@@ -1,16 +1,9 @@
 package cli
 
 import (
-	"context"
-	"fmt"
-	"net"
-	"strconv"
-	"strings"
-
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/portforward"
 	"github.com/spf13/cobra"
-	"inet.af/tcpproxy"
 )
 
 func NewPortForward(c CommandContext) *cobra.Command {
@@ -39,46 +32,6 @@ type PortForward struct {
 	client    ClientFactory
 }
 
-func (s *PortForward) forwardPort(ctx context.Context, c client.Client, containerName string, portDef string) error {
-	src, dest, ok := strings.Cut(portDef, ":")
-	if !ok {
-		dest = src
-	}
-
-	port, err := strconv.Atoi(dest)
-	if err != nil {
-		return err
-	}
-
-	dialer, err := c.ContainerReplicaPortForward(ctx, containerName, port)
-	if err != nil {
-		return err
-	}
-
-	p := tcpproxy.Proxy{}
-	p.AddRoute(s.Address+":"+src, &tcpproxy.DialProxy{
-		DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
-			return dialer(ctx)
-		},
-	})
-	p.ListenFunc = func(_, laddr string) (net.Listener, error) {
-		l, err := net.Listen("tcp", laddr)
-		if err != nil {
-			return nil, err
-		}
-		fmt.Printf("Forwarding %s => %d\n", l.Addr().String(), port)
-		return l, err
-	}
-	go func() {
-		<-ctx.Done()
-		_ = p.Close()
-	}()
-	if err := p.Start(); err != nil {
-		return err
-	}
-	return p.Wait()
-}
-
 func (s *PortForward) Run(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	c, err := s.client.CreateDefault()
@@ -98,5 +51,5 @@ func (s *PortForward) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	return s.forwardPort(ctx, c, name, portDef)
+	return portforward.PortForward(ctx, c, name, s.Address, portDef)
 }

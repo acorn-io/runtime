@@ -30,6 +30,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ImageAllowRuleInstanceList{},
 		&EventInstance{},
 		&EventInstanceList{},
+		&DevSessionInstance{},
+		&DevSessionInstanceList{},
 	)
 
 	// Add common types

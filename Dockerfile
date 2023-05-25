@@ -8,7 +8,7 @@ FROM ghcr.io/acorn-io/images-mirror/rancher/klipper-lb:v0.3.5 AS klipper-lb
 FROM ghcr.io/acorn-io/images-mirror/golang:1.20-alpine AS helper
 WORKDIR /usr/src
 RUN apk -U add curl
-RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v5.18.5.tar.gz | tar xzf - --strip-components=1
+RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v6.3.2.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/acorn-helper -ldflags "-s -w" ./helper
 
 FROM ghcr.io/acorn-io/images-mirror/golang:1.20 AS build

@@ -11,6 +11,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
+	"github.com/acorn-io/baaah/pkg/apply"
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -51,7 +53,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Links:               opts.Links,
 			Publish:             opts.Publish,
 			Profiles:            opts.Profiles,
-			DevMode:             opts.DevMode,
+			Stop:                opts.Stop,
 			Permissions:         opts.Permissions,
 			Environment:         opts.Env,
 			Labels:              opts.Labels,
@@ -119,8 +121,8 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles
 	}
-	if opts.DevMode != nil {
-		app.Spec.DevMode = opts.DevMode
+	if opts.Stop != nil {
+		app.Spec.Stop = opts.Stop
 	}
 	if opts.PublishMode != "" {
 		app.Spec.PublishMode = opts.PublishMode
@@ -153,11 +155,52 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	return app, nil
 }
 
+func (c *DefaultClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
+	devSession := &apiv1.DevSession{}
+	if err := c.Client.Get(ctx, router.Key(c.Namespace, name), devSession); err != nil {
+		return err
+	}
+	devSession.Spec.SessionRenewTime = metav1.Now()
+	devSession.Spec.Client = client
+	return c.Client.Update(ctx, devSession)
+}
+
+func (c *DefaultClient) DevSessionRelease(ctx context.Context, name string) error {
+	devSession := &apiv1.DevSession{}
+	if err := c.Client.Get(ctx, router.Key(c.Namespace, name), devSession); apierrors.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	return c.Client.Delete(ctx, devSession)
+}
+
 func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
+	if opts == nil {
+		opts = &AppUpdateOptions{}
+	}
+
 	app, err := ToAppUpdate(ctx, c, name, opts)
 	if err != nil {
 		return nil, err
 	}
+
+	if opts.DevSessionClient != nil {
+		return app, translatePermissions(apply.New(c.Client).Ensure(ctx, &apiv1.DevSession{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: c.Namespace,
+			},
+			Spec: v1.DevSessionInstanceSpec{
+				Client:                *opts.DevSessionClient,
+				SessionTimeoutSeconds: 30,
+				SessionStartTime:      metav1.Now(),
+				SessionRenewTime:      metav1.Now(),
+				SpecOverride:          &app.Spec,
+			},
+		}))
+	}
+
 	return app, translatePermissions(c.Client.Update(ctx, app))
 }
 
@@ -166,7 +209,7 @@ func translatePermissions(err error) error {
 		return err
 	}
 	if i := strings.Index(err.Error(), PrefixErrRulesNeeded); i != -1 {
-		perms := []v1.Permissions{}
+		var perms []v1.Permissions
 		marshalErr := json.Unmarshal([]byte(err.Error()[i+len(PrefixErrRulesNeeded):]), &perms)
 		if marshalErr == nil {
 			return &ErrRulesNeeded{

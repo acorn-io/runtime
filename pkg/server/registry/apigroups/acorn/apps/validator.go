@@ -20,6 +20,8 @@ import (
 	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/acorn-io/mink/pkg/strategy"
+	"github.com/acorn-io/mink/pkg/types"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"golang.org/x/exp/slices"
@@ -35,13 +37,19 @@ import (
 type Validator struct {
 	client        kclient.Client
 	clientFactory *client.Factory
+	deleter       strategy.Deleter
 }
 
-func NewValidator(client kclient.Client, clientFactory *client.Factory) *Validator {
+func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter strategy.Deleter) *Validator {
 	return &Validator{
 		client:        client,
 		clientFactory: clientFactory,
+		deleter:       deleter,
 	}
+}
+
+func (s *Validator) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+	return s.deleter.Get(ctx, namespace, name)
 }
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
@@ -141,10 +149,17 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
 	newParams := obj.(*apiv1.App)
 	oldParams := old.(*apiv1.App)
+
+	if oldParams.Status.GetDevMode() {
+		result = append(result, field.Invalid(field.NewPath("status", "devSession"), "", "app is locked by dev session"))
+		return result
+	}
+
 	if newParams.Spec.Region != oldParams.Spec.Region && newParams.Spec.Region != oldParams.Status.Defaults.Region {
 		result = append(result, field.Invalid(field.NewPath("spec", "region"), newParams.Spec.Region, "cannot change region"))
 		return result
 	}
+
 	return s.Validate(ctx, newParams)
 }
 
