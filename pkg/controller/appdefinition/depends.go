@@ -68,7 +68,7 @@ func getDependencyAnnotations(app *v1.AppInstance, containerOrJobName string, de
 			app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
 		}
 		app.Status.AppStatus.Containers[containerOrJobName] = s
-	} else if _, ok := app.Status.AppSpec.Jobs[containerOrJobName]; ok {
+	} else if _, ok = app.Status.AppSpec.Jobs[containerOrJobName]; ok {
 		s := app.Status.AppStatus.Jobs[containerOrJobName]
 		s.Dependencies = depStatus
 		if app.Status.AppStatus.Jobs == nil {

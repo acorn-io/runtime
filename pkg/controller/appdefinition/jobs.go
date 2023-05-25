@@ -42,8 +42,11 @@ func stripPruneAndUpdate(annotations map[string]string) map[string]string {
 func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, interpolator *secrets.Interpolator) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
 		job, err := toJob(req, appInstance, pullSecrets, tag, entry.Key, entry.Value, interpolator)
-		if err != nil || job == nil {
+		if err != nil {
 			return nil, err
+		}
+		if job == nil {
+			continue
 		}
 		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance)
 		if err != nil {
@@ -87,10 +90,14 @@ func getJobEvent(jobName string, appInstance *v1.AppInstance) string {
 	if !appInstance.DeletionTimestamp.IsZero() {
 		return "delete"
 	}
-	if appInstance.Generation > 1 && appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
-		return "update"
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		return "stop"
 	}
-	return "create"
+	if appInstance.Generation <= 1 || slices.Contains(appInstance.Status.AppSpec.Jobs[jobName].Events, "create") && !appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
+		// Create event jobs run at least once. So, if it hasn't succeeded, run it.
+		return "create"
+	}
+	return "update"
 }
 
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) (kclient.Object, error) {
@@ -100,7 +107,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	jobStatus := appInstance.Status.AppStatus.Jobs[name]
 	jobStatus.Skipped = !matchesJobEvent(jobEventName, container)
 	if appInstance.Status.AppStatus.Jobs == nil {
-		appInstance.Status.AppStatus.Jobs = map[string]v1.JobStatus{}
+		appInstance.Status.AppStatus.Jobs = make(map[string]v1.JobStatus, len(appInstance.Status.AppSpec.Jobs))
 	}
 	appInstance.Status.AppStatus.Jobs[name] = jobStatus
 
@@ -122,9 +129,11 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 
 	baseAnnotations := labels.Merge(secretAnnotations, labels.GatherScoped(name, v1.LabelTypeJob,
 		appInstance.Status.AppSpec.Annotations, container.Annotations, appInstance.Spec.Annotations))
+	if appInstance.Generation > 0 {
+		baseAnnotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
+	}
 
 	jobSpec := batchv1.JobSpec{
-		Suspend: appInstance.Spec.Stop,
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: jobLabels(appInstance, container, name,
@@ -132,7 +141,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 					labels.AcornAppPublicName, publicname.Get(appInstance),
 					labels.AcornJobName, name,
 					labels.AcornContainerName, ""),
-				Annotations: labels.Merge(podAnnotations(appInstance, name, container), baseAnnotations),
+				Annotations: labels.Merge(podAnnotations(appInstance, container), baseAnnotations),
 			},
 			Spec: corev1.PodSpec{
 				Affinity:                      appInstance.Status.Scheduling[name].Affinity,

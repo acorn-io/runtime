@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"os"
 	"testing"
 
 	"github.com/acorn-io/acorn/pkg/controller/namespace"
@@ -9,25 +10,20 @@ import (
 )
 
 func TestJobs(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/job/basic", DeploySpec)
-}
-
-func TestJobsLabels(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/job/labels", DeploySpec)
+	dirs, err := os.ReadDir("testdata/job")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, dir := range dirs {
+		name := dir.Name()
+		if dir.IsDir() && name != "labels-namespace" {
+			t.Run(name, func(t *testing.T) {
+				tester.DefaultTest(t, scheme.Scheme, "testdata/job/"+name, DeploySpec)
+			})
+		}
+	}
 }
 
 func TestJobsLabelsNamespace(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/job/labels-namespace", namespace.AddNamespace)
-}
-
-func TestCronJobs(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/cronjob", DeploySpec)
-}
-
-func TestDeleteJob(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/job/delete-job", DeploySpec)
-}
-
-func TestJobAppStopped(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/job/stopped-app", DeploySpec)
 }
