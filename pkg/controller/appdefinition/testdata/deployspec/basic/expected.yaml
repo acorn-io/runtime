@@ -145,7 +145,7 @@ spec:
     "acorn.io/app-name": "app-name"
     "acorn.io/managed": "true"
     "acorn.io/container-name": "oneimage"
-  default: false
+  default: true
   container: oneimage
   type: ClusterIP
   ports:

@@ -10,7 +10,7 @@ metadata:
     "acorn.io/container-name": "oneimage"
     "acorn.io/public-name": "app-name.oneimage"
 spec:
-  default: false
+  default: true
   appName: app-name
   appNamespace: app-namespace
   labels:

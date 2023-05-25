@@ -28,7 +28,7 @@ spec:
     "cona3": "value"
     "globala1": "value"
     "globala2": "value"
-  default: false
+  default: true
   container: con1
   ports:
     - port: 80
