@@ -12,7 +12,7 @@ metadata:
 spec:
   appName: app-name
   appNamespace: app-namespace
-  default: true
+  default: false
   external: app-name.acorn-name
   annotations:
     allacornsa: value

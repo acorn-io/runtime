@@ -56,7 +56,7 @@ spec:
   appName: app-name
   appNamespace: app-namespace
   publishMode: all
-  default: false
+  default: true
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace

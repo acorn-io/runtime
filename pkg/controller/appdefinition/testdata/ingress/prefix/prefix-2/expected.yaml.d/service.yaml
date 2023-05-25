@@ -10,7 +10,7 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/public-name": "app-name.con1"
 spec:
-  default: true
+  default: false
   appName: app-name
   appNamespace: app-namespace
   labels:
