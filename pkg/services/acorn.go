@@ -284,6 +284,19 @@ func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppI
 	if err != nil {
 		return nil, err
 	}
+
+	defaultFound := false
+	for _, obj := range objs {
+		if defaultFound {
+			obj.(*v1.ServiceInstance).Spec.Default = false
+		} else if obj.(*v1.ServiceInstance).Spec.Default {
+			defaultFound = true
+		}
+	}
+	if !defaultFound && len(objs) > 0 {
+		objs[0].(*v1.ServiceInstance).Spec.Default = true
+	}
+
 	result = append(result, objs...)
 	result = append(result, forAcorns(appInstance)...)
 	result = append(result, forContainers(appInstance)...)
@@ -293,11 +306,6 @@ func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppI
 		return nil, err
 	}
 	result = append(result, routers...)
-
-	// determine default before adding linked services
-	if len(result) == 1 {
-		result[0].(*v1.ServiceInstance).Spec.Default = true
-	}
 
 	result = append(result, forLinkedServices(appInstance)...)
 	return

@@ -13,7 +13,7 @@ spec:
   publishMode: all
   appName: app-name
   appNamespace: app-namespace
-  default: true
+  default: false
   routes:
   - pathType: exact
     path: /foo
