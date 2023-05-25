@@ -1573,14 +1573,14 @@ func TestEnforcedQuota(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Update the project to enforce quota.
-	if project.Annotations == nil {
-		project.Annotations = make(map[string]string)
-	}
-	project.Annotations[labels.ProjectEnforcedQuotaAnnotation] = "true"
-	if err := kclient.Update(ctx, project); err != nil {
-		t.Fatal(err)
-	}
+	// Annotate the project to enforce quota.
+	project = helper.WaitForObject(t, helper.Watcher(t, c), &corev1.NamespaceList{}, project, func(obj *corev1.Namespace) bool {
+		if project.Annotations == nil {
+			project.Annotations = make(map[string]string)
+		}
+		project.Annotations[labels.ProjectEnforcedQuotaAnnotation] = "true"
+		return kclient.Update(ctx, obj) == nil
+	})
 
 	// Run a simple app.
 	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{

@@ -60,6 +60,7 @@ jobs:
           KUBECONFIG: "/home/runner/.kube/config"
 
       - name: Build test summary
+        id: test_summary
         uses: test-summary/action@v1
         if: success() || failure()
         with:
@@ -71,7 +72,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.23.0
         with:
           channel-id: '${{ secrets.SLACK_BOT_FAILURE_CHANNEL }}'
-          slack-message: "❌ Nightly EKS test had ${{ steps.test_summary.outputs.failed }} test cases fail: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          slack-message: "❌ Nightly EKS test had ${{ steps.test_summary.outputs.failed }} test case(s) fail: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
