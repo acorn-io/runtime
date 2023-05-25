@@ -18,7 +18,7 @@ spec:
     "acorn.io/managed": "true"
     "acorn.io/container-name": "twoimage"
   container: twoimage
-  default: false
+  default: true
   type: ClusterIP
   ports:
     - port: 80

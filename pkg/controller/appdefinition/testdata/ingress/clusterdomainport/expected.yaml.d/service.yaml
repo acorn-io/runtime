@@ -18,7 +18,7 @@ spec:
     "acorn.io/container-name": "oneimage"
     "acorn.io/managed": "true"
   container: oneimage
-  default: false
+  default: true
   ports:
     - port: 80
       targetPort: 81

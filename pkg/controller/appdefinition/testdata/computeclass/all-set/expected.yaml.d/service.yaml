@@ -12,7 +12,7 @@ metadata:
 spec:
   appName: app-name
   appNamespace: app-namespace
-  default: false
+  default: true
   container: oneimage
   labels:
     "acorn.io/app-namespace": "app-namespace"
