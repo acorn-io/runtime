@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"path"
 	"strings"
@@ -68,17 +67,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 			// possible catch 22 where interpolation fails but we can't update the acorn
 			// because it's failing. This happens when we refer to an object that has
 			// yet to be created
-			interpolatorErr := interpolator.Err()
-			if interpolatorErr == nil {
-				missing := interpolator.Missing()
-				if len(missing) == 0 {
-					status.Success()
-				} else {
-					status.Unknown(fmt.Sprintf("waiting %v", missing))
-				}
-			} else {
-				status.Error(interpolatorErr)
-			}
+			status.Error(interpolator.Err())
 		} else {
 			status.Error(err)
 		}
@@ -109,7 +98,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addPVCs(req, appInstance, resp); err != nil {
 		return err
 	}
-	addAcorns(appInstance, tag, pullSecrets, resp)
+	addAcorns(req, appInstance, tag, pullSecrets, resp)
 
 	resp.Objects(pullSecrets.Objects()...)
 	resp.Objects(interpolator.Objects()...)
@@ -565,7 +554,6 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 		}
 		rev, err := getRevision(req, appInstance.Status.Namespace, secret)
 		if apierror.IsNotFound(err) {
-			interpolator.AddMissingSecretName(secret)
 			result[apply.AnnotationUpdate] = "false"
 			result[apply.AnnotationCreate] = "false"
 		} else if err != nil {
@@ -582,7 +570,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		stateful = isStateful(appInstance, container)
 	)
 
-	interpolator = interpolator.ForService(name)
+	interpolator = interpolator.ForContainer(name)
 
 	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
 
@@ -607,7 +595,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      deploymentLabels,
-			Annotations: typed.Concat(deploymentAnnotations, getDependencyAnnotations(appInstance, container.Dependencies), secretAnnotations),
+			Annotations: typed.Concat(deploymentAnnotations, getDependencyAnnotations(appInstance, name, container.Dependencies), secretAnnotations),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,

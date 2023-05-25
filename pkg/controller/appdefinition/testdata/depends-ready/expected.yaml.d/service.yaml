@@ -9,6 +9,8 @@ metadata:
     acorn.io/link-name: foo
     acorn.io/managed: "true"
     "acorn.io/public-name": "app-name.db"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   external: foo
   appName: app-name

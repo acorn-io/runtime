@@ -10,6 +10,8 @@ metadata:
     "acorn.io/container-name": "app1"
     "acorn.io/managed": "true"
     "acorn.io/public-name": "app-name.app1"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace
@@ -39,6 +41,8 @@ metadata:
     "acorn.io/container-name": "app2"
     "acorn.io/managed": "true"
     "acorn.io/public-name": "app-name.app2"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace

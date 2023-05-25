@@ -3,11 +3,10 @@ package secrets
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/secrets"
@@ -36,92 +35,70 @@ func secretsOrdered(app *v1.AppInstance) (result []secEntry) {
 	return append(result, generated...)
 }
 
+func addSecretTransitioning(appInstance *v1.AppInstance, secretName, title, msg string) {
+	c := appInstance.Status.AppStatus.Secrets[secretName]
+	c.LookupTransitioning = append(c.LookupTransitioning, fmt.Sprintf("%s: [%s]", title, msg))
+	appInstance.Status.AppStatus.Secrets[secretName] = c
+}
+
+func addSecretError(appInstance *v1.AppInstance, secretName string, err error) {
+	c := appInstance.Status.AppStatus.Secrets[secretName]
+	c.LookupErrors = append(c.LookupErrors, err.Error())
+	appInstance.Status.AppStatus.Secrets[secretName] = c
+}
+
 func CreateSecrets(req router.Request, resp router.Response) (err error) {
 	var (
-		missing     []string
-		errored     []string
-		waiting     []string
 		appInstance = req.Object.(*v1.AppInstance)
 		allSecrets  = map[string]*corev1.Secret{}
-		cond        = condition.Setter(appInstance, resp, v1.AppInstanceConditionSecrets)
 	)
 
-	defer func() {
-		if err != nil {
-			cond.Error(err)
-			return
-		}
-
-		buf := strings.Builder{}
-		if len(missing) > 0 {
-			sort.Strings(missing)
-			buf.WriteString("missing: [")
-			buf.WriteString(strings.Join(missing, ", "))
-			buf.WriteString("]")
-		}
-		if len(errored) > 0 {
-			sort.Strings(errored)
-			if buf.Len() > 0 {
-				buf.WriteString(" ")
-			}
-			buf.WriteString("errored: [")
-			buf.WriteString(strings.Join(errored, ", "))
-			buf.WriteString("]")
-		}
-		if len(waiting) > 0 {
-			sort.Strings(waiting)
-			if buf.Len() > 0 {
-				buf.WriteString(" ")
-			}
-			buf.WriteString("waiting: [")
-			buf.WriteString(strings.Join(waiting, ", "))
-			buf.WriteString("]")
-		}
-
-		if buf.Len() > 0 {
-			cond.Error(errors.New(buf.String()))
-		} else {
-			cond.Success()
-		}
-	}()
+	if appInstance.Status.AppStatus.Secrets == nil {
+		appInstance.Status.AppStatus.Secrets = map[string]v1.SecretStatus{}
+	}
 
 	for _, entry := range secretsOrdered(appInstance) {
 		secretName := entry.name
+
 		secret, err := secrets.GetOrCreateSecret(allSecrets, req, appInstance, secretName)
 		if apierrors.IsNotFound(err) {
 			if status := (*apierrors.StatusError)(nil); errors.As(err, &status) && status.ErrStatus.Details != nil {
 				if status.ErrStatus.Details.Name != "" {
-					missing = append(missing, status.ErrStatus.Details.Name)
+					addSecretTransitioning(appInstance, secretName, "missing", status.ErrStatus.Details.Name)
 				}
 			} else {
-				missing = append(missing, secretName)
+				addSecretTransitioning(appInstance, secretName, "missing", secretName)
 			}
 			continue
 		} else if apiError := apierrors.APIStatus(nil); errors.As(err, &apiError) {
-			cond.Error(err)
-			return err
+			addSecretError(appInstance, secretName, err)
+			return nil
 		} else if errors.Is(err, jobs.ErrJobNotDone) || errors.Is(err, jobs.ErrJobNoOutput) {
-			waiting = append(waiting, fmt.Sprintf("%s: %v", secretName, err))
+			addSecretTransitioning(appInstance, secretName, "waiting", err.Error())
 			continue
 		} else if err != nil {
 			if strings.HasPrefix(err.Error(), "waiting") {
-				waiting = append(waiting, fmt.Sprintf("%s: %v", secretName, err))
+				addSecretTransitioning(appInstance, secretName, "waiting", err.Error())
 			} else {
-				errored = append(errored, fmt.Sprintf("%s: %v", secretName, err))
+				addSecretError(appInstance, secretName, err)
 			}
 			continue
 		}
 
 		labelMap := map[string]string{
-			labels.AcornAppName:      appInstance.Name,
-			labels.AcornAppNamespace: appInstance.Namespace,
-			labels.AcornManaged:      "true",
+			labels.AcornAppName:          appInstance.Name,
+			labels.AcornAppNamespace:     appInstance.Namespace,
+			labels.AcornManaged:          "true",
+			labels.AcornSecretName:       secretName,
+			labels.AcornSecretSourceName: secret.Name,
 		}
 		labelMap = labels.Merge(labelMap, labels.GatherScoped(secretName, v1.LabelTypeSecret,
 			appInstance.Status.AppSpec.Labels, entry.secret.Labels, appInstance.Spec.Labels))
 
 		annotations := labels.GatherScoped(secretName, v1.LabelTypeSecret, appInstance.Status.AppSpec.Annotations,
 			entry.secret.Annotations, appInstance.Spec.Annotations)
+
+		annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
 
 		resp.Objects(&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{

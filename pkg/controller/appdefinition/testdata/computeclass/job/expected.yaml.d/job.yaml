@@ -4,6 +4,7 @@ metadata:
   name: oneimage
   namespace: app-created-namespace
   annotations:
+    acorn.io/app-generation: "0"
     "apply.acorn.io/prune": "false"
     apply.acorn.io/update: "true"
   labels:

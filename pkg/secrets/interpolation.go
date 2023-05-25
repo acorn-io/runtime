@@ -19,10 +19,10 @@ import (
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/pkg/replace"
 	"github.com/acorn-io/baaah/pkg/apply"
-	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/google/go-containerregistry/pkg/name"
-	"golang.org/x/exp/slices"
+	"github.com/pkg/errors"
+	"github.com/rancher/wrangler/pkg/merr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,59 +43,70 @@ var (
 		"hostname")
 )
 
+type ErrInterpolation struct {
+	v1.ExpressionError
+}
+
+func (e *ErrInterpolation) Error() string {
+	return e.ExpressionError.String()
+}
+
 type Interpolator struct {
 	secretName string
 
-	app         *v1.AppInstance
-	data        map[string][]byte
-	missing     map[string][]string
-	client      kclient.Client
-	ctx         context.Context
-	namespace   string
-	serviceName string
-	errs        *[]error
-}
-
-type Ref struct {
-	SecretName string
-	Key        string
+	app           *v1.AppInstance
+	data          map[string][]byte
+	incomplete    map[string]bool
+	client        kclient.Client
+	ctx           context.Context
+	errs          *[]error
+	namespace     string
+	containerName string
+	jobName       string
 }
 
 func NewInterpolator(ctx context.Context, c kclient.Client, app *v1.AppInstance) *Interpolator {
-	errs := make([]error, 0)
 	return &Interpolator{
 		secretName: "secrets-" + app.ShortID(),
 		app:        app,
 		data:       map[string][]byte{},
-		missing:    map[string][]string{},
+		incomplete: map[string]bool{},
 		client:     c,
 		ctx:        ctx,
 		namespace:  app.Status.Namespace,
-		errs:       &errs,
+		errs:       &[]error{},
 	}
 }
 
-func (i *Interpolator) ForService(serviceName string) *Interpolator {
+func (i *Interpolator) Err() error {
+	return merr.NewErrors(*i.errs...)
+}
+
+func (i *Interpolator) ForJob(jobName string) *Interpolator {
 	cp := *i
-	cp.serviceName = serviceName
+	cp.jobName = jobName
+	cp.containerName = ""
 	return &cp
 }
 
-func (i *Interpolator) Missing() []string {
-	if i.serviceName == "" {
-		result := sets.NewString()
-		for _, v := range i.missing {
-			result.Insert(v...)
-		}
-		// sorted
-		return result.List()
+func (i *Interpolator) ForContainer(containerName string) *Interpolator {
+	cp := *i
+	cp.jobName = ""
+	cp.containerName = containerName
+	return &cp
+}
+
+func (i *Interpolator) Incomplete() bool {
+	if i.jobName != "" {
+		return i.incomplete[i.jobName]
+	} else if i.containerName != "" {
+		return i.incomplete[i.containerName]
 	}
-	// sorted
-	return sets.NewString(i.missing[i.serviceName]...).List()
+	return len(i.incomplete) > 0
 }
 
 func (i *Interpolator) AddMissingAnnotations(annotations map[string]string) {
-	if len(i.Missing()) > 0 {
+	if i.Incomplete() {
 		annotations[apply.AnnotationUpdate] = "false"
 		annotations[apply.AnnotationCreate] = "false"
 	}
@@ -114,15 +125,13 @@ func (i *Interpolator) SecretName() string {
 func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.VolumeMount {
 	data, err := base64.StdEncoding.DecodeString(file.Content)
 	if err != nil {
-		*i.errs = append(*i.errs, err)
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], "error: "+err.Error())
+		i.saveError(err)
 		return corev1.VolumeMount{}
 	}
 
 	newValue, err := i.replace(string(data))
 	if err != nil {
-		*i.errs = append(*i.errs, err)
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], "error: "+err.Error())
+		i.saveError(err)
 		return corev1.VolumeMount{}
 	}
 
@@ -164,19 +173,15 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	return "", false, nil
 }
 
-func (i *Interpolator) AddMissingSecretName(secretName string) {
-	msg := "secret: " + secretName
-	if !slices.Contains(i.missing[i.serviceName], msg) {
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], msg)
-	}
-}
-
 func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (string, bool, error) {
 	secret := &corev1.Secret{}
 	err := ref.Lookup(i.ctx, i.client, secret, i.namespace, secretName...)
 	if apierrors.IsNotFound(err) {
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], "secret: "+strings.Join(secretName, "."))
-		return "", false, nil
+		return "", false, &ErrInterpolation{
+			ExpressionError: v1.ExpressionError{
+				Secret: strings.Join(secretName, "."),
+			},
+		}
 	} else if err != nil {
 		return "", false, err
 	}
@@ -215,8 +220,11 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		secret := &corev1.Secret{}
 		err := ref.Lookup(i.ctx, i.client, secret, svc.Namespace, extra[0])
 		if apierrors.IsNotFound(err) {
-			i.missing[i.serviceName] = append(i.missing[i.serviceName], "secret "+extra[0])
-			return "", nil
+			return "", &ErrInterpolation{
+				ExpressionError: v1.ExpressionError{
+					Secret: extra[0],
+				},
+			}
 		} else if err != nil {
 			return "", err
 		}
@@ -225,8 +233,11 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		if len(svc.Status.Endpoints) > 0 {
 			return svc.Status.Endpoints[0].Address, nil
 		}
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], "service endpoint "+svc.Name)
-		return "<pending>", nil
+		return "", &ErrInterpolation{
+			ExpressionError: v1.ExpressionError{
+				Endpoint: svc.Name,
+			},
+		}
 	case "address", "host", "hostname":
 		if svc.Spec.Address != "" {
 			return svc.Spec.Address, nil
@@ -279,8 +290,11 @@ func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
 	svc := &v1.ServiceInstance{}
 	err = ref.Lookup(i.ctx, i.client, svc, i.namespace, serviceName...)
 	if apierrors.IsNotFound(err) {
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], "service: "+strings.Join(serviceName, "."))
-		return "", false, nil
+		return "", false, &ErrInterpolation{
+			ExpressionError: v1.ExpressionError{
+				Service: strings.Join(serviceName, "."),
+			},
+		}
 	}
 	if err != nil {
 		return "", false, err
@@ -290,7 +304,14 @@ func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
 	return ret, true, err
 }
 
-func (i *Interpolator) resolve(token string) (string, bool, error) {
+func (i *Interpolator) resolve(token string) (_ string, _ bool, err error) {
+	defer func() {
+		if target := (*ErrInterpolation)(nil); errors.As(err, &target) {
+			target.Expression = token
+			err = target
+		}
+	}()
+
 	scheme, tail, ok := strings.Cut(token, "://")
 	if ok {
 		switch scheme {
@@ -338,10 +359,6 @@ func (i *Interpolator) resolveImages(imageName string) (string, bool, error) {
 	return result, result != "", nil
 }
 
-func (i *Interpolator) Err() error {
-	return merr.NewErrors(*i.errs...)
-}
-
 func (i *Interpolator) replace(content string) (string, error) {
 	content, err := replace.Replace(content, "@{", "}", i.resolve)
 	if err != nil {
@@ -353,12 +370,39 @@ func (i *Interpolator) replace(content string) (string, error) {
 	})
 }
 
+func (i *Interpolator) saveError(err error) {
+	var exprError v1.ExpressionError
+	if e := (*ErrInterpolation)(nil); errors.As(err, &e) {
+		exprError = e.ExpressionError
+	} else {
+		exprError = v1.ExpressionError{
+			Error: err.Error(),
+		}
+	}
+	if i.containerName != "" {
+		i.incomplete[i.containerName] = true
+		c := i.app.Status.AppStatus.Containers[i.containerName]
+		c.ExpressionErrors = append(c.ExpressionErrors, exprError)
+		i.app.Status.AppStatus.Containers[i.containerName] = c
+	} else if i.jobName != "" {
+		i.incomplete[i.jobName] = true
+		c := i.app.Status.AppStatus.Jobs[i.jobName]
+		c.ExpressionErrors = append(c.ExpressionErrors, exprError)
+		i.app.Status.AppStatus.Jobs[i.jobName] = c
+	} else {
+		i.incomplete[""] = true
+		*i.errs = append(*i.errs, fmt.Errorf("unqualified expression error: %w", err))
+	}
+}
+
 func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
 	newValue, err := i.replace(value)
 	if err != nil {
-		*i.errs = append(*i.errs, err)
-		i.missing[i.serviceName] = append(i.missing[i.serviceName], "error: "+err.Error())
-		return corev1.EnvVar{}
+		i.saveError(err)
+		return corev1.EnvVar{
+			Name:  key,
+			Value: value,
+		}
 	}
 	if value == newValue {
 		return corev1.EnvVar{

@@ -118,7 +118,7 @@ func TestIssue552(t *testing.T) {
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
 		return app.Status.Ready &&
-			app.Status.ContainerStatus["icinga2-master"].UpToDate == 1
+			app.Status.AppStatus.Containers["icinga2-master"].UpToDateReplicaCount == 1
 	})
 
 	dep := &appsv1.Deployment{}

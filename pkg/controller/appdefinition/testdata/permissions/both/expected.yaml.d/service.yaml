@@ -9,6 +9,8 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/container-name": "twoimage"
     "acorn.io/public-name": "app-name.twoimage"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace

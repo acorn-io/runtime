@@ -9,6 +9,8 @@ metadata:
     "acorn.io/app-public-name": "app-name"
     "acorn.io/job-name": "oneimage"
     "acorn.io/managed": "true"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   concurrencyPolicy: Replace
   failedJobsHistoryLimit: 3
@@ -69,6 +71,9 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+  appStatus:
+    jobs:
+      oneimage: {}
   appSpec:
     jobs:
       oneimage:

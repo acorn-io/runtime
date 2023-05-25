@@ -9,6 +9,8 @@ metadata:
     "acorn.io/container-name": "con1"
     "acorn.io/managed": "true"
     "acorn.io/public-name": "app-name.con1"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   default: true
   appName: app-name

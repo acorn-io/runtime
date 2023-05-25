@@ -390,7 +390,7 @@ func TestAppLog(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["default"].Ready == 1
+		return app.Status.AppStatus.Containers["default"].ReadyReplicaCount == 1
 	})
 
 	msgs, err := c.AppLog(ctx, app.Name, nil)

@@ -42,6 +42,9 @@ status:
       oneimage: 1048576 # 1Mi
   appImage:
     id: test
+  appStatus:
+    jobs:
+      oneimage: {}
   appSpec:
     jobs:
       oneimage:

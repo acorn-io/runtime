@@ -9,6 +9,8 @@ metadata:
     "acorn.io/acorn-name": "acorn-name"
     "acorn.io/managed": "true"
     "acorn.io/public-name": "app-name.acorn-name"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace

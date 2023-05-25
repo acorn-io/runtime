@@ -8,8 +8,6 @@ metadata:
     "acorn.io/app-name": "app-name"
     "acorn.io/container-name": "container-name"
     "acorn.io/managed": "true"
-  annotations:
-    acorn.io/dep-names: db
 spec:
   selector:
     matchLabels:
@@ -49,7 +47,6 @@ metadata:
     "acorn.io/container-name": "web"
     "acorn.io/managed": "true"
   annotations:
-    acorn.io/dep-names: container-name
     apply.acorn.io/create: "false"
     apply.acorn.io/update: "false"
 spec:

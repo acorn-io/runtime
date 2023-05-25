@@ -46,6 +46,7 @@ metadata:
     acorn.io/parent-acorn-name: app-name
     acorn.io/public-name: app-name.acorn-name
   annotations:
+    acorn.io/app-generation: "0"
     acorn.io/original-image: acorn-image-name
 spec:
   image: acorn-image-name

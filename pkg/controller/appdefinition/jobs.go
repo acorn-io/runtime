@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -86,22 +87,22 @@ func getJobEvent(jobName string, appInstance *v1.AppInstance) string {
 	if !appInstance.DeletionTimestamp.IsZero() {
 		return "delete"
 	}
-	if appInstance.Generation > 1 && appInstance.Status.JobsStatus[jobName].CreateEventSucceeded {
+	if appInstance.Generation > 1 && appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
 		return "update"
 	}
 	return "create"
 }
 
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) (kclient.Object, error) {
-	interpolator = interpolator.ForService(name)
+	interpolator = interpolator.ForJob(name)
 	jobEventName := getJobEvent(name, appInstance)
 
-	jobStatus := appInstance.Status.JobsStatus[name]
-	if appInstance.Status.JobsStatus == nil {
-		appInstance.Status.JobsStatus = make(map[string]v1.JobStatus)
-	}
+	jobStatus := appInstance.Status.AppStatus.Jobs[name]
 	jobStatus.Skipped = !matchesJobEvent(jobEventName, container)
-	appInstance.Status.JobsStatus[name] = jobStatus
+	if appInstance.Status.AppStatus.Jobs == nil {
+		appInstance.Status.AppStatus.Jobs = map[string]v1.JobStatus{}
+	}
+	appInstance.Status.AppStatus.Jobs[name] = jobStatus
 
 	if jobStatus.Skipped {
 		return nil, nil
@@ -157,7 +158,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Name:        name,
 				Namespace:   appInstance.Status.Namespace,
 				Labels:      jobSpec.Template.Labels,
-				Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), baseAnnotations),
+				Annotations: labels.Merge(getDependencyAnnotations(appInstance, name, container.Dependencies), baseAnnotations),
 			},
 			Spec: jobSpec,
 		}
@@ -165,14 +166,16 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		job.Spec.Template.Spec.InitContainers = setJobEventName(setTerminationPath(initContainers), jobEventName)
 		job.Annotations[apply.AnnotationPrune] = "false"
 		job.Annotations[apply.AnnotationUpdate] = "true"
+		job.Annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
 		return job, nil
 	}
-	return &batchv1.CronJob{
+
+	cronJob := &batchv1.CronJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      jobSpec.Template.Labels,
-			Annotations: labels.Merge(getDependencyAnnotations(appInstance, container.Dependencies), baseAnnotations),
+			Annotations: labels.Merge(getDependencyAnnotations(appInstance, name, container.Dependencies), baseAnnotations),
 		},
 		Spec: batchv1.CronJobSpec{
 			FailedJobsHistoryLimit:     &[]int32{3}[0],
@@ -186,7 +189,9 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				Spec: jobSpec,
 			},
 		},
-	}, nil
+	}
+	cronJob.Annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
+	return cronJob, nil
 }
 
 func toCronJobSchedule(schedule string) string {

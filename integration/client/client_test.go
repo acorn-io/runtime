@@ -106,7 +106,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, client.Watch, &apiv1.AppList{}, appInstance, func(obj *apiv1.App) bool {
-		return obj.Status.ContainerStatus["default"].Ready == 1
+		return obj.Status.AppStatus.Containers["default"].ReadyReplicaCount == 1
 	})
 
 	c, err = hclient.New(cfg, "", ns.Name)

@@ -13,6 +13,7 @@ status:
     imageData: {}
     vcs: {}
   appSpec: {}
+  appStatus: {}
   columns: {}
   defaults: {}
 

@@ -8,6 +8,8 @@ metadata:
     "acorn.io/app-public-name": "app-name"
     acorn.io/managed: "true"
     acorn.io/job-name: oneimage
+  annotations:
+    acorn.io/app-generation: "0"
 rules:
 - apiGroups:
   - foo.io
@@ -26,6 +28,8 @@ metadata:
     "acorn.io/app-public-name": "app-name"
     acorn.io/managed: "true"
     acorn.io/job-name: twoimage
+  annotations:
+    acorn.io/app-generation: "0"
 rules:
 - apiGroups:
   - foo.io
