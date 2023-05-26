@@ -69,10 +69,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 	}
 
 	// Check if strict mode is enabled
-	var strictMode bool
-	if cfg.ImageAllowRulesStrictMode != nil && *cfg.ImageAllowRulesStrictMode {
-		strictMode = true
-	}
+	strictMode := cfg.ImageAllowRulesStrictMode != nil && *cfg.ImageAllowRulesStrictMode
 
 	if len(imageAllowRules) == 0 {
 		// No ImageAllowRules found. Check if strict mode is enabled.
