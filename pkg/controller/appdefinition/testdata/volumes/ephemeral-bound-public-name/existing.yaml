@@ -3,10 +3,11 @@ kind: PersistentVolume
 metadata:
   labels:
     acorn.io/app-name: other-app
-    acorn.io/app-namespace: other-namespace
+    acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
     acorn.io/volume-class: custom-class
     acorn.io/volume-name: other-volume
+    acorn.io/public-name: other-app.foo
   name: existing-foo
 spec:
   accessModes:
