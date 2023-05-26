@@ -68,17 +68,14 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		return err
 	}
 
-	// Check if strict mode is enabled
-	strictMode := cfg.ImageAllowRulesStrictMode != nil && *cfg.ImageAllowRulesStrictMode
-
-	if len(imageAllowRules) == 0 {
-		// No ImageAllowRules found. Check if strict mode is enabled.
-		if strictMode {
-			// Strict mode: DENY the image
-			return &ErrImageNotAllowed{Image: image}
-		}
-		// No Strict Mode: ALLOW the image
+	// IAR not enabled? Allow all images.
+	if cfg.ImageAllowRulesEnabled == nil || !*cfg.ImageAllowRulesEnabled {
 		return nil
+	}
+
+	// No rules? Deny all images.
+	if len(imageAllowRules) == 0 {
+		return &ErrImageNotAllowed{Image: image}
 	}
 
 	logrus.Debugf("Checking image %s (%s) against %d rules", image, digest, len(imageAllowRules))

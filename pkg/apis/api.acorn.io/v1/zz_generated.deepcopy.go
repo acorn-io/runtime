@@ -521,8 +521,8 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.ImageAllowRulesStrictMode != nil {
-		in, out := &in.ImageAllowRulesStrictMode, &out.ImageAllowRulesStrictMode
+	if in.ImageAllowRulesEnabled != nil {
+		in, out := &in.ImageAllowRulesEnabled, &out.ImageAllowRulesEnabled
 		*out = new(bool)
 		**out = **in
 	}
