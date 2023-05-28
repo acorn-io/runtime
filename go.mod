@@ -39,7 +39,7 @@ require (
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
 	github.com/pterm/pterm v0.12.49
-	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
+	github.com/rancher/lasso v0.0.0-20230502204209-3eb356f3e8cf
 	github.com/rancher/wrangler v1.0.2
 	github.com/sigstore/cosign/v2 v2.0.2
 	github.com/sigstore/sigstore v1.6.3

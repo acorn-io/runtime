@@ -760,8 +760,8 @@ github.com/pterm/pterm v0.12.36/go.mod h1:NjiL09hFhT/vWjQHSj1athJpx6H8cjpHXNAK5b
 github.com/pterm/pterm v0.12.40/go.mod h1:ffwPLwlbXxP+rxT0GsgDTzS3y3rmpAO1NMjUkGTYf8s=
 github.com/pterm/pterm v0.12.49 h1:qeNm0wTWawy6WhKoY8ZKq6qTXFr0s2UtUyRW0yVztEg=
 github.com/pterm/pterm v0.12.49/go.mod h1:D4OBoWNqAfXkm5QLTjIgjNiMXPHemLJHnIreGUsWzWg=
-github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4 h1:Z/fJWD6j3p28Cdn9aOigjecoWeOafiOmIAEstEAjpBM=
-github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
+github.com/rancher/lasso v0.0.0-20230502204209-3eb356f3e8cf h1:ZfjUaNDL46WGGmInoJ5xqXUbcRoVznPXwPQtjV95ubA=
+github.com/rancher/lasso v0.0.0-20230502204209-3eb356f3e8cf/go.mod h1:dEfC9eFQigj95lv/JQ8K5e7+qQCacWs1aIA6nLxKzT8=
 github.com/rancher/wrangler v1.0.2 h1:0JGv62gF2OkYUoR0fsr99Za63fquFeKTHE2z9kAFVsE=
 github.com/rancher/wrangler v1.0.2/go.mod h1:Blhan9LdaIJjC9w+xGteSrHHEiIFIdPEHEMrtx82dPk=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
