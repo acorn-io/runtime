@@ -521,10 +521,12 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.ImageAllowRulesEnabled != nil {
-		in, out := &in.ImageAllowRulesEnabled, &out.ImageAllowRulesEnabled
-		*out = new(bool)
-		**out = **in
+	if in.Features != nil {
+		in, out := &in.Features, &out.Features
+		*out = make(map[string]bool, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 }
 

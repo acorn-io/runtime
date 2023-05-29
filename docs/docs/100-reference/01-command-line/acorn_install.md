@@ -31,11 +31,11 @@ acorn install
       --cluster-domain strings                          The externally addressable cluster domain (default .oss-acorn.io)
       --controller-replicas int                         acorn-controller deployment replica count
       --controller-service-account-annotation strings   annotation to apply to the acorn-system service account
+      --features strings                                Enable or disable features. (example foo=true,bar=false)
   -h, --help                                            help for install
       --http-endpoint-pattern string                    Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations              Don't propagate user-defined labels and annotations to dependent objects
       --image string                                    Override the default image used for the deployment
-      --image-allow-rules-enabled                       If true, ImageAllowRules will be enabled and the deny-by-default policy will be enforced for all projects. (default false)
       --ingress-class-name string                       The ingress class name to assign to all created ingress resources (default '')
       --ingress-controller-namespace string             The namespace where the ingress controller runs - used to secure published HTTP ports with NetworkPolicies.
       --internal-cluster-domain string                  The Kubernetes internal cluster domain (default svc.cluster.local)

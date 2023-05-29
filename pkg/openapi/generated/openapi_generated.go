@@ -1908,14 +1908,23 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
-					"imageAllowRulesEnabled": {
+					"features": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: false,
+										Type:    []string{"boolean"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "networkPolicies", "ingressControllerNamespace", "allowTrafficFromNamespace", "serviceLBAnnotations", "awsIdentityProviderArn", "imageAllowRulesEnabled"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "networkPolicies", "ingressControllerNamespace", "allowTrafficFromNamespace", "serviceLBAnnotations", "awsIdentityProviderArn", "features"},
 			},
 		},
 	}

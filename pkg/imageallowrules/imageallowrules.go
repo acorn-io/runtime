@@ -69,7 +69,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 	}
 
 	// IAR not enabled? Allow all images.
-	if cfg.ImageAllowRulesEnabled == nil || !*cfg.ImageAllowRulesEnabled {
+	if cfg.Features == nil || !cfg.Features[config.FeatureImageAllowRules] {
 		return nil
 	}
 

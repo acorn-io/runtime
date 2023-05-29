@@ -30,6 +30,12 @@ var (
 
 	// Default HttpEndpointPattern set to enable Let's Encrypt
 	DefaultHttpEndpointPattern = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
+
+	// Features
+	FeatureImageAllowRules = "image-allow-rules"
+	FeatureDefaults        = map[string]bool{
+		FeatureImageAllowRules: false,
+	}
 )
 
 func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
@@ -100,10 +106,15 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 	if c.AWSIdentityProviderARN == nil {
 		c.AWSIdentityProviderARN = new(string)
 	}
-	if c.ImageAllowRulesEnabled == nil {
-		c.ImageAllowRulesEnabled = new(bool)
+	if c.Features == nil {
+		c.Features = FeatureDefaults
+	} else {
+		for k, v := range FeatureDefaults {
+			if _, ok := c.Features[k]; !ok {
+				c.Features[k] = v
+			}
+		}
 	}
-
 	return nil
 }
 
@@ -316,8 +327,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.UseCustomCABundle != nil {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
 	}
-	if newConfig.ImageAllowRulesEnabled != nil {
-		mergedConfig.ImageAllowRulesEnabled = newConfig.ImageAllowRulesEnabled
+
+	if newConfig.Features != nil {
+		mergedConfig.Features = newConfig.Features
 	}
 
 	if len(newConfig.PropagateProjectAnnotations) > 0 && newConfig.PropagateProjectAnnotations[0] == "" {

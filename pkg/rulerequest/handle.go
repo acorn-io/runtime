@@ -92,8 +92,8 @@ This could be VERY DANGEROUS to the cluster if you do not trust this
 application. If you are unsure say no.`, image)
 
 	choiceMap := map[string]string{
-		"yes (this image only)":                  string(imageallowrules.SimpleImageScopeExact),
 		"NO":                                     "NO",
+		"yes (this image only)":                  string(imageallowrules.SimpleImageScopeExact),
 		"registry (all images in this registry)": string(imageallowrules.SimpleImageScopeRegistry),
 		"repository (all images in this repository)": string(imageallowrules.SimpleImageScopeRepository),
 		"all (all images out there)":                 string(imageallowrules.SimpleImageScopeAll),
