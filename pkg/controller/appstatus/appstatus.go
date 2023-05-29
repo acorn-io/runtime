@@ -66,9 +66,9 @@ func formatMessage(name string, parts []string) string {
 		if len(parts) == 1 {
 			return parts[0]
 		}
-		return fmt.Sprintf("[%s]", strings.Join(parts, ","))
+		return fmt.Sprintf("[%s]", strings.Join(parts, ", "))
 	}
-	return fmt.Sprintf("%s: [%s]", name, strings.Join(parts, ","))
+	return fmt.Sprintf("%s: [%s]", name, strings.Join(parts, ", "))
 }
 
 type commonStatusGetter interface {
