@@ -38,7 +38,7 @@ func TestContainerList(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["default"].UpToDate == 1
+		return app.Status.AppStatus.Containers["default"].UpToDateReplicaCount == 1
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -75,7 +75,7 @@ func TestContainerDelete(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].UpToDate == 1
+		return app.Status.Namespace != "" && app.Status.AppStatus.Containers["default"].UpToDateReplicaCount == 1
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -123,7 +123,7 @@ func TestContainerGet(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["default"].UpToDate == 1
+		return app.Status.AppStatus.Containers["default"].UpToDateReplicaCount == 1
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -167,7 +167,7 @@ func TestContainerExec(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["default"].UpToDate > 0
+		return app.Status.AppStatus.Containers["default"].UpToDateReplicaCount > 0
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -221,7 +221,7 @@ func TestContainerDebugExec(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.Namespace != "" && app.Status.ContainerStatus["default"].UpToDate > 0
+		return app.Status.Namespace != "" && app.Status.AppStatus.Containers["default"].UpToDateReplicaCount > 0
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, nil)
@@ -277,7 +277,7 @@ func TestContainerWithSidecarExec(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, lclient.Watch, &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["web"].UpToDate > 0
+		return app.Status.AppStatus.Containers["web"].UpToDateReplicaCount > 0
 	})
 
 	cons, err := c.ContainerReplicaList(ctx, &client.ContainerReplicaListOptions{App: app.Name})

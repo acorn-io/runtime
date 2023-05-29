@@ -11,7 +11,6 @@ type AppInstanceCondition string
 
 var (
 	AppInstanceConditionDefined        = "defined"
-	AppInstanceConditionDependencies   = "dependencies"
 	AppInstanceConditionDefaults       = "defaults"
 	AppInstanceConditionScheduling     = "scheduling"
 	AppInstanceConditionNamespace      = "namespace"
@@ -160,23 +159,6 @@ type VolumeBinding struct {
 	Class       string      `json:"class,omitempty"`
 }
 
-type ContainerStatus struct {
-	Ready        int32 `json:"ready,omitempty"`
-	ReadyDesired int32 `json:"readyDesired,omitempty"`
-	UpToDate     int32 `json:"upToDate,omitempty"`
-	RestartCount int32 `json:"restartCount,omitempty"`
-	Created      bool  `json:"created,omitempty"`
-}
-
-type JobStatus struct {
-	Succeed              bool   `json:"succeed,omitempty"`
-	Failed               bool   `json:"failed,omitempty"`
-	Running              bool   `json:"running,omitempty"`
-	Message              string `json:"message,omitempty"`
-	CreateEventSucceeded bool   `json:"createEventSucceeded,omitempty"`
-	Skipped              bool   `json:"skipped,omitempty"`
-}
-
 type AppColumns struct {
 	Healthy   string `json:"healthy,omitempty" column:"name=Healthy,jsonpath=.status.columns.healthy"`
 	UpToDate  string `json:"upToDate,omitempty" column:"name=Up-To-Date,jsonpath=.status.columns.upToDate"`
@@ -190,24 +172,20 @@ func (a AppInstanceStatus) GetDevMode() bool {
 }
 
 type AppInstanceStatus struct {
-	DevSession             *DevSessionInstanceSpec    `json:"devSession,omitempty"`
-	ObservedGeneration     int64                      `json:"observedGeneration,omitempty"`
-	ObservedImageDigest    string                     `json:"observedImageDigest,omitempty"`
-	Columns                AppColumns                 `json:"columns,omitempty"`
-	ContainerStatus        map[string]ContainerStatus `json:"containerStatus,omitempty"`
-	JobsStatus             map[string]JobStatus       `json:"jobsStatus,omitempty"`
-	AcornStatus            map[string]AcornStatus     `json:"acornStatus,omitempty"`
-	Ready                  bool                       `json:"ready,omitempty"`
-	Stopped                bool                       `json:"stopped,omitempty"`
-	Namespace              string                     `json:"namespace,omitempty"`
-	AppImage               AppImage                   `json:"appImage,omitempty"`
-	AvailableAppImage      string                     `json:"availableAppImage,omitempty"`
-	ConfirmUpgradeAppImage string                     `json:"confirmUpgradeAppImage,omitempty"`
-	AppSpec                AppSpec                    `json:"appSpec,omitempty"`
-	Scheduling             map[string]Scheduling      `json:"scheduling,omitempty"`
-	Conditions             []Condition                `json:"conditions,omitempty"`
-	Endpoints              []Endpoint                 `json:"endpoints,omitempty"`
-	Defaults               Defaults                   `json:"defaults,omitempty"`
+	DevSession             *DevSessionInstanceSpec `json:"devSession,omitempty"`
+	ObservedGeneration     int64                   `json:"observedGeneration,omitempty"`
+	ObservedImageDigest    string                  `json:"observedImageDigest,omitempty"`
+	Columns                AppColumns              `json:"columns,omitempty"`
+	Ready                  bool                    `json:"ready,omitempty"`
+	Namespace              string                  `json:"namespace,omitempty"`
+	AppImage               AppImage                `json:"appImage,omitempty"`
+	AvailableAppImage      string                  `json:"availableAppImage,omitempty"`
+	ConfirmUpgradeAppImage string                  `json:"confirmUpgradeAppImage,omitempty"`
+	AppSpec                AppSpec                 `json:"appSpec,omitempty"`
+	AppStatus              AppStatus               `json:"appStatus,omitempty"`
+	Scheduling             map[string]Scheduling   `json:"scheduling,omitempty"`
+	Conditions             []Condition             `json:"conditions,omitempty"`
+	Defaults               Defaults                `json:"defaults,omitempty"`
 }
 
 type Defaults struct {
@@ -226,14 +204,6 @@ type Scheduling struct {
 	Requirements corev1.ResourceRequirements `json:"requirements,omitempty"`
 	Affinity     *corev1.Affinity            `json:"affinity,omitempty"`
 	Tolerations  []corev1.Toleration         `json:"tolerations,omitempty"`
-}
-
-type AcornStatus struct {
-	ContainerStatus map[string]ContainerStatus `json:"containerStatus,omitempty"`
-	JobsStatus      map[string]JobStatus       `json:"jobsStatus,omitempty"`
-	AcornStatus     map[string]AcornStatus     `json:"acornStatus,omitempty"`
-	Stopped         bool                       `json:"stopped,omitempty"`
-	Ready           bool                       `json:"ready,omitempty"`
 }
 
 type Endpoint struct {

@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -8,19 +9,27 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/publicname"
+	"github.com/acorn-io/baaah/pkg/apply"
 	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
-	resp.Objects(toAcorns(appInstance, tag, pullSecrets)...)
+func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
+	for _, acorn := range toAcorns(appInstance, tag, pullSecrets) {
+		var devSession v1.DevSessionInstance
+		err := req.Get(&devSession, appInstance.Namespace, appInstance.Name)
+		if err == nil {
+			// Don't update app in dev mode
+			acorn.Annotations[apply.AnnotationUpdate] = "false"
+		}
+		resp.Objects(acorn)
+	}
 }
 
-func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
+func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []*v1.AppInstance) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
 		acornName, acorn := entry.Key, entry.Value
 		if ports.IsLinked(appInstance, acornName) {
@@ -100,6 +109,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Annotations: labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
 				map[string]string{
 					labels.AcornOriginalImage: originalImage,
+					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
 				}),
 		},
 		Spec: v1.AppInstanceSpec{

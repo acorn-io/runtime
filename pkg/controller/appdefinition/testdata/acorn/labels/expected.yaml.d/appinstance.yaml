@@ -23,6 +23,7 @@ metadata:
     "allacornsa": "value"
     "override2": "outervalue"
     acorn.io/original-image: foo
+    acorn.io/app-generation: "0"
 spec:
   # The labels and annotations in this spec should be a combination of the "inner" acorn's definition and the outer
   # appInstance's scoped label and annotations.

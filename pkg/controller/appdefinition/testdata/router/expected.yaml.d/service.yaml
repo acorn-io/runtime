@@ -9,6 +9,8 @@ metadata:
     acorn.io/managed: "true"
     acorn.io/router-name: router-name
     "acorn.io/public-name": "app-name.router-name"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace
@@ -52,6 +54,8 @@ metadata:
     acorn.io/managed: "true"
     acorn.io/service-name: foo-target
     "acorn.io/public-name": "app-name.foo-target"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace
@@ -75,6 +79,8 @@ metadata:
     acorn.io/managed: "true"
     acorn.io/service-name: zzz-target
     "acorn.io/public-name": "app-name.zzz-target"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace

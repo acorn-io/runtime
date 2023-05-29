@@ -20,6 +20,7 @@ metadata:
     allowed-global.io: test-global
     allowed.io: test-allowed-app-spec-ann
     admit.io: test-admit-app-spec-ann
+    acorn.io/app-generation: "0"
 spec:
   backoffLimit: 1000
   template:

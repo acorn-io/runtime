@@ -13,6 +13,21 @@ status:
   namespace: app-created-namespace
   appImage:
     id: "image-name"
+  appStatus:
+    containers:
+      container-name:
+        dependencies:
+          db:
+            ready: true
+            serviceType: container
+        ready: true
+      db:
+        ready: true
+      web:
+        dependencies:
+          container-name:
+            ready: true
+            serviceType: container
   appSpec:
     containers:
       container-name:
@@ -27,10 +42,6 @@ status:
         image: "image-name"
   conditions:
     - type: defined
-      reason: Success
-      status: "True"
-      success: true
-    - type: dependencies
       reason: Success
       status: "True"
       success: true

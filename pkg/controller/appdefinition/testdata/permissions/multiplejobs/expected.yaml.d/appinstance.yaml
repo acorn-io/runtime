@@ -41,6 +41,10 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+  appStatus:
+    jobs:
+      oneimage: {}
+      twoimage: {}
   appSpec:
     jobs:
       oneimage:

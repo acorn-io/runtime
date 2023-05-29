@@ -60,6 +60,9 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+  appStatus:
+    jobs:
+      job1: {}
   appSpec:
     labels:
       global2: "value"

@@ -1,16 +1,15 @@
-package appdefinition
+package appstatus
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/controller/appstatus"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/publish"
-	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -18,9 +17,9 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func serviceEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
+func serviceEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
 	serviceList := &corev1.ServiceList{}
-	err := req.List(serviceList, &kclient.ListOptions{
+	err := c.List(ctx, serviceList, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
 		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged:        "true",
@@ -82,9 +81,9 @@ func serviceEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.E
 	return
 }
 
-func ingressEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
+func ingressEndpoints(ctx context.Context, c kclient.Client, app *v1.AppInstance) (endpoints []v1.Endpoint, _ error) {
 	ingressList := &networkingv1.IngressList{}
-	err := req.List(ingressList, &kclient.ListOptions{
+	err := c.List(ctx, ingressList, &kclient.ListOptions{
 		Namespace: app.Status.Namespace,
 		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged: "true",
@@ -125,22 +124,23 @@ func ingressEndpoints(req router.Request, app *v1.AppInstance) (endpoints []v1.E
 	return
 }
 
-func AppEndpointsStatus(req router.Request, _ router.Response) error {
-	app := req.Object.(*v1.AppInstance)
+func (a *appStatusRenderer) readEndpoints() error {
+	// reset state
+	a.app.Status.AppStatus.Endpoints = nil
 
-	ingressEndpoints, err := ingressEndpoints(req, app)
+	ingressEndpoints, err := ingressEndpoints(a.ctx, a.c, a.app)
 	if err != nil {
 		return err
 	}
 
-	serviceEndpoints, err := serviceEndpoints(req, app)
+	serviceEndpoints, err := serviceEndpoints(a.ctx, a.c, a.app)
 	if err != nil {
 		return err
 	}
 
 	eps := append(ingressEndpoints, serviceEndpoints...)
 
-	ingressTLSHosts, err := appstatus.IngressTLSHosts(req.Ctx, req.Client, app)
+	ingressTLSHosts, err := ingressTLSHosts(a.ctx, a.c, a.app)
 	if err != nil {
 		return err
 	}
@@ -161,6 +161,33 @@ func AppEndpointsStatus(req router.Request, _ router.Response) error {
 		return eps[i].Address < eps[j].Address
 	})
 
-	app.Status.Endpoints = eps
+	a.app.Status.AppStatus.Endpoints = eps
 	return nil
+}
+
+func ingressTLSHosts(ctx context.Context, client kclient.Client, app *v1.AppInstance) (map[string]interface{}, error) {
+	ingresses := &networkingv1.IngressList{}
+	err := client.List(ctx, ingresses, &kclient.ListOptions{
+		Namespace: app.Status.Namespace,
+		LabelSelector: klabels.SelectorFromSet(map[string]string{
+			labels.AcornManaged: "true",
+			labels.AcornAppName: app.Name,
+		}),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ingressTLSHosts := map[string]interface{}{}
+	for _, ingress := range ingresses.Items {
+		if ingress.Spec.TLS != nil {
+			for _, tls := range ingress.Spec.TLS {
+				for _, host := range tls.Hosts {
+					ingressTLSHosts[host] = nil
+				}
+			}
+		}
+	}
+
+	return ingressTLSHosts, nil
 }

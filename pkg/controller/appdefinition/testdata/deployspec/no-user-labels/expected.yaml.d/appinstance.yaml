@@ -10,6 +10,9 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+  appStatus:
+    jobs:
+      job-name: {}
   appSpec:
     containers:
       container-name:

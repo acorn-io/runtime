@@ -13,6 +13,12 @@ status:
   namespace: app-created-namespace
   appImage:
     id: "image-name"
+  appStatus:
+    containers:
+      container-name:
+        ready: true
+      db:
+        ready: true
   appSpec:
     containers:
       container-name:

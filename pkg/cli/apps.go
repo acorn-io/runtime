@@ -50,7 +50,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, app := range apps {
-		if app.Status.Stopped && !a.All {
+		if app.Status.AppStatus.Stopped && !a.All {
 			continue
 		}
 		if len(args) > 0 {

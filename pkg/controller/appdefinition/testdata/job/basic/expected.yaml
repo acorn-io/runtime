@@ -6,6 +6,7 @@ metadata:
   annotations:
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
+    acorn.io/app-generation: "0"
   labels:
     "acorn.io/app-namespace": "app-namespace"
     "acorn.io/app-name": "app-name"
@@ -81,6 +82,9 @@ status:
   namespace: app-created-namespace
   appImage:
     id: test
+  appStatus:
+    jobs:
+      oneimage: {}
   appSpec:
     jobs:
       oneimage:

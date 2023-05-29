@@ -13,6 +13,20 @@ var clusterDomainHTTPDef = ListenDef{
 	Protocol: v1.ProtocolHTTP,
 }
 
+func LinkService(app *v1.AppInstance, name string) string {
+	if name == "" {
+		return ""
+	}
+
+	for _, binding := range app.Spec.Links {
+		if binding.Target == name {
+			return binding.Service
+		}
+	}
+
+	return ""
+}
+
 func IsLinked(app *v1.AppInstance, name string) bool {
 	if name == "" {
 		return false

@@ -15,6 +15,7 @@ metadata:
     "global": "value"
     "global2": "value"
   annotations:
+    acorn.io/app-generation: "0"
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
     "alljobsa": "value"

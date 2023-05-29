@@ -1410,13 +1410,13 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 			}
 
 			appInstance := helper.WaitForObject(t, helper.Watcher(t, check.client), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-				return obj.Status.JobsStatus["curl"].Failed || obj.Status.JobsStatus["curl"].Succeed
+				return obj.Status.AppStatus.Jobs["curl"].Ready || obj.Status.AppStatus.Jobs["curl"].ErrorCount > 0
 			})
 
 			if check.expectFailure {
-				assert.Equal(t, true, appInstance.Status.JobsStatus["curl"].Failed)
+				assert.Equal(t, true, appInstance.Status.AppStatus.Jobs["curl"].ErrorCount > 0)
 			} else {
-				assert.Equal(t, true, appInstance.Status.JobsStatus["curl"].Succeed)
+				assert.Equal(t, true, appInstance.Status.AppStatus.Jobs["curl"].Ready)
 			}
 		})
 	}

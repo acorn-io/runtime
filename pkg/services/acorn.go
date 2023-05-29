@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/jobs"
@@ -41,7 +42,9 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 			}
 		}
 
-		annotations := map[string]string{}
+		annotations := map[string]string{
+			labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+		}
 
 		if service.GetJob() != "" {
 			service = *service.DeepCopy()
@@ -147,6 +150,9 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object, err error
 				Labels: labels.Managed(appInstance,
 					labels.AcornPublicName, publicname.ForChild(appInstance, routerName),
 					labels.AcornRouterName, routerName),
+				Annotations: map[string]string{
+					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+				},
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,
@@ -185,6 +191,9 @@ func forAcorns(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Labels: labels.Managed(appInstance,
 					labels.AcornPublicName, publicname.ForChild(appInstance, acornName),
 					labels.AcornAcornName, acornName),
+				Annotations: map[string]string{
+					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+				},
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,
@@ -232,6 +241,9 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 				Labels: labels.Managed(appInstance,
 					labels.AcornPublicName, publicname.ForChild(appInstance, containerName),
 					labels.AcornContainerName, containerName),
+				Annotations: map[string]string{
+					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+				},
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,
@@ -261,6 +273,9 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 				Labels: labels.Managed(app,
 					labels.AcornPublicName, publicname.ForChild(app, link.Target),
 					labels.AcornLinkName, link.Service),
+				Annotations: map[string]string{
+					labels.AcornAppGeneration: strconv.FormatInt(app.Generation, 10),
+				},
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      app.Name,

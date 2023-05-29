@@ -49,6 +49,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	router.OnErrorHandler = appdefinition.OnError
 
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(devsession.OverlayDevSession)
+	appRouter.HandlerFunc(appstatus.PrepareStatus)
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
 	appRouter.HandlerFunc(appdefinition.CheckImageAllowedHandler(registryTransport))
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
@@ -66,14 +67,9 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	appHasNamespace.HandlerFunc(quota.WaitForAllocation)
 
 	appMeetsPreconditions := appHasNamespace.Middleware(appstatus.CheckStatus)
-	appMeetsPreconditions.Middleware(appdefinition.ImagePulled, appdefinition.CheckDependencies).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
+	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).IncludeRemoved().HandlerFunc(appdefinition.DeploySpec)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
-	appMeetsPreconditions.HandlerFunc(appstatus.AppStatus)
-	appMeetsPreconditions.HandlerFunc(appdefinition.AppEndpointsStatus)
-	appMeetsPreconditions.HandlerFunc(appstatus.JobStatus)
-	appMeetsPreconditions.HandlerFunc(appstatus.VolumeStatus)
-	appMeetsPreconditions.HandlerFunc(appstatus.AcornStatus)
-	appMeetsPreconditions.HandlerFunc(appstatus.ServiceStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.SetStatus)
 	appMeetsPreconditions.HandlerFunc(appstatus.ReadyStatus)
 	appMeetsPreconditions.HandlerFunc(networkpolicy.ForApp)
 	appMeetsPreconditions.HandlerFunc(appdefinition.AddAcornProjectLabel)

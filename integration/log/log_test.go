@@ -56,8 +56,8 @@ func TestLog(t *testing.T) {
 	defer cancel()
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["cont1-1"].Ready == 1 &&
-			app.Status.ContainerStatus["cont1-2"].Ready == 1
+		return app.Status.AppStatus.Containers["cont1-1"].ReadyReplicaCount == 1 &&
+			app.Status.AppStatus.Containers["cont1-2"].ReadyReplicaCount == 1
 	})
 
 	output, err := c.AppLog(ctx, app.Name, nil)
@@ -101,8 +101,8 @@ func TestContainerLog(t *testing.T) {
 	defer cancel()
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["cont1-1"].Ready == 1 &&
-			app.Status.ContainerStatus["cont1-2"].Ready == 1
+		return app.Status.AppStatus.Containers["cont1-1"].ReadyReplicaCount == 1 &&
+			app.Status.AppStatus.Containers["cont1-2"].ReadyReplicaCount == 1
 	})
 
 	replicas, err := c.ContainerReplicaList(ctx, &client.ContainerReplicaListOptions{
@@ -159,8 +159,8 @@ func TestSidecarContainerLog(t *testing.T) {
 	defer cancel()
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
-		return app.Status.ContainerStatus["cont1-1"].Ready == 1 &&
-			app.Status.ContainerStatus["cont1-2"].Ready == 1
+		return app.Status.AppStatus.Containers["cont1-1"].ReadyReplicaCount == 1 &&
+			app.Status.AppStatus.Containers["cont1-2"].ReadyReplicaCount == 1
 	})
 
 	replicas, err := c.ContainerReplicaList(ctx, &client.ContainerReplicaListOptions{

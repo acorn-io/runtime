@@ -9,6 +9,8 @@ metadata:
     "acorn.io/managed": "true"
     "acorn.io/container-name": "oneimage"
     "acorn.io/public-name": "app-name.oneimage"
+  annotations:
+    acorn.io/app-generation: "0"
 spec:
   appName: app-name
   appNamespace: app-namespace

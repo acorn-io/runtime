@@ -32,6 +32,6 @@ func TestServices(t *testing.T) {
 	}
 
 	helper.WaitForObject(t, k.Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.JobsStatus["test"].Succeed
+		return obj.Status.AppStatus.Jobs["test"].Ready
 	})
 }

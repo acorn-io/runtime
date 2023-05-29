@@ -138,7 +138,7 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 	provisionedCerts := map[string]interface{}{}
 	var errs []error
 
-	for i, ep := range appInstance.Status.Endpoints {
+	for i, ep := range appInstance.Status.AppStatus.Endpoints {
 		if ep.Protocol != "http" {
 			continue
 		}
@@ -148,7 +148,7 @@ func ProvisionCerts(req router.Request, resp router.Response) error {
 		}
 		provisionedCerts[ep.Address] = nil
 		ep.PublishProtocol = v1.PublishProtocolHTTPS
-		appInstance.Status.Endpoints[i] = ep
+		appInstance.Status.AppStatus.Endpoints[i] = ep
 	}
 
 	for _, pb := range appInstance.Spec.Publish {

@@ -60,7 +60,7 @@ func TestOpaque_Gen(t *testing.T) {
 	}
 
 	assert.Len(t, resp.Client.Created, 1)
-	assert.Len(t, resp.Collected, 2)
+	assert.Len(t, resp.Collected, 1)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
@@ -109,7 +109,7 @@ func TestBasic_Gen(t *testing.T) {
 	}
 
 	assert.Len(t, resp.Client.Created, 2)
-	assert.Len(t, resp.Collected, 3)
+	assert.Len(t, resp.Collected, 2)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
@@ -128,7 +128,7 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 	h := tester.Harness{
 		Scheme: scheme.Scheme,
 	}
-	resp, err := h.InvokeFunc(t, &v1.AppInstance{
+	app := &v1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "app-name",
 			Namespace: "app-ns",
@@ -152,16 +152,17 @@ func TestTemplateTokenMissing_Gen(t *testing.T) {
 				},
 			},
 		},
-	}, CreateSecrets)
+	}
+
+	resp, err := h.InvokeFunc(t, app, CreateSecrets)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Len(t, resp.Client.Created, 0)
-	assert.Len(t, resp.Collected, 1)
+	assert.Len(t, resp.Collected, 0)
 
-	app := resp.Collected[0].(*v1.AppInstance)
-	assert.Equal(t, "missing: [pass]", app.Status.Condition("secrets").Message)
+	assert.Equal(t, "missing: [pass]", app.Status.AppStatus.Secrets["template"].LookupTransitioning[0])
 }
 
 func TestTemplateToken_Gen(t *testing.T) {
@@ -210,7 +211,7 @@ func TestTemplateToken_Gen(t *testing.T) {
 	}
 
 	assert.Len(t, resp.Client.Created, 3)
-	assert.Len(t, resp.Collected, 4)
+	assert.Len(t, resp.Collected, 3)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
@@ -326,7 +327,7 @@ func TestSecretLabelsAnnotations(t *testing.T) {
 	}
 
 	assert.Len(t, resp.Client.Created, 2)
-	assert.Len(t, resp.Collected, 3)
+	assert.Len(t, resp.Collected, 2)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "secret1", secret.Labels[labels.AcornSecretName])

@@ -55,7 +55,7 @@ func appAndArgs(ctx context.Context, c client.Client, args []string) (string, []
 
 	var names []string
 	for _, app := range apps {
-		if !app.Status.Stopped {
+		if !app.Status.AppStatus.Stopped {
 			names = append(names, app.Name)
 		}
 	}
