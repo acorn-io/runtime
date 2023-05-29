@@ -13,7 +13,7 @@ require (
 	cuelang.org/go v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20230522195721-1194d1256120
-	github.com/acorn-io/baaah v0.0.0-20230529182050-547c6f5a4e2e
+	github.com/acorn-io/baaah v0.0.0-20230529210224-9b11179ad5be
 	github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/adrg/xdg v0.4.0

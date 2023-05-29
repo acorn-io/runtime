@@ -165,7 +165,10 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		job.Spec.Template.Spec.Containers = setJobEventName(setTerminationPath(containers), jobEventName)
 		job.Spec.Template.Spec.InitContainers = setJobEventName(setTerminationPath(initContainers), jobEventName)
 		job.Annotations[apply.AnnotationPrune] = "false"
-		job.Annotations[apply.AnnotationUpdate] = "true"
+		if job.Annotations[apply.AnnotationUpdate] == "" {
+			// getDependencyAnnotations may set this annotation, so don't override here
+			job.Annotations[apply.AnnotationUpdate] = "true"
+		}
 		job.Annotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
 		return job, nil
 	}
