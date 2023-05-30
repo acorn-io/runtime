@@ -1574,11 +1574,11 @@ func TestEnforcedQuota(t *testing.T) {
 	}
 
 	// Annotate the project to enforce quota.
-	project = helper.WaitForObject(t, helper.Watcher(t, c), &corev1.NamespaceList{}, project, func(obj *corev1.Namespace) bool {
-		if project.Annotations == nil {
-			project.Annotations = make(map[string]string)
+	helper.WaitForObject(t, helper.Watcher(t, c), &corev1.NamespaceList{}, project, func(obj *corev1.Namespace) bool {
+		if obj.Annotations == nil {
+			obj.Annotations = make(map[string]string)
 		}
-		project.Annotations[labels.ProjectEnforcedQuotaAnnotation] = "true"
+		obj.Annotations[labels.ProjectEnforcedQuotaAnnotation] = "true"
 		return kclient.Update(ctx, obj) == nil
 	})
 
