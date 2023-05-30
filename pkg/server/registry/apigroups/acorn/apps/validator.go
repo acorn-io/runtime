@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -54,6 +55,11 @@ func (s *Validator) Get(ctx context.Context, namespace, name string) (types.Obje
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	params := obj.(*apiv1.App)
+
+	if err := s.validateName(params); err != nil {
+		result = append(result, field.Invalid(field.NewPath("metadata", "name"), params.Name, err.Error()))
+		return
+	}
 
 	project := new(apiv1.Project)
 	if err := s.client.Get(ctx, kclient.ObjectKey{Name: params.Namespace}, project); err != nil {
@@ -161,6 +167,19 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	}
 
 	return s.Validate(ctx, newParams)
+}
+
+func (s *Validator) validateName(app *apiv1.App) error {
+	if app.Name == "" {
+		return fmt.Errorf("name is required")
+	}
+
+	errs := validation.IsDNS1035Label(app.Name)
+	if len(errs) > 0 {
+		return fmt.Errorf(strings.Join(errs, ": "))
+	}
+
+	return nil
 }
 
 func (s *Validator) validateRegion(app *apiv1.App, project *apiv1.Project) error {
