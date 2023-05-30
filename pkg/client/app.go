@@ -223,13 +223,24 @@ func translatePermissions(err error) error {
 func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {
 	appName := name
 
+	var targetNamespace, targetName string
+
 	app, err := c.AppGet(ctx, appName)
 	if apierrors.IsNotFound(err) {
 		appName, _ = publicname.Split(name)
 		app, err = c.AppGet(ctx, appName)
 	}
-	if err != nil {
-		return nil, err
+	if err == nil {
+		targetNamespace = app.Namespace
+		targetName = app.Name
+	} else {
+		cr, err := c.ContainerReplicaGet(ctx, name)
+		if err != nil {
+			return nil, err
+		}
+		targetNamespace = cr.Namespace
+		targetName = cr.Spec.AppName
+		opts.ContainerReplica = name
 	}
 
 	if opts == nil {
@@ -241,9 +252,9 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 	}
 
 	url := c.RESTClient.Get().
-		Namespace(app.Namespace).
+		Namespace(targetNamespace).
 		Resource("apps").
-		Name(app.Name).
+		Name(targetName).
 		SubResource("log").
 		VersionedParams((*apiv1.LogOptions)(opts), scheme.ParameterCodec).
 		URL()
