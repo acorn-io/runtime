@@ -205,7 +205,7 @@ func TestFindPVForBinding(t *testing.T) {
 				},
 			},
 			volumeBinding: v1.VolumeBinding{
-				Volume: "app2.volume",
+				Volume: "pv2",
 				Target: "targetVol",
 			},
 			expectedPVName: "pv2",
@@ -219,7 +219,7 @@ func TestFindPVForBinding(t *testing.T) {
 				},
 			},
 			volumeBinding: v1.VolumeBinding{
-				Volume: "app3.volume",
+				Volume: "pv3",
 				Target: "targetVol",
 			},
 			expectNotFoundError: true,
@@ -237,30 +237,6 @@ func TestFindPVForBinding(t *testing.T) {
 				Target: "targetVol",
 			},
 			expectNotFoundError: true,
-		},
-		{
-			name: "Bind PV that was already bound and changed to the new public name",
-			appInstance: v1.AppInstance{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "myApp",
-					Namespace: "proj1",
-				},
-			},
-			volumeBinding: v1.VolumeBinding{
-				Volume: "app4.volume",
-				Target: "targetVol",
-			},
-			extraPV: &corev1.PersistentVolume{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "pv4",
-					Labels: map[string]string{
-						labels.AcornAppNamespace: "proj1",
-						labels.AcornPublicName:   "myApp.targetVol",
-						labels.AcornManaged:      "true",
-					},
-				},
-			},
-			expectedPVName: "pv4",
 		},
 	}
 
