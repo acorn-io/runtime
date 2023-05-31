@@ -23,7 +23,7 @@ func (a *appStatusRenderer) readContainers() error {
 	)
 
 	// reset state
-	a.app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
+	a.app.Status.AppStatus.Containers = make(map[string]v1.ContainerStatus, len(a.app.Status.AppSpec.Containers))
 
 	summary, err := a.getReplicasSummary(labels.AcornContainerName)
 	if err != nil {
@@ -69,7 +69,7 @@ func (a *appStatusRenderer) readContainers() error {
 
 		if cs.LinkOverride != "" {
 			cs.UpToDate = true
-			cs.Ready, cs.Defined = a.isServiceReady(cs.LinkOverride)
+			cs.Ready, cs.Defined = a.isServiceReady(containerName)
 		}
 
 		if len(cs.TransitioningMessages) > 0 {
