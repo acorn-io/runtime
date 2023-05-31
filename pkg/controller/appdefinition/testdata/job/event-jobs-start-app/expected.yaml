@@ -1,0 +1,112 @@
+kind: AppInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  generation: 3
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  namespace: app-created-namespace
+  appImage:
+    id: test
+  appSpec:
+    jobs:
+      delete-only:
+        events: ["delete"]
+        image: "delete-only-image"
+      create-only:
+        events: ["create"]
+        image: "create-only-image"
+      update-only:
+        events: ["update"]
+        image: "update-only-image"
+      stop-only:
+        events: ["stop"]
+        image: "stop-only-image"
+  conditions:
+    - type: defined
+      observedGeneration: 3
+      reason: Success
+      status: "True"
+      success: true
+  appStatus:
+    jobs:
+      delete-only:
+        skipped: true
+      create-only:
+        createEventSucceeded: true
+        skipped: true
+      update-only: {}
+      stop-only:
+        skipped: true
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: update-only
+  namespace: app-created-namespace
+  annotations:
+    acorn.io/app-generation: "3"
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-public-name: "app-name"
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/job-name: "update-only"
+---
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: update-only
+  namespace: app-created-namespace
+  annotations:
+    acorn.io/app-generation: "3"
+    apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    acorn.io/app-public-name: "app-name"
+    "acorn.io/job-name": "update-only"
+    "acorn.io/managed": "true"
+spec:
+  backoffLimit: 1000
+  template:
+    metadata:
+      labels:
+        "acorn.io/app-namespace": "app-namespace"
+        "acorn.io/app-name": "app-name"
+        acorn.io/app-public-name: "app-name"
+        "acorn.io/job-name": "update-only"
+        "acorn.io/managed": "true"
+      annotations:
+        acorn.io/app-generation: "3"
+        acorn.io/container-spec: '{"events":["update"],"image":"update-only-image","probes":null}'
+    spec:
+      imagePullSecrets:
+        - name: update-only-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: update-only
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: update-only
+          image: "update-only-image"
+          terminationMessagePath: "/run/secrets/output"
+          env:
+            - name: ACORN_EVENT
+              value: "update"
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: update-only-pull-1234567890ab
+  namespace: app-created-namespace
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+type: "kubernetes.io/dockerconfigjson"
+data:
+  ".dockerconfigjson": eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19

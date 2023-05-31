@@ -459,12 +459,12 @@ func containerAnnotation(container v1.Container) string {
 	return string(json)
 }
 
-func podAnnotations(appInstance *v1.AppInstance, containerName string, container v1.Container) map[string]string {
+func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[string]string {
 	annotations := map[string]string{
 		labels.AcornContainerSpec: containerAnnotation(container),
 	}
 	images := map[string]string{}
-	addImageAnnotations(images, appInstance, containerName, container)
+	addImageAnnotations(images, appInstance, container)
 
 	if len(images) == 0 {
 		return annotations
@@ -480,14 +480,13 @@ func podAnnotations(appInstance *v1.AppInstance, containerName string, container
 	return annotations
 }
 
-func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, containerName string, container v1.Container) {
+func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInstance, container v1.Container) {
 	if container.Build != nil && container.Build.BaseImage != "" {
 		annotations[container.Image] = container.Build.BaseImage
 	}
 
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		name, sideCar := entry.Key, entry.Value
-		addImageAnnotations(annotations, appInstance, name, sideCar)
+		addImageAnnotations(annotations, appInstance, entry.Value)
 	}
 }
 
@@ -605,7 +604,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      podLabels,
-					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, name, container), secretAnnotations),
+					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, container), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,

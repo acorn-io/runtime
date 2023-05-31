@@ -19,7 +19,7 @@ func (a *appStatusRenderer) readJobs() error {
 	)
 
 	// reset state
-	a.app.Status.AppStatus.Jobs = map[string]v1.JobStatus{}
+	a.app.Status.AppStatus.Jobs = make(map[string]v1.JobStatus, len(a.app.Status.AppSpec.Jobs))
 
 	summary, err := a.getReplicasSummary(labels.AcornJobName)
 	if err != nil {
@@ -43,6 +43,7 @@ func (a *appStatusRenderer) readJobs() error {
 		if c.Skipped {
 			c.Ready = true
 			c.UpToDate = true
+			c.Defined = true
 			c.ErrorCount = 0
 			c.RunningCount = 0
 			c.Dependencies = nil
@@ -64,6 +65,7 @@ func (a *appStatusRenderer) readJobs() error {
 				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
 				c.RunningCount = len(cronJob.Status.Active)
 				if cronJob.Status.LastSuccessfulTime != nil {
+					c.CreateEventSucceeded = true
 					c.Ready = c.UpToDate
 				}
 			}
@@ -73,6 +75,7 @@ func (a *appStatusRenderer) readJobs() error {
 			c.Defined = true
 			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
 			if job.Status.Succeeded > 0 {
+				c.CreateEventSucceeded = true
 				c.Ready = c.UpToDate
 			} else if job.Status.Failed > 0 {
 				c.ErrorCount = int(job.Status.Failed)
@@ -84,6 +87,9 @@ func (a *appStatusRenderer) readJobs() error {
 		if c.LinkOverride != "" {
 			c.UpToDate = true
 			c.Ready, c.Defined = a.isServiceReady(c.LinkOverride)
+			if c.Ready {
+				c.CreateEventSucceeded = true
+			}
 		}
 
 		for _, entry := range typed.Sorted(c.Dependencies) {
