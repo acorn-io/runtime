@@ -210,18 +210,23 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			// This satisfies the usecase of autoUpgrade with an app's tag is something static, like "latest"
 			// However, if the tag is a pattern and the current image has no tag, we don't want to check for a digest because this would
 			// result in a digest upgrade even though no tag matched.
+			var remote bool
 			if !updated && (!isPattern || current.Identifier() != "") {
 				nextAppImage = imageKey.image
 				var pullErr error
 				if current.Context().RegistryStr() != defaultNoReg {
 					digest, pullErr = d.client.imageDigest(ctx, app.Namespace, imageKey.image)
 				}
+
 				// If we did not find the digest remotely, check to see if there is a version of this tag locally
 				if digest == "" {
 					if localDigest, ok, _ := d.client.resolveLocalTag(ctx, app.Namespace, imageKey.image); ok && localDigest != "" {
 						digest = localDigest
 					}
+				} else {
+					remote = true
 				}
+
 				if digest == "" && pullErr != nil {
 					logrus.Errorf("Problem getting updated digest for image %v from remote. Error: %v", imageKey.image, pullErr)
 				}
@@ -248,14 +253,18 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 						continue
 					}
 					app.Status.AvailableAppImage = nextAppImage
+					app.Status.AvailableAppImageRemote = remote
 					app.Status.ConfirmUpgradeAppImage = ""
+					app.Status.ConfirmUpgradeAppImageRemote = false
 				case "notify":
 					if app.Status.ConfirmUpgradeAppImage == nextAppImage {
 						d.appKeysPrevCheck[appKey] = updateTime
 						continue
 					}
 					app.Status.ConfirmUpgradeAppImage = nextAppImage
+					app.Status.ConfirmUpgradeAppImageRemote = remote
 					app.Status.AvailableAppImage = ""
+					app.Status.AvailableAppImageRemote = false
 				default:
 					logrus.Warnf("Unrecognized auto-upgrade mode %v for %v", mode, app.Name)
 					continue

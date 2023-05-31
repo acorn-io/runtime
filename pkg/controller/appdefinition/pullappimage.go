@@ -54,10 +54,19 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 			return nil
 		}
 
-		resolved, _, err := client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
-		if err != nil {
-			cond.Error(err)
-			return nil
+		// skip the attempt to locally resolve if we already know that the image will be remote
+		var (
+			resolved string
+			err      error
+		)
+		if !appInstance.Status.AvailableAppImageRemote {
+			resolved, _, err = client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
+			if err != nil {
+				cond.Error(err)
+				return nil
+			}
+		} else {
+			resolved = target
 		}
 
 		var (
