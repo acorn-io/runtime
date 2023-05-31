@@ -222,6 +222,9 @@ func translateErr(err error) error {
 }
 
 func translateNotAllowed(err error) error {
+	if err == nil {
+		return err
+	}
 	if strings.Contains(err.Error(), imageallowrules.ErrImageNotAllowedIdentifier) {
 		return &imageallowrules.ErrImageNotAllowed{} // we could actually extract the full error (including) image here, but that's probably not required
 	}
@@ -230,6 +233,9 @@ func translateNotAllowed(err error) error {
 }
 
 func translatePermissions(err error) error {
+	if err == nil {
+		return err
+	}
 	if i := strings.Index(err.Error(), PrefixErrRulesNeeded); i != -1 {
 		var perms []v1.Permissions
 		marshalErr := json.Unmarshal([]byte(err.Error()[i+len(PrefixErrRulesNeeded):]), &perms)
