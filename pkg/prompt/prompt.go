@@ -19,6 +19,15 @@ func Bool(msg string, def bool) (result bool, _ error) {
 	return result, err
 }
 
+func Choice(msg string, choices []string, def string) (result string, _ error) {
+	err := survey.AskOne(&survey.Select{
+		Message: msg,
+		Options: choices,
+		Default: def,
+	}, &result)
+	return result, err
+}
+
 func Remove(obj string) error {
 	if NoPromptRemove {
 		return nil

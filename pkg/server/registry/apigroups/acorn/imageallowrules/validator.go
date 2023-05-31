@@ -13,6 +13,9 @@ type Validator struct{}
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	aiar := obj.(*apiv1.ImageAllowRule)
+	if len(aiar.Images) == 0 && len(aiar.Signatures.Rules) == 0 {
+		return append(result, field.Invalid(field.NewPath(""), aiar, "at least one of scope or signatures must be specified"))
+	}
 	result = append(result, validateSignatureRules(ctx, aiar.Signatures)...)
 	return
 }
@@ -22,11 +25,6 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 }
 
 func validateSignatureRules(ctx context.Context, sigRules internalv1.ImageAllowRuleSignatures) (result field.ErrorList) {
-	if len(sigRules.Rules) == 0 {
-		result = append(result, field.Invalid(field.NewPath("signatures"), sigRules, "must not be empty"))
-		return
-	}
-
 	for i, rule := range sigRules.Rules {
 		if len(rule.SignedBy.AnyOf) == 0 && len(rule.SignedBy.AllOf) == 0 {
 			result = append(result, field.Invalid(field.NewPath("signatures").Index(i).Child("signedBy"), rule.SignedBy, "must not be empty (at least one of anyOf or allOf must be specified)"))

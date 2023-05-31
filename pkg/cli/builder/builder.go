@@ -85,6 +85,7 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 		arrays     = map[string]reflect.Value{}
 		slices     = map[string]reflect.Value{}
 		maps       = map[string]reflect.Value{}
+		boolmaps   = map[string]reflect.Value{}
 		quantities = map[string]reflect.Value{}
 		optString  = map[string]reflect.Value{}
 		optBool    = map[string]reflect.Value{}
@@ -140,7 +141,12 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 				flags.StringSliceP(name, alias, nil, usage)
 			}
 		case reflect.Map:
-			maps[name] = v
+			switch fieldType.Tag.Get("boolmap") {
+			case "true":
+				boolmaps[name] = v
+			default:
+				maps[name] = v
+			}
 			flags.StringSliceP(name, alias, nil, usage)
 		case reflect.Bool:
 			flags.BoolVarP((*bool)(unsafe.Pointer(v.Addr().Pointer())), name, alias, false, usage)
@@ -191,9 +197,9 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 	}
 
 	c.RunE = obj.Run
-	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, optInt, optBool, optString, quantities, envs)
-	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, optInt, optBool, optString, quantities, envs)
-	c.RunE = bind(c.RunE, arrays, slices, maps, optInt, optBool, optString, quantities, envs)
+	c.PersistentPreRunE = bind(c.PersistentPreRunE, arrays, slices, maps, boolmaps, optInt, optBool, optString, quantities, envs)
+	c.PreRunE = bind(c.PreRunE, arrays, slices, maps, boolmaps, optInt, optBool, optString, quantities, envs)
+	c.RunE = bind(c.RunE, arrays, slices, maps, boolmaps, optInt, optBool, optString, quantities, envs)
 
 	cust, ok := obj.(customizer)
 	if ok {
@@ -294,6 +300,32 @@ func assignMaps(app *cobra.Command, maps map[string]reflect.Value) error {
 	return nil
 }
 
+func assignBoolMaps(app *cobra.Command, maps map[string]reflect.Value) error {
+	for k, v := range maps {
+		k = contextKey(k)
+		s, err := app.Flags().GetStringSlice(k)
+		if err != nil {
+			return err
+		}
+		if s != nil {
+			values := map[string]bool{}
+			for _, part := range s {
+				parts := strings.SplitN(part, "=", 2)
+				if len(parts) == 1 {
+					values[parts[0]] = true
+				} else {
+					values[parts[0]], err = strconv.ParseBool(parts[1])
+					if err != nil {
+						return err
+					}
+				}
+			}
+			v.Set(reflect.ValueOf(values))
+		}
+	}
+	return nil
+}
+
 func assignSlices(app *cobra.Command, slices map[string]reflect.Value) error {
 	for k, v := range slices {
 		k = contextKey(k)
@@ -357,6 +389,7 @@ func bind(next func(*cobra.Command, []string) error,
 	arrays map[string]reflect.Value,
 	slices map[string]reflect.Value,
 	maps map[string]reflect.Value,
+	boolMaps map[string]reflect.Value,
 	optInt map[string]reflect.Value,
 	optBool map[string]reflect.Value,
 	optString map[string]reflect.Value,
@@ -376,6 +409,9 @@ func bind(next func(*cobra.Command, []string) error,
 			return err
 		}
 		if err := assignMaps(cmd, maps); err != nil {
+			return err
+		}
+		if err := assignBoolMaps(cmd, boolMaps); err != nil {
 			return err
 		}
 		if err := assignOptInt(cmd, optInt); err != nil {

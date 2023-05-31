@@ -31,6 +31,7 @@ acorn install
       --cluster-domain strings                          The externally addressable cluster domain (default .oss-acorn.io)
       --controller-replicas int                         acorn-controller deployment replica count
       --controller-service-account-annotation strings   annotation to apply to the acorn-system service account
+      --features strings                                Enable or disable features. (example foo=true,bar=false)
   -h, --help                                            help for install
       --http-endpoint-pattern string                    Go template for formatting application http endpoints. Valid variables to use are: App, Container, Namespace, Hash and ClusterDomain. (default pattern is {{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}})
       --ignore-user-labels-and-annotations              Don't propagate user-defined labels and annotations to dependent objects

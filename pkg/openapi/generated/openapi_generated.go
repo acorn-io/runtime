@@ -1908,8 +1908,23 @@ func schema_pkg_apis_apiacornio_v1_Config(ref common.ReferenceCallback) common.O
 							Format: "",
 						},
 					},
+					"features": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: false,
+										Type:    []string{"boolean"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 				},
-				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "networkPolicies", "ingressControllerNamespace", "allowTrafficFromNamespace", "serviceLBAnnotations", "awsIdentityProviderArn"},
+				Required: []string{"ingressClassName", "clusterDomains", "letsEncrypt", "letsEncryptEmail", "letsEncryptTOSAgree", "setPodSecurityEnforceProfile", "podSecurityEnforceProfile", "httpEndpointPattern", "internalClusterDomain", "acornDNS", "acornDNSEndpoint", "autoUpgradeInterval", "recordBuilds", "publishBuilders", "builderPerProject", "internalRegistryPrefix", "ignoreUserLabelsAndAnnotations", "allowUserLabels", "allowUserAnnotations", "workloadMemoryDefault", "workloadMemoryMaximum", "useCustomCABundle", "propagateProjectAnnotations", "propagateProjectLabels", "manageVolumeClasses", "networkPolicies", "ingressControllerNamespace", "allowTrafficFromNamespace", "serviceLBAnnotations", "awsIdentityProviderArn", "features"},
 			},
 		},
 	}
@@ -2890,10 +2905,25 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref common.ReferenceCallback) 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
+					"images": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 					"signatures": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+							Description: "list of patterns to match against image names",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
 						},
 					},
 				},
@@ -7592,10 +7622,25 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref common.Refere
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
+					"images": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 					"signatures": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+							Description: "list of patterns to match against image names",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
 						},
 					},
 				},

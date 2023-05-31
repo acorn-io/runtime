@@ -105,7 +105,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 
 		if !disableCheckImageAllowRules {
 			if err := s.checkImageAllowed(ctx, params.Namespace, params.Spec.Image); err != nil {
-				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, fmt.Sprintf("disallowed by imageAllowRules: %s", err.Error())))
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 				return
 			}
 		}
@@ -703,5 +703,5 @@ func (s *Validator) getImageDetails(ctx context.Context, namespace string, profi
 }
 
 func (s *Validator) checkImageAllowed(ctx context.Context, namespace, image string) error {
-	return imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image)
+	return imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image, "")
 }
