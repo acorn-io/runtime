@@ -17,4 +17,6 @@ The interactive dev mode offers a convenient way to test and debug your project 
     acorn dev -n [APP_NAME]
     ```
 
-
+:::note
+When using `acorn dev`, the `dev` profile will be automatically used. This behavior is the same when using `acorn run -i`.
+:::
