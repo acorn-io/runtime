@@ -8,16 +8,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var hideUpdateFlags = []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
+	"publish", "link", "label", "interval", "env", "compute-class", "annotation"}
+
 func NewUpdate(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:               "update [flags] APP_NAME [deploy flags]",
 		SilenceUsage:      true,
 		Short:             "Update a deployed app",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
-		Args:              cobra.MinimumNArgs(1),
 	})
-	hideUpdateFlags := []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
-		"publish", "link", "label", "interval", "image", "env", "compute-class", "annotation"}
 
 	toggleHiddenFlags(cmd, hideUpdateFlags, true)
 	cmd.Flags().SetInterspersed(false)
@@ -29,15 +29,26 @@ type Update struct {
 	Image          string `usage:"Acorn image name"`
 	ConfirmUpgrade bool   `usage:"When an auto-upgrade app is marked as having an upgrade available, pass this flag to confirm the upgrade. Used in conjunction with --notify-upgrade."`
 	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
-	Replace        bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
 	Wait           *bool  `usage:"Wait for app to become ready before command exiting (default: true)"`
 	Quiet          bool   `usage:"Do not print status" short:"q"`
+	HelpAdvanced   bool   `usage:"Show verbose help text"`
 
 	out    io.Writer
 	client ClientFactory
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {
+	if s.HelpAdvanced {
+		setAdvancedHelp(cmd, hideUpdateFlags, "")
+		return cmd.Help()
+	}
+
+	// we can't enforce the one argument requirement at the Cobra level since we have to make --help-advanced possible
+	// so enforce the argument requirement here
+	if len(args) == 0 {
+		return fmt.Errorf("requires at least 1 arg(s), only received 0")
+	}
+
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
@@ -75,7 +86,6 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		Wait:    s.Wait,
 		Quiet:   s.Quiet,
 		Update:  true,
-		Replace: s.Replace,
 		out:     s.out,
 		client:  s.client,
 	}

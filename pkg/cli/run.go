@@ -125,7 +125,7 @@ More Usages:
         acorn run --volume mydata:data .`
 
 var hideRunFlags = []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
-	"publish", "link", "label", "interval", "env", "compute-class", "annotation"}
+	"publish", "link", "label", "interval", "env", "compute-class", "annotation", "update", "replace"}
 
 type Run struct {
 	RunArgs
@@ -229,7 +229,7 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 
 func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	if s.HelpAdvanced {
-		setAdvancedHelp(cmd)
+		setAdvancedHelp(cmd, hideRunFlags, AdvancedHelp)
 		return cmd.Help()
 	}
 	defer func() {
@@ -375,12 +375,12 @@ func toggleHiddenFlags(cmd *cobra.Command, flagsToHide []string, hide bool) {
 	}
 }
 
-func setAdvancedHelp(cmd *cobra.Command) {
+func setAdvancedHelp(cmd *cobra.Command, hideRunFlags []string, advancedHelp string) {
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		fmt.Println(cmd.Short + "\n")
 		// toggle advanced flags on before printing flags out in cmd.UsageString
 		toggleHiddenFlags(cmd, hideRunFlags, false)
 		fmt.Println(cmd.UsageString())
-		fmt.Println(AdvancedHelp)
+		fmt.Println(advancedHelp)
 	})
 }
