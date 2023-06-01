@@ -2,7 +2,6 @@ package volumes
 
 import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
@@ -16,13 +15,12 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 	translated := translation.NewTranslationStrategy(&Translator{
 		c: c,
 	}, remote.NewRemote(&corev1.PersistentVolume{}, c))
-	remoteResource := publicname.NewStrategy(translated)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.Volume{}).
-		WithGet(remoteResource).
-		WithList(remoteResource).
-		WithDelete(remoteResource).
-		WithWatch(remoteResource).
+		WithGet(translated).
+		WithList(translated).
+		WithDelete(translated).
+		WithWatch(translated).
 		WithTableConverter(tables.VolumeConverter).
 		Build()
 }
