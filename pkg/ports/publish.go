@@ -199,10 +199,10 @@ func collectPorts(seen map[int32]struct{}, ports []v1.PortDef, devMode bool) (re
 		if !devMode && port.Dev {
 			continue
 		}
-		if _, ok := seen[port.Port]; ok {
+		if _, ok := seen[port.TargetPort]; ok {
 			continue
 		}
-		seen[port.Port] = struct{}{}
+		seen[port.TargetPort] = struct{}{}
 		result = append(result, port)
 	}
 	return
