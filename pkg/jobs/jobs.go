@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -165,4 +166,37 @@ func getCronJobLatestJob(ctx context.Context, c kclient.Client, namespace, name 
 	}
 
 	return "", ErrJobNotDone
+}
+
+// ShouldRunForEvent returns true if the job is configured to run for the given event.
+func ShouldRunForEvent(eventName string, container v1.Container) bool {
+	if len(container.Events) == 0 {
+		return slices.Contains([]string{"create", "update"}, eventName)
+	}
+	return slices.Contains(container.Events, eventName)
+}
+
+// ShouldRun determines if the job should run based on the app's status.
+func ShouldRun(jobName string, appInstance *v1.AppInstance) bool {
+	for name, job := range appInstance.Status.AppSpec.Jobs {
+		if name == jobName {
+			return ShouldRunForEvent(GetEvent(jobName, appInstance), job)
+		}
+	}
+	return false
+}
+
+// GetEvent determines the event type for the job based on the app's status.
+func GetEvent(jobName string, appInstance *v1.AppInstance) string {
+	if !appInstance.DeletionTimestamp.IsZero() {
+		return "delete"
+	}
+	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+		return "stop"
+	}
+	if appInstance.Generation <= 1 || slices.Contains(appInstance.Status.AppSpec.Jobs[jobName].Events, "create") && !appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
+		// Create event jobs run at least once. So, if it hasn't succeeded, run it.
+		return "create"
+	}
+	return "update"
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
@@ -12,7 +13,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
-	"golang.org/x/exp/slices"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,33 +79,12 @@ func setTerminationPath(containers []corev1.Container) (result []corev1.Containe
 	return
 }
 
-func matchesJobEvent(eventName string, container v1.Container) bool {
-	if len(container.Events) == 0 {
-		return slices.Contains([]string{"create", "update"}, eventName)
-	}
-	return slices.Contains(container.Events, eventName)
-}
-
-func getJobEvent(jobName string, appInstance *v1.AppInstance) string {
-	if !appInstance.DeletionTimestamp.IsZero() {
-		return "delete"
-	}
-	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
-		return "stop"
-	}
-	if appInstance.Generation <= 1 || slices.Contains(appInstance.Status.AppSpec.Jobs[jobName].Events, "create") && !appInstance.Status.AppStatus.Jobs[jobName].CreateEventSucceeded {
-		// Create event jobs run at least once. So, if it hasn't succeeded, run it.
-		return "create"
-	}
-	return "update"
-}
-
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) (kclient.Object, error) {
 	interpolator = interpolator.ForJob(name)
-	jobEventName := getJobEvent(name, appInstance)
+	jobEventName := jobs.GetEvent(name, appInstance)
 
 	jobStatus := appInstance.Status.AppStatus.Jobs[name]
-	jobStatus.Skipped = !matchesJobEvent(jobEventName, container)
+	jobStatus.Skipped = !jobs.ShouldRunForEvent(jobEventName, container)
 	if appInstance.Status.AppStatus.Jobs == nil {
 		appInstance.Status.AppStatus.Jobs = make(map[string]v1.JobStatus, len(appInstance.Status.AppSpec.Jobs))
 	}

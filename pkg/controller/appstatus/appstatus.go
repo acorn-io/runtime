@@ -7,6 +7,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/acorn/pkg/jobs"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/pkg/errors"
@@ -19,16 +20,24 @@ type appStatusRenderer struct {
 	app *v1.AppInstance
 }
 
-func PrepareStatus(req router.Request, resp router.Response) error {
+func PrepareStatus(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 
 	for name, status := range app.Status.AppStatus.Containers {
+		// If the app is being updated, then set the containers to not ready so that the controller will run them again and the
+		// dependency status will be set correctly.
+		status.Ready = status.Ready && app.Generation == app.Status.ObservedGeneration
 		status.ExpressionErrors = nil
 		app.Status.AppStatus.Containers[name] = status
 	}
 
 	for name, status := range app.Status.AppStatus.Jobs {
 		status.ExpressionErrors = nil
+		if app.Generation != app.Status.ObservedGeneration && jobs.ShouldRun(name, app) {
+			// If a job is going to run again, then set its status to not ready so that the controller will run it again and the
+			// dependency status will be set correctly.
+			status.Ready = false
+		}
 		app.Status.AppStatus.Jobs[name] = status
 	}
 
@@ -43,7 +52,7 @@ func PrepareStatus(req router.Request, resp router.Response) error {
 	return nil
 }
 
-func SetStatus(req router.Request, resp router.Response) error {
+func SetStatus(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	status, err := Get(req.Ctx, req.Client, app)
 	if err != nil {
