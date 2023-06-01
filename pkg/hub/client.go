@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -77,5 +78,12 @@ func httpGet(ctx context.Context, url, token string, into interface{}) error {
 		return fmt.Errorf("invalid status code: %v", resp.StatusCode)
 	}
 
-	return json.NewDecoder(resp.Body).Decode(into)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("can't read response %w", err)
+	}
+
+	logrus.Debugf("Response code: %v. Response body: %s", resp.StatusCode, body)
+
+	return json.Unmarshal(body, into)
 }
