@@ -86,7 +86,7 @@ func (a *appStatusRenderer) readJobs() error {
 
 		if c.LinkOverride != "" {
 			c.UpToDate = true
-			c.Ready, c.Defined = a.isServiceReady(c.LinkOverride)
+			c.Ready, c.Defined = a.isServiceReady(jobName)
 			if c.Ready {
 				c.CreateEventSucceeded = true
 			}

@@ -20,13 +20,19 @@ import (
 
 func (a *appStatusRenderer) readVolumes() error {
 	// reset
-	a.app.Status.AppStatus.Volumes = map[string]v1.VolumeStatus{}
+	a.app.Status.AppStatus.Volumes = make(map[string]v1.VolumeStatus, len(a.app.Status.AppSpec.Volumes))
 
-	for volumeName := range a.app.Status.AppSpec.Volumes {
+	for volumeName, vol := range a.app.Status.AppSpec.Volumes {
+		isEphemeral := vol.Class == v1.VolumeRequestTypeEphemeral
 		a.app.Status.AppStatus.Volumes[volumeName] = v1.VolumeStatus{
 			CommonStatus: v1.CommonStatus{
 				LinkOverride: linkedVolume(a.app, volumeName),
+				Defined:      isEphemeral,
+				UpToDate:     isEphemeral,
+				Ready:        isEphemeral,
 			},
+			Bound:             isEphemeral,
+			StorageClassFound: isEphemeral,
 		}
 	}
 
