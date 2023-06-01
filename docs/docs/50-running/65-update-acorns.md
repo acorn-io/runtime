@@ -52,7 +52,7 @@ The purpose of using -- is to distinguish between command-line options (flags) a
 :::
 
 
-### acorn --replace
+### run --replace
 Similarly to `acorn run --update`, `acorn run --replace` will create or update an existing acorn with ONLY the provided flags and args. Any previous modifications will be replaced.
 
 If we attempt a replace on the previous acorn, we should see the label be dropped
