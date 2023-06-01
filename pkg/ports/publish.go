@@ -208,7 +208,13 @@ func collectPorts(seen, seenTargets map[int32]struct{}, ports []v1.PortDef, devM
 
 		if port.Port != 0 {
 			seen[port.Port] = struct{}{}
+		} else {
+			// If port.Port is 0, that means only the TargetPort has been defined, and not the public-facing Port.
+			// The public-facing Port will ultimately use the same number as the TargetPort, so we add TargetPort to
+			// the Port "seen" map in that case.
+			seen[port.TargetPort] = struct{}{}
 		}
+
 		seenTargets[port.TargetPort] = struct{}{}
 
 		result = append(result, port)
