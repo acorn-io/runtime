@@ -4,6 +4,7 @@ go 1.20
 
 replace (
 	cuelang.org/go => cuelang.org/go v0.4.3
+	github.com/acorn-io/baaah => ../baaah
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	k8s.io/client-go => k8s.io/client-go v0.27.2

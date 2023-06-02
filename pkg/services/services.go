@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/ref"
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	corev1 "k8s.io/api/core/v1"
@@ -77,6 +78,12 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 		newService.Spec.ExternalName = service.Spec.Address
 	} else {
 		newService.Spec.Type = corev1.ServiceTypeClusterIP
+
+		// The baaah route we are on does not prune Endpoints,
+		// so we need to add this annotation to override it.
+		endpointsAnnotations := newService.GetAnnotations()
+		endpointsAnnotations[apply.AnnotationPrune] = "true"
+
 		result = append(result, &corev1.Endpoints{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        newService.Name,

@@ -11,6 +11,7 @@ import (
 	authv1 "k8s.io/api/authorization/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -47,6 +48,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, rbacv1.AddToScheme(scheme))
 	errs = append(errs, authv1.AddToScheme(scheme))
 	errs = append(errs, apiextensionv1.AddToScheme(scheme))
+	errs = append(errs, discoveryv1.AddToScheme(scheme))
 	return merr.NewErrors(errs...)
 }
 

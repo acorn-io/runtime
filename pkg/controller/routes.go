@@ -5,6 +5,7 @@ import (
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/devsession"
+	discoveryv1 "k8s.io/api/discovery/v1"
 
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
@@ -79,7 +80,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 
 	router.Type(&v1.DevSessionInstance{}).HandlerFunc(devsession.ExpireDevSession)
 
-	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
+	router.Type(&v1.ServiceInstance{}).WithoutPruneTypes(&corev1.Endpoints{}, &discoveryv1.EndpointSlice{}).HandlerFunc(service.RenderServices)
 
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.SetRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)

@@ -91,8 +91,6 @@ github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpH
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/acorn-io/aml v0.0.0-20230602194851-bd1a8baecfc2 h1:EOJgnBhPm3ckljwIUHUFmATuyNtZs7HQhp/EvSUfMDc=
 github.com/acorn-io/aml v0.0.0-20230602194851-bd1a8baecfc2/go.mod h1:UEx5RRLFjryCEHN2pM59+d8A0mPJ3VAxggJOTzPymwg=
-github.com/acorn-io/baaah v0.0.0-20230529210224-9b11179ad5be h1:rTHelG955EmnW0/iPXgrHz2ndIZEpeljoxXbYHyxxkk=
-github.com/acorn-io/baaah v0.0.0-20230529210224-9b11179ad5be/go.mod h1:rA7YPlf5YdLABSULZu43zawnjBs50hCU8iGU5yTHG4g=
 github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500 h1:tiM36bM+iMWuW9HM+YlM1GfNDXC7f565z8Be5epO0qM=
 github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500/go.mod h1:y6aYj2dF/SlU205bDfA43Y5c9sa/aYr4X5GDqYJzJTU=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
