@@ -24,7 +24,7 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 		recorder: recorder,
 		resolve:  tags.ResolveLocal,
 		pull:     images.PullAppImage,
-		now:      metav1.Now,
+		now:      metav1.NowMicro,
 	})
 }
 
@@ -36,7 +36,7 @@ type pullClient struct {
 	recorder event.Recorder
 	resolve  resolveImageFunc
 	pull     pullImageFunc
-	now      func() metav1.Time
+	now      func() metav1.MicroTime
 }
 
 func pullAppImage(transport http.RoundTripper, client pullClient) router.HandlerFunc {
@@ -186,7 +186,7 @@ func newImageSummary(appImage v1.AppImage) ImageSummary {
 	}
 }
 
-func recordPullEvent(ctx context.Context, recorder event.Recorder, observed metav1.Time, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage) {
+func recordPullEvent(ctx context.Context, recorder event.Recorder, observed metav1.MicroTime, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage) {
 	// Initialize with values for a success event
 	previous, target := newImageSummary(previousImage), newImageSummary(targetImage)
 	e := apiv1.Event{

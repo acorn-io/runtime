@@ -40,7 +40,7 @@ type EventInstance struct {
 	Description string `json:"description,omitempty"`
 
 	// Observed represents the time the Event was first observed.
-	Observed metav1.Time `json:"observed"`
+	Observed metav1.MicroTime `json:"observed" wrangler:"type=string"`
 
 	// Details provides additional information about the cluster at the time the Event occurred.
 	//
