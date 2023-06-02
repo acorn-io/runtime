@@ -18,12 +18,14 @@ func RenderServices(req router.Request, resp router.Response) error {
 		return err
 	}
 	resp.Objects(objs...)
+	svcInstance.Status.HasService = len(objs) > 0
 
 	objs, err = publish.ServiceLoadBalancer(req, svcInstance)
 	if err != nil {
 		return err
 	}
 	resp.Objects(objs...)
+	svcInstance.Status.HasService = svcInstance.Status.HasService || len(objs) > 0
 
 	objs, err = publish.Ingress(req, svcInstance)
 	if err != nil {
@@ -31,5 +33,6 @@ func RenderServices(req router.Request, resp router.Response) error {
 	}
 	resp.Objects(objs...)
 
+	resp.Objects(svcInstance)
 	return nil
 }

@@ -9712,6 +9712,12 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceStatus(ref common.Referen
 							},
 						},
 					},
+					"hasService": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
