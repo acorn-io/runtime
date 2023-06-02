@@ -92,7 +92,7 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 				Name:        newService.Name,
 				Namespace:   newService.Namespace,
 				Labels:      newService.Labels,
-				Annotations: newService.Annotations,
+				Annotations: endpointsAnnotations,
 			},
 			Subsets: []corev1.EndpointSubset{
 				{
