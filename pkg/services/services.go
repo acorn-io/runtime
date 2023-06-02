@@ -81,7 +81,10 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 
 		// The baaah route we are on does not prune Endpoints,
 		// so we need to add this annotation to override it.
-		endpointsAnnotations := newService.GetAnnotations()
+		endpointsAnnotations := make(map[string]string, len(newService.Annotations)+1)
+		for k, v := range newService.Annotations {
+			endpointsAnnotations[k] = v
+		}
 		endpointsAnnotations[apply.AnnotationPrune] = "true"
 
 		result = append(result, &corev1.Endpoints{
