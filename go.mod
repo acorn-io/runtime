@@ -27,7 +27,7 @@ require (
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
-	github.com/google/go-containerregistry v0.15.2
+	github.com/google/go-containerregistry v0.14.1-0.20230409045903-ed5c185df419
 	github.com/google/go-containerregistry/pkg/authn/kubernetes v0.0.0-20221213180026-23d895d08035
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
@@ -41,8 +41,8 @@ require (
 	github.com/pterm/pterm v0.12.49
 	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4
 	github.com/rancher/wrangler v1.0.2
-	github.com/sigstore/cosign/v2 v2.0.3-0.20230531165932-d48cc6532eb6
-	github.com/sigstore/sigstore v1.6.5
+	github.com/sigstore/cosign/v2 v2.0.2
+	github.com/sigstore/sigstore v1.6.4
 	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
