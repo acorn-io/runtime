@@ -40,10 +40,10 @@ func TestContentID(t *testing.T) {
 			name:  "NotEqual/Diff/Observed",
 			equal: false,
 			a: apiv1.Event{
-				Observed: metav1.Now(),
+				Observed: metav1.NowMicro(),
 			},
 			b: apiv1.Event{
-				Observed: metav1.NewTime(metav1.Now().Add(time.Hour)),
+				Observed: metav1.NewMicroTime(metav1.NowMicro().Add(time.Hour)),
 			},
 		},
 	} {

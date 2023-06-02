@@ -3,6 +3,7 @@ package event
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -62,12 +63,18 @@ func init() {
 
 func publicKind(obj runtime.Object) string {
 	kinds, _, _ := scheme.ObjectKinds(obj)
-	for _, k := range kinds {
+	for i, k := range kinds {
 		switch k.Kind {
 		case "App", "AppInstance":
 			return "app"
 		}
+
+		if i == len(kinds)-1 {
+			// TODO: Remove this hack
+			return strings.ToLower(k.GroupKind().String())
+		}
 	}
+
 	return ""
 }
 

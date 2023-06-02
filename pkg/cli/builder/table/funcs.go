@@ -20,6 +20,7 @@ import (
 var (
 	FuncMap = map[string]any{
 		"ago":           FormatCreated,
+		"microAgo":      FormatObserved,
 		"json":          FormatJSON,
 		"jsoncompact":   FormatJSONCompact,
 		"yaml":          FormatYAML,
@@ -102,6 +103,10 @@ func FormatID(obj kclient.Object) (string, error) {
 }
 
 func FormatCreated(data metav1.Time) string {
+	return duration.HumanDuration(time.Now().UTC().Sub(data.Time)) + " ago"
+}
+
+func FormatObserved(data metav1.MicroTime) string {
 	return duration.HumanDuration(time.Now().UTC().Sub(data.Time)) + " ago"
 }
 

@@ -28,6 +28,7 @@ import (
 
 var (
 	dnsRenewPeriodHours = 24 * time.Hour
+	controllerName      = "acorn-controller"
 )
 
 type Controller struct {
@@ -38,11 +39,6 @@ type Controller struct {
 }
 
 func New() (*Controller, error) {
-	router, err := baaah.DefaultRouter("acorn-controller", scheme.Scheme)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg, err := restconfig.New(scheme.Scheme)
 	if err != nil {
 		return nil, err
@@ -53,20 +49,30 @@ func New() (*Controller, error) {
 		return nil, err
 	}
 
-	apply := apply.New(client)
+	opts, err := baaah.DefaultOptions(controllerName, scheme.Scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	recorder := event.NewRecorder(client)
+
+	router, err := baaah.NewRouter(controllerName, scheme.Scheme, event.WithAuditing(recorder, opts))
+	if err != nil {
+		return nil, err
+	}
 
 	registryTransport, err := imagesystem.NewAPIBasedTransport(client, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	routes(router, registryTransport, event.NewRecorder(client))
+	routes(router, registryTransport, recorder)
 
 	return &Controller{
 		Router: router,
 		client: client,
 		Scheme: scheme.Scheme,
-		apply:  apply,
+		apply:  apply.New(client),
 	}, nil
 }
 
