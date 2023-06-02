@@ -2,6 +2,7 @@ package imageallowrules
 
 import (
 	"fmt"
+	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	imagename "github.com/google/go-containerregistry/pkg/name"
@@ -46,7 +47,7 @@ func buildImageScope(image imagename.Reference, scope string) (string, error) {
 	case SimpleImageScopeRepository:
 		is = fmt.Sprintf("%s/%s:**", image.Context().RegistryStr(), image.Context().RepositoryStr())
 	case SimpleImageScopeExact:
-		is = image.Name()
+		is = strings.TrimSuffix(image.Name(), ":")
 	case SimpleImageScopeAll:
 		is = "**"
 	default:

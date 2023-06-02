@@ -9,7 +9,6 @@ import (
 
 var (
 	PrefixErrRulesNeeded = "rules needed: "
-	PrefixErrNotAllowed  = "is not allowed by any ImageAllowRule in this project"
 )
 
 type ErrRulesNeeded struct {

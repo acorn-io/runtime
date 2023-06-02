@@ -10,14 +10,18 @@ import (
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/imageallowrules"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/prompt"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/tables"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/pterm/pterm"
 )
 
 func PromptRun(ctx context.Context, c client.Client, dangerous bool, image string, opts client.AppRunOptions) (*apiv1.App, error) {
 	app, err := c.AppRun(ctx, image, &opts)
+
+	// App requested permissions
 	if permErr := (*client.ErrRulesNeeded)(nil); errors.As(err, &permErr) {
 		if ok, promptErr := handleDangerous(dangerous, permErr.Permissions); promptErr != nil {
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
@@ -26,8 +30,30 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 			app, err = c.AppRun(ctx, image, &opts)
 		}
 	}
+
+	// ImageAllowRules are enabled and this image is not allowed
 	if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 		err.(*imageallowrules.ErrImageNotAllowed).Image = image
+
+		// We're checking for images first, since we could run existing images by ID
+		var il []apiv1.Image
+		il, err = c.ImageList(ctx)
+		if err != nil {
+			return nil, err
+		}
+		var img *apiv1.Image
+		var tag string
+		img, tag, err = images.FindImageMatch(apiv1.ImageList{Items: il}, image)
+		if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
+			return nil, err
+		} else if err == nil {
+			image = img.Name
+			if tag != "" {
+				image = tag
+			}
+		}
+
+		// Prompt user to create an simple IAR for this image
 		if choice, promptErr := handleNotAllowed(dangerous, image); promptErr != nil {
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 		} else if choice != "NO" {
@@ -82,7 +108,7 @@ application. If you are unsure say no.`)
 
 func handleNotAllowed(dangerous bool, image string) (string, error) {
 	if dangerous {
-		return "yes", nil
+		return string(imageallowrules.SimpleImageScopeExact), nil
 	}
 
 	pterm.Warning.Printfln(
@@ -91,12 +117,21 @@ This image is not trusted by any image allow rules in this project.
 This could be VERY DANGEROUS to the cluster if you do not trust this
 application. If you are unsure say no.`, image)
 
-	choiceMap := map[string]string{
-		"NO":                                     "NO",
-		"yes (this image only)":                  string(imageallowrules.SimpleImageScopeExact),
-		"registry (all images in this registry)": string(imageallowrules.SimpleImageScopeRegistry),
-		"repository (all images in this repository)": string(imageallowrules.SimpleImageScopeRepository),
-		"all (all images out there)":                 string(imageallowrules.SimpleImageScopeAll),
+	var choiceMap map[string]string
+
+	if tags.SHAPattern.MatchString(image) {
+		choiceMap = map[string]string{
+			"NO":                        "NO",
+			"yes (this ID or SHA only)": string(imageallowrules.SimpleImageScopeExact),
+		}
+	} else {
+		choiceMap = map[string]string{
+			"NO":                                     "NO",
+			"yes (this tag only)":                    string(imageallowrules.SimpleImageScopeExact),
+			"registry (all images in this registry)": string(imageallowrules.SimpleImageScopeRegistry),
+			"repository (all images in this repository)": string(imageallowrules.SimpleImageScopeRepository),
+			"all (all images out there)":                 string(imageallowrules.SimpleImageScopeAll),
+		}
 	}
 
 	var choices []string

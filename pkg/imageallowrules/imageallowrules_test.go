@@ -76,6 +76,12 @@ func TestImageCovered(t *testing.T) {
 			image:       "index.docker.io/library/foo/alpine:v1.0.1",
 			shouldMatch: false,
 		},
+		{
+			name:        "match by full ID",
+			pattern:     "e67e444786a869161b26fa00f4993bbdeba3da677043e0bead8747d7a05eb150",
+			image:       "e67e444786a869161b26fa00f4993bbdeba3da677043e0bead8747d7a05eb150",
+			shouldMatch: true,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -85,7 +91,7 @@ func TestImageCovered(t *testing.T) {
 				t.Fatalf("failed to parse image %s: %v", tc.image, err)
 			}
 
-			match := imageCovered(ref, name.Digest{}, v1.ImageAllowRuleInstance{
+			match := imageCovered(ref, "", v1.ImageAllowRuleInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "test",
 					Namespace: "testns",
