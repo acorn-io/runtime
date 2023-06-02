@@ -104,10 +104,6 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		image = digestRef.Name()
 	}
 
-	if err := cosign.EnsureReferences(ctx, c, image, &verifyOpts); err != nil {
-		return fmt.Errorf("error ensuring references for image %s: %w", image, err)
-	}
-
 iarLoop:
 	for _, imageAllowRule := range imageAllowRules {
 		// Check if the image is in scope of the ImageAllowRule
@@ -118,6 +114,9 @@ iarLoop:
 		// > Signatures
 		// Any verification error or failed verification issue will skip on to the next IAR
 		for _, rule := range imageAllowRule.Signatures.Rules {
+			if err := cosign.EnsureReferences(ctx, c, image, &verifyOpts); err != nil {
+				return fmt.Errorf("error ensuring references for image %s: %w", image, err)
+			}
 			verifyOpts.AnnotationRules = rule.Annotations
 
 			// allOf: all signatures must pass verification
