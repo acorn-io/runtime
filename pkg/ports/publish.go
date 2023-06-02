@@ -194,15 +194,29 @@ func matches(binding v1.PortPublish, port v1.PortDef) bool {
 		portMatches(binding, port)
 }
 
-func collectPorts(seen map[int32]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
+func collectPorts(seen, seenTargets map[int32]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 	for _, port := range ports {
 		if !devMode && port.Dev {
 			continue
 		}
-		if _, ok := seen[port.TargetPort]; ok {
+
+		if _, ok := seen[port.Port]; ok {
+			continue
+		} else if _, ok := seenTargets[port.TargetPort]; ok {
 			continue
 		}
-		seen[port.TargetPort] = struct{}{}
+
+		if port.Port != 0 {
+			seen[port.Port] = struct{}{}
+		} else {
+			// If port.Port is 0, that means only the TargetPort has been defined, and not the public-facing Port.
+			// The public-facing Port will ultimately use the same number as the TargetPort, so we add TargetPort to
+			// the Port "seen" map in that case.
+			seen[port.TargetPort] = struct{}{}
+		}
+
+		seenTargets[port.TargetPort] = struct{}{}
+
 		result = append(result, port)
 	}
 	return
@@ -220,10 +234,11 @@ func FilterDevPorts(ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 
 func CollectContainerPorts(container *v1.Container, devMode bool) (result []v1.PortDef) {
 	seen := map[int32]struct{}{}
+	seenTargets := map[int32]struct{}{}
 
-	result = append(result, collectPorts(seen, container.Ports, devMode)...)
+	result = append(result, collectPorts(seen, seenTargets, container.Ports, devMode)...)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		result = append(result, collectPorts(seen, entry.Value.Ports, devMode)...)
+		result = append(result, collectPorts(seen, seenTargets, entry.Value.Ports, devMode)...)
 	}
 
 	return
