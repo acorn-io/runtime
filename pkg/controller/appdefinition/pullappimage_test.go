@@ -92,7 +92,7 @@ func withMeta[T kclient.Object](name, uid, resourceVersion string, obj T) T {
 
 func TestPullAppImageEvents(t *testing.T) {
 	// Test cases below this comment ensure the handler produces the correct events
-	now := metav1.Now()
+	now := metav1.NowMicro()
 	// Manual upgrade should record an event
 	testRecordPullEvent(t,
 		"ImageChange",
@@ -236,7 +236,7 @@ func pullImageTo(image *v1.AppImage, err error) pullImageFunc {
 	}
 }
 
-func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInstance, resolve resolveImageFunc, pull pullImageFunc, now metav1.Time, expect *apiv1.Event) {
+func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInstance, resolve resolveImageFunc, pull pullImageFunc, now metav1.MicroTime, expect *apiv1.Event) {
 	t.Helper()
 	var recording []*apiv1.Event
 	fakeRecorder := func(_ context.Context, e *apiv1.Event) error {
@@ -248,7 +248,7 @@ func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInsta
 		recorder: event.RecorderFunc(fakeRecorder),
 		resolve:  resolve,
 		pull:     pull,
-		now: func() metav1.Time {
+		now: func() metav1.MicroTime {
 			return now
 		},
 	})
