@@ -79,12 +79,13 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 	} else {
 		newService.Spec.Type = corev1.ServiceTypeClusterIP
 
-		// The baaah route we are on does not prune Endpoints,
-		// so we need to add this annotation to override it.
 		endpointsAnnotations := make(map[string]string, len(newService.Annotations)+1)
 		for k, v := range newService.Annotations {
 			endpointsAnnotations[k] = v
 		}
+
+		// The baaah route we are on does not prune Endpoints,
+		// so we need to add this annotation to override it.
 		endpointsAnnotations[apply.AnnotationPrune] = "true"
 
 		result = append(result, &corev1.Endpoints{
