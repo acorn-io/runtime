@@ -80,7 +80,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 
 	router.Type(&v1.DevSessionInstance{}).HandlerFunc(devsession.ExpireDevSession)
 
-	router.Type(&v1.ServiceInstance{}).WithoutPruneTypes(&corev1.Endpoints{}, &discoveryv1.EndpointSlice{}).HandlerFunc(service.RenderServices)
+	router.Type(&v1.ServiceInstance{}).DisablePruningForTypes(&corev1.Endpoints{}, &discoveryv1.EndpointSlice{}).HandlerFunc(service.RenderServices)
 
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.SetRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
