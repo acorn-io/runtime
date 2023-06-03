@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/cosign"
 	"github.com/acorn-io/acorn/pkg/imagepattern"
 	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -28,7 +29,7 @@ type ErrImageNotAllowed struct {
 const ErrImageNotAllowedIdentifier = "not allowed by any ImageAllowRule"
 
 func (e *ErrImageNotAllowed) Error() string {
-	return fmt.Sprintf("image %s is %s in this project", e.Image, ErrImageNotAllowedIdentifier)
+	return fmt.Sprintf("image <%s> is %s in this project", e.Image, ErrImageNotAllowedIdentifier)
 }
 
 func (e *ErrImageNotAllowed) Is(target error) bool {
@@ -90,24 +91,24 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		CraneOpts:          []crane.Option{crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain)},
 	}
 
-	ref, err := name.ParseReference(image)
+	ref, err := name.ParseReference(image, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 	if err != nil {
 		return fmt.Errorf("error parsing image reference %s: %w", image, err)
 	}
 
-	var digestRef name.Digest
-	if digest != "" {
-		digestRef = ref.Context().Digest(digest)
-		if err != nil {
-			return fmt.Errorf("error parsing image digest reference %s: %w", image, err)
+	if ref.Identifier() == "" && tags.SHAPattern.MatchString(image) {
+		// image is a digest and was parsed as repository-only reference
+		if digest == "" {
+			digest = image
 		}
-		image = digestRef.Name()
+	} else if ref.Context().String() != "" {
+		digest = ref.Context().Digest(digest).Name()
 	}
 
 iarLoop:
 	for _, imageAllowRule := range imageAllowRules {
 		// Check if the image is in scope of the ImageAllowRule
-		if !imageCovered(ref, digestRef, imageAllowRule) {
+		if !imageCovered(ref, digest, imageAllowRule) {
 			continue
 		}
 
@@ -167,22 +168,22 @@ iarLoop:
 
 		return nil
 	}
-
 	return &ErrImageNotAllowed{Image: image}
 }
 
-func imageCovered(image name.Reference, digest name.Digest, iar v1.ImageAllowRuleInstance) bool {
+func imageCovered(image name.Reference, digest string, iar v1.ImageAllowRuleInstance) bool {
 	for _, pattern := range iar.Images {
 		// empty pattern? skip (should've been caught by IAR validation already)
 		if strings.TrimSpace(pattern) == "" {
 			continue
 		}
 
-		// not a pattern and image name is not an exact match? skip
+		// not a pattern? must be exact match then.
 		if !imagepattern.IsImagePattern(pattern) {
-			if image.Name() != pattern && (digest.Identifier() != "" && digest.Name() != pattern) {
+			if strings.TrimSuffix(image.Name(), ":") != pattern && digest != pattern {
 				continue
 			}
+			return true
 		}
 
 		parts := strings.Split(pattern, ":")
