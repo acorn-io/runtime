@@ -707,6 +707,5 @@ func (s *Validator) checkImageAllowed(ctx context.Context, namespace, image stri
 	if err != nil {
 		return err
 	}
-	err = imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image, digest)
-	return err
+	return imageallowrules.CheckImageAllowed(ctx, s.client, namespace, image, digest)
 }
