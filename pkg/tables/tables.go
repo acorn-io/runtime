@@ -172,7 +172,7 @@ var (
 		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},
 		{"Actor", "Actor"},
-		{"Observed", "{{ ago .Observed }}"},
+		{"Observed", "{{ microAgo .Observed }}"},
 		{"Description", "Description"},
 	}
 
