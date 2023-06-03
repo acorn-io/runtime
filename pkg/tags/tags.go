@@ -86,9 +86,6 @@ func ResolveLocal(ctx context.Context, c kclient.Client, namespace, image string
 		}
 	} else if err != nil {
 		return "", false, err
-	} else if !localImage.Remote {
-		// The name will match the name we used to lookup, so trim the digest
-		return strings.TrimPrefix(localImage.Digest, "sha256:"), true, nil
 	}
-	return image, false, nil
+	return strings.TrimPrefix(localImage.Digest, "sha256:"), !localImage.Remote, nil
 }
