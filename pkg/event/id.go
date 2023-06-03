@@ -3,8 +3,8 @@ package event
 import (
 	"encoding/hex"
 	"hash/fnv"
+	"strconv"
 	"strings"
-	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 )
@@ -18,7 +18,7 @@ func ContentID(e *apiv1.Event) (string, error) {
 		e.Actor,
 		e.Source.String(),
 		e.Description,
-		e.Observed.UTC().Format(time.RFC3339),
+		strconv.FormatInt(e.Observed.UnixMicro(), 10),
 	}, ",")
 
 	h := fnv.New128a()
