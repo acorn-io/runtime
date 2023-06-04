@@ -1,7 +1,10 @@
 package v1
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -40,7 +43,7 @@ type EventInstance struct {
 	Description string `json:"description,omitempty"`
 
 	// Observed represents the time the Event was first observed.
-	Observed metav1.MicroTime `json:"observed" wrangler:"type=string"`
+	Observed MicroTime `json:"observed" wrangler:"type=string"`
 
 	// Details provides additional information about the cluster at the time the Event occurred.
 	//
@@ -49,6 +52,42 @@ type EventInstance struct {
 	//
 	// +optional
 	Details GenericMap `json:"details,omitempty"`
+}
+
+// MicroTime represents a time with microsecond level precision.
+//
+// It extends metav1.MicroTime to allow unmarshaling from RFC3339.
+type MicroTime metav1.MicroTime
+
+// DeepCopy returns a deep-copy of the MicroTime value.  The underlying time.Time
+// type is effectively immutable in the time API, so it is safe to
+// copy-by-assign, despite the presence of (unexported) Pointer fields.
+func (t *MicroTime) DeepCopyInto(out *MicroTime) {
+	*out = *t
+}
+
+// UnmarshalJSON implements the json.Unmarshaller interface.
+func (t *MicroTime) UnmarshalJSON(b []byte) error {
+	if len(b) == 4 && string(b) == "null" {
+		t.Time = time.Time{}
+		return nil
+	}
+
+	var str string
+	if err := json.Unmarshal(b, &str); err != nil {
+		return err
+	}
+
+	pt, err := time.Parse(metav1.RFC3339Micro, str)
+	if err != nil {
+		var sErr error
+		if pt, sErr = time.Parse(time.RFC3339, str); sErr != nil {
+			return errors.Join(err, sErr)
+		}
+	}
+
+	t.Time = pt.Local()
+	return nil
 }
 
 const (
