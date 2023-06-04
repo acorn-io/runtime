@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -38,12 +39,14 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
 	LetsEncryptURLStaging    = "https://acme-staging-v02.api.letsencrypt.org/directory"
 	LetsEncryptURLProduction = "https://acme-v02.api.letsencrypt.org/directory"
+	acmeChallengePath        = "/.well-known/acme-challenge/"
 )
 
 var (
@@ -493,7 +496,7 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 						HTTP: &networkingv1.HTTPIngressRuleValue{
 							Paths: []networkingv1.HTTPIngressPath{
 								{
-									Path: "/.well-known/acme-challenge/",
+									Path: acmeChallengePath,
 									PathType: func() *networkingv1.PathType {
 										pt := networkingv1.PathTypePrefix
 										return &pt
@@ -558,6 +561,44 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 			return nil, fmt.Errorf("timed out waiting for ingress to be ready: %w", err)
 		}
 		return nil, err
+	}
+
+	// Setup and query test acme-challenge endpoint. This will ensure the networking from ingress to server is working
+	// before attempting to request the cert
+	err = httpProviderServer.Present(domain, "test", "test")
+	if err != nil {
+		return nil, fmt.Errorf("failed to present test acme-challenge. %w", err)
+	}
+
+	err = wait.ExponentialBackoffWithContext(ctx, wait.Backoff{
+		Duration: 1 * time.Second,
+		Factor:   2,
+		Steps:    10,
+		Cap:      180 * time.Second,
+	}, func(ctx context.Context) (done bool, err error) {
+		testUrl := "http://" + domain + acmeChallengePath + "test"
+		logrus.Debugf("Attempting to hit test cert path %v", testUrl)
+		resp, err := http.Get(testUrl)
+		if err != nil {
+			logrus.Errorf("Error hitting test acme-challenge endpoint: %v", err)
+			return false, nil
+		}
+		logrus.Debugf("Response code for test acme-challenge endpoint: %v", resp.StatusCode)
+		if resp.StatusCode == 200 {
+			return true, nil
+		}
+		return false, nil
+	})
+
+	// The provider will only present a single token at a time. Cleanup before attempting to obtain cert.
+	// Need to do this before potentially returning from ExponentialBackoffWithContext's error
+	cleanupErr := httpProviderServer.CleanUp(domain, "test", "test")
+	if cleanupErr != nil {
+		logrus.Errorf("Failed to cleanup test acme-challenge. %v", cleanupErr)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to successfully hit test acme-challenge endpoint. %w", err)
 	}
 
 	// Try to obtain the certificate
