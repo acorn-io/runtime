@@ -83,7 +83,7 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 		Details:     details,
 		Description: fmt.Sprintf("App %s/%s created", obj.GetNamespace(), obj.GetName()),
 		Source:      event.ObjectSource(obj),
-		Observed:    metav1.NowMicro(),
+		Observed:    v1.MicroTime(metav1.NowMicro()),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
@@ -116,7 +116,7 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 		Details:     details,
 		Description: fmt.Sprintf("App %s/%s deleted", obj.GetNamespace(), obj.GetName()),
 		Source:      event.ObjectSource(obj),
-		Observed:    metav1.NowMicro(),
+		Observed:    v1.MicroTime(metav1.NowMicro()),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
@@ -170,7 +170,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 		Details:     details,
 		Description: fmt.Sprintf("Spec field updated for App %s/%s", obj.GetNamespace(), obj.GetName()),
 		Source:      event.ObjectSource(obj),
-		Observed:    metav1.NowMicro(),
+		Observed:    v1.MicroTime(metav1.NowMicro()),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err)
 	}

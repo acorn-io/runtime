@@ -92,7 +92,7 @@ func withMeta[T kclient.Object](name, uid, resourceVersion string, obj T) T {
 
 func TestPullAppImageEvents(t *testing.T) {
 	// Test cases below this comment ensure the handler produces the correct events
-	now := metav1.NowMicro()
+	now := v1.MicroTime(metav1.NowMicro())
 	// Manual upgrade should record an event
 	testRecordPullEvent(t,
 		"ImageChange",
@@ -106,7 +106,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
 			Source:      v1.EventSource{Kind: "app", Name: "foo", UID: types.UID("foo-uid")},
-			Observed:    now,
+			Observed:    v1.MicroTime(now),
 			Details: mustMapify(t, AppImagePullEventDetails{
 				ResourceVersion: "1",
 				AutoUpgrade:     false,
@@ -129,7 +129,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
 			Source:      v1.EventSource{Kind: "app", Name: "foo"},
-			Observed:    now,
+			Observed:    v1.MicroTime(now),
 			Details: mustMapify(t, AppImagePullEventDetails{
 				AutoUpgrade: true,
 				Previous:    ImageSummary{Name: "acorn.io/img:1"},
@@ -150,7 +150,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
 			Source:      v1.EventSource{Kind: "app", Name: "foo"},
-			Observed:    now,
+			Observed:    v1.MicroTime(now),
 			Details: mustMapify(t, AppImagePullEventDetails{
 				AutoUpgrade: true,
 				Target:      ImageSummary{Name: "acorn.io/img:1"},
@@ -236,7 +236,7 @@ func pullImageTo(image *v1.AppImage, err error) pullImageFunc {
 	}
 }
 
-func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInstance, resolve resolveImageFunc, pull pullImageFunc, now metav1.MicroTime, expect *apiv1.Event) {
+func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInstance, resolve resolveImageFunc, pull pullImageFunc, now v1.MicroTime, expect *apiv1.Event) {
 	t.Helper()
 	var recording []*apiv1.Event
 	fakeRecorder := func(_ context.Context, e *apiv1.Event) error {
@@ -249,7 +249,7 @@ func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInsta
 		resolve:  resolve,
 		pull:     pull,
 		now: func() metav1.MicroTime {
-			return now
+			return metav1.MicroTime(now)
 		},
 	})
 

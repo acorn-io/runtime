@@ -145,6 +145,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageInstanceList":                     schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImagesData":                            schema_pkg_apis_internalacornio_v1_ImagesData(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus":                             schema_pkg_apis_internalacornio_v1_JobStatus(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime":                             schema_pkg_apis_internalacornio_v1_MicroTime(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue":                             schema_pkg_apis_internalacornio_v1_NameValue(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Param":                                 schema_pkg_apis_internalacornio_v1_Param(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ParamSpec":                             schema_pkg_apis_internalacornio_v1_ParamSpec(ref),
@@ -2738,7 +2739,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
+							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime"),
 						},
 					},
 					"details": {
@@ -2761,7 +2762,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -7308,7 +7309,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime"),
+							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime"),
 						},
 					},
 					"details": {
@@ -7331,7 +7332,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -8086,6 +8087,27 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_MicroTime(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "MicroTime represents a time with microsecond level precision.\n\nIt extends metav1.MicroTime to allow unmarshaling from RFC3339.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"Time": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Type:    []string{"string"},
+							Format:  "date-time",
+						},
+					},
+				},
+				Required: []string{"Time"},
+			},
+		},
 	}
 }
 

@@ -195,7 +195,7 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 		Severity:    v1.EventSeverityInfo,
 		Description: fmt.Sprintf("Pulled %s", target.Name),
 		Source:      event.ObjectSource(obj),
-		Observed:    observed,
+		Observed:    v1.MicroTime(observed),
 	}
 	e.SetNamespace(obj.GetNamespace())
 
