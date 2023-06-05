@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/spf13/cobra"
@@ -57,6 +59,14 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	args = args[1:]
 
+	isDependent, err := s.isDependentName(cmd.Context(), name)
+	if err != nil {
+		return err
+	} else if isDependent {
+		return fmt.Errorf(`acorn update does not support directly updating services or nested Acorns.
+Instead, update and rebuild the image for the parent Acorn with references to different Acorn images for any services or nested Acorns you want to update.`)
+	}
+
 	s.RunArgs.Name = name
 
 	if s.ConfirmUpgrade && s.Pull {
@@ -90,4 +100,36 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 		client:  s.client,
 	}
 	return r.Run(cmd, append([]string{s.Image}, args...))
+}
+
+// isDependentName checks whether the app name passed by the user is dependent on a parent app.
+// This is the case for nested Acorns and for services. The format is <parent name>.<dependent name>.
+func (s *Update) isDependentName(ctx context.Context, name string) (bool, error) {
+	appName, dependentName, isDependent := strings.Cut(name, ".")
+	if isDependent {
+		// try to find the app
+		client, err := s.client.CreateDefault()
+		if err != nil {
+			return false, err
+		}
+		app, err := client.AppGet(ctx, appName)
+		if err != nil {
+			return false, err
+		}
+
+		// check if the app contains a service that matches the dependentName
+		for serviceName := range app.Status.AppSpec.Services {
+			if serviceName == dependentName {
+				return true, nil
+			}
+		}
+		// check if the app contains a nested Acorn that matches the dependentName
+		for acornName := range app.Status.AppSpec.Acorns {
+			if acornName == dependentName {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
