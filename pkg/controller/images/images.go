@@ -13,7 +13,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateImages(req router.Request, resp router.Response) error {
+func CreateImages(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	if app.Status.AppImage.ID == "" || app.Status.AppImage.Digest == "" {
 		return nil
@@ -103,14 +103,15 @@ func createImageForSelf(req router.Request, app *v1.AppInstance) (*v1.ImageInsta
 				return image, nil
 			}
 		}
-	}
 
-	// remove tag from existing images
-	if err := removeTag(req, app, imageName); err != nil {
-		return nil, err
-	}
+		// If a new image is built with the same tag as the image used for this app,
+		// then we don't want to take the tag from the newly built image.
+		if found, err := checkExistingImages(req, app, imageName); err != nil {
+			return nil, err
+		} else if found {
+			return image, nil
+		}
 
-	if update {
 		tags := []string{imageName}
 		for _, tag := range image.Tags {
 			if tag == ref.Context().String() {
@@ -139,35 +140,22 @@ func createImageForSelf(req router.Request, app *v1.AppInstance) (*v1.ImageInsta
 	return image, req.Client.Create(req.Ctx, image)
 }
 
-func removeTag(req router.Request, app *v1.AppInstance, tag string) error {
+func checkExistingImages(req router.Request, app *v1.AppInstance, tag string) (bool, error) {
 	images := &v1.ImageInstanceList{}
 	err := req.List(images, &kclient.ListOptions{
 		Namespace: app.Namespace,
 	})
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	for _, image := range images.Items {
-		if len(image.Tags) == 0 {
-			continue
-		}
-
-		newTags := make([]string, 0, len(image.Tags))
 		for _, existingTag := range image.Tags {
 			if existingTag == tag {
-				continue
-			}
-			newTags = append(newTags, existingTag)
-		}
-
-		if len(newTags) != len(image.Tags) {
-			image.Tags = newTags
-			if err := req.Client.Update(req.Ctx, &image); err != nil {
-				return err
+				return true, nil
 			}
 		}
 	}
 
-	return nil
+	return false, nil
 }
