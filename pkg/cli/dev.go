@@ -4,6 +4,8 @@ import (
 	"io"
 
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/dev"
+	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/spf13/cobra"
 )
 
@@ -44,13 +46,23 @@ type Dev struct {
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
-	run := Run{
-		RunArgs:           s.RunArgs,
-		Dev:               true,
-		BidirectionalSync: s.BidirectionalSync,
-		Replace:           s.Replace,
-		out:               s.out,
-		client:            s.client,
+	c, err := s.client.CreateDefault()
+	if err != nil {
+		return err
 	}
-	return run.Run(cmd, args)
+
+	imageSource := imagesource.NewImageSource(s.File, args, s.Profile, nil)
+
+	opts, err := s.ToOpts()
+	if err != nil {
+		return err
+	}
+
+	return dev.Dev(cmd.Context(), c, &dev.Options{
+		ImageSource:       imageSource,
+		Run:               opts,
+		Replace:           s.Replace,
+		Dangerous:         s.Dangerous,
+		BidirectionalSync: s.BidirectionalSync,
+	})
 }

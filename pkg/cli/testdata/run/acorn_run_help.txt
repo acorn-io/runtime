@@ -53,7 +53,5 @@ Flags:
   -o, --output string     Output API request without creating app (json, yaml)
       --profile strings   Profile to assign default values
   -q, --quiet             Do not print status
-      --replace           Replace the app with only defined values, resetting undefined fields to default values
-  -u, --update            Update the app if it already exists
       --wait              Wait for app to become ready before command exiting (default: true)
 
