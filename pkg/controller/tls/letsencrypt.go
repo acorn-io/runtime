@@ -563,14 +563,35 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 		return nil, err
 	}
 
-	// Setup and query test acme-challenge endpoint. This will ensure the networking from ingress to server is working
-	// before attempting to request the cert
-	err = httpProviderServer.Present(domain, "test", "test")
-	if err != nil {
-		return nil, fmt.Errorf("failed to present test acme-challenge. %w", err)
+	if err = ensureChallengeEndpoint(ctx, httpProviderServer, domain); err != nil {
+		return nil, fmt.Errorf("failed to successfully hit test acme-challenge endpoint. %w", err)
 	}
 
-	err = wait.ExponentialBackoffWithContext(ctx, wait.Backoff{
+	// Try to obtain the certificate
+	request := certificate.ObtainRequest{
+		Domains: []string{strings.TrimPrefix(domain, ".")},
+		Bundle:  true,
+	}
+
+	return client.Certificate.Obtain(request)
+}
+
+func ensureChallengeEndpoint(ctx context.Context, provider *http01.ProviderServer, domain string) error {
+	// Setup and query test acme-challenge endpoint. This will ensure the networking from ingress to server is working
+	// before attempting to request the cert
+	if err := provider.Present(domain, "test", "test"); err != nil {
+		return fmt.Errorf("failed to present test acme-challenge. %w", err)
+	}
+
+	defer func() {
+		// The provider will only present a single token at a time, must cleanup.
+		cleanupErr := provider.CleanUp(domain, "test", "test")
+		if cleanupErr != nil {
+			logrus.Errorf("Failed to cleanup test acme-challenge. %v", cleanupErr)
+		}
+	}()
+
+	return wait.ExponentialBackoffWithContext(ctx, wait.Backoff{
 		Duration: 1 * time.Second,
 		Factor:   2,
 		Steps:    10,
@@ -589,23 +610,4 @@ func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate
 		}
 		return false, nil
 	})
-
-	// The provider will only present a single token at a time. Cleanup before attempting to obtain cert.
-	// Need to do this before potentially returning from ExponentialBackoffWithContext's error
-	cleanupErr := httpProviderServer.CleanUp(domain, "test", "test")
-	if cleanupErr != nil {
-		logrus.Errorf("Failed to cleanup test acme-challenge. %v", cleanupErr)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to successfully hit test acme-challenge endpoint. %w", err)
-	}
-
-	// Try to obtain the certificate
-	request := certificate.ObtainRequest{
-		Domains: []string{strings.TrimPrefix(domain, ".")},
-		Bundle:  true,
-	}
-
-	return client.Certificate.Obtain(request)
 }
