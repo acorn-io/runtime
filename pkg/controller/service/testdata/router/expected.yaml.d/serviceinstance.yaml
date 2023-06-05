@@ -1,0 +1,50 @@
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: router-name
+  namespace: app-created-namespace
+  uid: 1234567890abcdef
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+spec:
+  publishMode: all
+  appName: app-name
+  appNamespace: app-namespace
+  default: true
+  routes:
+    - pathType: exact
+      path: /foo
+      targetServiceName: foo-target
+      targetServicePort: 1234
+    - pathType: prefix
+      path: /zzzz
+      targetServiceName: zzz-target
+      targetServicePort: 8080
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  ports:
+    - name: "80"
+      port: 80
+      protocol: http
+      targetPort: 8080
+  containerLabels:
+    acorn.io/app-name: app-name
+    acorn.io/router-name: router-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+status:
+  hasService: true
+  conditions:
+  - reason: Success
+    status: "True"
+    success: true
+    type: defined
+  endpoints:
+  - address: router-name-app-name-3de5df49.local.oss-acorn.io
+    publishProtocol: http

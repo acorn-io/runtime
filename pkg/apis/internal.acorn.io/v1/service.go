@@ -29,6 +29,7 @@ type ServiceInstance struct {
 type ServiceInstanceStatus struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 	Endpoints  []Endpoint  `json:"endpoints,omitempty"`
+	HasService bool        `json:"hasService,omitempty"`
 }
 
 func (in *ServiceInstance) ShortID() string {

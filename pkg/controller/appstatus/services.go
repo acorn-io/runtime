@@ -19,7 +19,7 @@ import (
 
 func (a *appStatusRenderer) readServices() error {
 	// reset state
-	a.app.Status.AppStatus.Services = map[string]v1.ServiceStatus{}
+	a.app.Status.AppStatus.Services = make(map[string]v1.ServiceStatus, len(a.app.Status.AppSpec.Services))
 
 	for serviceName, serviceDef := range a.app.Status.AppSpec.Services {
 		s := v1.ServiceStatus{
@@ -28,8 +28,7 @@ func (a *appStatusRenderer) readServices() error {
 			},
 		}
 
-		ready, found := a.isServiceReady(serviceName)
-		s.Defined = found
+		s.Ready, s.Defined = a.isServiceReady(serviceName)
 
 		if s.LinkOverride == "" && serviceDef.Image != "" {
 			s.ServiceAcornName = publicname.ForChild(a.app, serviceName)
@@ -45,15 +44,18 @@ func (a *appStatusRenderer) readServices() error {
 
 		service := &v1.ServiceInstance{}
 		if err := ref.Lookup(a.ctx, a.c, service, a.app.Status.Namespace, serviceName); apierrors.IsNotFound(err) {
+			s.Ready = false
+			s.Defined = false
 			a.app.Status.AppStatus.Services[serviceName] = s
 			continue
 		} else if err != nil {
 			return err
 		}
 
+		s.Defined = s.Defined || !service.Status.HasService
 		s.UpToDate = service.Namespace != a.app.Status.Namespace ||
 			service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-		s.Ready = ready && s.UpToDate
+		s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
 		if s.ServiceAcornName != "" {
 			s.Ready = s.Ready && s.ServiceAcornReady
 		}
@@ -115,7 +117,7 @@ func (a *appStatusRenderer) isServiceReadyByNamespace(namespace, svc string) (re
 	}
 
 	if svcDep.Labels[labels.AcornManaged] != "true" {
-		// for services we don't managed just return ready always
+		// for services we don't manage, just return ready always
 		return true, true
 	}
 
