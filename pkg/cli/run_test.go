@@ -25,7 +25,9 @@ import (
 func TestRunArgs_Env(t *testing.T) {
 	os.Setenv("x222", "y333")
 	runArgs := RunArgs{
-		Env: []string{"x222", "y=1"},
+		UpdateArgs: UpdateArgs{
+			Env: []string{"x222", "y=1"},
+		},
 	}
 	opts, err := runArgs.ToOpts()
 	if err != nil {
