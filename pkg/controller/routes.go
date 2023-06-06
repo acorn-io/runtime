@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/controller/config"
 	"github.com/acorn-io/acorn/pkg/controller/defaults"
 	"github.com/acorn-io/acorn/pkg/controller/devsession"
+	"github.com/acorn-io/acorn/pkg/controller/eventinstance"
 	"github.com/acorn-io/acorn/pkg/controller/gc"
 	"github.com/acorn-io/acorn/pkg/controller/images"
 	"github.com/acorn-io/acorn/pkg/controller/ingress"
@@ -87,6 +88,9 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)
+
+	router.Type(&v1.EventInstance{}).HandlerFunc(eventinstance.GCExpired())
+
 	router.Type(&batchv1.Job{}).Selector(managedSelector).HandlerFunc(jobs.JobCleanup)
 	router.Type(&rbacv1.ClusterRole{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&rbacv1.ClusterRoleBinding{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
