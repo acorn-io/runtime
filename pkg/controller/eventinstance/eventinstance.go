@@ -3,25 +3,26 @@ package eventinstance
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/baaah/pkg/router"
+	"golang.org/x/sync/semaphore"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const defaultTTL = 168 * time.Hour // 7 days
+const defaultTTL = 7 * 24 * time.Hour
 
 func GCExpired() router.HandlerFunc {
-	// last stores pre-parsed TTLs from the configuration.
-	last := new(struct {
-		mu  sync.Mutex
+	sem := semaphore.NewWeighted(1)
+
+	// parsed stores pre-parsed TTLs from the configuration.
+	var parsed struct {
 		raw string
 		ttl time.Duration
-	})
+	}
 
 	return handler{
 		getTTL: func(ctx context.Context, getter kclient.Reader) (time.Duration, error) {
@@ -35,29 +36,29 @@ func GCExpired() router.HandlerFunc {
 				return defaultTTL, nil
 			}
 
-			last.mu.Lock()
-			defer last.mu.Unlock()
+			if err := sem.Acquire(ctx, 1); err != nil {
+				return 0, fmt.Errorf("failed to acquire ttl semaphore: %w", err)
+			}
+			defer sem.Release(1)
 
-			if last.raw != *cfgTTL {
+			if parsed.raw != *cfgTTL {
 				// This is a new TTL, parse and memoize
 				ttl, err := time.ParseDuration(*cfgTTL)
 				if err != nil {
 					return 0, err
 				}
 
-				last.raw, last.ttl = *cfgTTL, ttl
+				parsed.raw, parsed.ttl = *cfgTTL, ttl
 			}
 
-			return last.ttl, nil
+			return parsed.ttl, nil
 		},
 	}.gcExpired
 }
 
-// ttlFunc is a function that returns the TTL to use for event expiration.
-type ttlFunc func(context.Context, kclient.Reader) (time.Duration, error)
-
 type handler struct {
-	getTTL ttlFunc
+	// getTTL returns the TTL to use for event expiration.
+	getTTL func(context.Context, kclient.Reader) (time.Duration, error)
 }
 
 func (h handler) gcExpired(req router.Request, resp router.Response) error {
