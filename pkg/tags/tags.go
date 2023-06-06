@@ -84,6 +84,7 @@ func ResolveLocal(ctx context.Context, c kclient.Client, namespace, image string
 		if IsLocalReference(image) {
 			return "", false, err
 		}
+		return image, false, nil
 	} else if err != nil {
 		return "", false, err
 	}

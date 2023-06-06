@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -460,4 +461,38 @@ func TestAppRun(t *testing.T) {
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
 	assert.Equal(t, "secret", app.Spec.Secrets[0].Secret)
 	assert.Equal(t, "value", app.Spec.DeployArgs["key"])
+}
+
+func TestAppRunImageVariations(t *testing.T) {
+	helper.EnsureCRDs(t)
+	restConfig := helper.StartAPI(t)
+
+	ctx := helper.GetCTX(t)
+	kclient := helper.MustReturn(kclient.Default)
+	ns := helper.TempNamespace(t, kclient)
+
+	imageID := client2.NewImage(t, ns.Name)
+
+	c, err := client.New(restConfig, "", ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := c.ImageTag(ctx, imageID, "foo/bar:baz"); err != nil {
+		t.Fatal(err)
+	}
+
+	imageNames := []string{
+		"foo/bar:baz",
+		imageID,
+		fmt.Sprintf("sha256:%s", imageID),
+		imageID[:8],
+	}
+
+	for _, imageName := range imageNames {
+		_, err := c.AppRun(ctx, imageName, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 }
