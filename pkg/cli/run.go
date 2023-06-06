@@ -303,6 +303,7 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 	if s.Name == "" {
 		return nil, false, fmt.Errorf("--name is required for --update or --replace")
 	}
+
 	app, err := c.AppGet(ctx, s.Name)
 	if apierror.IsNotFound(err) {
 		if !imageSource.IsImageSet() {
