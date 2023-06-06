@@ -1,0 +1,161 @@
+`apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    allconsa1: value
+    cona1: value
+    cona3: value
+    globala1: value
+    globala2: value
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: con1
+    acorn.io/managed: "true"
+    allconsl1: value
+    conl1: value
+    conl3: value
+    globall1: value
+    globall2: value
+  name: con1
+  namespace: app-created-namespace
+spec:
+  ports:
+  - appProtocol: HTTP
+    name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 81
+  selector:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: con1
+    acorn.io/managed: "true"
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    allconsa1: value
+    cona1: value
+    cona3: value
+    globala1: value
+    globala2: value
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: con1
+    acorn.io/managed: "true"
+    allconsl1: value
+    conl1: value
+    conl3: value
+    globall1: value
+    globall2: value
+  name: app-name
+  namespace: app-namespace
+spec:
+  externalName: con1.app-created-namespace.svc.cluster.local
+  ports:
+  - appProtocol: HTTP
+    name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 81
+  type: ExternalName
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acorn.io/targets: '{"con1-app-name-2aaa2251.local.oss-acorn.io":{"port":81,"service":"con1"}}'
+    allconsa1: value
+    cona1: value
+    cona3: value
+    globala1: value
+    globala2: value
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: con1
+    acorn.io/managed: "true"
+    allconsl1: value
+    conl1: value
+    conl3: value
+    globall1: value
+    globall2: value
+  name: con1
+  namespace: app-created-namespace
+spec:
+  rules:
+  - host: con1-app-name-2aaa2251.local.oss-acorn.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: con1
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: con1
+    acorn.io/managed: "true"
+  name: con1
+  namespace: app-created-namespace
+spec:
+  annotations:
+    allconsa1: value
+    cona1: value
+    cona3: value
+    globala1: value
+    globala2: value
+  appName: app-name
+  appNamespace: app-namespace
+  container: con1
+  default: true
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: con1
+    acorn.io/managed: "true"
+    allconsl1: value
+    conl1: value
+    conl3: value
+    globall1: value
+    globall2: value
+  ports:
+  - port: 80
+    protocol: http
+    publish: true
+    targetPort: 81
+status:
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  endpoints:
+  - address: con1-app-name-2aaa2251.local.oss-acorn.io
+    publishProtocol: http
+  hasService: true
+`

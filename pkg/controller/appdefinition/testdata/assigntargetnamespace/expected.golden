@@ -1,0 +1,49 @@
+`apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: default
+  namespace: random
+  uid: 1234567890abcdef
+spec:
+  targetNamespace: foo
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: namespace
+  defaults: {}
+  namespace: foo
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: default
+  namespace: random
+  uid: 1234567890abcdef
+spec:
+  targetNamespace: foo
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: namespace
+  defaults: {}
+  namespace: foo
+`

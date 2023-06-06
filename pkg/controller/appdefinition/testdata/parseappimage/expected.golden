@@ -1,0 +1,49 @@
+`apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: default
+  namespace: random
+spec: {}
+status:
+  appImage:
+    acornfile: |
+      containers: {
+        oneimage: image: "image-name"
+        buildimage: build: {
+          dockerfile: "custom-dockerfile"
+        }
+      }
+    imageData:
+      containers:
+        buildimage:
+          image: sha256:build-image
+        oneimage:
+          image: image-name
+    vcs: {}
+  appSpec:
+    containers:
+      buildimage:
+        build:
+          context: .
+          dockerfile: custom-dockerfile
+        image: sha256:build-image
+        permissions: {}
+        probes: null
+      oneimage:
+        build:
+          baseImage: image-name
+          context: .
+          dockerfile: Dockerfile
+        image: image-name
+        permissions: {}
+        probes: null
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: parsed
+  defaults: {}
+`

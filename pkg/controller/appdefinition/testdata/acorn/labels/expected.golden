@@ -1,0 +1,248 @@
+`apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.acorn-name
+  name: acorn-name
+  namespace: app-created-namespace
+spec:
+  annotations:
+    allacornsa: value
+    global2a: value
+    globala: value
+    override2: outervalue
+  appName: app-name
+  appNamespace: app-namespace
+  default: true
+  external: app-name.acorn-name
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    allacorns: value
+    global: value
+    global2: value
+    nestedglobal: value
+    override1: outervalue
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/original-image: foo
+    allacornsa: value
+    global2a: value
+    globala: value
+    override2: outervalue
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/parent-acorn-name: app-name
+    acorn.io/public-name: app-name.acorn-name
+    allacorns: value
+    global: value
+    global2: value
+    nestedglobal: value
+    override1: outervalue
+  name: app-name-acorn-name-01b5d4ac
+  namespace: app-namespace
+spec:
+  annotations:
+  - key: globala
+    value: value
+  - key: allacornsa
+    resourceType: acorn
+    value: value
+  - key: acorn1a
+    resourceName: acorn1
+    resourceType: acorn
+    value: value
+  - key: override2
+    value: innervalue
+  - key: globala
+    value: value
+  - key: allacornsa
+    resourceType: acorn
+    value: value
+  - key: acorn1a
+    resourceName: acorn1
+    resourceType: acorn
+    value: value
+  - key: override2
+    resourceType: acorn
+    value: outervalue
+  image: foo
+  labels:
+  - key: nestedglobal
+    value: value
+  - key: nestedallcontainers
+    resourceType: container
+    value: value
+  - key: nestedcontainer1
+    resourceName: nestedcontainer1
+    resourceType: container
+    value: value
+  - key: inboth
+    resourceName: inboth
+    resourceType: container
+    value: innervalue
+  - key: override1
+    resourceType: metadata
+    value: innervalue
+  - key: global
+    value: value
+  - key: allacorns
+    resourceType: acorn
+    value: value
+  - key: acorn1
+    resourceName: acorn1
+    resourceType: acorn
+    value: value
+  - key: bad1
+    resourceName: acorn2
+    resourceType: acorn
+    value: value
+  - key: bad2
+    resourceType: container
+    value: value
+  - key: inboth
+    resourceName: inboth
+    resourceType: container
+    value: outervalue
+  - key: override1
+    value: outervalue
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  defaults: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: acorn-name-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  annotations:
+  - key: globala
+    value: value
+  - key: allacornsa
+    resourceType: acorn
+    value: value
+  - key: acorn1a
+    resourceName: acorn1
+    resourceType: acorn
+    value: value
+  - key: override2
+    resourceType: acorn
+    value: outervalue
+  image: test
+  labels:
+  - key: global
+    value: value
+  - key: allacorns
+    resourceType: acorn
+    value: value
+  - key: acorn1
+    resourceName: acorn1
+    resourceType: acorn
+    value: value
+  - key: bad1
+    resourceName: acorn2
+    resourceType: acorn
+    value: value
+  - key: bad2
+    resourceType: container
+    value: value
+  - key: inboth
+    resourceName: inboth
+    resourceType: container
+    value: outervalue
+  - key: override1
+    value: outervalue
+status:
+  appImage:
+    id: foo
+    imageData: {}
+    vcs: {}
+  appSpec:
+    acorns:
+      acorn-name:
+        annotations:
+        - key: globala
+          value: value
+        - key: allacornsa
+          resourceType: acorn
+          value: value
+        - key: acorn1a
+          resourceName: acorn1
+          resourceType: acorn
+          value: value
+        - key: override2
+          value: innervalue
+        image: foo
+        labels:
+        - key: nestedglobal
+          value: value
+        - key: nestedallcontainers
+          resourceType: container
+          value: value
+        - key: nestedcontainer1
+          resourceName: nestedcontainer1
+          resourceType: container
+          value: value
+        - key: inboth
+          resourceName: inboth
+          resourceType: container
+          value: innervalue
+        - key: override1
+          resourceType: metadata
+          value: innervalue
+    annotations:
+      global2a: value
+    labels:
+      global2: value
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+`

@@ -1,0 +1,261 @@
+`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  name: router-name
+  namespace: app-created-namespace
+spec:
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/managed: "true"
+      acorn.io/router-name: router-name
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/managed: "true"
+        acorn.io/router-name: router-name
+    spec:
+      containers:
+      - args:
+        - nginx
+        - -g
+        - daemon off;
+        command:
+        - /docker-entrypoint.sh
+        image: ghcr.io/acorn-io/acorn:main
+        name: nginx
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/nginx/conf.d/nginx.conf
+          name: conf
+          readOnly: true
+          subPath: config
+      enableServiceLinks: false
+      serviceAccountName: router-name
+      terminationGracePeriodSeconds: 5
+      tolerations:
+      - key: taints.acorn.io/workload
+        operator: Exists
+      volumes:
+      - configMap:
+          name: router-name-5f5b2f6b
+        name: conf
+status: {}
+
+---
+apiVersion: v1
+data:
+  config: |
+    server {
+    listen 8080;
+    location = /foo {
+      proxy_pass http://foo-target:80;
+    }
+    location = /zzzz {
+      proxy_pass http://zzz-target:80;
+    }
+    location /zzzz/ {
+      proxy_pass http://zzz-target:80;
+    }
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: router-name-5f5b2f6b
+  namespace: app-created-namespace
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  name: router-name
+  namespace: app-created-namespace
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  name: router-name
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 25%
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/managed: "true"
+      acorn.io/router-name: router-name
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.foo-target
+    acorn.io/service-name: foo-target
+  name: foo-target
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: foo-target
+  publishMode: all
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.zzz-target
+    acorn.io/service-name: zzz-target
+  name: zzz-target
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: zzz-target
+  publishMode: all
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.router-name
+    acorn.io/router-name: router-name
+  name: router-name
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  containerLabels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/router-name: router-name
+  ports:
+  - port: 80
+    protocol: http
+    publish: true
+    targetPort: 8080
+  publishMode: all
+  routes:
+  - path: /foo
+    pathType: exact
+    targetServiceName: foo-target
+  - path: /zzzz
+    pathType: prefix
+    targetServiceName: zzz-target
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  publishMode: all
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    routers:
+      router-name:
+        routes:
+        - path: /foo
+          pathType: exact
+          targetServiceName: foo-target
+        - path: /zzzz
+          pathType: prefix
+          targetServiceName: zzz-target
+    services:
+      foo-target: {}
+      zzz-target: {}
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+`

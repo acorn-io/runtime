@@ -1,0 +1,172 @@
+`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: oneimage
+      acorn.io/managed: "true"
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"image":"image-name","probes":null,"sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name","probes":null}}}'
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: oneimage
+        acorn.io/managed: "true"
+    spec:
+      containers:
+      - image: image-name
+        name: oneimage
+        resources: {}
+      - image: image-name
+        name: sidecar
+        resources: {}
+        volumeMounts:
+        - mountPath: /content-test
+          name: secrets-1234567890ab
+          subPath: cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2
+        - mountPath: /sidecar-content-test-mode
+          name: secrets-1234567890ab-0755
+          subPath: d352de740e4a487eb6c62532a76323325097b77814837dca9babeed0e67be730
+      enableServiceLinks: false
+      hostname: oneimage
+      imagePullSecrets:
+      - name: oneimage-pull-1234567890ab
+      serviceAccountName: oneimage
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: secrets-1234567890ab
+        secret:
+          secretName: secrets-1234567890ab
+      - name: secrets-1234567890ab-0755
+        secret:
+          defaultMode: 493
+          secretName: secrets-1234567890ab
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 25%
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: oneimage
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: oneimage-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  cae662172fd450bb0cd710a769079c05bfc5d8e35efa6576edc7d0377afdd4a2: YmFzZQ==
+  d352de740e4a487eb6c62532a76323325097b77814837dca9babeed0e67be730: c2lkZWNhci1tb2Rl
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+  name: secrets-1234567890ab
+  namespace: app-created-namespace
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      oneimage:
+        image: image-name
+        probes: null
+        sidecars:
+          sidecar:
+            files:
+              content-test:
+                content: YmFzZQ==
+                mode: "0644"
+                secret: {}
+              sidecar-content-test-mode:
+                content: c2lkZWNhci1tb2Rl
+                mode: "0755"
+                secret: {}
+            image: image-name
+            probes: null
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+`
