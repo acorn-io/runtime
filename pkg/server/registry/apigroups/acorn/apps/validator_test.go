@@ -2,10 +2,12 @@ package apps
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -111,5 +113,27 @@ func TestCannotChangeAppRegion(t *testing.T) {
 				t.Fatalf("Expected error, got nil")
 			}
 		})
+	}
+}
+
+func TestCannotUpdateNestedAcorn(t *testing.T) {
+	validator := &Validator{}
+
+	oldApp := apiv1.App{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "myapp.nested",
+		},
+	}
+	newApp := apiv1.App{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "myapp.nested",
+		},
+	}
+
+	if err := validator.ValidateUpdate(context.Background(), &newApp, &oldApp); err == nil {
+		t.Fatalf("Expected error, got no error")
+	} else {
+		assert.True(t, len(err) > 0)
+		assert.True(t, strings.Contains(err[0].Error(), "update the parent Acorn"))
 	}
 }
