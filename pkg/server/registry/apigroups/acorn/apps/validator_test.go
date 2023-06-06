@@ -7,6 +7,7 @@ import (
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -122,11 +123,17 @@ func TestCannotUpdateNestedAcorn(t *testing.T) {
 	oldApp := apiv1.App{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "myapp.nested",
+			Labels: map[string]string{
+				labels.AcornParentAcornName: "myapp",
+			},
 		},
 	}
 	newApp := apiv1.App{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "myapp.nested",
+			Labels: map[string]string{
+				labels.AcornParentAcornName: "myapp",
+			},
 		},
 	}
 
