@@ -15,6 +15,7 @@ import (
 	apiv1config "github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
+	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/pullsecret"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/volume"
@@ -156,7 +157,7 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	newParams := obj.(*apiv1.App)
 	oldParams := old.(*apiv1.App)
 
-	if len(strings.Split(newParams.Name, ".")) == 2 && newParams.Name == oldParams.Name {
+	if len(strings.Split(newParams.Name, ".")) == 2 && newParams.Name == oldParams.Name && newParams.Labels[labels.AcornParentAcornName] != "" {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), newParams.Name, "invalid name\nTo update a nested Acorn or a service, update the parent Acorn instead."))
 		return result
 	}
