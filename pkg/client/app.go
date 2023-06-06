@@ -70,6 +70,12 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 }
 
 func (c *DefaultClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+	img, err := c.ImageGet(ctx, image)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	} else if img != nil {
+		image = img.Name
+	}
 	app := ToApp(c.Namespace, image, opts)
 	return app, translateErr(c.Client.Create(ctx, app))
 }
@@ -96,6 +102,12 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 
 	if opts.Image != "" {
+		img, err := c.ImageGet(ctx, opts.Image)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return nil, err
+		} else if img != nil {
+			opts.Image = img.Name
+		}
 		app.Spec.Image = opts.Image
 	}
 
