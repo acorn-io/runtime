@@ -4,15 +4,13 @@ import (
 	"net/http"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/controller/devsession"
-	discoveryv1 "k8s.io/api/discovery/v1"
-
 	"github.com/acorn-io/acorn/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
 	"github.com/acorn-io/acorn/pkg/controller/appstatus"
 	"github.com/acorn-io/acorn/pkg/controller/builder"
 	"github.com/acorn-io/acorn/pkg/controller/config"
 	"github.com/acorn-io/acorn/pkg/controller/defaults"
+	"github.com/acorn-io/acorn/pkg/controller/devsession"
 	"github.com/acorn-io/acorn/pkg/controller/gc"
 	"github.com/acorn-io/acorn/pkg/controller/images"
 	"github.com/acorn-io/acorn/pkg/controller/ingress"
@@ -80,7 +78,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 
 	router.Type(&v1.DevSessionInstance{}).HandlerFunc(devsession.ExpireDevSession)
 
-	router.Type(&v1.ServiceInstance{}).DisablePruningForTypes(&corev1.Endpoints{}, &discoveryv1.EndpointSlice{}).HandlerFunc(service.RenderServices)
+	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.SetRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
