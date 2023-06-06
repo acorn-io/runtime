@@ -114,25 +114,7 @@ func (s *Update) Run(cmd *cobra.Command, args []string) error {
 
 func (s *Update) getRunArgs(name string) RunArgs {
 	return RunArgs{
-		Name:            name,
-		Region:          s.UpdateArgs.Region,
-		File:            s.UpdateArgs.File,
-		Volume:          s.UpdateArgs.Volume,
-		Secret:          s.UpdateArgs.Secret,
-		Link:            s.UpdateArgs.Link,
-		PublishAll:      s.UpdateArgs.PublishAll,
-		Publish:         s.UpdateArgs.Publish,
-		Profile:         s.UpdateArgs.Profile,
-		Env:             s.UpdateArgs.Env,
-		Label:           s.UpdateArgs.Label,
-		Annotation:      s.UpdateArgs.Annotation,
-		Dangerous:       s.UpdateArgs.Dangerous,
-		Output:          s.UpdateArgs.Output,
-		TargetNamespace: s.UpdateArgs.TargetNamespace,
-		NotifyUpgrade:   s.UpdateArgs.NotifyUpgrade,
-		AutoUpgrade:     s.UpdateArgs.AutoUpgrade,
-		Interval:        s.UpdateArgs.Interval,
-		Memory:          s.UpdateArgs.Memory,
-		ComputeClass:    s.UpdateArgs.ComputeClass,
+		Name:       name,
+		UpdateArgs: s.UpdateArgs,
 	}
 }
