@@ -156,6 +156,11 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	newParams := obj.(*apiv1.App)
 	oldParams := old.(*apiv1.App)
 
+	if len(strings.Split(newParams.Name, ".")) == 2 && newParams.Name == oldParams.Name {
+		result = append(result, field.Invalid(field.NewPath("metadata", "name"), newParams.Name, "invalid name\nTo update a nested Acorn or a service, update the parent Acorn instead."))
+		return result
+	}
+
 	if oldParams.Status.GetDevMode() {
 		result = append(result, field.Invalid(field.NewPath("status", "devSession"), "", "app is locked by dev session"))
 		return result

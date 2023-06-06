@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -305,14 +304,6 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 		return nil, false, fmt.Errorf("--name is required for --update or --replace")
 	}
 
-	isDependent, err := s.isDependentName(ctx, s.Name)
-	if err != nil {
-		return nil, false, err
-	} else if isDependent {
-		return nil, false, fmt.Errorf(`acorn update does not support directly updating services or nested Acorns.
-Instead, update and rebuild the image for the parent Acorn with references to different Acorn images for any services or nested Acorns you want to update.`)
-	}
-
 	app, err := c.AppGet(ctx, s.Name)
 	if apierror.IsNotFound(err) {
 		if !imageSource.IsImageSet() {
@@ -393,36 +384,4 @@ func setAdvancedHelp(cmd *cobra.Command, hideRunFlags []string, advancedHelp str
 		fmt.Println(cmd.UsageString())
 		fmt.Println(advancedHelp)
 	})
-}
-
-// isDependentName checks whether the app name passed by the user is dependent on a parent app.
-// This is the case for nested Acorns and for services. The format is <parent name>.<dependent name>.
-func (s *Run) isDependentName(ctx context.Context, name string) (bool, error) {
-	appName, dependentName, isDependent := strings.Cut(name, ".")
-	if isDependent {
-		// try to find the app
-		client, err := s.client.CreateDefault()
-		if err != nil {
-			return false, err
-		}
-		app, err := client.AppGet(ctx, appName)
-		if err != nil {
-			return false, err
-		}
-
-		// check if the app contains a service that matches the dependentName
-		for serviceName := range app.Status.AppSpec.Services {
-			if serviceName == dependentName {
-				return true, nil
-			}
-		}
-		// check if the app contains a nested Acorn that matches the dependentName
-		for acornName := range app.Status.AppSpec.Acorns {
-			if acornName == dependentName {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
 }
