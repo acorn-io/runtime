@@ -10,3 +10,7 @@ import (
 func TestAcornLabels(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/acorn/labels", DeploySpec)
 }
+
+func TestAcornBasic(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/acorn/basic", DeploySpec)
+}
