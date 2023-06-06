@@ -184,5 +184,11 @@ func jsonPatch(from, to any) (json.RawMessage, error) {
 		return nil, err
 	}
 
+	if len(patch) < 1 {
+		// Marshaling an empty patch yields "null", which is harder to reason about.
+		// Return nil instead.
+		return nil, nil
+	}
+
 	return json.Marshal(patch)
 }
