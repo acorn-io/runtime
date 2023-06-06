@@ -61,6 +61,11 @@ func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nested
 		return nil, err
 	}
 
+	if !tags.SHAPattern.MatchString(image) {
+		// Use the tag name so that it normalized. For example, docker.io replaced with index.docker.io
+		image = tag.Name()
+	}
+
 	if nestedDigest != "" {
 		tag, err = imagename.NewDigest(tag.Context().String() + "@" + nestedDigest)
 		if err != nil {
