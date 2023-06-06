@@ -58,7 +58,7 @@ var (
 
 func getTextSecretData(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, secretRef v1.Secret, secretName string) (*v1.Secret, error) {
 	var output string
-	_, err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, &output)
+	err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, &output)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func getTextSecretData(ctx context.Context, c kclient.Client, appInstance *v1.Ap
 
 func getJSONSecretData(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, secretRef v1.Secret, secretName string) (*v1.Secret, error) {
 	newSecret := &v1.Secret{}
-	_, err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, newSecret)
+	err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, newSecret)
 	if err != nil {
 		return nil, err
 	}

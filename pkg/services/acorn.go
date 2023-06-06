@@ -49,7 +49,7 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 		if service.GetJob() != "" {
 			service = *service.DeepCopy()
 			// Populate service from job output
-			_, err := jobs.GetOutputFor(ctx, c, appInstance, service.GetJob(), serviceName, &service)
+			err := jobs.GetOutputFor(ctx, c, appInstance, service.GetJob(), serviceName, &service)
 			if errors.Is(err, jobs.ErrJobNotDone) || errors.Is(err, jobs.ErrJobNoOutput) || apierror.IsNotFound(err) {
 				annotations[apply.AnnotationUpdate] = "false"
 				annotations[apply.AnnotationCreate] = "false"

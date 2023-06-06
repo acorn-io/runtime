@@ -9,12 +9,14 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/secrets"
+	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/name"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -71,9 +73,11 @@ func setJobEventName(containers []corev1.Container, eventName string) (result []
 	return
 }
 
-func setTerminationPath(containers []corev1.Container) (result []corev1.Container) {
+func setSecretOutputVolume(containers []corev1.Container) (result []corev1.Container) {
 	for _, c := range containers {
-		c.TerminationMessagePath = "/run/secrets/output"
+		c.VolumeMounts = append([]corev1.VolumeMount{
+			{Name: jobs.Helper, MountPath: "/run/secrets"},
+		}, c.VolumeMounts...)
 		result = append(result, c)
 	}
 	return
@@ -95,6 +99,13 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	}
 
 	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
+
+	containers = append(containers, corev1.Container{
+		Name:            jobs.Helper,
+		Image:           system.DefaultImage(),
+		Command:         []string{"/usr/local/bin/acorn-job-helper-init"},
+		ImagePullPolicy: corev1.PullIfNotPresent,
+	})
 
 	secretAnnotations, err := getSecretAnnotations(req, appInstance, container, interpolator)
 	if err != nil {
@@ -129,10 +140,18 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				EnableServiceLinks:            new(bool),
 				RestartPolicy:                 corev1.RestartPolicyNever,
-				Containers:                    setTerminationPath(containers),
-				InitContainers:                setTerminationPath(initContainers),
-				Volumes:                       volumes,
-				ServiceAccountName:            name,
+				Containers:                    setSecretOutputVolume(containers),
+				InitContainers:                setSecretOutputVolume(initContainers),
+				Volumes: append(volumes, corev1.Volume{
+					Name: jobs.Helper,
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{
+							Medium:    corev1.StorageMediumMemory,
+							SizeLimit: resource.NewScaledQuantity(1, resource.Mega),
+						},
+					},
+				}),
+				ServiceAccountName: name,
 			},
 		},
 	}
@@ -150,8 +169,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			},
 			Spec: jobSpec,
 		}
-		job.Spec.Template.Spec.Containers = setJobEventName(setTerminationPath(containers), jobEventName)
-		job.Spec.Template.Spec.InitContainers = setJobEventName(setTerminationPath(initContainers), jobEventName)
+		job.Spec.Template.Spec.Containers = setJobEventName(setSecretOutputVolume(containers), jobEventName)
+		job.Spec.Template.Spec.InitContainers = setJobEventName(setSecretOutputVolume(initContainers), jobEventName)
 		job.Annotations[apply.AnnotationPrune] = "false"
 		if job.Annotations[apply.AnnotationUpdate] == "" {
 			// getDependencyAnnotations may set this annotation, so don't override here

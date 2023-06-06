@@ -1,0 +1,2 @@
+#!/bin/sh
+cp -f /usr/local/bin/acorn-helper /.acorn/acorn-helper

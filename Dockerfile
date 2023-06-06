@@ -33,12 +33,10 @@ COPY ./scripts/setup-binfmt /usr/local/bin
 COPY --from=helper /usr/local/bin/acorn-helper /usr/local/bin/
 VOLUME /var/lib/buildkit
 
-# NOTE: Requires buildkit: DOCKER_BUILDKIT=1
-COPY <<EOF /usr/local/bin/acorn-helper-init
-#!/bin/sh
-cp -f /usr/local/bin/acorn-helper /.acorn/acorn-helper
-EOF
-RUN chmod +x /usr/local/bin/acorn-helper-init
+COPY /scripts/acorn-helper-init /usr/local/bin
+COPY /scripts/acorn-job-helper-init /usr/local/bin
+COPY /scripts/acorn-job-helper-shutdown /usr/local/bin
+COPY /scripts/acorn-job-get-output /usr/local/bin
 CMD []
 ENTRYPOINT ["/usr/local/bin/acorn"]
 
