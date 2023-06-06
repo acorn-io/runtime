@@ -18,7 +18,6 @@ acorn update [flags] APP_NAME [deploy flags]
   -h, --help              help for update
       --help-advanced     Show verbose help text
       --image string      Acorn image name
-  -n, --name string       Name of app to create
       --notify-upgrade    If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it
   -o, --output string     Output API request without creating app (json, yaml)
       --profile strings   Profile to assign default values
