@@ -243,6 +243,9 @@ func TestBuildNestedAcornWithLocalImage(t *testing.T) {
 	// build the Nginx image
 	source := imagesource.NewImageSource("./testdata/nested/nginx.Acornfile", []string{}, []string{}, []string{})
 	image, _, err := source.GetImageAndDeployArgs(helper.GetCTX(t), c)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = c.ImageTag(helper.GetCTX(t), image, "localnginx:latest")
 	if err != nil {
 		t.Fatal(err)
