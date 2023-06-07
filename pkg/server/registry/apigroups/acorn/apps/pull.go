@@ -60,7 +60,7 @@ func (s *PullAppImageStrategy) New() types.Object {
 func (v PullAppImageNameValidator) ValidateName(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	appPullImage := obj.(*apiv1.AppPullImage)
 	if len(strings.Split(appPullImage.Name, ".")) == 2 {
-		result = append(result, field.Invalid(field.NewPath("metadata", "name"), appPullImage.Name, "invalid name\nTo update a nested Acorn or a service, update the parent Acorn instead."))
+		result = append(result, field.Invalid(field.NewPath("metadata", "name"), appPullImage.Name, "To update a nested Acorn or a service, update the parent Acorn instead."))
 		return result
 	}
 	return nil
