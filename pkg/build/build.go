@@ -424,7 +424,7 @@ imageLoop:
 
 		return pushTarget.Context().Digest(digest).String(), nil
 	}
-	return "", fmt.Errorf("could not find local image with id %s", image)
+	return "", fmt.Errorf("could not find local image %s", image)
 }
 
 func progressClose(progress chan ggcrv1.Update) {

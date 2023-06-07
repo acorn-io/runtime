@@ -9,6 +9,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -228,4 +229,45 @@ func TestMultiArch(t *testing.T) {
 	assert.Len(t, manifest.Manifests, 2)
 	assert.Equal(t, manifest.Manifests[0].Platform.Architecture, "amd64")
 	assert.Equal(t, manifest.Manifests[1].Platform.Architecture, "arm64")
+}
+
+func TestBuildNestedAcornWithLocalImage(t *testing.T) {
+	helper.StartController(t)
+	cfg := helper.StartAPI(t)
+	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
+	c, err := client.New(cfg, "", ns.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// build the Nginx image
+	source := imagesource.NewImageSource("./testdata/nested/nginx.Acornfile", []string{}, []string{}, []string{})
+	image, _, err := source.GetImageAndDeployArgs(helper.GetCTX(t), c)
+	err = c.ImageTag(helper.GetCTX(t), image, "localnginx:latest")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// build the nested image - should succeed
+	nestedImage, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/nested/nested.Acornfile", &client.AcornImageBuildOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// verify that the digests match up
+	assert.Equal(t, strings.Split(nestedImage.ImageData.Acorns["nginx"].Image, "sha256:")[1], image)
+
+	// create a second project and make sure we can't access the local image from the first project
+	ns2 := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
+	c2, err := client.New(cfg, "", ns2.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// build the nested image in the new project - should fail
+	_, err = c2.AcornImageBuild(helper.GetCTX(t), "./testdata/nested/nested.Acornfile", &client.AcornImageBuildOptions{})
+	if err == nil {
+		t.Fatalf("expected error when referencing local image in another project, got nil")
+	}
+	assert.Contains(t, err.Error(), "could not find local image localnginx:latest")
 }
