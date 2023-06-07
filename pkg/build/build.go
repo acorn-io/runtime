@@ -369,11 +369,7 @@ func isImageRemote(ctx *buildContext, image string) bool {
 	}
 
 	_, err = remote.Index(ref, ctx.remoteOpts...)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func resolveLocalImage(ctx *buildContext, image string) (string, error) {
