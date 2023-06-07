@@ -79,14 +79,14 @@ func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.Ser
 
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
 	var image string
-	_, isPattern := autoupgrade.AutoUpgradePattern(acorn.Image)
+	pattern, isPattern := autoupgrade.AutoUpgradePattern(acorn.Image)
 	isPattern = isPattern && acorn.AutoUpgrade != nil && *acorn.AutoUpgrade
 	if isPattern {
 		image = acorn.Image
 
 		// remove the autoupgrade pattern from the end of the image for resolving the pull secret
 		// the registry is all that really matters for the pull secret so this is safe to do
-		pullSecrets.ForAcorn(acornName, image[:strings.LastIndex(image, ":")])
+		pullSecrets.ForAcorn(acornName, strings.TrimSuffix(image, ":"+pattern))
 	} else {
 		image = images.ResolveTag(tag, acorn.Image)
 		if strings.HasPrefix(acorn.Image, "sha256:") {
