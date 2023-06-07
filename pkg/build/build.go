@@ -197,13 +197,12 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 				})
 				continue
 			}
-			isRemote, err := isImageRemote(ctx, acornImage.Image)
-			if err != nil {
-				return nil, nil, err
-			}
 
-			var id string
-			if isRemote {
+			var (
+				id  string
+				err error
+			)
+			if isImageRemote(ctx, acornImage.Image) {
 				id, err = pullImage(ctx, acornImage.Image)
 			} else {
 				id, err = resolveLocalImage(ctx, acornImage.Image)
@@ -363,18 +362,18 @@ func pullImage(ctx *buildContext, image string) (id string, err error) {
 	return pushTarget.Context().Digest(digest.String()).String(), nil
 }
 
-func isImageRemote(ctx *buildContext, image string) (bool, error) {
+func isImageRemote(ctx *buildContext, image string) bool {
 	ref, err := images2.ParseReferenceNoDefault(image)
 	if err != nil {
-		return false, nil
+		return false
 	}
 
 	_, err = remote.Index(ref, ctx.remoteOpts...)
 	if err != nil {
-		return false, nil
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 func resolveLocalImage(ctx *buildContext, image string) (string, error) {
