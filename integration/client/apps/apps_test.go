@@ -482,17 +482,17 @@ func TestAppRunImageVariations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	imageNames := []string{
-		"foo/bar:baz",
-		imageID,
-		fmt.Sprintf("sha256:%s", imageID),
-		imageID[:8],
-	}
-
-	for _, imageName := range imageNames {
-		_, err := c.AppRun(ctx, imageName, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for desc, imageName := range map[string]string{
+		"ref":    "foo/bar:baz",
+		"id":     imageID,
+		"sha256": fmt.Sprintf("sha256:%s", imageID),
+		"short":  imageID[:8],
+	} {
+		imageName := imageName
+		t.Run(desc, func(t *testing.T) {
+			t.Parallel()
+			_, err := c.AppRun(ctx, imageName, nil)
+			assert.NoError(t, err)
+		})
 	}
 }
