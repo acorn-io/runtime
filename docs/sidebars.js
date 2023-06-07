@@ -67,7 +67,8 @@ const sidebars = {
         "running/update-acorns",
         "running/remove-acorns",
         "running/dev",
-        "running/alpha-image-allow-rules",
+        "running/events",
+        "running/alpha-image-allow-rules"
       ],
       "collapsed": true
     },
@@ -106,6 +107,7 @@ const sidebars = {
             "reference/command-line/acorn_credential",
             "reference/command-line/acorn_credential_login",
             "reference/command-line/acorn_credential_logout",
+            "reference/command-line/acorn_events",
             "reference/command-line/acorn_exec",
             "reference/command-line/acorn_image",
             "reference/command-line/acorn_image_rm",
