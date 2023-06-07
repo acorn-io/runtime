@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/ports"
@@ -77,18 +78,28 @@ func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.Ser
 }
 
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
-	image := images.ResolveTag(tag, acorn.Image)
-	if strings.HasPrefix(acorn.Image, "sha256:") {
-		image = strings.TrimPrefix(acorn.Image, "sha256:")
+	var image string
+	_, isPattern := autoupgrade.AutoUpgradePattern(acorn.Image)
+	isPattern = isPattern && acorn.AutoUpgrade != nil && *acorn.AutoUpgrade
+	if isPattern {
+		image = acorn.Image
+
+		// remove the autoupgrade pattern from the end of the image for resolving the pull secret
+		// the registry is all that really matters for the pull secret so this is safe to do
+		pullSecrets.ForAcorn(acornName, image[:strings.LastIndex(image, ":")])
+	} else {
+		image = images.ResolveTag(tag, acorn.Image)
+		if strings.HasPrefix(acorn.Image, "sha256:") {
+			image = strings.TrimPrefix(acorn.Image, "sha256:")
+		}
+
+		pullSecrets.ForAcorn(acornName, image)
 	}
 
 	originalImage := acorn.Image
 	if acorn.Build != nil && acorn.Build.OriginalImage != "" {
 		originalImage = acorn.Build.OriginalImage
 	}
-
-	// Ensure secret gets copied
-	pullSecrets.ForAcorn(acornName, image)
 
 	labelMap := labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Labels, appInstance.Spec.Labels, acorn.Labels),
 		labels.Managed(appInstance,
