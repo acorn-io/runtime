@@ -80,7 +80,6 @@ func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.Ser
 func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
 	var image string
 	pattern, isPattern := autoupgrade.AutoUpgradePattern(acorn.Image)
-	isPattern = isPattern && acorn.AutoUpgrade != nil && *acorn.AutoUpgrade
 	if isPattern {
 		image = acorn.Image
 
