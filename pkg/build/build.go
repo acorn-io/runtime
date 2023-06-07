@@ -24,6 +24,7 @@ import (
 	"github.com/google/uuid"
 	client2 "github.com/moby/buildkit/client"
 	"github.com/opencontainers/go-digest"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
@@ -44,9 +45,10 @@ type buildContext struct {
 	keychain      authn.Keychain
 	remoteOpts    []remote.Option
 	messages      buildclient.Messages
+	client        kclient.WithWatch
 }
 
-func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+func Build(ctx context.Context, client kclient.WithWatch, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
 	remoteKc := NewRemoteKeyChain(messages, keychain)
 	buildContext := &buildContext{
 		ctx:        ctx,
@@ -56,6 +58,7 @@ func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, 
 		keychain:   remoteKc,
 		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
 		messages:   messages,
+		client:     client,
 	}
 
 	return build(buildContext)
@@ -195,10 +198,21 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 				})
 				continue
 			}
-			id, err := pullImage(ctx, acornImage.Image)
+			isRemote, err := isImageRemote(ctx, acornImage.Image)
 			if err != nil {
 				return nil, nil, err
 			}
+
+			var id string
+			if isRemote {
+				id, err = pullImage(ctx, acornImage.Image)
+			} else {
+				id, err = resolveLocalImage(ctx, acornImage.Image)
+			}
+			if err != nil {
+				return nil, nil, err
+			}
+
 			result[key] = v1.ImageData{
 				Image: id,
 			}
@@ -348,6 +362,69 @@ func pullImage(ctx *buildContext, image string) (id string, err error) {
 	}
 
 	return pushTarget.Context().Digest(digest.String()).String(), nil
+}
+
+func isImageRemote(ctx *buildContext, image string) (bool, error) {
+	ref, err := images2.ParseReferenceNoDefault(image)
+	if err != nil {
+		return false, nil
+	}
+
+	_, err = remote.Index(ref, ctx.remoteOpts...)
+	if err != nil {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func resolveLocalImage(ctx *buildContext, image string) (string, error) {
+	// We need to be careful to make sure we only list ImageInstances in the namespace to which the user has access.
+	// We can determine the namespace based on the pushRepo, which is in the format <registry>/acorn/<namespace>.
+	// To be very safe, verify the structure of pushRepo before getting the namespace from it.
+	if len(strings.Split(ctx.pushRepo, "/")) != 3 || !strings.HasPrefix(ctx.pushRepo, "127.0.0.1:") || strings.Split(ctx.pushRepo, "/")[1] != "acorn" {
+		return "", fmt.Errorf("invalid pushRepo: %s", ctx.pushRepo)
+	}
+
+	namespace := strings.Split(ctx.pushRepo, "/")[2]
+
+	imageList := v1.ImageInstanceList{}
+	err := ctx.client.List(ctx.ctx, &imageList, &kclient.ListOptions{
+		Namespace: namespace,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	var digest string
+imageLoop:
+	for _, imageInstance := range imageList.Items {
+		// check whether the image specified by the user matches the name (ID) of the image
+		// require at least the first three characters to match
+		if len(image) > 2 && strings.HasPrefix(imageInstance.Name, image) {
+			digest = imageInstance.Digest
+			break
+		}
+
+		// check to see if it matches any of the tags on the image
+		for _, tag := range imageInstance.Tags {
+			if tag == image {
+				digest = imageInstance.Digest
+				break imageLoop
+			}
+		}
+	}
+
+	fmt.Printf("digest: %s", digest)
+	if digest != "" {
+		pushTarget, err := imagename.ParseReference(ctx.pushRepo)
+		if err != nil {
+			return "", err
+		}
+
+		return pushTarget.Context().Digest(digest).String(), nil
+	}
+	return "", fmt.Errorf("could not find local image with id %s", image)
 }
 
 func progressClose(progress chan ggcrv1.Update) {

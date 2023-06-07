@@ -126,7 +126,7 @@ func (s *Server) build(ctx context.Context, messages buildclient.Messages, token
 	if err != nil {
 		return nil, err
 	}
-	image, err := build.Build(ctx, messages, token.PushRepo, token.Build.Spec, keychain)
+	image, err := build.Build(ctx, s.client, messages, token.PushRepo, token.Build.Spec, keychain)
 	if err != nil {
 		_ = s.recordBuildError(ctx, &token.Build, err)
 		return nil, err
