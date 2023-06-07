@@ -419,7 +419,6 @@ imageLoop:
 		}
 	}
 
-	fmt.Printf("digest: %s", digest)
 	if digest != "" {
 		pushTarget, err := imagename.ParseReference(ctx.pushRepo)
 		if err != nil {
