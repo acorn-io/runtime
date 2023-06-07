@@ -32,6 +32,7 @@ import (
 	klogv2 "k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/util/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CheckResult describes the results of a check, making it human-readable
@@ -43,6 +44,8 @@ type CheckResult struct {
 
 // CheckOptions defines some extra settings for the tests
 type CheckOptions struct {
+	Client kclient.WithWatch
+
 	// RuntimeImage is required for tests that spin up a pod and that we want to work in airgap environments
 	RuntimeImage string `json:"runtimeImage"`
 
@@ -53,7 +56,16 @@ type CheckOptions struct {
 	Namespace *string `json:"namespace"`
 }
 
-func (copts *CheckOptions) setDefaults() {
+func (copts *CheckOptions) setDefaults(ctx context.Context) error {
+	if copts.Client == nil {
+		silenceKlog()
+		cli, err := k8sclient.Default()
+		if err != nil {
+			return err
+		}
+		copts.Client = cli
+	}
+
 	if copts.Namespace == nil {
 		ns := system.Namespace
 		copts.Namespace = &ns
@@ -62,6 +74,16 @@ func (copts *CheckOptions) setDefaults() {
 	if copts.RuntimeImage == "" {
 		copts.RuntimeImage = system.DefaultImage()
 	}
+
+	if copts.IngressClassName == nil {
+		icn, err := publish.IngressClassNameIfNoDefault(ctx, copts.Client)
+		if err != nil {
+			return err
+		}
+		copts.IngressClassName = icn
+	}
+
+	return nil
 }
 
 // PreInstallChecks is a list of all checks that are run before the installation.
@@ -96,8 +118,14 @@ func IsFailed(results []CheckResult) bool {
 
 // RunChecks runs a list of checks and returns their results as a list.
 func RunChecks(ctx context.Context, opts CheckOptions, checks ...func(ctx context.Context, opts CheckOptions) CheckResult) []CheckResult {
-	opts.setDefaults()
 	var results []CheckResult
+
+	if err := opts.setDefaults(ctx); err != nil {
+		return append(results, CheckResult{
+			Passed:  false,
+			Message: fmt.Sprintf("Error setting default check options: %v", err),
+		})
+	}
 	for _, check := range checks {
 		results = append(results, check(ctx, opts))
 	}
@@ -118,12 +146,6 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 	}
 
 	silenceKlog()
-	cli, err := k8sclient.Default()
-	if err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating client: %v", err)
-		return result
-	}
 
 	image := system.DefaultImage()
 	if opts.RuntimeImage != "" {
@@ -167,19 +189,19 @@ func CheckExec(ctx context.Context, opts CheckOptions) CheckResult {
 		},
 	}
 
-	if err := cli.Create(ctx, pod); err != nil {
+	if err := opts.Client.Create(ctx, pod); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating pod: %v", err)
 		return result
 	}
 
 	defer func() {
-		if err := cli.Delete(ctx, pod); err != nil {
+		if err := opts.Client.Delete(ctx, pod); err != nil {
 			fmt.Printf("Error deleting pod: %v\n", err)
 		}
 	}()
 
-	_, err = watcher.New[*corev1.Pod](cli).ByObject(ctx, pod, func(pod *corev1.Pod) (bool, error) {
+	_, err = watcher.New[*corev1.Pod](opts.Client).ByObject(ctx, pod, func(pod *corev1.Pod) (bool, error) {
 		return pod.Status.Phase == corev1.PodRunning, nil
 	})
 	if err != nil {
@@ -258,12 +280,6 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	}
 
 	silenceKlog()
-	cli, err := k8sclient.Default()
-	if err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating client: %v", err)
-		return result
-	}
 
 	unique, err := randomtoken.Generate()
 	if err != nil {
@@ -316,13 +332,6 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		},
 	}
 
-	ingressClassName, err := publish.IngressClassNameIfNoDefault(ctx, cli)
-	if err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error ingress class: %v", err)
-		return result
-	}
-
 	// Create a new ingress object
 	pt := networkingv1.PathTypeImplementationSpecific
 	ing := &networkingv1.Ingress{
@@ -331,7 +340,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 			Namespace: *opts.Namespace,
 		},
 		Spec: networkingv1.IngressSpec{
-			IngressClassName: ingressClassName,
+			IngressClassName: opts.IngressClassName,
 			Rules: []networkingv1.IngressRule{
 				{
 					Host: "inflight-check.acorn.io",
@@ -358,17 +367,13 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		},
 	}
 
-	if opts.IngressClassName != nil {
-		ing.Spec.IngressClassName = opts.IngressClassName
-	}
-
 	resources := []client.Object{ep, svc, ing}
 
 	// Cleanup resources
 	defer func() {
 		for _, r := range resources {
 			// context.Background() so deletion won't get cancelled by parent context
-			if err := cli.Delete(context.Background(), r); err != nil && !apierrors.IsNotFound(err) {
+			if err := opts.Client.Delete(context.Background(), r); err != nil && !apierrors.IsNotFound(err) {
 				klog.Errorf("error deleting check-ingress resource %s: %v", r.GetName(), err)
 			}
 		}
@@ -376,7 +381,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 
 	// Create resources
 	for _, r := range resources {
-		if err := cli.Create(ctx, r); err != nil {
+		if err := opts.Client.Create(ctx, r); err != nil {
 			result.Passed = false
 			result.Message = fmt.Sprintf("Error creating %s: %v", r.GetName(), err)
 			return result
@@ -386,7 +391,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 	// Wait for ingress to be ready, or timeout after 1 minute
 	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
-	_, err = watcher.New[*networkingv1.Ingress](cli).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
+	_, err = watcher.New[*networkingv1.Ingress](opts.Client).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
 		return ing.Status.LoadBalancer.Ingress != nil, nil
 	})
 	if errors.Is(err, context.DeadlineExceeded) {
@@ -416,17 +421,11 @@ func CheckNodesReady(ctx context.Context, opts CheckOptions) CheckResult {
 	}
 
 	silenceKlog()
-	cli, err := k8sclient.Default()
-	if err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating client: %v", err)
-		return result
-	}
 
 	// Try to list cluster nodes
 	var nds corev1.NodeList
 
-	if err := cli.List(ctx, &nds); err != nil {
+	if err := opts.Client.List(ctx, &nds); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error listing nodes: %v", err)
 		return result
@@ -465,12 +464,6 @@ func CheckRBAC(ctx context.Context, opts CheckOptions) CheckResult {
 	}
 
 	silenceKlog()
-	cli, err := k8sclient.Default()
-	if err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating client: %v", err)
-		return result
-	}
 
 	// Check if the cluster is authorized to create a namespace
 	av := &authorizationv1.SelfSubjectAccessReview{
@@ -482,7 +475,7 @@ func CheckRBAC(ctx context.Context, opts CheckOptions) CheckResult {
 			},
 		},
 	}
-	if err := cli.Create(ctx, av); err != nil {
+	if err := opts.Client.Create(ctx, av); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error creating SelfSubjectAccessReview to verify AuthZ: %v", err)
 	} else {
@@ -507,17 +500,11 @@ func CheckDefaultStorageClass(ctx context.Context, opts CheckOptions) CheckResul
 	}
 
 	silenceKlog()
-	cli, err := k8sclient.Default()
-	if err != nil {
-		result.Passed = false
-		result.Message = fmt.Sprintf("Error creating client: %v", err)
-		return result
-	}
 
 	// List registered storageClasses
 	var scs storagev1.StorageClassList
 
-	if err := cli.List(ctx, &scs); err != nil {
+	if err := opts.Client.List(ctx, &scs); err != nil {
 		result.Passed = false
 		result.Message = fmt.Sprintf("Error listing storage classes: %v", err)
 		return result
