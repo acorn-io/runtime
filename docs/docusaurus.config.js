@@ -30,6 +30,7 @@ const config = {
       ({
         docs: {
           versions: {
+			"0.6": {label: "0.6", banner: "none", path: "0.6"},
 			"0.5": {label: "0.5", banner: "none", path: "0.5"},
           },
           routeBasePath: '/', // Serve the docs at the site's root
