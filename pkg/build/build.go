@@ -15,6 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	images2 "github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -45,10 +46,9 @@ type buildContext struct {
 	keychain      authn.Keychain
 	remoteOpts    []remote.Option
 	messages      buildclient.Messages
-	client        kclient.WithWatch
 }
 
-func Build(ctx context.Context, client kclient.WithWatch, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
 	remoteKc := NewRemoteKeyChain(messages, keychain)
 	buildContext := &buildContext{
 		ctx:        ctx,
@@ -58,7 +58,6 @@ func Build(ctx context.Context, client kclient.WithWatch, messages buildclient.M
 		keychain:   remoteKc,
 		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
 		messages:   messages,
-		client:     client,
 	}
 
 	return build(buildContext)
@@ -388,8 +387,13 @@ func resolveLocalImage(ctx *buildContext, image string) (string, error) {
 
 	namespace := strings.Split(ctx.pushRepo, "/")[2]
 
+	c, err := k8sclient.Default()
+	if err != nil {
+		return "", err
+	}
+
 	imageList := v1.ImageInstanceList{}
-	err := ctx.client.List(ctx.ctx, &imageList, &kclient.ListOptions{
+	err = c.List(ctx.ctx, &imageList, &kclient.ListOptions{
 		Namespace: namespace,
 	})
 	if err != nil {
