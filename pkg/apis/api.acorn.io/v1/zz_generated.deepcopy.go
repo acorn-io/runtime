@@ -521,6 +521,11 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.EventTTL != nil {
+		in, out := &in.EventTTL, &out.EventTTL
+		*out = new(string)
+		**out = **in
+	}
 	if in.Features != nil {
 		in, out := &in.Features, &out.Features
 		*out = make(map[string]bool, len(*in))

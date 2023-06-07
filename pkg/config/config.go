@@ -368,6 +368,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.AWSIdentityProviderARN = newConfig.AWSIdentityProviderARN
 	}
 
+	if newConfig.EventTTL != nil {
+		mergedConfig.EventTTL = newConfig.EventTTL
+	}
+
 	return &mergedConfig
 }
 

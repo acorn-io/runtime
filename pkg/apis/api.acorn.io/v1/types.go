@@ -427,6 +427,7 @@ type Config struct {
 	AllowTrafficFromNamespace      []string        `json:"allowTrafficFromNamespace" name:"allow-traffic-from-namespace" usage:"Namespaces that are allowed to send network traffic to all Acorn apps"`
 	ServiceLBAnnotations           []string        `json:"serviceLBAnnotations" name:"service-lb-annotation" usage:"Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)"`
 	AWSIdentityProviderARN         *string         `json:"awsIdentityProviderArn" name:"aws-identity-provider-arn" usage:"ARN of cluster's OpenID Connect provider registered in AWS"`
+	EventTTL                       *string         `json:"eventTTL" name:"event-ttl" usage:"Amount of time an Acorn event will be stored before being deleted (default '168h' - 7 days)"`
 	Features                       map[string]bool `json:"features" name:"features" boolmap:"true" usage:"Enable or disable features. (example foo=true,bar=false)"`
 }
 
