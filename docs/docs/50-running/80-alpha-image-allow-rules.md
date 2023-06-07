@@ -1,23 +1,31 @@
-# [Alpha Feature] ImageAllowRules (IARs)
+---
+title: ImageAllowRules [Alpha]
+---
 
-ImageAllowRules are an alpha-feature of Acorn, currently hidden behind a feature flag.
-To enable it in your Acorn installation, use `acorn isntall --features image-allow-rules=true` (**Beware**: first read the rest of this page before enabling it, as it's quite disruptive).
+ImageAllowRules (IARs) are an alpha-feature of Acorn, currently hidden behind a feature flag.
+To enable them in your Acorn installation, use `acorn install --features image-allow-rules=true`.
+
+:::caution
+Please read this page to completion before enabling IARs, as they can be quite disruptive.
+:::
+
 
 ## How ImageAllowRules work
 
 The principle behind IARs is to make your cluster more secure.
-In fact, secure by default, once it's enabled. No additional policies needed.
 If you enable this feature, you won't be able to deploy any Acorn image anymore without allowing it.
 To do that, you have to create an `ImageAllowRule` resource.
 If the app image is allowed by a single IAR in your project, it's good to run.
 
-**Note**: Removing an IAR won't stop your running app, but will update the `image-allowed` status condition on the app.
+:::note
+Removing an IAR won't stop your running app, but will update the `image-allowed` status condition on the app.
+:::
 
 ## What makes up an ImageAllowRule
 
 Currently, IARs have two parts:
 
-1. The `images` scope (must-have), denoting, what images the rule applies to. It uses the same syntax as the auto-upgrade pattern. Examples below.
+1. The `images` scope (required) denotes which images the rule applies to. It uses the same syntax as the auto-upgrade pattern. Examples below.
 2. The `signatures` rules (optional) define a set of image signatures and annotations on those signatures to make sure that an image was actually approved by someone or something, e.g. by your QA team. We're using [sigstore/cosign](https://docs.sigstore.dev/cosign/installation/) for everything related to signatures.
 
 ## Example
@@ -27,7 +35,7 @@ apiVersion: api.acorn.io/v1
 kind: ImageAllowRule
 metadata:
   name: example-iar
-  namespace: acorn # your project namespace
+  namespace: acorn # your project name
 images:
   - ghcr.io/** # ** matches everything, * matches a single path item, # matches a number
 signatures:
@@ -54,9 +62,12 @@ signatures:
 ## About Signatures
 
 To sign an image, you can use [sigstore/cosign](https://docs.sigstore.dev/cosign/installation/) via the CLI.
-You download or build an Acorn image, you sign it with cosign and optionally annotate the signature, then you upload it to some OCI registry.
-Now when you try to run that in a protected cluster and the image is in scope of an IAR, Acorn will check the signature, make sure that it matches the provided public keys and that matching signatures also have the required annotations.
-Only if all of this is true, we let the image pass.
+You can download or build an Acorn image, sign it with cosign, annotate the signature (optional), then upload it to an OCI registry.
+Afterwards, when you try to run that image in a protected cluster where the image is in scope of an IAR, Acorn will first ensure that:
+- it matches the provided public keys
+- matching signatures also have the required annotations
+
+If one or both of these conditions aren't met, Acorn will refuse to run the image.
 
 ### Walkthrough
 

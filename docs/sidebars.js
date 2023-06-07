@@ -67,7 +67,7 @@ const sidebars = {
         "running/update-acorns",
         "running/remove-acorns",
         "running/dev",
-
+        "running/alpha-image-allow-rules",
       ],
       "collapsed": true
     },
