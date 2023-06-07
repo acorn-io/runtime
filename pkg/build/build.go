@@ -38,26 +38,28 @@ func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
 }
 
 type buildContext struct {
-	ctx           context.Context
-	cwd           string
-	acornfilePath string
-	pushRepo      string
-	opts          v1.AcornImageBuildInstanceSpec
-	keychain      authn.Keychain
-	remoteOpts    []remote.Option
-	messages      buildclient.Messages
+	ctx            context.Context
+	cwd            string
+	acornfilePath  string
+	pushRepo       string
+	buildNamespace string
+	opts           v1.AcornImageBuildInstanceSpec
+	keychain       authn.Keychain
+	remoteOpts     []remote.Option
+	messages       buildclient.Messages
 }
 
-func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+func Build(ctx context.Context, messages buildclient.Messages, pushRepo, buildNamespace string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
 	remoteKc := NewRemoteKeyChain(messages, keychain)
 	buildContext := &buildContext{
-		ctx:        ctx,
-		cwd:        "",
-		pushRepo:   pushRepo,
-		opts:       opts,
-		keychain:   remoteKc,
-		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
-		messages:   messages,
+		ctx:            ctx,
+		cwd:            "",
+		pushRepo:       pushRepo,
+		buildNamespace: buildNamespace,
+		opts:           opts,
+		keychain:       remoteKc,
+		remoteOpts:     append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
+		messages:       messages,
 	}
 
 	return build(buildContext)
@@ -373,23 +375,15 @@ func isImageRemote(ctx *buildContext, image string) bool {
 }
 
 func resolveLocalImage(ctx *buildContext, image string) (string, error) {
-	// We need to be careful to make sure we only list ImageInstances in the namespace to which the user has access.
-	// We can determine the namespace based on the pushRepo, which is in the format <registry>/acorn/<namespace>.
-	// To be very safe, verify the structure of pushRepo before getting the namespace from it.
-	if len(strings.Split(ctx.pushRepo, "/")) != 3 || !strings.HasPrefix(ctx.pushRepo, "127.0.0.1:") || strings.Split(ctx.pushRepo, "/")[1] != "acorn" {
-		return "", fmt.Errorf("invalid pushRepo: %s", ctx.pushRepo)
-	}
-
-	namespace := strings.Split(ctx.pushRepo, "/")[2]
-
 	c, err := k8sclient.Default()
 	if err != nil {
 		return "", err
 	}
 
+	// very important - make sure we only list images in the buildNamespace to avoid finding ones in other projects
 	imageList := v1.ImageInstanceList{}
 	err = c.List(ctx.ctx, &imageList, &kclient.ListOptions{
-		Namespace: namespace,
+		Namespace: ctx.buildNamespace,
 	})
 	if err != nil {
 		return "", err
