@@ -64,7 +64,7 @@ func uptodate(app *v1.AppInstance) string {
 	)
 	for _, status := range app.Status.AppStatus.Containers {
 		uptodate += status.UpToDateReplicaCount
-		desired += status.DesiredReplicaCount
+		desired += status.RunningReplicaCount
 	}
 	if uptodate != desired {
 		return fmt.Sprintf("%d/%d", uptodate, desired)
@@ -84,7 +84,7 @@ func healthy(app *v1.AppInstance) string {
 	)
 	for _, status := range app.Status.AppStatus.Containers {
 		desired += status.DesiredReplicaCount
-		ready += status.ReadyReplicaCount
+		ready += status.RunningReplicaCount
 	}
 	if ready != desired {
 		return fmt.Sprintf("%d/%d", ready, desired)

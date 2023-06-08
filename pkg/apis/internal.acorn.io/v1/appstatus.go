@@ -101,6 +101,7 @@ type ContainerStatus struct {
 	CommonStatus           `json:",inline"`
 	ReadyReplicaCount      int32                       `json:"readyCount,omitempty"`
 	DesiredReplicaCount    int32                       `json:"readyDesiredCount,omitempty"`
+	RunningReplicaCount    int32                       `json:"runningReplicaCount,omitempty"`
 	UpToDateReplicaCount   int32                       `json:"upToDateCount,omitempty"`
 	MaxReplicaRestartCount int32                       `json:"maxReplicaRestartCount,omitempty"`
 	Dependencies           map[string]DependencyStatus `json:"dependencies,omitempty"`
