@@ -132,6 +132,10 @@ dockers:
       - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
       - "--platform=linux/arm64"
     extra_files:
+      - scripts/acorn-helper-init
+      - scripts/acorn-job-get-output
+      - scripts/acorn-job-helper-init
+      - scripts/acorn-job-helper-shutdown
       - scripts/ds-containerd-config-path-entry
       - scripts/setup-binfmt
 
