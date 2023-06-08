@@ -41,3 +41,14 @@ status:
         profiles:
           - profileOne
           - profileTwo
+        labels:
+          myLabel: myValue
+        annotations:
+          myAnnotation: myValue
+        links:
+          - target: targetApp
+            service: myService
+        memory:
+          workload1: 1024
+        computeClasses:
+          workload1: default
