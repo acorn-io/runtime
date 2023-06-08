@@ -1,0 +1,12 @@
+`apiVersion: internal.admin.acorn.io/v1
+default: true
+description: Acorn-generated volume class representing the storage class storage-name
+kind: ClusterVolumeClassInstance
+metadata:
+  creationTimestamp: null
+  name: storage-name
+size: {}
+storageClassName: storage-name
+supportedRegions:
+- local
+`

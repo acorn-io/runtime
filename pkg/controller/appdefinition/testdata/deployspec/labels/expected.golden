@@ -1,0 +1,388 @@
+`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    appSpecAnn: test-app-spec-ann
+    container-scoped-ann: test-container
+    containerAnn: test-container-ann
+    global-scoped-ann: test-global
+    named-scoped-ann: test-named
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    appSpecLabel: test-app-spec-label
+    container-scoped-label: test-container
+    containerLabel: test-container-label
+    global-scoped-label: test-global
+    named-scoped-label: test-named
+  name: container-name
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    appSpecAnn: test-app-spec-ann
+    container-scoped-ann: test-container
+    containerAnn: test-container-ann
+    global-scoped-ann: test-global
+    named-scoped-ann: test-named
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    appSpecLabel: test-app-spec-label
+    container-scoped-label: test-container
+    containerLabel: test-container-label
+    global-scoped-label: test-global
+    named-scoped-label: test-named
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: container-name
+      acorn.io/managed: "true"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"annotations":{"containerAnn":"test-container-ann"},"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","labels":{"containerLabel":"test-container-label"},"probes":null}'
+        appSpecAnn: test-app-spec-ann
+        container-scoped-ann: test-container
+        containerAnn: test-container-ann
+        global-scoped-ann: test-global
+        named-scoped-ann: test-named
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: container-name
+        acorn.io/managed: "true"
+        appSpecLabel: test-app-spec-label
+        container-scoped-label: test-container
+        containerLabel: test-container-label
+        global-scoped-label: test-global
+        named-scoped-label: test-named
+    spec:
+      containers:
+      - image: image-name
+        name: container-name
+        resources: {}
+        volumeMounts:
+        - mountPath: /var/tmp
+          name: foo
+      enableServiceLinks: false
+      hostname: container-name
+      imagePullSecrets:
+      - name: container-name-pull-1234567890ab
+      serviceAccountName: container-name
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: foo
+        persistentVolumeClaim:
+          claimName: foo
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  annotations:
+    appSpecAnn: test-app-spec-ann
+    container-scoped-ann: test-container
+    containerAnn: test-container-ann
+    global-scoped-ann: test-global
+    named-scoped-ann: test-named
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: container-name
+    acorn.io/managed: "true"
+    appSpecLabel: test-app-spec-label
+    container-scoped-label: test-container
+    containerLabel: test-container-label
+    global-scoped-label: test-global
+    named-scoped-label: test-named
+  name: container-name
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: container-name
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    appSpecAnn: test-app-spec-ann
+    global-scoped-ann: test-global
+    jobAnn: test-job-ann
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: job-name
+    acorn.io/managed: "true"
+    appSpecLabel: test-app-spec-label
+    global-scoped-label: test-global
+    jobLabel: test-job-label
+  name: job-name
+  namespace: app-created-namespace
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    appSpecAnn: test-app-spec-ann
+    apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
+    global-scoped-ann: test-global
+    jobAnn: test-job-ann
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: job-name
+    acorn.io/managed: "true"
+    appSpecLabel: test-app-spec-label
+    global-scoped-label: test-global
+    jobLabel: test-job-label
+  name: job-name
+  namespace: app-created-namespace
+spec:
+  backoffLimit: 1000
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"annotations":{"jobAnn":"test-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"jobLabel":"test-job-label"},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        appSpecAnn: test-app-spec-ann
+        global-scoped-ann: test-global
+        jobAnn: test-job-ann
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: job-name
+        acorn.io/managed: "true"
+        appSpecLabel: test-app-spec-label
+        global-scoped-label: test-global
+        jobLabel: test-job-label
+    spec:
+      containers:
+      - env:
+        - name: ACORN_EVENT
+          value: create
+        image: image-name
+        name: job-name
+        ports:
+        - containerPort: 81
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 81
+        resources: {}
+        terminationMessagePath: /run/secrets/output
+      enableServiceLinks: false
+      imagePullSecrets:
+      - name: job-name-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: job-name
+      terminationGracePeriodSeconds: 5
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    appSpecAnn: test-app-spec-ann
+    global-scoped-ann: test-global
+    named-scoped-ann: test-named
+    volume-scoped-ann: test-volume
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.foo
+    acorn.io/volume-name: foo
+    appSpecLabel: test-app-spec-label
+    global-scoped-label: test-global
+    named-scoped-label: test-named
+    volume-scoped-label: test-volume
+  name: foo
+  namespace: app-created-namespace
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10G
+status: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: container-name-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: job-name-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  annotations:
+  - key: global-scoped-ann
+    value: test-global
+  - key: container-scoped-ann
+    resourceType: container
+    value: test-container
+  - key: metadata-scoped-ann
+    resourceType: metadata
+    value: test-app-ann
+  - key: named-scoped-ann
+    resourceName: container-name
+    value: test-named
+  - key: named-scoped-ann
+    resourceName: foo
+    value: test-named
+  - key: volume-scoped-ann
+    resourceType: volume
+    value: test-volume
+  - key: named-scoped-ann
+    resourceName: super-secret
+    value: test-named
+  - key: secret-scoped-ann
+    resourceType: secret
+    value: test-secret
+  image: test
+  labels:
+  - key: global-scoped-label
+    value: test-global
+  - key: container-scoped-label
+    resourceType: container
+    value: test-container
+  - key: metadata-scoped-label
+    resourceType: metadata
+    value: test-app-label
+  - key: named-scoped-label
+    resourceName: container-name
+    value: test-named
+  - key: named-scoped-label
+    resourceName: foo
+    value: test-named
+  - key: volume-scoped-label
+    resourceType: volume
+    value: test-volume
+  - key: named-scoped-label
+    resourceName: super-secret
+    value: test-named
+  - key: secret-scoped-label
+    resourceType: secret
+    value: test-secret
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    annotations:
+      appSpecAnn: test-app-spec-ann
+    containers:
+      container-name:
+        annotations:
+          containerAnn: test-container-ann
+        dirs:
+          /var/tmp:
+            secret: {}
+            volume: foo
+        image: image-name
+        labels:
+          containerLabel: test-container-label
+        probes: null
+    jobs:
+      job-name:
+        annotations:
+          jobAnn: test-job-ann
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: image-name
+        labels:
+          jobLabel: test-job-label
+        ports:
+        - port: 80
+          protocol: http
+          targetPort: 81
+        probes: null
+    labels:
+      appSpecLabel: test-app-spec-label
+    volumes:
+      foo: {}
+  appStatus:
+    jobs:
+      job-name: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+`

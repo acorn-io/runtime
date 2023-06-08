@@ -1,0 +1,49 @@
+`apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  volumes:
+  - class: test-volume-class
+    target: foo
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      container-name:
+        dirs:
+          /var/tmp:
+            secret: {}
+            volume: foo
+        image: image-name
+        probes: null
+    volumes:
+      foo:
+        class: default-test-volume-class
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defaults
+  defaults:
+    memory:
+      "": 0
+      container-name: 0
+    region: local
+    volumes:
+      foo:
+        accessModes:
+        - readWriteOnce
+        size: 5Gi
+  namespace: app-created-namespace
+  observedGeneration: 1
+`

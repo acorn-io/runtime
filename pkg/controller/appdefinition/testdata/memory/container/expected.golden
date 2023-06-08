@@ -1,0 +1,218 @@
+`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: oneimage
+      acorn.io/managed: "true"
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/container-name: oneimage
+        acorn.io/managed: "true"
+    spec:
+      containers:
+      - image: image-name
+        name: oneimage
+        ports:
+        - containerPort: 81
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 81
+        resources:
+          limits:
+            memory: 1Mi
+          requests:
+            memory: 1Mi
+      - image: foo
+        name: left
+        ports:
+        - containerPort: 91
+          protocol: TCP
+        readinessProbe:
+          tcpSocket:
+            port: 91
+        resources: {}
+      enableServiceLinks: false
+      hostname: oneimage
+      imagePullSecrets:
+      - name: oneimage-pull-1234567890ab
+      serviceAccountName: oneimage
+      terminationGracePeriodSeconds: 5
+status: {}
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  maxUnavailable: 25%
+  selector:
+    matchLabels:
+      acorn.io/app-name: app-name
+      acorn.io/app-namespace: app-namespace
+      acorn.io/container-name: oneimage
+      acorn.io/managed: "true"
+status:
+  currentHealthy: 0
+  desiredHealthy: 0
+  disruptionsAllowed: 0
+  expectedPods: 0
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.oneimage
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  container: oneimage
+  default: true
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  ports:
+  - port: 80
+    protocol: http
+    targetPort: 81
+  - port: 90
+    protocol: tcp
+    targetPort: 91
+status: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: oneimage-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+  memory:
+    oneimage: 1048576
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      oneimage:
+        build:
+          context: .
+          dockerfile: Dockerfile
+        image: image-name
+        ports:
+        - port: 80
+          protocol: http
+          targetPort: 81
+        probes: null
+        sidecars:
+          left:
+            image: foo
+            ports:
+            - port: 90
+              protocol: tcp
+              targetPort: 91
+            probes: null
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: scheduling
+    reason: Success
+    status: "True"
+    success: true
+    type: defaults
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults:
+    memory:
+      "": 0
+      left: 0
+      oneimage: 0
+  namespace: app-created-namespace
+  observedGeneration: 1
+  scheduling:
+    left:
+      requirements: {}
+    oneimage:
+      requirements:
+        limits:
+          memory: 1Mi
+        requests:
+          memory: 1Mi
+`

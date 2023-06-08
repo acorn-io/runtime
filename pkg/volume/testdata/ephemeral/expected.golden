@@ -1,0 +1,12 @@
+`apiVersion: internal.admin.acorn.io/v1
+description: Acorn-generated volume class representing ephemeral volumes not backed
+  by a storage class
+kind: ClusterVolumeClassInstance
+metadata:
+  creationTimestamp: null
+  name: ephemeral
+size: {}
+storageClassName: ""
+supportedRegions:
+- local
+`

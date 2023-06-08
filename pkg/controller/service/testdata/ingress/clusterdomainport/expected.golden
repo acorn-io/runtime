@@ -1,0 +1,118 @@
+`apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  ports:
+  - appProtocol: HTTP
+    name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 81
+  selector:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: app-name
+  namespace: app-namespace
+spec:
+  externalName: oneimage.app-created-namespace.svc.cluster.local
+  ports:
+  - appProtocol: HTTP
+    name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 81
+  type: ExternalName
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acorn.io/targets: '{"oneimage.app-name.app-namespace.local.oss-acorn.io:8081":{"port":81,"service":"oneimage"}}'
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  rules:
+  - host: oneimage.app-name.app-namespace.local.oss-acorn.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: oneimage
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  container: oneimage
+  default: true
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  ports:
+  - port: 80
+    protocol: http
+    publish: true
+    targetPort: 81
+status:
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  endpoints:
+  - address: oneimage.app-name.app-namespace.local.oss-acorn.io
+    publishProtocol: http
+  hasService: true
+`

@@ -1,0 +1,16 @@
+`apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    foo: foo1
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: default
+    acorn.io/app-namespace: acorn
+    acorn.io/managed: "true"
+    bar: bar1
+    pod-security.kubernetes.io/enforce: baseline
+  name: app-created-namespace
+spec: {}
+status: {}
+`

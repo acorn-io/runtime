@@ -1,0 +1,135 @@
+`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    acorn.io/app-generation: "3"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: update-only
+    acorn.io/managed: "true"
+  name: update-only
+  namespace: app-created-namespace
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    acorn.io/app-generation: "3"
+    apply.acorn.io/prune: "false"
+    apply.acorn.io/update: "true"
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
+    acorn.io/job-name: update-only
+    acorn.io/managed: "true"
+  name: update-only
+  namespace: app-created-namespace
+spec:
+  backoffLimit: 1000
+  template:
+    metadata:
+      annotations:
+        acorn.io/app-generation: "3"
+        acorn.io/container-spec: '{"events":["update"],"image":"update-only-image","probes":null}'
+      creationTimestamp: null
+      labels:
+        acorn.io/app-name: app-name
+        acorn.io/app-namespace: app-namespace
+        acorn.io/app-public-name: app-name
+        acorn.io/job-name: update-only
+        acorn.io/managed: "true"
+    spec:
+      containers:
+      - env:
+        - name: ACORN_EVENT
+          value: update
+        image: update-only-image
+        name: update-only
+        resources: {}
+        terminationMessagePath: /run/secrets/output
+      enableServiceLinks: false
+      imagePullSecrets:
+      - name: update-only-pull-1234567890ab
+      restartPolicy: Never
+      serviceAccountName: update-only
+      terminationGracePeriodSeconds: 5
+status: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: update-only-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  generation: 3
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    jobs:
+      create-only:
+        events:
+        - create
+        image: create-only-image
+        probes: null
+      delete-only:
+        events:
+        - delete
+        image: delete-only-image
+        probes: null
+      stop-only:
+        events:
+        - stop
+        image: stop-only-image
+        probes: null
+      update-only:
+        events:
+        - update
+        image: update-only-image
+        probes: null
+  appStatus:
+    jobs:
+      create-only:
+        createEventSucceeded: true
+        skipped: true
+      delete-only:
+        skipped: true
+      stop-only:
+        skipped: true
+      update-only: {}
+  columns: {}
+  conditions:
+    observedGeneration: 3
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+`

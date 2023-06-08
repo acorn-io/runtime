@@ -1,0 +1,39 @@
+`apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  generation: 1
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    id: test
+    imageData: {}
+    vcs: {}
+  appSpec:
+    containers:
+      container-name:
+        dirs:
+          /var/tmp:
+            secret: {}
+            volume: foo
+        image: image-name
+        probes: null
+    volumes:
+      foo:
+        class: test-volume-class
+  appStatus: {}
+  columns: {}
+  conditions:
+    observedGeneration: 1
+    reason: Success
+    status: "True"
+    success: true
+    type: defaults
+  defaults: {}
+  namespace: app-created-namespace
+  observedGeneration: 1
+`
