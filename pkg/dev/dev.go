@@ -233,6 +233,7 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	if err != nil {
 		return "", err
 	}
+	opts.Run.Permissions = app.Spec.Permissions
 	return app.Name, nil
 }
 
