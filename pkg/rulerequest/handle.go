@@ -117,26 +117,37 @@ This image is not trusted by any image allow rules in this project.
 This could be VERY DANGEROUS to the cluster if you do not trust this
 application. If you are unsure say no.`, image)
 
+	// The below code is super ugly, but it's the only non-overengineered way to preserve the order of the
+	// choices since Go doesn't guarantee the order when looping over a map. If you have a better way, please push it :)
 	var choiceMap map[string]string
+	var choices []string
 
 	if tags.SHAPattern.MatchString(image) {
+		choices = []string{
+			"NO",
+			"yes (this ID or SHA only)",
+		}
+
 		choiceMap = map[string]string{
-			"NO":                        "NO",
-			"yes (this ID or SHA only)": string(imageallowrules.SimpleImageScopeExact),
+			choices[0]: "NO",
+			choices[1]: string(imageallowrules.SimpleImageScopeExact),
 		}
 	} else {
-		choiceMap = map[string]string{
-			"NO":                                     "NO",
-			"yes (this tag only)":                    string(imageallowrules.SimpleImageScopeExact),
-			"registry (all images in this registry)": string(imageallowrules.SimpleImageScopeRegistry),
-			"repository (all images in this repository)": string(imageallowrules.SimpleImageScopeRepository),
-			"all (all images out there)":                 string(imageallowrules.SimpleImageScopeAll),
+		choices = []string{
+			"NO",
+			"yes (this tag only)",
+			"repository (all images in this repository)",
+			"registry (all images in this registry)",
+			"all (all images out there)",
 		}
-	}
 
-	var choices []string
-	for k := range choiceMap {
-		choices = append(choices, k)
+		choiceMap = map[string]string{
+			choices[0]: "NO",
+			choices[1]: string(imageallowrules.SimpleImageScopeExact),
+			choices[2]: string(imageallowrules.SimpleImageScopeRepository),
+			choices[3]: string(imageallowrules.SimpleImageScopeRegistry),
+			choices[4]: string(imageallowrules.SimpleImageScopeAll),
+		}
 	}
 
 	pterm.Println()
