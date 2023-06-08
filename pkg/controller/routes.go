@@ -54,7 +54,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	appRouter.HandlerFunc(appdefinition.CheckImageAllowedHandler(registryTransport))
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
 	appRouter.HandlerFunc(images.CreateImages)
-	appRouter.HandlerFunc(appdefinition.ParseAppImage)
+	appRouter.IncludeRemoved().HandlerFunc(appdefinition.ParseAppImage)
 	appRouter.HandlerFunc(tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
 	appRouter.Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)
 	appRouter.Middleware(jobs.NeedsDestroyJobFinalization).FinalizeFunc(jobs.DestroyJobFinalizer, jobs.FinalizeDestroyJob)

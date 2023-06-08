@@ -8,6 +8,9 @@ import (
 )
 
 func ParseAppImage(req router.Request, resp router.Response) error {
+	if req.Object == nil {
+		return nil
+	}
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionParsed)
 	appImage := appInstance.Status.AppImage
