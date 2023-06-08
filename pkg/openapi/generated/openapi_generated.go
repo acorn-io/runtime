@@ -6787,6 +6787,12 @@ func schema_pkg_apis_internalacornio_v1_ContainerStatus(ref common.ReferenceCall
 							Format: "int32",
 						},
 					},
+					"runningReplicaCount": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
 					"upToDateCount": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},

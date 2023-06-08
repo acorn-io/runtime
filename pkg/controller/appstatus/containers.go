@@ -52,10 +52,10 @@ func (a *appStatusRenderer) readContainers() error {
 		} else if err != nil {
 			return err
 		} else {
-			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) &&
-				dep.Status.UpdatedReplicas == dep.Status.Replicas
+			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
 			cs.ReadyReplicaCount = dep.Status.ReadyReplicas
-			cs.DesiredReplicaCount = dep.Status.Replicas
+			cs.RunningReplicaCount = dep.Status.Replicas
+			cs.DesiredReplicaCount = replicas(dep.Spec.Replicas)
 			cs.UpToDateReplicaCount = dep.Status.UpdatedReplicas
 			cs.Defined = true
 
@@ -151,4 +151,11 @@ func (a *appStatusRenderer) isDepReady(dep *appsv1.Deployment) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func replicas(replicas *int32) int32 {
+	if replicas == nil {
+		return 1
+	}
+	return *replicas
 }

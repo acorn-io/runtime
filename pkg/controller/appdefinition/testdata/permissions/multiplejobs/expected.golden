@@ -149,7 +149,9 @@ spec:
           tcpSocket:
             port: 81
         resources: {}
-        terminationMessagePath: /run/secrets/output
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
       - env:
         - name: ACORN_EVENT
           value: create
@@ -162,13 +164,32 @@ spec:
           tcpSocket:
             port: 91
         resources: {}
-        terminationMessagePath: /run/secrets/output
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
+      - command:
+        - /usr/local/bin/acorn-job-helper-init
+        env:
+        - name: ACORN_EVENT
+          value: create
+        image: ghcr.io/acorn-io/acorn:main
+        imagePullPolicy: IfNotPresent
+        name: acorn-job-output-helper
+        resources: {}
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
       enableServiceLinks: false
       imagePullSecrets:
       - name: oneimage-pull-1234567890ab
       restartPolicy: Never
       serviceAccountName: oneimage
       terminationGracePeriodSeconds: 5
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 1M
+        name: acorn-job-output-helper
 status: {}
 
 ---
@@ -323,7 +344,9 @@ spec:
           tcpSocket:
             port: 81
         resources: {}
-        terminationMessagePath: /run/secrets/output
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
       - env:
         - name: ACORN_EVENT
           value: create
@@ -336,19 +359,38 @@ spec:
           tcpSocket:
             port: 91
         resources: {}
-        terminationMessagePath: /run/secrets/output
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
+      - command:
+        - /usr/local/bin/acorn-job-helper-init
+        env:
+        - name: ACORN_EVENT
+          value: create
+        image: ghcr.io/acorn-io/acorn:main
+        imagePullPolicy: IfNotPresent
+        name: acorn-job-output-helper
+        resources: {}
+        volumeMounts:
+        - mountPath: /run/secrets
+          name: acorn-job-output-helper
       enableServiceLinks: false
       imagePullSecrets:
       - name: twoimage-pull-1234567890ab
       restartPolicy: Never
       serviceAccountName: twoimage
       terminationGracePeriodSeconds: 5
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 1M
+        name: acorn-job-output-helper
 status: {}
 
 ---
 apiVersion: v1
 data:
-  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
 kind: Secret
 metadata:
   creationTimestamp: null
@@ -362,7 +404,7 @@ type: kubernetes.io/dockerconfigjson
 ---
 apiVersion: v1
 data:
-  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+  .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7ImF1dGgiOiJPZz09In0sImluZGV4LmRvY2tlci5pbyI6eyJhdXRoIjoiT2c9PSJ9fX0=
 kind: Secret
 metadata:
   creationTimestamp: null
