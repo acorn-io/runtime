@@ -200,17 +200,14 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 				continue
 			}
 
-			var (
-				id  string
-				err error
-			)
-			if isImageRemote(ctx, acornImage.Image) {
-				id, err = pullImage(ctx, acornImage.Image)
-			} else {
-				id, err = resolveLocalImage(ctx, acornImage.Image)
-			}
+			// first attempt to resolve the image locally
+			id, err := resolveLocalImage(ctx, acornImage.Image)
 			if err != nil {
-				return nil, nil, err
+				// see if it can be pulled from a remote registry
+				id, err = pullImage(ctx, acornImage.Image)
+				if err != nil {
+					return nil, nil, err
+				}
 			}
 
 			result[key] = v1.ImageData{
