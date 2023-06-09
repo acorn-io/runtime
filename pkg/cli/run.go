@@ -12,6 +12,7 @@ import (
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/acorn/pkg/dev"
 	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/acorn-io/acorn/pkg/wait"
@@ -129,11 +130,13 @@ var hideRunFlags = []string{"dangerous", "memory", "target-namespace", "secret",
 
 type Run struct {
 	RunArgs
-	Wait         *bool `usage:"Wait for app to become ready before command exiting (default: true)"`
-	Quiet        bool  `usage:"Do not print status" short:"q"`
-	Update       bool  `usage:"Update the app if it already exists" short:"u"`
-	Replace      bool  `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	HelpAdvanced bool  `usage:"Show verbose help text"`
+	Dev               bool  `usage:"Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit" short:"i"`
+	BidirectionalSync bool  `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Wait              *bool `usage:"Wait for app to become ready before command exiting (default: true)"`
+	Quiet             bool  `usage:"Do not print status" short:"q"`
+	Update            bool  `usage:"Update the app if it already exists" short:"u"`
+	Replace           bool  `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	HelpAdvanced      bool  `usage:"Show verbose help text"`
 
 	out    io.Writer
 	client ClientFactory
@@ -240,6 +243,16 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	_, err = c.Info(cmd.Context())
 	if err != nil {
 		return err
+	}
+
+	if s.Dev {
+		return dev.Dev(cmd.Context(), c, &dev.Options{
+			ImageSource:       imageSource,
+			Run:               opts,
+			Replace:           s.Replace,
+			Dangerous:         s.Dangerous,
+			BidirectionalSync: s.BidirectionalSync,
+		})
 	}
 
 	defer func() {

@@ -55,16 +55,18 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
 ### Options
 
 ```
-      --auto-upgrade      Enabled automatic upgrades.
-  -f, --file string       Name of the build file (default "DIRECTORY/Acornfile")
-  -h, --help              help for run
-      --help-advanced     Show verbose help text
-  -n, --name string       Name of app to create
-      --notify-upgrade    If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it
-  -o, --output string     Output API request without creating app (json, yaml)
-      --profile strings   Profile to assign default values
-  -q, --quiet             Do not print status
-      --wait              Wait for app to become ready before command exiting (default: true)
+      --auto-upgrade         Enabled automatic upgrades.
+  -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
+  -i, --dev                  Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
+  -f, --file string          Name of the build file (default "DIRECTORY/Acornfile")
+  -h, --help                 help for run
+      --help-advanced        Show verbose help text
+  -n, --name string          Name of app to create
+      --notify-upgrade       If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it
+  -o, --output string        Output API request without creating app (json, yaml)
+      --profile strings      Profile to assign default values
+  -q, --quiet                Do not print status
+      --wait                 Wait for app to become ready before command exiting (default: true)
 ```
 
 ### Options inherited from parent commands
