@@ -41,17 +41,17 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 		if err != nil {
 			return nil, err
 		}
-		var exImg *apiv1.Image
-		var exImgTag, exImgName string
+		var existingImg *apiv1.Image
+		var existingImgTag, existingImgName string
 
-		exImg, exImgTag, err = images.FindImageMatch(apiv1.ImageList{Items: il}, image)
+		existingImg, existingImgTag, err = images.FindImageMatch(apiv1.ImageList{Items: il}, image)
 		if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 			return nil, err
 		} else if err == nil {
-			image = exImg.Name
-			exImgName = exImg.Name
-			if exImgTag != "" {
-				image = exImgTag
+			image = existingImg.Name
+			existingImgName = existingImg.Name
+			if existingImgTag != "" {
+				image = existingImgTag
 			}
 		}
 
@@ -59,7 +59,7 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 		if choice, promptErr := handleNotAllowed(dangerous, image); promptErr != nil {
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 		} else if choice != "NO" {
-			iarErr := createImageAllowRule(ctx, c, image, choice, exImgName) // exImgName to ensure that this exact image ID is allowed in addition to whatever pattern we're allowing
+			iarErr := createImageAllowRule(ctx, c, image, choice, existingImgName) // existingImgName to ensure that this exact image ID is allowed in addition to whatever pattern we're allowing
 			if iarErr != nil {
 				return nil, iarErr
 			}

@@ -72,7 +72,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 }
 
 func (c *DefaultClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
-	img, tag, err := GetImageRef(ctx, c, image)
+	img, tag, err := FindImage(ctx, c, image)
 	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 		return nil, err
 	} else if err == nil && img != nil {
@@ -107,11 +107,14 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 
 	if opts.Image != "" {
-		img, err := c.ImageGet(ctx, opts.Image)
+		img, tag, err := FindImage(ctx, c, opts.Image)
 		if err != nil && !apierrors.IsNotFound(err) {
 			return nil, err
-		} else if img != nil {
+		} else if err == nil && img != nil {
 			opts.Image = img.Name
+			if tag != "" {
+				opts.Image = tag
+			}
 		}
 		app.Spec.Image = opts.Image
 	}
