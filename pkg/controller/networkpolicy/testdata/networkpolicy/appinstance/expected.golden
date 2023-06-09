@@ -7,16 +7,6 @@ metadata:
   name: app-name
   namespace: app-created-namespace
 spec:
-  egress:
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 169.254.169.254/32
-    - ipBlock:
-        cidr: ::/0
-        except:
-        - fd00:ec2::254/64
   ingress:
   - from:
     - namespaceSelector:
@@ -29,6 +19,5 @@ spec:
       acorn.io/managed: "true"
   policyTypes:
   - Ingress
-  - Egress
 status: {}
 `

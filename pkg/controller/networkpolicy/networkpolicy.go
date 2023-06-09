@@ -20,13 +20,6 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-// These IP addresses are what workloads running on AWS EC2 instances use to access the instance metadata service.
-// We block them with a NetworkPolicy in each app.
-const (
-	awsEC2cidrV4 = "169.254.169.254/32"
-	awsEC2cidrV6 = "fd00:ec2::254/64"
-)
-
 // ForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
 // to all pods in an app, so that they cannot be reached by pods from other projects.
 func ForApp(req router.Request, resp router.Response) error {
@@ -60,7 +53,6 @@ func ForApp(req router.Request, resp router.Response) error {
 
 	// create the NetworkPolicy for the whole app
 	// this allows traffic only from within the project
-	// it also blocks ec2 metadata traffic with an egress policy
 	resp.Objects(&networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
@@ -76,23 +68,7 @@ func ForApp(req router.Request, resp router.Response) error {
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
 				From: allowedNamespaceSelectors,
 			}},
-			Egress: []networkingv1.NetworkPolicyEgressRule{{
-				To: []networkingv1.NetworkPolicyPeer{
-					{
-						IPBlock: &networkingv1.IPBlock{
-							CIDR:   "0.0.0.0/0",
-							Except: []string{awsEC2cidrV4},
-						},
-					},
-					{
-						IPBlock: &networkingv1.IPBlock{
-							CIDR:   "::/0",
-							Except: []string{awsEC2cidrV6},
-						},
-					},
-				},
-			}},
-			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},
 	})
 	return nil
