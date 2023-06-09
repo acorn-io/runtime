@@ -365,6 +365,9 @@ type Container struct {
 	ComputeClass *string                `json:"class,omitempty"`
 	Memory       *int64                 `json:"memory,omitempty"`
 
+	// Metrics is available on containers and jobs, but not sidecars
+	Metrics MetricsDef `json:"metrics,omitempty"`
+
 	// Scale is only available on containers, not sidecars or jobs
 	Scale *int32 `json:"scale,omitempty"`
 
@@ -460,6 +463,11 @@ type MemoryMap map[string]*int64
 
 // Workload to its class
 type ComputeClassMap map[string]string
+
+type MetricsDef struct {
+	Port int32  `json:"port,omitempty"`
+	Path string `json:"path,omitempty"`
+}
 
 type GeneratedService struct {
 	Job string `json:"job,omitempty"`
