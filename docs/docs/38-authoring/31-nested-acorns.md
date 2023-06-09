@@ -18,7 +18,7 @@ acorns: {
 //...
 ```
 
-## Desribe a deployment pipeline with Acorns and services
+## Describe a deployment pipeline with Acorns and services
 
 To describe an entire deployment with Acorns you declare each Acorn and define a profile for the deployment type. You can also use `services` to provide infrastructure components to the app deployment.
 
