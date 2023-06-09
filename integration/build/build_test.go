@@ -272,5 +272,5 @@ func TestBuildNestedAcornWithLocalImage(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error when referencing local image in another project, got nil")
 	}
-	assert.Contains(t, err.Error(), "could not find local image localnginx:latest")
+	assert.Contains(t, err.Error(), "missing registry host in the tag [localnginx:latest]")
 }
