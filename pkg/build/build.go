@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
@@ -361,14 +362,14 @@ func pullImage(ctx *buildContext, image string) (id string, err error) {
 	return pushTarget.Context().Digest(digest.String()).String(), nil
 }
 
-func resolveLocalImage(ctx *buildContext, image string) (string, error) {
+func resolveLocalImage(ctx *buildContext, imageName string) (string, error) {
 	c, err := k8sclient.Default()
 	if err != nil {
 		return "", err
 	}
 
 	// very important - make sure we only list images in the buildNamespace to avoid finding ones in other projects
-	imageList := v1.ImageInstanceList{}
+	imageList := apiv1.ImageList{}
 	err = c.List(ctx.ctx, &imageList, &kclient.ListOptions{
 		Namespace: ctx.buildNamespace,
 	})
@@ -376,32 +377,18 @@ func resolveLocalImage(ctx *buildContext, image string) (string, error) {
 		return "", err
 	}
 
-	var digest string
-imageLoop:
-	for _, imageInstance := range imageList.Items {
-		// check whether the image specified by the user matches the name (ID) of the image
-		// require at least the first three characters to match
-		if len(image) > 2 && strings.HasPrefix(imageInstance.Name, image) {
-			digest = imageInstance.Digest
-			break
-		}
-
-		// check to see if it matches any of the tags on the image
-		for _, tag := range imageInstance.Tags {
-			if tag == image {
-				digest = imageInstance.Digest
-				break imageLoop
-			}
-		}
+	image, _, err := images2.FindImageMatch(imageList, imageName)
+	if err != nil {
+		return "", err
 	}
 
-	if digest != "" {
+	if image.Digest != "" {
 		pushTarget, err := imagename.ParseReference(ctx.pushRepo)
 		if err != nil {
 			return "", err
 		}
 
-		return pushTarget.Context().Digest(digest).String(), nil
+		return pushTarget.Context().Digest(image.Digest).String(), nil
 	}
 	return "", fmt.Errorf("could not find local image %s", image)
 }
