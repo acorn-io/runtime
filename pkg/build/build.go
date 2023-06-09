@@ -390,7 +390,7 @@ func resolveLocalImage(ctx *buildContext, imageName string) (string, error) {
 
 		return pushTarget.Context().Digest(image.Digest).String(), nil
 	}
-	return "", fmt.Errorf("could not find local image %s", image)
+	return "", fmt.Errorf("could not find local image %s", imageName)
 }
 
 func progressClose(progress chan ggcrv1.Update) {
