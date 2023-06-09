@@ -169,6 +169,10 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 			}
 			return tag.Digest(i.app.Status.AppImage.Digest).String(), true, nil
 		}
+	case "imageName":
+		return i.app.Status.AppImage.Name, true, nil
+	case "commitSha":
+		return i.app.Status.AppImage.VCS.Revision, true, nil
 	}
 	return "", false, nil
 }

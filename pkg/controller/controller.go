@@ -60,7 +60,10 @@ func New() (*Controller, error) {
 		return nil, err
 	}
 
-	routes(router, registryTransport, event.NewRecorder(client))
+	err = routes(router, cfg, registryTransport, event.NewRecorder(client))
+	if err != nil {
+		return nil, err
+	}
 
 	return &Controller{
 		Router: router,

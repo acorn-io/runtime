@@ -37,6 +37,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/rest"
 )
 
 var (
@@ -45,7 +46,12 @@ var (
 	})
 )
 
-func routes(router *router.Router, registryTransport http.RoundTripper, recorder event.Recorder) {
+func routes(router *router.Router, cfg *rest.Config, registryTransport http.RoundTripper, recorder event.Recorder) error {
+	jobsHandler, err := jobs.NewHandler(cfg)
+	if err != nil {
+		return err
+	}
+
 	router.OnErrorHandler = appdefinition.OnError
 
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(devsession.OverlayDevSession)
@@ -103,6 +109,7 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	router.Type(&policyv1.PodDisruptionBudget{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobs.JobPodOrphanCleanup)
+	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobsHandler.SaveJobOutput)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the oss-acorn.io wildcard cert
@@ -117,4 +124,6 @@ func routes(router *router.Router, registryTransport http.RoundTripper, recorder
 	configRouter.HandlerFunc(builder.DeployRegistry)
 	configRouter.HandlerFunc(config.HandleAutoUpgradeInterval)
 	configRouter.HandlerFunc(volume.CreateEphemeralVolumeClass)
+
+	return nil
 }

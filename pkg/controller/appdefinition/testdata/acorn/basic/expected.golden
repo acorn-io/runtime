@@ -1,0 +1,205 @@
+`apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.acorn-name
+  name: acorn-name
+  namespace: app-created-namespace
+spec:
+  annotations:
+    myAnnotation: myValue
+  appName: app-name
+  appNamespace: app-namespace
+  default: true
+  external: app-name.acorn-name
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    myLabel: myValue
+status: {}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.vol
+    acorn.io/volume-name: vol
+  name: vol
+  namespace: app-created-namespace
+spec:
+  accessModes:
+  - ReadWriteOnce
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/original-image: foo
+    myAnnotation: myValue
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: acorn-name
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/parent-acorn-name: app-name
+    acorn.io/public-name: app-name.acorn-name
+    myLabel: myValue
+  name: app-name-acorn-name-01b5d4ac
+  namespace: app-namespace
+spec:
+  annotations:
+  - key: myAnnotation
+    value: myValue
+  autoUpgrade: true
+  autoUpgradeInterval: 1m
+  deployArgs:
+    myArg: value
+  environment:
+  - name: MY_VAR
+    value: my-value
+  image: foo
+  labels:
+  - key: myLabel
+    value: myValue
+  notifyUpgrade: true
+  ports:
+  - port: 4444
+    protocol: http
+  profiles:
+  - profileOne
+  - profileTwo
+  secrets:
+  - secret: app-name.secret
+    target: target
+  services:
+  - service: app-name.myService
+    target: targetApp
+  volumes:
+  - accessModes:
+    - readWriteOnce
+    - readWriteMany
+    class: volclass
+    size: 1Gi
+    target: target
+    volume: vol
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  defaults: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: acorn-name-pull-1234567890ab
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  image: test
+status:
+  appImage:
+    id: foo
+    imageData: {}
+    vcs: {}
+  appSpec:
+    acorns:
+      acorn-name:
+        annotations:
+        - key: myAnnotation
+          value: myValue
+        autoUpgrade: true
+        autoUpgradeInterval: 1m
+        computeClasses:
+          workload1: default
+        deployArgs:
+          myArg: value
+        environment:
+        - name: MY_VAR
+          value: my-value
+        image: foo
+        labels:
+        - key: myLabel
+          value: myValue
+        links:
+        - service: myService
+          target: targetApp
+        memory:
+          workload1: 1024
+        notifyUpgrade: true
+        profiles:
+        - profileOne
+        - profileTwo
+        publish:
+        - port: 4444
+          protocol: http
+        secrets:
+        - secret: secret
+          target: target
+        volumes:
+        - accessModes:
+          - readWriteOnce
+          - readWriteMany
+          class: volclass
+          size: 1Gi
+          target: target
+          volume: vol
+    secrets:
+      secret:
+        type: opaque
+    volumes:
+      vol:
+        accessModes:
+        - readWriteOnce
+        - readWriteMany
+        size: 1Gi
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+`

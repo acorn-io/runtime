@@ -1,0 +1,5 @@
+#!/bin/sh
+
+if [ -e /run/secrets/output ]; then
+    cat /run/secrets/output
+fi
