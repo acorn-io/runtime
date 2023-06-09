@@ -361,16 +361,6 @@ func pullImage(ctx *buildContext, image string) (id string, err error) {
 	return pushTarget.Context().Digest(digest.String()).String(), nil
 }
 
-func isImageRemote(ctx *buildContext, image string) bool {
-	ref, err := images2.ParseReferenceNoDefault(image)
-	if err != nil {
-		return false
-	}
-
-	_, err = remote.Index(ref, ctx.remoteOpts...)
-	return err == nil
-}
-
 func resolveLocalImage(ctx *buildContext, image string) (string, error) {
 	c, err := k8sclient.Default()
 	if err != nil {
