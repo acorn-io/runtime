@@ -70,11 +70,14 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 }
 
 func (c *DefaultClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
-	img, err := c.ImageGet(ctx, image)
+	img, tag, err := GetImageRef(ctx, c, image)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
-	} else if img != nil {
+	} else if err == nil && img != nil {
 		image = img.Name
+		if tag != "" {
+			image = tag
+		}
 	}
 	app := ToApp(c.Namespace, image, opts)
 	return app, translateErr(c.Client.Create(ctx, app))
