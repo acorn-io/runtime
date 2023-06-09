@@ -41,15 +41,17 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 		if err != nil {
 			return nil, err
 		}
-		var img *apiv1.Image
-		var tag string
-		img, tag, err = images.FindImageMatch(apiv1.ImageList{Items: il}, image)
+		var exImg *apiv1.Image
+		var exImgTag, exImgName string
+
+		exImg, exImgTag, err = images.FindImageMatch(apiv1.ImageList{Items: il}, image)
 		if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 			return nil, err
 		} else if err == nil {
-			image = img.Name
-			if tag != "" {
-				image = tag
+			image = exImg.Name
+			exImgName = exImg.Name
+			if exImgTag != "" {
+				image = exImgTag
 			}
 		}
 
@@ -57,7 +59,7 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 		if choice, promptErr := handleNotAllowed(dangerous, image); promptErr != nil {
 			return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 		} else if choice != "NO" {
-			iarErr := createImageAllowRule(ctx, c, image, choice)
+			iarErr := createImageAllowRule(ctx, c, image, choice, exImgName) // exImgName to ensure that this exact image ID is allowed in addition to whatever pattern we're allowing
 			if iarErr != nil {
 				return nil, iarErr
 			}
@@ -144,11 +146,18 @@ application. If you are unsure say no.`, image)
 	return choiceMap[choice], err
 }
 
-func createImageAllowRule(ctx context.Context, c client.Client, image, choice string) error {
+func createImageAllowRule(ctx context.Context, c client.Client, image, choice string, extraExactMatches ...string) error {
 	iar, err := imageallowrules.GenerateSimpleAllowRule(c.GetProject(), run.NameGenerator.Generate(), image, choice)
 	if err != nil {
 		return fmt.Errorf("error generating ImageAllowRule: %w", err)
 	}
+
+	for _, extra := range extraExactMatches {
+		if extra != image && extra != "" {
+			iar.Images = append(iar.Images, extra)
+		}
+	}
+
 	cli, err := c.GetClient()
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
