@@ -55,7 +55,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"annotations":{"cona3":"value"},"image":"test","labels":{"conl3":"value"},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"cona3":"value"},"image":"test","labels":{"conl3":"value"},"metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
         allconsa1: value
         cona1: value
         cona3: value
@@ -231,6 +231,7 @@ status:
         image: test
         labels:
           conl3: value
+        metrics: {}
         ports:
         - port: 80
           protocol: http

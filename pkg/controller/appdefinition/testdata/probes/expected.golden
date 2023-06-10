@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":[]}'
+        acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":[]}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -119,7 +119,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
+        acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -299,6 +299,7 @@ status:
     containers:
       nodefault:
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -306,6 +307,7 @@ status:
         probes: []
       oneimage:
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -314,6 +316,7 @@ status:
         sidecars:
           left:
             image: foo
+            metrics: {}
             probes:
             - http:
                 headers:

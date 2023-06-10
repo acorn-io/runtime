@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"dependencies":[{"targetName":"db"}],"image":"image-name","probes":null}'
+        acorn.io/container-spec: '{"dependencies":[{"targetName":"db"}],"image":"image-name","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -122,7 +122,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"dependencies":[{"targetName":"container-name"}],"image":"image-name","probes":null}'
+        acorn.io/container-spec: '{"dependencies":[{"targetName":"container-name"}],"image":"image-name","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -252,14 +252,17 @@ status:
         dependencies:
         - targetName: db
         image: image-name
+        metrics: {}
         probes: null
       db:
         image: image-name
+        metrics: {}
         probes: null
       web:
         dependencies:
         - targetName: container-name
         image: image-name
+        metrics: {}
         probes: null
   appStatus:
     containers:

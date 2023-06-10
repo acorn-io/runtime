@@ -55,7 +55,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"annotations":{"job3a":"value"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"job3":"value"},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"job3a":"value"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"job3":"value"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         alljobsa: value
         global2a: value
         globala: value
@@ -194,6 +194,7 @@ status:
         image: image-name
         labels:
           job3: value
+        metrics: {}
         ports:
         - port: 80
           protocol: http

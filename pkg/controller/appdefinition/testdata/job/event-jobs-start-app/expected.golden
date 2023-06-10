@@ -36,7 +36,7 @@ spec:
     metadata:
       annotations:
         acorn.io/app-generation: "3"
-        acorn.io/container-spec: '{"events":["update"],"image":"update-only-image","probes":null}'
+        acorn.io/container-spec: '{"events":["update"],"image":"update-only-image","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -116,21 +116,25 @@ status:
         events:
         - create
         image: create-only-image
+        metrics: {}
         probes: null
       delete-only:
         events:
         - delete
         image: delete-only-image
+        metrics: {}
         probes: null
       stop-only:
         events:
         - stop
         image: stop-only-image
+        metrics: {}
         probes: null
       update-only:
         events:
         - update
         image: update-only-image
+        metrics: {}
         probes: null
   appStatus:
     jobs:

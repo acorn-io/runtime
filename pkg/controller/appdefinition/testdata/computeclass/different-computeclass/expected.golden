@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -136,7 +136,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -318,6 +318,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -328,6 +329,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http

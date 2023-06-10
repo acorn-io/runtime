@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","probes":null}'
+        acorn.io/container-spec: '{"image":"image-name","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -113,6 +113,7 @@ status:
     containers:
       container-name:
         image: image-name
+        metrics: {}
         probes: null
   appStatus: {}
   columns: {}
