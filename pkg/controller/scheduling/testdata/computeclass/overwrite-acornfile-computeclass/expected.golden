@@ -22,6 +22,7 @@ status:
           dockerfile: Dockerfile
         class: sample-compute-class-01
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -30,6 +31,7 @@ status:
         sidecars:
           left:
             image: foo
+            metrics: {}
             ports:
             - port: 90
               protocol: tcp

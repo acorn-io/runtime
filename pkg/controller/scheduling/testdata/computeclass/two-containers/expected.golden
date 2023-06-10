@@ -21,6 +21,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -31,6 +32,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http

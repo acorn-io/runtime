@@ -21,6 +21,7 @@ status:
             secret: {}
             volume: foo
         image: image-name
+        metrics: {}
         probes: null
     volumes:
       foo:

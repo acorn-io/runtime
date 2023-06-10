@@ -20,6 +20,7 @@ status:
           dockerfile: Dockerfile
         image: image-name
         memory: 1048576
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -28,6 +29,7 @@ status:
         sidecars:
           left:
             image: foo
+            metrics: {}
             ports:
             - port: 90
               protocol: tcp
