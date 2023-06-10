@@ -9,12 +9,14 @@ import (
 	"strings"
 	"time"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/build/buildkit"
 	"github.com/acorn-io/acorn/pkg/buildclient"
 	images2 "github.com/acorn-io/acorn/pkg/images"
+	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/aml/pkg/cue"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -24,6 +26,7 @@ import (
 	"github.com/google/uuid"
 	client2 "github.com/moby/buildkit/client"
 	"github.com/opencontainers/go-digest"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
@@ -36,26 +39,28 @@ func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
 }
 
 type buildContext struct {
-	ctx           context.Context
-	cwd           string
-	acornfilePath string
-	pushRepo      string
-	opts          v1.AcornImageBuildInstanceSpec
-	keychain      authn.Keychain
-	remoteOpts    []remote.Option
-	messages      buildclient.Messages
+	ctx            context.Context
+	cwd            string
+	acornfilePath  string
+	pushRepo       string
+	buildNamespace string
+	opts           v1.AcornImageBuildInstanceSpec
+	keychain       authn.Keychain
+	remoteOpts     []remote.Option
+	messages       buildclient.Messages
 }
 
-func Build(ctx context.Context, messages buildclient.Messages, pushRepo string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
+func Build(ctx context.Context, messages buildclient.Messages, pushRepo, buildNamespace string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
 	remoteKc := NewRemoteKeyChain(messages, keychain)
 	buildContext := &buildContext{
-		ctx:        ctx,
-		cwd:        "",
-		pushRepo:   pushRepo,
-		opts:       opts,
-		keychain:   remoteKc,
-		remoteOpts: append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
-		messages:   messages,
+		ctx:            ctx,
+		cwd:            "",
+		pushRepo:       pushRepo,
+		buildNamespace: buildNamespace,
+		opts:           opts,
+		keychain:       remoteKc,
+		remoteOpts:     append(remoteOpts, remote.WithAuthFromKeychain(remoteKc), remote.WithContext(ctx)),
+		messages:       messages,
 	}
 
 	return build(buildContext)
@@ -195,10 +200,17 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 				})
 				continue
 			}
-			id, err := pullImage(ctx, acornImage.Image)
+
+			// first attempt to resolve the image locally
+			id, err := resolveLocalImage(ctx, acornImage.Image)
 			if err != nil {
-				return nil, nil, err
+				// see if it can be pulled from a remote registry
+				id, err = pullImage(ctx, acornImage.Image)
+				if err != nil {
+					return nil, nil, err
+				}
 			}
+
 			result[key] = v1.ImageData{
 				Image: id,
 			}
@@ -348,6 +360,37 @@ func pullImage(ctx *buildContext, image string) (id string, err error) {
 	}
 
 	return pushTarget.Context().Digest(digest.String()).String(), nil
+}
+
+func resolveLocalImage(ctx *buildContext, imageName string) (string, error) {
+	c, err := k8sclient.Default()
+	if err != nil {
+		return "", err
+	}
+
+	// very important - make sure we only list images in the buildNamespace to avoid finding ones in other projects
+	imageList := apiv1.ImageList{}
+	err = c.List(ctx.ctx, &imageList, &kclient.ListOptions{
+		Namespace: ctx.buildNamespace,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	image, _, err := images2.FindImageMatch(imageList, imageName)
+	if err != nil {
+		return "", err
+	}
+
+	if image.Digest != "" {
+		pushTarget, err := imagename.ParseReference(ctx.pushRepo)
+		if err != nil {
+			return "", err
+		}
+
+		return pushTarget.Context().Digest(image.Digest).String(), nil
+	}
+	return "", fmt.Errorf("could not find local image %s", imageName)
 }
 
 func progressClose(progress chan ggcrv1.Update) {

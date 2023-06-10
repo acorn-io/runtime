@@ -1,0 +1,1 @@
+acorns: nginx: image: "localnginx:latest"

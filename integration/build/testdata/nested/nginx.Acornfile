@@ -1,0 +1,8 @@
+containers: nginx: {
+	image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+	ports: "80/http"
+	files: "/usr/share/nginx/html/index.html": """
+		Nginx Acorn
+
+		"""
+}

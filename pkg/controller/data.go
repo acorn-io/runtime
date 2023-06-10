@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/system"
@@ -60,6 +61,11 @@ func (c *Controller) initData(ctx context.Context) error {
 				Verbs:     []string{"update"},
 				APIGroups: []string{v1.SchemeGroupVersion.Group},
 				Resources: []string{"acornimagebuildinstances/status"},
+			},
+			{
+				Verbs:     []string{"get", "list", "watch"},
+				APIGroups: []string{apiv1.SchemeGroupVersion.Group},
+				Resources: []string{"images"},
 			},
 		},
 	}, &rbacv1.ClusterRoleBinding{
