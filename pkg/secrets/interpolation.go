@@ -183,13 +183,17 @@ func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (stri
 	if apierrors.IsNotFound(err) {
 		return "", false, &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
-				Secret: strings.Join(secretName, "."),
+				Error: notFound("secret", secretName...),
 			},
 		}
 	} else if err != nil {
 		return "", false, err
 	}
 	return string(secret.Data[keyName]), true, nil
+}
+
+func notFound(kind string, keys ...string) string {
+	return kind + " [" + strings.Join(keys, ".") + "] not found"
 }
 
 func splitServiceProperty(parts []string) (head []string, tail []string, err error) {
@@ -219,14 +223,14 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 	switch prop {
 	case "secret", "secrets":
 		if len(extra) != 2 {
-			return "", fmt.Errorf("invalid secret lookup on service [%s] key must be at least two parts, go %v", svc.Name, extra)
+			return "", fmt.Errorf("invalid secret lookup on service [%s] key must be at least two parts, got %v", svc.Name, extra)
 		}
 		secret := &corev1.Secret{}
 		err := ref.Lookup(i.ctx, i.client, secret, svc.Namespace, extra[0])
 		if apierrors.IsNotFound(err) {
 			return "", &ErrInterpolation{
 				ExpressionError: v1.ExpressionError{
-					Secret: extra[0],
+					Error: notFound("secret", extra[0]),
 				},
 			}
 		} else if err != nil {
@@ -239,7 +243,7 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		}
 		return "", &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
-				Endpoint: svc.Name,
+				Error: fmt.Sprintf("endpoint on service [%s] undefined", svc.Name),
 			},
 		}
 	case "address", "host", "hostname":
@@ -296,7 +300,7 @@ func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
 	if apierrors.IsNotFound(err) {
 		return "", false, &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
-				Service: strings.Join(serviceName, "."),
+				Error: notFound("service", serviceName...),
 			},
 		}
 	}

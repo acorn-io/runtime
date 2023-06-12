@@ -23,6 +23,12 @@ func CLIStatus(req router.Request, resp router.Response) (err error) {
 
 func message(app *v1.AppInstance) string {
 	buf := &bytes.Buffer{}
+	if !app.DeletionTimestamp.IsZero() {
+		buf.WriteString("[removing]")
+	} else if app.GetStopped() && !app.Status.AppStatus.Stopped {
+		buf.WriteString("[stopping]")
+	}
+
 	for _, cond := range app.Status.Conditions {
 		if cond.Type == v1.AppInstanceConditionReady {
 			continue
