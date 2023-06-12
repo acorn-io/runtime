@@ -21,7 +21,7 @@ import (
 func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
 	for _, acorn := range toAcorns(appInstance, tag, pullSecrets) {
 		var devSession v1.DevSessionInstance
-		err := req.Get(&devSession, appInstance.Namespace, appInstance.Name)
+		err := req.Get(&devSession, acorn.Namespace, acorn.Name)
 		if err == nil {
 			// Don't update app in dev mode
 			acorn.Annotations[apply.AnnotationUpdate] = "false"

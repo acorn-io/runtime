@@ -567,7 +567,9 @@ func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, conta
 		}
 		rev, err := getRevision(req, appInstance.Status.Namespace, secret)
 		if apierror.IsNotFound(err) {
-			result[apply.AnnotationUpdate] = "false"
+			if !appInstance.GetStopped() {
+				result[apply.AnnotationUpdate] = "false"
+			}
 			result[apply.AnnotationCreate] = "false"
 		} else if err != nil {
 			return nil, err
