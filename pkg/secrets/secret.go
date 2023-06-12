@@ -146,6 +146,8 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 		return nil, err
 	}
 
+	tempInterpolator := NewInterpolator(req.Ctx, req.Client, appInstance)
+
 	for _, entry := range typed.Sorted(secret.Data) {
 		var (
 			template       = string(entry.Value)
@@ -181,6 +183,11 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 
 			return images.ResolveTag(tag, digest.Image)
 		})
+
+		template, err := tempInterpolator.replace(template)
+		if err != nil {
+			return nil, err
+		}
 
 		secret.Data[entry.Key] = []byte(template)
 	}
