@@ -4,11 +4,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"net/url"
 	"path"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/appdefinition"
 	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/images"
@@ -68,6 +70,9 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 			// because it's failing. This happens when we refer to an object that has
 			// yet to be created
 			status.Error(interpolator.Err())
+		} else if errors.Is(err, appdefinition.ErrInvalidInput) {
+			status.Error(err)
+			err = nil
 		} else {
 			status.Error(err)
 		}

@@ -32,15 +32,13 @@ func GetJobOutputSecretName(ctx context.Context, namespace, jobName string) stri
 
 // GetOutputFor obj must be acorn internal v1.Secret, v1.Service, or string
 func GetOutputFor(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, name, serviceName string, obj interface{}) (err error) {
-	defer func() {
-		if err != nil && !errors.Is(err, ErrJobNoOutput) && !errors.Is(err, ErrJobNotDone) {
-			err = errors.Join(err, ErrJobNotDone)
-		}
-	}()
-
 	data, err := getOutput(ctx, c, appInstance, name)
 	if err != nil {
 		return err
+	}
+
+	if len(data) == 0 {
+		return fmt.Errorf("job [%s] produced no output in /run/secrets/output", name)
 	}
 
 	switch v := obj.(type) {
@@ -52,16 +50,22 @@ func GetOutputFor(ctx context.Context, c kclient.Client, appInstance *v1.AppInst
 		}
 		appSpec, err := asAppSpec(data)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse generated output for secret [%s] bytes [%d]: %v", serviceName, len(data), err)
 		}
-		secret := appSpec.Secrets[serviceName]
+		secret, ok := appSpec.Secrets[serviceName]
+		if !ok {
+			return fmt.Errorf("generated output is missing secret [%s] bytes [%d]: %w", serviceName, len(data), appdefinition.ErrInvalidInput)
+		}
 		secret.DeepCopyInto(v)
 	case *v1.Service:
 		appSpec, err := asAppSpec(data)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse generated output for service [%s] bytes [%d]: %v", serviceName, len(data), err)
 		}
-		svc := appSpec.Services[serviceName]
+		svc, ok := appSpec.Services[serviceName]
+		if !ok {
+			return fmt.Errorf("generated output is missing service [%s] bytes [%d]: %w", serviceName, len(data), appdefinition.ErrInvalidInput)
+		}
 		svc.DeepCopyInto(v)
 	default:
 		return fmt.Errorf("invalid job output type %T", v)
@@ -79,6 +83,10 @@ func asAppSpec(data []byte) (*v1.AppSpec, error) {
 }
 
 func getOutput(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, name string) (data []byte, err error) {
+	if _, ok := appInstance.Status.AppSpec.Jobs[name]; !ok {
+		return nil, fmt.Errorf("generated output depends on undefined job [%s]", name)
+	}
+
 	defer func() {
 		if err == nil {
 			if nacl.IsAcornEncryptedData(data) {

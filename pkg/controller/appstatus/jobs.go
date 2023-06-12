@@ -40,6 +40,10 @@ func (a *appStatusRenderer) readJobs() error {
 		c.ErrorMessages = append(c.ErrorMessages, summary.ErrorMessages...)
 		c.RunningCount = summary.RunningCount
 
+		for _, ee := range c.ExpressionErrors {
+			c.ErrorMessages = append(c.ErrorMessages, ee.String())
+		}
+
 		if c.Skipped {
 			c.Ready = true
 			c.UpToDate = true

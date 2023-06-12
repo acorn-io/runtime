@@ -16,23 +16,15 @@ type AppStatus struct {
 }
 
 type ExpressionError struct {
-	Error      string `json:"-"`
+	Error      string `json:"error,omitempty"`
 	Expression string `json:"expression,omitempty"`
-	Secret     string `json:"secret,omitempty"`
-	Service    string `json:"service,omitempty"`
-	Endpoint   string `json:"endpoint,omitempty"`
 }
 
 func (e *ExpressionError) String() string {
 	if e.Error != "" {
-		return fmt.Sprintf("[%s]: %s", e.Expression, e.Error)
-	} else if e.Secret != "" {
-		return fmt.Sprintf("[%s]: secret %s: %s", e.Expression, e.Secret, e.Error)
-	} else if e.Service != "" {
-		return fmt.Sprintf("[%s]: service %s: %s", e.Expression, e.Service, e.Error)
-	} else if e.Endpoint != "" {
-		return fmt.Sprintf("[%s]: endpoint %s: %s", e.Expression, e.Endpoint, e.Error)
+		return fmt.Sprintf("error in expression [%s]: %s", e.Expression, e.Error)
 	}
+
 	return fmt.Sprintf("[%s]: expression error", e.Expression)
 }
 

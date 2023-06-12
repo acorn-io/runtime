@@ -45,7 +45,8 @@ func (a *appStatusRenderer) readServices() error {
 		service := &v1.ServiceInstance{}
 		if err := ref.Lookup(a.ctx, a.c, service, a.app.Status.Namespace, serviceName); apierrors.IsNotFound(err) {
 			s.Ready = false
-			s.Defined = false
+			s.UpToDate = s.ServiceAcornName != ""
+			s.Defined = s.ServiceAcornName != ""
 			a.app.Status.AppStatus.Services[serviceName] = s
 			continue
 		} else if err != nil {

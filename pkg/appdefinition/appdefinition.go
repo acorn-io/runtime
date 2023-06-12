@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -21,6 +22,10 @@ const (
 	ImageDataFile = "images.json"
 	VCSDataFile   = "vcs.json"
 	BuildDataFile = "build.json"
+)
+
+var (
+	ErrInvalidInput = errors.New("invalid input")
 )
 
 type AppDefinition struct {
