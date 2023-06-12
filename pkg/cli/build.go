@@ -21,7 +21,6 @@ acorn build .`,
 		SilenceUsage: true,
 		Short:        "Build an app from a Acornfile file",
 		Long:         "Build all dependent container and app images from your Acornfile file",
-		Args:         cobra.MinimumNArgs(1),
 	})
 	cmd.Flags().SetInterspersed(false)
 	return cmd
