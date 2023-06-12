@@ -92,7 +92,7 @@ func (a *appStatusRenderer) readContainers() error {
 	}
 
 	a.app.Status.AppStatus.Stopped = false
-	if !isTransitioning && a.app.Spec.GetStopped() {
+	if !isTransitioning && a.app.GetStopped() {
 		allZero := true
 		for _, v := range a.app.Status.AppStatus.Containers {
 			if v.DesiredReplicaCount != 0 {

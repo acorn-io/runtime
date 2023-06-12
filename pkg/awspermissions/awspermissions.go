@@ -300,7 +300,7 @@ func AWSAnnotations(ctx context.Context, c kclient.Client, app *v1.AppInstance, 
 		return nil, err
 	}
 
-	if app.Spec.GetStopped() {
+	if app.GetStopped() {
 		// strip privileges for stopped app
 		return nil, nil
 	}

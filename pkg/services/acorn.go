@@ -20,7 +20,7 @@ import (
 )
 
 func publishMode(app *v1.AppInstance) v1.PublishMode {
-	if app.Spec.GetStopped() {
+	if app.GetStopped() {
 		return v1.PublishModeNone
 	}
 	return app.Spec.PublishMode

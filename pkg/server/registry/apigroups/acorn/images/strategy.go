@@ -51,7 +51,7 @@ func (s *Strategy) validateDelete(ctx context.Context, obj types.Object) error {
 	for _, app := range apps.Items {
 		if app.Status.AppImage.Digest != "" && app.Status.AppImage.Digest == img.Digest {
 			name := publicname.Get(&app)
-			if app.Spec.GetStopped() {
+			if app.GetStopped() {
 				name = name + " (stopped)"
 			}
 			return apierrors.NewInvalid(schema.GroupKind{
