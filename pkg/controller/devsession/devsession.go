@@ -1,6 +1,8 @@
 package devsession
 
 import (
+	"encoding/json"
+	"hash/fnv"
 	"time"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -26,16 +28,39 @@ func ExpireDevSession(req router.Request, resp router.Response) error {
 
 func OverlayDevSession(next router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
-		if err := updateAppForDevSession(req, resp); err != nil {
+		oldGeneration, err := updateAppForDevSession(req, resp)
+		if err != nil {
 			return err
 		}
-		return next.Handle(req, resp)
+		err = next.Handle(req, resp)
+		if err != nil {
+			return err
+		}
+		if oldGeneration > 0 {
+			app := req.Object.(*v1.AppInstance)
+			if app.Generation == app.Status.ObservedGeneration {
+				app.Status.ObservedGeneration = oldGeneration
+			}
+			app.Generation = oldGeneration
+		}
+		return nil
 	})
 }
 
-func updateAppForDevSession(req router.Request, resp router.Response) error {
+func getNewGeneration(devSession *v1.DevSessionInstance) int64 {
+	data, _ := json.Marshal(devSession.Spec.SpecOverride)
+	h := fnv.New64a()
+	_, _ = h.Write(data)
+	v := int64(h.Sum64())
+	if v < 0 {
+		v = 0 - v
+	}
+	return v
+}
+
+func updateAppForDevSession(req router.Request, resp router.Response) (int64, error) {
 	if req.Object == nil {
-		return nil
+		return 0, nil
 	}
 
 	app := req.Object.(*v1.AppInstance)
@@ -43,17 +68,24 @@ func updateAppForDevSession(req router.Request, resp router.Response) error {
 
 	if err := req.Get(devSession, app.Namespace, publicname.Get(app)); apierror.IsNotFound(err) {
 		app.Status.DevSession = nil
-		return nil
+		return 0, nil
 	} else if err != nil {
-		return err
+		return 0, err
 	}
 
+	generation := int64(0)
 	app.Status.DevSession = &devSession.Spec
 	if devSession.Spec.SpecOverride != nil {
+		generation = app.Generation
+		app.Generation = getNewGeneration(devSession)
 		app.Spec = *devSession.Spec.SpecOverride
+		// If already in sync, keep in sync
+		if app.Status.ObservedGeneration == generation {
+			app.Status.ObservedGeneration = app.Generation
+		}
 	}
 
-	return nil
+	return generation, nil
 }
 
 func releaseTime(devSession *v1.DevSessionInstance) time.Time {
