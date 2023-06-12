@@ -167,6 +167,15 @@ func (c *DefaultClient) DevSessionRenew(ctx context.Context, name string, client
 }
 
 func (c *DefaultClient) DevSessionRelease(ctx context.Context, name string) error {
+	// Don't release a devsession for removing apps
+	app, err := c.AppGet(ctx, name)
+	if apierrors.IsNotFound(err) {
+	} else if err != nil {
+		return err
+	} else if !app.DeletionTimestamp.IsZero() {
+		return nil
+	}
+
 	devSession := &apiv1.DevSession{}
 	if err := c.Client.Get(ctx, router.Key(c.Namespace, name), devSession); apierrors.IsNotFound(err) {
 		return nil

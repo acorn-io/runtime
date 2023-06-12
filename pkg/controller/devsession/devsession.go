@@ -11,6 +11,12 @@ import (
 
 func ExpireDevSession(req router.Request, resp router.Response) error {
 	if delay := expired(req.Object.(*v1.DevSessionInstance)); delay < 0 && req.Object.GetDeletionTimestamp().IsZero() {
+		// Don't delete devsession when the app is removing because this latest devsession might have the info in
+		// it to properly remove the object
+		app := &v1.AppInstance{}
+		if err := req.Get(app, req.Namespace, req.Name); err == nil && !app.DeletionTimestamp.IsZero() {
+			return nil
+		}
 		return req.Client.Delete(req.Ctx, req.Object)
 	} else if delay >= 0 {
 		resp.RetryAfter(delay)
