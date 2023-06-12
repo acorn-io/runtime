@@ -108,7 +108,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 
 	if opts.Image != "" {
 		img, tag, err := FindImage(ctx, c, opts.Image)
-		if err != nil && !apierrors.IsNotFound(err) {
+		if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 			return nil, err
 		} else if err == nil && img != nil {
 			opts.Image = img.Name
