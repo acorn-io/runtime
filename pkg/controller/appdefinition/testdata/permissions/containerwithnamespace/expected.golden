@@ -163,6 +163,8 @@ subjects:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  annotations:
+    acorn.io/permissions: '{"serviceName":"oneimage","rules":[{"verbs":["create"],"apiGroups":["foo.io"],"resources":["bar"],"scopes":["account"]},{"verbs":["create"],"apiGroups":["2.foo.io"],"resources":["2.bar"],"scopes":["namespace:ns1","namespace:ns2"]},{"verbs":["patch"],"apiGroups":["bar.io"],"resources":["foo"]}]}'
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name

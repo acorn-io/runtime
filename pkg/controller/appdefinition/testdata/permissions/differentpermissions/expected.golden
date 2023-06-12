@@ -81,6 +81,8 @@ subjects:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  annotations:
+    acorn.io/permissions: '{"serviceName":"oneimage","rules":[{"verbs":["create"],"apiGroups":["foo.io"],"resources":["bar"],"scopes":["account"]},{"verbs":["patch"],"apiGroups":["bar.io"],"resources":["foo"]}]}'
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -259,6 +261,8 @@ subjects:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  annotations:
+    acorn.io/permissions: '{"serviceName":"twoimage","rules":[{"verbs":["put"],"apiGroups":["foo.io"],"resources":["bar"],"scopes":["cluster"]},{"verbs":["delete"],"apiGroups":["bar.io"],"resources":["foo"]}]}'
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
