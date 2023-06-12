@@ -33,6 +33,7 @@ acorn dev --name wandering-sound <IMAGE>
 		cmd.Printf("Error registering completion function for --compute-class flag: %v\n", err)
 	}
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
+	toggleHiddenFlags(cmd, hideUpdateFlags, true)
 	cmd.Flags().SetInterspersed(false)
 	return cmd
 }
@@ -41,11 +42,16 @@ type Dev struct {
 	RunArgs
 	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
 	Replace           bool `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	HelpAdvanced      bool `usage:"Show verbose help text"`
 	out               io.Writer
 	client            ClientFactory
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
+	if s.HelpAdvanced {
+		setAdvancedHelp(cmd, hideUpdateFlags, AdvancedHelp)
+		return cmd.Help()
+	}
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
