@@ -53,11 +53,6 @@ func FilterLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
 }
 
 func DeploySpec(req router.Request, resp router.Response) (err error) {
-	// We need this handler to run even when the app is deleting so ensure jobs will clean up
-	if req.Object == nil {
-		return nil
-	}
-
 	appInstance := req.Object.(*v1.AppInstance)
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
 	interpolator := secrets.NewInterpolator(req.Ctx, req.Client, appInstance)
