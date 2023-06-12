@@ -223,7 +223,7 @@ func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpd
 			},
 			Spec: v1.DevSessionInstanceSpec{
 				Client:                *opts.DevSessionClient,
-				SessionTimeoutSeconds: 30,
+				SessionTimeoutSeconds: 60,
 				SessionStartTime:      metav1.Now(),
 				SessionRenewTime:      metav1.Now(),
 				SpecOverride:          &app.Spec,
