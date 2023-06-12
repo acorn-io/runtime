@@ -169,6 +169,7 @@ type LogOptions struct {
 	Tail             *int64 `json:"tailLines,omitempty"`
 	Follow           bool   `json:"follow,omitempty"`
 	ContainerReplica string `json:"containerReplica,omitempty"`
+	Container        string `json:"container,omitempty"`
 	Since            string `json:"since,omitempty"`
 }
 

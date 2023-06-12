@@ -72,6 +72,7 @@ func (i *Logs) Connect(ctx context.Context, id string, options runtime.Object, r
 			Tail:             opts.Tail,
 			Follow:           opts.Follow,
 			ContainerReplica: opts.ContainerReplica,
+			Container:        opts.Container,
 		})
 		if err != nil {
 			output <- log.Message{

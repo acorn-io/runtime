@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -105,7 +106,9 @@ func ForIngress(req router.Request, resp router.Response) error {
 		}
 	}
 
-	for svcName, ports := range svcNameToPorts {
+	for _, entry := range typed.Sorted(svcNameToPorts) {
+		svcName, ports := entry.Key, entry.Value
+
 		// get the Service from k8s
 		svc := corev1.Service{}
 		err = req.Get(&svc, ingress.Namespace, svcName)

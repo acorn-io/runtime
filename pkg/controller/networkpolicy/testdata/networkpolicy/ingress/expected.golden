@@ -4,6 +4,38 @@ metadata:
   creationTimestamp: null
   labels:
     acorn.io/managed: "true"
+  name: acorn-my-app-my-service-nginx-9090-9090
+  namespace: my-app-namespace
+spec:
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: acorn-system
+    ports:
+    - port: 9090
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      acorn.io/app-name: my-app
+      acorn.io/app-namespace: acorn
+      acorn.io/managed: "true"
+      port-number.acorn.io/9090: "true"
+      service-name.acorn.io/nginx-9090: "true"
+  policyTypes:
+  - Ingress
+status: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
   name: acorn-my-app-my-service-service-7777-9999-10000
   namespace: my-app-namespace
 spec:
@@ -27,38 +59,6 @@ spec:
       acorn.io/managed: "true"
       port-number.acorn.io/9999: "true"
       service-name.acorn.io/service-7777: "true"
-  policyTypes:
-  - Ingress
-status: {}
-
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/managed: "true"
-  name: acorn-my-app-my-service-nginx-9090-9090
-  namespace: my-app-namespace
-spec:
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: acorn-system
-    ports:
-    - port: 9090
-      protocol: TCP
-  podSelector:
-    matchLabels:
-      acorn.io/app-name: my-app
-      acorn.io/app-namespace: acorn
-      acorn.io/managed: "true"
-      port-number.acorn.io/9090: "true"
-      service-name.acorn.io/nginx-9090: "true"
   policyTypes:
   - Ingress
 status: {}
