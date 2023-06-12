@@ -7,13 +7,12 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	k8s.io/client-go => k8s.io/client-go v0.27.2
-	github.com/acorn-io/aml => ../aml
 )
 
 require (
 	cuelang.org/go v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20230612000521-a812941e7fab
+	github.com/acorn-io/aml v0.0.0-20230612195632-e6a07f02364d
 	github.com/acorn-io/baaah v0.0.0-20230617011755-3291c17915f5
 	github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
