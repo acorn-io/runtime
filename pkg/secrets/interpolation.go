@@ -179,7 +179,18 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 
 func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (string, bool, error) {
 	secret := &corev1.Secret{}
-	err := ref.Lookup(i.ctx, i.client, secret, i.namespace, secretName...)
+	ns := i.namespace
+	secretNames := secretName
+
+	// support interpolation of external secrets
+	if len(secretName) > 0 && strings.HasPrefix(secretName[0], "external:") {
+		secretNames = append([]string{
+			strings.TrimPrefix(secretName[0], "external:"),
+		}, secretName[1:]...)
+		ns = i.app.Namespace
+	}
+
+	err := ref.Lookup(i.ctx, i.client, secret, ns, secretNames...)
 	if apierrors.IsNotFound(err) {
 		return "", false, &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{

@@ -13,6 +13,7 @@ import (
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/dev"
+	"github.com/acorn-io/acorn/pkg/env"
 	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/acorn-io/acorn/pkg/rulerequest"
 	"github.com/acorn-io/acorn/pkg/wait"
@@ -147,7 +148,7 @@ type RunArgs struct {
 	Name string `usage:"Name of app to create" short:"n"`
 }
 
-func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
+func (s RunArgs) ToOpts(ctx context.Context, c client.Client) (client.AppRunOptions, error) {
 	var (
 		opts client.AppRunOptions
 		err  error
@@ -186,7 +187,10 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 		return opts, err
 	}
 
-	opts.Env = v1.ParseNameValues(true, s.Env...)
+	opts.Env, err = env.ParseEnvForCLIAndCreateSecret(ctx, c, s.Env...)
+	if err != nil {
+		return opts, err
+	}
 
 	opts.Labels, err = v1.ParseScopedLabels(s.Label...)
 	if err != nil {
@@ -234,7 +238,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		updated     bool
 	)
 
-	opts, err := s.ToOpts()
+	opts, err := s.ToOpts(cmd.Context(), c)
 	if err != nil {
 		return err
 	}
