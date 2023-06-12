@@ -229,3 +229,13 @@ func (c *DefaultClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 
 	return result.Items, nil
 }
+
+// FindImage finds an image if exists and returns whether it was found by tag
+func FindImage(ctx context.Context, c Client, name string) (*apiv1.Image, string, error) {
+	il, err := c.ImageList(ctx)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return images.FindImageMatch(apiv1.ImageList{Items: il}, name)
+}

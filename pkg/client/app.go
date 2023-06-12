@@ -3,12 +3,14 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"sort"
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/imageallowrules"
+	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/run"
 	"github.com/acorn-io/acorn/pkg/scheme"
@@ -70,6 +72,15 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 }
 
 func (c *DefaultClient) AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error) {
+	img, tag, err := FindImage(ctx, c, image)
+	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
+		return nil, err
+	} else if err == nil && img != nil {
+		image = img.Name
+		if tag != "" {
+			image = tag
+		}
+	}
 	app := ToApp(c.Namespace, image, opts)
 	return app, translateErr(c.Client.Create(ctx, app))
 }
@@ -96,6 +107,15 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 
 	if opts.Image != "" {
+		img, tag, err := FindImage(ctx, c, opts.Image)
+		if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
+			return nil, err
+		} else if err == nil && img != nil {
+			opts.Image = img.Name
+			if tag != "" {
+				opts.Image = tag
+			}
+		}
 		app.Spec.Image = opts.Image
 	}
 
