@@ -13,6 +13,7 @@ import (
 	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/util/retry"
 )
 
@@ -26,8 +27,7 @@ func DevPorts(ctx context.Context, c client.Client, appName string) error {
 	forwarder := forwarder{
 		c:                         c,
 		looping:                   map[string]bool{},
-		forwarding:                map[string]func(){},
-		forwardingByContainerName: map[string]string{},
+		forwardingByContainerName: map[string]func(){},
 	}
 
 	_, err = w.BySelector(ctx, c.GetNamespace(), nil, func(container *apiv1.ContainerReplica) (bool, error) {
@@ -50,8 +50,7 @@ func DevPorts(ctx context.Context, c client.Client, appName string) error {
 type forwarder struct {
 	c                         client.Client
 	looping                   map[string]bool
-	forwarding                map[string]func()
-	forwardingByContainerName map[string]string
+	forwardingByContainerName map[string]func()
 	mapLock                   sync.Mutex
 }
 
@@ -59,50 +58,45 @@ func (f *forwarder) Stop(container *apiv1.ContainerReplica) {
 	f.mapLock.Lock()
 	defer f.mapLock.Unlock()
 
-	cancel := f.forwarding[container.Name]
+	cancel := f.forwardingByContainerName[container.Spec.ContainerName]
 	if cancel != nil {
 		cancel()
 		logrus.Infof("Stopping dev ports container [%s]", container.Name)
 	}
 
-	delete(f.forwarding, container.Name)
-
-	if f.forwardingByContainerName[container.Spec.ContainerName] == container.Name {
-		delete(f.forwardingByContainerName, container.Spec.ContainerName)
-	}
+	delete(f.forwardingByContainerName, container.Spec.ContainerName)
 }
 
-func (f *forwarder) startListener(ctx context.Context, container *apiv1.ContainerReplica, ports []v1.PortDef) {
+func (f *forwarder) startListener(ctx context.Context, container *apiv1.ContainerReplica, ports []v1.PortDef) bool {
 	f.mapLock.Lock()
 	defer f.mapLock.Unlock()
 
 	if _, found := f.forwardingByContainerName[container.Spec.ContainerName]; found {
-		return
-	}
-
-	if _, found := f.forwarding[container.Name]; found {
-		return
+		return false
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
+	f.forwardingByContainerName[container.Spec.ContainerName] = cancel
 
 	for _, port := range ports {
 		logrus.Infof("Start dev port [%s] on container [%s]", port.FormatString(""), container.Name)
 		port := port
 		go func() {
-			if err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
-				return !errors.Is(err, context.Canceled)
+			err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
+				return !errors.Is(err, context.Canceled) || !apierrors.IsNotFound(err)
 			}, func() error {
 				return portforward.PortForward(ctx, f.c, container.Name, "127.0.0.1", fmt.Sprintf("%d:%d", port.Port, port.TargetPort))
-			}); err != nil && !errors.Is(err, context.Canceled) {
+			})
+			if err != nil {
+				if !errors.Is(err, context.Canceled) {
+					logrus.Errorf("Failed to establish port forward for dev port [%s] on container [%s]: %v", port.FormatString(""), container.Name, err)
+				}
 				f.Stop(container)
-				logrus.Errorf("Failed to establish port forward for dev port [%s] on container [%s]: %v", port.FormatString(""), container.Name, err)
 			}
 		}()
 	}
 
-	f.forwardingByContainerName[container.Spec.ContainerName] = container.Name
-	f.forwarding[container.Name] = cancel
+	return true
 }
 
 func (f *forwarder) listenLoop(ctx context.Context, container *apiv1.ContainerReplica, ports []v1.PortDef) {
@@ -113,7 +107,11 @@ func (f *forwarder) listenLoop(ctx context.Context, container *apiv1.ContainerRe
 	}()
 
 	for {
-		f.startListener(ctx, container, ports)
+		if f.startListener(ctx, container, ports) {
+			if _, err := f.c.ContainerReplicaGet(ctx, container.Name); apierrors.IsNotFound(err) {
+				break
+			}
+		}
 		select {
 		case <-ctx.Done():
 			break
