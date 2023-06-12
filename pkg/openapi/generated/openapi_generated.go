@@ -48,6 +48,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.CredentialList":                             schema_pkg_apis_apiacornio_v1_CredentialList(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSession":                                 schema_pkg_apis_apiacornio_v1_DevSession(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSessionList":                             schema_pkg_apis_apiacornio_v1_DevSessionList(ref),
+		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EmbeddedContainer":                          schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey":                              schema_pkg_apis_apiacornio_v1_EncryptionKey(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event":                                      schema_pkg_apis_apiacornio_v1_Event(ref),
 		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EventList":                                  schema_pkg_apis_apiacornio_v1_EventList(ref),
@@ -2179,34 +2180,34 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"appName": {
+					"labels": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
-					"jobName": {
+					"annotations": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"containerName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"sidecarName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"region": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 					"dirs": {
@@ -2314,6 +2315,79 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 							},
 						},
 					},
+					"probes": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe"),
+									},
+								},
+							},
+						},
+					},
+					"dependencies": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Don't omitempty so that nil vs empty is recorded",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+									},
+								},
+							},
+						},
+					},
+					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+						},
+					},
+					"class": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"memory": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"scale": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Scale is only available on containers, not sidecars or jobs",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"schedule": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Schedule is only available on jobs",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"events": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Events is only available on jobs",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 					"init": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Init is only available on sidecars",
@@ -2336,11 +2410,42 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 							},
 						},
 					},
+					"appName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"jobName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"containerName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"sidecarName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
+				Required: []string{"probes"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -2640,6 +2745,252 @@ func schema_pkg_apis_apiacornio_v1_DevSessionList(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSession", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EmbeddedContainer is used to allow embedding of the v1.Container type but not pick up the UnmarshalJSON method from v1.Container.  Otherwise the type embedding v1.Container automatically inherits UnmarshalJSON and breaks the unmarshalling",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"dirs": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"),
+									},
+								},
+							},
+						},
+					},
+					"files": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File"),
+									},
+								},
+							},
+						},
+					},
+					"image": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"build": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+						},
+					},
+					"command": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"interactive": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"entrypoint": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"environment": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar"),
+									},
+								},
+							},
+						},
+					},
+					"workingDir": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"ports": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+									},
+								},
+							},
+						},
+					},
+					"probes": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe"),
+									},
+								},
+							},
+						},
+					},
+					"dependencies": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Don't omitempty so that nil vs empty is recorded",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+									},
+								},
+							},
+						},
+					},
+					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+						},
+					},
+					"class": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"memory": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"scale": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Scale is only available on containers, not sidecars or jobs",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"schedule": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Schedule is only available on jobs",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"events": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Events is only available on jobs",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"init": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Init is only available on sidecars",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"sidecars": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Sidecars are not available on sidecars",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"probes"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
