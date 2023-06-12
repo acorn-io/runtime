@@ -134,7 +134,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Profiles:            acorn.Profiles,
 			DeployArgs:          acorn.DeployArgs,
 			Publish:             acorn.Publish,
-			Stop:                appInstance.Spec.Stop,
+			Stop:                typed.Pointer(appInstance.GetStopped()),
 			Environment:         append(acorn.Environment, appInstance.Spec.Environment...),
 			Permissions:         trimPermPrefix(appInstance.Spec.Permissions, acornName),
 			AutoUpgrade:         acorn.AutoUpgrade,

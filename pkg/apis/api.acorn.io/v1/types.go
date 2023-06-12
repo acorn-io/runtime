@@ -19,6 +19,10 @@ type App struct {
 	Status v1.AppInstanceStatus `json:"status,omitempty"`
 }
 
+func (in *App) GetStopped() bool {
+	return in.Spec.Stop != nil && *in.Spec.Stop && in.DeletionTimestamp.IsZero()
+}
+
 func (in *App) GetRegion() string {
 	if in.Spec.Region != "" {
 		return in.Spec.Region

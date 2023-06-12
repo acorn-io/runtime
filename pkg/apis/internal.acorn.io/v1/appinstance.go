@@ -105,8 +105,8 @@ type AppInstanceSpec struct {
 	Memory              MemoryMap        `json:"memory,omitempty"`
 }
 
-func (in *AppInstanceSpec) GetStopped() bool {
-	return in.Stop != nil && *in.Stop
+func (in *AppInstance) GetStopped() bool {
+	return in.Spec.Stop != nil && *in.Spec.Stop && in.DeletionTimestamp.IsZero()
 }
 
 func (in *AppInstanceSpec) GetAutoUpgrade() bool {

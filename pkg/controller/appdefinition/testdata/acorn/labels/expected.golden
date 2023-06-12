@@ -125,6 +125,7 @@ spec:
     value: outervalue
   - key: override1
     value: outervalue
+  stop: false
 status:
   appImage:
     imageData: {}

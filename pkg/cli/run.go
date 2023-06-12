@@ -257,6 +257,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	defer func() {
 		if err == nil && (s.Wait == nil || *s.Wait) && app != nil {
+			app, getErr := c.AppGet(cmd.Context(), app.Name)
+			if getErr == nil && (app.GetStopped() || !app.DeletionTimestamp.IsZero()) {
+				return
+			}
 			_ = wait.App(cmd.Context(), c, app.Name, s.Quiet)
 		}
 	}()

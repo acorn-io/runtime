@@ -136,6 +136,7 @@ spec:
   - name: from-cli-name
     value: from-cli-value
   image: acorn-image-name
+  stop: false
 status:
   appImage:
     imageData: {}

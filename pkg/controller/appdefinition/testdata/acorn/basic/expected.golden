@@ -96,6 +96,7 @@ spec:
   services:
   - service: app-name.myService
     target: targetApp
+  stop: false
   volumes:
   - accessModes:
     - readWriteOnce
