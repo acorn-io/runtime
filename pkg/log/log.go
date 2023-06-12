@@ -77,6 +77,7 @@ type Options struct {
 	Tail             *int64
 	Follow           bool
 	ContainerReplica string
+	Container        string
 }
 
 func (o *Options) restConfig() (*rest.Config, error) {
@@ -129,6 +130,7 @@ func pipe(input io.ReadCloser, output chan<- Message, pod *corev1.Pod, name stri
 	var lastTS *metav1.Time
 
 	scanner := bufio.NewScanner(input)
+	scanner.Buffer(nil, 1_000_000)
 	for scanner.Scan() {
 		line := scanner.Text()
 		ts, newLine, _ := strings.Cut(line, " ")
@@ -417,6 +419,11 @@ func matchesContainer(pod *corev1.Pod, container corev1.Container, options *Opti
 		} else {
 			return pod.Name == podName && container.Name == containerName
 		}
+	}
+
+	if options != nil && options.Container != "" {
+		return pod.Labels[applabels.AcornContainerName] == options.Container ||
+			pod.Labels[applabels.AcornJobName] == options.Container
 	}
 
 	var validContainerNames []string
