@@ -31,6 +31,7 @@ import (
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/sets"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -136,11 +137,24 @@ func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
 }
 
 func toEnv(envs []v1.EnvVar, appEnv []v1.NameValue, interpolator *secrets.Interpolator) (result []corev1.EnvVar) {
+	appEnvNames := sets.New[string]()
+	for _, appEnv := range appEnv {
+		if appEnv.Name != "" {
+			appEnvNames.Insert(appEnv.Name)
+		}
+	}
+
 	for _, env := range envs {
 		if env.Secret.Name == "" {
+			if appEnvNames.Has(env.Name) {
+				continue
+			}
 			result = append(result, interpolator.ToEnv(env.Name, env.Value))
 		} else {
 			if env.Secret.Key == "" {
+				continue
+			}
+			if appEnvNames.Has(env.Name) {
 				continue
 			}
 			result = append(result, corev1.EnvVar{
