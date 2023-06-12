@@ -59,7 +59,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 
 	imageSource := imagesource.NewImageSource(s.File, args, s.Profile, nil)
 
-	opts, err := s.ToOpts()
+	opts, err := s.ToOpts(cmd.Context(), c)
 	if err != nil {
 		return err
 	}
