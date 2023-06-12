@@ -131,9 +131,9 @@ func toEnvFrom(envs []v1.EnvVar) (result []corev1.EnvFromSource) {
 	return
 }
 
-func toEnv(envs []v1.EnvVar, appEnv []v1.NameValue, interpolator *secrets.Interpolator) (result []corev1.EnvVar) {
+func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Interpolator) (result []corev1.EnvVar) {
 	appEnvNames := sets.New[string]()
-	for _, appEnv := range appEnv {
+	for _, appEnv := range appEnvs {
 		if appEnv.Name != "" {
 			appEnvNames.Insert(appEnv.Name)
 		}
@@ -165,7 +165,7 @@ func toEnv(envs []v1.EnvVar, appEnv []v1.NameValue, interpolator *secrets.Interp
 			})
 		}
 	}
-	for _, appEnv := range appEnv {
+	for _, appEnv := range appEnvs {
 		result = append(result, corev1.EnvVar{
 			Name:  appEnv.Name,
 			Value: appEnv.Value,
