@@ -28,6 +28,7 @@ items:
   spec:
     appName: found
     probes: null
+    metrics: {}
   status:
     columns: {}
     image: ""
