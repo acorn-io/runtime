@@ -1,6 +1,7 @@
 package streams
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -9,6 +10,17 @@ import (
 type Output struct {
 	Out io.Writer
 	Err io.Writer
+}
+
+// MustWriteErr writes an error to o.Err and panics if it can't.
+func (o *Output) MustWriteErr(err error) {
+	if err == nil || o.Err == nil {
+		return
+	}
+
+	if _, pErr := fmt.Fprintln(o.Err, err.Error()); pErr != nil {
+		panic(pErr)
+	}
 }
 
 type lockedWriter struct {
