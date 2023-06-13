@@ -3,10 +3,10 @@ package table
 import (
 	"io"
 	"os"
-	"text/tabwriter"
 	"text/template"
 
 	"github.com/acorn-io/aml"
+	"github.com/liggitt/tabwriter"
 	"golang.org/x/exp/maps"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	yaml2 "sigs.k8s.io/yaml"
@@ -16,6 +16,7 @@ type Writer interface {
 	Write(obj any)
 	Close() error
 	Err() error
+	Flush() error
 	AddFormatFunc(name string, f FormatFunc)
 }
 
@@ -25,7 +26,7 @@ type writer struct {
 	ValueFormat   string
 	err           error
 	headerPrinted bool
-	Writer        io.Writer
+	Writer        *tabwriter.Writer
 	funcMap       map[string]any
 }
 
@@ -36,7 +37,7 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 		funcMap: maps.Clone(FuncMap),
 	}
 
-	t.Writer = tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+	t.Writer = tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', tabwriter.RememberWidths)
 
 	t.HeaderFormat, t.ValueFormat = SimpleFormat(values)
 
@@ -150,6 +151,10 @@ func (t *writer) Write(obj any) {
 	}
 }
 
+func (t *writer) Flush() error {
+	return t.Writer.Flush()
+}
+
 func (t *writer) Close() error {
 	if t.closed {
 		return t.err
@@ -165,10 +170,7 @@ func (t *writer) Close() error {
 	if t.err != nil {
 		return t.err
 	}
-	if _, ok := t.Writer.(*tabwriter.Writer); ok {
-		return t.Writer.(*tabwriter.Writer).Flush()
-	}
-	return nil
+	return t.Flush()
 }
 
 func (t *writer) printTemplate(out io.Writer, templateContent string, obj any) error {
