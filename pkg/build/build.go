@@ -382,7 +382,7 @@ func resolveLocalImage(ctx *buildContext, imageName string) (string, error) {
 		return "", err
 	}
 
-	if image.Digest != "" {
+	if !image.Remote && image.Digest != "" {
 		pushTarget, err := imagename.ParseReference(ctx.pushRepo)
 		if err != nil {
 			return "", err
