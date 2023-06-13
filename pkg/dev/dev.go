@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
@@ -25,6 +26,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/util/retry"
 )
 
 type Options struct {
@@ -139,6 +141,20 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	failed := atomic.Bool{}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				break
+			case <-time.After(2 * time.Minute):
+			}
+			if failed.Swap(false) {
+				watcher.Trigger()
+			}
+		}
+	}()
+
 outer:
 	for {
 		if err := watcher.Wait(ctx); err != nil {
@@ -155,12 +171,11 @@ outer:
 			}
 			logrus.Errorf("Failed to build %s: %v", buildFile, err)
 			logrus.Infof("Build failed, touch [%s] to rebuild", buildFile)
-			go func() {
-				time.Sleep(120 * time.Second)
-				watcher.Trigger()
-			}()
+			failed.Store(true)
 			continue
 		}
+
+		failed.Store(false)
 
 		for {
 			appName, err = runOrUpdate(ctx, client, hash, image, deployArgs, opts)
@@ -343,7 +358,10 @@ func renewDevSession(ctx context.Context, c client.Client, appName string, clien
 		case <-time.After(20 * time.Second):
 		}
 
-		if err := c.DevSessionRenew(ctx, appName, client); err != nil {
+		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			return c.DevSessionRenew(ctx, appName, client)
+		})
+		if err != nil {
 			logrus.Errorf("Failed to lock app [%s]: %v", appName, err)
 			return
 		}
