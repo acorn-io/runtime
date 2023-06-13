@@ -8,7 +8,6 @@ import (
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
@@ -21,7 +20,6 @@ import (
 var (
 	FuncMap = map[string]any{
 		"ago":           FormatCreated,
-		"microAgo":      FormatObserved,
 		"json":          FormatJSON,
 		"jsoncompact":   FormatJSONCompact,
 		"yaml":          FormatYAML,
@@ -104,15 +102,7 @@ func FormatID(obj kclient.Object) (string, error) {
 }
 
 func FormatCreated(data metav1.Time) string {
-	return formatAgo(data.Time)
-}
-
-func FormatObserved(data v1.MicroTime) string {
-	return formatAgo(data.Time)
-}
-
-func formatAgo(t time.Time) string {
-	return duration.HumanDuration(time.Now().UTC().Sub(t)) + " ago"
+	return duration.HumanDuration(time.Now().UTC().Sub(data.Time)) + " ago"
 }
 
 func FormatJSON(data any) (string, error) {
