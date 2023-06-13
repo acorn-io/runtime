@@ -157,6 +157,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 			Digest:     image.Digest,
 			Tag:        "",
 			Repository: "",
+			Remote:     image.Remote,
 		}
 
 		// no tag set at all, so only print if --all is set
@@ -215,6 +216,7 @@ type imagePrint struct {
 	Digest     string `json:"digest,omitempty"`
 	Repository string `json:"repository,omitempty"`
 	Tag        string `json:"tag,omitempty"`
+	Remote     bool   `json:"remote,omitempty"`
 }
 
 type imageContainer struct {

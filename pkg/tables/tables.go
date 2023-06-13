@@ -54,12 +54,14 @@ var (
 		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
 		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
 		{"Image-ID", "{{trunc .Name}}"},
+		{"Remote", "{{if .Remote }}{{boolToStar .Remote}}{{end}}"},
 	}
 
 	// Used for kubectl image related printing
 	Image = [][]string{
 		{"Image-ID", "{{trunc .Name}}"},
 		{"Tags", "{{if .Tags}}{{else}}<none>{{end}}{{range $index, $v := .Tags}}{{if $index}},{{end}}{{if eq $v \"\"}}<none>{{else}}{{$v}}{{end}}{{end}}"},
+		{"Remote", "{{if .Remote }}{{boolToStar .Remote}}{{end}}"},
 	}
 	ImageConverter = MustConverter(Image)
 
