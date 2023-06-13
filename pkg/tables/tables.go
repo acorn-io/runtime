@@ -172,7 +172,7 @@ var (
 		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},
 		{"Actor", "Actor"},
-		{"Observed", "{{ microAgo .Observed }}"},
+		{"Observed", "Observed"},
 		{"Description", "Description"},
 	}
 
