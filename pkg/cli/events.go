@@ -23,16 +23,21 @@ func NewEvent(c CommandContext) *cobra.Command {
   # List the last 10 events 
   acorn events --tail 10
 
-# Getting Details 
+  # List the last 5 events and follow the event log
+  acorn events --tail 5 -f
+
+  # Getting Details 
   # The 'details' field provides additional information about an event.
   # By default, this field is elided from this command's output, but can be enabled via the '--details' flag.
-  acorn events --details
+  # This flag must be used in conjunction with a non-table output format, like '-o=yaml'.
+  acorn events --details -o yaml
 `})
 	return cmd
 }
 
 type Events struct {
 	Tail    int    `usage:"Return this number of latest events" short:"t"`
+	Follow  bool   `usage:"Follow the event log" short:"f"`
 	Details bool   `usage:"Don't strip event details from response" short:"d"`
 	Output  string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client  ClientFactory
@@ -46,6 +51,7 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 
 	opts := &client.EventStreamOptions{
 		Tail:    e.Tail,
+		Follow:  e.Follow,
 		Details: e.Details,
 	}
 
@@ -57,6 +63,16 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 	out := table.NewWriter(tables.Event, false, e.Output)
 	for event := range events {
 		out.Write(event)
+
+		if !opts.Follow {
+			// Wait to flush until all events have been written.
+			// This ensures consistent column width for table formatting.
+			continue
+		}
+
+		if err := out.Flush(); err != nil {
+			break
+		}
 	}
 
 	return out.Err()

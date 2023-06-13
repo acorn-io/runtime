@@ -15,6 +15,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/streams"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -322,8 +323,10 @@ type ContainerReplicaListOptions struct {
 }
 
 type EventStreamOptions struct {
-	Details bool `json:"details,omitempty"`
-	Tail    int  `json:"tail,omitempty"`
+	Tail            int    `json:"tail,omitempty"`
+	Follow          bool   `json:"follow,omitempty"`
+	Details         bool   `json:"details,omitempty"`
+	ResourceVersion string `json:"resourceVersion,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
@@ -332,6 +335,9 @@ func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
 		FieldSelector: fields.Set{
 			"details": strconv.FormatBool(o.Details),
 		}.AsSelector(),
+		Raw: &metav1.ListOptions{
+			ResourceVersion: o.ResourceVersion,
+		},
 	}
 }
 

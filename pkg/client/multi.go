@@ -2,14 +2,17 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"sort"
 	"strings"
+	"sync"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/channels"
 	"github.com/acorn-io/acorn/pkg/client/term"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
+	"github.com/acorn-io/acorn/pkg/streams"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -528,40 +531,74 @@ func (m *MultiClient) Info(ctx context.Context) ([]apiv1.Info, error) {
 }
 
 func (m *MultiClient) EventStream(ctx context.Context, opts *EventStreamOptions) (<-chan apiv1.Event, error) {
-	clients, err := m.Factory.List(ctx)
+	var (
+		eventStreams []<-chan apiv1.Event
+		out          = streams.CurrentOutput()
+	)
+	initial, err := aggregate(ctx, m.Factory, func(client Client) ([]apiv1.Event, error) {
+		c, err := client.GetClient()
+		if err != nil {
+			return nil, err
+		}
+
+		var (
+			list       apiv1.EventList
+			clientOpts = *opts
+			listOpts   = clientOpts.ListOptions()
+		)
+		listOpts.Namespace = client.GetNamespace()
+
+		if opts.ResourceVersion == "" {
+			if err := c.List(ctx, &list, listOpts); err != nil {
+				return nil, err
+			}
+
+			// Set options s.t. the watch starts *after* the list
+			clientOpts.ResourceVersion = list.ResourceVersion
+		}
+
+		if opts.Follow {
+			if stream, err := client.EventStream(ctx, &clientOpts); err != nil {
+				out.MustWriteErr(fmt.Errorf("failed to start event stream for project [%s]: [%w]", client.GetProject(), err))
+			} else {
+				eventStreams = append(eventStreams, stream)
+			}
+		}
+
+		return list.Items, nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	all := make(chan apiv1.Event)
-	g, gCtx := errgroup.WithContext(ctx)
-	for _, client := range clients {
-		c := client
-		g.Go(func() error {
-			stream, err := c.EventStream(gCtx, opts)
-			if err != nil {
-				return err
-			}
+	// Sort into chronological order (by observed)
+	sort.Slice(initial, func(i, j int) bool {
+		return initial[i].Observed.Before(initial[j].Observed.Time)
+	})
 
-			for e := range stream {
-				select {
-				case <-gCtx.Done():
-					return gCtx.Err()
-				case all <- e:
-				}
-			}
-
-			return nil
-		})
-	}
+	result := make(chan apiv1.Event, len(initial))
 	go func() {
-		defer close(all)
-		if err := g.Wait(); err != nil {
-			logrus.Errorf("Error streaming events: %s", err.Error())
+		defer close(result)
+		if err := channels.Send(ctx, result, initial...); !channels.NilOrCanceled(err) {
+			out.MustWriteErr(fmt.Errorf("failed to stream initial events for all projects: [%w]", err))
+			return
 		}
+
+		var wg sync.WaitGroup
+		for _, stream := range eventStreams {
+			wg.Add(1)
+			stream := stream
+			go func() {
+				defer wg.Done()
+				if err := channels.Forward(ctx, stream, result); !channels.NilOrCanceled(err) {
+					out.MustWriteErr(fmt.Errorf("failed to forward stream results: [%w]", err))
+				}
+			}()
+		}
+		wg.Wait()
 	}()
 
-	return all, nil
+	return result, nil
 }
 
 func (m *MultiClient) GetProject() string {
