@@ -13,7 +13,7 @@ require (
 	cuelang.org/go v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20230612000521-a812941e7fab
-	github.com/acorn-io/baaah v0.0.0-20230612001310-e46073700d8b
+	github.com/acorn-io/baaah v0.0.0-20230617011755-3291c17915f5
 	github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/adrg/xdg v0.4.0
@@ -62,7 +62,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.100.1
-	k8s.io/kube-aggregator v0.25.2
+	k8s.io/kube-aggregator v0.27.0
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f
 	k8s.io/kubectl v0.25.2
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
