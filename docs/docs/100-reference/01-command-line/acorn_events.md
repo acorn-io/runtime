@@ -21,10 +21,14 @@ acorn events [flags]
   # List the last 10 events 
   acorn events --tail 10
 
-# Getting Details 
+  # List the last 5 events and follow the event log
+  acorn events --tail 5 -f
+
+  # Getting Details 
   # The 'details' field provides additional information about an event.
   # By default, this field is elided from this command's output, but can be enabled via the '--details' flag.
-  acorn events --details
+  # This flag must be used in conjunction with a non-table output format, like '-o=yaml'.
+  acorn events --details -o yaml
 
 ```
 
@@ -32,6 +36,7 @@ acorn events [flags]
 
 ```
   -d, --details         Don't strip event details from response
+  -f, --follow          Follow the event log
   -h, --help            help for events
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -t, --tail int        Return this number of latest events
