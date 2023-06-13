@@ -166,10 +166,7 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 		}
 	}
 	for _, appEnv := range appEnvs {
-		result = append(result, corev1.EnvVar{
-			Name:  appEnv.Name,
-			Value: appEnv.Value,
-		})
+		result = append(result, interpolator.ToEnv(appEnv.Name, appEnv.Value))
 	}
 	return
 }
