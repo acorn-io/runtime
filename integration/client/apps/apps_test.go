@@ -483,10 +483,11 @@ func TestAppRunImageVariations(t *testing.T) {
 	}
 
 	for desc, imageName := range map[string]string{
-		"ref":    "foo/bar:baz",
-		"id":     imageID,
-		"sha256": fmt.Sprintf("sha256:%s", imageID),
-		"short":  imageID[:8],
+		"ref":         "foo/bar:baz",
+		"id":          imageID,
+		"sha256":      fmt.Sprintf("sha256:%s", imageID),
+		"short":       imageID[:8],
+		"autoupgrade": "foo/bar:**",
 	} {
 		imageName := imageName
 		t.Run(desc, func(t *testing.T) {

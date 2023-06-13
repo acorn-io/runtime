@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/autoupgrade"
 	"github.com/acorn-io/acorn/pkg/images"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/gorilla/websocket"
@@ -232,6 +233,11 @@ func (c *DefaultClient) ImageList(ctx context.Context) ([]apiv1.Image, error) {
 
 // FindImage finds an image if exists and returns whether it was found by tag
 func FindImage(ctx context.Context, c Client, name string) (*apiv1.Image, string, error) {
+	// Early filter autoupgrade patterns, as they will fail lookup since the reference cannot be parsed
+	if _, ok := autoupgrade.AutoUpgradePattern(name); ok {
+		return nil, "", images.ErrImageNotFound{ImageSearch: name}
+	}
+
 	il, err := c.ImageList(ctx)
 	if err != nil {
 		return nil, "", err
