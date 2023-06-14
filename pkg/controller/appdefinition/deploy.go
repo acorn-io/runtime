@@ -68,6 +68,8 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 			status.Error(interpolator.Err())
 		} else if errors.Is(err, appdefinition.ErrInvalidInput) {
 			status.Error(err)
+			// Not all object could have been rendered to don't purge anything
+			resp.DisablePrune()
 			err = nil
 		} else {
 			status.Error(err)
@@ -93,7 +95,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addJobs(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
-	if err := addServices(req, appInstance, resp); err != nil {
+	if err := addServices(req, appInstance, interpolator, resp); err != nil {
 		return err
 	}
 	if err := addPVCs(req, appInstance, resp); err != nil {

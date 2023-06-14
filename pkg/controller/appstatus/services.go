@@ -18,6 +18,8 @@ import (
 )
 
 func (a *appStatusRenderer) readServices() error {
+	existingStatus := a.app.Status.AppStatus.Services
+
 	// reset state
 	a.app.Status.AppStatus.Services = make(map[string]v1.ServiceStatus, len(a.app.Status.AppSpec.Services))
 
@@ -26,6 +28,7 @@ func (a *appStatusRenderer) readServices() error {
 			CommonStatus: v1.CommonStatus{
 				LinkOverride: ports.LinkService(a.app, serviceName),
 			},
+			ExpressionErrors: existingStatus[serviceName].ExpressionErrors,
 		}
 
 		s.Ready, s.Defined = a.isServiceReady(serviceName)
@@ -61,6 +64,8 @@ func (a *appStatusRenderer) readServices() error {
 			s.Ready = s.Ready && s.ServiceAcornReady
 		}
 
+		s.Default = service.Spec.Default
+		s.Ports = service.Spec.Ports
 		s.Data = service.Spec.Data
 		s.Secrets = service.Spec.Secrets
 		s.Address = service.Spec.Address
@@ -96,6 +101,8 @@ func (a *appStatusRenderer) readServices() error {
 			s.TransitioningMessages = append(s.TransitioningMessages, fmt.Sprintf("%s: waiting [%s]", waitingName, waitingMessage))
 		default:
 		}
+
+		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
 
 		a.app.Status.AppStatus.Services[serviceName] = s
 	}

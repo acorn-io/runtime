@@ -90,7 +90,7 @@ func healthy(app *v1.AppInstance) string {
 	)
 	for _, status := range app.Status.AppStatus.Containers {
 		desired += status.DesiredReplicaCount
-		ready += status.RunningReplicaCount
+		ready += status.ReadyReplicaCount
 	}
 	if ready != desired {
 		return fmt.Sprintf("%d/%d", ready, desired)

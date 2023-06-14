@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	ports2 "github.com/acorn-io/acorn/pkg/ports"
 	"github.com/acorn-io/acorn/pkg/publicname"
+	"github.com/acorn-io/acorn/pkg/secrets"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -26,7 +27,7 @@ func publishMode(app *v1.AppInstance) v1.PublishMode {
 	return app.Spec.PublishMode
 }
 
-func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+func forDefined(ctx context.Context, c kclient.Client, interpolator *secrets.Interpolator, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
 		serviceName, service := entry.Key, entry.Value
 
@@ -53,8 +54,9 @@ func forDefined(ctx context.Context, c kclient.Client, appInstance *v1.AppInstan
 			if errors.Is(err, jobs.ErrJobNotDone) || errors.Is(err, jobs.ErrJobNoOutput) || apierror.IsNotFound(err) {
 				annotations[apply.AnnotationUpdate] = "false"
 				annotations[apply.AnnotationCreate] = "false"
-			} else if err != nil && !apierror.IsNotFound(err) {
-				return nil, err
+			} else if err != nil {
+				interpolator.ForService(serviceName).AddError(err)
+				continue
 			}
 		}
 
@@ -283,9 +285,9 @@ func forLinkedServices(app *v1.AppInstance) (result []kclient.Object) {
 				PublishMode:  publishMode(app),
 				Publish:      ports2.PortPublishForService(link.Target, app.Spec.Publish),
 				External:     link.Service,
-				Labels: map[string]string{
-					labels.AcornLinkName: link.Service,
-				},
+				Labels: labels.Managed(app,
+					labels.AcornPublicName, publicname.ForChild(app, link.Target),
+					labels.AcornLinkName, link.Service),
 			},
 		}
 		result = append(result, newService)
@@ -345,8 +347,8 @@ func findDefaultServiceName(appInstance *v1.AppInstance) (string, error) {
 	return "", nil
 }
 
-func ToAcornServices(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
-	objs, err := forDefined(ctx, c, appInstance)
+func ToAcornServices(ctx context.Context, c kclient.Client, interpolator *secrets.Interpolator, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+	objs, err := forDefined(ctx, c, interpolator, appInstance)
 	if err != nil {
 		return nil, err
 	}

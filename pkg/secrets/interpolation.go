@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/digest"
 	"github.com/acorn-io/acorn/pkg/encryption/nacl"
 	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/acorn/pkg/ref"
 	"github.com/acorn-io/acorn/pkg/tags"
 	"github.com/acorn-io/acorn/pkg/volume"
@@ -48,7 +49,7 @@ type ErrInterpolation struct {
 }
 
 func (e *ErrInterpolation) Error() string {
-	return e.ExpressionError.String()
+	return e.String()
 }
 
 type Interpolator struct {
@@ -63,6 +64,7 @@ type Interpolator struct {
 	namespace     string
 	containerName string
 	jobName       string
+	serviceName   string
 }
 
 func NewInterpolator(ctx context.Context, c kclient.Client, app *v1.AppInstance) *Interpolator {
@@ -78,6 +80,10 @@ func NewInterpolator(ctx context.Context, c kclient.Client, app *v1.AppInstance)
 	}
 }
 
+func (i *Interpolator) AddError(err error) {
+	i.saveError(err)
+}
+
 func (i *Interpolator) Err() error {
 	return merr.NewErrors(*i.errs...)
 }
@@ -86,13 +92,23 @@ func (i *Interpolator) ForJob(jobName string) *Interpolator {
 	cp := *i
 	cp.jobName = jobName
 	cp.containerName = ""
+	cp.serviceName = ""
 	return &cp
 }
 
 func (i *Interpolator) ForContainer(containerName string) *Interpolator {
 	cp := *i
 	cp.jobName = ""
+	cp.serviceName = ""
 	cp.containerName = containerName
+	return &cp
+}
+
+func (i *Interpolator) ForService(serviceName string) *Interpolator {
+	cp := *i
+	cp.jobName = ""
+	cp.serviceName = serviceName
+	cp.containerName = ""
 	return &cp
 }
 
@@ -150,13 +166,31 @@ func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.Volum
 func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	switch keyName {
 	case "name":
-		return i.app.Name, true, nil
-	case "project":
-		project := i.app.Labels[labels.AcornProjectName]
-		if project != "" {
-			return project, true, nil
+		return publicname.Get(i.app), true, nil
+	case "account":
+		ns := &corev1.Namespace{}
+		if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
+			return "", false, err
 		}
-		return i.app.Namespace, true, nil
+		name := ns.Labels[labels.AcornAccountID]
+		if name == "" {
+			ns := &corev1.Namespace{}
+			if err := i.client.Get(i.ctx, router.Key("", "kube-system"), ns); err != nil {
+				return "", false, err
+			}
+			return "runtime-" + string(ns.UID[:8]), true, nil
+		}
+		return name, true, nil
+	case "project":
+		ns := &corev1.Namespace{}
+		if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
+			return "", false, err
+		}
+		name := ns.Labels[labels.AcornProjectName]
+		if name == "" {
+			return i.app.Namespace, true, nil
+		}
+		return name, true, nil
 	case "namespace":
 		return i.app.Status.Namespace, true, nil
 	case "image":
@@ -183,17 +217,16 @@ func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (stri
 	if apierrors.IsNotFound(err) {
 		return "", false, &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
-				Error: notFound("secret", secretName...),
+				DependencyNotFound: &v1.DependencyNotFound{
+					DependencyType: v1.DependencyService,
+					Name:           strings.Join(secretName, "."),
+				},
 			},
 		}
 	} else if err != nil {
 		return "", false, err
 	}
 	return string(secret.Data[keyName]), true, nil
-}
-
-func notFound(kind string, keys ...string) string {
-	return kind + " [" + strings.Join(keys, ".") + "] not found"
 }
 
 func splitServiceProperty(parts []string) (head []string, tail []string, err error) {
@@ -230,7 +263,10 @@ func (i *Interpolator) serviceProperty(svc *v1.ServiceInstance, prop string, ext
 		if apierrors.IsNotFound(err) {
 			return "", &ErrInterpolation{
 				ExpressionError: v1.ExpressionError{
-					Error: notFound("secret", extra[0]),
+					DependencyNotFound: &v1.DependencyNotFound{
+						DependencyType: v1.DependencyService,
+						Name:           extra[0],
+					},
 				},
 			}
 		} else if err != nil {
@@ -300,7 +336,10 @@ func (i *Interpolator) resolveServices(parts []string) (string, bool, error) {
 	if apierrors.IsNotFound(err) {
 		return "", false, &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
-				Error: notFound("service", serviceName...),
+				DependencyNotFound: &v1.DependencyNotFound{
+					DependencyType: v1.DependencyService,
+					Name:           strings.Join(serviceName, "."),
+				},
 			},
 		}
 	}
@@ -379,13 +418,8 @@ func (i *Interpolator) replace(content string) (string, error) {
 }
 
 func (i *Interpolator) saveError(err error) {
-	var exprError v1.ExpressionError
-	if e := (*ErrInterpolation)(nil); errors.As(err, &e) {
-		exprError = e.ExpressionError
-	} else {
-		exprError = v1.ExpressionError{
-			Error: err.Error(),
-		}
+	exprError := v1.ExpressionError{
+		Error: err.Error(),
 	}
 	if i.containerName != "" {
 		i.incomplete[i.containerName] = true
@@ -397,6 +431,11 @@ func (i *Interpolator) saveError(err error) {
 		c := i.app.Status.AppStatus.Jobs[i.jobName]
 		c.ExpressionErrors = append(c.ExpressionErrors, exprError)
 		i.app.Status.AppStatus.Jobs[i.jobName] = c
+	} else if i.serviceName != "" {
+		i.incomplete[i.serviceName] = true
+		c := i.app.Status.AppStatus.Services[i.serviceName]
+		c.ExpressionErrors = append(c.ExpressionErrors, exprError)
+		i.app.Status.AppStatus.Services[i.serviceName] = c
 	} else {
 		i.incomplete[""] = true
 		*i.errs = append(*i.errs, fmt.Errorf("unqualified expression error: %w", err))

@@ -118,6 +118,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus":                       schema_pkg_apis_internalacornio_v1_ContainerStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Defaults":                              schema_pkg_apis_internalacornio_v1_Defaults(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency":                            schema_pkg_apis_internalacornio_v1_Dependency(ref),
+		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyNotFound":                    schema_pkg_apis_internalacornio_v1_DependencyNotFound(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus":                      schema_pkg_apis_internalacornio_v1_DependencyStatus(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionImageSource":                 schema_pkg_apis_internalacornio_v1_DevSessionImageSource(ref),
 		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstance":                    schema_pkg_apis_internalacornio_v1_DevSessionInstance(ref),
@@ -7263,6 +7264,30 @@ func schema_pkg_apis_internalacornio_v1_Dependency(ref common.ReferenceCallback)
 	}
 }
 
+func schema_pkg_apis_internalacornio_v1_DependencyNotFound(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"dependencyType": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_internalacornio_v1_DependencyStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -7823,10 +7848,9 @@ func schema_pkg_apis_internalacornio_v1_ExpressionError(ref common.ReferenceCall
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"error": {
+					"dependencyNotFound": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyNotFound"),
 						},
 					},
 					"expression": {
@@ -7835,9 +7859,17 @@ func schema_pkg_apis_internalacornio_v1_ExpressionError(ref common.ReferenceCall
 							Format: "",
 						},
 					},
+					"error": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyNotFound"},
 	}
 }
 
@@ -10163,6 +10195,25 @@ func schema_pkg_apis_internalacornio_v1_ServiceStatus(ref common.ReferenceCallba
 							},
 						},
 					},
+					"default": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"ports": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+									},
+								},
+							},
+						},
+					},
 					"data": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -10215,9 +10266,24 @@ func schema_pkg_apis_internalacornio_v1_ServiceStatus(ref common.ReferenceCallba
 							Format: "",
 						},
 					},
+					"expressionErrors": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"},
 	}
 }
 
