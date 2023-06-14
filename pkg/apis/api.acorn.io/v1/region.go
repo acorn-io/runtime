@@ -24,6 +24,7 @@ type Region struct {
 type RegionSpec struct {
 	Description string `json:"description,omitempty"`
 	RegionName  string `json:"regionName,omitempty"`
+	Sandbox     bool   `json:"sandbox,omitempty"`
 }
 
 type RegionStatus struct {

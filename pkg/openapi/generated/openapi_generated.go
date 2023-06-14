@@ -3850,6 +3850,12 @@ func schema_pkg_apis_apiacornio_v1_RegionSpec(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
+					"sandbox": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
