@@ -50,7 +50,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\ntesttag      latest    found-image1   \ntesttag1     latest    found-image-   \ntesttag2     v1        found-image-   \n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\ntesttag1     latest    found-image-\ntesttag2     v1        found-image-\n",
 		},
 		{
 			name: "acorn image --no-trunc", fields: fields{
@@ -69,7 +69,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID                      REMOTE\ntesttag      latest    found-image1234567            \ntesttag1     latest    found-image-two-tags1234567   \ntesttag2     v1        found-image-two-tags1234567   \n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1234567\ntesttag1     latest    found-image-two-tags1234567\ntesttag2     v1        found-image-two-tags1234567\n",
 		},
 		{
 			name: "acorn image -a", fields: fields{
@@ -88,7 +88,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\ntesttag      latest    found-image1   \n<none>       <none>    found-image-   \ntesttag1     latest    found-image-   \ntesttag2     v1        found-image-   \n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\n<none>       <none>    found-image-\ntesttag1     latest    found-image-\ntesttag2     v1        found-image-\n",
 		},
 		{
 			name: "acorn image -c ", fields: fields{
@@ -186,7 +186,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\ntesttag      latest    found-image1   \n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag      latest    found-image1\n",
 		},
 		{
 			name: "acorn image testtag1", fields: fields{
@@ -210,7 +210,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\ntesttag1     latest    found-image-   \n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag1     latest    found-image-\n",
 		},
 		{
 			name: "acorn image digest", fields: fields{
@@ -233,7 +233,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\ntesttag1     latest    found-image-   \ntesttag2     v1        found-image-   \n",
+			wantOut: "REPOSITORY   TAG       IMAGE-ID\ntesttag1     latest    found-image-\ntesttag2     v1        found-image-\n",
 		},
 		{
 			name: "acorn image registry specific tag", fields: fields{
@@ -256,7 +256,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY                    TAG       IMAGE-ID       REMOTE\nindex.docker.io/subdir/test   v1        registy12345   \n",
+			wantOut: "REPOSITORY                    TAG       IMAGE-ID\nindex.docker.io/subdir/test   v1        registy12345\n",
 		},
 		{
 			name: "acorn image digest multi tag", fields: fields{
@@ -279,7 +279,7 @@ func TestImage(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "REPOSITORY                    TAG       IMAGE-ID       REMOTE\nindex.docker.io/subdir/test   v1        registy12345   \nindex.docker.io/subdir/test   v2        registy12345   \n",
+			wantOut: "REPOSITORY                    TAG       IMAGE-ID\nindex.docker.io/subdir/test   v1        registy12345\nindex.docker.io/subdir/test   v2        registy12345\n",
 		},
 		{
 			name: "acorn image -c digest multi tag", fields: fields{
@@ -425,35 +425,6 @@ func TestImage(t *testing.T) {
 			},
 			wantErr: false,
 			wantOut: "Untagged foo:v1\n",
-		},
-		{
-			name: "acorn image testtag remote", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
-			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{
-					ImageList: []apiv1.Image{
-						{
-							ObjectMeta: metav1.ObjectMeta{Name: "found-image1234567"},
-							Tags:       []string{"testtag:latest"},
-							Digest:     "1234567890asdfghkl",
-							Remote:     true,
-						},
-					},
-				},
-
-				StdOut: w,
-				StdErr: w,
-				StdIn:  strings.NewReader("y\n"),
-			},
-			args: args{
-				args:   []string{"testtag"},
-				client: &testdata.MockClient{},
-			},
-			wantErr: false,
-			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\ntesttag      latest    found-image1   *\n",
 		},
 	}
 
