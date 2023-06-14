@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/channels"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/project"
@@ -366,6 +368,25 @@ func regionsCompletion(ctx context.Context, c client.Client, toComplete string) 
 		if strings.HasPrefix(region.Name, toComplete) {
 			result = append(result, region.Name)
 		}
+	}
+
+	return result, nil
+}
+
+func eventsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	var result []string
+	events, err := c.EventStream(ctx, &client.EventStreamOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := channels.ForEach(ctx, events, func(e apiv1.Event) error {
+		if strings.HasPrefix(e.Name, toComplete) {
+			result = append(result, e.Name)
+		}
+		return nil
+	}); !channels.NilOrCanceled(err) {
+		return nil, err
 	}
 
 	return result, nil

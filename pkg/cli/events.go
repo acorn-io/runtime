@@ -10,15 +10,19 @@ import (
 
 func NewEvent(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Events{client: c.ClientFactory}, cobra.Command{
-		Use:          "events [flags]",
-		SilenceUsage: true,
-		Short:        "List events about Acorn resources",
-		Args:         cobra.MaximumNArgs(0),
+		Use:               "events [flags] [EVENT_NAME]",
+		SilenceUsage:      true,
+		Short:             "List events about Acorn resources",
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: newCompletion(c.ClientFactory, eventsCompletion).complete,
 		Example: `# List all events in the current project
   acorn events
 
   # List events across all projects
   acorn -A events
+
+  # Get a single event by name
+  acorn events 4b2ba097badf2031c4718609b9179fb5
 
   # List the last 10 events 
   acorn events --tail 10
@@ -53,6 +57,10 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 		Tail:    e.Tail,
 		Follow:  e.Follow,
 		Details: e.Details,
+	}
+
+	if len(args) > 0 {
+		opts.Name = args[0]
 	}
 
 	events, err := c.EventStream(cmd.Context(), opts)

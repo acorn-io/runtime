@@ -326,15 +326,22 @@ type EventStreamOptions struct {
 	Tail            int    `json:"tail,omitempty"`
 	Follow          bool   `json:"follow,omitempty"`
 	Details         bool   `json:"details,omitempty"`
+	Name            string `json:"name,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
+	fieldSet := make(fields.Set)
+	if o.Name != "" {
+		fieldSet["metadata.name"] = o.Name
+	}
+	if o.Details {
+		fieldSet["details"] = strconv.FormatBool(o.Details)
+	}
+
 	return &kclient.ListOptions{
-		Limit: int64(o.Tail),
-		FieldSelector: fields.Set{
-			"details": strconv.FormatBool(o.Details),
-		}.AsSelector(),
+		Limit:         int64(o.Tail),
+		FieldSelector: fieldSet.AsSelector(),
 		Raw: &metav1.ListOptions{
 			ResourceVersion: o.ResourceVersion,
 		},
