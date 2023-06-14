@@ -35,28 +35,37 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 	return namespace, opts, nil
 }
 
-func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (result []types.Object, _ error) {
+func (t *Translator) ToPublic(_ context.Context, obj ...runtime.Object) (result []types.Object, _ error) {
 	for _, obj := range obj {
 		ns := obj.(*corev1.Namespace)
 		if !ns.DeletionTimestamp.IsZero() {
 			continue
 		}
 
-		var supportedRegions []string
-		if len(ns.Annotations[labels.AcornProjectSupportedRegions]) > 0 {
-			supportedRegions = strings.Split(ns.Annotations[labels.AcornProjectSupportedRegions], ",")
-		}
-
 		defaultRegion := ns.Annotations[labels.AcornProjectDefaultRegion]
 
 		calculatedDefaultRegion := ns.Annotations[labels.AcornCalculatedProjectDefaultRegion]
-		if defaultRegion == "" && calculatedDefaultRegion == "" {
-			calculatedDefaultRegion = t.defaultRegion
+		if calculatedDefaultRegion == "" {
+			if defaultRegion == "" && len(ns.Annotations[labels.AcornProjectSupportedRegions]) == 0 {
+				calculatedDefaultRegion = t.defaultRegion
+			} else {
+				calculatedDefaultRegion = defaultRegion
+			}
+		}
+
+		var supportedRegions, calculatedSupportedRegions []string
+		if len(ns.Annotations[labels.AcornProjectSupportedRegions]) > 0 {
+			supportedRegions = strings.Split(ns.Annotations[labels.AcornProjectSupportedRegions], ",")
+			calculatedSupportedRegions = supportedRegions
+		} else {
+			calculatedSupportedRegions = []string{calculatedDefaultRegion}
 		}
 
 		delete(ns.Labels, labels.AcornProject)
 		delete(ns.Annotations, labels.AcornProjectDefaultRegion)
 		delete(ns.Annotations, labels.AcornProjectSupportedRegions)
+		delete(ns.Annotations, labels.AcornCalculatedProjectDefaultRegion)
+		delete(ns.Annotations, labels.AcornCalculatedProjectSupportedRegions)
 
 		result = append(result, &apiv1.Project{
 			ObjectMeta: ns.ObjectMeta,
@@ -65,15 +74,16 @@ func (t *Translator) ToPublic(ctx context.Context, obj ...runtime.Object) (resul
 				SupportedRegions: supportedRegions,
 			},
 			Status: apiv1.ProjectStatus{
-				Namespace:     ns.Name,
-				DefaultRegion: calculatedDefaultRegion,
+				Namespace:        ns.Name,
+				DefaultRegion:    calculatedDefaultRegion,
+				SupportedRegions: calculatedSupportedRegions,
 			},
 		})
 	}
 	return
 }
 
-func (t *Translator) FromPublic(ctx context.Context, obj runtime.Object) (types.Object, error) {
+func (t *Translator) FromPublic(_ context.Context, obj runtime.Object) (types.Object, error) {
 	prj := obj.(*apiv1.Project)
 
 	ns := &corev1.Namespace{
@@ -91,6 +101,7 @@ func (t *Translator) FromPublic(ctx context.Context, obj runtime.Object) (types.
 	ns.Annotations[labels.AcornProjectDefaultRegion] = prj.Spec.DefaultRegion
 	ns.Annotations[labels.AcornProjectSupportedRegions] = strings.Join(prj.Spec.SupportedRegions, ",")
 	ns.Annotations[labels.AcornCalculatedProjectDefaultRegion] = prj.Status.DefaultRegion
+	ns.Annotations[labels.AcornCalculatedProjectSupportedRegions] = strings.Join(prj.Status.SupportedRegions, ",")
 
 	return ns, nil
 }
