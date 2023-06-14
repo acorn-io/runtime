@@ -148,10 +148,6 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 		servicePorts = ports.ToServicePorts(targetService.Spec.Ports)
 	}
 
-	if len(servicePorts) == 0 {
-		return nil, missing, nil
-	}
-
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
