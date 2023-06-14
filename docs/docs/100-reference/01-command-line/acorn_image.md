@@ -23,7 +23,7 @@ acorn images
   -c, --containers      Show containers for images
   -h, --help            help for image
       --no-trunc        Don't truncate IDs
-  -o, --output string   Output format (json, yaml, {{gotemplate}})
+  -o, --output string   Output format (wide, json, yaml, {{gotemplate}})
   -q, --quiet           Output only names
 ```
 

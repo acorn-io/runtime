@@ -54,8 +54,15 @@ var (
 		{"Repository", "{{if eq .Repository \"\"}}<none>{{else}}{{.Repository}}{{end}}"},
 		{"Tag", "{{if eq .Tag \"\"}}<none>{{else}}{{.Tag}}{{end}}"},
 		{"Image-ID", "{{trunc .Name}}"},
-		{"Remote", "{{if .Remote }}{{boolToStar .Remote}}{{end}}"},
 	}
+
+	// Wide output, including optional information
+	ImageAcornWide = append(ImageAcorn, [][]string{
+		{"Remote", "{{if .Remote }}{{boolToStar .Remote}}{{end}}"},
+	}...,
+	)
+
+	ImageWideConverter = MustConverter(ImageAcornWide)
 
 	// Used for kubectl image related printing
 	Image = [][]string{

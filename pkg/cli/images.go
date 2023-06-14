@@ -36,7 +36,7 @@ type Image struct {
 	All        bool   `usage:"Include untagged images" short:"a" local:"true"`
 	Quiet      bool   `usage:"Output only names" short:"q" local:"true"`
 	NoTrunc    bool   `usage:"Don't truncate IDs" local:"true"`
-	Output     string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o" local:"true"`
+	Output     string `usage:"Output format (wide, json, yaml, {{gotemplate}})" short:"o" local:"true"`
 	Containers bool   `usage:"Show containers for images" short:"c" local:"true"`
 	client     ClientFactory
 }
@@ -138,6 +138,10 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	out := table.NewWriter(tables.ImageAcorn, false, a.Output)
+	if a.Output == "wide" {
+		out.SetValues(tables.ImageAcornWide, false)
+	}
+
 	if a.Quiet {
 		out = table.NewWriter([][]string{
 			{"Name", "{{ .Name }}"},
@@ -216,7 +220,7 @@ type imagePrint struct {
 	Digest     string `json:"digest,omitempty"`
 	Repository string `json:"repository,omitempty"`
 	Tag        string `json:"tag,omitempty"`
-	Remote     bool   `json:"remote,omitempty"`
+	Remote     bool   `json:"remote,omitempty" table:"wide"`
 }
 
 type imageContainer struct {

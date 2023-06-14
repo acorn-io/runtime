@@ -17,6 +17,8 @@ type Writer interface {
 	Close() error
 	Err() error
 	AddFormatFunc(name string, f FormatFunc)
+	SetFormat(format string)
+	SetValues(values [][]string, quiet bool)
 }
 
 type writer struct {
@@ -38,6 +40,14 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 
 	t.Writer = tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
+	t.SetValues(values, quiet)
+
+	t.SetFormat(format)
+
+	return t
+}
+
+func (t *writer) SetValues(values [][]string, quiet bool) {
 	t.HeaderFormat, t.ValueFormat = SimpleFormat(values)
 
 	if quiet {
@@ -49,7 +59,9 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 			}
 		}
 	}
+}
 
+func (t *writer) SetFormat(format string) {
 	switch customFormat := format; customFormat {
 	case "json":
 		t.HeaderFormat = ""
@@ -63,6 +75,7 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 	case "aml":
 		t.HeaderFormat = ""
 		t.ValueFormat = "aml"
+	case "wide":
 	case "raw":
 	case "table":
 	default:
@@ -71,8 +84,6 @@ func NewWriter(values [][]string, quiet bool, format string) Writer {
 			t.HeaderFormat = ""
 		}
 	}
-
-	return t
 }
 
 func (t *writer) AddFormatFunc(name string, f FormatFunc) {
