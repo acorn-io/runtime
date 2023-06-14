@@ -58,29 +58,19 @@ type ContainerReplicaList struct {
 	Items           []ContainerReplica `json:"items"`
 }
 
+// EmbeddedContainer is used to allow embedding of the v1.Container type but
+// not pick up the UnmarshalJSON method from v1.Container.  Otherwise the
+// type embedding v1.Container automatically inherits UnmarshalJSON and breaks
+// the unmarshalling
+type EmbeddedContainer v1.Container
+
 type ContainerReplicaSpec struct {
-	AppName       string `json:"appName,omitempty"`
-	JobName       string `json:"jobName,omitempty"`
-	ContainerName string `json:"containerName,omitempty"`
-	SidecarName   string `json:"sidecarName,omitempty"`
-	Region        string `json:"region,omitempty"`
-
-	Dirs        map[string]v1.VolumeMount `json:"dirs,omitempty"`
-	Files       map[string]v1.File        `json:"files,omitempty"`
-	Image       string                    `json:"image,omitempty"`
-	Build       *v1.Build                 `json:"build,omitempty"`
-	Command     []string                  `json:"command,omitempty"`
-	Interactive bool                      `json:"interactive,omitempty"`
-	Entrypoint  []string                  `json:"entrypoint,omitempty"`
-	Environment []v1.EnvVar               `json:"environment,omitempty"`
-	WorkingDir  string                    `json:"workingDir,omitempty"`
-	Ports       []v1.PortDef              `json:"ports,omitempty"`
-
-	// Init is only available on sidecars
-	Init bool `json:"init,omitempty"`
-
-	// Sidecars are not available on sidecars
-	Sidecars map[string]v1.Container `json:"sidecars,omitempty"`
+	EmbeddedContainer `json:",inline"`
+	AppName           string `json:"appName,omitempty"`
+	JobName           string `json:"jobName,omitempty"`
+	ContainerName     string `json:"containerName,omitempty"`
+	SidecarName       string `json:"sidecarName,omitempty"`
+	Region            string `json:"region,omitempty"`
 }
 
 type ContainerReplicaColumns struct {

@@ -33,6 +33,7 @@ CONTAINERS:
         "creationTimestamp": null
     },
     "spec": {
+        "probes": null,
         "appName": "found"
     },
     "status": {

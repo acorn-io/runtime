@@ -25,6 +25,7 @@ metadata:
   name: found.container
 spec:
   appName: found
+  probes: null
 status:
   columns: {}
   image: ""
