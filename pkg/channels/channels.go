@@ -21,7 +21,7 @@ func Send[T any](ctx context.Context, to chan<- T, msgs ...T) error {
 	return nil
 }
 
-// ForEach passes each message recieved from a channel to a function.
+// ForEach passes each message received from a channel to a function.
 //
 // It blocks until the given context is closed or the function returns an error.
 func ForEach[T any](ctx context.Context, in <-chan T, do func(T) error) error {
@@ -29,7 +29,12 @@ func ForEach[T any](ctx context.Context, in <-chan T, do func(T) error) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case msg := <-in:
+		case msg, ok := <-in:
+			if !ok {
+				// Channel is closed, msg is zero value.
+				// Bail out.
+				return nil
+			}
 			if err := do(msg); err != nil {
 				return err
 			}
@@ -37,7 +42,7 @@ func ForEach[T any](ctx context.Context, in <-chan T, do func(T) error) error {
 	}
 }
 
-// Forward sends messages recieved from one channel to another.
+// Forward sends messages received from one channel to another.
 //
 // It blocks until the given context is closed.
 func Forward[T any](ctx context.Context, from <-chan T, to chan<- T) error {
