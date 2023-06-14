@@ -426,6 +426,34 @@ func TestImage(t *testing.T) {
 			wantErr: false,
 			wantOut: "Untagged foo:v1\n",
 		},
+		{
+			name: "acorn image -o wide", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{
+					ImageList: []apiv1.Image{
+						{
+							ObjectMeta: metav1.ObjectMeta{Name: "testimg123456"},
+							Tags:       []string{"foo/bar:latest"},
+							Digest:     "sha256:abcdef1234567890",
+							Remote:     true,
+						},
+					},
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"-o", "wide"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "REPOSITORY   TAG       IMAGE-ID       REMOTE\nfoo/bar      latest    testimg12345   *\n",
+		},
 	}
 
 	for _, tt := range tests {
