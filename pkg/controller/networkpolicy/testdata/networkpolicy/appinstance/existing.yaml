@@ -1,13 +1,4 @@
 apiVersion: v1
-kind: Node
-metadata:
-  name: existing-node
-spec:
-  podCIDR: 10.42.0.0/24
-  podCIDRs:
-    - 10.42.0.0/24
----
-apiVersion: v1
 data:
   config: '{"networkPolicies":true}'
 kind: ConfigMap
