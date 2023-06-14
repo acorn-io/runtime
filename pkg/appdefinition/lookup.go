@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 )
 
 func findImageInImageData(imageData v1.ImagesData, imageKey string) (string, bool) {
@@ -56,7 +57,7 @@ func findContainerImage(imageData v1.ImagesData, containerBuild *v1.Build) (stri
 		if testBuild == nil {
 			continue
 		}
-		if !reflect.DeepEqual(*containerBuild, *testBuild) {
+		if !equality.Semantic.DeepEqual(*containerBuild, *testBuild) {
 			continue
 		}
 		if build.ImageKey != "" {

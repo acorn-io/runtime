@@ -1,6 +1,7 @@
 package cli
 
 import (
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/tables"
@@ -50,7 +51,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, app := range apps {
-		if app.Status.AppStatus.Stopped && !a.All {
+		if (app.Status.AppStatus.Stopped || inactive(app)) && !a.All {
 			continue
 		}
 		if len(args) > 0 {
@@ -63,4 +64,11 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return out.Err()
+}
+
+func inactive(app apiv1.App) bool {
+	return app.Status.Ready &&
+		app.Status.Columns.Healthy == "0" &&
+		app.Status.Columns.UpToDate == "0" &&
+		app.Status.Columns.Message == "OK"
 }

@@ -41,6 +41,17 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 		app.Status.AppStatus.Jobs[name] = status
 	}
 
+	for name, status := range app.Status.AppStatus.Services {
+		status.ExpressionErrors = nil
+		app.Status.AppStatus.Services[name] = status
+	}
+
+	for name, status := range app.Status.AppStatus.Secrets {
+		status.LookupErrors = nil
+		status.LookupTransitioning = nil
+		app.Status.AppStatus.Secrets[name] = status
+	}
+
 	if app.Status.AppStatus.Containers == nil {
 		app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
 	}

@@ -41,10 +41,6 @@ func (a *appStatusRenderer) readContainers() error {
 		cs.TransitioningMessages = append(cs.TransitioningMessages, summary.TransitioningMessages...)
 		cs.MaxReplicaRestartCount = summary.MaxReplicaRestartCount
 
-		for _, ee := range cs.ExpressionErrors {
-			cs.ErrorMessages = append(cs.ErrorMessages, ee.String())
-		}
-
 		dep := appsv1.Deployment{}
 		err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, containerName), &dep)
 		if apierror.IsNotFound(err) {
@@ -87,6 +83,8 @@ func (a *appStatusRenderer) readContainers() error {
 				cs.TransitioningMessages = append(cs.TransitioningMessages, msg)
 			}
 		}
+
+		addExpressionErrors(&cs.CommonStatus, cs.ExpressionErrors)
 
 		a.app.Status.AppStatus.Containers[containerName] = cs
 	}

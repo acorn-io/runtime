@@ -40,10 +40,6 @@ func (a *appStatusRenderer) readJobs() error {
 		c.ErrorMessages = append(c.ErrorMessages, summary.ErrorMessages...)
 		c.RunningCount = summary.RunningCount
 
-		for _, ee := range c.ExpressionErrors {
-			c.ErrorMessages = append(c.ErrorMessages, ee.String())
-		}
-
 		if c.Skipped {
 			c.Ready = true
 			c.UpToDate = true
@@ -88,6 +84,12 @@ func (a *appStatusRenderer) readJobs() error {
 			}
 		}
 
+		if c.RunningCount > 0 {
+			c.TransitioningMessages = append(c.TransitioningMessages, "running")
+		} else if c.ErrorCount > 0 {
+			c.ErrorMessages = append(c.ErrorMessages, fmt.Sprintf("%d failed attempts", c.ErrorCount))
+		}
+
 		if c.LinkOverride != "" {
 			c.UpToDate = true
 			c.Ready, c.Defined = a.isServiceReady(jobName)
@@ -108,10 +110,26 @@ func (a *appStatusRenderer) readJobs() error {
 			}
 		}
 
+		addExpressionErrors(&c.CommonStatus, c.ExpressionErrors)
+
 		a.app.Status.AppStatus.Jobs[jobName] = c
 	}
 
 	return nil
+}
+
+func addExpressionErrors(status *v1.CommonStatus, expressionErrors []v1.ExpressionError) {
+	missing := map[string]v1.DependencyType{}
+	for _, ee := range expressionErrors {
+		status.Ready = false
+		if ee.DependencyNotFound != nil {
+			missing[ee.DependencyNotFound.Name] = ee.DependencyNotFound.DependencyType
+		}
+	}
+
+	for _, entry := range typed.Sorted(missing) {
+		status.TransitioningMessages = append(status.TransitioningMessages, fmt.Sprintf("%s [%s] missing", entry.Value, entry.Key))
+	}
 }
 
 func (a *appStatusRenderer) isJobReady(jobName string) (ready bool, err error) {

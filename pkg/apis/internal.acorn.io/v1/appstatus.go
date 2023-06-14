@@ -15,17 +15,22 @@ type AppStatus struct {
 	Stopped   bool       `json:"stopped,omitempty"`
 }
 
+type DependencyNotFound struct {
+	DependencyType DependencyType `json:"dependencyType,omitempty"`
+	Name           string         `json:"name,omitempty"`
+}
+
 type ExpressionError struct {
-	Error      string `json:"error,omitempty"`
-	Expression string `json:"expression,omitempty"`
+	DependencyNotFound *DependencyNotFound `json:"dependencyNotFound,omitempty"`
+	Expression         string              `json:"expression,omitempty"`
+	Error              string              `json:"error,omitempty"`
 }
 
 func (e *ExpressionError) String() string {
-	if e.Error != "" {
-		return fmt.Sprintf("error in expression [%s]: %s", e.Expression, e.Error)
+	if e.DependencyNotFound == nil {
+		return "error [" + e.Error + "] expression [" + e.Expression + "]"
 	}
-
-	return fmt.Sprintf("[%s]: expression error", e.Expression)
+	return fmt.Sprintf("missing %s [%s]", e.DependencyNotFound.DependencyType, e.DependencyNotFound.Name)
 }
 
 type ReplicasSummary struct {
@@ -63,12 +68,15 @@ func (in RouterStatus) GetCommonStatus() CommonStatus {
 
 type ServiceStatus struct {
 	CommonStatus      `json:",inline"`
-	Data              GenericMap `json:"data,omitempty"`
-	Secrets           []string   `json:"secrets,omitempty"`
-	Address           string     `json:"address,omitempty"`
-	Endpoint          string     `json:"endpoint,omitempty"`
-	ServiceAcornName  string     `json:"serviceAcornName,omitempty"`
-	ServiceAcornReady bool       `json:"serviceAcornReady,omitempty"`
+	Default           bool              `json:"default,omitempty"`
+	Ports             Ports             `json:"ports,omitempty"`
+	Data              GenericMap        `json:"data,omitempty"`
+	Secrets           []string          `json:"secrets,omitempty"`
+	Address           string            `json:"address,omitempty"`
+	Endpoint          string            `json:"endpoint,omitempty"`
+	ServiceAcornName  string            `json:"serviceAcornName,omitempty"`
+	ServiceAcornReady bool              `json:"serviceAcornReady,omitempty"`
+	ExpressionErrors  []ExpressionError `json:"expressionErrors,omitempty"`
 }
 
 func (in ServiceStatus) GetCommonStatus() CommonStatus {
@@ -123,6 +131,7 @@ type DependencyStatus struct {
 type DependencyType string
 
 const (
+	DependencySecret    = DependencyType("secret")
 	DependencyService   = DependencyType("service")
 	DependencyJob       = DependencyType("job")
 	DependencyContainer = DependencyType("container")

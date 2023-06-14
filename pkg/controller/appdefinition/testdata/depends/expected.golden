@@ -193,7 +193,11 @@ spec:
   default: false
   external: foo
   labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
     acorn.io/link-name: foo
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.db
 status: {}
 
 ---

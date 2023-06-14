@@ -10,6 +10,7 @@ import (
 	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (a *appStatusRenderer) readAcorns() error {
@@ -44,6 +45,17 @@ func (a *appStatusRenderer) readAcorns() error {
 		s.UpToDate = acorn.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
 		s.Ready = s.UpToDate && acorn.Status.Ready
 		s.AcornName = publicname.Get(acorn)
+
+		for _, cond := range acorn.Status.Conditions {
+			if cond.Type == v1.AppInstanceConditionReady {
+				if cond.Status == metav1.ConditionFalse {
+					s.ErrorMessages = append(s.ErrorMessages, cond.Message)
+				} else if cond.Status == metav1.ConditionUnknown {
+					s.TransitioningMessages = append(s.TransitioningMessages, cond.Message)
+				}
+			}
+		}
+
 		a.app.Status.AppStatus.Acorns[acornName] = s
 	}
 

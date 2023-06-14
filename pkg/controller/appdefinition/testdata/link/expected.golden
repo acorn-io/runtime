@@ -18,7 +18,11 @@ spec:
   default: false
   external: con-link
   labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
     acorn.io/link-name: con-link
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.con
 status: {}
 
 ---
