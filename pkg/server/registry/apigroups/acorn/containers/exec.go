@@ -108,6 +108,9 @@ func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.
 	}
 
 	containerName := container.Spec.ContainerName
+	if containerName == "" {
+		containerName = container.Spec.JobName
+	}
 	if container.Spec.SidecarName != "" {
 		containerName = container.Spec.SidecarName
 	}
