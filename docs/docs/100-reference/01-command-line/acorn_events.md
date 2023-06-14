@@ -6,7 +6,7 @@ title: "acorn events"
 List events about Acorn resources
 
 ```
-acorn events [flags]
+acorn events [flags] [EVENT_NAME]
 ```
 
 ### Examples
@@ -17,6 +17,9 @@ acorn events [flags]
 
   # List events across all projects
   acorn -A events
+
+  # Get a single event by name
+  acorn events 4b2ba097badf2031c4718609b9179fb5
 
   # List the last 10 events 
   acorn events --tail 10
