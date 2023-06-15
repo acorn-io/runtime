@@ -42,14 +42,14 @@ func (v *Validator) Validate(_ context.Context, obj runtime.Object) field.ErrorL
 	return nil
 }
 
-func (v *Validator) ValidateUpdate(ctx context.Context, new, old runtime.Object) field.ErrorList {
+func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
 	// Ensure that default region and supported regions are valid.
-	if err := v.Validate(ctx, new); err != nil {
+	if err := v.Validate(ctx, obj); err != nil {
 		return err
 	}
 
 	// If the user is removing a supported region, ensure that there are no apps in that region.
-	oldProject, newProject := old.(*apiv1.Project), new.(*apiv1.Project)
+	oldProject, newProject := old.(*apiv1.Project), obj.(*apiv1.Project)
 	var removedRegions []string
 	for _, region := range append(oldProject.Spec.SupportedRegions, oldProject.Status.DefaultRegion) {
 		if !newProject.HasRegion(region) {
@@ -58,43 +58,57 @@ func (v *Validator) ValidateUpdate(ctx context.Context, new, old runtime.Object)
 	}
 
 	if len(removedRegions) > 0 {
-		return v.ensureNoObjectsExistInRegions(ctx, newProject.Name, removedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
+		return v.ensureNoObjectsExistInRegions(ctx, newProject.Name, newProject.Spec.SupportedRegions, removedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
 	}
 
 	return nil
 }
 
-func (v *Validator) ensureNoObjectsExistInRegions(ctx context.Context, namespace string, regions []string, objList ...kclient.ObjectList) field.ErrorList {
+func (v *Validator) ensureNoObjectsExistInRegions(ctx context.Context, namespace string, regions, removedRegions []string, objList ...kclient.ObjectList) field.ErrorList {
 	var result field.ErrorList
 	for _, obj := range objList {
-		objectsInRemoveRegions := make([]string, 0)
+		var inRemovedRegion []string
 		if err := v.Client.List(ctx, obj, kclient.InNamespace(namespace)); err != nil {
 			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
 		}
 
 		if err := meta.EachListItem(obj, func(object runtime.Object) error {
 			regionObject, ok := object.(regionNamer)
-			if ok && slices.Contains(regions, regionObject.GetRegion()) {
-				objectsInRemoveRegions = append(objectsInRemoveRegions, regionObject.GetName())
+			if ok && slices.Contains(removedRegions, regionObject.GetRegion()) {
+				inRemovedRegion = append(inRemovedRegion, regionObject.GetName())
 			}
 			return nil
 		}); err != nil {
 			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
 		}
 
-		if len(objectsInRemoveRegions) > 0 {
+		if len(inRemovedRegion) > 0 {
 			result = append(result, field.Invalid(
 				field.NewPath("spec", "supportedRegions"),
 				regions,
 				fmt.Sprintf(
-					"cannot remove regions %v that have %s: %v",
-					regions,
-					strings.TrimSuffix(strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind), "list"),
-					strings.Join(objectsInRemoveRegions, ", "),
+					"cannot remove regions %v while in use by the following %ss: %v",
+					removedRegions,
+					v.resource(obj),
+					inRemovedRegion,
 				),
 			))
 		}
 	}
 
 	return result
+}
+
+func (v *Validator) resource(obj runtime.Object) string {
+	kind := obj.GetObjectKind().GroupVersionKind().Kind
+	if kind == "" {
+		gvks, _, _ := v.Client.Scheme().ObjectKinds(obj)
+		if len(gvks) < 1 {
+			// Kind unknown
+			return "resource"
+		}
+		kind = gvks[0].Kind
+	}
+
+	return strings.TrimSuffix(strings.ToLower(kind), "list")
 }
