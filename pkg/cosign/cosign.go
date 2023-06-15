@@ -9,8 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/imagesystem"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/acorn/pkg/imagesystem"
+	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
@@ -174,14 +175,31 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 	}
 
 	// --- parse key
-	if opts.Key != "" {
-		verifier, err := LoadKey(ctx, opts.Key, opts.SignatureAlgorithm)
-		if err != nil {
-			return fmt.Errorf("failed to load key: %w", err)
-		}
-		cosignOpts.SigVerifier = verifier
+	verifiers, err := LoadVerifiers(ctx, opts.Key, opts.SignatureAlgorithm)
+	if err != nil {
+		return fmt.Errorf("failed to load key: %w", err)
 	}
 
+	verified := false
+	var errs []error
+	for _, v := range verifiers {
+		cosignOpts.SigVerifier = v
+		err := verifySignature(ctx, sigs, imgDigestHash, opts, cosignOpts)
+		if err == nil {
+			verified = true
+			break
+		}
+		errs = append(errs, err)
+	}
+
+	if !verified {
+		return fmt.Errorf("failed to find valid signature: %w", merr.NewErrors(errs...))
+	}
+
+	return nil
+}
+
+func verifySignature(ctx context.Context, sigs oci.Signatures, imgDigestHash ggcrv1.Hash, opts VerifyOpts, cosignOpts *cosign.CheckOpts) error {
 	// --- get and verify signatures
 	signatures, bundlesVerified, err := verifySignatures(ctx, sigs, imgDigestHash, cosignOpts)
 	if err != nil {
@@ -334,20 +352,40 @@ var algorithms = map[string]crypto.Hash{
 	"sha512": crypto.SHA512,
 }
 
-func LoadKey(ctx context.Context, keyRef string, algorithm string) (verifier signature.Verifier, err error) {
+func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
 	if strings.HasPrefix(strings.TrimSpace(keyRef), "-----BEGIN PUBLIC KEY-----") {
 		// no scheme, inline PEM
-		verifier, err = decodePEM([]byte(keyRef), algorithms[algorithm])
+		v, err := decodePEM([]byte(keyRef), algorithms[algorithm])
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
-		// TODO: add github
+		verifiers = append(verifiers, v)
+	} else if strings.HasPrefix(keyRef, "gh://") {
+		// gh://
+		sshPubKeys, err := getGitHubPublicKeys(strings.TrimPrefix(keyRef, "gh://"))
+		if err != nil {
+			return nil, fmt.Errorf("failed to load public keys from GitHub: %w", err)
+		}
+
+		for _, pubKey := range sshPubKeys {
+			v, err := signature.LoadVerifier(pubKey, algorithms[algorithm])
+			if err != nil {
+				logrus.Errorf("failed to load verifier for public key from GitHub (type %T): %v", pubKey, err)
+				continue
+			}
+			verifiers = append(verifiers, v)
+		}
 	} else {
 		// schemes: k8s://, pkcs11://, gitlab://
-		verifier, err = cosignature.PublicKeyFromKeyRef(ctx, keyRef)
+		v, err := cosignature.PublicKeyFromKeyRef(ctx, keyRef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from %s: %w", keyRef, err)
 		}
+		verifiers = append(verifiers, v)
+	}
+
+	if len(verifiers) == 0 {
+		return nil, fmt.Errorf("error: no public keys loaded from %s", keyRef)
 	}
 
 	return

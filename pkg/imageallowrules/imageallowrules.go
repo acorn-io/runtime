@@ -135,8 +135,8 @@ iarLoop:
 					}
 				}
 			}
-			var anyOfErrs []error
 			// anyOf: only one signature must pass verification
+			var anyOfErrs []error
 			if len(rule.SignedBy.AnyOf) != 0 {
 				anyOfOK := false
 				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
