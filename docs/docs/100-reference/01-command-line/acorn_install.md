@@ -28,6 +28,7 @@ acorn install
       --auto-upgrade-interval string                    For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
       --aws-identity-provider-arn string                ARN of cluster's OpenID Connect provider registered in AWS
       --builder-per-project                             Create a dedicated builder per project
+      --cert-manager-issuer string                      The name of the cert-manager cluster issuer to use for TLS certificates on custom domains (default letsencrypt-prod) (default "letsencrypt-prod")
       --cluster-domain strings                          The externally addressable cluster domain (default .oss-acorn.io)
       --controller-replicas int                         acorn-controller deployment replica count
       --controller-service-account-annotation strings   annotation to apply to the acorn-system service account

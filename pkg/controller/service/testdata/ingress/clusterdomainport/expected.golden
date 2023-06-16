@@ -61,7 +61,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
-  name: oneimage
+  name: oneimage-cluster-domain
   namespace: app-created-namespace
 spec:
   rules:

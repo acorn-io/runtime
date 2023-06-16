@@ -345,7 +345,7 @@ func Test_setupCertManager(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := setupCertManager(tt.args.serviceName, tt.args.annotations, tt.args.rules, tt.args.tls); !reflect.DeepEqual(got, tt.want) {
+			if got := setupCertManager(tt.args.serviceName, tt.args.annotations, tt.args.rules, tt.args.tls, false); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("setupCertManager() = %v, want %v", got, tt.want)
 			}
 		})

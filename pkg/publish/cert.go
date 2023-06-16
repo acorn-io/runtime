@@ -127,7 +127,7 @@ func copySecretsForCerts(req router.Request, svc *v1.ServiceInstance, filteredTL
 	return
 }
 
-func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []networkingv1.IngressRule) ([]client.Object, []networkingv1.IngressTLS, error) {
+func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []networkingv1.IngressRule, useCertManager bool) ([]client.Object, []networkingv1.IngressTLS, error) {
 	tlsCerts, err := getCerts(req, svc.Spec.AppNamespace)
 	if err != nil {
 		return nil, nil, err
@@ -140,7 +140,7 @@ func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []net
 	}
 
 	ingressTLS := getCertsForPublishedHosts(rules, tlsCerts)
-	ingressTLS = setupCertManager(svc.Name, svc.Spec.Annotations, rules, ingressTLS)
+	ingressTLS = setupCertManager(svc.Name, svc.Spec.Annotations, rules, ingressTLS, useCertManager)
 
 	return secrets, ingressTLS, nil
 }

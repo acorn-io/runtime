@@ -62,14 +62,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"},"oneimage-app-name-a5b0aade.local.oss-acorn.io":{"port":81,"service":"oneimage"}}'
+    acorn.io/targets: '{"oneimage-app-name-a5b0aade.local.oss-acorn.io":{"port":81,"service":"oneimage"}}'
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
-  name: oneimage
+  name: oneimage-cluster-domain
   namespace: app-created-namespace
 spec:
   rules:
@@ -83,6 +83,26 @@ spec:
               number: 80
         path: /
         pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"}}'
+    cert-manager.io/cluster-issuer: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage-custom-domain
+  namespace: app-created-namespace
+spec:
+  rules:
   - host: localhost
     http:
       paths:
@@ -93,6 +113,10 @@ spec:
               number: 80
         path: /
         pathType: Prefix
+  tls:
+  - hosts:
+    - localhost
+    secretName: oneimage-cm-cert-1
 status:
   loadBalancer: {}
 
@@ -140,6 +164,6 @@ status:
   - address: oneimage-app-name-a5b0aade.local.oss-acorn.io
     publishProtocol: http
   - address: localhost
-    publishProtocol: http
+    publishProtocol: https
   hasService: true
 `

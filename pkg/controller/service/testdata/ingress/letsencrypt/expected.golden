@@ -30,14 +30,14 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    acorn.io/targets: '{"app1-app-name-04396c88.local.oss-acorn.io":{"port":81,"service":"app1"},"ci1.acorn.not":{"port":81,"service":"app1"}}'
+    acorn.io/targets: '{"app1-app-name-04396c88.local.oss-acorn.io":{"port":81,"service":"app1"}}'
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/container-name: app1
     acorn.io/managed: "true"
-  name: app1
+  name: app1-cluster-domain
   namespace: app-created-namespace
 spec:
   rules:
@@ -51,6 +51,26 @@ spec:
               number: 80
         path: /
         pathType: Prefix
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"app1"}}'
+    cert-manager.io/cluster-issuer: ""
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: app1
+    acorn.io/managed: "true"
+  name: app1-custom-domain
+  namespace: app-created-namespace
+spec:
+  rules:
   - host: ci1.acorn.not
     http:
       paths:
@@ -64,7 +84,7 @@ spec:
   tls:
   - hosts:
     - ci1.acorn.not
-    secretName: test-tls-app1-1234567890ab
+    secretName: app1-cm-cert-1
 status:
   loadBalancer: {}
 
@@ -122,7 +142,7 @@ status:
     type: defined
   endpoints:
   - address: app1-app-name-04396c88.local.oss-acorn.io
-    publishProtocol: https
+    publishProtocol: http
   - address: ci1.acorn.not
     publishProtocol: https
   hasService: true
