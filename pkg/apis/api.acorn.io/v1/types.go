@@ -424,7 +424,7 @@ type Config struct {
 	AWSIdentityProviderARN         *string         `json:"awsIdentityProviderArn" name:"aws-identity-provider-arn" usage:"ARN of cluster's OpenID Connect provider registered in AWS"`
 	EventTTL                       *string         `json:"eventTTL" name:"event-ttl" usage:"Amount of time an Acorn event will be stored before being deleted (default '168h' - 7 days)"`
 	Features                       map[string]bool `json:"features" name:"features" boolmap:"true" usage:"Enable or disable features. (example foo=true,bar=false)"`
-	CertManagerIssuer              *string         `json:"certManagerIssuer" name:"cert-manager-issuer" usage:"The name of the cert-manager cluster issuer to use for TLS certificates on custom domains (default letsencrypt-prod)" default:"letsencrypt-prod"`
+	CertManagerIssuer              *string         `json:"certManagerIssuer" name:"cert-manager-issuer" usage:"The name of the cert-manager cluster issuer to use for TLS certificates on custom domains" default:"letsencrypt-prod"`
 }
 
 type EncryptionKey struct {

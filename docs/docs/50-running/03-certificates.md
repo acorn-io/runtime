@@ -2,7 +2,7 @@
 title: TLS Certificates
 ---
 
-Applications that publish HTTP endpoints can be protected by TLS certificates.  If you've enabled Acorn's [Let's Encrypt integration](30-installation/02-options.md#tls-via-lets-encrypt), a valid certificate will be provisioned for your app's endpoints. This applies to oss-acorn.io generated endpoints and custom endpoints configured using the [publish flag](50-running/02-networking.md#publish-individual-ports).
+Applications that publish HTTP endpoints can be protected by TLS certificates.  If you've enabled Acorn's [Let's Encrypt integration](30-installation/02-options.md#tls-via-lets-encrypt), a valid certificate will be provisioned for your app's endpoints. This only applies to oss-acorn.io generated endpoints. For custom endpoints configured using the [publish flag](50-running/02-networking.md#publish-individual-ports), acorn relies on external cert-manager to issue certificates. For more information on how to configure cert-manager, see [Issuing custom domain certs](#issuing-custom-domain-certs).
 
 ## Manually adding certificates
 If you don't wish to use Acorn's Let's Encrypt integration, you can configure certificates manually or by integrating with cert-manager. Acorn will automatically look for SANs in secrets of type `kubernetes.io/tls` for the exposed FQDN of the application in the Acorn namespace.
@@ -53,3 +53,32 @@ acorn run -p my-app.example.com:web [MY_APP_IMAGE]
 
 Acorn will automatically inspect each certificate in the Acorn namespace for one that can be used with `my-app.example.com`.
 If no TLS secret is found with that FQDN, it will be exposed on HTTP only.
+
+### Issuing custom domain certs
+
+Acorn Let's Encrypt integration does not issue certificates for custom domain. Instead, you will rely on external cert-manager to issue certificates. To do so, you will need to create a cluster issuer first. For more information on how to configure cert-manager, see [cert-manager docs](https://cert-manager.io/docs/).
+
+```yaml 
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: users@exmaple.io
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: traefik
+```
+
+Modify the ingressClassName to match the ingress controller you are using. For example, if you are using nginx ingress controller, you will need to change it to `nginx`.
+
+Once you have created the cluster issuer, pass the cluster issuer's name to acorn install so that acorn knows where to apply the cluster issuer to the ingress resource.
+
+```shell
+acorn install --cert-manager-issuer=letsencrypt-prod
+```

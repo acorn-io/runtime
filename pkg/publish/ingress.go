@@ -200,20 +200,15 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 	}
 
 	for _, rules := range []struct {
-		rules []networkingv1.IngressRule
-		name  string
+		rules  []networkingv1.IngressRule
+		name   string
+		target map[string]Target
 	}{
-		{rules: clusterDomainRules, name: clusterDomain},
-		{rules: customDomainRules, name: customDomain},
+		{rules: clusterDomainRules, name: clusterDomain, target: clusterDomainTargets},
+		{rules: customDomainRules, name: customDomain, target: customDomainTargets},
 	} {
 		if len(rules.rules) == 0 {
 			continue
-		}
-		var targets map[string]Target
-		if rules.name == clusterDomain {
-			targets = clusterDomainTargets
-		} else {
-			targets = customDomainTargets
 		}
 		// For custom domain, always use cert-manager to provision certificate.
 		useCertManager := rules.name == customDomain
@@ -222,7 +217,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 			return nil, err
 		}
 
-		targetJSON, err := json.Marshal(targets)
+		targetJSON, err := json.Marshal(rules.target)
 		if err != nil {
 			return nil, err
 		}
