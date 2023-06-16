@@ -29,7 +29,7 @@ jobs:
       - run: make build
       - run: docker buildx install
       - run: make setup-ci-image
-      - run: ./bin/acorn install --image acorn:v-ci --skip-checks --acorn-dns=disabled
+      - run: ./bin/acorn install --image acorn:v-ci --skip-checks --acorn-dns=disabled --network-policies=true
       - run: TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile test-summary.xml" make test
       - name: Build test summary
         uses: test-summary/action@v1

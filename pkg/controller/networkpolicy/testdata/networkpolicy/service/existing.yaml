@@ -6,3 +6,11 @@ spec:
   podCIDR: 10.42.0.0/24
   podCIDRs:
     - 10.42.0.0/24
+---
+apiVersion: v1
+data:
+  config: '{"networkPolicies":true}'
+kind: ConfigMap
+metadata:
+  name: acorn-config
+  namespace: acorn-system
