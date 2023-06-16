@@ -98,7 +98,7 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 		c.UseCustomCABundle = new(bool)
 	}
 	if c.NetworkPolicies == nil {
-		c.NetworkPolicies = &[]bool{false}[0]
+		c.NetworkPolicies = new(bool)
 	}
 	if c.IngressControllerNamespace == nil {
 		c.IngressControllerNamespace = new(string)
