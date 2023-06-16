@@ -54,7 +54,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 			return nil
 		}
 
-		// skip the attempt to locally resolve if we already know that the image will be remote
+		// Skip the attempt to locally resolve if we already know that the image will be remote
 		var (
 			resolved string
 			err      error
@@ -65,8 +65,9 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 			if err != nil {
 				cond.Error(err)
 				return nil
-			} else if !isLocal {
-				// force pull from remote, since the only local image we found was marked remote, and there might be a newer version
+			}
+			if !isLocal {
+				// Force pull from remote, since the only local image we found was marked remote, and there might be a newer version
 				resolved = target
 			}
 		} else {
