@@ -27,6 +27,7 @@ items:
     name: found.container
   spec:
     appName: found
+    metrics: {}
     probes: null
     metrics: {}
   status:
