@@ -106,7 +106,8 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 		return app, nil
 	}
 
-	if opts.Image != "" {
+	// only change app.Spec.Image if the user specified a different image
+	if opts.Image != "" && opts.Image != app.Spec.Image {
 		img, tag, err := FindImage(ctx, c, opts.Image)
 		if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 			return nil, err

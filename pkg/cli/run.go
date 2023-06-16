@@ -313,20 +313,18 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 		return nil, false, err
 	}
 
-	if !imageSource.IsImageSet() {
-		// If there is no image set, then lookup the existing app and use the image of the current app
-		imageSource = imageSource.WithImage(app.Status.AppImage.ID)
-	}
-
-	image, deployArgs, err := imageSource.GetImageAndDeployArgs(ctx, c)
-	if err != nil {
-		return nil, false, err
-	}
-
 	updateOpts := opts.ToUpdate()
 	updateOpts.Replace = s.Replace
-	updateOpts.Image = image
-	updateOpts.DeployArgs = deployArgs
+
+	if imageSource.IsImageSet() {
+		image, deployArgs, err := imageSource.GetImageAndDeployArgs(ctx, c)
+		if err != nil {
+			return nil, false, err
+		}
+		updateOpts.Image = image
+		updateOpts.DeployArgs = deployArgs
+	}
+
 	app, err = rulerequest.PromptUpdate(ctx, c, s.Dangerous, app.Name, updateOpts)
 	if err != nil {
 		return nil, false, err
