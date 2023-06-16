@@ -60,7 +60,6 @@ kind: Ingress
 metadata:
   annotations:
     acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"app1"}}'
-    cert-manager.io/cluster-issuer: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -84,7 +83,7 @@ spec:
   tls:
   - hosts:
     - ci1.acorn.not
-    secretName: app1-cm-cert-1
+    secretName: test-tls-app1-1234567890ab
 status:
   loadBalancer: {}
 

@@ -88,7 +88,6 @@ kind: Ingress
 metadata:
   annotations:
     acorn.io/targets: '{"localhost":{"port":80,"service":"oneimage"}}'
-    cert-manager.io/cluster-issuer: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -109,10 +108,6 @@ spec:
               number: 80
         path: /
         pathType: Prefix
-  tls:
-  - hosts:
-    - localhost
-    secretName: oneimage-cm-cert-1
 status:
   loadBalancer: {}
 
@@ -158,6 +153,6 @@ status:
   - address: oneimage-app-name-a5b0aade.local.oss-acorn.io
     publishProtocol: http
   - address: localhost
-    publishProtocol: https
+    publishProtocol: http
   hasService: true
 `

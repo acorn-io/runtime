@@ -211,7 +211,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 			continue
 		}
 		// For custom domain, always use cert-manager to provision certificate.
-		useCertManager := rules.name == customDomain
+		useCertManager := rules.name == customDomain && cfg.CertManagerIssuer != nil && *cfg.CertManagerIssuer != ""
 		secrets, ingressTLS, err := setupCertsForRules(req, svc, rules.rules, useCertManager)
 		if err != nil {
 			return nil, err

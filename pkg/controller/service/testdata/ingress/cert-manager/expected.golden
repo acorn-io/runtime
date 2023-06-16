@@ -12,14 +12,18 @@ metadata:
 spec:
   ports:
   - appProtocol: HTTP
-    name: "80"
-    port: 80
+    name: "81"
+    port: 81
     protocol: TCP
     targetPort: 81
   - name: "90"
     port: 90
     protocol: TCP
     targetPort: 91
+  - name: "92"
+    port: 92
+    protocol: TCP
+    targetPort: 92
   selector:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
@@ -48,6 +52,10 @@ spec:
     port: 90
     protocol: TCP
     targetPort: 91
+  - name: "92"
+    port: 92
+    protocol: TCP
+    targetPort: 92
   selector:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
@@ -80,7 +88,7 @@ spec:
           service:
             name: oneimage
             port:
-              number: 80
+              number: 81
         path: /
         pathType: Prefix
 status:
@@ -91,7 +99,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    acorn.io/targets: '{"localhost":{"port":81,"service":"oneimage"}}'
+    acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"oneimage"},"localhost":{"port":81,"service":"oneimage"}}'
+    cert-manager.io/cluster-issuer: default
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -102,6 +111,16 @@ metadata:
   namespace: app-created-namespace
 spec:
   rules:
+  - host: ci1.acorn.not
+    http:
+      paths:
+      - backend:
+          service:
+            name: oneimage
+            port:
+              number: 81
+        path: /
+        pathType: Prefix
   - host: localhost
     http:
       paths:
@@ -109,9 +128,16 @@ spec:
           service:
             name: oneimage
             port:
-              number: 80
+              number: 81
         path: /
         pathType: Prefix
+  tls:
+  - hosts:
+    - ci1.acorn.not
+    secretName: oneimage-cm-cert-1
+  - hosts:
+    - localhost
+    secretName: oneimage-cm-cert-2
 status:
   loadBalancer: {}
 
@@ -139,16 +165,19 @@ spec:
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
   ports:
-  - port: 80
-    protocol: http
+  - protocol: http
     publish: true
     targetPort: 81
   - port: 90
     protocol: tcp
     publish: true
     targetPort: 91
+  - protocol: tcp
+    publish: true
+    targetPort: 92
   publish:
   - hostname: localhost
+  - hostname: ci1.acorn.not
 status:
   conditions:
     reason: Success
@@ -158,7 +187,9 @@ status:
   endpoints:
   - address: oneimage-app-name-a5b0aade.local.oss-acorn.io
     publishProtocol: http
+  - address: ci1.acorn.not
+    publishProtocol: https
   - address: localhost
-    publishProtocol: http
+    publishProtocol: https
   hasService: true
 `

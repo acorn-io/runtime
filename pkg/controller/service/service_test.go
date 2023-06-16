@@ -109,3 +109,7 @@ func TestRouter(t *testing.T) {
 func TestSecret(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/secret", RenderServices)
 }
+
+func TestCertManager(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/cert-manager", RenderServices)
+}
