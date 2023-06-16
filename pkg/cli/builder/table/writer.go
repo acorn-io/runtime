@@ -75,9 +75,7 @@ func (t *writer) SetFormat(format string) {
 	case "aml":
 		t.HeaderFormat = ""
 		t.ValueFormat = "aml"
-	case "wide":
-	case "raw":
-	case "table":
+	case "wide", "raw", "table":
 	default:
 		if customFormat != "" {
 			t.ValueFormat = customFormat + "\n"
