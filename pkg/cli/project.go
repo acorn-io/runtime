@@ -106,11 +106,11 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 					supportedRegions[i] = supportedRegion + "*"
 				}
 			}
-			out.Write(projectEntry{
+			out.WriteFormatted(projectEntry{
 				Name:    projectItem.FullName,
 				Default: defaultProject == projectItem.FullName,
 				Regions: supportedRegions,
-			})
+			}, projectItem.Project)
 		}
 	}
 

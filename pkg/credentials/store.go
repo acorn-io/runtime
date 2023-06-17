@@ -16,13 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-type Credential struct {
-	ServerAddress string
-	Username      string
-	Password      string
-	LocalStorage  bool
-}
-
 type Store struct {
 	cfg *config.CLIConfig
 	c   client.Client
@@ -43,7 +36,7 @@ func IsErrCredentialsNotFound(err error) bool {
 	return credentials3.IsErrCredentialsNotFound(err)
 }
 
-func normalize(cred Credential) Credential {
+func normalize(cred apiv1.Credential) apiv1.Credential {
 	cred.ServerAddress = imagesystem.NormalizeServerAddress(cred.ServerAddress)
 	return cred
 }
@@ -68,11 +61,11 @@ func (s *Store) Get(ctx context.Context, serverAddress string) (*apiv1.RegistryA
 	}, true, nil
 }
 
-func (s *Store) Add(ctx context.Context, cred Credential, skipChecks bool) error {
+func (s *Store) Add(ctx context.Context, cred apiv1.Credential, skipChecks bool) error {
 	cred = normalize(cred)
 	if cred.LocalStorage {
 		if !skipChecks {
-			err := credentials2.CredentialValidate(ctx, cred.Username, cred.Password, cred.ServerAddress)
+			err := credentials2.CredentialValidate(ctx, cred.Username, cred.GetPassword(), cred.ServerAddress)
 			if err != nil {
 				return err
 			}
@@ -83,14 +76,14 @@ func (s *Store) Add(ctx context.Context, cred Credential, skipChecks bool) error
 		}
 		return s.Store(types.AuthConfig{
 			Username:      cred.Username,
-			Password:      cred.Password,
+			Password:      cred.GetPassword(),
 			ServerAddress: cred.ServerAddress,
 		})
 	}
 
 	existing, err := s.c.CredentialGet(ctx, cred.ServerAddress)
 	if apierror.IsNotFound(err) {
-		_, err = s.c.CredentialCreate(ctx, cred.ServerAddress, cred.Username, cred.Password, skipChecks)
+		_, err = s.c.CredentialCreate(ctx, cred.ServerAddress, cred.Username, cred.GetPassword(), skipChecks)
 		if err != nil {
 			return err
 		}
@@ -99,12 +92,12 @@ func (s *Store) Add(ctx context.Context, cred Credential, skipChecks bool) error
 	}
 
 	existing.Username = cred.Username
-	existing.Password = &cred.Password
-	_, err = s.c.CredentialUpdate(ctx, cred.ServerAddress, cred.Username, cred.Password, skipChecks)
+	existing.Password = cred.Password
+	_, err = s.c.CredentialUpdate(ctx, cred.ServerAddress, cred.Username, cred.GetPassword(), skipChecks)
 	return err
 }
 
-func (s *Store) Remove(ctx context.Context, cred Credential) error {
+func (s *Store) Remove(ctx context.Context, cred apiv1.Credential) error {
 	cred = normalize(cred)
 	if !cred.LocalStorage {
 		_, err := s.c.CredentialDelete(ctx, cred.ServerAddress)
@@ -119,17 +112,17 @@ func (s *Store) Remove(ctx context.Context, cred Credential) error {
 	return store.Erase(cred.ServerAddress)
 }
 
-func (s *Store) List(ctx context.Context) (result []Credential, err error) {
+func (s *Store) List(ctx context.Context) (result []apiv1.Credential, err error) {
 	creds, err := s.c.CredentialList(ctx)
 	for _, cred := range creds {
-		result = append(result, Credential{
+		result = append(result, apiv1.Credential{
 			ServerAddress: cred.ServerAddress,
 			Username:      cred.Username,
 		})
 	}
 
 	for _, entry := range typed.Sorted(s.cfg.Auths) {
-		result = append(result, Credential{
+		result = append(result, apiv1.Credential{
 			ServerAddress: entry.Key,
 			Username:      entry.Value.Username,
 			LocalStorage:  true,
@@ -154,7 +147,7 @@ func (s *Store) List(ctx context.Context) (result []Credential, err error) {
 			return nil, err
 		}
 		for _, entry := range typed.Sorted(auths) {
-			result = append(result, Credential{
+			result = append(result, apiv1.Credential{
 				ServerAddress: entry.Key,
 				Username:      entry.Value.Username,
 				LocalStorage:  true,

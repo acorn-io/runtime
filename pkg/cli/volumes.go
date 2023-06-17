@@ -53,10 +53,10 @@ func (a *Volume) Run(cmd *cobra.Command, args []string) error {
 	for _, volume := range volumes {
 		if len(args) > 0 {
 			if slices.Contains(args, volume.Name) {
-				out.Write(volume)
+				out.Write(&volume)
 			}
 		} else {
-			out.Write(volume)
+			out.Write(&volume)
 		}
 	}
 

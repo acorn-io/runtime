@@ -51,7 +51,7 @@ func (a *Check) Run(cmd *cobra.Command, args []string) error {
 	if !a.Quiet {
 		out := table.NewWriter(tables.CheckResult, a.Quiet, a.Output)
 		for _, r := range checkresult {
-			out.Write(&r)
+			out.WriteFormatted(&r, nil)
 		}
 		if err := out.Err(); err != nil {
 			fmt.Println(err)

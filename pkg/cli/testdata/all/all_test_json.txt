@@ -1,74 +1,94 @@
 
 APPS:
 {
-    "metadata": {
-        "name": "found",
-        "creationTimestamp": null
-    },
-    "spec": {
-        "secrets": [
-            {
-                "secret": "found.secret",
-                "target": "found"
+    "items": [
+        {
+            "metadata": {
+                "name": "found",
+                "creationTimestamp": null
+            },
+            "spec": {
+                "secrets": [
+                    {
+                        "secret": "found.secret",
+                        "target": "found"
+                    }
+                ]
+            },
+            "status": {
+                "columns": {},
+                "appImage": {
+                    "imageData": {},
+                    "vcs": {}
+                },
+                "appSpec": {},
+                "appStatus": {},
+                "defaults": {}
             }
-        ]
-    },
-    "status": {
-        "columns": {},
-        "appImage": {
-            "imageData": {},
-            "vcs": {}
-        },
-        "appSpec": {},
-        "appStatus": {},
-        "defaults": {}
-    }
+        }
+    ]
 }
 
 
 CONTAINERS:
 {
-    "metadata": {
-        "name": "found.container",
-        "creationTimestamp": null
-    },
-    "spec": {
-        "probes": null,
-        "appName": "found"
-    },
-    "status": {
-        "columns": {},
-        "state": {},
-        "lastState": {},
-        "ready": false,
-        "restartCount": 0,
-        "image": "",
-        "imageID": ""
-    }
+    "items": [
+        {
+            "metadata": {
+                "name": "found.container",
+                "creationTimestamp": null
+            },
+            "spec": {
+                "probes": null,
+                "appName": "found"
+            },
+            "status": {
+                "columns": {},
+                "state": {},
+                "lastState": {},
+                "ready": false,
+                "restartCount": 0,
+                "image": "",
+                "imageID": ""
+            }
+        }
+    ]
 }
 
 
 VOLUMES:
 {
-    "metadata": {
-        "name": "found.vol",
-        "creationTimestamp": null
-    },
-    "spec": {},
-    "status": {
-        "appName": "found",
-        "appPublicName": "found",
-        "volumeName": "vol",
-        "columns": {}
-    }
+    "items": [
+        {
+            "metadata": {
+                "name": "found.vol",
+                "creationTimestamp": null,
+                "labels": {
+                    "acorn.io/app-name": "found",
+                    "acorn.io/volume-name": "vol"
+                }
+            },
+            "spec": {},
+            "status": {
+                "appName": "found",
+                "appPublicName": "found",
+                "volumeName": "vol",
+                "columns": {}
+            }
+        }
+    ]
 }
 
 
 SECRETS:
 {
-    "metadata": {
-        "name": "found.secret",
-        "creationTimestamp": null
-    }
+    "items": [
+        {
+            "metadata": {
+                "name": "found.secret",
+                "creationTimestamp": null
+            }
+        }
+    ]
 }
 

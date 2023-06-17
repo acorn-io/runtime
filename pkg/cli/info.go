@@ -77,7 +77,7 @@ func (s *Info) Run(cmd *cobra.Command, _ []string) error {
 	}
 
 	out := table.NewWriter(tables.Info, false, s.Output)
-	out.Write(InfoCLIResponse{
+	out.WriteFormatted(InfoCLIResponse{
 		Client: struct {
 			Version bversion.Version  `json:"version,omitempty"`
 			CLI     *config.CLIConfig `json:"cli,omitempty"`
@@ -86,7 +86,11 @@ func (s *Info) Run(cmd *cobra.Command, _ []string) error {
 			CLI:     cfg.Sanitize(),
 		},
 		Projects: projectInfo,
-	})
+	}, nil)
+	// This is somewhat of a hack that forces this single item to print
+	if err := out.Flush(); err != nil {
+		return err
+	}
 	return out.Err()
 }
 

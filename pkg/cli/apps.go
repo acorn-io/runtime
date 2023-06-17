@@ -56,10 +56,10 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		}
 		if len(args) > 0 {
 			if slices.Contains(args, app.Name) {
-				out.Write(app)
+				out.Write(&app)
 			}
 		} else {
-			out.Write(app)
+			out.Write(&app)
 		}
 	}
 

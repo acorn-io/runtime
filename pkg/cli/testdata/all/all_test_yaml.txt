@@ -1,57 +1,64 @@
 
 APPS:
 ---
-metadata:
-  creationTimestamp: null
-  name: found
-spec:
-  secrets:
-  - secret: found.secret
-    target: found
-status:
-  appImage:
-    imageData: {}
-    vcs: {}
-  appSpec: {}
-  appStatus: {}
-  columns: {}
-  defaults: {}
+items:
+- metadata:
+    creationTimestamp: null
+    name: found
+  spec:
+    secrets:
+    - secret: found.secret
+      target: found
+  status:
+    appImage:
+      imageData: {}
+      vcs: {}
+    appSpec: {}
+    appStatus: {}
+    columns: {}
+    defaults: {}
 
 
 CONTAINERS:
 ---
-metadata:
-  creationTimestamp: null
-  name: found.container
-spec:
-  appName: found
-  probes: null
-status:
-  columns: {}
-  image: ""
-  imageID: ""
-  lastState: {}
-  ready: false
-  restartCount: 0
-  state: {}
+items:
+- metadata:
+    creationTimestamp: null
+    name: found.container
+  spec:
+    appName: found
+    probes: null
+  status:
+    columns: {}
+    image: ""
+    imageID: ""
+    lastState: {}
+    ready: false
+    restartCount: 0
+    state: {}
 
 
 VOLUMES:
 ---
-metadata:
-  creationTimestamp: null
-  name: found.vol
-spec: {}
-status:
-  appName: found
-  appPublicName: found
-  columns: {}
-  volumeName: vol
+items:
+- metadata:
+    creationTimestamp: null
+    labels:
+      acorn.io/app-name: found
+      acorn.io/volume-name: vol
+    name: found.vol
+  spec: {}
+  status:
+    appName: found
+    appPublicName: found
+    columns: {}
+    volumeName: vol
 
 
 SECRETS:
 ---
-metadata:
-  creationTimestamp: null
-  name: found.secret
+items:
+- metadata:
+    creationTimestamp: null
+    name: found.secret
 

@@ -69,7 +69,7 @@ func (a *Container) Run(cmd *cobra.Command, args []string) error {
 		}
 		for _, container := range containers {
 			if slices.Contains(args, container.Name) {
-				out.Write(container)
+				out.Write(&container)
 			}
 		}
 	}

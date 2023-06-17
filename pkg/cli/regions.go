@@ -51,7 +51,7 @@ func (a *Regions) Run(cmd *cobra.Command, args []string) error {
 	for _, region := range regions {
 		if len(args) > 0 {
 			if slices.Contains(args, region.Name) {
-				out.Write(region)
+				out.Write(&region)
 			}
 		} else {
 			out.Write(&region)

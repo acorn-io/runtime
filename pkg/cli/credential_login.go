@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -123,10 +124,10 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = store.Add(cmd.Context(), credentials.Credential{
+	err = store.Add(cmd.Context(), apiv1.Credential{
 		ServerAddress: serverAddress,
 		Username:      a.Username,
-		Password:      a.Password,
+		Password:      &a.Password,
 		LocalStorage:  a.LocalStorage,
 	}, a.SkipChecks)
 	if err != nil {

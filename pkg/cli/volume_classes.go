@@ -52,10 +52,10 @@ func (a *Storage) Run(cmd *cobra.Command, args []string) error {
 	for _, storage := range storages {
 		if len(args) > 0 {
 			if slices.Contains(args, storage.Name) {
-				out.Write(storage)
+				out.Write(&storage)
 			}
 		} else {
-			out.Write(storage)
+			out.Write(&storage)
 		}
 	}
 

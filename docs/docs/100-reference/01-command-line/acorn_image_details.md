@@ -19,7 +19,7 @@ acorn image details my-image
 
 ```
   -h, --help            help for details
-  -o, --output string   Output format (json, yaml, aml) (default "aml")
+  -o, --output string   Output format (json, yaml, aml) (default "yaml")
 ```
 
 ### Options inherited from parent commands
