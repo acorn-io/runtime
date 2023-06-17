@@ -70,7 +70,7 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 
 	out := table.NewWriter(tables.Event, false, e.Output)
 	for event := range events {
-		out.Write(event)
+		out.Write(&event)
 
 		if !opts.Follow {
 			// Wait to flush until all events have been written.

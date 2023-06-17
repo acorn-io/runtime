@@ -59,11 +59,11 @@ func (a *Credential) Run(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			if slices.Contains(args, credential.ServerAddress) {
 				found = true
-				out.Write(credential)
+				out.Write(&credential)
 			}
 		} else {
 			found = true
-			out.Write(credential)
+			out.Write(&credential)
 		}
 	}
 

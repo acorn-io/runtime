@@ -1,13 +1,11 @@
 package cli
 
 import (
-	"fmt"
-
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	"github.com/acorn-io/acorn/pkg/cli/builder/table"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/credentials"
-	"github.com/acorn-io/aml"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +25,7 @@ func NewImageDetails(c CommandContext) *cobra.Command {
 
 type ImageDetails struct {
 	client ClientFactory
-	Output string `usage:"Output format (json, yaml, aml)" short:"o" local:"true" default:"aml"`
+	Output string `usage:"Output format (json, yaml, aml)" short:"o" local:"true" default:"yaml"`
 }
 
 func (a *ImageDetails) Run(cmd *cobra.Command, args []string) error {
@@ -69,14 +67,8 @@ func (a *ImageDetails) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	switch a.Output {
-	case "aml":
-		out, err := aml.Marshal(image.AppImage)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s\n", out)
-	}
+	w := table.NewWriter(nil, false, a.Output)
+	w.WriteFormatted(image.AppImage, nil)
 
-	return nil
+	return w.Close()
 }

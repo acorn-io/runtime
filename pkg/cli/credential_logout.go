@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/acorn/pkg/config"
@@ -57,7 +58,7 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = store.Remove(cmd.Context(), credentials2.Credential{
+	err = store.Remove(cmd.Context(), apiv1.Credential{
 		ServerAddress: args[0],
 		LocalStorage:  a.LocalStorage,
 	})

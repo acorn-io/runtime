@@ -326,6 +326,14 @@ type Credential struct {
 	Username      string  `json:"username,omitempty"`
 	Password      *string `json:"password,omitempty"`
 	SkipChecks    bool    `json:"skipChecks,omitempty"`
+	LocalStorage  bool    `json:"localStorage,omitempty"`
+}
+
+func (c *Credential) GetPassword() string {
+	if c.Password == nil {
+		return ""
+	}
+	return *c.Password
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

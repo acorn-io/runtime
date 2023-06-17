@@ -60,12 +60,12 @@ func (a *Reveal) Run(cmd *cobra.Command, args []string) error {
 
 	for _, secret := range matchedSecrets {
 		for _, entry := range typed.Sorted(secret.Data) {
-			out.Write(&revealEntry{
+			out.WriteFormatted(&revealEntry{
 				Name:  secret.Name,
 				Type:  secret.Type,
 				Key:   entry.Key,
 				Value: string(entry.Value),
-			})
+			}, &secret)
 		}
 	}
 

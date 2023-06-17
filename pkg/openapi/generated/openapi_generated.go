@@ -2599,6 +2599,12 @@ func schema_pkg_apis_apiacornio_v1_Credential(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
+					"localStorage": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},

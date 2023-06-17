@@ -113,7 +113,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "{\n    \"metadata\": {\n        \"name\": \"found.vol\",\n        \"creationTimestamp\": null\n    },\n    \"spec\": {},\n    \"status\": {\n        \"appName\": \"found\",\n        \"appPublicName\": \"found\",\n        \"volumeName\": \"vol\",\n        \"columns\": {}\n    }\n}\n\n",
+			wantOut: "{\n    \"items\": [\n        {\n            \"metadata\": {\n                \"name\": \"found.vol\",\n                \"creationTimestamp\": null,\n                \"labels\": {\n                    \"acorn.io/app-name\": \"found\",\n                    \"acorn.io/volume-name\": \"vol\"\n                }\n            },\n            \"spec\": {},\n            \"status\": {\n                \"appName\": \"found\",\n                \"appPublicName\": \"found\",\n                \"volumeName\": \"vol\",\n                \"columns\": {}\n            }\n        }\n    ]\n}\n\n",
 		},
 		{
 			name: "acorn volume -o yaml", fields: fields{
@@ -126,7 +126,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "---\nmetadata:\n  creationTimestamp: null\n  name: found.vol\nspec: {}\nstatus:\n  appName: found\n  appPublicName: found\n  columns: {}\n  volumeName: vol\n\n",
+			wantOut: "---\nitems:\n- metadata:\n    creationTimestamp: null\n    labels:\n      acorn.io/app-name: found\n      acorn.io/volume-name: vol\n    name: found.vol\n  spec: {}\n  status:\n    appName: found\n    appPublicName: found\n    columns: {}\n    volumeName: vol\n\n",
 		},
 		{
 			name: "acorn volume found.vol", fields: fields{

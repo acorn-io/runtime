@@ -44,7 +44,7 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		out.Write(*secret)
+		out.Write(secret)
 		return out.Err()
 	}
 
@@ -56,10 +56,10 @@ func (a *Secret) Run(cmd *cobra.Command, args []string) error {
 	for _, secret := range secrets {
 		if len(args) > 0 {
 			if slices.Contains(args, secret.Name) {
-				out.Write(secret)
+				out.Write(&secret)
 			}
 		} else {
-			out.Write(secret)
+			out.Write(&secret)
 		}
 	}
 

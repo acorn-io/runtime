@@ -67,7 +67,7 @@ func TestSecret(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "{\n    \"metadata\": {\n        \"name\": \"found.secret\",\n        \"creationTimestamp\": null\n    }\n}\n\n",
+			wantOut: "{\n    \"items\": [\n        {\n            \"metadata\": {\n                \"name\": \"found.secret\",\n                \"creationTimestamp\": null\n            }\n        }\n    ]\n}\n\n",
 		},
 		{
 			name: "acorn secret -o yaml", fields: fields{
@@ -86,7 +86,7 @@ func TestSecret(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "---\nmetadata:\n  creationTimestamp: null\n  name: found.secret\n\n",
+			wantOut: "---\nitems:\n- metadata:\n    creationTimestamp: null\n    name: found.secret\n\n",
 		},
 		{
 			name: "acorn secret found.secret", fields: fields{

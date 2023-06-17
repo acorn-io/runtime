@@ -101,7 +101,7 @@ func (e *Encrypt) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out.Write(output)
+	out.WriteFormatted(output, nil)
 
 	return out.Err()
 }

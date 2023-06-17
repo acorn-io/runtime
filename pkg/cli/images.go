@@ -161,7 +161,7 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 
 		// no tag set at all, so only print if --all is set
 		if len(image.Tags) == 0 && a.All {
-			out.Write(imagePrint)
+			out.WriteFormatted(imagePrint, &image)
 			continue
 		}
 
@@ -189,16 +189,16 @@ func (a *Image) Run(cmd *cobra.Command, args []string) error {
 					// it's a tag, so add the tag output
 					imagePrint.Tag = ntag.TagStr()
 				}
-				out.Write(imagePrint)
+				out.WriteFormatted(imagePrint, &image)
 			} else if tagToMatch == imageTagRef.Name() || repoToMatch == imageTagRef.Context().Name() {
 				// > searching by tag
 				if ntag, ok := imageTagRef.(name.Tag); ok {
 					// it's a tag, so add the tag output
 					imagePrint.Tag = ntag.TagStr()
-					out.Write(imagePrint)
+					out.WriteFormatted(imagePrint, &image)
 				} else if _, ok := imageTagRef.(name.Digest); ok {
 					// it's a digest, so print without a tag
-					out.Write(imagePrint)
+					out.WriteFormatted(imagePrint, &image)
 				}
 			}
 
@@ -257,7 +257,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 			if len(imageContainer.Tags) == 0 && a.All {
 				imageContainerPrint.Tag = "<none>"
 				imageContainerPrint.Repo = "<none>"
-				out.Write(imageContainerPrint)
+				out.WriteFormatted(imageContainerPrint, &image)
 				continue
 			}
 			for _, tag := range imageContainer.Tags {
@@ -271,7 +271,7 @@ func printContainerImages(images []apiv1.Image, ctx context.Context, c client.Cl
 						imageContainerPrint.Repo = imageParsedTag.RegistryStr() + "/"
 					}
 					imageContainerPrint.Repo += imageParsedTag.RepositoryStr()
-					out.Write(imageContainerPrint)
+					out.WriteFormatted(imageContainerPrint, &image)
 					imageContainerPrint.Repo = ""
 				}
 			}

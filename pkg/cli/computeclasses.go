@@ -50,7 +50,7 @@ func (a *ComputeClass) Run(cmd *cobra.Command, args []string) error {
 
 	for _, cc := range computeClasses {
 		if len(args) == 0 || slices.Contains(args, cc.Name) {
-			out.Write(cc)
+			out.Write(&cc)
 		}
 	}
 

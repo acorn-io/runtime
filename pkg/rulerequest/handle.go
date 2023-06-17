@@ -97,7 +97,7 @@ application. If you are unsure say no.`)
 
 	writer := table.NewWriter(tables.RuleRequests, false, "")
 	for _, request := range requests {
-		writer.Write(request)
+		writer.WriteFormatted(request, nil)
 	}
 
 	if err := writer.Close(); err != nil {
