@@ -43,6 +43,18 @@ func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
 		StringData   map[string]string `json:"stringData,omitempty"`
 	}{}
 
+	// If the secret is of type 'basic' and no file or data is provided,
+	// default username and password values are set.
+	if a.Type == "basic" && a.File == "" && len(a.Data) == 0 {
+		username := "username"
+		password := "password"
+		if secret.Data == nil {
+			secret.Data = map[string][]byte{}
+		}
+		secret.Data[username] = []byte(username)
+		secret.Data[password] = []byte(password)
+	}
+
 	if a.File != "" {
 		err := cue.UnmarshalFile(a.File, secret)
 		if err != nil {
