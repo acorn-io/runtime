@@ -135,13 +135,17 @@ func (h *Handler) SaveJobOutput(req router.Request, resp router.Response) error 
 		names.Insert(name)
 	}
 
+	helperRunning := false
 	for _, status := range append(pod.Status.ContainerStatuses, pod.Status.InitContainerStatuses...) {
+		if status.Name == jobs.Helper && status.State.Running != nil {
+			helperRunning = true
+		}
 		if status.State.Terminated != nil {
 			names.Delete(status.Name)
 		}
 	}
 
-	if names.Len() > 0 {
+	if names.Len() > 0 || !helperRunning {
 		return nil
 	}
 
@@ -170,7 +174,6 @@ func (h *Handler) SaveJobOutput(req router.Request, resp router.Response) error 
 		return err
 	}
 
-	// ignore error, it always exits with exit code 137
-	_, _ = h.runCommand(req.Ctx, pod, "/usr/local/bin/acorn-job-helper-shutdown")
-	return nil
+	_, err = h.runCommand(req.Ctx, pod, "/usr/local/bin/acorn-job-helper-shutdown")
+	return err
 }
