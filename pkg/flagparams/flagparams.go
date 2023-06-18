@@ -1,6 +1,7 @@
 package flagparams
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 
@@ -76,9 +77,16 @@ func (f *Flags) Parse(args []string) (map[string]any, error) {
 		} else if strings.HasPrefix(value, "@") {
 			fName := value[1:]
 			val := map[string]any{}
-			err := cue.UnmarshalFile(fName, &val)
-			if err != nil {
-				return nil, err
+			if strings.HasPrefix(fName, "{") {
+				err := json.Unmarshal([]byte(fName), &val)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				err := cue.UnmarshalFile(fName, &val)
+				if err != nil {
+					return nil, err
+				}
 			}
 			result[name] = val
 		} else {
