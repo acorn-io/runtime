@@ -283,6 +283,9 @@ func impliedSecretsForContainer(app *AppSpec, container Container) {
 		}
 	}
 	for _, dir := range container.Dirs {
+		if strings.Contains(dir.Secret.Name, ".") {
+			continue
+		}
 		if _, ok := app.Secrets[dir.Secret.Name]; dir.Secret.Name != "" && !ok {
 			app.Secrets[dir.Secret.Name] = Secret{
 				Type: "opaque",
@@ -290,6 +293,9 @@ func impliedSecretsForContainer(app *AppSpec, container Container) {
 		}
 	}
 	for _, file := range container.Files {
+		if strings.Contains(file.Secret.Name, ".") {
+			continue
+		}
 		if _, ok := app.Secrets[file.Secret.Name]; file.Secret.Name != "" && !ok {
 			app.Secrets[file.Secret.Name] = Secret{
 				Type: "opaque",
@@ -406,6 +412,9 @@ func addImpliedResources(in *AppSpec) error {
 
 	for _, a := range in.Acorns {
 		for _, volumeBinding := range a.Volumes {
+			if strings.Contains(volumeBinding.Volume, ".") {
+				continue
+			}
 			if _, ok := in.Volumes[volumeBinding.Volume]; !ok {
 				in.Volumes[volumeBinding.Volume] = VolumeRequest{
 					Size:        volumeBinding.Size,
@@ -414,6 +423,9 @@ func addImpliedResources(in *AppSpec) error {
 			}
 		}
 		for _, secretBinding := range a.Secrets {
+			if strings.Contains(secretBinding.Secret, ".") {
+				continue
+			}
 			if _, ok := in.Secrets[secretBinding.Secret]; !ok {
 				in.Secrets[secretBinding.Secret] = Secret{
 					Type: "opaque",
