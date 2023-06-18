@@ -114,7 +114,7 @@ func (f *forwarder) listenLoop(ctx context.Context, container *apiv1.ContainerRe
 		}
 		select {
 		case <-ctx.Done():
-			break
+			return
 		case <-time.After(time.Second):
 		}
 	}

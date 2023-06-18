@@ -146,7 +146,7 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case <-time.After(2 * time.Minute):
 			}
 			if failed.Swap(false) {
