@@ -58,6 +58,7 @@ func registryDeployment(namespace, registryImage string) []client.Object {
 					},
 				},
 				Spec: corev1.PodSpec{
+					PriorityClassName:  system.AcornPriorityClass,
 					EnableServiceLinks: new(bool),
 					Containers: []corev1.Container{
 						{
@@ -68,8 +69,9 @@ func registryDeployment(namespace, registryImage string) []client.Object {
 									Value: "true",
 								},
 							},
-							Image:   registryImage,
-							Command: []string{"/usr/local/bin/registry", "serve", "/etc/docker/registry/config.yml"},
+							Resources: system.RegistryResources(),
+							Image:     registryImage,
+							Command:   []string{"/usr/local/bin/registry", "serve", "/etc/docker/registry/config.yml"},
 							LivenessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									TCPSocket: &corev1.TCPSocketAction{
