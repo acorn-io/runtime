@@ -1,0 +1,190 @@
+`apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: default1
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+spec:
+  ports:
+  - appProtocol: HTTP
+    name: "81"
+    port: 81
+    protocol: TCP
+    targetPort: 81
+  - name: "90"
+    port: 90
+    protocol: TCP
+    targetPort: 91
+  - name: "92"
+    port: 92
+    protocol: TCP
+    targetPort: 92
+  selector:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: default1
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+    acorn.io/service-publish: "true"
+  name: oneimage-publish-1234567890ab
+  namespace: app-created-namespace
+spec:
+  ports:
+  - name: "90"
+    port: 90
+    protocol: TCP
+    targetPort: 91
+  - name: "92"
+    port: 92
+    protocol: TCP
+    targetPort: 92
+  selector:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acorn.io/targets: '{"oneimage-app-name-a5b0aade.local.oss-acorn.io":{"port":81,"service":"oneimage"}}'
+    cert-manager.io/cluster-issuer: default1
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage-cluster-domain
+  namespace: app-created-namespace
+spec:
+  rules:
+  - host: oneimage-app-name-a5b0aade.local.oss-acorn.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: oneimage
+            port:
+              number: 81
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - oneimage-app-name-a5b0aade.local.oss-acorn.io
+    secretName: oneimage-cm-cert-1
+status:
+  loadBalancer: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"oneimage"}}'
+    cert-manager.io/cluster-issuer: default1
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage-custom-domain
+  namespace: app-created-namespace
+spec:
+  rules:
+  - host: ci1.acorn.not
+    http:
+      paths:
+      - backend:
+          service:
+            name: oneimage
+            port:
+              number: 81
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - ci1.acorn.not
+    secretName: oneimage-cm-cert-1
+status:
+  loadBalancer: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  name: oneimage
+  namespace: app-created-namespace
+  uid: 1234567890abcdef
+spec:
+  annotations:
+    cert-manager.io/cluster-issuer: default1
+  appName: app-name
+  appNamespace: app-namespace
+  container: oneimage
+  default: false
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/container-name: oneimage
+    acorn.io/managed: "true"
+  ports:
+  - protocol: http
+    publish: true
+    targetPort: 81
+  - port: 90
+    protocol: tcp
+    publish: true
+    targetPort: 91
+  - protocol: tcp
+    publish: true
+    targetPort: 92
+  publish:
+  - hostname: ci1.acorn.not
+status:
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  endpoints:
+  - address: oneimage-app-name-a5b0aade.local.oss-acorn.io
+    publishProtocol: https
+  - address: ci1.acorn.not
+    publishProtocol: https
+  hasService: true
+`

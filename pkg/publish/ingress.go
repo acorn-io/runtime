@@ -211,8 +211,8 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 			continue
 		}
 		// For custom domain, always use cert-manager to provision certificate.
-		useCertManager := rules.name == customDomain && cfg.CertManagerIssuer != nil && *cfg.CertManagerIssuer != ""
-		secrets, ingressTLS, err := setupCertsForRules(req, svc, rules.rules, useCertManager)
+		defaulClusterIssuer := *cfg.CertManagerIssuer
+		secrets, ingressTLS, ingressAnnotation, err := setupCertsForRules(req, svc, rules.rules, rules.name == customDomain, defaulClusterIssuer)
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +245,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 				Name:      name.SafeConcatName(svc.Name, rules.name),
 				Namespace: svc.Namespace,
 				Labels:    svc.Spec.Labels,
-				Annotations: labels.Merge(svc.Spec.Annotations, map[string]string{
+				Annotations: labels.Merge(ingressAnnotation, map[string]string{
 					labels.AcornTargets: string(targetJSON),
 				}),
 			},
@@ -255,13 +255,6 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 				TLS:              ingressTLS,
 			},
 		}
-		// if custom domains don't use cert-manager, use the default acorn cert-manager setting
-		if useCertManager && (ingress.Annotations["cert-manager.io/cluster-issuer"] == "" && ingress.Annotations["cert-manager.io/issuer"] == "") {
-			if cfg.CertManagerIssuer != nil {
-				ingress.Annotations["cert-manager.io/cluster-issuer"] = *cfg.CertManagerIssuer
-			}
-		}
-
 		result = append(result, ingress)
 
 		result = append(result, secrets...)
@@ -270,12 +263,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 	return
 }
 
-func setupCertManager(serviceName string, annotations map[string]string, rules []networkingv1.IngressRule, tls []networkingv1.IngressTLS, useCertManager bool) []networkingv1.IngressTLS {
-	if annotations["cert-manager.io/cluster-issuer"] == "" && annotations["cert-manager.io/issuer"] == "" && !useCertManager {
-		// cert-manager override is not being used
-		return tls
-	}
-
+func setupCertManager(serviceName string, rules []networkingv1.IngressRule) []networkingv1.IngressTLS {
 	var result []networkingv1.IngressTLS
 	hostsSeen := map[string]bool{}
 	for _, rule := range rules {

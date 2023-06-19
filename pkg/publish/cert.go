@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -127,22 +128,34 @@ func copySecretsForCerts(req router.Request, svc *v1.ServiceInstance, filteredTL
 	return
 }
 
-func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []networkingv1.IngressRule, useCertManager bool) ([]client.Object, []networkingv1.IngressTLS, error) {
+func setupCertsForRules(req router.Request, svc *v1.ServiceInstance, rules []networkingv1.IngressRule, customDomain bool, defaultClusterIssuer string) ([]client.Object, []networkingv1.IngressTLS, map[string]string, error) {
 	tlsCerts, err := getCerts(req, svc.Spec.AppNamespace)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	tlsCerts = getCertsMatchingRules(rules, tlsCerts)
 	secrets, tlsCerts, err := copySecretsForCerts(req, svc, tlsCerts)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
+	annotations := maps.Clone(svc.Spec.Annotations)
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
 	ingressTLS := getCertsForPublishedHosts(rules, tlsCerts)
-	ingressTLS = setupCertManager(svc.Name, svc.Spec.Annotations, rules, ingressTLS, useCertManager)
+	// In here, we want to setup cert-manager if:
+	// 1. The user has specified a cert-manager issuer in the annotations on top of acorn
+	// 2. The user has specified default cert-manager issuer in the settings, and there is no matching certs for this custom domain
+	if svc.Spec.Annotations["cert-manager.io/cluster-issuer"] != "" || svc.Spec.Annotations["cert-manager.io/issuer"] != "" || (len(ingressTLS) == 0 && customDomain && defaultClusterIssuer != "") {
+		if svc.Spec.Annotations["cert-manager.io/cluster-issuer"] == "" && svc.Spec.Annotations["cert-manager.io/issuer"] == "" {
+			annotations["cert-manager.io/cluster-issuer"] = defaultClusterIssuer
+		}
+		ingressTLS = setupCertManager(svc.Name, rules)
+	}
 
-	return secrets, ingressTLS, nil
+	return secrets, ingressTLS, annotations, nil
 }
 
 func getCertsMatchingRules(rules []networkingv1.IngressRule, certs []TLSCert) (filteredCerts []TLSCert) {
