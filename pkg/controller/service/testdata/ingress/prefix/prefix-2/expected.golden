@@ -93,7 +93,7 @@ metadata:
     conl3: value
     globall1: value
     globall2: value
-  name: con1
+  name: con1-cluster-domain
   namespace: app-created-namespace
 spec:
   rules:

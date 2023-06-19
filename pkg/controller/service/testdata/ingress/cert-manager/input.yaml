@@ -1,0 +1,34 @@
+kind: ServiceInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: oneimage
+  namespace: app-created-namespace
+  uid: 1234567890abcdef
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+spec:
+  appName: app-name
+  appNamespace: app-namespace
+  publish:
+    - hostname: localhost
+    - hostname: ci1.acorn.not
+  labels:
+    "acorn.io/app-namespace": "app-namespace"
+    "acorn.io/app-name": "app-name"
+    "acorn.io/container-name": "oneimage"
+    "acorn.io/managed": "true"
+  container: oneimage
+  ports:
+    - targetPort: 81
+      publish: true
+      protocol: http
+    - port: 90
+      targetPort: 91
+      publish: true
+      protocol: tcp
+    - targetPort: 92
+      publish: true
+      protocol: tcp

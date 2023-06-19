@@ -8,22 +8,15 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/rancher/wrangler/pkg/name"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 // ProvisionWildcardCert provisions a Let's Encrypt wildcard certificate for *.<domain>.oss-acorn.io
@@ -109,70 +102,6 @@ func RenewCert(req router.Request, resp router.Response) error {
 	}()
 
 	return nil
-}
-
-// ProvisionCerts handles the provisioning of new TLS certificates for AppInstances
-func ProvisionCerts(req router.Request, resp router.Response) error {
-	cfg, err := config.Get(req.Ctx, req.Client)
-	if err != nil {
-		return err
-	}
-
-	// Early exit if Let's Encrypt is not enabled
-	// Just to be on the safe side, we check for all possible allowed configuration values
-	if strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
-		return nil
-	}
-
-	appInstance := req.Object.(*v1.AppInstance)
-
-	appInstanceIDSegment := strings.SplitN(string(appInstance.GetUID()), "-", 2)[0]
-
-	leUser, err := ensureLEUser(req.Ctx, req.Client)
-	if err != nil {
-		logrus.Errorf("failed to get/create lets-encrypt account in ProvisionCerts: %v", err)
-		resp.RetryAfter(15 * time.Second)
-		return nil
-	}
-
-	provisionedCerts := map[string]interface{}{}
-	var errs []error
-
-	for i, ep := range appInstance.Status.AppStatus.Endpoints {
-		if ep.Protocol != "http" {
-			continue
-		}
-
-		if err := prov(req, leUser, ep.Address, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
-			return err
-		}
-		provisionedCerts[ep.Address] = nil
-		ep.PublishProtocol = v1.PublishProtocolHTTPS
-		appInstance.Status.AppStatus.Endpoints[i] = ep
-	}
-
-	for _, pb := range appInstance.Spec.Publish {
-		if _, ok := provisionedCerts[pb.Hostname]; ok {
-			continue
-		}
-		if err := prov(req, leUser, pb.Hostname, appInstance.Name, appInstanceIDSegment, appInstance.Namespace); err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		provisionedCerts[pb.Hostname] = nil
-	}
-
-	return utilerrors.NewAggregate(errs)
-}
-
-func prov(req router.Request, leUser *LEUser, domain, appname, segment, namespace string) error {
-	if domain == "" || len(validation.IsFullyQualifiedDomainName(&field.Path{}, domain)) > 0 || strings.HasSuffix(domain, "oss-acorn.io") {
-		logrus.Debugf("Skipping cert provisioning for %s", domain)
-		return nil
-	}
-	secretName := name.Limit(appname+"-tls-"+domain, 63-len(segment)-1) + "-" + segment
-
-	return leUser.provisionCertIfNotExists(req.Ctx, req.Client, domain, namespace, secretName)
 }
 
 // certFromSecret converts TLS secret data to a TLS certificate

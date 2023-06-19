@@ -25,6 +25,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	customDomain  = "custom-domain"
+	clusterDomain = "cluster-domain"
+)
+
 var (
 	ErrInvalidPattern           = errors.New("endpoint pattern is invalid")
 	ErrSegmentExceededMaxLength = errors.New("segment exceeded maximum length of 63 characters")
@@ -155,8 +160,13 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 	}
 
 	var (
-		rules   []networkingv1.IngressRule
-		targets = map[string]Target{}
+		// Separate rules for cluster domain and custom domain
+		// This is needed to have separate ingress resources so that for custom domain, we can apply cert-manager setting to request certificate,
+		// while keeping cluster domain certs as it is with acorn's built-in LE feature.
+		customDomainRules    []networkingv1.IngressRule
+		clusterDomainRules   []networkingv1.IngressRule
+		customDomainTargets  = map[string]Target{}
+		clusterDomainTargets = map[string]Target{}
 	)
 
 	for _, entry := range typed.Sorted(bindings.ByHostname()) {
@@ -176,78 +186,84 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 					if err != nil {
 						return nil, err
 					}
-					targets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
-					rules = append(rules, getIngressRule(svc, hostname, port.Port))
+					clusterDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
+					clusterDomainRules = append(clusterDomainRules, getIngressRule(svc, hostname, port.Port))
 				}
 			}
 		} else {
 			if len(ports) > 1 {
 				return nil, fmt.Errorf("multiple ports bound to the same hostname [%s]", hostname)
 			}
-			targets[hostname] = Target{Port: ports[0].TargetPort, Service: svc.Name}
-			rules = append(rules, getIngressRule(svc, hostname, ports[0].Port))
+			customDomainTargets[hostname] = Target{Port: ports[0].TargetPort, Service: svc.Name}
+			customDomainRules = append(customDomainRules, getIngressRule(svc, hostname, ports[0].Port))
 		}
 	}
 
-	if len(rules) == 0 {
-		return
-	}
-
-	secrets, ingressTLS, err := setupCertsForRules(req, svc, rules)
-	if err != nil {
-		return nil, err
-	}
-
-	targetJSON, err := json.Marshal(targets)
-	if err != nil {
-		return nil, err
-	}
-
-	proto := v1.PublishProtocolHTTP
-	if len(ingressTLS) > 0 {
-		proto = v1.PublishProtocolHTTPS
-	}
-
-	hostnameSeen := map[string]struct{}{}
-	for _, rule := range rules {
-		if _, ok := hostnameSeen[rule.Host]; ok {
+	for _, rules := range []struct {
+		rules  []networkingv1.IngressRule
+		name   string
+		target map[string]Target
+	}{
+		{rules: clusterDomainRules, name: clusterDomain, target: clusterDomainTargets},
+		{rules: customDomainRules, name: customDomain, target: customDomainTargets},
+	} {
+		if len(rules.rules) == 0 {
 			continue
 		}
-		hostnameSeen[rule.Host] = struct{}{}
-		svc.Status.Endpoints = append(svc.Status.Endpoints, v1.Endpoint{
-			Address:         rule.Host,
-			PublishProtocol: proto,
-		})
+		// For custom domain, always use cert-manager to provision certificate.
+		defaulClusterIssuer := *cfg.CertManagerIssuer
+		secrets, ingressTLS, ingressAnnotation, err := setupCertsForRules(req, svc, rules.rules, rules.name == customDomain, defaulClusterIssuer)
+		if err != nil {
+			return nil, err
+		}
+
+		targetJSON, err := json.Marshal(rules.target)
+		if err != nil {
+			return nil, err
+		}
+
+		proto := v1.PublishProtocolHTTP
+		if len(ingressTLS) > 0 {
+			proto = v1.PublishProtocolHTTPS
+		}
+
+		hostnameSeen := map[string]struct{}{}
+		for _, rule := range rules.rules {
+			if _, ok := hostnameSeen[rule.Host]; ok {
+				continue
+			}
+			hostnameSeen[rule.Host] = struct{}{}
+			svc.Status.Endpoints = append(svc.Status.Endpoints, v1.Endpoint{
+				Address:         rule.Host,
+				PublishProtocol: proto,
+			})
+		}
+
+		ingress := &networkingv1.Ingress{
+			TypeMeta: metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name.SafeConcatName(svc.Name, rules.name),
+				Namespace: svc.Namespace,
+				Labels:    svc.Spec.Labels,
+				Annotations: labels.Merge(ingressAnnotation, map[string]string{
+					labels.AcornTargets: string(targetJSON),
+				}),
+			},
+			Spec: networkingv1.IngressSpec{
+				IngressClassName: ingressClassName,
+				Rules:            rules.rules,
+				TLS:              ingressTLS,
+			},
+		}
+		result = append(result, ingress)
+
+		result = append(result, secrets...)
 	}
-
-	result = append(result, &networkingv1.Ingress{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      svc.Name,
-			Namespace: svc.Namespace,
-			Labels:    svc.Spec.Labels,
-			Annotations: labels.Merge(svc.Spec.Annotations, map[string]string{
-				labels.AcornTargets: string(targetJSON),
-			}),
-		},
-		Spec: networkingv1.IngressSpec{
-			IngressClassName: ingressClassName,
-			Rules:            rules,
-			TLS:              ingressTLS,
-		},
-	})
-
-	result = append(result, secrets...)
 
 	return
 }
 
-func setupCertManager(serviceName string, annotations map[string]string, rules []networkingv1.IngressRule, tls []networkingv1.IngressTLS) []networkingv1.IngressTLS {
-	if annotations["cert-manager.io/cluster-issuer"] == "" && annotations["cert-manager.io/issuer"] == "" {
-		// cert-manager override is not being used
-		return tls
-	}
-
+func setupCertManager(serviceName string, rules []networkingv1.IngressRule) []networkingv1.IngressTLS {
 	var result []networkingv1.IngressTLS
 	hostsSeen := map[string]bool{}
 	for _, rule := range rules {

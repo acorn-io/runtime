@@ -13,8 +13,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"net"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -24,20 +22,16 @@ import (
 	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/challenge/dns01"
-	"github.com/go-acme/lego/v4/challenge/http01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/rancher/wrangler/pkg/name"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -305,8 +299,7 @@ func (u *LEUser) getCert(ctx context.Context, domain string) (*certificate.Resou
 	if strings.HasPrefix(domain, "*.") {
 		return u.dnsChallenge(ctx, domain)
 	}
-
-	return u.httpChallenge(ctx, domain)
+	return nil, nil
 }
 
 func lockDomain(domain string) bool {
@@ -327,16 +320,6 @@ func unlockDomain(domain string) {
 	CertificatesRequestLock.Lock()
 	delete(CertificateRequests, domain)
 	CertificatesRequestLock.Unlock()
-}
-
-// freePort returns a free port that is ready to use, e.g. for the HTTP01 challenge server
-func freePort() (int, error) {
-	l, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return 0, err
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
 // stillValid checks if the certificate is still valid for at least 7 days
@@ -409,154 +392,6 @@ func (u *LEUser) dnsChallenge(ctx context.Context, domain string) (*certificate.
 	dnsProvider := NewACMEDNS01ChallengeProvider(dnsEndpoint, strings.TrimPrefix(domain, "*"), token)
 
 	if err := client.Challenge.SetDNS01Provider(dnsProvider, dns01.WrapPreCheck(noOpCheck)); err != nil {
-		return nil, err
-	}
-
-	// Try to obtain the certificate
-	request := certificate.ObtainRequest{
-		Domains: []string{strings.TrimPrefix(domain, ".")},
-		Bundle:  true,
-	}
-
-	return client.Certificate.Obtain(request)
-}
-
-func (u *LEUser) httpChallenge(ctx context.Context, domain string) (*certificate.Resource, error) {
-	client, err := u.leClient()
-	if err != nil {
-		return nil, err
-	}
-
-	// Find a free port for the HTTP challenge server
-	port, err := freePort()
-	if err != nil {
-		return nil, err
-	}
-
-	// Setup HTTP Challenge Server
-	httpProviderServer := http01.NewProviderServer("0.0.0.0", strconv.Itoa(port))
-
-	if err := client.Challenge.SetHTTP01Provider(httpProviderServer); err != nil {
-		return nil, err
-	}
-
-	logrus.Debugf("HTTP01 Provider Server Address for %s: %s", domain, httpProviderServer.GetAddress())
-
-	// Setup Ingress + Service for HTTP Challenge
-	challengeObjectName := name.Limit(fmt.Sprintf("%s-le-challenge", strings.ReplaceAll(domain, ".", "-")), 63)
-
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      challengeObjectName,
-			Namespace: system.Namespace,
-			Labels: map[string]string{
-				labels.AcornManaged: "true",
-			},
-			Annotations: map[string]string{
-				labels.AcornDomain:                  domain,
-				labels.AcornLetsEncryptSettingsHash: u.toHash(),
-				labels.AcornAppNamespace:            system.Namespace,
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			Selector: map[string]string{
-				"app": system.ControllerName,
-			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:       "http",
-					Port:       80,
-					TargetPort: intstr.FromInt(port),
-				},
-			},
-		},
-	}
-
-	ing := &networkingv1.Ingress{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      challengeObjectName,
-			Namespace: system.Namespace,
-			Annotations: map[string]string{
-				labels.AcornDomain:                  domain,
-				labels.AcornLetsEncryptSettingsHash: u.toHash(),
-			},
-			Labels: map[string]string{
-				labels.AcornManaged:      "true",
-				labels.AcornAppNamespace: system.Namespace,
-			},
-		},
-		Spec: networkingv1.IngressSpec{
-			Rules: []networkingv1.IngressRule{
-				{
-					Host: domain,
-					IngressRuleValue: networkingv1.IngressRuleValue{
-						HTTP: &networkingv1.HTTPIngressRuleValue{
-							Paths: []networkingv1.HTTPIngressPath{
-								{
-									Path: "/.well-known/acme-challenge/",
-									PathType: func() *networkingv1.PathType {
-										pt := networkingv1.PathTypePrefix
-										return &pt
-									}(),
-									Backend: networkingv1.IngressBackend{
-										Service: &networkingv1.IngressServiceBackend{
-											Name: challengeObjectName,
-											Port: networkingv1.ServiceBackendPort{
-												Name: "http",
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	c, err := k8sclient.Default()
-	if err != nil {
-		return nil, err
-	}
-
-	cfg, err := config.Get(ctx, c)
-	if err != nil {
-		return nil, err
-	}
-
-	if cfg.IngressClassName != nil && *cfg.IngressClassName != "" {
-		ing.Spec.IngressClassName = cfg.IngressClassName
-	}
-
-	if err := c.Create(ctx, svc); err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := c.Delete(ctx, svc); err != nil {
-			logrus.Errorf("Error deleting service: %v", err)
-		}
-	}()
-
-	if err := c.Create(ctx, ing); err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := c.Delete(ctx, ing); err != nil {
-			logrus.Errorf("Error deleting ingress: %v", err)
-		}
-	}()
-
-	// Wait for Ingress to be ready
-	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancel()
-	_, err = watcher.New[*networkingv1.Ingress](c).ByObject(nctx, ing, func(ing *networkingv1.Ingress) (bool, error) {
-		return ing.Status.LoadBalancer.Ingress != nil, nil
-	})
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, fmt.Errorf("timed out waiting for ingress to be ready: %w", err)
-		}
 		return nil, err
 	}
 

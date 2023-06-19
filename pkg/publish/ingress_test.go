@@ -267,9 +267,7 @@ func TestValidateEndpointPattern(t *testing.T) {
 func Test_setupCertManager(t *testing.T) {
 	type args struct {
 		serviceName string
-		annotations map[string]string
 		rules       []networkingv1.IngressRule
-		tls         []networkingv1.IngressTLS
 	}
 	tests := []struct {
 		name string
@@ -277,48 +275,10 @@ func Test_setupCertManager(t *testing.T) {
 		want []networkingv1.IngressTLS
 	}{
 		{
-			name: "no annotation",
+			name: "basic",
 			args: args{
 				serviceName: "foo",
-				annotations: map[string]string{},
-				tls:         []networkingv1.IngressTLS{{Hosts: []string{"host"}}},
-			},
-			want: []networkingv1.IngressTLS{{Hosts: []string{"host"}}},
-		},
-		{
-			name: "annotation and tls found, prefer annotation",
-			args: args{
-				serviceName: "foo",
-				annotations: map[string]string{
-					"cert-manager.io/cluster-issuer": "foo",
-				},
-				rules: []networkingv1.IngressRule{{Host: "host1"}},
-				tls:   []networkingv1.IngressTLS{{Hosts: []string{"host"}}},
-			},
-			want: []networkingv1.IngressTLS{{Hosts: []string{"host1"}, SecretName: "foo-cm-cert-1"}},
-		},
-		{
-			name: "cluster-issuer annotation found",
-			args: args{
-				serviceName: "foo",
-				annotations: map[string]string{
-					"cert-manager.io/cluster-issuer": "foo",
-				},
-				rules: []networkingv1.IngressRule{{Host: "host1"}},
-			},
-			want: []networkingv1.IngressTLS{{
-				Hosts:      []string{"host1"},
-				SecretName: "foo-cm-cert-1",
-			}},
-		},
-		{
-			name: "issuer annotation found",
-			args: args{
-				serviceName: "foo",
-				annotations: map[string]string{
-					"cert-manager.io/issuer": "foo",
-				},
-				rules: []networkingv1.IngressRule{{Host: "host1"}},
+				rules:       []networkingv1.IngressRule{{Host: "host1"}},
 			},
 			want: []networkingv1.IngressTLS{{
 				Hosts:      []string{"host1"},
@@ -329,10 +289,7 @@ func Test_setupCertManager(t *testing.T) {
 			name: "two hosts",
 			args: args{
 				serviceName: "foo",
-				annotations: map[string]string{
-					"cert-manager.io/issuer": "foo",
-				},
-				rules: []networkingv1.IngressRule{{Host: "host1"}, {Host: "host2"}},
+				rules:       []networkingv1.IngressRule{{Host: "host1"}, {Host: "host2"}},
 			},
 			want: []networkingv1.IngressTLS{{
 				Hosts:      []string{"host1"},
@@ -345,7 +302,7 @@ func Test_setupCertManager(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := setupCertManager(tt.args.serviceName, tt.args.annotations, tt.args.rules, tt.args.tls); !reflect.DeepEqual(got, tt.want) {
+			if got := setupCertManager(tt.args.serviceName, tt.args.rules); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("setupCertManager() = %v, want %v", got, tt.want)
 			}
 		})

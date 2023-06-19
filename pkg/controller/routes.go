@@ -61,7 +61,6 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
 	appRouter.HandlerFunc(images.CreateImages)
 	appRouter.HandlerFunc(appdefinition.ParseAppImage)
-	appRouter.HandlerFunc(tls.ProvisionCerts) // Provision TLS certificates for port bindings with user-defined (valid) domains
 	appRouter.Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)
 	appRouter.Middleware(jobs.NeedsDestroyJobFinalization).FinalizeFunc(jobs.DestroyJobFinalizer, jobs.FinalizeDestroyJob)
 

@@ -109,3 +109,18 @@ func TestRouter(t *testing.T) {
 func TestSecret(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/secret", RenderServices)
 }
+
+// TestSettingUpDefaultCertManager tests that the default cert-manager annotation is set up on custom domain if no matching certs is found
+func TestSettingUpDefaultCertManager(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/cert-manager", RenderServices)
+}
+
+// TestCustomCertsShouldNotSetCertManager tests that the default cert-manager annotation should not be setup on custom domain if matching certs is found
+func TestCustomCertsShouldNotSetCertManager(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/customdomainwithcerts", RenderServices)
+}
+
+// TestCustomCertsWithAnnonationsShouldNotSetCertManagerDefaultIssuer tests that the default cert-manager annotation should not be setup on custom domain if cert-manager annotations is already set
+func TestCustomCertsWithAnnonationsShouldNotSetCertManagerDefaultIssuer(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/customdomainwithannotations", RenderServices)
+}

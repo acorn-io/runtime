@@ -1,92 +1,10 @@
-`apiVersion: v1
-kind: Service
+apiVersion: v1
+data:
+  config: '{"certManagerIssuer":"default"}'
+kind: ConfigMap
 metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/container-name: app1
-    acorn.io/managed: "true"
-  name: app1
-  namespace: app-created-namespace
-spec:
-  ports:
-  - appProtocol: HTTP
-    name: "80"
-    port: 80
-    protocol: TCP
-    targetPort: 81
-  selector:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/container-name: app1
-    acorn.io/managed: "true"
-  type: ClusterIP
-status:
-  loadBalancer: {}
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    acorn.io/targets: '{"app1-app-name-04396c88.local.oss-acorn.io":{"port":81,"service":"app1"}}'
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/container-name: app1
-    acorn.io/managed: "true"
-  name: app1-cluster-domain
-  namespace: app-created-namespace
-spec:
-  rules:
-  - host: app1-app-name-04396c88.local.oss-acorn.io
-    http:
-      paths:
-      - backend:
-          service:
-            name: app1
-            port:
-              number: 80
-        path: /
-        pathType: Prefix
-status:
-  loadBalancer: {}
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    acorn.io/targets: '{"ci1.acorn.not":{"port":81,"service":"app1"}}'
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/container-name: app1
-    acorn.io/managed: "true"
-  name: app1-custom-domain
-  namespace: app-created-namespace
-spec:
-  rules:
-  - host: ci1.acorn.not
-    http:
-      paths:
-      - backend:
-          service:
-            name: app1
-            port:
-              number: 80
-        path: /
-        pathType: Prefix
-  tls:
-  - hosts:
-    - ci1.acorn.not
-    secretName: test-tls-app1-1234567890ab
-status:
-  loadBalancer: {}
-
+  name: acorn-config
+  namespace: acorn-system
 ---
 apiVersion: v1
 data:
@@ -94,55 +12,7 @@ data:
   tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBcG4xSkhVT3NHUTZZcklTQTVqR1FtQVdvWG1KRW8waGdGL3ZHUXV2dXB6T0czbHNTCnAxTk9UTXo5TjdURHNOK3pJaGZWb2VDWXkweEUzQTJtaHd6QitOQXNnYWR0WGd5bUpJOWFieXUwOEQzUGtOcmcKWTdKalk5cDBrUzdCS1VRU2RhQy9PeTdGdThnclVQbUtBbTRtM0d1ZDRudFVwbWRrczdnOWVHSDhZZFZyL3p5bApXejNwRzF6YmNmelBPQXo1cHlUM2hZZ0JIOVk5U2J4SnFlM0hhd1p1UVRlcm5yVFBRcStXVTZXMWk1TjRIYTRhCmQ0RGF1Y2xjcy80YnplVHB5d3JXaGVpVEZGc3pzcmFPbDIxNnVBMnpWQU9ZWXQ0YVdzb1lyUisxOGhqdkNTU3MKZnZndkd5aGtyVEE2NlhmT1g3Z2h1M0hBRXR5aDZCYWdsRnpTUndJREFRQUJBb0lCQUhwaGNkTXZJVnd4M0l4RAp3alJ6anFRUTFKaThoMU8zS2R1M1dSOXNLanVCcHN2Z0NqQXhEa2RxRDJCWllkZXNPQk1CamltMTNOcmpyMkpLCkxuVHJMZEpsdzdGeWp2UXBQQjkzdUxRclhvK1IvL2VzekhDOGVrNjJFQ1dBUnNDOHB3ME1Ja1d3dGV5NDBRNXUKdjhIVmtuOUlKQUNOUThZbURtSUZOam85WExYVWFoaEhHQVpvSnBsVzR2WkpRelhIMWRjK3dLSGY0cjhjZ0laRgppMmh5TkdzRUEyRFBOemNCNHQzaitEZXNrUzNIOW1PSTVld1V2c1BUdStFWVdMbjhEOTRKOUlNNlZ5QW8vcFRaCjhNS2orTUxTUkFnNGJjMUVZbUM0VVg2dVl2VVpZSmkvY3QyMWtrRFc3ZEtlZU9OdjEwVkV2VkIrMUlES3krMGkKN0t5alZ1RUNnWUVBMW9OMUIxeTUvWEZnV1hZTHZGb3ovY0NKdFJjSnNxUWRxRXRoZG9BYUdVRTJBU3BCL3lHNgpQR3M1UXdsRjhTUmdERXRKRzlOMEU4TXBtaXplTWc0MFI3cDJoZ2lXN0xQWWM4VE84Y0I1SDdNMzFOTGNVL0VaCm9qTEVPOUVYdlJBTThVVmJ0TUQzdXpJbTFJckRBdGI1dnJ6MmF3SFd6VG9TVm1WZDFxR3A4RDhDZ1lFQXhyQW8KMTM2K0xiM3F0dkxWQ2hKUzVBanVwZ1pLMTRHdithTlFVM0h3M0ZDYXhlL0NpcXNUN0NFOUFkbFc4N0pOeWVlaQpJWEZab3FwTS9VN0RMdnFPRjZkcU0rb3daempRWW1SU0dSbk5OeHpocHJiK08yUU9ZUnZSYnRlaHVJV1BHZ09DCjJHZC9QRzNhQUdia1BFMSsrS21YTFVaOXVmKzVqVVJ0QUNka20va0NnWUVBcjhDdTNxUlRZbHBFNWFjNUFFNHIKY01rU1NvT2dsM090Tk5qbDlwQUlVZzdDcjN1dTdOajJYRkJCYnpJbTB1YkpwdWo3OGtkeVFFclRTQlZneTBRbQpBMnE3ZHgrTWdFenRtQlIwdFUvTUxYUEoxNTRYbE5MaC9LbDVhOFRwblNhTVpCVStpTDdkZWNzaVUxdUpZVWMvCkFjNlNXcVA4R05OdWVNaStkSDZwM0VNQ2dZQmFnNllYaGdYZGtNZDgwT044MHh3d0JtR3lBT3ZYZ1oxSmZMejcKUnMwVGtTVHhSMmk1QTNidis3UnZRelA1a1NFZStnZENkUUVBdWRTWkVXaVoza3NkTzRlR1h3bnQvRlB5ZndGbgpyZmx2UWhrS2VoTVh1MTFSbi9xcEpGTG9YTy8wU2VVeDhQUmw4eVY5U1dKd2xsMWhxdURVSDJqbmN6aDB3dGRsCldvemJBUUtCZ1FDMWJEaTVJV1dDODhBcmNVa0hZcmVKdHQyWGQ5dGczY2RKcjJTMkNCT2RKNkt1T2xvMml4c0oKWDBtZ25HbGpLb1JrTjhScWc1anlBK29tOVN6TWlmZzF4dGQ4cHp1VlJ2QVFnMXRua3RJNTFoV1pQOXpvdklESwpBK3lTQVE0dG1zb0lrRW9URXE0Zkxva0ZvSGRpcTl6bi9TamJRamNhUmxiZlFUVFFDQzhNd2c9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
 kind: Secret
 metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/managed: "true"
-  name: test-tls-app1-1234567890ab
-  namespace: app-created-namespace
-type: kubernetes.io/tls
-
----
-apiVersion: internal.acorn.io/v1
-kind: ServiceInstance
-metadata:
-  creationTimestamp: null
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/container-name: app1
-    acorn.io/managed: "true"
-  name: app1
-  namespace: app-created-namespace
+  name: test-tls
+  namespace: app-namespace
   uid: 1234567890abcdef
-spec:
-  appName: app-name
-  appNamespace: app-namespace
-  container: app1
-  default: false
-  labels:
-    acorn.io/app-name: app-name
-    acorn.io/app-namespace: app-namespace
-    acorn.io/container-name: app1
-    acorn.io/managed: "true"
-  ports:
-  - port: 80
-    protocol: http
-    publish: true
-    targetPort: 81
-  publish:
-  - hostname: ci1.acorn.not
-status:
-  conditions:
-    reason: Success
-    status: "True"
-    success: true
-    type: defined
-  endpoints:
-  - address: app1-app-name-04396c88.local.oss-acorn.io
-    publishProtocol: http
-  - address: ci1.acorn.not
-    publishProtocol: https
-  hasService: true
-`
+type: kubernetes.io/tls
