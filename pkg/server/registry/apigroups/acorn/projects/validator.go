@@ -26,14 +26,7 @@ type Validator struct {
 func (v *Validator) Validate(_ context.Context, obj runtime.Object) field.ErrorList {
 	var result field.ErrorList
 	project := obj.(*apiv1.Project)
-	if project.Spec.DefaultRegion == "" && len(project.Spec.SupportedRegions) == 0 {
-		// If no regions are specified, use the default region.
-		project.Status.DefaultRegion = v.DefaultRegion
-		return nil
-	}
-
-	// Reset the default region on status to indicate that a "real" default is set.
-	project.Status.DefaultRegion = ""
+	project.SetDefaultRegion(v.DefaultRegion)
 
 	if !project.HasRegion(project.Spec.DefaultRegion) {
 		return append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
@@ -51,14 +44,14 @@ func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	// If the user is removing a supported region, ensure that there are no apps in that region.
 	oldProject, newProject := old.(*apiv1.Project), obj.(*apiv1.Project)
 	var removedRegions []string
-	for _, region := range append(oldProject.Spec.SupportedRegions, oldProject.Status.DefaultRegion) {
+	for _, region := range oldProject.Status.SupportedRegions {
 		if !newProject.HasRegion(region) {
 			removedRegions = append(removedRegions, region)
 		}
 	}
 
 	if len(removedRegions) > 0 {
-		return v.ensureNoObjectsExistInRegions(ctx, newProject.Name, newProject.Spec.SupportedRegions, removedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
+		return v.ensureNoObjectsExistInRegions(ctx, newProject.Name, newProject.Status.SupportedRegions, removedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
 	}
 
 	return nil

@@ -4090,6 +4090,20 @@ func schema_pkg_apis_apiacornio_v1_ProjectStatus(ref common.ReferenceCallback) c
 							Format: "",
 						},
 					},
+					"supportedRegions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},

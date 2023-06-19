@@ -462,8 +462,9 @@ type ProjectSpec struct {
 }
 
 type ProjectStatus struct {
-	Namespace     string `json:"namespace,omitempty"`
-	DefaultRegion string `json:"defaultRegion,omitempty"`
+	Namespace        string   `json:"namespace,omitempty"`
+	DefaultRegion    string   `json:"defaultRegion,omitempty"`
+	SupportedRegions []string `json:"supportedRegions,omitempty"`
 }
 
 func (in *Project) NamespaceScoped() bool {
@@ -471,31 +472,26 @@ func (in *Project) NamespaceScoped() bool {
 }
 
 func (in *Project) HasRegion(region string) bool {
-	if region == "" || slices.Contains(in.Spec.SupportedRegions, region) {
-		return true
-	}
-	return in.Spec.DefaultRegion == "" && in.Status.DefaultRegion == region
+	return region == "" || slices.Contains(in.Status.SupportedRegions, region)
 }
 
 func (in *Project) GetRegion() string {
-	if in.Spec.DefaultRegion != "" {
-		return in.Spec.DefaultRegion
-	}
 	return in.Status.DefaultRegion
 }
 
 func (in *Project) GetSupportedRegions() []string {
-	if len(in.Spec.SupportedRegions) != 0 {
-		return in.Spec.SupportedRegions
-	}
-	return []string{in.GetRegion()}
+	return in.Status.SupportedRegions
 }
 
 func (in *Project) SetDefaultRegion(region string) {
-	if in.Spec.DefaultRegion == "" {
+	if in.Spec.DefaultRegion == "" && len(in.Spec.SupportedRegions) == 0 {
 		in.Status.DefaultRegion = region
+		in.Status.SupportedRegions = []string{region}
 	} else {
-		in.Status.DefaultRegion = ""
+		// Set the status values to the provided spec values.
+		// The idea here is that internally, we only need to check the status values.
+		in.Status.DefaultRegion = in.Spec.DefaultRegion
+		in.Status.SupportedRegions = in.Spec.SupportedRegions
 	}
 }
 

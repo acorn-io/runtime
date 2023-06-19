@@ -66,6 +66,14 @@ func TestProjectCreateValidation(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Create project with supported regions and no default is valid",
+			project: apiv1.Project{
+				Spec: apiv1.ProjectSpec{
+					SupportedRegions: []string{"acorn-test-region", "acorn-test-dne"},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -75,9 +83,18 @@ func TestProjectCreateValidation(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				// Ensure that the default region is set on status if no default region was given
-				if tt.project.Spec.DefaultRegion == "" {
-					assert.NotEmpty(t, tt.project.Status.DefaultRegion, "default region should be set")
+				// Ensure that if supported regions were supplied, then they were copied to the status.
+				if len(tt.project.Spec.SupportedRegions) != 0 {
+					assert.Equal(t, tt.project.Spec.SupportedRegions, tt.project.Status.SupportedRegions)
+				}
+				// Ensure that if a default region was supplied, then it was copied to the status.
+				if len(tt.project.Spec.DefaultRegion) != 0 {
+					assert.Equal(t, tt.project.Spec.DefaultRegion, tt.project.Status.DefaultRegion)
+				}
+				// Ensure that if no default and no supported regions were supplied, then the default region was set to the value passed to the validator.
+				if len(tt.project.Spec.DefaultRegion) == 0 && len(tt.project.Spec.SupportedRegions) == 0 {
+					assert.Equal(t, validator.DefaultRegion, tt.project.Status.DefaultRegion)
+					assert.Equal(t, []string{validator.DefaultRegion}, tt.project.Status.SupportedRegions)
 				}
 			} else if tt.wantError && err == nil {
 				t.Fatal("expected error for test case")
@@ -264,6 +281,10 @@ func TestProjectUpdateValidation(t *testing.T) {
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
+				Status: apiv1.ProjectStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
 			},
 			newProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
@@ -301,6 +322,10 @@ func TestProjectUpdateValidation(t *testing.T) {
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
+				Status: apiv1.ProjectStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
 			},
 			newProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
@@ -335,6 +360,10 @@ func TestProjectUpdateValidation(t *testing.T) {
 					Name: "my-project",
 				},
 				Spec: apiv1.ProjectSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+				Status: apiv1.ProjectStatus{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
