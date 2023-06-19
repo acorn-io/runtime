@@ -101,6 +101,8 @@ github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500 h1:tiM36bM+iMWuW9HM+
 github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500/go.mod h1:y6aYj2dF/SlU205bDfA43Y5c9sa/aYr4X5GDqYJzJTU=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CXNkuTdJSbhFWczAorbmx67nqlqswx5CQi7XI=
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
+github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c h1:4k4uuDw+PT3neNLCALme0hGe67XjoR/0cUXnxaT5d+g=
+github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c/go.mod h1:D6Tu6oVX8aGtCHsMCtYaysgVK3ad920MTSeAu7rzb5U=
 github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
 github.com/adrg/xdg v0.4.0/go.mod h1:N6ag73EX4wyxeaoeHctc1mas01KZgsj5tYiAIwqJE/E=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=
@@ -789,10 +791,8 @@ github.com/pterm/pterm v0.12.36/go.mod h1:NjiL09hFhT/vWjQHSj1athJpx6H8cjpHXNAK5b
 github.com/pterm/pterm v0.12.40/go.mod h1:ffwPLwlbXxP+rxT0GsgDTzS3y3rmpAO1NMjUkGTYf8s=
 github.com/pterm/pterm v0.12.49 h1:qeNm0wTWawy6WhKoY8ZKq6qTXFr0s2UtUyRW0yVztEg=
 github.com/pterm/pterm v0.12.49/go.mod h1:D4OBoWNqAfXkm5QLTjIgjNiMXPHemLJHnIreGUsWzWg=
-github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4 h1:Z/fJWD6j3p28Cdn9aOigjecoWeOafiOmIAEstEAjpBM=
-github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4/go.mod h1:T6WoUopOHBWTGjnphruTJAgoZ+dpm6llvn6GDYaa7Kw=
-github.com/rancher/wrangler v1.0.2 h1:0JGv62gF2OkYUoR0fsr99Za63fquFeKTHE2z9kAFVsE=
-github.com/rancher/wrangler v1.0.2/go.mod h1:Blhan9LdaIJjC9w+xGteSrHHEiIFIdPEHEMrtx82dPk=
+github.com/rancher/lasso v0.0.0-20221227210133-6ea88ca2fbcc h1:29VHrInLV4qSevvcvhBj5UhQWkPShxrxv4AahYg2Scw=
+github.com/rancher/lasso v0.0.0-20221227210133-6ea88ca2fbcc/go.mod h1:dEfC9eFQigj95lv/JQ8K5e7+qQCacWs1aIA6nLxKzT8=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
