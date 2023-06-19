@@ -29,7 +29,6 @@ items:
     appName: found
     metrics: {}
     probes: null
-    metrics: {}
   status:
     columns: {}
     image: ""
