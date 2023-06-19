@@ -28,6 +28,7 @@ func (s *Controller) Run(cmd *cobra.Command, _ []string) error {
 	if err := c.Start(cmd.Context()); err != nil {
 		return err
 	}
-	<-cmd.Context().Done()
-	return nil
+
+	// Block forever. The controller will call os.Exit when it's done.
+	select {}
 }

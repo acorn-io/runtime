@@ -27,6 +27,10 @@ spec:
             - controller
           securityContext:
             runAsUser: 1000
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8888
       serviceAccountName: acorn-system
       tolerations:
         - key: node-role.kubernetes.io/control-plane
