@@ -22,6 +22,7 @@ var (
 )
 
 type fileSyncClient struct {
+	compress  bool
 	sessionID string
 	messages  Messages
 	msg       <-chan *Message
@@ -54,8 +55,9 @@ func newFileSyncClient(ctx context.Context, cwd, sessionID string, messages Mess
 		keyExporterMetaPrefix: opts.ExporterMetaPrefix,
 	}
 
-	logrus.Tracef("starting file sync client %s", sessionID)
+	logrus.Tracef("starting file sync client %s, compress=%v", sessionID, opts.Compress)
 	fsClient := &fileSyncClient{
+		compress:  opts.Compress,
 		sessionID: sessionID,
 		messages:  messages,
 		tempDir:   tempDir,
@@ -188,6 +190,7 @@ func (s *fileSyncClient) Close() {
 
 func (s *fileSyncClient) SendMsg(m interface{}) error {
 	return s.messages.Send(&Message{
+		Compress:      s.compress,
 		FileSessionID: s.sessionID,
 		Packet:        m.(*types.Packet),
 	})
