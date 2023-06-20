@@ -36,6 +36,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const defaultNoReg = "xxx-no-reg"
+
 type Validator struct {
 	client        kclient.Client
 	clientFactory *client.Factory
@@ -86,6 +88,21 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		}
 
 		if !local {
+			if _, autoUpgradeOn := autoupgrade.Mode(params.Spec); autoUpgradeOn {
+				// Make sure there is a registry specified here
+				// If there isn't one, return an error in order to avoid checking Docker Hub implicitly
+				ref, err := name.ParseReference(params.Spec.Image, name.WithDefaultRegistry(defaultNoReg))
+				if err != nil {
+					result = append(result, field.InternalError(field.NewPath("spec", "image"), err))
+					return
+				}
+
+				if ref.Context().RegistryStr() == defaultNoReg {
+					result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image,
+						fmt.Sprintf("could not find local image for %v\nif you are trying to use Docker Hub, use docker.io/%v", params.Spec.Image, params.Spec.Image)))
+				}
+			}
+
 			if err := s.checkRemoteAccess(ctx, params.Namespace, image); err != nil {
 				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 				return

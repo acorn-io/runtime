@@ -10,11 +10,14 @@ import (
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/tags"
+	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const defaultNoReg = "xxx-no-reg"
 
 func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
@@ -24,6 +27,13 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern); err != nil {
 			return nil, err
 		} else if !found {
+			// Check and see if no registry was specified on the image.
+			// If this is the case, notify the user that they need to explicitly specify docker.io if that is what they are trying to use.
+			ref, err := imagename.ParseReference(strings.TrimSuffix(imageName, ":"+tagPattern), imagename.WithDefaultRegistry(defaultNoReg))
+			if err == nil && ref.Context().Registry.Name() == defaultNoReg {
+				return nil, fmt.Errorf("unable to find an image for %v matching pattern %v\nif you are trying to use Docker Hub, use docker.io/%v", imageName, tagPattern, imageName)
+			}
+
 			return nil, fmt.Errorf("unable to find an image for %v matching pattern %v", imageName, tagPattern)
 		} else {
 			imageName = latestImage

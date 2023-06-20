@@ -13,11 +13,14 @@ import (
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/tags"
+	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const defaultNoReg = "xxx-no-reg"
 
 func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
 	return pullAppImage(transport, pullClient{
@@ -56,9 +59,10 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 
 		// Skip the attempt to locally resolve if we already know that the image will be remote
 		var (
-			resolved string
-			err      error
-			isLocal  bool
+			_, autoUpgradeOn = autoupgrade.Mode(appInstance.Spec)
+			resolved         string
+			err              error
+			isLocal          bool
 		)
 		if !appInstance.Status.AvailableAppImageRemote {
 			resolved, isLocal, err = client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
@@ -67,6 +71,17 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 				return nil
 			}
 			if !isLocal {
+				if autoUpgradeOn && !tags.IsLocalReference(target) {
+					ref, err := imagename.ParseReference(target, imagename.WithDefaultRegistry(defaultNoReg))
+					if err != nil {
+						return err
+					}
+					if ref.Context().RegistryStr() == defaultNoReg {
+						// Prevent this from being resolved remotely, as we should never assume Docker Hub for auto-upgrade apps
+						return fmt.Errorf("no local image found for %v\nif you are trying to use Docker Hub, use docker.io/%v", target, target)
+					}
+				}
+
 				// Force pull from remote, since the only local image we found was marked remote, and there might be a newer version
 				resolved = target
 			}
@@ -75,9 +90,8 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 		}
 
 		var (
-			_, autoUpgradeOn = autoupgrade.Mode(appInstance.Spec)
-			previousImage    = appInstance.Status.AppImage
-			targetImage      *v1.AppImage
+			previousImage = appInstance.Status.AppImage
+			targetImage   *v1.AppImage
 		)
 		defer func() {
 			// Record the results as an event
