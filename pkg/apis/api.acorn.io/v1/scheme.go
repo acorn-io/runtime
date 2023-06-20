@@ -67,6 +67,7 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&EventList{},
 		&DevSession{},
 		&DevSessionList{},
+		&IgnoreCleanup{},
 	)
 
 	// Add common types

@@ -143,7 +143,7 @@ func removeVolume(arg string, c client.Client, cmd *cobra.Command, force bool) e
 	}
 	return nil
 }
-func removeApp(arg string, c client.Client, cmd *cobra.Command, force, wait bool) error {
+func removeApp(arg string, c client.Client, cmd *cobra.Command, force, ignoreCleanup, wait bool) error {
 	if !force {
 		pterm.FgRed.Println(arg)
 		err := prompt.Remove("app")
@@ -159,6 +159,12 @@ func removeApp(arg string, c client.Client, cmd *cobra.Command, force, wait bool
 	if app == nil {
 		fmt.Printf("Error: No such app: %s\n", arg)
 		return nil
+	}
+
+	if ignoreCleanup {
+		if err := c.AppIgnoreDeleteCleanup(cmd.Context(), arg); err != nil {
+			return fmt.Errorf("skipping cleanup for app %s: %w", arg, err)
+		}
 	}
 
 	// Ensure this gets printed whether we wait or not

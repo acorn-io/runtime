@@ -4,7 +4,6 @@ import (
 	"context"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
@@ -25,14 +24,13 @@ type ConfirmUpgradeStrategy struct {
 }
 
 func (s *ConfirmUpgradeStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
-	confirmUpgrade := obj.(*apiv1.ConfirmUpgrade)
 	ri, _ := request.RequestInfoFrom(ctx)
 
 	if ri.Name == "" || ri.Namespace == "" {
-		return confirmUpgrade, nil
+		return obj, nil
 	}
 
-	app := &v1.AppInstance{}
+	app := &apiv1.App{}
 	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
 	if err != nil {
 		return nil, err
@@ -45,7 +43,7 @@ func (s *ConfirmUpgradeStrategy) Create(ctx context.Context, obj types.Object) (
 		return nil, err
 	}
 
-	return confirmUpgrade, nil
+	return obj, nil
 }
 
 func (s *ConfirmUpgradeStrategy) New() types.Object {

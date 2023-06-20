@@ -19,10 +19,11 @@ acorn rm -t volume,container APP_NAME`,
 }
 
 type Rm struct {
-	All    bool     `usage:"Delete all types" short:"a"`
-	Type   []string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
-	Force  bool     `usage:"Force Delete" short:"f"`
-	client ClientFactory
+	All           bool     `usage:"Delete all types" short:"a"`
+	Type          []string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
+	Force         bool     `usage:"Force Delete" short:"f"`
+	IgnoreCleanup bool     `usage:"Ignore delete jobs"`
+	client        ClientFactory
 }
 type RmObjects struct {
 	App       bool
@@ -59,7 +60,7 @@ func (a *Rm) Run(cmd *cobra.Command, args []string) error {
 
 	for _, arg := range args {
 		if rmObjects.App {
-			err := removeApp(arg, c, cmd, a.Force, rmObjects.Container || rmObjects.Volume || rmObjects.Secret)
+			err := removeApp(arg, c, cmd, a.Force, a.IgnoreCleanup, rmObjects.Container || rmObjects.Volume || rmObjects.Secret)
 			if err != nil {
 				return err
 			}

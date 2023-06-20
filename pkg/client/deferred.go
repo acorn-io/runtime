@@ -101,6 +101,13 @@ func (d *DeferredClient) AppPullImage(ctx context.Context, name string) error {
 	return d.Client.AppPullImage(ctx, name)
 }
 
+func (d *DeferredClient) AppIgnoreDeleteCleanup(ctx context.Context, name string) error {
+	if err := d.create(); err != nil {
+		return err
+	}
+	return d.Client.AppIgnoreDeleteCleanup(ctx, name)
+}
+
 func (d *DeferredClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
 	if err := d.create(); err != nil {
 		return err
