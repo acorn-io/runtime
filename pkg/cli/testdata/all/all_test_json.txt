@@ -40,6 +40,7 @@ CONTAINERS:
             },
             "spec": {
                 "probes": null,
+                "metrics": {},
                 "appName": "found"
             },
             "status": {

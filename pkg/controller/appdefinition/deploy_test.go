@@ -68,6 +68,10 @@ func TestDeploySpecStop(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/stop", DeploySpec)
 }
 
+func TestDeploySpecMetrics(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/metrics", DeploySpec)
+}
+
 func TestProbe(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/probes", DeploySpec)
 }

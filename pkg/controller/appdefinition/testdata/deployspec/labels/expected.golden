@@ -57,7 +57,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"annotations":{"containerAnn":"test-container-ann"},"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","labels":{"containerLabel":"test-container-label"},"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"containerAnn":"test-container-ann"},"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","labels":{"containerLabel":"test-container-label"},"metrics":{},"probes":null}'
         appSpecAnn: test-app-spec-ann
         container-scoped-ann: test-container
         containerAnn: test-container-ann
@@ -182,7 +182,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"annotations":{"jobAnn":"test-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"jobLabel":"test-job-label"},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"jobAnn":"test-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"jobLabel":"test-job-label"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         appSpecAnn: test-app-spec-ann
         global-scoped-ann: test-global
         jobAnn: test-job-ann
@@ -373,6 +373,7 @@ status:
         image: image-name
         labels:
           containerLabel: test-container-label
+        metrics: {}
         probes: null
     jobs:
       job-name:
@@ -384,6 +385,7 @@ status:
         image: image-name
         labels:
           jobLabel: test-job-label
+        metrics: {}
         ports:
         - port: 80
           protocol: http

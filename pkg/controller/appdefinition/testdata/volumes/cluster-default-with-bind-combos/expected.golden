@@ -35,7 +35,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"dirs":{"/var/temp":{"secret":{},"volume":"bar"},"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","probes":null}'
+        acorn.io/container-spec: '{"dirs":{"/var/temp":{"secret":{},"volume":"bar"},"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -188,6 +188,7 @@ status:
             secret: {}
             volume: foo
         image: image-name
+        metrics: {}
         probes: null
     volumes:
       bar:

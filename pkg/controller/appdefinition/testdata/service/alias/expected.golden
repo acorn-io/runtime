@@ -43,7 +43,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         both: con1val
         con1: value
       creationTimestamp: null
@@ -153,7 +153,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
+        acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         both: con2val
         con2: value
       creationTimestamp: null
@@ -253,7 +253,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"foo","ports":[{"port":100,"protocol":"udp","publish":true,"targetPort":101},{"port":100,"protocol":"udp","targetPort":101}],"probes":null}'
+        acorn.io/container-spec: '{"image":"foo","metrics":{},"ports":[{"port":100,"protocol":"udp","publish":true,"targetPort":101},{"port":100,"protocol":"udp","targetPort":101}],"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -496,6 +496,7 @@ status:
           both: con1val
           con1: value
         image: foo
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -513,6 +514,7 @@ status:
           both: con2val
           con2: value
         image: foo
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -527,6 +529,7 @@ status:
         probes: null
       con3:
         image: foo
+        metrics: {}
         ports:
         - port: 100
           protocol: udp

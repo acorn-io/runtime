@@ -59,6 +59,10 @@ const (
 	AcornCalculatedProjectSupportedRegions = Prefix + "calculated-project-supported-regions"
 	ProjectEnforcedQuotaAnnotation         = Prefix + "enforced-quota"
 	AcornPermissions                       = Prefix + "permissions"
+
+	PrometheusScrape = "prometheus.io/scrape"
+	PrometheusPath   = "prometheus.io/path"
+	PrometheusPort   = "prometheus.io/port"
 )
 
 func Merge(base, overlay map[string]string) map[string]string {

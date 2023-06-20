@@ -128,7 +128,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -324,7 +324,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -472,6 +472,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -480,6 +481,7 @@ status:
         sidecars:
           left:
             image: foo
+            metrics: {}
             ports:
             - port: 90
               protocol: tcp
@@ -490,6 +492,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -498,6 +501,7 @@ status:
         sidecars:
           left:
             image: foo
+            metrics: {}
             ports:
             - port: 90
               protocol: tcp

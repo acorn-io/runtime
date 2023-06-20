@@ -36,7 +36,7 @@ spec:
     metadata:
       annotations:
         acorn.io/app-generation: "2"
-        acorn.io/container-spec: '{"events":["create","update"],"image":"only-image","probes":null}'
+        acorn.io/container-spec: '{"events":["create","update"],"image":"only-image","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -117,6 +117,7 @@ status:
         - create
         - update
         image: only-image
+        metrics: {}
         probes: null
   appStatus:
     jobs:

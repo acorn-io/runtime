@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -122,7 +122,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
+        acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -299,6 +299,7 @@ status:
     containers:
       app1:
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http
@@ -307,6 +308,7 @@ status:
         probes: null
       app2:
         image: image-name
+        metrics: {}
         ports:
         - port: 80
           protocol: http

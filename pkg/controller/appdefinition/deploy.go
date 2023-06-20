@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
@@ -476,6 +477,8 @@ func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[str
 	annotations := map[string]string{
 		labels.AcornContainerSpec: containerAnnotation(container),
 	}
+	addPrometheusAnnotations(annotations, container)
+
 	images := map[string]string{}
 	addImageAnnotations(images, appInstance, container)
 
@@ -500,6 +503,14 @@ func addImageAnnotations(annotations map[string]string, appInstance *v1.AppInsta
 
 	for _, entry := range typed.Sorted(container.Sidecars) {
 		addImageAnnotations(annotations, appInstance, entry.Value)
+	}
+}
+
+func addPrometheusAnnotations(annotations map[string]string, container v1.Container) {
+	if container.Metrics.Path != "" && container.Metrics.Port != 0 {
+		annotations[labels.PrometheusScrape] = "true"
+		annotations[labels.PrometheusPath] = container.Metrics.Path
+		annotations[labels.PrometheusPort] = strconv.Itoa(int(container.Metrics.Port))
 	}
 }
 

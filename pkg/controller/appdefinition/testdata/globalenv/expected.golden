@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"environment":[{"name":"env-name","secret":{},"value":"env-value"}],"image":"image-name","probes":null}'
+        acorn.io/container-spec: '{"environment":[{"name":"env-name","secret":{},"value":"env-value"}],"image":"image-name","metrics":{},"probes":null}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -206,6 +206,7 @@ status:
           secret: {}
           value: env-value
         image: image-name
+        metrics: {}
         probes: null
   appStatus: {}
   columns: {}

@@ -33,7 +33,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"image":"image-name","probes":null,"sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name","probes":null}}}'
+        acorn.io/container-spec: '{"image":"image-name","metrics":{},"probes":null,"sidecars":{"sidecar":{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0755","secret":{}}},"image":"image-name","metrics":{},"probes":null}}}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -146,6 +146,7 @@ status:
     containers:
       oneimage:
         image: image-name
+        metrics: {}
         probes: null
         sidecars:
           sidecar:
@@ -159,6 +160,7 @@ status:
                 mode: "0755"
                 secret: {}
             image: image-name
+            metrics: {}
             probes: null
   appStatus: {}
   columns: {}

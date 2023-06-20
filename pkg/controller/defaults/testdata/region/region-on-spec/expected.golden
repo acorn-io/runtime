@@ -17,6 +17,7 @@ status:
     containers:
       container-name:
         image: image-name
+        metrics: {}
         probes: null
   appStatus: {}
   columns: {}

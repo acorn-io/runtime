@@ -945,6 +945,7 @@ func (in *EmbeddedContainer) DeepCopyInto(out *EmbeddedContainer) {
 		*out = new(int64)
 		**out = **in
 	}
+	out.Metrics = in.Metrics
 	if in.Scale != nil {
 		in, out := &in.Scale, &out.Scale
 		*out = new(int32)

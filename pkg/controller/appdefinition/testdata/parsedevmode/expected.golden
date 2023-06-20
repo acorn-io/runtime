@@ -26,6 +26,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: sha256:build-image
+        metrics: {}
         permissions: {}
         probes: null
   appStatus: {}

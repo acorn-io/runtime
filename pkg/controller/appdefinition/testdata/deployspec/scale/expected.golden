@@ -34,7 +34,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","probes":null,"scale":7}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","metrics":{},"probes":null,"scale":7}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -117,7 +117,7 @@ spec:
   template:
     metadata:
       annotations:
-        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","probes":null,"scale":3}'
+        acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"probes":null,"scale":3}'
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -213,6 +213,7 @@ status:
           context: .
           dockerfile: custom-dockerfile
         image: sha256:build-image
+        metrics: {}
         probes: null
         scale: 7
       oneimage:
@@ -220,6 +221,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         probes: null
         scale: 3
   appStatus: {}

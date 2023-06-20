@@ -28,6 +28,7 @@ status:
           context: .
           dockerfile: custom-dockerfile
         image: sha256:build-image
+        metrics: {}
         permissions: {}
         probes: null
       oneimage:
@@ -36,6 +37,7 @@ status:
           context: .
           dockerfile: Dockerfile
         image: image-name
+        metrics: {}
         permissions: {}
         probes: null
   appStatus: {}

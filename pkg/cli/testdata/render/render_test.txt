@@ -10,5 +10,6 @@
 		]
 		probes: null
 		permissions: {}
+		metrics: {}
 	}
 }
