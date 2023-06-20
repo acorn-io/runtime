@@ -178,7 +178,7 @@ func (d *daemon) determineAppsToRefresh(apps map[kclient.ObjectKey]v1.AppInstanc
 // which will trigger the appInstance handlers to pick up the change and deploy the new version of the app
 func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v1.AppInstance, imagesToRefresh map[imageAndNamespaceKey][]kclient.ObjectKey, updateTime time.Time) {
 	for imageKey, appsForImage := range imagesToRefresh {
-		current, err := imagename.ParseReference(imageKey.image, imagename.WithDefaultRegistry(defaultNoReg), imagename.WithDefaultTag(""))
+		current, err := imagename.ParseReference(imageKey.image, imagename.WithDefaultTag(""))
 		if err != nil {
 			logrus.Errorf("Problem parsing image referece %v: %v", imageKey.image, err)
 			continue

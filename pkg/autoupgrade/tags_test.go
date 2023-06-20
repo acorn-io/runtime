@@ -1,8 +1,13 @@
 package autoupgrade
 
 import (
+	"context"
 	"testing"
 
+	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,4 +50,112 @@ func test(t *testing.T, pattern string, expectedIndex int, tags []string) {
 		panic(err)
 	}
 	assert.Equal(t, tags[expectedIndex], latest)
+}
+
+func TestGetTagsForImagePattern(t *testing.T) {
+	testCases := []struct {
+		name             string
+		currentImage     string
+		remoteTags       []string
+		localTags        []string
+		expectRemote     bool
+		expectedRegistry string
+	}{
+		{
+			name:             "remote, no specified registry",
+			currentImage:     "myrepo/myimage:v1.0.0",
+			remoteTags:       []string{"v1.0.0", "v1.0.1"},
+			localTags:        []string{"v2.0.0"},
+			expectRemote:     true,
+			expectedRegistry: "index.docker.io",
+		},
+		{
+			name:             "remote, docker.io",
+			currentImage:     "docker.io/myrepo/myimage:v1.0.0",
+			remoteTags:       []string{"v1.0.0", "v1.0.1"},
+			localTags:        []string{"v2.0.0"},
+			expectRemote:     true,
+			expectedRegistry: "index.docker.io",
+		},
+		{
+			name:             "remote, index.docker.io",
+			currentImage:     "index.docker.io/myrepo/myimage:v1.0.1",
+			remoteTags:       []string{"v1.0.0", "v1.0.1"},
+			localTags:        []string{"v2.0.0"},
+			expectRemote:     true,
+			expectedRegistry: "index.docker.io",
+		},
+		{
+			name:             "local, no specified registry",
+			currentImage:     "myrepo/myimage:v1.0.0",
+			remoteTags:       []string{},
+			localTags:        []string{"v2.0.0"},
+			expectRemote:     false,
+			expectedRegistry: defaultNoReg,
+		},
+		{
+			name:             "remote, ghcr.io",
+			currentImage:     "ghcr.io/myrepo/myimage:v1.0.1",
+			remoteTags:       []string{"v1.0.0", "v1.1.0"},
+			localTags:        []string{"v2.0.0"},
+			expectRemote:     true,
+			expectedRegistry: "ghcr.io",
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			client := testDaemonClient{
+				localTags:  tt.localTags,
+				remoteTags: tt.remoteTags,
+			}
+
+			currentRef, foundTags, err := getTagsForImagePattern(context.Background(), client, "my-namespace", tt.currentImage)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.expectedRegistry, currentRef.Context().RegistryStr())
+			if tt.expectRemote {
+				assert.Equal(t, tt.remoteTags, foundTags)
+			} else {
+				assert.Equal(t, tt.localTags, foundTags)
+			}
+		})
+	}
+}
+
+type testDaemonClient struct {
+	localTags, remoteTags []string
+}
+
+func (c testDaemonClient) listTags(_ context.Context, _, _ string, _ ...remote.Option) ([]string, error) {
+	return c.remoteTags, nil
+}
+
+func (c testDaemonClient) getTagsMatchingRepo(_ context.Context, _ name.Reference, _, _ string) ([]string, error) {
+	return c.localTags, nil
+}
+
+// We don't care about these functions
+
+func (c testDaemonClient) getConfig(_ context.Context) (*apiv1.Config, error) {
+	return nil, nil
+}
+
+func (c testDaemonClient) listAppInstances(_ context.Context) ([]v1.AppInstance, error) {
+	return nil, nil
+}
+
+func (c testDaemonClient) updateAppStatus(_ context.Context, _ *v1.AppInstance) error {
+	return nil
+}
+
+func (c testDaemonClient) imageDigest(_ context.Context, _, _ string, _ ...remote.Option) (string, error) {
+	return "", nil
+}
+
+func (c testDaemonClient) resolveLocalTag(_ context.Context, _, _ string) (string, bool, error) {
+	return "", false, nil
+}
+
+func (c testDaemonClient) checkImageAllowed(_ context.Context, _, _ string) error {
+	return nil
 }

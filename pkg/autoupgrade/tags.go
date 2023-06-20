@@ -16,25 +16,28 @@ import (
 const invalidTag = "+notfound+"
 
 func getTagsForImagePattern(ctx context.Context, c daemonClient, namespace, image string) (imagename.Reference, []string, error) {
-	current, err := imagename.ParseReference(image, imagename.WithDefaultRegistry(defaultNoReg))
+	current, err := imagename.ParseReference(image) // Implicitly use Docker Hub as the default registry
 	if err != nil {
 		return nil, nil, fmt.Errorf("problem parsing image referece %v: %v", image, err)
 	}
-	// if the registry after being parsed is our default fake one, then this is a local image with no registry
-	hasValidRegistry := current.Context().RegistryStr() != defaultNoReg
-	var tags []string
-	var pullErr error
-	if hasValidRegistry {
-		tags, pullErr = c.listTags(ctx, namespace, image)
+
+	// Check remote tags first, since those take priority over local images when using auto-upgrade
+	tags, pullErr := c.listTags(ctx, namespace, image)
+	if pullErr == nil && len(tags) > 0 {
+		return current, tags, nil
 	}
+
+	// There were no remote tags, so switch the current image reference back to no default registry
+	current, err = imagename.ParseReference(image, imagename.WithDefaultRegistry(defaultNoReg))
+
 	localTags, err := c.getTagsMatchingRepo(ctx, current, namespace, defaultNoReg)
 	if err != nil {
 		logrus.Errorf("Problem finding local tags matching %v: %v", image, err)
 	}
 	if len(localTags) == 0 && pullErr != nil {
-		logrus.Errorf("Couldn't find any remote tags for image %v. Error: %v", image, pullErr)
+		logrus.Errorf("Couldn't find any tags for image %v. Error: %v", image, pullErr)
 	}
-	return current, append(tags, localTags...), nil
+	return current, localTags, nil
 }
 
 func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, current, namespace, image, pattern string) (string, bool, error) {
