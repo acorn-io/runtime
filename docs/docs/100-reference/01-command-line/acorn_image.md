@@ -43,4 +43,5 @@ acorn images
 * [acorn image details](acorn_image_details.md)	 - Show details of an Image
 * [acorn image rm](acorn_image_rm.md)	 - Delete an Image
 * [acorn image sign](acorn_image_sign.md)	 - Sign an Image
+* [acorn image verify](acorn_image_verify.md)	 - Verify Image Signatures
 

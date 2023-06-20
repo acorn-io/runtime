@@ -11,6 +11,7 @@ import (
 	acornsign "github.com/acorn-io/acorn/pkg/cosign"
 	"github.com/acorn-io/acorn/pkg/images"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/pterm/pterm"
 	"github.com/sigstore/cosign/v2/cmd/cosign/cli/generate"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/cosign/remote"
@@ -83,7 +84,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	if a.Key == "" { // TODO: use default identity if no key is given
 		return fmt.Errorf("key is required")
 	}
-	fmt.Printf("Signing Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
+	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
 
 	pass, err := generate.GetPass(false)
 	if err != nil {
@@ -101,7 +102,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		if !strings.Contains(err.Error(), "unsupported pem type") {
 			return err
 		}
-		fmt.Printf("Key %s is not a supported PEM key, importing...\n", a.Key)
+		pterm.Debug.Printf("Key %s is not a supported PEM key, importing...\n", a.Key)
 		keyBytes, err := cosign.ImportKeyPair(a.Key, pf)
 		if err != nil {
 			return err
@@ -152,11 +153,13 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 			}
 			targetRepo = ref.Context()
 		}
-		fmt.Printf("Pushing signature to %s\n", targetRepo.String())
-		return ociremote.WriteSignatures(targetRepo, mutatedOCIEntity) // TODO: need remote opts
+		if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity); err != nil { // TODO: need remote opts
+			return err
+		}
+		pterm.Success.Printf("Done: Pushed signature to %s\n", targetRepo.String())
+	} else {
+		pterm.Success.Println("Done: Did not push signature")
 	}
-
-	fmt.Println("Not pushing signature")
 
 	return nil
 }
