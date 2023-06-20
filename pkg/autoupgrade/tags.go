@@ -29,6 +29,9 @@ func getTagsForImagePattern(ctx context.Context, c daemonClient, namespace, imag
 
 	// There were no remote tags, so switch the current image reference back to no default registry
 	current, err = imagename.ParseReference(image, imagename.WithDefaultRegistry(defaultNoReg))
+	if err != nil {
+		return nil, nil, fmt.Errorf("problem parsing image reference %v: %v", image, err)
+	}
 
 	localTags, err := c.getTagsMatchingRepo(ctx, current, namespace, defaultNoReg)
 	if err != nil {
