@@ -3495,6 +3495,13 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
 						},
 					},
+					"noDefaultRegistry": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NoDefaultRegistry - if true, do not assume a default registry on the image if none is specified",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"appImage": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Output Params",
@@ -6033,21 +6040,9 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
-					"availableAppImageRemote": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
 					"confirmUpgradeAppImage": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"confirmUpgradeAppImageRemote": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
 							Format: "",
 						},
 					},

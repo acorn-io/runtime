@@ -60,7 +60,7 @@ func TestDev(t *testing.T) {
 	eg := errgroup.Group{}
 	eg.Go(func() error {
 		return dev.Dev(subCtx, helper.BuilderClient(t, ns.Name), &dev.Options{
-			ImageSource: imagesource.NewImageSource(acornCueFile, []string{tmp}, nil, nil),
+			ImageSource: imagesource.NewImageSource(acornCueFile, []string{tmp}, nil, nil, false),
 			Run: client.AppRunOptions{
 				Name: "test-app",
 			},

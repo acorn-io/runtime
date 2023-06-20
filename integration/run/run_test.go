@@ -19,6 +19,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/appdefinition"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/imagesource"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/run"
@@ -1697,4 +1698,56 @@ func TestAutoUpgradeImageValidation(t *testing.T) {
 		t.Fatal("expected error when failing to find local image for auto-upgrade app, got no error")
 	}
 	assert.ErrorContains(t, err, "could not find local image for myimage:latest - if you are trying to use a remote image, specify the full registry")
+}
+
+func TestAutoUpgradeLocalImage(t *testing.T) {
+	ctx := helper.GetCTX(t)
+
+	helper.StartController(t)
+	restConfig, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		t.Fatal("error while getting rest config:", err)
+	}
+	kclient := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kclient)
+
+	c, err := client.New(restConfig, project.Name, project.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Attempt to run an auto-upgrade app with a non-existent local image. Should get an error.
+	_, err = c.AppRun(ctx, "mylocalimage", &client.AppRunOptions{
+		AutoUpgrade: &[]bool{true}[0],
+	})
+	if err == nil {
+		t.Fatalf("expected to get a not found error, instead got %v", err)
+	}
+	assert.ErrorContains(t, err, "could not find local image for mylocalimage - if you are trying to use a remote image, specify the full registry")
+
+	// Next, build the local image
+	image, err := c.AcornImageBuild(ctx, "./testdata/named/Acornfile", &client.AcornImageBuildOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Tag the image
+	err = c.ImageTag(ctx, image.ID, "mylocalimage")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Deploy the app
+	imageSource := imagesource.NewImageSource("", []string{"mylocalimage"}, []string{}, nil, true)
+	appImage, _, err := imageSource.GetImageAndDeployArgs(ctx, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.AppRun(ctx, appImage, &client.AppRunOptions{
+		AutoUpgrade: &[]bool{true}[0],
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }

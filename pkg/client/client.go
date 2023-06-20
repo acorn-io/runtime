@@ -309,6 +309,8 @@ type ImageDetailsOptions struct {
 	Profiles     []string
 	DeployArgs   map[string]any
 	Auth         *apiv1.RegistryAuth
+	// NoDefaultRegistry - if true, indicates that no default container registry should be assumed when getting image details
+	NoDefaultRegistry bool
 }
 
 type ImageDeleteOptions struct {

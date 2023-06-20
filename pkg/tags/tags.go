@@ -17,6 +17,8 @@ var (
 	SHAPermissivePrefixPattern = regexp.MustCompile(`^[a-f\d]{3,64}$`)
 	SHAPattern                 = regexp.MustCompile(`^[a-f\d]{64}$`)
 	DigestPattern              = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
+	// Can't use the NoDefaultRegistry const from the images packages without causing a dependency cycle
+	noDefaultRegistry = "xxx-no-reg"
 )
 
 func IsImageDigest(s string) bool {
@@ -31,6 +33,13 @@ func IsLocalReference(image string) bool {
 		return true
 	}
 	return false
+}
+
+// HasNoSpecifiedRegistry returns true if there is no registry specified in the image name, or if an error occurred
+// while trying to parse it into a reference.
+func HasNoSpecifiedRegistry(image string) bool {
+	ref, err := name.ParseReference(image, name.WithDefaultRegistry(noDefaultRegistry))
+	return err != nil || ref.Context().RegistryStr() == noDefaultRegistry
 }
 
 func Get(ctx context.Context, c client.Reader, namespace string) (apiv1.ImageList, error) {

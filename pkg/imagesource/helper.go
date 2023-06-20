@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/acorn-io/runtime/pkg/appdefinition"
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/build"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
@@ -21,13 +22,20 @@ type ImageSource struct {
 	Args      []string
 	Profiles  []string
 	Platforms []string
+	// NoDefaultRegistry - if true, indicates that no container registry should be assumed for the Image.
+	// This is used if the ImageSource is for an app with auto-upgrade enabled.
+	NoDefaultRegistry bool
 }
 
-func NewImageSource(file string, args, profiles, platforms []string) (result ImageSource) {
+func NewImageSource(file string, args, profiles, platforms []string, noDefaultReg bool) (result ImageSource) {
 	result.File = file
 	result.Image, result.Args = splitImageAndArgs(args)
 	result.Profiles = profiles
 	result.Platforms = platforms
+
+	// If the image is a pattern, auto-upgrade is on, so assume no default registry
+	_, isPattern := autoupgrade.AutoUpgradePattern(result.Image)
+	result.NoDefaultRegistry = noDefaultReg || isPattern
 	return
 }
 
@@ -64,7 +72,7 @@ func (i ImageSource) GetAppDefinition(ctx context.Context, c client.Client) (*ap
 	)
 	if file == "" {
 		sourceName = image
-		imageDetails, err := c.ImageDetails(ctx, image, nil)
+		imageDetails, err := c.ImageDetails(ctx, image, &client.ImageDetailsOptions{NoDefaultRegistry: i.NoDefaultRegistry})
 		if err != nil {
 			return nil, nil, err
 		}

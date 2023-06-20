@@ -208,6 +208,8 @@ type ImageDetails struct {
 	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
 	Profiles     []string      `json:"profiles,omitempty"`
 	Auth         *RegistryAuth `json:"auth,omitempty"`
+	// NoDefaultRegistry - if true, do not assume a default registry on the image if none is specified
+	NoDefaultRegistry bool `json:"noDefaultRegistry,omitempty"`
 
 	// Output Params
 	AppImage   v1.AppImage   `json:"appImage,omitempty"`

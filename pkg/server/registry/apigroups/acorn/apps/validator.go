@@ -114,6 +114,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 				if ref.Context().RegistryStr() == images.NoDefaultRegistry {
 					result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image,
 						fmt.Sprintf("could not find local image for %v - if you are trying to use a remote image, specify the full registry", params.Spec.Image)))
+					return
 				}
 			}
 

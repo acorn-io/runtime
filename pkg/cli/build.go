@@ -44,7 +44,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	helper := imagesource.NewImageSource(s.File, args, s.Profile, s.Platform)
+	helper := imagesource.NewImageSource(s.File, args, s.Profile, s.Platform, false)
 	image, _, err := helper.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
 		return err

@@ -247,7 +247,7 @@ func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInsta
 		return nil
 	}
 
-	handler := pullAppImage(nil, pullClient{
+	handler := pullAppImage(mockRoundTripper{}, pullClient{
 		recorder: event.RecorderFunc(fakeRecorder),
 		resolve:  resolve,
 		pull:     pull,
