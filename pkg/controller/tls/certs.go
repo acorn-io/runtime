@@ -68,6 +68,10 @@ func RenewCert(req router.Request, resp router.Response) error {
 
 	domain := sec.Annotations[labels.AcornDomain]
 
+	if domain == "" {
+		return nil
+	}
+
 	go func() {
 		// Do not start a new challenge if we already have one in progress
 		if !lockDomain(domain) {
