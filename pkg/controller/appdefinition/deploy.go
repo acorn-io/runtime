@@ -635,6 +635,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 				Spec: corev1.PodSpec{
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 					Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
+					PriorityClassName:             appInstance.Status.Scheduling[name].PriorityClassName,
 					TerminationGracePeriodSeconds: &[]int64{5}[0],
 					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 					EnableServiceLinks:            new(bool),

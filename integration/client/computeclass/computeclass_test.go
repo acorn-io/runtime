@@ -26,10 +26,11 @@ func TestCreatingComputeClasses(t *testing.T) {
 	ctx := helper.GetCTX(t)
 
 	checks := []struct {
-		name      string
-		memory    adminv1.ComputeClassMemory
-		cpuScaler float64
-		fail      bool
+		name              string
+		memory            adminv1.ComputeClassMemory
+		cpuScaler         float64
+		priorityClassName string
+		fail              bool
 	}{
 		{
 			name: "valid-only-max",
@@ -51,6 +52,11 @@ func TestCreatingComputeClasses(t *testing.T) {
 				Default: "512Mi",
 			},
 			fail: false,
+		},
+		{
+			name:              "valid-only-priority-class",
+			priorityClassName: "system-cluster-critical",
+			fail:              false,
 		},
 		{
 			name:      "valid-values",
@@ -142,8 +148,9 @@ func TestCreatingComputeClasses(t *testing.T) {
 					GenerateName: "acorn-test-custom",
 					Namespace:    c.GetNamespace(),
 				},
-				CPUScaler: tt.cpuScaler,
-				Memory:    tt.memory,
+				CPUScaler:         tt.cpuScaler,
+				Memory:            tt.memory,
+				PriorityClassName: tt.priorityClassName,
 			}
 
 			// TODO - dry run

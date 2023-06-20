@@ -1051,6 +1051,33 @@ func TestUsingComputeClasses(t *testing.T) {
 			},
 		},
 		{
+			name:              "priority-class",
+			testDataDirectory: "./testdata/simple",
+			computeClass: adminv1.ProjectComputeClassInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "acorn-test-custom",
+					Namespace: c.GetNamespace(),
+				},
+				Default:           true,
+				CPUScaler:         0.25,
+				PriorityClassName: "system-cluster-critical",
+				SupportedRegions:  []string{apiv1.LocalRegion},
+			},
+			expected: map[string]v1.Scheduling{"simple": {
+				PriorityClassName: "system-cluster-critical",
+				Tolerations: []corev1.Toleration{
+					{
+						Key:      tolerations.WorkloadTolerationKey,
+						Operator: corev1.TolerationOpExists,
+					},
+				}},
+			},
+			waitFor: func(obj *apiv1.App) bool {
+				return obj.Status.Condition(v1.AppInstanceConditionParsed).Success &&
+					obj.Status.Condition(v1.AppInstanceConditionScheduling).Success
+			},
+		},
+		{
 			name:              "unsupported-region",
 			testDataDirectory: "./testdata/simple",
 			computeClass: adminv1.ProjectComputeClassInstance{

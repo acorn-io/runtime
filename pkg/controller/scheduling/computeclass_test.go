@@ -53,6 +53,10 @@ func TestDifferentDigestGenerationComputeClass(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/different-digest-generation", Calculate)
 }
 
+func TestPriorityClass(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/computeclass/priority-class", Calculate)
+}
+
 func TestTwoCCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/computeclass/two-ccc-defaults-should-error")
 	if err != nil {
@@ -69,6 +73,20 @@ func TestTwoCCCDefaultsShouldError(t *testing.T) {
 
 func TestTwoPCCDefaultsShouldError(t *testing.T) {
 	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/computeclass/two-pcc-defaults-should-error")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := harness.Invoke(t, input, router.HandlerFunc(Calculate))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, resp.NoPrune, "NoPrune should be true when error occurs")
+}
+
+func TestInvalidPriorityClassShouldError(t *testing.T) {
+	harness, input, err := tester.FromDir(scheme.Scheme, "testdata/computeclass/invalid-priority-class-should-error")
 	if err != nil {
 		t.Fatal(err)
 	}

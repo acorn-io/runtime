@@ -203,9 +203,10 @@ type VolumeDefault struct {
 }
 
 type Scheduling struct {
-	Requirements corev1.ResourceRequirements `json:"requirements,omitempty"`
-	Affinity     *corev1.Affinity            `json:"affinity,omitempty"`
-	Tolerations  []corev1.Toleration         `json:"tolerations,omitempty"`
+	Requirements      corev1.ResourceRequirements `json:"requirements,omitempty"`
+	Affinity          *corev1.Affinity            `json:"affinity,omitempty"`
+	Tolerations       []corev1.Toleration         `json:"tolerations,omitempty"`
+	PriorityClassName string                      `json:"priorityClassName,omitempty"`
 }
 
 type Endpoint struct {

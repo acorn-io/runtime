@@ -15,6 +15,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +50,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, authv1.AddToScheme(scheme))
 	errs = append(errs, apiextensionv1.AddToScheme(scheme))
 	errs = append(errs, discoveryv1.AddToScheme(scheme))
+	errs = append(errs, schedulingv1.AddToScheme(scheme))
 	return merr.NewErrors(errs...)
 }
 

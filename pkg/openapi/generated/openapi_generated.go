@@ -576,6 +576,12 @@ func schema_pkg_apis_adminacornio_v1_ClusterComputeClass(ref common.ReferenceCal
 							},
 						},
 					},
+					"priorityClassName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 				Required: []string{"default"},
 			},
@@ -857,6 +863,12 @@ func schema_pkg_apis_adminacornio_v1_ProjectComputeClass(ref common.ReferenceCal
 									},
 								},
 							},
+						},
+					},
+					"priorityClassName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},
@@ -9353,6 +9365,12 @@ func schema_pkg_apis_internalacornio_v1_Scheduling(ref common.ReferenceCallback)
 							},
 						},
 					},
+					"priorityClassName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -11211,6 +11229,12 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref com
 							},
 						},
 					},
+					"priorityClassName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 				Required: []string{"default"},
 			},
@@ -11536,6 +11560,12 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstance(ref com
 									},
 								},
 							},
+						},
+					},
+					"priorityClassName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},

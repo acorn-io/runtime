@@ -51,6 +51,7 @@ type ProjectComputeClassInstance struct {
 	Tolerations       []corev1.Toleration `json:"tolerations,omitempty"`
 	Memory            ComputeClassMemory  `json:"memory,omitempty"`
 	SupportedRegions  []string            `json:"supportedRegions,omitempty"`
+	PriorityClassName string              `json:"priorityClassName,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
