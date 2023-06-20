@@ -5,7 +5,6 @@ import (
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -43,7 +42,7 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 		}
 
 		if img == nil && len(removedTags) == 0 {
-			logrus.Infof("No image found for %s", image)
+			fmt.Printf("No image found for %s", image)
 			continue // no idea how this could happen anyway
 		}
 		for _, tag := range removedTags {
