@@ -6,6 +6,7 @@ replace (
 	cuelang.org/go => cuelang.org/go v0.4.3
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
+	github.com/rancher/wrangler => github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c
 	k8s.io/client-go => k8s.io/client-go v0.27.2
 )
 
@@ -214,7 +215,7 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/protocolbuffers/txtpbfmt v0.0.0-20220428173112-74888fd59c2b // indirect
-	github.com/rancher/lasso v0.0.0-20220412224715-5f3517291ad4 // indirect
+	github.com/rancher/lasso v0.0.0-20221227210133-6ea88ca2fbcc // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20180611051255-d3107576ba94 // indirect
