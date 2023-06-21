@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/channels"
-	"github.com/acorn-io/acorn/pkg/streams"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/channels"
+	"github.com/acorn-io/runtime/pkg/streams"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kwatch "k8s.io/apimachinery/pkg/watch"
 )

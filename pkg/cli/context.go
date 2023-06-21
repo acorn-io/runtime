@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/project"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/spf13/cobra"
 )
 

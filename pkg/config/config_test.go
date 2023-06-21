@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	mocks "github.com/acorn-io/acorn/pkg/mocks/k8s"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	mocks "github.com/acorn-io/runtime/pkg/mocks/k8s"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )

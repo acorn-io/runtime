@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/imagepattern"
+	"github.com/acorn-io/runtime/pkg/imagepattern"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
 	"k8s.io/utils/strings/slices"

@@ -1,8 +1,8 @@
 package k8sclient
 
 import (
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/runtime/pkg/scheme"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"

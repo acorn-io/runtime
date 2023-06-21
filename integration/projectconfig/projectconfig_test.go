@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/project"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/adrg/xdg"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/tools/clientcmd"

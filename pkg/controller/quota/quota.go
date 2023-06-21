@@ -3,13 +3,13 @@ package quota
 import (
 	"fmt"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/labels"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/labels"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/acorn-io/acorn/pkg/condition"
+	"github.com/acorn-io/runtime/pkg/condition"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 

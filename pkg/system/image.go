@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/acorn-io/acorn/pkg/version"
+	"github.com/acorn-io/runtime/pkg/version"
 )
 
 var (

@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/flagparams"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/appdefinition"
+	"github.com/acorn-io/runtime/pkg/flagparams"
 	"golang.org/x/exp/maps"
 )
 

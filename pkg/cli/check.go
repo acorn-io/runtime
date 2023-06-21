@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/install"
-	"github.com/acorn-io/acorn/pkg/tables"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/install"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )

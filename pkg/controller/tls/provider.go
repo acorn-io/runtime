@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/dns"
+	"github.com/acorn-io/runtime/pkg/dns"
 	"github.com/go-acme/lego/v4/challenge/dns01"
 	"github.com/sirupsen/logrus"
 )

@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/acorn-io/acorn/integration/helper"
-	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/project"
+	"github.com/acorn-io/runtime/integration/helper"
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/tags"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/duration"

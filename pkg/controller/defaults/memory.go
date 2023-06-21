@@ -1,11 +1,11 @@
 package defaults
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/computeclasses"
 	"github.com/acorn-io/baaah/pkg/router"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 

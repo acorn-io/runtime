@@ -1,10 +1,10 @@
 package appdefinition
 
 import (
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/condition"
 	"github.com/acorn-io/baaah/pkg/router"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/appdefinition"
+	"github.com/acorn-io/runtime/pkg/condition"
 )
 
 func ParseAppImage(req router.Request, resp router.Response) error {

@@ -1,16 +1,16 @@
 package apps
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/event"
-	"github.com/acorn-io/acorn/pkg/publicname"
-	"github.com/acorn-io/acorn/pkg/server/registry/middleware"
-	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/event"
+	"github.com/acorn-io/runtime/pkg/publicname"
+	"github.com/acorn-io/runtime/pkg/server/registry/middleware"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"k8s.io/apiserver/pkg/registry/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )

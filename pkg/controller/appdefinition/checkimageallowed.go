@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/condition"
-	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/baaah/pkg/router"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/condition"
+	"github.com/acorn-io/runtime/pkg/imageallowrules"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/sirupsen/logrus"

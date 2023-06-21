@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/install"
-	"github.com/acorn-io/acorn/pkg/system"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/install"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/spf13/cobra"
 )
 

@@ -1,9 +1,9 @@
 package builder
 
 import (
-	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/controller/defaults"
 	"github.com/acorn-io/baaah/pkg/router"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/controller/defaults"
 )
 
 func SetRegion(req router.Request, _ router.Response) error {

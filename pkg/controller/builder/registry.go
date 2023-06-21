@@ -1,8 +1,8 @@
 package builder
 
 import (
-	"github.com/acorn-io/acorn/pkg/imagesystem"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/runtime/pkg/imagesystem"
 )
 
 func DeployRegistry(req router.Request, resp router.Response) error {

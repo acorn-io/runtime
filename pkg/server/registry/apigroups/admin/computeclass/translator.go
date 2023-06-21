@@ -1,8 +1,8 @@
 package computeclass
 
 import (
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
-	adminapiv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
+	adminapiv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 
 	mtypes "github.com/acorn-io/mink/pkg/types"
 )

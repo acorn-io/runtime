@@ -1,12 +1,12 @@
 package admin
 
 import (
-	adminapi "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
-	v1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin/computeclass"
-	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin/volumeclass"
 	"github.com/acorn-io/mink/pkg/serializer"
+	adminapi "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io"
+	v1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/scheme"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin/computeclass"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin/volumeclass"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/registry/rest"

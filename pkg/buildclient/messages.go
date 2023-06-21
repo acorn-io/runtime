@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"sync"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/mink/pkg/channel"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/gorilla/websocket"
 	"github.com/moby/buildkit/client"
 	"github.com/sirupsen/logrus"

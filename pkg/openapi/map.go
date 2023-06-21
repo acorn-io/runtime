@@ -1,7 +1,7 @@
 package openapi
 
 import (
-	"github.com/acorn-io/acorn/pkg/openapi/generated"
+	"github.com/acorn-io/runtime/pkg/openapi/generated"
 	"k8s.io/kube-openapi/pkg/common"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 )

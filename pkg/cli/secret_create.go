@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/aml/pkg/cue"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 

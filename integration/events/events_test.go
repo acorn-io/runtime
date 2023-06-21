@@ -3,11 +3,11 @@ package events
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/integration/helper"
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/apps"
+	"github.com/acorn-io/runtime/integration/helper"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/apps"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -1,7 +1,7 @@
 package credentials
 
 import (
-	"github.com/acorn-io/acorn/pkg/config"
+	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/docker/cli/cli/config/credentials"
 	"github.com/docker/cli/cli/config/types"
 	"github.com/docker/docker-credential-helpers/client"

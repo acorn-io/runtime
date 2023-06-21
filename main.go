@@ -1,7 +1,7 @@
 package main
 
 import (
-	acorn "github.com/acorn-io/acorn/pkg/cli"
+	acorn "github.com/acorn-io/runtime/pkg/cli"
 	"github.com/rancher/wrangler/pkg/signals"
 
 	// Include cloud auth clients

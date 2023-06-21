@@ -1,14 +1,14 @@
 package scheduling
 
 import (
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/computeclasses"
-	"github.com/acorn-io/acorn/pkg/condition"
-	tl "github.com/acorn-io/acorn/pkg/tolerations"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/computeclasses"
+	"github.com/acorn-io/runtime/pkg/condition"
+	tl "github.com/acorn-io/runtime/pkg/tolerations"
 
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/baaah/pkg/router"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/config"
 	corev1 "k8s.io/api/core/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"

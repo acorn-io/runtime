@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/acorn-io/acorn/pkg/system"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/adrg/xdg"
 	"github.com/docker/cli/cli/config/types"
 	"sigs.k8s.io/yaml"

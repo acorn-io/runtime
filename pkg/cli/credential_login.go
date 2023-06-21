@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/credentials"
-	"github.com/acorn-io/acorn/pkg/hub"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/hub"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )

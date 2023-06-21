@@ -3,7 +3,7 @@ package build
 import (
 	"testing"
 
-	vcs2 "github.com/acorn-io/acorn/pkg/vcs"
+	vcs2 "github.com/acorn-io/runtime/pkg/vcs"
 	"github.com/stretchr/testify/assert"
 )
 

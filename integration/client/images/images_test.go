@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	client2 "github.com/acorn-io/acorn/integration/client"
-	"github.com/acorn-io/acorn/integration/helper"
-	"github.com/acorn-io/acorn/pkg/client"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	client2 "github.com/acorn-io/runtime/integration/client"
+	"github.com/acorn-io/runtime/integration/helper"
+	"github.com/acorn-io/runtime/pkg/client"
+	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )

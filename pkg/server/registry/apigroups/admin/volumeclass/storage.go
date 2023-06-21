@@ -1,12 +1,12 @@
 package volumeclass
 
 import (
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
-	internaladminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
+	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"k8s.io/apiserver/pkg/registry/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )

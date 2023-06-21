@@ -6,7 +6,7 @@
 package v1
 
 import (
-	internal_acorn_iov1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	internal_acorn_iov1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

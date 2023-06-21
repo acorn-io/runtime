@@ -16,481 +16,481 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterComputeClass":                      schema_pkg_apis_adminacornio_v1_ClusterComputeClass(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterComputeClassList":                  schema_pkg_apis_adminacornio_v1_ClusterComputeClassList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterVolumeClass":                       schema_pkg_apis_adminacornio_v1_ClusterVolumeClass(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterVolumeClassList":                   schema_pkg_apis_adminacornio_v1_ClusterVolumeClassList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectComputeClass":                      schema_pkg_apis_adminacornio_v1_ProjectComputeClass(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectComputeClassList":                  schema_pkg_apis_adminacornio_v1_ProjectComputeClassList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectVolumeClass":                       schema_pkg_apis_adminacornio_v1_ProjectVolumeClass(ref),
-		"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectVolumeClassList":                   schema_pkg_apis_adminacornio_v1_ProjectVolumeClassList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornImageBuild":                            schema_pkg_apis_apiacornio_v1_AcornImageBuild(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornImageBuildList":                        schema_pkg_apis_apiacornio_v1_AcornImageBuildList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Acornfile":                                  schema_pkg_apis_apiacornio_v1_Acornfile(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.App":                                        schema_pkg_apis_apiacornio_v1_App(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AppList":                                    schema_pkg_apis_apiacornio_v1_AppList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AppPullImage":                               schema_pkg_apis_apiacornio_v1_AppPullImage(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Builder":                                    schema_pkg_apis_apiacornio_v1_Builder(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.BuilderList":                                schema_pkg_apis_apiacornio_v1_BuilderList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.BuilderPortOptions":                         schema_pkg_apis_apiacornio_v1_BuilderPortOptions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ComputeClass":                               schema_pkg_apis_apiacornio_v1_ComputeClass(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ComputeClassList":                           schema_pkg_apis_apiacornio_v1_ComputeClassList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config":                                     schema_pkg_apis_apiacornio_v1_Config(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ConfirmUpgrade":                             schema_pkg_apis_apiacornio_v1_ConfirmUpgrade(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplica":                           schema_pkg_apis_apiacornio_v1_ContainerReplica(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns":                    schema_pkg_apis_apiacornio_v1_ContainerReplicaColumns(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaExecOptions":                schema_pkg_apis_apiacornio_v1_ContainerReplicaExecOptions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaList":                       schema_pkg_apis_apiacornio_v1_ContainerReplicaList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaPortForwardOptions":         schema_pkg_apis_apiacornio_v1_ContainerReplicaPortForwardOptions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaSpec":                       schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus":                     schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Credential":                                 schema_pkg_apis_apiacornio_v1_Credential(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.CredentialList":                             schema_pkg_apis_apiacornio_v1_CredentialList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSession":                                 schema_pkg_apis_apiacornio_v1_DevSession(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSessionList":                             schema_pkg_apis_apiacornio_v1_DevSessionList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EmbeddedContainer":                          schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey":                              schema_pkg_apis_apiacornio_v1_EncryptionKey(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event":                                      schema_pkg_apis_apiacornio_v1_Event(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EventList":                                  schema_pkg_apis_apiacornio_v1_EventList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.IgnoreCleanup":                              schema_pkg_apis_apiacornio_v1_IgnoreCleanup(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Image":                                      schema_pkg_apis_apiacornio_v1_Image(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageAllowRule":                             schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageAllowRuleList":                         schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageDetails":                               schema_pkg_apis_apiacornio_v1_ImageDetails(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageList":                                  schema_pkg_apis_apiacornio_v1_ImageList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImagePull":                                  schema_pkg_apis_apiacornio_v1_ImagePull(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImagePush":                                  schema_pkg_apis_apiacornio_v1_ImagePush(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageTag":                                   schema_pkg_apis_apiacornio_v1_ImageTag(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Info":                                       schema_pkg_apis_apiacornio_v1_Info(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.InfoList":                                   schema_pkg_apis_apiacornio_v1_InfoList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.InfoSpec":                                   schema_pkg_apis_apiacornio_v1_InfoSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.LogMessage":                                 schema_pkg_apis_apiacornio_v1_LogMessage(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.LogOptions":                                 schema_pkg_apis_apiacornio_v1_LogOptions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.PortForwardOptions":                         schema_pkg_apis_apiacornio_v1_PortForwardOptions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project":                                    schema_pkg_apis_apiacornio_v1_Project(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectList":                                schema_pkg_apis_apiacornio_v1_ProjectList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectSpec":                                schema_pkg_apis_apiacornio_v1_ProjectSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectStatus":                              schema_pkg_apis_apiacornio_v1_ProjectStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Region":                                     schema_pkg_apis_apiacornio_v1_Region(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionList":                                 schema_pkg_apis_apiacornio_v1_RegionList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionSpec":                                 schema_pkg_apis_apiacornio_v1_RegionSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionStatus":                               schema_pkg_apis_apiacornio_v1_RegionStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth":                               schema_pkg_apis_apiacornio_v1_RegistryAuth(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Secret":                                     schema_pkg_apis_apiacornio_v1_Secret(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.SecretList":                                 schema_pkg_apis_apiacornio_v1_SecretList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Service":                                    schema_pkg_apis_apiacornio_v1_Service(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ServiceList":                                schema_pkg_apis_apiacornio_v1_ServiceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Volume":                                     schema_pkg_apis_apiacornio_v1_Volume(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeClass":                                schema_pkg_apis_apiacornio_v1_VolumeClass(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeClassList":                            schema_pkg_apis_apiacornio_v1_VolumeClassList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeColumns":                              schema_pkg_apis_apiacornio_v1_VolumeColumns(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeCreateOptions":                        schema_pkg_apis_apiacornio_v1_VolumeCreateOptions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeList":                                 schema_pkg_apis_apiacornio_v1_VolumeList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeSpec":                                 schema_pkg_apis_apiacornio_v1_VolumeSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeStatus":                               schema_pkg_apis_apiacornio_v1_VolumeStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn":                                 schema_pkg_apis_internalacornio_v1_Acorn(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild":                            schema_pkg_apis_internalacornio_v1_AcornBuild(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec":                      schema_pkg_apis_internalacornio_v1_AcornBuilderSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstance":               schema_pkg_apis_internalacornio_v1_AcornImageBuildInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceList":           schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec":           schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus":         schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus":                           schema_pkg_apis_internalacornio_v1_AcornStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Alias":                                 schema_pkg_apis_internalacornio_v1_Alias(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns":                            schema_pkg_apis_internalacornio_v1_AppColumns(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage":                              schema_pkg_apis_internalacornio_v1_AppImage(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstance":                           schema_pkg_apis_internalacornio_v1_AppInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceList":                       schema_pkg_apis_internalacornio_v1_AppInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec":                       schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceStatus":                     schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec":                               schema_pkg_apis_internalacornio_v1_AppSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppStatus":                             schema_pkg_apis_internalacornio_v1_AppStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build":                                 schema_pkg_apis_internalacornio_v1_Build(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuildRecord":                           schema_pkg_apis_internalacornio_v1_BuildRecord(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstance":                       schema_pkg_apis_internalacornio_v1_BuilderInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceList":                   schema_pkg_apis_internalacornio_v1_BuilderInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus":                 schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderSpec":                           schema_pkg_apis_internalacornio_v1_BuilderSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.CommonStatus":                          schema_pkg_apis_internalacornio_v1_CommonStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition":                             schema_pkg_apis_internalacornio_v1_Condition(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container":                             schema_pkg_apis_internalacornio_v1_Container(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerData":                         schema_pkg_apis_internalacornio_v1_ContainerData(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec":             schema_pkg_apis_internalacornio_v1_ContainerImageBuilderSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus":                       schema_pkg_apis_internalacornio_v1_ContainerStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Defaults":                              schema_pkg_apis_internalacornio_v1_Defaults(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency":                            schema_pkg_apis_internalacornio_v1_Dependency(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyNotFound":                    schema_pkg_apis_internalacornio_v1_DependencyNotFound(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus":                      schema_pkg_apis_internalacornio_v1_DependencyStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionImageSource":                 schema_pkg_apis_internalacornio_v1_DevSessionImageSource(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstance":                    schema_pkg_apis_internalacornio_v1_DevSessionInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceClient":              schema_pkg_apis_internalacornio_v1_DevSessionInstanceClient(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceExpireAction":        schema_pkg_apis_internalacornio_v1_DevSessionInstanceExpireAction(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceList":                schema_pkg_apis_internalacornio_v1_DevSessionInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec":                schema_pkg_apis_internalacornio_v1_DevSessionInstanceSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus":              schema_pkg_apis_internalacornio_v1_DevSessionInstanceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint":                              schema_pkg_apis_internalacornio_v1_Endpoint(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar":                                schema_pkg_apis_internalacornio_v1_EnvVar(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance":                         schema_pkg_apis_internalacornio_v1_EventInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstanceList":                     schema_pkg_apis_internalacornio_v1_EventInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource":                           schema_pkg_apis_internalacornio_v1_EventSource(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExecProbe":                             schema_pkg_apis_internalacornio_v1_ExecProbe(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError":                       schema_pkg_apis_internalacornio_v1_ExpressionError(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File":                                  schema_pkg_apis_internalacornio_v1_File(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GeneratedService":                      schema_pkg_apis_internalacornio_v1_GeneratedService(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.HTTPProbe":                             schema_pkg_apis_internalacornio_v1_HTTPProbe(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image":                                 schema_pkg_apis_internalacornio_v1_Image(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance":                schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstanceList":            schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures":              schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec":                      schema_pkg_apis_internalacornio_v1_ImageBuilderSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData":                             schema_pkg_apis_internalacornio_v1_ImageData(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageInstance":                         schema_pkg_apis_internalacornio_v1_ImageInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageInstanceList":                     schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImagesData":                            schema_pkg_apis_internalacornio_v1_ImagesData(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus":                             schema_pkg_apis_internalacornio_v1_JobStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef":                            schema_pkg_apis_internalacornio_v1_MetricsDef(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime":                             schema_pkg_apis_internalacornio_v1_MicroTime(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue":                             schema_pkg_apis_internalacornio_v1_NameValue(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Param":                                 schema_pkg_apis_internalacornio_v1_Param(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ParamSpec":                             schema_pkg_apis_internalacornio_v1_ParamSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions":                           schema_pkg_apis_internalacornio_v1_Permissions(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Platform":                              schema_pkg_apis_internalacornio_v1_Platform(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule":                            schema_pkg_apis_internalacornio_v1_PolicyRule(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding":                           schema_pkg_apis_internalacornio_v1_PortBinding(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef":                               schema_pkg_apis_internalacornio_v1_PortDef(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortPublish":                           schema_pkg_apis_internalacornio_v1_PortPublish(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe":                                 schema_pkg_apis_internalacornio_v1_Probe(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Profile":                               schema_pkg_apis_internalacornio_v1_Profile(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ReplicasSummary":                       schema_pkg_apis_internalacornio_v1_ReplicasSummary(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Route":                                 schema_pkg_apis_internalacornio_v1_Route(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router":                                schema_pkg_apis_internalacornio_v1_Router(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.RouterStatus":                          schema_pkg_apis_internalacornio_v1_RouterStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Scheduling":                            schema_pkg_apis_internalacornio_v1_Scheduling(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel":                           schema_pkg_apis_internalacornio_v1_ScopedLabel(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret":                                schema_pkg_apis_internalacornio_v1_Secret(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding":                         schema_pkg_apis_internalacornio_v1_SecretBinding(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference":                       schema_pkg_apis_internalacornio_v1_SecretReference(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretStatus":                          schema_pkg_apis_internalacornio_v1_SecretStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service":                               schema_pkg_apis_internalacornio_v1_Service(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding":                        schema_pkg_apis_internalacornio_v1_ServiceBinding(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstance":                       schema_pkg_apis_internalacornio_v1_ServiceInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceList":                   schema_pkg_apis_internalacornio_v1_ServiceInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec":                   schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus":                 schema_pkg_apis_internalacornio_v1_ServiceInstanceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceStatus":                         schema_pkg_apis_internalacornio_v1_ServiceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignatureAnnotations":                  schema_pkg_apis_internalacornio_v1_SignatureAnnotations(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignatureRules":                        schema_pkg_apis_internalacornio_v1_SignatureRules(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignedBy":                              schema_pkg_apis_internalacornio_v1_SignedBy(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.TCPProbe":                              schema_pkg_apis_internalacornio_v1_TCPProbe(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VCS":                                   schema_pkg_apis_internalacornio_v1_VCS(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding":                         schema_pkg_apis_internalacornio_v1_VolumeBinding(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeDefault":                         schema_pkg_apis_internalacornio_v1_VolumeDefault(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount":                           schema_pkg_apis_internalacornio_v1_VolumeMount(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest":                         schema_pkg_apis_internalacornio_v1_VolumeRequest(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeSecretMount":                     schema_pkg_apis_internalacornio_v1_VolumeSecretMount(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeStatus":                          schema_pkg_apis_internalacornio_v1_VolumeStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.acornAliases":                          schema_pkg_apis_internalacornio_v1_acornAliases(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.containerAliases":                      schema_pkg_apis_internalacornio_v1_containerAliases(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.envVal":                                schema_pkg_apis_internalacornio_v1_envVal(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.policyRuleAliases":                     schema_pkg_apis_internalacornio_v1_policyRuleAliases(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.routeTarget":                           schema_pkg_apis_internalacornio_v1_routeTarget(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.secretReference":                       schema_pkg_apis_internalacornio_v1_secretReference(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance":     schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstanceList": schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstanceList":  schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory":              schema_pkg_apis_internaladminacornio_v1_ComputeClassMemory(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance":     schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstanceList": schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstanceList":  schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance":            schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstance(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceList":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus":      schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources":                       schema_pkg_apis_internaladminacornio_v1_Resources(ref),
-		"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                 schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
-		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                           schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
-		"k8s.io/api/core/v1.Affinity":                                                                   schema_k8sio_api_core_v1_Affinity(ref),
-		"k8s.io/api/core/v1.AttachedVolume":                                                             schema_k8sio_api_core_v1_AttachedVolume(ref),
-		"k8s.io/api/core/v1.AvoidPods":                                                                  schema_k8sio_api_core_v1_AvoidPods(ref),
-		"k8s.io/api/core/v1.AzureDiskVolumeSource":                                                      schema_k8sio_api_core_v1_AzureDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.AzureFilePersistentVolumeSource":                                            schema_k8sio_api_core_v1_AzureFilePersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.AzureFileVolumeSource":                                                      schema_k8sio_api_core_v1_AzureFileVolumeSource(ref),
-		"k8s.io/api/core/v1.Binding":                                                                    schema_k8sio_api_core_v1_Binding(ref),
-		"k8s.io/api/core/v1.CSIPersistentVolumeSource":                                                  schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CSIVolumeSource":                                                            schema_k8sio_api_core_v1_CSIVolumeSource(ref),
-		"k8s.io/api/core/v1.Capabilities":                                                               schema_k8sio_api_core_v1_Capabilities(ref),
-		"k8s.io/api/core/v1.CephFSPersistentVolumeSource":                                               schema_k8sio_api_core_v1_CephFSPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CephFSVolumeSource":                                                         schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
-		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                                               schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.CinderVolumeSource":                                                         schema_k8sio_api_core_v1_CinderVolumeSource(ref),
-		"k8s.io/api/core/v1.ClaimSource":                                                                schema_k8sio_api_core_v1_ClaimSource(ref),
-		"k8s.io/api/core/v1.ClientIPConfig":                                                             schema_k8sio_api_core_v1_ClientIPConfig(ref),
-		"k8s.io/api/core/v1.ComponentCondition":                                                         schema_k8sio_api_core_v1_ComponentCondition(ref),
-		"k8s.io/api/core/v1.ComponentStatus":                                                            schema_k8sio_api_core_v1_ComponentStatus(ref),
-		"k8s.io/api/core/v1.ComponentStatusList":                                                        schema_k8sio_api_core_v1_ComponentStatusList(ref),
-		"k8s.io/api/core/v1.ConfigMap":                                                                  schema_k8sio_api_core_v1_ConfigMap(ref),
-		"k8s.io/api/core/v1.ConfigMapEnvSource":                                                         schema_k8sio_api_core_v1_ConfigMapEnvSource(ref),
-		"k8s.io/api/core/v1.ConfigMapKeySelector":                                                       schema_k8sio_api_core_v1_ConfigMapKeySelector(ref),
-		"k8s.io/api/core/v1.ConfigMapList":                                                              schema_k8sio_api_core_v1_ConfigMapList(ref),
-		"k8s.io/api/core/v1.ConfigMapNodeConfigSource":                                                  schema_k8sio_api_core_v1_ConfigMapNodeConfigSource(ref),
-		"k8s.io/api/core/v1.ConfigMapProjection":                                                        schema_k8sio_api_core_v1_ConfigMapProjection(ref),
-		"k8s.io/api/core/v1.ConfigMapVolumeSource":                                                      schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref),
-		"k8s.io/api/core/v1.Container":                                                                  schema_k8sio_api_core_v1_Container(ref),
-		"k8s.io/api/core/v1.ContainerImage":                                                             schema_k8sio_api_core_v1_ContainerImage(ref),
-		"k8s.io/api/core/v1.ContainerPort":                                                              schema_k8sio_api_core_v1_ContainerPort(ref),
-		"k8s.io/api/core/v1.ContainerResizePolicy":                                                      schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
-		"k8s.io/api/core/v1.ContainerState":                                                             schema_k8sio_api_core_v1_ContainerState(ref),
-		"k8s.io/api/core/v1.ContainerStateRunning":                                                      schema_k8sio_api_core_v1_ContainerStateRunning(ref),
-		"k8s.io/api/core/v1.ContainerStateTerminated":                                                   schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
-		"k8s.io/api/core/v1.ContainerStateWaiting":                                                      schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
-		"k8s.io/api/core/v1.ContainerStatus":                                                            schema_k8sio_api_core_v1_ContainerStatus(ref),
-		"k8s.io/api/core/v1.DaemonEndpoint":                                                             schema_k8sio_api_core_v1_DaemonEndpoint(ref),
-		"k8s.io/api/core/v1.DownwardAPIProjection":                                                      schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
-		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                                                      schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
-		"k8s.io/api/core/v1.DownwardAPIVolumeSource":                                                    schema_k8sio_api_core_v1_DownwardAPIVolumeSource(ref),
-		"k8s.io/api/core/v1.EmptyDirVolumeSource":                                                       schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref),
-		"k8s.io/api/core/v1.EndpointAddress":                                                            schema_k8sio_api_core_v1_EndpointAddress(ref),
-		"k8s.io/api/core/v1.EndpointPort":                                                               schema_k8sio_api_core_v1_EndpointPort(ref),
-		"k8s.io/api/core/v1.EndpointSubset":                                                             schema_k8sio_api_core_v1_EndpointSubset(ref),
-		"k8s.io/api/core/v1.Endpoints":                                                                  schema_k8sio_api_core_v1_Endpoints(ref),
-		"k8s.io/api/core/v1.EndpointsList":                                                              schema_k8sio_api_core_v1_EndpointsList(ref),
-		"k8s.io/api/core/v1.EnvFromSource":                                                              schema_k8sio_api_core_v1_EnvFromSource(ref),
-		"k8s.io/api/core/v1.EnvVar":                                                                     schema_k8sio_api_core_v1_EnvVar(ref),
-		"k8s.io/api/core/v1.EnvVarSource":                                                               schema_k8sio_api_core_v1_EnvVarSource(ref),
-		"k8s.io/api/core/v1.EphemeralContainer":                                                         schema_k8sio_api_core_v1_EphemeralContainer(ref),
-		"k8s.io/api/core/v1.EphemeralContainerCommon":                                                   schema_k8sio_api_core_v1_EphemeralContainerCommon(ref),
-		"k8s.io/api/core/v1.EphemeralVolumeSource":                                                      schema_k8sio_api_core_v1_EphemeralVolumeSource(ref),
-		"k8s.io/api/core/v1.Event":                                                                      schema_k8sio_api_core_v1_Event(ref),
-		"k8s.io/api/core/v1.EventList":                                                                  schema_k8sio_api_core_v1_EventList(ref),
-		"k8s.io/api/core/v1.EventSeries":                                                                schema_k8sio_api_core_v1_EventSeries(ref),
-		"k8s.io/api/core/v1.EventSource":                                                                schema_k8sio_api_core_v1_EventSource(ref),
-		"k8s.io/api/core/v1.ExecAction":                                                                 schema_k8sio_api_core_v1_ExecAction(ref),
-		"k8s.io/api/core/v1.FCVolumeSource":                                                             schema_k8sio_api_core_v1_FCVolumeSource(ref),
-		"k8s.io/api/core/v1.FlexPersistentVolumeSource":                                                 schema_k8sio_api_core_v1_FlexPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.FlexVolumeSource":                                                           schema_k8sio_api_core_v1_FlexVolumeSource(ref),
-		"k8s.io/api/core/v1.FlockerVolumeSource":                                                        schema_k8sio_api_core_v1_FlockerVolumeSource(ref),
-		"k8s.io/api/core/v1.GCEPersistentDiskVolumeSource":                                              schema_k8sio_api_core_v1_GCEPersistentDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.GRPCAction":                                                                 schema_k8sio_api_core_v1_GRPCAction(ref),
-		"k8s.io/api/core/v1.GitRepoVolumeSource":                                                        schema_k8sio_api_core_v1_GitRepoVolumeSource(ref),
-		"k8s.io/api/core/v1.GlusterfsPersistentVolumeSource":                                            schema_k8sio_api_core_v1_GlusterfsPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.GlusterfsVolumeSource":                                                      schema_k8sio_api_core_v1_GlusterfsVolumeSource(ref),
-		"k8s.io/api/core/v1.HTTPGetAction":                                                              schema_k8sio_api_core_v1_HTTPGetAction(ref),
-		"k8s.io/api/core/v1.HTTPHeader":                                                                 schema_k8sio_api_core_v1_HTTPHeader(ref),
-		"k8s.io/api/core/v1.HostAlias":                                                                  schema_k8sio_api_core_v1_HostAlias(ref),
-		"k8s.io/api/core/v1.HostPathVolumeSource":                                                       schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
-		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                                                schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.ISCSIVolumeSource":                                                          schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
-		"k8s.io/api/core/v1.KeyToPath":                                                                  schema_k8sio_api_core_v1_KeyToPath(ref),
-		"k8s.io/api/core/v1.Lifecycle":                                                                  schema_k8sio_api_core_v1_Lifecycle(ref),
-		"k8s.io/api/core/v1.LifecycleHandler":                                                           schema_k8sio_api_core_v1_LifecycleHandler(ref),
-		"k8s.io/api/core/v1.LimitRange":                                                                 schema_k8sio_api_core_v1_LimitRange(ref),
-		"k8s.io/api/core/v1.LimitRangeItem":                                                             schema_k8sio_api_core_v1_LimitRangeItem(ref),
-		"k8s.io/api/core/v1.LimitRangeList":                                                             schema_k8sio_api_core_v1_LimitRangeList(ref),
-		"k8s.io/api/core/v1.LimitRangeSpec":                                                             schema_k8sio_api_core_v1_LimitRangeSpec(ref),
-		"k8s.io/api/core/v1.List":                                                                       schema_k8sio_api_core_v1_List(ref),
-		"k8s.io/api/core/v1.LoadBalancerIngress":                                                        schema_k8sio_api_core_v1_LoadBalancerIngress(ref),
-		"k8s.io/api/core/v1.LoadBalancerStatus":                                                         schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
-		"k8s.io/api/core/v1.LocalObjectReference":                                                       schema_k8sio_api_core_v1_LocalObjectReference(ref),
-		"k8s.io/api/core/v1.LocalVolumeSource":                                                          schema_k8sio_api_core_v1_LocalVolumeSource(ref),
-		"k8s.io/api/core/v1.NFSVolumeSource":                                                            schema_k8sio_api_core_v1_NFSVolumeSource(ref),
-		"k8s.io/api/core/v1.Namespace":                                                                  schema_k8sio_api_core_v1_Namespace(ref),
-		"k8s.io/api/core/v1.NamespaceCondition":                                                         schema_k8sio_api_core_v1_NamespaceCondition(ref),
-		"k8s.io/api/core/v1.NamespaceList":                                                              schema_k8sio_api_core_v1_NamespaceList(ref),
-		"k8s.io/api/core/v1.NamespaceSpec":                                                              schema_k8sio_api_core_v1_NamespaceSpec(ref),
-		"k8s.io/api/core/v1.NamespaceStatus":                                                            schema_k8sio_api_core_v1_NamespaceStatus(ref),
-		"k8s.io/api/core/v1.Node":                                                                       schema_k8sio_api_core_v1_Node(ref),
-		"k8s.io/api/core/v1.NodeAddress":                                                                schema_k8sio_api_core_v1_NodeAddress(ref),
-		"k8s.io/api/core/v1.NodeAffinity":                                                               schema_k8sio_api_core_v1_NodeAffinity(ref),
-		"k8s.io/api/core/v1.NodeCondition":                                                              schema_k8sio_api_core_v1_NodeCondition(ref),
-		"k8s.io/api/core/v1.NodeConfigSource":                                                           schema_k8sio_api_core_v1_NodeConfigSource(ref),
-		"k8s.io/api/core/v1.NodeConfigStatus":                                                           schema_k8sio_api_core_v1_NodeConfigStatus(ref),
-		"k8s.io/api/core/v1.NodeDaemonEndpoints":                                                        schema_k8sio_api_core_v1_NodeDaemonEndpoints(ref),
-		"k8s.io/api/core/v1.NodeList":                                                                   schema_k8sio_api_core_v1_NodeList(ref),
-		"k8s.io/api/core/v1.NodeProxyOptions":                                                           schema_k8sio_api_core_v1_NodeProxyOptions(ref),
-		"k8s.io/api/core/v1.NodeResources":                                                              schema_k8sio_api_core_v1_NodeResources(ref),
-		"k8s.io/api/core/v1.NodeSelector":                                                               schema_k8sio_api_core_v1_NodeSelector(ref),
-		"k8s.io/api/core/v1.NodeSelectorRequirement":                                                    schema_k8sio_api_core_v1_NodeSelectorRequirement(ref),
-		"k8s.io/api/core/v1.NodeSelectorTerm":                                                           schema_k8sio_api_core_v1_NodeSelectorTerm(ref),
-		"k8s.io/api/core/v1.NodeSpec":                                                                   schema_k8sio_api_core_v1_NodeSpec(ref),
-		"k8s.io/api/core/v1.NodeStatus":                                                                 schema_k8sio_api_core_v1_NodeStatus(ref),
-		"k8s.io/api/core/v1.NodeSystemInfo":                                                             schema_k8sio_api_core_v1_NodeSystemInfo(ref),
-		"k8s.io/api/core/v1.ObjectFieldSelector":                                                        schema_k8sio_api_core_v1_ObjectFieldSelector(ref),
-		"k8s.io/api/core/v1.ObjectReference":                                                            schema_k8sio_api_core_v1_ObjectReference(ref),
-		"k8s.io/api/core/v1.PersistentVolume":                                                           schema_k8sio_api_core_v1_PersistentVolume(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaim":                                                      schema_k8sio_api_core_v1_PersistentVolumeClaim(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimCondition":                                             schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimList":                                                  schema_k8sio_api_core_v1_PersistentVolumeClaimList(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimSpec":                                                  schema_k8sio_api_core_v1_PersistentVolumeClaimSpec(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimStatus":                                                schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimTemplate":                                              schema_k8sio_api_core_v1_PersistentVolumeClaimTemplate(ref),
-		"k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource":                                          schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref),
-		"k8s.io/api/core/v1.PersistentVolumeList":                                                       schema_k8sio_api_core_v1_PersistentVolumeList(ref),
-		"k8s.io/api/core/v1.PersistentVolumeSource":                                                     schema_k8sio_api_core_v1_PersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.PersistentVolumeSpec":                                                       schema_k8sio_api_core_v1_PersistentVolumeSpec(ref),
-		"k8s.io/api/core/v1.PersistentVolumeStatus":                                                     schema_k8sio_api_core_v1_PersistentVolumeStatus(ref),
-		"k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource":                                           schema_k8sio_api_core_v1_PhotonPersistentDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.Pod":                                                                        schema_k8sio_api_core_v1_Pod(ref),
-		"k8s.io/api/core/v1.PodAffinity":                                                                schema_k8sio_api_core_v1_PodAffinity(ref),
-		"k8s.io/api/core/v1.PodAffinityTerm":                                                            schema_k8sio_api_core_v1_PodAffinityTerm(ref),
-		"k8s.io/api/core/v1.PodAntiAffinity":                                                            schema_k8sio_api_core_v1_PodAntiAffinity(ref),
-		"k8s.io/api/core/v1.PodAttachOptions":                                                           schema_k8sio_api_core_v1_PodAttachOptions(ref),
-		"k8s.io/api/core/v1.PodCondition":                                                               schema_k8sio_api_core_v1_PodCondition(ref),
-		"k8s.io/api/core/v1.PodDNSConfig":                                                               schema_k8sio_api_core_v1_PodDNSConfig(ref),
-		"k8s.io/api/core/v1.PodDNSConfigOption":                                                         schema_k8sio_api_core_v1_PodDNSConfigOption(ref),
-		"k8s.io/api/core/v1.PodExecOptions":                                                             schema_k8sio_api_core_v1_PodExecOptions(ref),
-		"k8s.io/api/core/v1.PodIP":                                                                      schema_k8sio_api_core_v1_PodIP(ref),
-		"k8s.io/api/core/v1.PodList":                                                                    schema_k8sio_api_core_v1_PodList(ref),
-		"k8s.io/api/core/v1.PodLogOptions":                                                              schema_k8sio_api_core_v1_PodLogOptions(ref),
-		"k8s.io/api/core/v1.PodOS":                                                                      schema_k8sio_api_core_v1_PodOS(ref),
-		"k8s.io/api/core/v1.PodPortForwardOptions":                                                      schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
-		"k8s.io/api/core/v1.PodProxyOptions":                                                            schema_k8sio_api_core_v1_PodProxyOptions(ref),
-		"k8s.io/api/core/v1.PodReadinessGate":                                                           schema_k8sio_api_core_v1_PodReadinessGate(ref),
-		"k8s.io/api/core/v1.PodResourceClaim":                                                           schema_k8sio_api_core_v1_PodResourceClaim(ref),
-		"k8s.io/api/core/v1.PodSchedulingGate":                                                          schema_k8sio_api_core_v1_PodSchedulingGate(ref),
-		"k8s.io/api/core/v1.PodSecurityContext":                                                         schema_k8sio_api_core_v1_PodSecurityContext(ref),
-		"k8s.io/api/core/v1.PodSignature":                                                               schema_k8sio_api_core_v1_PodSignature(ref),
-		"k8s.io/api/core/v1.PodSpec":                                                                    schema_k8sio_api_core_v1_PodSpec(ref),
-		"k8s.io/api/core/v1.PodStatus":                                                                  schema_k8sio_api_core_v1_PodStatus(ref),
-		"k8s.io/api/core/v1.PodStatusResult":                                                            schema_k8sio_api_core_v1_PodStatusResult(ref),
-		"k8s.io/api/core/v1.PodTemplate":                                                                schema_k8sio_api_core_v1_PodTemplate(ref),
-		"k8s.io/api/core/v1.PodTemplateList":                                                            schema_k8sio_api_core_v1_PodTemplateList(ref),
-		"k8s.io/api/core/v1.PodTemplateSpec":                                                            schema_k8sio_api_core_v1_PodTemplateSpec(ref),
-		"k8s.io/api/core/v1.PortStatus":                                                                 schema_k8sio_api_core_v1_PortStatus(ref),
-		"k8s.io/api/core/v1.PortworxVolumeSource":                                                       schema_k8sio_api_core_v1_PortworxVolumeSource(ref),
-		"k8s.io/api/core/v1.PreferAvoidPodsEntry":                                                       schema_k8sio_api_core_v1_PreferAvoidPodsEntry(ref),
-		"k8s.io/api/core/v1.PreferredSchedulingTerm":                                                    schema_k8sio_api_core_v1_PreferredSchedulingTerm(ref),
-		"k8s.io/api/core/v1.Probe":                                                                      schema_k8sio_api_core_v1_Probe(ref),
-		"k8s.io/api/core/v1.ProbeHandler":                                                               schema_k8sio_api_core_v1_ProbeHandler(ref),
-		"k8s.io/api/core/v1.ProjectedVolumeSource":                                                      schema_k8sio_api_core_v1_ProjectedVolumeSource(ref),
-		"k8s.io/api/core/v1.QuobyteVolumeSource":                                                        schema_k8sio_api_core_v1_QuobyteVolumeSource(ref),
-		"k8s.io/api/core/v1.RBDPersistentVolumeSource":                                                  schema_k8sio_api_core_v1_RBDPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.RBDVolumeSource":                                                            schema_k8sio_api_core_v1_RBDVolumeSource(ref),
-		"k8s.io/api/core/v1.RangeAllocation":                                                            schema_k8sio_api_core_v1_RangeAllocation(ref),
-		"k8s.io/api/core/v1.ReplicationController":                                                      schema_k8sio_api_core_v1_ReplicationController(ref),
-		"k8s.io/api/core/v1.ReplicationControllerCondition":                                             schema_k8sio_api_core_v1_ReplicationControllerCondition(ref),
-		"k8s.io/api/core/v1.ReplicationControllerList":                                                  schema_k8sio_api_core_v1_ReplicationControllerList(ref),
-		"k8s.io/api/core/v1.ReplicationControllerSpec":                                                  schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
-		"k8s.io/api/core/v1.ReplicationControllerStatus":                                                schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
-		"k8s.io/api/core/v1.ResourceClaim":                                                              schema_k8sio_api_core_v1_ResourceClaim(ref),
-		"k8s.io/api/core/v1.ResourceFieldSelector":                                                      schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
-		"k8s.io/api/core/v1.ResourceQuota":                                                              schema_k8sio_api_core_v1_ResourceQuota(ref),
-		"k8s.io/api/core/v1.ResourceQuotaList":                                                          schema_k8sio_api_core_v1_ResourceQuotaList(ref),
-		"k8s.io/api/core/v1.ResourceQuotaSpec":                                                          schema_k8sio_api_core_v1_ResourceQuotaSpec(ref),
-		"k8s.io/api/core/v1.ResourceQuotaStatus":                                                        schema_k8sio_api_core_v1_ResourceQuotaStatus(ref),
-		"k8s.io/api/core/v1.ResourceRequirements":                                                       schema_k8sio_api_core_v1_ResourceRequirements(ref),
-		"k8s.io/api/core/v1.SELinuxOptions":                                                             schema_k8sio_api_core_v1_SELinuxOptions(ref),
-		"k8s.io/api/core/v1.ScaleIOPersistentVolumeSource":                                              schema_k8sio_api_core_v1_ScaleIOPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.ScaleIOVolumeSource":                                                        schema_k8sio_api_core_v1_ScaleIOVolumeSource(ref),
-		"k8s.io/api/core/v1.ScopeSelector":                                                              schema_k8sio_api_core_v1_ScopeSelector(ref),
-		"k8s.io/api/core/v1.ScopedResourceSelectorRequirement":                                          schema_k8sio_api_core_v1_ScopedResourceSelectorRequirement(ref),
-		"k8s.io/api/core/v1.SeccompProfile":                                                             schema_k8sio_api_core_v1_SeccompProfile(ref),
-		"k8s.io/api/core/v1.Secret":                                                                     schema_k8sio_api_core_v1_Secret(ref),
-		"k8s.io/api/core/v1.SecretEnvSource":                                                            schema_k8sio_api_core_v1_SecretEnvSource(ref),
-		"k8s.io/api/core/v1.SecretKeySelector":                                                          schema_k8sio_api_core_v1_SecretKeySelector(ref),
-		"k8s.io/api/core/v1.SecretList":                                                                 schema_k8sio_api_core_v1_SecretList(ref),
-		"k8s.io/api/core/v1.SecretProjection":                                                           schema_k8sio_api_core_v1_SecretProjection(ref),
-		"k8s.io/api/core/v1.SecretReference":                                                            schema_k8sio_api_core_v1_SecretReference(ref),
-		"k8s.io/api/core/v1.SecretVolumeSource":                                                         schema_k8sio_api_core_v1_SecretVolumeSource(ref),
-		"k8s.io/api/core/v1.SecurityContext":                                                            schema_k8sio_api_core_v1_SecurityContext(ref),
-		"k8s.io/api/core/v1.SerializedReference":                                                        schema_k8sio_api_core_v1_SerializedReference(ref),
-		"k8s.io/api/core/v1.Service":                                                                    schema_k8sio_api_core_v1_Service(ref),
-		"k8s.io/api/core/v1.ServiceAccount":                                                             schema_k8sio_api_core_v1_ServiceAccount(ref),
-		"k8s.io/api/core/v1.ServiceAccountList":                                                         schema_k8sio_api_core_v1_ServiceAccountList(ref),
-		"k8s.io/api/core/v1.ServiceAccountTokenProjection":                                              schema_k8sio_api_core_v1_ServiceAccountTokenProjection(ref),
-		"k8s.io/api/core/v1.ServiceList":                                                                schema_k8sio_api_core_v1_ServiceList(ref),
-		"k8s.io/api/core/v1.ServicePort":                                                                schema_k8sio_api_core_v1_ServicePort(ref),
-		"k8s.io/api/core/v1.ServiceProxyOptions":                                                        schema_k8sio_api_core_v1_ServiceProxyOptions(ref),
-		"k8s.io/api/core/v1.ServiceSpec":                                                                schema_k8sio_api_core_v1_ServiceSpec(ref),
-		"k8s.io/api/core/v1.ServiceStatus":                                                              schema_k8sio_api_core_v1_ServiceStatus(ref),
-		"k8s.io/api/core/v1.SessionAffinityConfig":                                                      schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
-		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":                                            schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
-		"k8s.io/api/core/v1.StorageOSVolumeSource":                                                      schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
-		"k8s.io/api/core/v1.Sysctl":                                                                     schema_k8sio_api_core_v1_Sysctl(ref),
-		"k8s.io/api/core/v1.TCPSocketAction":                                                            schema_k8sio_api_core_v1_TCPSocketAction(ref),
-		"k8s.io/api/core/v1.Taint":                                                                      schema_k8sio_api_core_v1_Taint(ref),
-		"k8s.io/api/core/v1.Toleration":                                                                 schema_k8sio_api_core_v1_Toleration(ref),
-		"k8s.io/api/core/v1.TopologySelectorLabelRequirement":                                           schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref),
-		"k8s.io/api/core/v1.TopologySelectorTerm":                                                       schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
-		"k8s.io/api/core/v1.TopologySpreadConstraint":                                                   schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
-		"k8s.io/api/core/v1.TypedLocalObjectReference":                                                  schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
-		"k8s.io/api/core/v1.TypedObjectReference":                                                       schema_k8sio_api_core_v1_TypedObjectReference(ref),
-		"k8s.io/api/core/v1.Volume":                                                                     schema_k8sio_api_core_v1_Volume(ref),
-		"k8s.io/api/core/v1.VolumeDevice":                                                               schema_k8sio_api_core_v1_VolumeDevice(ref),
-		"k8s.io/api/core/v1.VolumeMount":                                                                schema_k8sio_api_core_v1_VolumeMount(ref),
-		"k8s.io/api/core/v1.VolumeNodeAffinity":                                                         schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
-		"k8s.io/api/core/v1.VolumeProjection":                                                           schema_k8sio_api_core_v1_VolumeProjection(ref),
-		"k8s.io/api/core/v1.VolumeSource":                                                               schema_k8sio_api_core_v1_VolumeSource(ref),
-		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":                                             schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
-		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                                                    schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
-		"k8s.io/api/core/v1.WindowsSecurityContextOptions":                                              schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
-		"k8s.io/api/rbac/v1.AggregationRule":                                                            schema_k8sio_api_rbac_v1_AggregationRule(ref),
-		"k8s.io/api/rbac/v1.ClusterRole":                                                                schema_k8sio_api_rbac_v1_ClusterRole(ref),
-		"k8s.io/api/rbac/v1.ClusterRoleBinding":                                                         schema_k8sio_api_rbac_v1_ClusterRoleBinding(ref),
-		"k8s.io/api/rbac/v1.ClusterRoleBindingList":                                                     schema_k8sio_api_rbac_v1_ClusterRoleBindingList(ref),
-		"k8s.io/api/rbac/v1.ClusterRoleList":                                                            schema_k8sio_api_rbac_v1_ClusterRoleList(ref),
-		"k8s.io/api/rbac/v1.PolicyRule":                                                                 schema_k8sio_api_rbac_v1_PolicyRule(ref),
-		"k8s.io/api/rbac/v1.Role":                                                                       schema_k8sio_api_rbac_v1_Role(ref),
-		"k8s.io/api/rbac/v1.RoleBinding":                                                                schema_k8sio_api_rbac_v1_RoleBinding(ref),
-		"k8s.io/api/rbac/v1.RoleBindingList":                                                            schema_k8sio_api_rbac_v1_RoleBindingList(ref),
-		"k8s.io/api/rbac/v1.RoleList":                                                                   schema_k8sio_api_rbac_v1_RoleList(ref),
-		"k8s.io/api/rbac/v1.RoleRef":                                                                    schema_k8sio_api_rbac_v1_RoleRef(ref),
-		"k8s.io/api/rbac/v1.Subject":                                                                    schema_k8sio_api_rbac_v1_Subject(ref),
-		"k8s.io/apimachinery/pkg/api/resource.Quantity":                                                 schema_apimachinery_pkg_api_resource_Quantity(ref),
-		"k8s.io/apimachinery/pkg/api/resource.int64Amount":                                              schema_apimachinery_pkg_api_resource_int64Amount(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                                 schema_pkg_apis_meta_v1_APIGroup(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                             schema_pkg_apis_meta_v1_APIGroupList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                              schema_pkg_apis_meta_v1_APIResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                          schema_pkg_apis_meta_v1_APIResourceList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                              schema_pkg_apis_meta_v1_APIVersions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                             schema_pkg_apis_meta_v1_ApplyOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                                schema_pkg_apis_meta_v1_Condition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                            schema_pkg_apis_meta_v1_CreateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                            schema_pkg_apis_meta_v1_DeleteOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                                 schema_pkg_apis_meta_v1_Duration(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                                 schema_pkg_apis_meta_v1_FieldsV1(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                               schema_pkg_apis_meta_v1_GetOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                                schema_pkg_apis_meta_v1_GroupKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                            schema_pkg_apis_meta_v1_GroupResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                             schema_pkg_apis_meta_v1_GroupVersion(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                                 schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                         schema_pkg_apis_meta_v1_GroupVersionKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                     schema_pkg_apis_meta_v1_GroupVersionResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                            schema_pkg_apis_meta_v1_InternalEvent(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                            schema_pkg_apis_meta_v1_LabelSelector(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                                 schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                     schema_pkg_apis_meta_v1_List(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                                 schema_pkg_apis_meta_v1_ListMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                              schema_pkg_apis_meta_v1_ListOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                       schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                                schema_pkg_apis_meta_v1_MicroTime(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                               schema_pkg_apis_meta_v1_ObjectMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                           schema_pkg_apis_meta_v1_OwnerReference(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                                    schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                                schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                                    schema_pkg_apis_meta_v1_Patch(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                             schema_pkg_apis_meta_v1_PatchOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                            schema_pkg_apis_meta_v1_Preconditions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                                schema_pkg_apis_meta_v1_RootPaths(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                                schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                                   schema_pkg_apis_meta_v1_Status(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                              schema_pkg_apis_meta_v1_StatusCause(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                            schema_pkg_apis_meta_v1_StatusDetails(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                                    schema_pkg_apis_meta_v1_Table(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                                    schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                             schema_pkg_apis_meta_v1_TableOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                                 schema_pkg_apis_meta_v1_TableRow(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                        schema_pkg_apis_meta_v1_TableRowCondition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                     schema_pkg_apis_meta_v1_Time(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                                schema_pkg_apis_meta_v1_Timestamp(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                                 schema_pkg_apis_meta_v1_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                            schema_pkg_apis_meta_v1_UpdateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                               schema_pkg_apis_meta_v1_WatchEvent(ref),
-		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                                  schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
-		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                      schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                       schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
-		"k8s.io/apimachinery/pkg/version.Info":                                                          schema_k8sio_apimachinery_pkg_version_Info(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterComputeClass":                      schema_pkg_apis_adminacornio_v1_ClusterComputeClass(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterComputeClassList":                  schema_pkg_apis_adminacornio_v1_ClusterComputeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterVolumeClass":                       schema_pkg_apis_adminacornio_v1_ClusterVolumeClass(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterVolumeClassList":                   schema_pkg_apis_adminacornio_v1_ClusterVolumeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectComputeClass":                      schema_pkg_apis_adminacornio_v1_ProjectComputeClass(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectComputeClassList":                  schema_pkg_apis_adminacornio_v1_ProjectComputeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectVolumeClass":                       schema_pkg_apis_adminacornio_v1_ProjectVolumeClass(ref),
+		"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectVolumeClassList":                   schema_pkg_apis_adminacornio_v1_ProjectVolumeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AcornImageBuild":                            schema_pkg_apis_apiacornio_v1_AcornImageBuild(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AcornImageBuildList":                        schema_pkg_apis_apiacornio_v1_AcornImageBuildList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Acornfile":                                  schema_pkg_apis_apiacornio_v1_Acornfile(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.App":                                        schema_pkg_apis_apiacornio_v1_App(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AppList":                                    schema_pkg_apis_apiacornio_v1_AppList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AppPullImage":                               schema_pkg_apis_apiacornio_v1_AppPullImage(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Builder":                                    schema_pkg_apis_apiacornio_v1_Builder(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.BuilderList":                                schema_pkg_apis_apiacornio_v1_BuilderList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.BuilderPortOptions":                         schema_pkg_apis_apiacornio_v1_BuilderPortOptions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClass":                               schema_pkg_apis_apiacornio_v1_ComputeClass(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClassList":                           schema_pkg_apis_apiacornio_v1_ComputeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Config":                                     schema_pkg_apis_apiacornio_v1_Config(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ConfirmUpgrade":                             schema_pkg_apis_apiacornio_v1_ConfirmUpgrade(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplica":                           schema_pkg_apis_apiacornio_v1_ContainerReplica(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns":                    schema_pkg_apis_apiacornio_v1_ContainerReplicaColumns(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaExecOptions":                schema_pkg_apis_apiacornio_v1_ContainerReplicaExecOptions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaList":                       schema_pkg_apis_apiacornio_v1_ContainerReplicaList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaPortForwardOptions":         schema_pkg_apis_apiacornio_v1_ContainerReplicaPortForwardOptions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaSpec":                       schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus":                     schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Credential":                                 schema_pkg_apis_apiacornio_v1_Credential(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.CredentialList":                             schema_pkg_apis_apiacornio_v1_CredentialList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.DevSession":                                 schema_pkg_apis_apiacornio_v1_DevSession(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.DevSessionList":                             schema_pkg_apis_apiacornio_v1_DevSessionList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EmbeddedContainer":                          schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EncryptionKey":                              schema_pkg_apis_apiacornio_v1_EncryptionKey(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Event":                                      schema_pkg_apis_apiacornio_v1_Event(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EventList":                                  schema_pkg_apis_apiacornio_v1_EventList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.IgnoreCleanup":                              schema_pkg_apis_apiacornio_v1_IgnoreCleanup(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Image":                                      schema_pkg_apis_apiacornio_v1_Image(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRule":                             schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRuleList":                         schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageDetails":                               schema_pkg_apis_apiacornio_v1_ImageDetails(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageList":                                  schema_pkg_apis_apiacornio_v1_ImageList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImagePull":                                  schema_pkg_apis_apiacornio_v1_ImagePull(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImagePush":                                  schema_pkg_apis_apiacornio_v1_ImagePush(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageTag":                                   schema_pkg_apis_apiacornio_v1_ImageTag(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Info":                                       schema_pkg_apis_apiacornio_v1_Info(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.InfoList":                                   schema_pkg_apis_apiacornio_v1_InfoList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.InfoSpec":                                   schema_pkg_apis_apiacornio_v1_InfoSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.LogMessage":                                 schema_pkg_apis_apiacornio_v1_LogMessage(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.LogOptions":                                 schema_pkg_apis_apiacornio_v1_LogOptions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.PortForwardOptions":                         schema_pkg_apis_apiacornio_v1_PortForwardOptions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Project":                                    schema_pkg_apis_apiacornio_v1_Project(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectList":                                schema_pkg_apis_apiacornio_v1_ProjectList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectSpec":                                schema_pkg_apis_apiacornio_v1_ProjectSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectStatus":                              schema_pkg_apis_apiacornio_v1_ProjectStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Region":                                     schema_pkg_apis_apiacornio_v1_Region(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionList":                                 schema_pkg_apis_apiacornio_v1_RegionList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionSpec":                                 schema_pkg_apis_apiacornio_v1_RegionSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionStatus":                               schema_pkg_apis_apiacornio_v1_RegionStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth":                               schema_pkg_apis_apiacornio_v1_RegistryAuth(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Secret":                                     schema_pkg_apis_apiacornio_v1_Secret(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.SecretList":                                 schema_pkg_apis_apiacornio_v1_SecretList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Service":                                    schema_pkg_apis_apiacornio_v1_Service(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ServiceList":                                schema_pkg_apis_apiacornio_v1_ServiceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Volume":                                     schema_pkg_apis_apiacornio_v1_Volume(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeClass":                                schema_pkg_apis_apiacornio_v1_VolumeClass(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeClassList":                            schema_pkg_apis_apiacornio_v1_VolumeClassList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeColumns":                              schema_pkg_apis_apiacornio_v1_VolumeColumns(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeCreateOptions":                        schema_pkg_apis_apiacornio_v1_VolumeCreateOptions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeList":                                 schema_pkg_apis_apiacornio_v1_VolumeList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeSpec":                                 schema_pkg_apis_apiacornio_v1_VolumeSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeStatus":                               schema_pkg_apis_apiacornio_v1_VolumeStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Acorn":                                 schema_pkg_apis_internalacornio_v1_Acorn(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild":                            schema_pkg_apis_internalacornio_v1_AcornBuild(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec":                      schema_pkg_apis_internalacornio_v1_AcornBuilderSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstance":               schema_pkg_apis_internalacornio_v1_AcornImageBuildInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceList":           schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec":           schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus":         schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornStatus":                           schema_pkg_apis_internalacornio_v1_AcornStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Alias":                                 schema_pkg_apis_internalacornio_v1_Alias(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns":                            schema_pkg_apis_internalacornio_v1_AppColumns(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage":                              schema_pkg_apis_internalacornio_v1_AppImage(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstance":                           schema_pkg_apis_internalacornio_v1_AppInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceList":                       schema_pkg_apis_internalacornio_v1_AppInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec":                       schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceStatus":                     schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec":                               schema_pkg_apis_internalacornio_v1_AppSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus":                             schema_pkg_apis_internalacornio_v1_AppStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build":                                 schema_pkg_apis_internalacornio_v1_Build(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuildRecord":                           schema_pkg_apis_internalacornio_v1_BuildRecord(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstance":                       schema_pkg_apis_internalacornio_v1_BuilderInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstanceList":                   schema_pkg_apis_internalacornio_v1_BuilderInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus":                 schema_pkg_apis_internalacornio_v1_BuilderInstanceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderSpec":                           schema_pkg_apis_internalacornio_v1_BuilderSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonStatus":                          schema_pkg_apis_internalacornio_v1_CommonStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition":                             schema_pkg_apis_internalacornio_v1_Condition(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container":                             schema_pkg_apis_internalacornio_v1_Container(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerData":                         schema_pkg_apis_internalacornio_v1_ContainerData(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec":             schema_pkg_apis_internalacornio_v1_ContainerImageBuilderSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerStatus":                       schema_pkg_apis_internalacornio_v1_ContainerStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults":                              schema_pkg_apis_internalacornio_v1_Defaults(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency":                            schema_pkg_apis_internalacornio_v1_Dependency(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyNotFound":                    schema_pkg_apis_internalacornio_v1_DependencyNotFound(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyStatus":                      schema_pkg_apis_internalacornio_v1_DependencyStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionImageSource":                 schema_pkg_apis_internalacornio_v1_DevSessionImageSource(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstance":                    schema_pkg_apis_internalacornio_v1_DevSessionInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceClient":              schema_pkg_apis_internalacornio_v1_DevSessionInstanceClient(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceExpireAction":        schema_pkg_apis_internalacornio_v1_DevSessionInstanceExpireAction(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceList":                schema_pkg_apis_internalacornio_v1_DevSessionInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec":                schema_pkg_apis_internalacornio_v1_DevSessionInstanceSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus":              schema_pkg_apis_internalacornio_v1_DevSessionInstanceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint":                              schema_pkg_apis_internalacornio_v1_Endpoint(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar":                                schema_pkg_apis_internalacornio_v1_EnvVar(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventInstance":                         schema_pkg_apis_internalacornio_v1_EventInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventInstanceList":                     schema_pkg_apis_internalacornio_v1_EventInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource":                           schema_pkg_apis_internalacornio_v1_EventSource(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExecProbe":                             schema_pkg_apis_internalacornio_v1_ExecProbe(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError":                       schema_pkg_apis_internalacornio_v1_ExpressionError(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File":                                  schema_pkg_apis_internalacornio_v1_File(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.GeneratedService":                      schema_pkg_apis_internalacornio_v1_GeneratedService(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.HTTPProbe":                             schema_pkg_apis_internalacornio_v1_HTTPProbe(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Image":                                 schema_pkg_apis_internalacornio_v1_Image(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance":                schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstanceList":            schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures":              schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec":                      schema_pkg_apis_internalacornio_v1_ImageBuilderSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData":                             schema_pkg_apis_internalacornio_v1_ImageData(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstance":                         schema_pkg_apis_internalacornio_v1_ImageInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstanceList":                     schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImagesData":                            schema_pkg_apis_internalacornio_v1_ImagesData(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus":                             schema_pkg_apis_internalacornio_v1_JobStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef":                            schema_pkg_apis_internalacornio_v1_MetricsDef(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime":                             schema_pkg_apis_internalacornio_v1_MicroTime(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue":                             schema_pkg_apis_internalacornio_v1_NameValue(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Param":                                 schema_pkg_apis_internalacornio_v1_Param(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParamSpec":                             schema_pkg_apis_internalacornio_v1_ParamSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions":                           schema_pkg_apis_internalacornio_v1_Permissions(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Platform":                              schema_pkg_apis_internalacornio_v1_Platform(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PolicyRule":                            schema_pkg_apis_internalacornio_v1_PolicyRule(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding":                           schema_pkg_apis_internalacornio_v1_PortBinding(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef":                               schema_pkg_apis_internalacornio_v1_PortDef(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortPublish":                           schema_pkg_apis_internalacornio_v1_PortPublish(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe":                                 schema_pkg_apis_internalacornio_v1_Probe(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Profile":                               schema_pkg_apis_internalacornio_v1_Profile(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ReplicasSummary":                       schema_pkg_apis_internalacornio_v1_ReplicasSummary(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Route":                                 schema_pkg_apis_internalacornio_v1_Route(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Router":                                schema_pkg_apis_internalacornio_v1_Router(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.RouterStatus":                          schema_pkg_apis_internalacornio_v1_RouterStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling":                            schema_pkg_apis_internalacornio_v1_Scheduling(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel":                           schema_pkg_apis_internalacornio_v1_ScopedLabel(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Secret":                                schema_pkg_apis_internalacornio_v1_Secret(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding":                         schema_pkg_apis_internalacornio_v1_SecretBinding(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference":                       schema_pkg_apis_internalacornio_v1_SecretReference(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretStatus":                          schema_pkg_apis_internalacornio_v1_SecretStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Service":                               schema_pkg_apis_internalacornio_v1_Service(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding":                        schema_pkg_apis_internalacornio_v1_ServiceBinding(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstance":                       schema_pkg_apis_internalacornio_v1_ServiceInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceList":                   schema_pkg_apis_internalacornio_v1_ServiceInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec":                   schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus":                 schema_pkg_apis_internalacornio_v1_ServiceInstanceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceStatus":                         schema_pkg_apis_internalacornio_v1_ServiceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations":                  schema_pkg_apis_internalacornio_v1_SignatureAnnotations(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules":                        schema_pkg_apis_internalacornio_v1_SignatureRules(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignedBy":                              schema_pkg_apis_internalacornio_v1_SignedBy(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.TCPProbe":                              schema_pkg_apis_internalacornio_v1_TCPProbe(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS":                                   schema_pkg_apis_internalacornio_v1_VCS(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding":                         schema_pkg_apis_internalacornio_v1_VolumeBinding(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeDefault":                         schema_pkg_apis_internalacornio_v1_VolumeDefault(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount":                           schema_pkg_apis_internalacornio_v1_VolumeMount(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeRequest":                         schema_pkg_apis_internalacornio_v1_VolumeRequest(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeSecretMount":                     schema_pkg_apis_internalacornio_v1_VolumeSecretMount(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeStatus":                          schema_pkg_apis_internalacornio_v1_VolumeStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.acornAliases":                          schema_pkg_apis_internalacornio_v1_acornAliases(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.containerAliases":                      schema_pkg_apis_internalacornio_v1_containerAliases(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.envVal":                                schema_pkg_apis_internalacornio_v1_envVal(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.policyRuleAliases":                     schema_pkg_apis_internalacornio_v1_policyRuleAliases(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.routeTarget":                           schema_pkg_apis_internalacornio_v1_routeTarget(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.secretReference":                       schema_pkg_apis_internalacornio_v1_secretReference(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance":     schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstanceList": schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstanceList":  schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory":              schema_pkg_apis_internaladminacornio_v1_ComputeClassMemory(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance":     schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstanceList": schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstanceList":  schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance":            schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstance(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceList":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus":      schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources":                       schema_pkg_apis_internaladminacornio_v1_Resources(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                 schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
+		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                             schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
+		"k8s.io/api/core/v1.Affinity":                                                                     schema_k8sio_api_core_v1_Affinity(ref),
+		"k8s.io/api/core/v1.AttachedVolume":                                                               schema_k8sio_api_core_v1_AttachedVolume(ref),
+		"k8s.io/api/core/v1.AvoidPods":                                                                    schema_k8sio_api_core_v1_AvoidPods(ref),
+		"k8s.io/api/core/v1.AzureDiskVolumeSource":                                                        schema_k8sio_api_core_v1_AzureDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.AzureFilePersistentVolumeSource":                                              schema_k8sio_api_core_v1_AzureFilePersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.AzureFileVolumeSource":                                                        schema_k8sio_api_core_v1_AzureFileVolumeSource(ref),
+		"k8s.io/api/core/v1.Binding":                                     schema_k8sio_api_core_v1_Binding(ref),
+		"k8s.io/api/core/v1.CSIPersistentVolumeSource":                   schema_k8sio_api_core_v1_CSIPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CSIVolumeSource":                             schema_k8sio_api_core_v1_CSIVolumeSource(ref),
+		"k8s.io/api/core/v1.Capabilities":                                schema_k8sio_api_core_v1_Capabilities(ref),
+		"k8s.io/api/core/v1.CephFSPersistentVolumeSource":                schema_k8sio_api_core_v1_CephFSPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CephFSVolumeSource":                          schema_k8sio_api_core_v1_CephFSVolumeSource(ref),
+		"k8s.io/api/core/v1.CinderPersistentVolumeSource":                schema_k8sio_api_core_v1_CinderPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.CinderVolumeSource":                          schema_k8sio_api_core_v1_CinderVolumeSource(ref),
+		"k8s.io/api/core/v1.ClaimSource":                                 schema_k8sio_api_core_v1_ClaimSource(ref),
+		"k8s.io/api/core/v1.ClientIPConfig":                              schema_k8sio_api_core_v1_ClientIPConfig(ref),
+		"k8s.io/api/core/v1.ComponentCondition":                          schema_k8sio_api_core_v1_ComponentCondition(ref),
+		"k8s.io/api/core/v1.ComponentStatus":                             schema_k8sio_api_core_v1_ComponentStatus(ref),
+		"k8s.io/api/core/v1.ComponentStatusList":                         schema_k8sio_api_core_v1_ComponentStatusList(ref),
+		"k8s.io/api/core/v1.ConfigMap":                                   schema_k8sio_api_core_v1_ConfigMap(ref),
+		"k8s.io/api/core/v1.ConfigMapEnvSource":                          schema_k8sio_api_core_v1_ConfigMapEnvSource(ref),
+		"k8s.io/api/core/v1.ConfigMapKeySelector":                        schema_k8sio_api_core_v1_ConfigMapKeySelector(ref),
+		"k8s.io/api/core/v1.ConfigMapList":                               schema_k8sio_api_core_v1_ConfigMapList(ref),
+		"k8s.io/api/core/v1.ConfigMapNodeConfigSource":                   schema_k8sio_api_core_v1_ConfigMapNodeConfigSource(ref),
+		"k8s.io/api/core/v1.ConfigMapProjection":                         schema_k8sio_api_core_v1_ConfigMapProjection(ref),
+		"k8s.io/api/core/v1.ConfigMapVolumeSource":                       schema_k8sio_api_core_v1_ConfigMapVolumeSource(ref),
+		"k8s.io/api/core/v1.Container":                                   schema_k8sio_api_core_v1_Container(ref),
+		"k8s.io/api/core/v1.ContainerImage":                              schema_k8sio_api_core_v1_ContainerImage(ref),
+		"k8s.io/api/core/v1.ContainerPort":                               schema_k8sio_api_core_v1_ContainerPort(ref),
+		"k8s.io/api/core/v1.ContainerResizePolicy":                       schema_k8sio_api_core_v1_ContainerResizePolicy(ref),
+		"k8s.io/api/core/v1.ContainerState":                              schema_k8sio_api_core_v1_ContainerState(ref),
+		"k8s.io/api/core/v1.ContainerStateRunning":                       schema_k8sio_api_core_v1_ContainerStateRunning(ref),
+		"k8s.io/api/core/v1.ContainerStateTerminated":                    schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
+		"k8s.io/api/core/v1.ContainerStateWaiting":                       schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
+		"k8s.io/api/core/v1.ContainerStatus":                             schema_k8sio_api_core_v1_ContainerStatus(ref),
+		"k8s.io/api/core/v1.DaemonEndpoint":                              schema_k8sio_api_core_v1_DaemonEndpoint(ref),
+		"k8s.io/api/core/v1.DownwardAPIProjection":                       schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
+		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                       schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
+		"k8s.io/api/core/v1.DownwardAPIVolumeSource":                     schema_k8sio_api_core_v1_DownwardAPIVolumeSource(ref),
+		"k8s.io/api/core/v1.EmptyDirVolumeSource":                        schema_k8sio_api_core_v1_EmptyDirVolumeSource(ref),
+		"k8s.io/api/core/v1.EndpointAddress":                             schema_k8sio_api_core_v1_EndpointAddress(ref),
+		"k8s.io/api/core/v1.EndpointPort":                                schema_k8sio_api_core_v1_EndpointPort(ref),
+		"k8s.io/api/core/v1.EndpointSubset":                              schema_k8sio_api_core_v1_EndpointSubset(ref),
+		"k8s.io/api/core/v1.Endpoints":                                   schema_k8sio_api_core_v1_Endpoints(ref),
+		"k8s.io/api/core/v1.EndpointsList":                               schema_k8sio_api_core_v1_EndpointsList(ref),
+		"k8s.io/api/core/v1.EnvFromSource":                               schema_k8sio_api_core_v1_EnvFromSource(ref),
+		"k8s.io/api/core/v1.EnvVar":                                      schema_k8sio_api_core_v1_EnvVar(ref),
+		"k8s.io/api/core/v1.EnvVarSource":                                schema_k8sio_api_core_v1_EnvVarSource(ref),
+		"k8s.io/api/core/v1.EphemeralContainer":                          schema_k8sio_api_core_v1_EphemeralContainer(ref),
+		"k8s.io/api/core/v1.EphemeralContainerCommon":                    schema_k8sio_api_core_v1_EphemeralContainerCommon(ref),
+		"k8s.io/api/core/v1.EphemeralVolumeSource":                       schema_k8sio_api_core_v1_EphemeralVolumeSource(ref),
+		"k8s.io/api/core/v1.Event":                                       schema_k8sio_api_core_v1_Event(ref),
+		"k8s.io/api/core/v1.EventList":                                   schema_k8sio_api_core_v1_EventList(ref),
+		"k8s.io/api/core/v1.EventSeries":                                 schema_k8sio_api_core_v1_EventSeries(ref),
+		"k8s.io/api/core/v1.EventSource":                                 schema_k8sio_api_core_v1_EventSource(ref),
+		"k8s.io/api/core/v1.ExecAction":                                  schema_k8sio_api_core_v1_ExecAction(ref),
+		"k8s.io/api/core/v1.FCVolumeSource":                              schema_k8sio_api_core_v1_FCVolumeSource(ref),
+		"k8s.io/api/core/v1.FlexPersistentVolumeSource":                  schema_k8sio_api_core_v1_FlexPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.FlexVolumeSource":                            schema_k8sio_api_core_v1_FlexVolumeSource(ref),
+		"k8s.io/api/core/v1.FlockerVolumeSource":                         schema_k8sio_api_core_v1_FlockerVolumeSource(ref),
+		"k8s.io/api/core/v1.GCEPersistentDiskVolumeSource":               schema_k8sio_api_core_v1_GCEPersistentDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.GRPCAction":                                  schema_k8sio_api_core_v1_GRPCAction(ref),
+		"k8s.io/api/core/v1.GitRepoVolumeSource":                         schema_k8sio_api_core_v1_GitRepoVolumeSource(ref),
+		"k8s.io/api/core/v1.GlusterfsPersistentVolumeSource":             schema_k8sio_api_core_v1_GlusterfsPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.GlusterfsVolumeSource":                       schema_k8sio_api_core_v1_GlusterfsVolumeSource(ref),
+		"k8s.io/api/core/v1.HTTPGetAction":                               schema_k8sio_api_core_v1_HTTPGetAction(ref),
+		"k8s.io/api/core/v1.HTTPHeader":                                  schema_k8sio_api_core_v1_HTTPHeader(ref),
+		"k8s.io/api/core/v1.HostAlias":                                   schema_k8sio_api_core_v1_HostAlias(ref),
+		"k8s.io/api/core/v1.HostPathVolumeSource":                        schema_k8sio_api_core_v1_HostPathVolumeSource(ref),
+		"k8s.io/api/core/v1.ISCSIPersistentVolumeSource":                 schema_k8sio_api_core_v1_ISCSIPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.ISCSIVolumeSource":                           schema_k8sio_api_core_v1_ISCSIVolumeSource(ref),
+		"k8s.io/api/core/v1.KeyToPath":                                   schema_k8sio_api_core_v1_KeyToPath(ref),
+		"k8s.io/api/core/v1.Lifecycle":                                   schema_k8sio_api_core_v1_Lifecycle(ref),
+		"k8s.io/api/core/v1.LifecycleHandler":                            schema_k8sio_api_core_v1_LifecycleHandler(ref),
+		"k8s.io/api/core/v1.LimitRange":                                  schema_k8sio_api_core_v1_LimitRange(ref),
+		"k8s.io/api/core/v1.LimitRangeItem":                              schema_k8sio_api_core_v1_LimitRangeItem(ref),
+		"k8s.io/api/core/v1.LimitRangeList":                              schema_k8sio_api_core_v1_LimitRangeList(ref),
+		"k8s.io/api/core/v1.LimitRangeSpec":                              schema_k8sio_api_core_v1_LimitRangeSpec(ref),
+		"k8s.io/api/core/v1.List":                                        schema_k8sio_api_core_v1_List(ref),
+		"k8s.io/api/core/v1.LoadBalancerIngress":                         schema_k8sio_api_core_v1_LoadBalancerIngress(ref),
+		"k8s.io/api/core/v1.LoadBalancerStatus":                          schema_k8sio_api_core_v1_LoadBalancerStatus(ref),
+		"k8s.io/api/core/v1.LocalObjectReference":                        schema_k8sio_api_core_v1_LocalObjectReference(ref),
+		"k8s.io/api/core/v1.LocalVolumeSource":                           schema_k8sio_api_core_v1_LocalVolumeSource(ref),
+		"k8s.io/api/core/v1.NFSVolumeSource":                             schema_k8sio_api_core_v1_NFSVolumeSource(ref),
+		"k8s.io/api/core/v1.Namespace":                                   schema_k8sio_api_core_v1_Namespace(ref),
+		"k8s.io/api/core/v1.NamespaceCondition":                          schema_k8sio_api_core_v1_NamespaceCondition(ref),
+		"k8s.io/api/core/v1.NamespaceList":                               schema_k8sio_api_core_v1_NamespaceList(ref),
+		"k8s.io/api/core/v1.NamespaceSpec":                               schema_k8sio_api_core_v1_NamespaceSpec(ref),
+		"k8s.io/api/core/v1.NamespaceStatus":                             schema_k8sio_api_core_v1_NamespaceStatus(ref),
+		"k8s.io/api/core/v1.Node":                                        schema_k8sio_api_core_v1_Node(ref),
+		"k8s.io/api/core/v1.NodeAddress":                                 schema_k8sio_api_core_v1_NodeAddress(ref),
+		"k8s.io/api/core/v1.NodeAffinity":                                schema_k8sio_api_core_v1_NodeAffinity(ref),
+		"k8s.io/api/core/v1.NodeCondition":                               schema_k8sio_api_core_v1_NodeCondition(ref),
+		"k8s.io/api/core/v1.NodeConfigSource":                            schema_k8sio_api_core_v1_NodeConfigSource(ref),
+		"k8s.io/api/core/v1.NodeConfigStatus":                            schema_k8sio_api_core_v1_NodeConfigStatus(ref),
+		"k8s.io/api/core/v1.NodeDaemonEndpoints":                         schema_k8sio_api_core_v1_NodeDaemonEndpoints(ref),
+		"k8s.io/api/core/v1.NodeList":                                    schema_k8sio_api_core_v1_NodeList(ref),
+		"k8s.io/api/core/v1.NodeProxyOptions":                            schema_k8sio_api_core_v1_NodeProxyOptions(ref),
+		"k8s.io/api/core/v1.NodeResources":                               schema_k8sio_api_core_v1_NodeResources(ref),
+		"k8s.io/api/core/v1.NodeSelector":                                schema_k8sio_api_core_v1_NodeSelector(ref),
+		"k8s.io/api/core/v1.NodeSelectorRequirement":                     schema_k8sio_api_core_v1_NodeSelectorRequirement(ref),
+		"k8s.io/api/core/v1.NodeSelectorTerm":                            schema_k8sio_api_core_v1_NodeSelectorTerm(ref),
+		"k8s.io/api/core/v1.NodeSpec":                                    schema_k8sio_api_core_v1_NodeSpec(ref),
+		"k8s.io/api/core/v1.NodeStatus":                                  schema_k8sio_api_core_v1_NodeStatus(ref),
+		"k8s.io/api/core/v1.NodeSystemInfo":                              schema_k8sio_api_core_v1_NodeSystemInfo(ref),
+		"k8s.io/api/core/v1.ObjectFieldSelector":                         schema_k8sio_api_core_v1_ObjectFieldSelector(ref),
+		"k8s.io/api/core/v1.ObjectReference":                             schema_k8sio_api_core_v1_ObjectReference(ref),
+		"k8s.io/api/core/v1.PersistentVolume":                            schema_k8sio_api_core_v1_PersistentVolume(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaim":                       schema_k8sio_api_core_v1_PersistentVolumeClaim(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimCondition":              schema_k8sio_api_core_v1_PersistentVolumeClaimCondition(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimList":                   schema_k8sio_api_core_v1_PersistentVolumeClaimList(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimSpec":                   schema_k8sio_api_core_v1_PersistentVolumeClaimSpec(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimStatus":                 schema_k8sio_api_core_v1_PersistentVolumeClaimStatus(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimTemplate":               schema_k8sio_api_core_v1_PersistentVolumeClaimTemplate(ref),
+		"k8s.io/api/core/v1.PersistentVolumeClaimVolumeSource":           schema_k8sio_api_core_v1_PersistentVolumeClaimVolumeSource(ref),
+		"k8s.io/api/core/v1.PersistentVolumeList":                        schema_k8sio_api_core_v1_PersistentVolumeList(ref),
+		"k8s.io/api/core/v1.PersistentVolumeSource":                      schema_k8sio_api_core_v1_PersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.PersistentVolumeSpec":                        schema_k8sio_api_core_v1_PersistentVolumeSpec(ref),
+		"k8s.io/api/core/v1.PersistentVolumeStatus":                      schema_k8sio_api_core_v1_PersistentVolumeStatus(ref),
+		"k8s.io/api/core/v1.PhotonPersistentDiskVolumeSource":            schema_k8sio_api_core_v1_PhotonPersistentDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.Pod":                                         schema_k8sio_api_core_v1_Pod(ref),
+		"k8s.io/api/core/v1.PodAffinity":                                 schema_k8sio_api_core_v1_PodAffinity(ref),
+		"k8s.io/api/core/v1.PodAffinityTerm":                             schema_k8sio_api_core_v1_PodAffinityTerm(ref),
+		"k8s.io/api/core/v1.PodAntiAffinity":                             schema_k8sio_api_core_v1_PodAntiAffinity(ref),
+		"k8s.io/api/core/v1.PodAttachOptions":                            schema_k8sio_api_core_v1_PodAttachOptions(ref),
+		"k8s.io/api/core/v1.PodCondition":                                schema_k8sio_api_core_v1_PodCondition(ref),
+		"k8s.io/api/core/v1.PodDNSConfig":                                schema_k8sio_api_core_v1_PodDNSConfig(ref),
+		"k8s.io/api/core/v1.PodDNSConfigOption":                          schema_k8sio_api_core_v1_PodDNSConfigOption(ref),
+		"k8s.io/api/core/v1.PodExecOptions":                              schema_k8sio_api_core_v1_PodExecOptions(ref),
+		"k8s.io/api/core/v1.PodIP":                                       schema_k8sio_api_core_v1_PodIP(ref),
+		"k8s.io/api/core/v1.PodList":                                     schema_k8sio_api_core_v1_PodList(ref),
+		"k8s.io/api/core/v1.PodLogOptions":                               schema_k8sio_api_core_v1_PodLogOptions(ref),
+		"k8s.io/api/core/v1.PodOS":                                       schema_k8sio_api_core_v1_PodOS(ref),
+		"k8s.io/api/core/v1.PodPortForwardOptions":                       schema_k8sio_api_core_v1_PodPortForwardOptions(ref),
+		"k8s.io/api/core/v1.PodProxyOptions":                             schema_k8sio_api_core_v1_PodProxyOptions(ref),
+		"k8s.io/api/core/v1.PodReadinessGate":                            schema_k8sio_api_core_v1_PodReadinessGate(ref),
+		"k8s.io/api/core/v1.PodResourceClaim":                            schema_k8sio_api_core_v1_PodResourceClaim(ref),
+		"k8s.io/api/core/v1.PodSchedulingGate":                           schema_k8sio_api_core_v1_PodSchedulingGate(ref),
+		"k8s.io/api/core/v1.PodSecurityContext":                          schema_k8sio_api_core_v1_PodSecurityContext(ref),
+		"k8s.io/api/core/v1.PodSignature":                                schema_k8sio_api_core_v1_PodSignature(ref),
+		"k8s.io/api/core/v1.PodSpec":                                     schema_k8sio_api_core_v1_PodSpec(ref),
+		"k8s.io/api/core/v1.PodStatus":                                   schema_k8sio_api_core_v1_PodStatus(ref),
+		"k8s.io/api/core/v1.PodStatusResult":                             schema_k8sio_api_core_v1_PodStatusResult(ref),
+		"k8s.io/api/core/v1.PodTemplate":                                 schema_k8sio_api_core_v1_PodTemplate(ref),
+		"k8s.io/api/core/v1.PodTemplateList":                             schema_k8sio_api_core_v1_PodTemplateList(ref),
+		"k8s.io/api/core/v1.PodTemplateSpec":                             schema_k8sio_api_core_v1_PodTemplateSpec(ref),
+		"k8s.io/api/core/v1.PortStatus":                                  schema_k8sio_api_core_v1_PortStatus(ref),
+		"k8s.io/api/core/v1.PortworxVolumeSource":                        schema_k8sio_api_core_v1_PortworxVolumeSource(ref),
+		"k8s.io/api/core/v1.PreferAvoidPodsEntry":                        schema_k8sio_api_core_v1_PreferAvoidPodsEntry(ref),
+		"k8s.io/api/core/v1.PreferredSchedulingTerm":                     schema_k8sio_api_core_v1_PreferredSchedulingTerm(ref),
+		"k8s.io/api/core/v1.Probe":                                       schema_k8sio_api_core_v1_Probe(ref),
+		"k8s.io/api/core/v1.ProbeHandler":                                schema_k8sio_api_core_v1_ProbeHandler(ref),
+		"k8s.io/api/core/v1.ProjectedVolumeSource":                       schema_k8sio_api_core_v1_ProjectedVolumeSource(ref),
+		"k8s.io/api/core/v1.QuobyteVolumeSource":                         schema_k8sio_api_core_v1_QuobyteVolumeSource(ref),
+		"k8s.io/api/core/v1.RBDPersistentVolumeSource":                   schema_k8sio_api_core_v1_RBDPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.RBDVolumeSource":                             schema_k8sio_api_core_v1_RBDVolumeSource(ref),
+		"k8s.io/api/core/v1.RangeAllocation":                             schema_k8sio_api_core_v1_RangeAllocation(ref),
+		"k8s.io/api/core/v1.ReplicationController":                       schema_k8sio_api_core_v1_ReplicationController(ref),
+		"k8s.io/api/core/v1.ReplicationControllerCondition":              schema_k8sio_api_core_v1_ReplicationControllerCondition(ref),
+		"k8s.io/api/core/v1.ReplicationControllerList":                   schema_k8sio_api_core_v1_ReplicationControllerList(ref),
+		"k8s.io/api/core/v1.ReplicationControllerSpec":                   schema_k8sio_api_core_v1_ReplicationControllerSpec(ref),
+		"k8s.io/api/core/v1.ReplicationControllerStatus":                 schema_k8sio_api_core_v1_ReplicationControllerStatus(ref),
+		"k8s.io/api/core/v1.ResourceClaim":                               schema_k8sio_api_core_v1_ResourceClaim(ref),
+		"k8s.io/api/core/v1.ResourceFieldSelector":                       schema_k8sio_api_core_v1_ResourceFieldSelector(ref),
+		"k8s.io/api/core/v1.ResourceQuota":                               schema_k8sio_api_core_v1_ResourceQuota(ref),
+		"k8s.io/api/core/v1.ResourceQuotaList":                           schema_k8sio_api_core_v1_ResourceQuotaList(ref),
+		"k8s.io/api/core/v1.ResourceQuotaSpec":                           schema_k8sio_api_core_v1_ResourceQuotaSpec(ref),
+		"k8s.io/api/core/v1.ResourceQuotaStatus":                         schema_k8sio_api_core_v1_ResourceQuotaStatus(ref),
+		"k8s.io/api/core/v1.ResourceRequirements":                        schema_k8sio_api_core_v1_ResourceRequirements(ref),
+		"k8s.io/api/core/v1.SELinuxOptions":                              schema_k8sio_api_core_v1_SELinuxOptions(ref),
+		"k8s.io/api/core/v1.ScaleIOPersistentVolumeSource":               schema_k8sio_api_core_v1_ScaleIOPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.ScaleIOVolumeSource":                         schema_k8sio_api_core_v1_ScaleIOVolumeSource(ref),
+		"k8s.io/api/core/v1.ScopeSelector":                               schema_k8sio_api_core_v1_ScopeSelector(ref),
+		"k8s.io/api/core/v1.ScopedResourceSelectorRequirement":           schema_k8sio_api_core_v1_ScopedResourceSelectorRequirement(ref),
+		"k8s.io/api/core/v1.SeccompProfile":                              schema_k8sio_api_core_v1_SeccompProfile(ref),
+		"k8s.io/api/core/v1.Secret":                                      schema_k8sio_api_core_v1_Secret(ref),
+		"k8s.io/api/core/v1.SecretEnvSource":                             schema_k8sio_api_core_v1_SecretEnvSource(ref),
+		"k8s.io/api/core/v1.SecretKeySelector":                           schema_k8sio_api_core_v1_SecretKeySelector(ref),
+		"k8s.io/api/core/v1.SecretList":                                  schema_k8sio_api_core_v1_SecretList(ref),
+		"k8s.io/api/core/v1.SecretProjection":                            schema_k8sio_api_core_v1_SecretProjection(ref),
+		"k8s.io/api/core/v1.SecretReference":                             schema_k8sio_api_core_v1_SecretReference(ref),
+		"k8s.io/api/core/v1.SecretVolumeSource":                          schema_k8sio_api_core_v1_SecretVolumeSource(ref),
+		"k8s.io/api/core/v1.SecurityContext":                             schema_k8sio_api_core_v1_SecurityContext(ref),
+		"k8s.io/api/core/v1.SerializedReference":                         schema_k8sio_api_core_v1_SerializedReference(ref),
+		"k8s.io/api/core/v1.Service":                                     schema_k8sio_api_core_v1_Service(ref),
+		"k8s.io/api/core/v1.ServiceAccount":                              schema_k8sio_api_core_v1_ServiceAccount(ref),
+		"k8s.io/api/core/v1.ServiceAccountList":                          schema_k8sio_api_core_v1_ServiceAccountList(ref),
+		"k8s.io/api/core/v1.ServiceAccountTokenProjection":               schema_k8sio_api_core_v1_ServiceAccountTokenProjection(ref),
+		"k8s.io/api/core/v1.ServiceList":                                 schema_k8sio_api_core_v1_ServiceList(ref),
+		"k8s.io/api/core/v1.ServicePort":                                 schema_k8sio_api_core_v1_ServicePort(ref),
+		"k8s.io/api/core/v1.ServiceProxyOptions":                         schema_k8sio_api_core_v1_ServiceProxyOptions(ref),
+		"k8s.io/api/core/v1.ServiceSpec":                                 schema_k8sio_api_core_v1_ServiceSpec(ref),
+		"k8s.io/api/core/v1.ServiceStatus":                               schema_k8sio_api_core_v1_ServiceStatus(ref),
+		"k8s.io/api/core/v1.SessionAffinityConfig":                       schema_k8sio_api_core_v1_SessionAffinityConfig(ref),
+		"k8s.io/api/core/v1.StorageOSPersistentVolumeSource":             schema_k8sio_api_core_v1_StorageOSPersistentVolumeSource(ref),
+		"k8s.io/api/core/v1.StorageOSVolumeSource":                       schema_k8sio_api_core_v1_StorageOSVolumeSource(ref),
+		"k8s.io/api/core/v1.Sysctl":                                      schema_k8sio_api_core_v1_Sysctl(ref),
+		"k8s.io/api/core/v1.TCPSocketAction":                             schema_k8sio_api_core_v1_TCPSocketAction(ref),
+		"k8s.io/api/core/v1.Taint":                                       schema_k8sio_api_core_v1_Taint(ref),
+		"k8s.io/api/core/v1.Toleration":                                  schema_k8sio_api_core_v1_Toleration(ref),
+		"k8s.io/api/core/v1.TopologySelectorLabelRequirement":            schema_k8sio_api_core_v1_TopologySelectorLabelRequirement(ref),
+		"k8s.io/api/core/v1.TopologySelectorTerm":                        schema_k8sio_api_core_v1_TopologySelectorTerm(ref),
+		"k8s.io/api/core/v1.TopologySpreadConstraint":                    schema_k8sio_api_core_v1_TopologySpreadConstraint(ref),
+		"k8s.io/api/core/v1.TypedLocalObjectReference":                   schema_k8sio_api_core_v1_TypedLocalObjectReference(ref),
+		"k8s.io/api/core/v1.TypedObjectReference":                        schema_k8sio_api_core_v1_TypedObjectReference(ref),
+		"k8s.io/api/core/v1.Volume":                                      schema_k8sio_api_core_v1_Volume(ref),
+		"k8s.io/api/core/v1.VolumeDevice":                                schema_k8sio_api_core_v1_VolumeDevice(ref),
+		"k8s.io/api/core/v1.VolumeMount":                                 schema_k8sio_api_core_v1_VolumeMount(ref),
+		"k8s.io/api/core/v1.VolumeNodeAffinity":                          schema_k8sio_api_core_v1_VolumeNodeAffinity(ref),
+		"k8s.io/api/core/v1.VolumeProjection":                            schema_k8sio_api_core_v1_VolumeProjection(ref),
+		"k8s.io/api/core/v1.VolumeSource":                                schema_k8sio_api_core_v1_VolumeSource(ref),
+		"k8s.io/api/core/v1.VsphereVirtualDiskVolumeSource":              schema_k8sio_api_core_v1_VsphereVirtualDiskVolumeSource(ref),
+		"k8s.io/api/core/v1.WeightedPodAffinityTerm":                     schema_k8sio_api_core_v1_WeightedPodAffinityTerm(ref),
+		"k8s.io/api/core/v1.WindowsSecurityContextOptions":               schema_k8sio_api_core_v1_WindowsSecurityContextOptions(ref),
+		"k8s.io/api/rbac/v1.AggregationRule":                             schema_k8sio_api_rbac_v1_AggregationRule(ref),
+		"k8s.io/api/rbac/v1.ClusterRole":                                 schema_k8sio_api_rbac_v1_ClusterRole(ref),
+		"k8s.io/api/rbac/v1.ClusterRoleBinding":                          schema_k8sio_api_rbac_v1_ClusterRoleBinding(ref),
+		"k8s.io/api/rbac/v1.ClusterRoleBindingList":                      schema_k8sio_api_rbac_v1_ClusterRoleBindingList(ref),
+		"k8s.io/api/rbac/v1.ClusterRoleList":                             schema_k8sio_api_rbac_v1_ClusterRoleList(ref),
+		"k8s.io/api/rbac/v1.PolicyRule":                                  schema_k8sio_api_rbac_v1_PolicyRule(ref),
+		"k8s.io/api/rbac/v1.Role":                                        schema_k8sio_api_rbac_v1_Role(ref),
+		"k8s.io/api/rbac/v1.RoleBinding":                                 schema_k8sio_api_rbac_v1_RoleBinding(ref),
+		"k8s.io/api/rbac/v1.RoleBindingList":                             schema_k8sio_api_rbac_v1_RoleBindingList(ref),
+		"k8s.io/api/rbac/v1.RoleList":                                    schema_k8sio_api_rbac_v1_RoleList(ref),
+		"k8s.io/api/rbac/v1.RoleRef":                                     schema_k8sio_api_rbac_v1_RoleRef(ref),
+		"k8s.io/api/rbac/v1.Subject":                                     schema_k8sio_api_rbac_v1_Subject(ref),
+		"k8s.io/apimachinery/pkg/api/resource.Quantity":                  schema_apimachinery_pkg_api_resource_Quantity(ref),
+		"k8s.io/apimachinery/pkg/api/resource.int64Amount":               schema_apimachinery_pkg_api_resource_int64Amount(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                  schema_pkg_apis_meta_v1_APIGroup(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":              schema_pkg_apis_meta_v1_APIGroupList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":               schema_pkg_apis_meta_v1_APIResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":           schema_pkg_apis_meta_v1_APIResourceList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":               schema_pkg_apis_meta_v1_APIVersions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":              schema_pkg_apis_meta_v1_ApplyOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                 schema_pkg_apis_meta_v1_Condition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":             schema_pkg_apis_meta_v1_CreateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":             schema_pkg_apis_meta_v1_DeleteOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                  schema_pkg_apis_meta_v1_Duration(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                  schema_pkg_apis_meta_v1_FieldsV1(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                schema_pkg_apis_meta_v1_GetOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                 schema_pkg_apis_meta_v1_GroupKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":             schema_pkg_apis_meta_v1_GroupResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":              schema_pkg_apis_meta_v1_GroupVersion(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":  schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":          schema_pkg_apis_meta_v1_GroupVersionKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":      schema_pkg_apis_meta_v1_GroupVersionResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":             schema_pkg_apis_meta_v1_InternalEvent(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":             schema_pkg_apis_meta_v1_LabelSelector(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":  schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                      schema_pkg_apis_meta_v1_List(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                  schema_pkg_apis_meta_v1_ListMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":               schema_pkg_apis_meta_v1_ListOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":        schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                 schema_pkg_apis_meta_v1_MicroTime(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                schema_pkg_apis_meta_v1_ObjectMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":            schema_pkg_apis_meta_v1_OwnerReference(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":     schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList": schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                     schema_pkg_apis_meta_v1_Patch(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":              schema_pkg_apis_meta_v1_PatchOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":             schema_pkg_apis_meta_v1_Preconditions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                 schema_pkg_apis_meta_v1_RootPaths(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR": schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                    schema_pkg_apis_meta_v1_Status(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":               schema_pkg_apis_meta_v1_StatusCause(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":             schema_pkg_apis_meta_v1_StatusDetails(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                     schema_pkg_apis_meta_v1_Table(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":     schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":              schema_pkg_apis_meta_v1_TableOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                  schema_pkg_apis_meta_v1_TableRow(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":         schema_pkg_apis_meta_v1_TableRowCondition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                      schema_pkg_apis_meta_v1_Time(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                 schema_pkg_apis_meta_v1_Timestamp(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                  schema_pkg_apis_meta_v1_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":             schema_pkg_apis_meta_v1_UpdateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                schema_pkg_apis_meta_v1_WatchEvent(ref),
+		"k8s.io/apimachinery/pkg/runtime.RawExtension":                   schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
+		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                       schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/runtime.Unknown":                        schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
+		"k8s.io/apimachinery/pkg/version.Info":                           schema_k8sio_apimachinery_pkg_version_Info(ref),
 	}
 }
 
@@ -560,7 +560,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterComputeClass(ref common.ReferenceCal
 					"memory": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
 						},
 					},
 					"supportedRegions": {
@@ -588,7 +588,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterComputeClass(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -625,7 +625,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterComputeClassList(ref common.Referenc
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterComputeClass"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterComputeClass"),
 									},
 								},
 							},
@@ -636,7 +636,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterComputeClassList(ref common.Referenc
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -703,7 +703,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterVolumeClass(ref common.ReferenceCall
 					"size": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
 						},
 					},
 					"inactive": {
@@ -731,7 +731,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterVolumeClass(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -768,7 +768,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterVolumeClassList(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterVolumeClass"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterVolumeClass"),
 									},
 								},
 							},
@@ -779,7 +779,7 @@ func schema_pkg_apis_adminacornio_v1_ClusterVolumeClassList(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ClusterVolumeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ClusterVolumeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -849,7 +849,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectComputeClass(ref common.ReferenceCal
 					"memory": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
 						},
 					},
 					"supportedRegions": {
@@ -877,7 +877,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectComputeClass(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -914,7 +914,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectComputeClassList(ref common.Referenc
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectComputeClass"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectComputeClass"),
 									},
 								},
 							},
@@ -925,7 +925,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectComputeClassList(ref common.Referenc
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -992,7 +992,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectVolumeClass(ref common.ReferenceCall
 					"size": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
 						},
 					},
 					"inactive": {
@@ -1020,7 +1020,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectVolumeClass(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1057,7 +1057,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectVolumeClassList(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectVolumeClass"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectVolumeClass"),
 									},
 								},
 							},
@@ -1068,7 +1068,7 @@ func schema_pkg_apis_adminacornio_v1_ProjectVolumeClassList(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1.ProjectVolumeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1.ProjectVolumeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -1101,20 +1101,20 @@ func schema_pkg_apis_apiacornio_v1_AcornImageBuild(ref common.ReferenceCallback)
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1151,7 +1151,7 @@ func schema_pkg_apis_apiacornio_v1_AcornImageBuildList(ref common.ReferenceCallb
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornImageBuild"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AcornImageBuild"),
 									},
 								},
 							},
@@ -1162,7 +1162,7 @@ func schema_pkg_apis_apiacornio_v1_AcornImageBuildList(ref common.ReferenceCallb
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.AcornImageBuild", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AcornImageBuild", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -1210,7 +1210,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -1224,7 +1224,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -1238,7 +1238,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Image"),
 									},
 								},
 							},
@@ -1252,7 +1252,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeRequest"),
 									},
 								},
 							},
@@ -1266,7 +1266,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Secret"),
 									},
 								},
 							},
@@ -1280,7 +1280,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Acorn"),
 									},
 								},
 							},
@@ -1294,7 +1294,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Router"),
 									},
 								},
 							},
@@ -1308,7 +1308,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Service"),
 									},
 								},
 							},
@@ -1318,7 +1318,7 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Service", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
 	}
 }
 
@@ -1351,20 +1351,20 @@ func schema_pkg_apis_apiacornio_v1_App(ref common.ReferenceCallback) common.Open
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1401,7 +1401,7 @@ func schema_pkg_apis_apiacornio_v1_AppList(ref common.ReferenceCallback) common.
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.App"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.App"),
 									},
 								},
 							},
@@ -1412,7 +1412,7 @@ func schema_pkg_apis_apiacornio_v1_AppList(ref common.ReferenceCallback) common.
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.App", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.App", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -1479,14 +1479,14 @@ func schema_pkg_apis_apiacornio_v1_Builder(ref common.ReferenceCallback) common.
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1523,7 +1523,7 @@ func schema_pkg_apis_apiacornio_v1_BuilderList(ref common.ReferenceCallback) com
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Builder"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Builder"),
 									},
 								},
 							},
@@ -1534,7 +1534,7 @@ func schema_pkg_apis_apiacornio_v1_BuilderList(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Builder", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Builder", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -1593,7 +1593,7 @@ func schema_pkg_apis_apiacornio_v1_ComputeClass(ref common.ReferenceCallback) co
 					"memory": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
 						},
 					},
 					"description": {
@@ -1628,7 +1628,7 @@ func schema_pkg_apis_apiacornio_v1_ComputeClass(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1665,7 +1665,7 @@ func schema_pkg_apis_apiacornio_v1_ComputeClassList(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ComputeClass"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClass"),
 									},
 								},
 							},
@@ -1676,7 +1676,7 @@ func schema_pkg_apis_apiacornio_v1_ComputeClassList(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ComputeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -2022,20 +2022,20 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplica(ref common.ReferenceCallback
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaSpec", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaSpec", "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2148,7 +2148,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaList(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplica"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplica"),
 									},
 								},
 							},
@@ -2159,7 +2159,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaList(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplica", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplica", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -2239,7 +2239,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"),
 									},
 								},
 							},
@@ -2253,7 +2253,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File"),
 									},
 								},
 							},
@@ -2267,7 +2267,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
 					"command": {
@@ -2311,7 +2311,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar"),
 									},
 								},
 							},
@@ -2330,7 +2330,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"),
 									},
 								},
 							},
@@ -2343,7 +2343,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe"),
 									},
 								},
 							},
@@ -2357,7 +2357,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency"),
 									},
 								},
 							},
@@ -2365,7 +2365,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 					},
 					"permissions": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
 						},
 					},
 					"class": {
@@ -2384,7 +2384,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 						SchemaProps: spec.SchemaProps{
 							Description: "Metrics is available on containers and jobs, but not sidecars",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef"),
 						},
 					},
 					"scale": {
@@ -2432,7 +2432,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -2473,7 +2473,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -2518,7 +2518,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref common.ReferenceCa
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns"),
 						},
 					},
 					"state": {
@@ -2572,7 +2572,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns", "k8s.io/api/core/v1.ContainerState"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns", "k8s.io/api/core/v1.ContainerState"},
 	}
 }
 
@@ -2673,7 +2673,7 @@ func schema_pkg_apis_apiacornio_v1_CredentialList(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Credential"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Credential"),
 									},
 								},
 							},
@@ -2684,7 +2684,7 @@ func schema_pkg_apis_apiacornio_v1_CredentialList(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Credential", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Credential", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -2717,20 +2717,20 @@ func schema_pkg_apis_apiacornio_v1_DevSession(ref common.ReferenceCallback) comm
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2767,7 +2767,7 @@ func schema_pkg_apis_apiacornio_v1_DevSessionList(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSession"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.DevSession"),
 									},
 								},
 							},
@@ -2778,7 +2778,7 @@ func schema_pkg_apis_apiacornio_v1_DevSessionList(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.DevSession", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.DevSession", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -2827,7 +2827,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"),
 									},
 								},
 							},
@@ -2841,7 +2841,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File"),
 									},
 								},
 							},
@@ -2855,7 +2855,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
 					"command": {
@@ -2899,7 +2899,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar"),
 									},
 								},
 							},
@@ -2918,7 +2918,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"),
 									},
 								},
 							},
@@ -2931,7 +2931,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe"),
 									},
 								},
 							},
@@ -2945,7 +2945,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency"),
 									},
 								},
 							},
@@ -2953,7 +2953,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 					},
 					"permissions": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
 						},
 					},
 					"class": {
@@ -2972,7 +2972,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 						SchemaProps: spec.SchemaProps{
 							Description: "Metrics is available on containers and jobs, but not sidecars",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef"),
 						},
 					},
 					"scale": {
@@ -3020,7 +3020,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -3031,7 +3031,7 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -3123,7 +3123,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						SchemaProps: spec.SchemaProps{
 							Description: "Source identifies the object the Event is regarding.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource"),
 						},
 					},
 					"description": {
@@ -3137,7 +3137,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime"),
 						},
 					},
 					"details": {
@@ -3160,7 +3160,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -3197,7 +3197,7 @@ func schema_pkg_apis_apiacornio_v1_EventList(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Event"),
 									},
 								},
 							},
@@ -3208,7 +3208,7 @@ func schema_pkg_apis_apiacornio_v1_EventList(ref common.ReferenceCallback) commo
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Event", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Event", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -3356,14 +3356,14 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref common.ReferenceCallback) 
 						SchemaProps: spec.SchemaProps{
 							Description: "list of patterns to match against image names",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -3400,7 +3400,7 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageAllowRule"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRule"),
 									},
 								},
 							},
@@ -3411,7 +3411,7 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ImageAllowRule", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRule", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -3478,24 +3478,24 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
 						},
 					},
 					"appImage": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Output Params",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
 						},
 					},
 					"appSpec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec"),
 						},
 					},
 					"params": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ParamSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParamSpec"),
 						},
 					},
 					"parseError": {
@@ -3508,7 +3508,7 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ParamSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParamSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -3545,7 +3545,7 @@ func schema_pkg_apis_apiacornio_v1_ImageList(ref common.ReferenceCallback) commo
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Image"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Image"),
 									},
 								},
 							},
@@ -3556,7 +3556,7 @@ func schema_pkg_apis_apiacornio_v1_ImageList(ref common.ReferenceCallback) commo
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Image", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Image", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -3582,14 +3582,14 @@ func schema_pkg_apis_apiacornio_v1_ImagePull(ref common.ReferenceCallback) commo
 					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"},
 	}
 }
 
@@ -3615,14 +3615,14 @@ func schema_pkg_apis_apiacornio_v1_ImagePush(ref common.ReferenceCallback) commo
 					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegistryAuth"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"},
 	}
 }
 
@@ -3700,7 +3700,7 @@ func schema_pkg_apis_apiacornio_v1_Info(ref common.ReferenceCallback) common.Ope
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.InfoSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.InfoSpec"),
 									},
 								},
 							},
@@ -3725,7 +3725,7 @@ func schema_pkg_apis_apiacornio_v1_Info(ref common.ReferenceCallback) common.Ope
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.InfoSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.InfoSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -3762,7 +3762,7 @@ func schema_pkg_apis_apiacornio_v1_InfoList(ref common.ReferenceCallback) common
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Info"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Info"),
 									},
 								},
 							},
@@ -3773,7 +3773,7 @@ func schema_pkg_apis_apiacornio_v1_InfoList(ref common.ReferenceCallback) common
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Info", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Info", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -3831,7 +3831,7 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EncryptionKey"),
 									},
 								},
 							},
@@ -3840,13 +3840,13 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 					"config": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Config"),
 						},
 					},
 					"userConfig": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Config"),
 						},
 					},
 					"letsEncryptCertificate": {
@@ -3860,7 +3860,7 @@ func schema_pkg_apis_apiacornio_v1_InfoSpec(ref common.ReferenceCallback) common
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Config", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.EncryptionKey"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Config", "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EncryptionKey"},
 	}
 }
 
@@ -4043,20 +4043,20 @@ func schema_pkg_apis_apiacornio_v1_Project(ref common.ReferenceCallback) common.
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectSpec", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.ProjectStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectSpec", "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ProjectStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -4093,7 +4093,7 @@ func schema_pkg_apis_apiacornio_v1_ProjectList(ref common.ReferenceCallback) com
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Project"),
 									},
 								},
 							},
@@ -4104,7 +4104,7 @@ func schema_pkg_apis_apiacornio_v1_ProjectList(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Project", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Project", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -4207,20 +4207,20 @@ func schema_pkg_apis_apiacornio_v1_Region(ref common.ReferenceCallback) common.O
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionSpec", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.RegionStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionSpec", "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegionStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -4257,7 +4257,7 @@ func schema_pkg_apis_apiacornio_v1_RegionList(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Region"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Region"),
 									},
 								},
 							},
@@ -4268,7 +4268,7 @@ func schema_pkg_apis_apiacornio_v1_RegionList(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Region", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Region", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -4309,7 +4309,7 @@ func schema_pkg_apis_apiacornio_v1_RegionStatus(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"),
 									},
 								},
 							},
@@ -4319,7 +4319,7 @@ func schema_pkg_apis_apiacornio_v1_RegionStatus(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"},
 	}
 }
 
@@ -4448,7 +4448,7 @@ func schema_pkg_apis_apiacornio_v1_SecretList(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Secret"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Secret"),
 									},
 								},
 							},
@@ -4459,7 +4459,7 @@ func schema_pkg_apis_apiacornio_v1_SecretList(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Secret", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Secret", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -4492,20 +4492,20 @@ func schema_pkg_apis_apiacornio_v1_Service(ref common.ReferenceCallback) common.
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -4542,7 +4542,7 @@ func schema_pkg_apis_apiacornio_v1_ServiceList(ref common.ReferenceCallback) com
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Service"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Service"),
 									},
 								},
 							},
@@ -4553,7 +4553,7 @@ func schema_pkg_apis_apiacornio_v1_ServiceList(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Service", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Service", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -4586,20 +4586,20 @@ func schema_pkg_apis_apiacornio_v1_Volume(ref common.ReferenceCallback) common.O
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeSpec", "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeSpec", "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -4666,7 +4666,7 @@ func schema_pkg_apis_apiacornio_v1_VolumeClass(ref common.ReferenceCallback) com
 					"size": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
 						},
 					},
 					"inactive": {
@@ -4694,7 +4694,7 @@ func schema_pkg_apis_apiacornio_v1_VolumeClass(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -4731,7 +4731,7 @@ func schema_pkg_apis_apiacornio_v1_VolumeClassList(ref common.ReferenceCallback)
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeClass"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeClass"),
 									},
 								},
 							},
@@ -4742,7 +4742,7 @@ func schema_pkg_apis_apiacornio_v1_VolumeClassList(ref common.ReferenceCallback)
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeClass", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -4829,7 +4829,7 @@ func schema_pkg_apis_apiacornio_v1_VolumeList(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Volume"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Volume"),
 									},
 								},
 							},
@@ -4840,7 +4840,7 @@ func schema_pkg_apis_apiacornio_v1_VolumeList(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.Volume", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Volume", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -4928,14 +4928,14 @@ func schema_pkg_apis_apiacornio_v1_VolumeStatus(ref common.ReferenceCallback) co
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeColumns"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeColumns"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1.VolumeColumns"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.VolumeColumns"},
 	}
 }
 
@@ -4952,7 +4952,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
 									},
 								},
 							},
@@ -4965,7 +4965,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
 									},
 								},
 							},
@@ -4979,7 +4979,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild"),
 						},
 					},
 					"profiles": {
@@ -5017,7 +5017,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding"),
 									},
 								},
 							},
@@ -5036,7 +5036,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue"),
 									},
 								},
 							},
@@ -5049,7 +5049,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding"),
 									},
 								},
 							},
@@ -5062,7 +5062,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding"),
 									},
 								},
 							},
@@ -5075,7 +5075,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
 									},
 								},
 							},
@@ -5132,7 +5132,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
 	}
 }
 
@@ -5200,14 +5200,14 @@ func schema_pkg_apis_internalacornio_v1_AcornBuilderSpec(ref common.ReferenceCal
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild"},
 	}
 }
 
@@ -5240,20 +5240,20 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstance(ref common.Refer
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -5290,7 +5290,7 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceList(ref common.R
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstance"),
 									},
 								},
 							},
@@ -5301,7 +5301,7 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceList(ref common.R
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornImageBuildInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -5344,7 +5344,7 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceSpec(ref common.R
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Platform"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Platform"),
 									},
 								},
 							},
@@ -5367,14 +5367,14 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceSpec(ref common.R
 					"vcs": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VCS"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Platform", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VCS"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Platform", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS"},
 	}
 }
 
@@ -5411,7 +5411,7 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref common
 					"appImage": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
 						},
 					},
 					"conditions": {
@@ -5421,7 +5421,7 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref common
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"),
 									},
 								},
 							},
@@ -5443,7 +5443,7 @@ func schema_pkg_apis_internalacornio_v1_AcornImageBuildInstanceStatus(ref common
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"},
 	}
 }
 
@@ -5612,7 +5612,7 @@ func schema_pkg_apis_internalacornio_v1_AppImage(ref common.ReferenceCallback) c
 					"imageData": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImagesData"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImagesData"),
 						},
 					},
 					"buildArgs": {
@@ -5632,14 +5632,14 @@ func schema_pkg_apis_internalacornio_v1_AppImage(ref common.ReferenceCallback) c
 					"vcs": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VCS"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImagesData", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VCS"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImagesData", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS"},
 	}
 }
 
@@ -5672,20 +5672,20 @@ func schema_pkg_apis_internalacornio_v1_AppInstance(ref common.ReferenceCallback
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -5722,7 +5722,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceList(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstance"),
 									},
 								},
 							},
@@ -5733,7 +5733,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceList(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -5756,7 +5756,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
 									},
 								},
 							},
@@ -5769,7 +5769,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
 									},
 								},
 							},
@@ -5808,7 +5808,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding"),
 									},
 								},
 							},
@@ -5821,7 +5821,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding"),
 									},
 								},
 							},
@@ -5834,7 +5834,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue"),
 									},
 								},
 							},
@@ -5859,7 +5859,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
 									},
 								},
 							},
@@ -5872,7 +5872,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding"),
 									},
 								},
 							},
@@ -5899,7 +5899,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
 									},
 								},
 							},
@@ -5956,7 +5956,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
 	}
 }
 
@@ -5968,7 +5968,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"devSession": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec"),
 						},
 					},
 					"observedGeneration": {
@@ -5986,7 +5986,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns"),
 						},
 					},
 					"ready": {
@@ -6004,7 +6004,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 					"appImage": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
 						},
 					},
 					"availableAppImage": {
@@ -6034,13 +6034,13 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 					"appSpec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec"),
 						},
 					},
 					"appStatus": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus"),
 						},
 					},
 					"scheduling": {
@@ -6051,7 +6051,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Scheduling"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling"),
 									},
 								},
 							},
@@ -6064,7 +6064,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"),
 									},
 								},
 							},
@@ -6073,14 +6073,14 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 					"defaults": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Defaults"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Defaults", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Scheduling"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling"},
 	}
 }
 
@@ -6128,7 +6128,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -6142,7 +6142,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -6156,7 +6156,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Image"),
 									},
 								},
 							},
@@ -6170,7 +6170,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeRequest"),
 									},
 								},
 							},
@@ -6184,7 +6184,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Secret"),
 									},
 								},
 							},
@@ -6198,7 +6198,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Acorn"),
 									},
 								},
 							},
@@ -6212,7 +6212,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Router"),
 									},
 								},
 							},
@@ -6226,7 +6226,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Service"),
 									},
 								},
 							},
@@ -6236,7 +6236,7 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Service", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Acorn", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Image", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Router", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Secret", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Service", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeRequest"},
 	}
 }
 
@@ -6254,7 +6254,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerStatus"),
 									},
 								},
 							},
@@ -6268,7 +6268,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus"),
 									},
 								},
 							},
@@ -6282,7 +6282,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeStatus"),
 									},
 								},
 							},
@@ -6296,7 +6296,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretStatus"),
 									},
 								},
 							},
@@ -6310,7 +6310,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornStatus"),
 									},
 								},
 							},
@@ -6324,7 +6324,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.RouterStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.RouterStatus"),
 									},
 								},
 							},
@@ -6338,7 +6338,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceStatus"),
 									},
 								},
 							},
@@ -6351,7 +6351,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint"),
 									},
 								},
 							},
@@ -6367,7 +6367,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.JobStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.RouterStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeStatus"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.RouterStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeStatus"},
 	}
 }
 
@@ -6451,22 +6451,22 @@ func schema_pkg_apis_internalacornio_v1_BuildRecord(ref common.ReferenceCallback
 				Properties: map[string]spec.Schema{
 					"acornBuild": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec"),
 						},
 					},
 					"acornAppImage": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
 						},
 					},
 					"containerBuild": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
 						},
 					},
 					"imageBuild": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"),
 						},
 					},
 					"imageKey": {
@@ -6479,7 +6479,7 @@ func schema_pkg_apis_internalacornio_v1_BuildRecord(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"},
 	}
 }
 
@@ -6512,14 +6512,14 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstance(ref common.ReferenceCall
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -6556,7 +6556,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstanceList(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstance"),
 									},
 								},
 							},
@@ -6567,7 +6567,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderInstanceList(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuilderInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuilderInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -6641,7 +6641,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec"),
 									},
 								},
 							},
@@ -6655,7 +6655,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
 									},
 								},
 							},
@@ -6669,7 +6669,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
 									},
 								},
 							},
@@ -6683,7 +6683,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"),
 									},
 								},
 							},
@@ -6697,7 +6697,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec"),
 									},
 								},
 							},
@@ -6707,7 +6707,7 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuilderSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec"},
 	}
 }
 
@@ -6888,7 +6888,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"),
 									},
 								},
 							},
@@ -6902,7 +6902,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File"),
 									},
 								},
 							},
@@ -6916,7 +6916,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
 					"command": {
@@ -6960,7 +6960,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar"),
 									},
 								},
 							},
@@ -6979,7 +6979,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"),
 									},
 								},
 							},
@@ -6992,7 +6992,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe"),
 									},
 								},
 							},
@@ -7006,7 +7006,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency"),
 									},
 								},
 							},
@@ -7014,7 +7014,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 					},
 					"permissions": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
 						},
 					},
 					"class": {
@@ -7033,7 +7033,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 						SchemaProps: spec.SchemaProps{
 							Description: "Metrics is available on containers and jobs, but not sidecars",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef"),
 						},
 					},
 					"scale": {
@@ -7081,7 +7081,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container"),
 									},
 								},
 							},
@@ -7092,7 +7092,7 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Container", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -7116,7 +7116,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerData(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData"),
 									},
 								},
 							},
@@ -7126,7 +7126,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerData(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData"},
 	}
 }
 
@@ -7144,7 +7144,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerImageBuilderSpec(ref common.Ref
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
 					"sidecars": {
@@ -7156,7 +7156,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerImageBuilderSpec(ref common.Ref
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"),
 									},
 								},
 							},
@@ -7166,7 +7166,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerImageBuilderSpec(ref common.Ref
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerImageBuilderSpec"},
 	}
 }
 
@@ -7266,7 +7266,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerStatus(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyStatus"),
 									},
 								},
 							},
@@ -7279,7 +7279,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerStatus(ref common.ReferenceCall
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError"),
 									},
 								},
 							},
@@ -7289,7 +7289,7 @@ func schema_pkg_apis_internalacornio_v1_ContainerStatus(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError"},
 	}
 }
 
@@ -7307,7 +7307,7 @@ func schema_pkg_apis_internalacornio_v1_Defaults(ref common.ReferenceCallback) c
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeDefault"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeDefault"),
 									},
 								},
 							},
@@ -7337,7 +7337,7 @@ func schema_pkg_apis_internalacornio_v1_Defaults(ref common.ReferenceCallback) c
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeDefault"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeDefault"},
 	}
 }
 
@@ -7466,20 +7466,20 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstance(ref common.ReferenceC
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -7498,14 +7498,14 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceClient(ref common.Refe
 					"imageSource": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionImageSource"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionImageSource"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionImageSource"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionImageSource"},
 	}
 }
 
@@ -7560,7 +7560,7 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceList(ref common.Refere
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstance"),
 									},
 								},
 							},
@@ -7571,7 +7571,7 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceList(ref common.Refere
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -7584,7 +7584,7 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceSpec(ref common.Refere
 					"client": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceClient"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceClient"),
 						},
 					},
 					"sessionTimeoutSeconds": {
@@ -7607,14 +7607,14 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceSpec(ref common.Refere
 					},
 					"specOverride": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DevSessionInstanceClient", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceClient", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -7637,7 +7637,7 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceStatus(ref common.Refe
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"),
 									},
 								},
 							},
@@ -7647,7 +7647,7 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceStatus(ref common.Refe
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"},
 	}
 }
 
@@ -7720,14 +7720,14 @@ func schema_pkg_apis_internalacornio_v1_EnvVar(ref common.ReferenceCallback) com
 					"secret": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"},
 	}
 }
 
@@ -7784,7 +7784,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						SchemaProps: spec.SchemaProps{
 							Description: "Source identifies the object the Event is regarding.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource"),
 						},
 					},
 					"description": {
@@ -7798,7 +7798,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						SchemaProps: spec.SchemaProps{
 							Description: "Observed represents the time the Event was first observed.",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime"),
 						},
 					},
 					"details": {
@@ -7821,7 +7821,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -7858,7 +7858,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstanceList(ref common.ReferenceCa
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventInstance"),
 									},
 								},
 							},
@@ -7869,7 +7869,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstanceList(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EventInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -7945,7 +7945,7 @@ func schema_pkg_apis_internalacornio_v1_ExpressionError(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"dependencyNotFound": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyNotFound"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyNotFound"),
 						},
 					},
 					"expression": {
@@ -7964,7 +7964,7 @@ func schema_pkg_apis_internalacornio_v1_ExpressionError(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyNotFound"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyNotFound"},
 	}
 }
 
@@ -7989,14 +7989,14 @@ func schema_pkg_apis_internalacornio_v1_File(ref common.ReferenceCallback) commo
 					"secret": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"},
 	}
 }
 
@@ -8065,19 +8065,19 @@ func schema_pkg_apis_internalacornio_v1_Image(ref common.ReferenceCallback) comm
 					},
 					"containerBuild": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"},
 	}
 }
 
@@ -8125,14 +8125,14 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref common.Refere
 						SchemaProps: spec.SchemaProps{
 							Description: "list of patterns to match against image names",
 							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -8169,7 +8169,7 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref common.Re
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance"),
 									},
 								},
 							},
@@ -8180,7 +8180,7 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref common.Re
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -8197,7 +8197,7 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref common.Refe
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignatureRules"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules"),
 									},
 								},
 							},
@@ -8207,7 +8207,7 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref common.Refe
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignatureRules"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules"},
 	}
 }
 
@@ -8225,19 +8225,19 @@ func schema_pkg_apis_internalacornio_v1_ImageBuilderSpec(ref common.ReferenceCal
 					},
 					"containerBuild": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"),
 						},
 					},
 					"acornBuild": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Build"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Build"},
 	}
 }
 
@@ -8359,7 +8359,7 @@ func schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref common.ReferenceCa
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstance"),
 									},
 								},
 							},
@@ -8370,7 +8370,7 @@ func schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -8388,7 +8388,7 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerData"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerData"),
 									},
 								},
 							},
@@ -8402,7 +8402,7 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerData"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerData"),
 									},
 								},
 							},
@@ -8416,7 +8416,7 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData"),
 									},
 								},
 							},
@@ -8430,7 +8430,7 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData"),
 									},
 								},
 							},
@@ -8443,7 +8443,7 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuildRecord"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuildRecord"),
 									},
 								},
 							},
@@ -8453,7 +8453,7 @@ func schema_pkg_apis_internalacornio_v1_ImagesData(ref common.ReferenceCallback)
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.BuildRecord", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ContainerData", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ImageData"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.BuildRecord", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerData", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData"},
 	}
 }
 
@@ -8541,7 +8541,7 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyStatus"),
 									},
 								},
 							},
@@ -8560,7 +8560,7 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError"),
 									},
 								},
 							},
@@ -8570,7 +8570,7 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.DependencyStatus", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DependencyStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError"},
 	}
 }
 
@@ -8692,7 +8692,7 @@ func schema_pkg_apis_internalacornio_v1_ParamSpec(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Param"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Param"),
 									},
 								},
 							},
@@ -8705,7 +8705,7 @@ func schema_pkg_apis_internalacornio_v1_ParamSpec(ref common.ReferenceCallback) 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Profile"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Profile"),
 									},
 								},
 							},
@@ -8715,7 +8715,7 @@ func schema_pkg_apis_internalacornio_v1_ParamSpec(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Param", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Profile"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Param", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Profile"},
 	}
 }
 
@@ -8738,7 +8738,7 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PolicyRule"),
 									},
 								},
 							},
@@ -8752,7 +8752,7 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PolicyRule"),
 									},
 								},
 							},
@@ -8762,7 +8762,7 @@ func schema_pkg_apis_internalacornio_v1_Permissions(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PolicyRule"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PolicyRule"},
 	}
 }
 
@@ -9083,17 +9083,17 @@ func schema_pkg_apis_internalacornio_v1_Probe(ref common.ReferenceCallback) comm
 					},
 					"exec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExecProbe"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExecProbe"),
 						},
 					},
 					"http": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.HTTPProbe"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.HTTPProbe"),
 						},
 					},
 					"tcp": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.TCPProbe"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.TCPProbe"),
 						},
 					},
 					"initialDelaySeconds": {
@@ -9130,7 +9130,7 @@ func schema_pkg_apis_internalacornio_v1_Probe(ref common.ReferenceCallback) comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExecProbe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.HTTPProbe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.TCPProbe"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExecProbe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.HTTPProbe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.TCPProbe"},
 	}
 }
 
@@ -9292,7 +9292,7 @@ func schema_pkg_apis_internalacornio_v1_Router(ref common.ReferenceCallback) com
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Route"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Route"),
 									},
 								},
 							},
@@ -9302,7 +9302,7 @@ func schema_pkg_apis_internalacornio_v1_Router(ref common.ReferenceCallback) com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Route"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Route"},
 	}
 }
 
@@ -9730,7 +9730,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
 									},
 								},
 							},
@@ -9743,7 +9743,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel"),
 									},
 								},
 							},
@@ -9780,7 +9780,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"),
 									},
 								},
 							},
@@ -9808,7 +9808,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 					},
 					"generated": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GeneratedService"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.GeneratedService"),
 						},
 					},
 					"image": {
@@ -9819,7 +9819,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 					},
 					"build": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild"),
 						},
 					},
 					"serviceArgs": {
@@ -9843,7 +9843,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue"),
 									},
 								},
 							},
@@ -9856,7 +9856,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding"),
 									},
 								},
 							},
@@ -9869,7 +9869,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding"),
 									},
 								},
 							},
@@ -9911,7 +9911,7 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.GeneratedService", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceBinding"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.GeneratedService", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding"},
 	}
 }
 
@@ -9968,20 +9968,20 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstance(ref common.ReferenceCall
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -10018,7 +10018,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceList(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstance"),
 									},
 								},
 							},
@@ -10029,7 +10029,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceList(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ServiceInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -10101,7 +10101,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"),
 									},
 								},
 							},
@@ -10182,7 +10182,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Route"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Route"),
 									},
 								},
 							},
@@ -10201,7 +10201,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref common.Reference
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortPublish"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortPublish"),
 									},
 								},
 							},
@@ -10212,7 +10212,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceSpec(ref common.Reference
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortPublish", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Route"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortPublish", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Route"},
 	}
 }
 
@@ -10229,7 +10229,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceStatus(ref common.Referen
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"),
 									},
 								},
 							},
@@ -10242,7 +10242,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceStatus(ref common.Referen
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint"),
 									},
 								},
 							},
@@ -10258,7 +10258,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceInstanceStatus(ref common.Referen
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Endpoint"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint"},
 	}
 }
 
@@ -10333,7 +10333,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceStatus(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"),
 									},
 								},
 							},
@@ -10398,7 +10398,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceStatus(ref common.ReferenceCallba
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError"),
 									},
 								},
 							},
@@ -10408,7 +10408,7 @@ func schema_pkg_apis_internalacornio_v1_ServiceStatus(ref common.ReferenceCallba
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.ExpressionError", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.PortDef"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef"},
 	}
 }
 
@@ -10463,20 +10463,20 @@ func schema_pkg_apis_internalacornio_v1_SignatureRules(ref common.ReferenceCallb
 					"signedBy": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignedBy"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignedBy"),
 						},
 					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignatureAnnotations", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SignedBy"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignedBy"},
 	}
 }
 
@@ -10691,14 +10691,14 @@ func schema_pkg_apis_internalacornio_v1_VolumeMount(ref common.ReferenceCallback
 					"secret": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeSecretMount"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeSecretMount"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeSecretMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeSecretMount"},
 	}
 }
 
@@ -10889,7 +10889,7 @@ func schema_pkg_apis_internalacornio_v1_acornAliases(ref common.ReferenceCallbac
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue"),
 									},
 								},
 							},
@@ -10913,7 +10913,7 @@ func schema_pkg_apis_internalacornio_v1_acornAliases(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.NameValue"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue"},
 	}
 }
 
@@ -10944,7 +10944,7 @@ func schema_pkg_apis_internalacornio_v1_containerAliases(ref common.ReferenceCal
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar"),
 									},
 								},
 							},
@@ -10975,7 +10975,7 @@ func schema_pkg_apis_internalacornio_v1_containerAliases(ref common.ReferenceCal
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe"),
 									},
 								},
 							},
@@ -10989,7 +10989,7 @@ func schema_pkg_apis_internalacornio_v1_containerAliases(ref common.ReferenceCal
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"),
 									},
 								},
 							},
@@ -11002,7 +11002,7 @@ func schema_pkg_apis_internalacornio_v1_containerAliases(ref common.ReferenceCal
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency"),
 									},
 								},
 							},
@@ -11015,7 +11015,7 @@ func schema_pkg_apis_internalacornio_v1_containerAliases(ref common.ReferenceCal
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency"),
 									},
 								},
 							},
@@ -11031,7 +11031,7 @@ func schema_pkg_apis_internalacornio_v1_containerAliases(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.VolumeMount"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Dependency", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Probe", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeMount"},
 	}
 }
 
@@ -11056,14 +11056,14 @@ func schema_pkg_apis_internalacornio_v1_envVal(ref common.ReferenceCallback) com
 					"secret": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"},
 	}
 }
 
@@ -11162,7 +11162,7 @@ func schema_pkg_apis_internalacornio_v1_secretReference(ref common.ReferenceCall
 					"SecretReference": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"),
 						},
 					},
 					"Mode": {
@@ -11177,7 +11177,7 @@ func schema_pkg_apis_internalacornio_v1_secretReference(ref common.ReferenceCall
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.SecretReference"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretReference"},
 	}
 }
 
@@ -11247,7 +11247,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref com
 					"memory": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
 						},
 					},
 					"supportedRegions": {
@@ -11275,7 +11275,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -11312,7 +11312,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstanceList(ref
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance"),
 									},
 								},
 							},
@@ -11323,7 +11323,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstanceList(ref
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -11390,7 +11390,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstance(ref comm
 					"size": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
 						},
 					},
 					"inactive": {
@@ -11418,7 +11418,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstance(ref comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -11455,7 +11455,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstanceList(ref 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance"),
 									},
 								},
 							},
@@ -11466,7 +11466,7 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstanceList(ref 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -11580,7 +11580,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstance(ref com
 					"memory": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory"),
 						},
 					},
 					"supportedRegions": {
@@ -11608,7 +11608,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstance(ref com
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory", "k8s.io/api/core/v1.Affinity", "k8s.io/api/core/v1.Toleration", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -11645,7 +11645,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstanceList(ref
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance"),
 									},
 								},
 							},
@@ -11656,7 +11656,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstanceList(ref
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -11723,7 +11723,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref comm
 					"size": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize"),
 						},
 					},
 					"inactive": {
@@ -11751,7 +11751,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -11788,7 +11788,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref 
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance"),
 									},
 								},
 							},
@@ -11799,7 +11799,7 @@ func schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstanceList(ref 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -11832,20 +11832,20 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstance(ref common.Ref
 					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec", "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -11882,7 +11882,7 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref common
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance"),
 									},
 								},
 							},
@@ -11893,7 +11893,7 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref common
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -11912,14 +11912,14 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref common
 					"resources": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"},
 	}
 }
 
@@ -11938,12 +11938,12 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref comm
 					"allocatedResources": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"),
 						},
 					},
 					"failedResources": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"),
 						},
 					},
 					"conditions": {
@@ -11953,7 +11953,7 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref comm
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
 										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition"),
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition"),
 									},
 								},
 							},
@@ -11963,7 +11963,7 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1.Resources"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"},
 	}
 }
 

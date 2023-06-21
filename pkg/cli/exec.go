@@ -6,12 +6,12 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/client/term"
-	"github.com/acorn-io/acorn/pkg/streams"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/client/term"
+	"github.com/acorn-io/runtime/pkg/streams"
 	"github.com/spf13/cobra"
 )
 

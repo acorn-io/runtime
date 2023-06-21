@@ -11,10 +11,10 @@ import (
 	sync2 "sync"
 	"time"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/controller/appdefinition"
 	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/controller/appdefinition"
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
 	"github.com/loft-sh/devspace/pkg/devspace/sync"
 	logpkg "github.com/loft-sh/devspace/pkg/util/log"

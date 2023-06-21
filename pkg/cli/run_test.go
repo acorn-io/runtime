@@ -8,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/runtime/pkg/client"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/mocks"
+	"github.com/acorn-io/runtime/pkg/cli/testdata"
+	"github.com/acorn-io/runtime/pkg/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 

@@ -6,12 +6,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/credentials"
-	"github.com/acorn-io/acorn/pkg/hub"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/hub"
+	"github.com/acorn-io/runtime/pkg/system"
 	"k8s.io/client-go/rest"
 )
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/install/progress"
+	"github.com/acorn-io/runtime/pkg/install/progress"
 	"github.com/pterm/pterm"
 )
 

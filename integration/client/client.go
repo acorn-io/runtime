@@ -3,8 +3,8 @@ package client
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/integration/helper"
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/runtime/integration/helper"
+	"github.com/acorn-io/runtime/pkg/client"
 )
 
 func NewImageWithSidecar(t *testing.T, namespace string) string {

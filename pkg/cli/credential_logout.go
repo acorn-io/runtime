@@ -3,11 +3,11 @@ package cli
 import (
 	"fmt"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	credentials2 "github.com/acorn-io/acorn/pkg/credentials"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	credentials2 "github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )

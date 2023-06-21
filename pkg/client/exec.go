@@ -3,9 +3,9 @@ package client
 import (
 	"context"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client/term"
-	"github.com/acorn-io/acorn/pkg/scheme"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client/term"
+	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/sirupsen/logrus"
 )
 

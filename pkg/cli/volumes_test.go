@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/mocks"
+	"github.com/acorn-io/runtime/pkg/mocks"
 	"github.com/golang/mock/gomock"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/labels"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/cli/testdata"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -23,7 +23,7 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X "github.com/acorn-io/acorn/pkg/version.Tag=v{{ .Version }}"
+      - -X "github.com/acorn-io/runtime/pkg/version.Tag=v{{ .Version }}"
 
 universal_binaries:
   - id: mac
@@ -77,7 +77,7 @@ changelog:
 release:
   github:
     owner: acorn-io
-    name: acorn
+    name: runtime
   prerelease: auto
   extra_files:
     - glob: ./cosign.pub
@@ -107,7 +107,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
+      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/runtime"
       - "--platform=linux/amd64"
     extra_files:
       - scripts/acorn-helper-init
@@ -129,7 +129,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/acorn"
+      - "--label=org.opencontainers.image.source=https://github.com/acorn-io/runtime"
       - "--platform=linux/arm64"
     extra_files:
       - scripts/acorn-helper-init

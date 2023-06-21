@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/mocks"
+	"github.com/acorn-io/runtime/pkg/cli/testdata"
+	"github.com/acorn-io/runtime/pkg/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"

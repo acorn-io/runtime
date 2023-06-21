@@ -1,8 +1,8 @@
 package registry
 
 import (
-	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn"
-	"github.com/acorn-io/acorn/pkg/server/registry/apigroups/admin"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/admin"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	clientgo "k8s.io/client-go/rest"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"

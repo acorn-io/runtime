@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/runtime/pkg/client"
 	"inet.af/tcpproxy"
 )
 

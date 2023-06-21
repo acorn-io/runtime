@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	api_acorn_io "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
+	api_acorn_io "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

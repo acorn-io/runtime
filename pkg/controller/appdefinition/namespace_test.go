@@ -3,10 +3,10 @@ package appdefinition
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/controller/namespace"
-	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router/tester"
+	"github.com/acorn-io/runtime/pkg/controller/namespace"
+	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"

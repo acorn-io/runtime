@@ -3,7 +3,7 @@ package condition
 import (
 	"testing"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

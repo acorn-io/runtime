@@ -3,12 +3,12 @@ package autoupgrade
 import (
 	"context"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/imageallowrules"
-	"github.com/acorn-io/acorn/pkg/images"
-	tags2 "github.com/acorn-io/acorn/pkg/tags"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/images"
+	tags2 "github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"

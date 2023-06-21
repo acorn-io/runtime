@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/encryption/nacl"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/encryption/nacl"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

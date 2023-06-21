@@ -38,7 +38,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/acorn-io/acorn/tree/main/docs/',
+            'https://github.com/acorn-io/runtime/tree/main/docs/',
         },
         blog: false,
         gtag: {
@@ -70,7 +70,7 @@ const config = {
             target: '_self',
           },
           {
-            to: 'https://github.com/acorn-io/acorn',
+            to: 'https://github.com/acorn-io/runtime',
             label: 'GitHub',
             position: 'right',
           },
@@ -86,7 +86,7 @@ const config = {
         links: [
           {
             label: 'GitHub',
-            to: 'https://github.com/acorn-io/acorn',
+            to: 'https://github.com/acorn-io/runtime',
           },
           {
             label: 'Users Slack',

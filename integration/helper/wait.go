@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	hclient "github.com/acorn-io/acorn/pkg/client"
+	hclient "github.com/acorn-io/runtime/pkg/client"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/watch"

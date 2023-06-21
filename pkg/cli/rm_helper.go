@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/prompt"
+	"github.com/acorn-io/runtime/pkg/prompt"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/acorn-io/acorn/pkg/client"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/spf13/cobra"
 )
 
