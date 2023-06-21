@@ -31,6 +31,11 @@ spec:
             httpGet:
               path: /healthz
               port: 8888
+          resources:
+            requests:
+              cpu: 150m
+              memory: 200Mi
+      priorityClassName: system-cluster-critical
       serviceAccountName: acorn-system
       tolerations:
         - key: node-role.kubernetes.io/control-plane

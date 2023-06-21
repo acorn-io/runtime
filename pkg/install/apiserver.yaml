@@ -66,6 +66,11 @@ spec:
             - containerPort: 7443
           securityContext:
             runAsUser: 1000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 100Mi
+      priorityClassName: system-cluster-critical
       serviceAccountName: acorn-system
       tolerations:
         - key: node-role.kubernetes.io/control-plane

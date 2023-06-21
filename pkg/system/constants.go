@@ -13,6 +13,8 @@ const (
 	CustomCABundleSecretVolumeName
 	CustomCABundleDir      = "/etc/ssl/certs"
 	CustomCABundleCertName = "ca-certificates.crt"
+
+	AcornPriorityClass = "system-cluster-critical"
 )
 
 var (
