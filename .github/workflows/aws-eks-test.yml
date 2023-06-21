@@ -48,7 +48,7 @@ jobs:
             acorn uninstall -af
           fi
           # Install Acorn with NetworkPolicies disabled because EKS does not enforce them, so tests will fail if we leave them enabled
-          acorn install --image ghcr.io/acorn-io/acorn:main --network-policies=false
+          acorn install --image ghcr.io/acorn-io/runtime:main --network-policies=false
           
         env:
           KUBECONFIG: "/home/runner/.kube/config"

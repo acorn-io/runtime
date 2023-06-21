@@ -129,23 +129,23 @@ func TestImageTag(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.ImageTag(ctx, "foo:latest", "ghcr.io/acorn-io/acorn/test:v0.0.0-abc")
+	err = c.ImageTag(ctx, "foo:latest", "ghcr.io/acorn-io/runtime/test:v0.0.0-abc")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.ImageTag(ctx, "ghcr.io/acorn-io/acorn/test:v0.0.0-abc", "ghcr.io/acorn-io/acorn/test:v0.0.0-def")
+	err = c.ImageTag(ctx, "ghcr.io/acorn-io/runtime/test:v0.0.0-abc", "ghcr.io/acorn-io/runtime/test:v0.0.0-def")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	newImage, err := c.ImageGet(ctx, "ghcr.io/acorn-io/acorn/test:v0.0.0-abc")
+	newImage, err := c.ImageGet(ctx, "ghcr.io/acorn-io/runtime/test:v0.0.0-abc")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Equal(t, image.Name, newImage.Name)
-	assert.Equal(t, "ghcr.io/acorn-io/acorn/test:v0.0.0-abc", newImage.Tags[2])
+	assert.Equal(t, "ghcr.io/acorn-io/runtime/test:v0.0.0-abc", newImage.Tags[2])
 }
 
 func TestImagePush(t *testing.T) {

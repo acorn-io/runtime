@@ -19,4 +19,4 @@ jobs:
 
       - name: Copy Staging to Production
         run: |
-          crane tag ghcr.io/acorn-io/acorn:stg prod
+          crane tag ghcr.io/acorn-io/runtime:stg prod

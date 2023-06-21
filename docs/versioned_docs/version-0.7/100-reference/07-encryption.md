@@ -17,7 +17,7 @@ acorn info
 #  publicKeys:
 #  - keyID: 3rRkDpFF9FjhT4wGTaIvw8U5MX0p80eosk8yu61FOAY
 #server:
-#  apiServerImage: ghcr.io/acorn-io/acorn:main
+#  apiServerImage: ghcr.io/acorn-io/runtime:main
 #  config:
 #....
 ```

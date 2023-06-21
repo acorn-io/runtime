@@ -21,4 +21,4 @@ jobs:
 
       - name: Copy Main to Staging
         run: |
-          crane tag ghcr.io/acorn-io/acorn:main stg
+          crane tag ghcr.io/acorn-io/runtime:main stg

@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: acorn-controller
-          image: ghcr.io/acorn-io/acorn
+          image: ghcr.io/acorn-io/runtime
           args:
             - controller
           securityContext:
