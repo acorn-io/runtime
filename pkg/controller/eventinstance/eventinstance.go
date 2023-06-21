@@ -25,7 +25,10 @@ func GCExpired() router.HandlerFunc {
 	}
 
 	return handler{
-		getTTL: func(ctx context.Context, getter kclient.Reader) (time.Duration, error) {
+		getTTL: func(
+			ctx context.Context,
+			getter kclient.Reader,
+		) (time.Duration, error) {
 			cfg, err := config.Get(ctx, getter)
 			if err != nil {
 				return 0, err
@@ -56,13 +59,25 @@ func GCExpired() router.HandlerFunc {
 	}.gcExpired
 }
 
-type handler struct {
-	// getTTL returns the TTL to use for event expiration.
-	getTTL func(context.Context, kclient.Reader) (time.Duration, error)
+// GCable describes types that can be GCed by the router.HandlerFunc returned by GCExpired.
+type GCable interface {
+	// GetObserved returns the time of the initial observation.
+	GetObserved() v1.MicroTime
 }
 
-func (h handler) gcExpired(req router.Request, resp router.Response) error {
-	e := req.Object.(*v1.EventInstance)
+type handler struct {
+	// getTTL returns the TTL to use for event expiration.
+	getTTL func(
+		context.Context,
+		kclient.Reader,
+	) (time.Duration, error)
+}
+
+func (h handler) gcExpired(
+	req router.Request,
+	resp router.Response,
+) error {
+	e := req.Object
 
 	// Get the currently configured TTL
 	ttl, err := h.getTTL(req.Ctx, req.Client)
@@ -71,22 +86,26 @@ func (h handler) gcExpired(req router.Request, resp router.Response) error {
 	}
 
 	// Check expiration
-	if now, expiration := time.Now(), e.Observed.Add(ttl); now.Before(expiration) {
+	if now, expiration := time.Now(), e.(GCable).GetObserved().Add(ttl); now.Before(expiration) {
 		// Still fresh, wait until expiration
 		resp.RetryAfter(time.Until(expiration))
 		return nil
 	}
 
 	// Expired, delete the event
-	if err := req.Client.Delete(req.Ctx, e, kclient.Preconditions{
+	if err := req.Client.Delete(req.Ctx, req.Object, kclient.Preconditions{
 		// Adding these preconditions prevents us from deleting an event based on old information.
 		// e.g. The observed time has been updated and the event is no longer expired.
-		UID:             &e.UID,
-		ResourceVersion: &e.ResourceVersion,
+		UID:             ptr(e.GetUID()),
+		ResourceVersion: ptr(e.GetResourceVersion()),
 	}); err != nil && !apierrors.IsNotFound(err) {
 		// Assume any error other than not found is transient, return error to requeue w/ backoff
 		return err
 	}
 
 	return nil
+}
+
+func ptr[T any](t T) *T {
+	return &t
 }

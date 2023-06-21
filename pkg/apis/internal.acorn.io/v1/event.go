@@ -54,12 +54,17 @@ type EventInstance struct {
 	Details GenericMap `json:"details,omitempty"`
 }
 
+// GetObserved returns the time that the Event was first observed.
+func (e EventInstance) GetObserved() MicroTime {
+	return e.Observed
+}
+
 // MicroTime represents a time with microsecond level precision.
 //
 // It extends metav1.MicroTime to allow unmarshaling from RFC3339.
 type MicroTime metav1.MicroTime
 
-// DeepCopy returns a deep-copy of the MicroTime value.  The underlying time.Time
+// DeepCopyInto returns a deep-copy of the MicroTime value.  The underlying time.Time
 // type is effectively immutable in the time API, so it is safe to
 // copy-by-assign, despite the presence of (unexported) Pointer fields.
 func (t *MicroTime) DeepCopyInto(out *MicroTime) {
