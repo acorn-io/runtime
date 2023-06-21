@@ -37,11 +37,10 @@ func NewImageSign(c CommandContext) *cobra.Command {
 }
 
 type ImageSign struct {
-	client              ClientFactory
-	Key                 string            `usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
-	Annotations         map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true"`
-	SignatureRepository string            `usage:"Repository to push the signature to" short:"r" local:"true" default:""`
-	Push                bool              `usage:"Push the signature to the signature repository" short:"p" local:"true" default:"true"`
+	client      ClientFactory
+	Key         string            `usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
+	Annotations map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true"`
+	Push        bool              `usage:"Push the signature to the signature repository" short:"p" local:"true" default:"true"`
 }
 
 func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
@@ -50,15 +49,13 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	push := cmd.Flag("push").Changed && a.Push
+	targetName := args[0]
+	targetDigest := ""
 
 	img, tag, err := client.FindImage(cmd.Context(), c, args[0])
 	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 		return err
 	}
-
-	targetName := args[0]
-	targetDigest := ""
 
 	if err == nil && tag == "" {
 		return fmt.Errorf("Signing a local image without specifying the repository is not supported")
@@ -144,15 +141,8 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if push {
+	if a.Push {
 		targetRepo := ref.Context()
-		if a.SignatureRepository != "" {
-			ref, err := name.ParseReference(a.SignatureRepository)
-			if err != nil {
-				return err
-			}
-			targetRepo = ref.Context()
-		}
 		if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity); err != nil { // TODO: need remote opts
 			return err
 		}

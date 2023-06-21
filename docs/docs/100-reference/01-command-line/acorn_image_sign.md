@@ -18,11 +18,10 @@ acorn image sign my-image --key ./my-key
 ### Options
 
 ```
-  -a, --annotations strings           Annotations to add to the signature
-  -h, --help                          help for sign
-  -k, --key string                    Key to use for signing (default "./cosign.key")
-  -p, --push                          Push the signature to the signature repository
-  -r, --signature-repository string   Repository to push the signature to
+  -a, --annotations strings   Annotations to add to the signature
+  -h, --help                  help for sign
+  -k, --key string            Key to use for signing (default "./cosign.key")
+  -p, --push                  Push the signature to the signature repository
 ```
 
 ### Options inherited from parent commands
