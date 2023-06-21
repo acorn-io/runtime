@@ -31,7 +31,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 			// If this is the case, notify the user that they need to explicitly specify docker.io if that is what they are trying to use.
 			ref, err := imagename.ParseReference(strings.TrimSuffix(imageName, ":"+tagPattern), imagename.WithDefaultRegistry(defaultNoReg))
 			if err == nil && ref.Context().Registry.Name() == defaultNoReg {
-				return nil, fmt.Errorf("unable to find an image for %v matching pattern %v\nif you are trying to use Docker Hub, use docker.io/%v", imageName, tagPattern, imageName)
+				return nil, fmt.Errorf("unable to find an image for %v matching pattern %v - if you are trying to use Docker Hub, use docker.io/%v", imageName, tagPattern, imageName)
 			}
 
 			return nil, fmt.Errorf("unable to find an image for %v matching pattern %v", imageName, tagPattern)

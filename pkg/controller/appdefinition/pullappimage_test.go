@@ -3,13 +3,16 @@ package appdefinition
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/router/tester"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/scheme"
+	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -269,4 +272,50 @@ func testRecordPullEvent(t *testing.T, testName string, appInstance *v1.AppInsta
 		assert.Len(t, recording, 1)
 		assert.EqualValues(t, expect, recording[0])
 	})
+}
+
+func TestAutoUpgradeImageResolution(t *testing.T) {
+	// Auto-upgrade apps are not supposed to use Docker Hub implicitly.
+	// In this test, we create an auto-upgrade App with the image "myimage:latest".
+	// In the first test case, this image exists locally and should be resolved properly.
+	// In the second test case, no such image exists locally, and Acorn should not reach out to Docker Hub, and should instead return an error.
+
+	fakeRecorder := func(_ context.Context, _ *apiv1.Event) error {
+		return nil
+	}
+
+	// First, test to make sure that the local image is properly resolved
+	tester.DefaultTest(t, scheme.Scheme, "testdata/autoupgrade/with-local-image", testPullAppImage(mockRoundTripper{}, event.RecorderFunc(fakeRecorder)))
+
+	// Next, test to make sure that Docker Hub is not implicitly used when no local image is found
+	// There should be a helpful error message instead
+	harness, obj, err := tester.FromDir(scheme.Scheme, "testdata/autoupgrade/without-local-image")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = harness.InvokeFunc(t, obj, testPullAppImage(mockRoundTripper{}, event.RecorderFunc(fakeRecorder)))
+	if err == nil {
+		t.Fatalf("expected error when no local image was found for auto-upgrade app without a specified registry")
+	}
+	assert.ErrorContains(t, err, "no local image found for myimage:latest - if you are trying to use Docker Hub, use docker.io/myimage:latest")
+}
+
+func testPullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
+	return pullAppImage(transport, pullClient{
+		recorder: recorder,
+		resolve:  tags.ResolveLocal,
+		pull: func(_ context.Context, _ kclient.Reader, _ string, _ string, _ string, _ ...remote.Option) (*v1.AppImage, error) {
+			return &v1.AppImage{
+				Name:   "myimage:latest",
+				Digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			}, nil
+		},
+		now: metav1.NowMicro,
+	})
+}
+
+type mockRoundTripper struct{}
+
+func (m mockRoundTripper) RoundTrip(_ *http.Request) (*http.Response, error) {
+	return nil, nil
 }

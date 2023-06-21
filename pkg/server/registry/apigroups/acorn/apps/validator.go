@@ -99,7 +99,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 
 				if ref.Context().RegistryStr() == defaultNoReg {
 					result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image,
-						fmt.Sprintf("could not find local image for %v\nif you are trying to use Docker Hub, use docker.io/%v", params.Spec.Image, params.Spec.Image)))
+						fmt.Sprintf("could not find local image for %v - if you are trying to use Docker Hub, use docker.io/%v", params.Spec.Image, params.Spec.Image)))
 				}
 			}
 

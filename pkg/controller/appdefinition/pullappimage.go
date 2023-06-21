@@ -78,7 +78,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 					}
 					if ref.Context().RegistryStr() == defaultNoReg {
 						// Prevent this from being resolved remotely, as we should never assume Docker Hub for auto-upgrade apps
-						return fmt.Errorf("no local image found for %v\nif you are trying to use Docker Hub, use docker.io/%v", target, target)
+						return fmt.Errorf("no local image found for %v - if you are trying to use Docker Hub, use docker.io/%v", target, target)
 					}
 				}
 

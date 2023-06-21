@@ -1,0 +1,27 @@
+`apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  autoUpgrade: true
+  image: myimage:latest
+status:
+  appImage:
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    imageData: {}
+    name: myimage:latest
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: image-pull
+  defaults: {}
+  namespace: app-created-namespace
+`

@@ -1,0 +1,12 @@
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  name: app-name
+  namespace: app-namespace
+  uid: 1234567890abcdef
+spec:
+  autoUpgrade: true
+  image: myimage:latest
+status:
+  namespace: app-created-namespace
