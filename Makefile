@@ -40,8 +40,19 @@ validate-code: tidy generate lint gen-docs
 	;fi
 
 GOTESTSUM_VERSION ?= v1.10.0
-test:
-	go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format testname $(TEST_FLAGS) -- $(GO_TEST_FLAGS) ./...
+GOTESTSUM ?= go run gotest.tools/gotestsum@$(GOTESTSUM_VERSION) --format testname $(TEST_FLAGS) -- $(GO_TEST_FLAGS)
+
+.PHONY: test
+test: unit integration
+
+.PHONY: unit
+unit:
+	$(GOTESTSUM) $$(go list ./... | grep -v /integration/)
+
+.PHONY: integration
+integration:
+	$(GOTESTSUM) ./integration/...
+
 
 goreleaser:
 	goreleaser build --snapshot --single-target --rm-dist
