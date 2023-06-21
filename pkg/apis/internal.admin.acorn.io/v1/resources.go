@@ -11,12 +11,15 @@ import (
 // external controllers to programmatically set the resources easier. Calls to
 // its functions are mutating.
 type Resources struct {
+	Unlimited bool `json:"unlimited,omitempty"`
+
 	Apps       int `json:"apps,omitempty"`
 	Containers int `json:"containers,omitempty"`
 	Jobs       int `json:"jobs,omitempty"`
 	Volumes    int `json:"volumes,omitempty"`
 	Secrets    int `json:"secrets,omitempty"`
 	Images     int `json:"images,omitempty"`
+	Projects   int `json:"projects,omitempty"`
 
 	VolumeStorage resource.Quantity `json:"volumeStorage,omitempty"`
 	Memory        resource.Quantity `json:"memory,omitempty"`
@@ -31,6 +34,7 @@ func (current *Resources) Add(incoming Resources) {
 	current.Volumes += incoming.Volumes
 	current.Secrets += incoming.Secrets
 	current.Images += incoming.Images
+	current.Projects += incoming.Projects
 
 	current.VolumeStorage.Add(incoming.VolumeStorage)
 	current.Memory.Add(incoming.Memory)
@@ -39,18 +43,28 @@ func (current *Resources) Add(incoming Resources) {
 
 // Remove will remove the resources of another Resources struct from the current one.
 func (current *Resources) Remove(incoming Resources, all bool) {
-	current.Apps -= incoming.Apps
-	current.Containers -= incoming.Containers
-	current.Jobs -= incoming.Jobs
-	current.Volumes -= incoming.Volumes
-	current.Images -= incoming.Images
+	// Do not allow resources to go below 0
+	nonNegativeSubtract := func(currentVal, incomingVal int) int {
+		difference := currentVal - incomingVal
+		if difference < 0 {
+			difference = 0
+		}
+		return difference
+	}
+
+	current.Apps = nonNegativeSubtract(current.Apps, incoming.Apps)
+	current.Containers = nonNegativeSubtract(current.Containers, incoming.Containers)
+	current.Jobs = nonNegativeSubtract(current.Jobs, incoming.Jobs)
+	current.Volumes = nonNegativeSubtract(current.Volumes, incoming.Volumes)
+	current.Images = nonNegativeSubtract(current.Images, incoming.Images)
+	current.Projects = nonNegativeSubtract(current.Projects, incoming.Projects)
 
 	current.Memory.Sub(incoming.Memory)
 	current.CPU.Sub(incoming.CPU)
 
 	// Only remove persistent resources if all is true.
 	if all {
-		current.Secrets -= incoming.Secrets
+		current.Secrets = nonNegativeSubtract(current.Secrets, incoming.Secrets)
 		current.VolumeStorage.Sub(incoming.VolumeStorage)
 	}
 }
@@ -60,87 +74,86 @@ func (current *Resources) Remove(incoming Resources, all bool) {
 // an aggregated error will be returned with all exceeded resources.
 func (current *Resources) Fits(incoming Resources) error {
 	exceededResources := []string{}
-	if current.Apps < incoming.Apps {
-		exceededResources = append(exceededResources, "Apps")
-	}
-	if current.Containers < incoming.Containers {
-		exceededResources = append(exceededResources, "Containers")
-	}
-	if current.Jobs < incoming.Jobs {
-		exceededResources = append(exceededResources, "Jobs")
-	}
-	if current.Volumes < incoming.Volumes {
-		exceededResources = append(exceededResources, "Volumes")
-	}
-	if current.Secrets < incoming.Secrets {
-		exceededResources = append(exceededResources, "Secrets")
-	}
-	if current.Images < incoming.Images {
-		exceededResources = append(exceededResources, "Images")
+
+	// Define function for checking int resources to keep code DRY
+	checkResource := func(resource string, currentVal, incomingVal int) {
+		if currentVal <= incomingVal {
+			exceededResources = append(exceededResources, resource)
+		}
 	}
 
-	if current.VolumeStorage.Cmp(incoming.VolumeStorage) < 0 {
-		exceededResources = append(exceededResources, "VolumeStorage")
+	// Define function for checking quantity resources to keep code DRY
+	checkQuantityResource := func(resource string, currentVal, incomingVal resource.Quantity) {
+		if currentVal.Cmp(incomingVal) <= 0 {
+			exceededResources = append(exceededResources, resource)
+		}
 	}
-	if current.Memory.Cmp(incoming.Memory) < 0 {
-		exceededResources = append(exceededResources, "Memory")
-	}
-	if current.CPU.Cmp(incoming.CPU) < 0 {
-		exceededResources = append(exceededResources, "Cpu")
-	}
+
+	checkResource("Apps", current.Apps, incoming.Apps)
+	checkResource("Containers", current.Containers, incoming.Containers)
+	checkResource("Jobs", current.Jobs, incoming.Jobs)
+	checkResource("Volumes", current.Volumes, incoming.Volumes)
+	checkResource("Secrets", current.Secrets, incoming.Secrets)
+	checkResource("Images", current.Images, incoming.Images)
+	checkResource("Projects", current.Projects, incoming.Projects)
+
+	checkQuantityResource("VolumeStorage", current.VolumeStorage, incoming.VolumeStorage)
+	checkQuantityResource("Memory", current.Memory, incoming.Memory)
+	checkQuantityResource("Cpu", current.CPU, incoming.CPU)
 
 	// Build an aggregated error message for the exceeded resources
 	if len(exceededResources) > 0 {
-		return fmt.Errorf("exceeded quota for resources: %s", strings.Join(exceededResources, ", "))
+		return fmt.Errorf("quota would be exceeded for resources: %s", strings.Join(exceededResources, ", "))
 	}
 
 	return nil
 }
 
-// ToString will return a string representation of the Resources struct.
-func (current *Resources) ToString() string {
-	resources := []string{}
-	if current.Apps > 0 {
-		resources = append(resources, fmt.Sprintf("Apps:%v", current.Apps))
-	}
-	if current.Containers > 0 {
-		resources = append(resources, fmt.Sprintf("Containers:%v", current.Containers))
-	}
-	if current.Jobs > 0 {
-		resources = append(resources, fmt.Sprintf("Jobs:%v", current.Jobs))
-	}
-	if current.Volumes > 0 {
-		resources = append(resources, fmt.Sprintf("Volumes:%v", current.Volumes))
-	}
-	if current.Secrets > 0 {
-		resources = append(resources, fmt.Sprintf("Secrets:%v", current.Secrets))
-	}
-	if current.Images > 0 {
-		resources = append(resources, fmt.Sprintf("Images:%v", current.Images))
+// NonEmptyString will return a string representation of the non-empty
+// Resources within the struct.
+func (current *Resources) NonEmptyString() string {
+	var resources []string
+
+	// Define function for checking int resources to keep code DRY
+	checkResource := func(resource string, value int) {
+		if value > 0 {
+			resources = append(resources, resource)
+		}
 	}
 
-	if !current.VolumeStorage.IsZero() {
-		resources = append(resources, fmt.Sprintf("VolumeStorage:%v", current.VolumeStorage))
-	}
-	if !current.Memory.IsZero() {
-		resources = append(resources, fmt.Sprintf("Memory:%v", current.Memory))
-	}
-	if !current.CPU.IsZero() {
-		resources = append(resources, fmt.Sprintf("CPU:%v", current.CPU))
+	// Define function for checking quantity resources to keep code DRY
+	checkQuantityResource := func(resource string, currentVal resource.Quantity) {
+		if !currentVal.IsZero() {
+			resources = append(resources, resource)
+		}
 	}
 
-	return strings.Join(resources, ",")
+	checkResource("Apps", current.Apps)
+	checkResource("Containers", current.Containers)
+	checkResource("Jobs", current.Jobs)
+	checkResource("Volumes", current.Volumes)
+	checkResource("Secrets", current.Secrets)
+	checkResource("Images", current.Images)
+	checkResource("Projects", current.Projects)
+
+	checkQuantityResource("VolumeStorage", current.VolumeStorage)
+	checkQuantityResource("Memory", current.Memory)
+	checkQuantityResource("Cpu", current.CPU)
+
+	return strings.Join(resources, ", ")
 }
 
 // Equals will check if the current Resources struct is equal to another. This is useful
 // to avoid needing to do a deep equal on the entire struct.
 func (current *Resources) Equals(incoming Resources) bool {
-	return current.Apps == incoming.Apps &&
+	return current.Unlimited == incoming.Unlimited &&
+		current.Apps == incoming.Apps &&
 		current.Containers == incoming.Containers &&
 		current.Jobs == incoming.Jobs &&
 		current.Volumes == incoming.Volumes &&
 		current.Secrets == incoming.Secrets &&
 		current.Images == incoming.Images &&
+		current.Projects == incoming.Projects &&
 		current.VolumeStorage.Cmp(incoming.VolumeStorage) == 0 &&
 		current.Memory.Cmp(incoming.Memory) == 0 &&
 		current.CPU.Cmp(incoming.CPU) == 0

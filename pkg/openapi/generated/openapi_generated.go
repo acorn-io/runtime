@@ -11909,6 +11909,12 @@ func schema_pkg_apis_internaladminacornio_v1_Resources(ref common.ReferenceCallb
 				Description: "Resources is a struct separate from the QuotaRequestInstanceSpec to allow for external controllers to programmatically set the resources easier. Calls to its functions are mutating.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"unlimited": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"apps": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
@@ -11940,6 +11946,12 @@ func schema_pkg_apis_internaladminacornio_v1_Resources(ref common.ReferenceCallb
 						},
 					},
 					"images": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"projects": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
 							Format: "int32",
