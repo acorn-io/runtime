@@ -1662,3 +1662,39 @@ func TestEnforcedQuota(t *testing.T) {
 		return obj.Status.Condition(v1.AppInstanceConditionQuotaAllocated).Success
 	})
 }
+
+func TestAutoUpgradeImageValidation(t *testing.T) {
+	ctx := helper.GetCTX(t)
+
+	helper.StartController(t)
+	restConfig, err := restconfig.New(scheme.Scheme)
+	if err != nil {
+		t.Fatal("error while getting rest config:", err)
+	}
+	kclient := helper.MustReturn(kclient.Default)
+	project := helper.TempProject(t, kclient)
+
+	c, err := client.New(restConfig, project.Name, project.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, "ghcr.io/acorn-io/library/nginx:latest", &client.AppRunOptions{
+		Name:        "myapp",
+		AutoUpgrade: &[]bool{true}[0],
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Attempt to update the app to "myimage:latest".
+	// Since no image exists with this tag, it should fail.
+	// Auto-upgrade apps are not supposed to implicitly use Docker Hub when no registry is specified.
+	_, err = c.AppUpdate(ctx, app.Name, &client.AppUpdateOptions{
+		Image: "myimage:latest",
+	})
+	if err == nil {
+		t.Fatal("expected error when failing to find local image for auto-upgrade app, got no error")
+	}
+	assert.ErrorContains(t, err, "could not find local image for myimage:latest - if you are trying to use Docker Hub, use docker.io/myimage:latest")
+}
