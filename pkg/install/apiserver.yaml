@@ -68,8 +68,8 @@ spec:
             runAsUser: 1000
           resources:
             requests:
-              cpu: 50m
-              memory: 100Mi
+              cpu: 100m
+              memory: 256Mi
       priorityClassName: system-cluster-critical
       serviceAccountName: acorn-system
       tolerations:
