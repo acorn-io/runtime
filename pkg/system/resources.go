@@ -11,19 +11,20 @@ import (
 // on metrics we have collected from internal use. You can override these values by setting
 // the corresponding environment variable.
 var (
-	mi = int64(1_048_576) // 1 MiB in bytes
+	mi = int64(1 << 20) // 1 MiB in bytes
+	gi = int64(1 << 30) // 1 GiB in bytes.
 
-	registryMemoryRequest = *resource.NewQuantity(40*mi, resource.BinarySI)    // REGISTRY_MEMORY_REQUEST
-	registryMemoryLimit   = *resource.NewQuantity(80*mi, resource.BinarySI)    // REGISTRY_MEMORY_LIMIT
-	registryCPURequest    = *resource.NewMilliQuantity(50, resource.DecimalSI) // REGISTRY_CPU_REQUEST
+	registryMemoryRequest = *resource.NewQuantity(128*mi, resource.BinarySI)    // REGISTRY_MEMORY_REQUEST
+	registryMemoryLimit   = *resource.NewQuantity(512*mi, resource.BinarySI)    // REGISTRY_MEMORY_LIMIT
+	registryCPURequest    = *resource.NewMilliQuantity(200, resource.DecimalSI) // REGISTRY_CPU_REQUEST
 
-	buildkitdMemoryRequest = *resource.NewQuantity(100*mi, resource.BinarySI)   // BUILDKITD_MEMORY_REQUEST
-	buildkitdMemoryLimit   = *resource.NewQuantity(200*mi, resource.BinarySI)   // BUILDKITD_MEMORY_LIMIT
-	buildkitdCPURequest    = *resource.NewMilliQuantity(50, resource.DecimalSI) // BUILDKITD_CPU_REQUEST
+	buildkitdMemoryRequest = *resource.NewQuantity(256*mi, resource.BinarySI)    // BUILDKITD_MEMORY_REQUEST
+	buildkitdMemoryLimit   = *resource.NewQuantity(1*gi, resource.BinarySI)      // BUILDKITD_MEMORY_LIMIT
+	buildkitdCPURequest    = *resource.NewMilliQuantity(800, resource.DecimalSI) // BUILDKITD_CPU_REQUEST
 
-	buildkitdServiceMemoryRequest = *resource.NewQuantity(70*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_REQUEST
-	buildkitdServiceMemoryLimit   = *resource.NewQuantity(140*mi, resource.BinarySI)   // BUILDKITD_SERVICE_MEMORY_LIMIT
-	buildkitdServiceCPURequest    = *resource.NewMilliQuantity(50, resource.DecimalSI) // BUILDKITD_SERVICE_CPU_REQUEST
+	buildkitdServiceMemoryRequest = *resource.NewQuantity(128*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_REQUEST
+	buildkitdServiceMemoryLimit   = *resource.NewQuantity(256*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_LIMIT
+	buildkitdServiceCPURequest    = *resource.NewMilliQuantity(200, resource.DecimalSI) // BUILDKITD_SERVICE_CPU_REQUEST
 )
 
 func RegistryResources() corev1.ResourceRequirements {

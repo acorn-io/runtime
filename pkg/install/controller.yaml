@@ -33,8 +33,8 @@ spec:
               port: 8888
           resources:
             requests:
-              cpu: 150m
-              memory: 200Mi
+              cpu: 100m
+              memory: 256Mi
       priorityClassName: system-cluster-critical
       serviceAccountName: acorn-system
       tolerations:
