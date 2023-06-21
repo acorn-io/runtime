@@ -193,7 +193,10 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 	}
 
 	if !verified {
-		return fmt.Errorf("failed to find valid signature: %w", merr.NewErrors(errs...))
+		err := cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(verifiers))
+		err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+		logrus.Debugf("%s: %v", err, merr.NewErrors(errs...))
+		return err
 	}
 
 	return nil
