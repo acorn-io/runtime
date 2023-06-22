@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/jobs"
 	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/mink/pkg/stores"
@@ -33,7 +34,9 @@ func (s *ignoreCleanupStrategy) Create(ctx context.Context, obj types.Object) (t
 		return obj, nil
 	}
 
-	app := &apiv1.App{}
+	// Use app instance here because in Hub this request is forwarded to the workload cluster.
+	// The app validation logic should not run there.
+	app := &v1.AppInstance{}
 	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
 	if err != nil {
 		return nil, err

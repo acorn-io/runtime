@@ -6,6 +6,7 @@ import (
 	"time"
 
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/acorn/pkg/controller/jobs"
 	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/stretchr/testify/assert"
@@ -21,12 +22,12 @@ import (
 func TestIgnoreCleanupStrategy(t *testing.T) {
 	tests := []struct {
 		name                    string
-		app                     *apiv1.App
+		app                     *v1.AppInstance
 		wantError, expectUpdate bool
 	}{
 		{
 			name: "error if app is not deleting",
-			app: &apiv1.App{
+			app: &v1.AppInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "my-app",
 					Namespace: "my-project",
@@ -36,7 +37,7 @@ func TestIgnoreCleanupStrategy(t *testing.T) {
 		},
 		{
 			name: "remove finalizer if app is deleting",
-			app: &apiv1.App{
+			app: &v1.AppInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Finalizers:        []string{jobs.DestroyJobFinalizer},
 					DeletionTimestamp: &metav1.Time{Time: time.Now()},
@@ -48,7 +49,7 @@ func TestIgnoreCleanupStrategy(t *testing.T) {
 		},
 		{
 			name: "remove finalizer from end if app is deleting",
-			app: &apiv1.App{
+			app: &v1.AppInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Finalizers:        []string{"first-finalizer", "another-finalizer", jobs.DestroyJobFinalizer},
 					DeletionTimestamp: &metav1.Time{Time: time.Now()},
@@ -60,7 +61,7 @@ func TestIgnoreCleanupStrategy(t *testing.T) {
 		},
 		{
 			name: "no update if the delete job finalizer is not present",
-			app: &apiv1.App{
+			app: &v1.AppInstance{
 				ObjectMeta: metav1.ObjectMeta{
 					Finalizers:        []string{"first-finalizer", "another-finalizer"},
 					DeletionTimestamp: &metav1.Time{Time: time.Now()},
@@ -98,13 +99,13 @@ func TestIgnoreCleanupStrategy(t *testing.T) {
 
 type objectTracker struct {
 	t           *testing.T
-	app         *apiv1.App
+	app         *v1.AppInstance
 	updateCalls int
 	ktesting.ObjectTracker
 }
 
 func (o *objectTracker) Update(gvr schema.GroupVersionResource, obj runtime.Object, ns string) error {
-	if app, ok := obj.(*apiv1.App); ok {
+	if app, ok := obj.(*v1.AppInstance); ok {
 		o.updateCalls++
 		assert.NotContains(o.t, app.Finalizers, jobs.DestroyJobFinalizer, "finalizer should be removed")
 		assert.Equal(o.t, len(o.app.Finalizers)-1, len(app.Finalizers), "only job delete finalizer should be removed")
