@@ -55,7 +55,7 @@ jobs:
 
       - name: run acorn integration tests
         run: |
-          TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile test-summary.xml -- -timeout=7m" make test
+          TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile test-summary.xml" GO_TEST_FLAGS="-timeout=7m" make integration
         env:
           KUBECONFIG: "/home/runner/.kube/config"
 
