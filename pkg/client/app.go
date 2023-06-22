@@ -601,3 +601,12 @@ func (c *DefaultClient) AppPullImage(ctx context.Context, name string) error {
 		SubResource("pullimage").
 		Body(&apiv1.AppPullImage{}).Do(ctx).Error()
 }
+
+func (c *DefaultClient) AppIgnoreDeleteCleanup(ctx context.Context, name string) error {
+	return c.RESTClient.Post().
+		Namespace(c.Namespace).
+		Resource("apps").
+		Name(name).
+		SubResource("ignorecleanup").
+		Body(&apiv1.IgnoreCleanup{}).Do(ctx).Error()
+}

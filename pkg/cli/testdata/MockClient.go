@@ -152,6 +152,10 @@ func (m *MockClient) AppDelete(ctx context.Context, name string) (*apiv1.App, er
 	return nil, nil
 }
 
+func (m *MockClient) AppIgnoreDeleteCleanup(ctx context.Context, name string) error {
+	return nil
+}
+
 func (m *MockClient) AppGet(ctx context.Context, name string) (*apiv1.App, error) {
 	if m.AppItem != nil {
 		return m.AppItem, nil

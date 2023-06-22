@@ -127,6 +127,10 @@ func (c *IgnoreUninstalled) AppLog(ctx context.Context, name string, opts *LogOp
 	return c.Client.AppLog(ctx, name, opts)
 }
 
+func (c *IgnoreUninstalled) AppSkipDeleteCleanup(ctx context.Context, name string) error {
+	return c.Client.AppIgnoreDeleteCleanup(ctx, name)
+}
+
 func (c *IgnoreUninstalled) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
 	return c.Client.DevSessionRenew(ctx, name, client)
 }

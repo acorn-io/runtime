@@ -202,6 +202,7 @@ type Client interface {
 	AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error)
 	AppConfirmUpgrade(ctx context.Context, name string) error
 	AppPullImage(ctx context.Context, name string) error
+	AppIgnoreDeleteCleanup(ctx context.Context, name string) error
 
 	DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error
 	DevSessionRelease(ctx context.Context, name string) error

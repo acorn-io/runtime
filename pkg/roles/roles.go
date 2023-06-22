@@ -107,6 +107,7 @@ var (
 					"images/tag",
 					"apps/confirmupgrade",
 					"apps/pullimage",
+					"apps/ignorecleanup",
 				},
 			},
 			{

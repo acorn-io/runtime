@@ -212,6 +212,13 @@ func (m *MultiClient) AppPullImage(ctx context.Context, name string) error {
 	return err
 }
 
+func (m *MultiClient) AppIgnoreDeleteCleanup(ctx context.Context, name string) error {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
+		return &apiv1.App{}, c.AppIgnoreDeleteCleanup(ctx, name)
+	})
+	return err
+}
+
 func (m *MultiClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
 	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return &apiv1.App{}, c.DevSessionRenew(ctx, name, client)

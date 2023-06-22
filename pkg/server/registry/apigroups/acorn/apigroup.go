@@ -79,6 +79,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"apps/log":                      logsStorage,
 		"apps/confirmupgrade":           apps.NewConfirmUpgrade(c),
 		"apps/pullimage":                apps.NewPullAppImage(c),
+		"apps/ignorecleanup":            apps.NewIgnoreCleanup(c),
 		"devsessions":                   devsessions.NewStorage(c, clientFactory),
 		"builders":                      buildersStorage,
 		"builders/port":                 buildersPort,

@@ -36,7 +36,7 @@ The `update` event will run the job when the app is updated or started from stop
 
 The `stop` event will run the job when the app is stopped.
 
-The `delete` event will run the job when the app is deleted. The job will run, and must complete successfully, before the remaining containers are deleted in that Acorn app.
+The `delete` event will run the job when the app is deleted. The job will run, and must complete successfully, before the remaining containers are deleted in that Acorn app. If the job fails, the app will not be deleted. To skip the job, use the [`--ignore-cleanup`](100-reference/01-command-line/acorn_rm.md#options) flag.
 
 ```acorn
 jobs: {
