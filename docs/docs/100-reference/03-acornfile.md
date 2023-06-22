@@ -524,6 +524,29 @@ containers: {
 }
 ```
 
+### metrics
+
+`metrics` allows you to specify the HTTP port and path on which the container will expose metrics. Acorn will take this information and create the standard `prometheus.io` scrape annotations on the Kubernetes Pod(s) created for the container.
+
+```acorn
+containers: "mycontainer": {
+    image: "nginx"
+    ports: ["80/http", "8080/http"]
+    metrics: {
+        port: 8080
+        path: "/metrics"
+    }
+}
+```
+
+The Pod created for this container will have the following annotations:
+
+```yaml
+prometheus.io/scrape: "true"
+prometheus.io/port: "8080"
+prometheus.io/path: "/metrics"
+```
+
 ## services (consuming)
 
 `services` are Acorns that will deploy cloud services outside the scope of Acorn and provide endpoints, credentials, and other information needed for other Acorns to consume the service. These services are typically managed by the cloud provider.  For example, a service could be a RDS database or a S3 bucket.
