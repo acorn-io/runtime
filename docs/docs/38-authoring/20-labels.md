@@ -53,3 +53,26 @@ You can also specify labels and annotations from the CLI when launching an acorn
 If the Acorn installation has [disabled user label and annotation propagation](30-installation/02-options.md#ignoring-user-defined-labels-and-annotations), then, except for the metadata scope, labels and annotations will be silently ignored.
 
 :::
+
+## Metrics
+
+To automatically create Prometheus scrape annotations on your Acorn apps, define the metrics port and HTTP path in the Acornfile:
+```acorn
+containers: "mycontainer": {
+    ports: ["8080/http", "8081/http"]
+    metrics: {
+        port: 8081
+        path: "/metrics"
+    }
+    // ...
+}
+```
+
+This would create the following annotations on the Kubernetes Pods for the container:
+```yaml
+prometheus.io/scrape: "true"
+prometheus.io/port: "8081"
+prometheus.io/path: "/metrics"
+```
+
+The `path` parameter must begin with `/`, and the `port` parameter must be an integer in between 1 and 65535.
