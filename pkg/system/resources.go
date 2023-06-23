@@ -25,9 +25,14 @@ var (
 	buildkitdServiceMemoryRequest = *resource.NewQuantity(128*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_REQUEST
 	buildkitdServiceMemoryLimit   = *resource.NewQuantity(256*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_LIMIT
 	buildkitdServiceCPURequest    = *resource.NewMilliQuantity(200, resource.DecimalSI) // BUILDKITD_SERVICE_CPU_REQUEST
+
+	enabled = "ACORN_IMAGE_SYSTEM_RESOURCES"
 )
 
 func RegistryResources() corev1.ResourceRequirements {
+	if os.Getenv(enabled) != "true" {
+		return corev1.ResourceRequirements{}
+	}
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceMemory: envOrDefault("REGISTRY_MEMORY_REQUEST", registryMemoryRequest),
@@ -40,6 +45,9 @@ func RegistryResources() corev1.ResourceRequirements {
 }
 
 func BuildkitdResources() corev1.ResourceRequirements {
+	if os.Getenv(enabled) != "true" {
+		return corev1.ResourceRequirements{}
+	}
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceMemory: envOrDefault("BUILDKITD_MEMORY_REQUEST", buildkitdMemoryRequest),
@@ -52,6 +60,9 @@ func BuildkitdResources() corev1.ResourceRequirements {
 }
 
 func BuildkitdServiceResources() corev1.ResourceRequirements {
+	if os.Getenv(enabled) != "true" {
+		return corev1.ResourceRequirements{}
+	}
 	return corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceMemory: envOrDefault("BUILDKITD_SERVICE_MEMORY_REQUEST", buildkitdServiceMemoryRequest),
