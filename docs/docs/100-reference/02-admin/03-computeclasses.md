@@ -22,6 +22,7 @@ memory:
   values: # Specific values that are only allowed to be used. Default must be included in these values and max/min cannot be set.
   - 1.5Gi
 cpuScaler: 1 # This is used as a ratio of how many VCPUs to schedule per Gibibyte of memory. In this case it is 1 to 1.
+priorityClassName: foo # The priority class to use for Pods
 tolerations: # The same toleration fields for Pods
   - key: "foo"
     operator: "Equal"

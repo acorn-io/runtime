@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/baaah/pkg/router"
 	corev1 "k8s.io/api/core/v1"
+	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -75,7 +76,9 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 			appInstance.Status.Scheduling[sidecarName] = v1.Scheduling{Requirements: *sidecarRequirements}
 		}
 
-		affinity, tolerations, err = Nodes(req, name, container, appInstance, computeClass)
+		affinity, tolerations = Nodes(req, computeClass)
+
+		priorityClassName, err := PriorityClassName(req, computeClass)
 		if err != nil {
 			return err
 		}
@@ -90,22 +93,36 @@ func addScheduling(req router.Request, appInstance *v1.AppInstance, workloads ma
 		}
 
 		appInstance.Status.Scheduling[name] = v1.Scheduling{
-			Requirements: *requirements,
-			Affinity:     affinity,
-			Tolerations:  tolerations,
+			Requirements:      *requirements,
+			Affinity:          affinity,
+			Tolerations:       tolerations,
+			PriorityClassName: priorityClassName,
 		}
 	}
 	return nil
 }
 
-// Add edits the provided PodTemplateSpec to have the applied configuration for the ComputeClass and Memory values
-func Nodes(req router.Request, name string, container v1.Container, app *v1.AppInstance, computeClass *adminv1.ProjectComputeClassInstance) (*corev1.Affinity, []corev1.Toleration, error) {
-	if computeClass != nil {
-		// Return any custom affinities and tolerations from the ComputeClass
-		return computeClass.Affinity, computeClass.Tolerations, nil
+// Nodes returns the Affinity and Tolerations from a ComputeClass if they exist
+func Nodes(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (*corev1.Affinity, []corev1.Toleration) {
+	if computeClass == nil {
+		return nil, nil
+	}
+	return computeClass.Affinity, computeClass.Tolerations
+}
+
+// PriorityClass checks that a defined PriorityClass exists and returns the name of it
+func PriorityClassName(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (string, error) {
+	if computeClass == nil || computeClass.PriorityClassName == "" {
+		return "", nil
 	}
 
-	return nil, nil, nil
+	// Verify that the PriorityClass exists
+	priorityClassName := &schedulingv1.PriorityClass{}
+	if err := req.Client.Get(req.Ctx, router.Key("", computeClass.PriorityClassName), priorityClassName); err != nil {
+		return "", err
+	}
+
+	return computeClass.PriorityClassName, nil
 }
 
 // ResourceRequirements determines the cpu and memory amount to be set for the limits/requests of the Pod
