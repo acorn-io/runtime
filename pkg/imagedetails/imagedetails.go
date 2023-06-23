@@ -17,8 +17,6 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const defaultNoReg = "xxx-no-reg"
-
 func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
@@ -29,8 +27,8 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		} else if !found {
 			// Check and see if no registry was specified on the image.
 			// If this is the case, notify the user that they need to explicitly specify docker.io if that is what they are trying to use.
-			ref, err := imagename.ParseReference(strings.TrimSuffix(imageName, ":"+tagPattern), imagename.WithDefaultRegistry(defaultNoReg))
-			if err == nil && ref.Context().Registry.Name() == defaultNoReg {
+			ref, err := imagename.ParseReference(strings.TrimSuffix(imageName, ":"+tagPattern), imagename.WithDefaultRegistry(images.NoDefaultRegistry))
+			if err == nil && ref.Context().Registry.Name() == images.NoDefaultRegistry {
 				return nil, fmt.Errorf("unable to find an image for %v matching pattern %v - if you are trying to use Docker Hub, use docker.io/%v", imageName, tagPattern, imageName)
 			}
 

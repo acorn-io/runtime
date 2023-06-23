@@ -87,15 +87,15 @@ func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nested
 	return appImage, nil
 }
 
-const DefaultRegistry = "NO_DEFAULT"
+const NoDefaultRegistry = "xxx-no-reg"
 
 func ParseReferenceNoDefault(name string) (imagename.Reference, error) {
-	ref, err := imagename.ParseReference(name, imagename.WithDefaultRegistry(DefaultRegistry))
+	ref, err := imagename.ParseReference(name, imagename.WithDefaultRegistry(NoDefaultRegistry))
 	if err != nil {
 		return nil, err
 	}
 
-	if ref.Context().RegistryStr() == DefaultRegistry {
+	if ref.Context().RegistryStr() == NoDefaultRegistry {
 		return nil, fmt.Errorf("missing registry host in the tag [%s] (ie ghcr.io or docker.io)", name)
 	}
 	return ref, nil

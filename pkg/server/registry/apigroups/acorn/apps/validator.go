@@ -18,6 +18,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apiv1config "github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/pullsecret"
@@ -35,8 +36,6 @@ import (
 	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-const defaultNoReg = "xxx-no-reg"
 
 type Validator struct {
 	client        kclient.Client
@@ -91,13 +90,13 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			if _, autoUpgradeOn := autoupgrade.Mode(params.Spec); autoUpgradeOn {
 				// Make sure there is a registry specified here
 				// If there isn't one, return an error in order to avoid checking Docker Hub implicitly
-				ref, err := name.ParseReference(params.Spec.Image, name.WithDefaultRegistry(defaultNoReg))
+				ref, err := name.ParseReference(params.Spec.Image, name.WithDefaultRegistry(images.NoDefaultRegistry))
 				if err != nil {
 					result = append(result, field.InternalError(field.NewPath("spec", "image"), err))
 					return
 				}
 
-				if ref.Context().RegistryStr() == defaultNoReg {
+				if ref.Context().RegistryStr() == images.NoDefaultRegistry {
 					result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image,
 						fmt.Sprintf("could not find local image for %v - if you are trying to use Docker Hub, use docker.io/%v", params.Spec.Image, params.Spec.Image)))
 				}
