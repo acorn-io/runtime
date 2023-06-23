@@ -4,6 +4,7 @@ snapshot:
 
 builds:
   - id: default
+    binary: acorn
     env:
       - CGO_ENABLED=0
     goos:
@@ -32,7 +33,7 @@ universal_binaries:
     replace: true
     hooks:
       post:
-        - cmd: ./tools/notarize "{{ .Path }}" "{{ .ProjectName }}-v{{ .Version }}-macOS-universal"
+        - cmd: ./tools/notarize "{{ .Path }}" "acorn-v{{ .Version }}-macOS-universal"
           output: true
           env:
             - SIGN={{ if index .Env "SIGN" }}1{{ end }}
@@ -47,7 +48,7 @@ archives:
     builds:
       - default
       - mac
-    name_template: '{{ .ProjectName }}-v{{ .Version }}-{{ if eq .Os "darwin" }}macOS-universal{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}'
+    name_template: 'acorn-v{{ .Version }}-{{ if eq .Os "darwin" }}macOS-universal{{ else }}{{ .Os }}-{{ .Arch }}{{ .Arm }}{{ end }}'
     format_overrides:
       - goos: windows
         format: zip
@@ -85,6 +86,7 @@ release:
 
 brews:
   - description: "Acorn CLI"
+    name: acorn
     homepage: "https://acorn.io"
     license: "Apache 2.0"
     skip_upload: auto
