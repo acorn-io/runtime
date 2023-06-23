@@ -63,11 +63,7 @@ VOLUMES:
         {
             "metadata": {
                 "name": "found.vol",
-                "creationTimestamp": null,
-                "labels": {
-                    "acorn.io/app-name": "found",
-                    "acorn.io/volume-name": "vol"
-                }
+                "creationTimestamp": null
             },
             "spec": {},
             "status": {
