@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/system"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"

@@ -60,7 +60,7 @@ spec:
         env:
         - name: ACORN_EVENT
           value: delete
-        image: ghcr.io/acorn-io/acorn:main
+        image: ghcr.io/acorn-io/runtime:main
         imagePullPolicy: IfNotPresent
         name: acorn-job-output-helper
         resources: {}

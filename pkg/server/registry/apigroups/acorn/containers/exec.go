@@ -7,11 +7,11 @@ import (
 	"net/http/httputil"
 	"time"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/acorn-io/mink/pkg/strategy"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/rancher/wrangler/pkg/name"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	corev1 "k8s.io/api/core/v1"

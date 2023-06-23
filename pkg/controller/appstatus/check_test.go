@@ -3,11 +3,11 @@ package appstatus
 import (
 	"testing"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/condition"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/router/tester"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/condition"
+	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -3,9 +3,9 @@ package secrets
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/integration/helper"
-	"github.com/acorn-io/acorn/pkg/client"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/runtime/integration/helper"
+	"github.com/acorn-io/runtime/pkg/client"
+	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/stretchr/testify/assert"
 )
 

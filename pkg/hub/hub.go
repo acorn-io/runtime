@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/baaah/pkg/randomtoken"
+	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/pkg/browser"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"

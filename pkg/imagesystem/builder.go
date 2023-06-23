@@ -6,10 +6,10 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/digest"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/digest"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/google/go-containerregistry/pkg/name"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	"golang.org/x/crypto/nacl/box"

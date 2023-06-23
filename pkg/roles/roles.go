@@ -1,8 +1,8 @@
 package roles
 
 import (
-	admin_acorn_io "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
-	api_acorn_io "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
+	admin_acorn_io "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io"
+	api_acorn_io "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

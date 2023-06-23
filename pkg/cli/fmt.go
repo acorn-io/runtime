@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
 	"github.com/acorn-io/aml/pkg/cue"
+	"github.com/acorn-io/runtime/pkg/appdefinition"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
 

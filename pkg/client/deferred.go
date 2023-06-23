@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client/term"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client/term"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

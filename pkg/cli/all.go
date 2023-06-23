@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"
 )

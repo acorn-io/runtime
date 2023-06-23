@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/build"
+	"github.com/acorn-io/runtime/pkg/build"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 )

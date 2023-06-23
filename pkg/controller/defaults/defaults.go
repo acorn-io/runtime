@@ -1,11 +1,11 @@
 package defaults
 
 import (
-	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/condition"
-	"github.com/acorn-io/acorn/pkg/config"
 	"github.com/acorn-io/baaah/pkg/router"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/condition"
+	"github.com/acorn-io/runtime/pkg/config"
 )
 
 // Calculate is a handler that sets the defaults for an AppInstance to its status if

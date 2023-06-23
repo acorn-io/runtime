@@ -173,7 +173,7 @@ spec:
         env:
         - name: ACORN_EVENT
           value: create
-        image: ghcr.io/acorn-io/acorn:main
+        image: ghcr.io/acorn-io/runtime:main
         imagePullPolicy: IfNotPresent
         name: acorn-job-output-helper
         resources: {}
@@ -369,7 +369,7 @@ spec:
         env:
         - name: ACORN_EVENT
           value: create
-        image: ghcr.io/acorn-io/acorn:main
+        image: ghcr.io/acorn-io/runtime:main
         imagePullPolicy: IfNotPresent
         name: acorn-job-output-helper
         resources: {}

@@ -3,11 +3,11 @@ package info
 import (
 	"context"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/encryption"
-	"github.com/acorn-io/acorn/pkg/encryption/nacl"
-	"github.com/acorn-io/acorn/pkg/info"
 	"github.com/acorn-io/mink/pkg/types"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/encryption"
+	"github.com/acorn-io/runtime/pkg/encryption/nacl"
+	"github.com/acorn-io/runtime/pkg/info"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/storage"
 	"sigs.k8s.io/controller-runtime/pkg/client"

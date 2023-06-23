@@ -3,10 +3,10 @@ package publicname
 import (
 	"context"
 
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
 	"github.com/acorn-io/mink/pkg/types"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"k8s.io/apimachinery/pkg/api/meta"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"

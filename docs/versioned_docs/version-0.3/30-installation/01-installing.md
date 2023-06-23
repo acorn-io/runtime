@@ -43,7 +43,7 @@ scoop install acorn
 
 ### Manual install
 
-You can download the Acorn CLI binary from the project's [GitHub page](https://github.com/acorn-io/acorn/releases).
+You can download the Acorn CLI binary from the project's [GitHub page](https://github.com/acorn-io/runtime/releases).
 
 Download the correct binary for your platform.
 

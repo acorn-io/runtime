@@ -1,9 +1,9 @@
 package events
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	mtypes "github.com/acorn-io/mink/pkg/types"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 )
 
 type translator struct{}

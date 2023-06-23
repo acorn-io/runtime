@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/build/authprovider"
-	"github.com/acorn-io/acorn/pkg/buildclient"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/build/authprovider"
+	"github.com/acorn-io/runtime/pkg/buildclient"
 	cplatforms "github.com/containerd/containerd/platforms"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/uuid"

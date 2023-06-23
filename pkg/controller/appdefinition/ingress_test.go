@@ -3,11 +3,11 @@ package appdefinition
 import (
 	"testing"
 
-	v12 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/controller/namespace"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/router/tester"
+	v12 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/controller/namespace"
+	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )

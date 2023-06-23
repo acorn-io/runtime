@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	admininternalv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	admininternalv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"

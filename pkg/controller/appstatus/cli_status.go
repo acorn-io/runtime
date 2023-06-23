@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 )
 
 func CLIStatus(req router.Request, resp router.Response) (err error) {

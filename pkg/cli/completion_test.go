@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	acornv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/cli/testdata"
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/baaah/pkg/typed"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	acornv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/cli/testdata"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

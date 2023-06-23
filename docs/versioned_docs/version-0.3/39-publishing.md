@@ -11,7 +11,7 @@ To publish your image run the familiar build command with a `-t` option to tag t
 An example would be:
 
 ```shell
-acorn build -t ghcr.io/acorn-io/acorn:v1.0 .
+acorn build -t ghcr.io/acorn-io/runtime:v1.0 .
 ```
 
 This is very similar to the Docker build workflow:

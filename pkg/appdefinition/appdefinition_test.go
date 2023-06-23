@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"cuelang.org/go/cue/errors"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/baaah/pkg/typed"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/stretchr/testify/assert"
 )
 

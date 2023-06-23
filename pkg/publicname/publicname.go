@@ -3,8 +3,8 @@ package publicname
 import (
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/name"
+	"github.com/acorn-io/runtime/pkg/labels"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

@@ -3,9 +3,9 @@ package k8sclient
 import (
 	"strings"
 
-	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/mink/pkg/strategy"
+	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/rancher/wrangler/pkg/name"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"

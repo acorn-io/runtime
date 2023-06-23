@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/encryption/nacl"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/encryption/nacl"
 	"github.com/sirupsen/logrus"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )

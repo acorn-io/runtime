@@ -3,8 +3,8 @@ package helper
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	corev1 "k8s.io/api/core/v1"

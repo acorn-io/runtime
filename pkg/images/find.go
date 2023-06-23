@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/go-containerregistry/pkg/name"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 
-	tags2 "github.com/acorn-io/acorn/pkg/tags"
+	tags2 "github.com/acorn-io/runtime/pkg/tags"
 )
 
 type ErrImageNotFound struct {

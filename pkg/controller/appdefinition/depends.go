@@ -3,9 +3,9 @@ package appdefinition
 import (
 	"strconv"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/labels"
 	"github.com/acorn-io/baaah/pkg/apply"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/labels"
 )
 
 func getDependencyAnnotations(app *v1.AppInstance, containerOrJobName string, deps []v1.Dependency) map[string]string {

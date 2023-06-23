@@ -3,12 +3,12 @@ package credentials
 import (
 	"context"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/imagesystem"
-	credentials2 "github.com/acorn-io/acorn/pkg/server/registry/apigroups/acorn/credentials"
 	"github.com/acorn-io/baaah/pkg/typed"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/imagesystem"
+	credentials2 "github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/credentials"
 	"github.com/docker/cli/cli/config/credentials"
 	"github.com/docker/cli/cli/config/types"
 	credentials3 "github.com/docker/docker-credential-helpers/credentials"

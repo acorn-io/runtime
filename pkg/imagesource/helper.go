@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/acorn-io/acorn/pkg/appdefinition"
-	"github.com/acorn-io/acorn/pkg/build"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/credentials"
-	"github.com/acorn-io/acorn/pkg/deployargs"
+	"github.com/acorn-io/runtime/pkg/appdefinition"
+	"github.com/acorn-io/runtime/pkg/build"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/deployargs"
 )
 
 type ImageSource struct {

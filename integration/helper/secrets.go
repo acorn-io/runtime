@@ -3,8 +3,8 @@ package helper
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/encryption/nacl"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/encryption/nacl"
 )
 
 func EncryptData(t *testing.T, client client.Client, keys []string, data string) string {

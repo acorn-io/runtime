@@ -63,10 +63,10 @@ jobs:
           for i in ${IMAGES}; do
             docker push $i
           done
-          docker manifest create ghcr.io/acorn-io/acorn:main ${IMAGES}
-          docker manifest push ghcr.io/acorn-io/acorn:main
-          docker manifest create ghcr.io/acorn-io/acorn:${VERSION} ${IMAGES}
-          docker manifest push ghcr.io/acorn-io/acorn:${VERSION}
+          docker manifest create ghcr.io/acorn-io/runtime:main ${IMAGES}
+          docker manifest push ghcr.io/acorn-io/runtime:main
+          docker manifest create ghcr.io/acorn-io/runtime:${VERSION} ${IMAGES}
+          docker manifest push ghcr.io/acorn-io/runtime:${VERSION}
       - name: Upload to S3
         uses: jakejarvis/s3-sync-action@v0.5.1
         env:

@@ -3,9 +3,9 @@ package cli
 import (
 	"fmt"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/imagesource"
 	"github.com/acorn-io/aml/pkg/cue"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/spf13/cobra"
 )
 

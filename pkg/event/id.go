@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 )
 
 // ContentID returns a deterministic ID based on the content of a given event.

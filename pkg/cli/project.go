@@ -3,12 +3,12 @@ package cli
 import (
 	"sort"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/project"
-	"github.com/acorn-io/acorn/pkg/tables"
 	"github.com/acorn-io/baaah/pkg/typed"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/project"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"

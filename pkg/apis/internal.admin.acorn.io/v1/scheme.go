@@ -1,7 +1,7 @@
 package v1
 
 import (
-	internal_admin_acorn_io "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io"
+	internal_admin_acorn_io "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

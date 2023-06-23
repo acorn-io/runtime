@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/project"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/spf13/cobra"
 )
 

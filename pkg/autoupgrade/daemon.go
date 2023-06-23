@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/config"
-	"github.com/acorn-io/acorn/pkg/imageallowrules"
 	"github.com/acorn-io/baaah/pkg/router"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/imageallowrules"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"

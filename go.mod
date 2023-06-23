@@ -1,4 +1,4 @@
-module github.com/acorn-io/acorn
+module github.com/acorn-io/runtime
 
 go 1.20
 

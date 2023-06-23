@@ -3,7 +3,7 @@ package buildclient
 import (
 	"context"
 
-	"github.com/acorn-io/acorn/pkg/streams"
+	"github.com/acorn-io/runtime/pkg/streams"
 	"github.com/containerd/console"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/util/progress/progressui"

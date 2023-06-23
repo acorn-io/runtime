@@ -1,10 +1,10 @@
 package cli
 
 import (
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/tables"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 )
 

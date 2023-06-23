@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	acorn "github.com/acorn-io/acorn/pkg/cli"
+	acorn "github.com/acorn-io/runtime/pkg/cli"
 	"github.com/spf13/cobra/doc"
 )
 

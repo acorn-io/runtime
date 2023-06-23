@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/acorn-io/acorn/integration/helper"
-	adminapiv1 "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io/v1"
-	adminv1 "github.com/acorn-io/acorn/pkg/apis/internal.admin.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	kclient "github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/runtime/integration/helper"
+	adminapiv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

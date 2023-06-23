@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/dev"
 	objwatcher "github.com/acorn-io/baaah/pkg/watcher"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/dev"
 )
 
 func App(ctx context.Context, c client.Client, appName string, quiet bool) error {

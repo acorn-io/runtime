@@ -1,7 +1,7 @@
 # Contributing
 Thanks for your interest in contributing to Acorn. Here are a few guidelines to help make you successful.
 
-More details can also be found in our [developer wiki](https://github.com/acorn-io/acorn/wiki).
+More details can also be found in our [developer wiki](https://github.com/acorn-io/runtime/wiki).
 
 ## Pull requests
 Contributions to the code or documentation should be submitted as pull requests. A maintainer will review your PR and either approve, reject, or ask for changes. Once a PR is approved, it can be merged by a maintainer. Keep PRs scoped to a single functional change. For example, only fix one bug or implement a single enhancement. This will simplify the review and merge process.

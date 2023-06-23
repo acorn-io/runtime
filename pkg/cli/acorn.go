@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client/term"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"

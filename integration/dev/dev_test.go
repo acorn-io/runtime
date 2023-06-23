@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/acorn-io/acorn/integration/helper"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/dev"
-	"github.com/acorn-io/acorn/pkg/imagesource"
-	hclient "github.com/acorn-io/acorn/pkg/k8sclient"
 	"github.com/acorn-io/baaah/pkg/watcher"
+	"github.com/acorn-io/runtime/integration/helper"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/dev"
+	"github.com/acorn-io/runtime/pkg/imagesource"
+	hclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"golang.org/x/sync/errgroup"
 )
 

@@ -3,12 +3,12 @@ package appstatus
 import (
 	"strconv"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/ports"
-	"github.com/acorn-io/acorn/pkg/publicname"
 	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/ports"
+	"github.com/acorn-io/runtime/pkg/publicname"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

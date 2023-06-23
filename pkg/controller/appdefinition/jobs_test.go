@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/controller/namespace"
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router/tester"
+	"github.com/acorn-io/runtime/pkg/controller/namespace"
+	"github.com/acorn-io/runtime/pkg/scheme"
 )
 
 func TestJobs(t *testing.T) {

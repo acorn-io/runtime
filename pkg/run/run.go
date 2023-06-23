@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/namespace"
 	"github.com/acorn-io/namegenerator"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/namespace"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

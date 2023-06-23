@@ -3,8 +3,8 @@ package scheduling
 import (
 	"testing"
 
-	"github.com/acorn-io/acorn/pkg/scheme"
 	"github.com/acorn-io/baaah/pkg/router/tester"
+	"github.com/acorn-io/runtime/pkg/scheme"
 )
 
 func TestContainerMemory(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/volume"
 	"github.com/acorn-io/baaah/pkg/typed"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/volume"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

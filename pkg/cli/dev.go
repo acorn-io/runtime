@@ -3,9 +3,9 @@ package cli
 import (
 	"io"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/dev"
-	"github.com/acorn-io/acorn/pkg/imagesource"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/dev"
+	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/spf13/cobra"
 )
 

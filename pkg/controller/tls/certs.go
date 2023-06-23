@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/labels"
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

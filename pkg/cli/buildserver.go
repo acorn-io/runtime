@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/acorn-io/acorn/pkg/buildserver"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/buildserver"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"inet.af/tcpproxy"

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/client"
+	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 )

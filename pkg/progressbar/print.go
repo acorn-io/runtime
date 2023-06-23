@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/client"
 	"github.com/acorn-io/baaah/pkg/typed"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/pterm/pterm"
 )
 

@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

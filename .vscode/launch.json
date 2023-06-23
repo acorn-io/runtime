@@ -46,7 +46,7 @@
         {
 			"id": "acornimage",
 			"type": "promptString",
-			"default": "ghcr.io/acorn-io/acorn:main",
+			"default": "ghcr.io/acorn-io/runtime:main",
 			"description": "The image of Acorn to install."
 		},
 	]

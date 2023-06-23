@@ -1,15 +1,15 @@
 package server
 
 import (
-	adminapi "github.com/acorn-io/acorn/pkg/apis/admin.acorn.io"
-	api "github.com/acorn-io/acorn/pkg/apis/api.acorn.io"
-	"github.com/acorn-io/acorn/pkg/k8sclient"
-	"github.com/acorn-io/acorn/pkg/openapi"
-	"github.com/acorn-io/acorn/pkg/scheme"
-	"github.com/acorn-io/acorn/pkg/server/registry"
 	"github.com/acorn-io/baaah/pkg/clientaggregator"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/mink/pkg/server"
+	adminapi "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io"
+	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
+	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/openapi"
+	"github.com/acorn-io/runtime/pkg/scheme"
+	"github.com/acorn-io/runtime/pkg/server/registry"
 	apiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/options"
 	"k8s.io/client-go/rest"

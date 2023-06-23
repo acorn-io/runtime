@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/client"
-	"github.com/acorn-io/acorn/pkg/imagesource"
-	"github.com/acorn-io/acorn/pkg/progressbar"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/imagesource"
+	"github.com/acorn-io/runtime/pkg/progressbar"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/spf13/cobra"

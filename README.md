@@ -1,6 +1,6 @@
 # Acorn
 
-![main-release](https://github.com/acorn-io/acorn/actions/workflows/main-release.yaml/badge.svg)
+![main-release](https://github.com/acorn-io/runtime/actions/workflows/main-release.yaml/badge.svg)
 
 A simple application deployment framework for Kubernetes.
 
@@ -13,15 +13,15 @@ A simple application deployment framework for Kubernetes.
 
 ## Get Started
 
-- [Downloads](https://github.com/acorn-io/acorn/releases)
+- [Downloads](https://github.com/acorn-io/runtime/releases)
 - [Documentation](https://docs.acorn.io)
 - [Community Slack](https://slack.acorn.io)
-- [Discussions Forum](https://github.com/acorn-io/acorn/discussions)
+- [Discussions Forum](https://github.com/acorn-io/runtime/discussions)
 
 ## Contributing
 For the basics on how to contribute to acorn, checkout [CONTRIBUTING.md](CONTRIBUTING.md).
 
-More details can also be found in our [developer wiki](https://github.com/acorn-io/acorn/wiki).
+More details can also be found in our [developer wiki](https://github.com/acorn-io/runtime/wiki).
 
 ## License
 Copyright (c) 2023 [Acorn Labs, Inc.](http://acorn.io)

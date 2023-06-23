@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/acorn-io/acorn/pkg/version"
+	"github.com/acorn-io/runtime/pkg/version"
 )
 
 var (
-	InstallImage  = "ghcr.io/acorn-io/acorn"
+	InstallImage  = "ghcr.io/acorn-io/runtime"
 	DefaultBranch = "main"
 	devTag        = "v0.0.0-dev"
 )

@@ -1,10 +1,10 @@
 package service
 
 import (
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/publish"
-	"github.com/acorn-io/acorn/pkg/services"
 	"github.com/acorn-io/baaah/pkg/router"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/publish"
+	"github.com/acorn-io/runtime/pkg/services"
 )
 
 func RenderServices(req router.Request, resp router.Response) error {

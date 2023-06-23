@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/aml/pkg/cue"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/spf13/pflag"
 )

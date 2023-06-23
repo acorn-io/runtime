@@ -7,5 +7,5 @@ acorn:
     latestRegexp: .*
   github:
     owner: acorn-io
-    repo: acorn
-  redirectBase: https://github.com/acorn-io/acorn/releases/tag/
+    repo: runtime
+  redirectBase: https://github.com/acorn-io/runtime/releases/tag/

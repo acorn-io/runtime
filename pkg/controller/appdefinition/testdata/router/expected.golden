@@ -34,7 +34,7 @@ spec:
         - daemon off;
         command:
         - /docker-entrypoint.sh
-        image: ghcr.io/acorn-io/acorn:main
+        image: ghcr.io/acorn-io/runtime:main
         name: nginx
         ports:
         - containerPort: 8080

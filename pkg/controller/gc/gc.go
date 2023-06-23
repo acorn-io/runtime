@@ -1,9 +1,9 @@
 package gc
 
 import (
-	"github.com/acorn-io/acorn/pkg/system"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/runtime/pkg/system"
 	corev1 "k8s.io/api/core/v1"
 )
 

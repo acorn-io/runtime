@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/client/term"
+	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/gorilla/websocket"
 	"github.com/rancher/wrangler/pkg/merr"
 )

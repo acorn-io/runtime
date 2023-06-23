@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/channels"
-	"github.com/acorn-io/acorn/pkg/client/term"
-	"github.com/acorn-io/acorn/pkg/streams"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/channels"
+	"github.com/acorn-io/runtime/pkg/client/term"
+	"github.com/acorn-io/runtime/pkg/streams"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

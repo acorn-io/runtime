@@ -1,11 +1,11 @@
 package cli
 
 import (
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/config"
-	credentials2 "github.com/acorn-io/acorn/pkg/credentials"
-	"github.com/acorn-io/acorn/pkg/tables"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/config"
+	credentials2 "github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )

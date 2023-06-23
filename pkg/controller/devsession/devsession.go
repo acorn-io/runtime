@@ -5,9 +5,9 @@ import (
 	"hash/fnv"
 	"time"
 
-	v1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/acorn/pkg/publicname"
 	"github.com/acorn-io/baaah/pkg/router"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/publicname"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 )
 

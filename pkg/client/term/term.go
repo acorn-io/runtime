@@ -4,7 +4,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/acorn-io/acorn/pkg/streams"
+	"github.com/acorn-io/runtime/pkg/streams"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/kubectl/pkg/util/term"
 )

@@ -1,10 +1,10 @@
 package cli
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/tables"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
