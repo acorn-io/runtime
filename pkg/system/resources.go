@@ -19,7 +19,7 @@ var (
 	registryCPURequest    = *resource.NewMilliQuantity(200, resource.DecimalSI) // REGISTRY_CPU_REQUEST
 
 	buildkitdMemoryRequest = *resource.NewQuantity(256*mi, resource.BinarySI)    // BUILDKITD_MEMORY_REQUEST
-	buildkitdMemoryLimit   = *resource.NewQuantity(1*gi, resource.BinarySI)      // BUILDKITD_MEMORY_LIMIT
+	buildkitdMemoryLimit   = *resource.NewQuantity(10*gi, resource.BinarySI)     // BUILDKITD_MEMORY_LIMIT
 	buildkitdCPURequest    = *resource.NewMilliQuantity(800, resource.DecimalSI) // BUILDKITD_CPU_REQUEST
 
 	buildkitdServiceMemoryRequest = *resource.NewQuantity(128*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_REQUEST
