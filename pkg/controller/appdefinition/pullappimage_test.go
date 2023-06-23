@@ -297,7 +297,7 @@ func TestAutoUpgradeImageResolution(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error when no local image was found for auto-upgrade app without a specified registry")
 	}
-	assert.ErrorContains(t, err, "no local image found for myimage:latest - if you are trying to use Docker Hub, use docker.io/myimage:latest")
+	assert.ErrorContains(t, err, "no local image found for myimage:latest - if you are trying to use a remote image, specify the full registry")
 }
 
 func testPullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {

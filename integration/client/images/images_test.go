@@ -331,7 +331,7 @@ func TestImageDetails(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for auto-upgrade pattern that matches no local images")
 	}
-	assert.ErrorContains(t, err, "unable to find an image for dne:v#.#.# matching pattern v#.#.# - if you are trying to use Docker Hub, use docker.io/dne:v#.#.#")
+	assert.ErrorContains(t, err, "unable to find an image for dne:v#.#.# matching pattern v#.#.# - if you are trying to use a remote image, specify the full registry")
 }
 
 func TestImageDeleteTwoTags(t *testing.T) {

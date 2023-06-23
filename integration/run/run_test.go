@@ -1696,5 +1696,5 @@ func TestAutoUpgradeImageValidation(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error when failing to find local image for auto-upgrade app, got no error")
 	}
-	assert.ErrorContains(t, err, "could not find local image for myimage:latest - if you are trying to use Docker Hub, use docker.io/myimage:latest")
+	assert.ErrorContains(t, err, "could not find local image for myimage:latest - if you are trying to use a remote image, specify the full registry")
 }
