@@ -23,7 +23,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceRoot}",
-            "args": ["run", "${input:acornfile}"],
+            //"args": ["secret", "reveal", "mytestsec", "-o=json"],
+            "args": ["images", "-o=json"],
             "console": "integratedTerminal",
         },
         {
@@ -37,6 +38,11 @@
         }
     ],
     "inputs": [
+        {
+            "id": "args",
+            "type": "promptStringArray",
+            "description": "Enter any arguments to pass to the program.",
+        },
 		{
 			"id": "acornfile",
 			"type": "promptString",

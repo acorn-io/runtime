@@ -126,6 +126,13 @@ func toKObject(obj any) (kclient.Object, bool) {
 }
 
 func cleanFields(obj any) any {
+	if ol, ok := obj.(ObjectList); ok {
+		for i, o := range ol.Items {
+			ol.Items[i] = cleanFields(o)
+		}
+		return ol
+	}
+
 	ro, ok := toKObject(obj)
 	if ok {
 		ro.SetManagedFields(nil)
