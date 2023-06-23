@@ -36,6 +36,8 @@ func (s *PullAppImageStrategy) Create(ctx context.Context, obj types.Object) (ty
 	p := obj.(*apiv1.AppPullImage)
 	ri, _ := request.RequestInfoFrom(ctx)
 
+	// Use app instance here because in Hub this request is forwarded to the workload cluster.
+	// The app validation logic should not run there.
 	app := &v1.AppInstance{}
 	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
 	if err != nil {
