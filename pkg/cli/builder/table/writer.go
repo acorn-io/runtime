@@ -230,7 +230,7 @@ func (t *writer) writeDataObject(objs ...any) error {
 	return errors.Join(t.errs...)
 }
 
-type ObjectList struct {
+type objectList struct {
 	Items []any `json:"items"`
 }
 
@@ -266,7 +266,7 @@ func (t *writer) flush(closing bool) error {
 		if closing {
 			// if we are closing, then we want to print objects its in a proper list
 			// data structure
-			err := t.writeDataObject(ObjectList{Items: objs})
+			err := t.writeDataObject(objectList{Items: objs})
 			if err != nil {
 				return err
 			}
