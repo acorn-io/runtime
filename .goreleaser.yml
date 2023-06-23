@@ -87,6 +87,8 @@ release:
 brews:
   - description: "Acorn CLI"
     name: acorn
+    install: |
+      bin.install "acorn"
     homepage: "https://acorn.io"
     license: "Apache 2.0"
     skip_upload: auto
