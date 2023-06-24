@@ -66,6 +66,11 @@ func (a *Reveal) Run(cmd *cobra.Command, args []string) error {
 				Key:   entry.Key,
 				Value: string(entry.Value),
 			}, &secret)
+			if a.Output != "" {
+				// in non-table output, we write the source object to buffer,
+				// so we exit here to not write the same object multiple times (one per data key)
+				break
+			}
 		}
 	}
 

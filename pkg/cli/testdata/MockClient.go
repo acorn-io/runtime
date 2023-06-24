@@ -379,6 +379,26 @@ func (m *MockClient) SecretReveal(ctx context.Context, name string) (*apiv1.Secr
 			Data:       nil,
 			Keys:       nil,
 		}, nil
+	case "secret.withdata":
+		return &apiv1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "secret.withdata",
+			},
+			Data: map[string][]byte{
+				"foo": []byte("bar"),
+				"baz": []byte("qux"),
+			},
+		}, nil
+	case "secret.withdata2":
+		return &apiv1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "secret.withdata2",
+			},
+			Data: map[string][]byte{
+				"spam": []byte("eggs"),
+			},
+		}, nil
+
 	}
 	return nil, nil
 }

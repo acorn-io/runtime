@@ -44,9 +44,6 @@ VOLUMES:
 items:
 - metadata:
     creationTimestamp: null
-    labels:
-      acorn.io/app-name: found
-      acorn.io/volume-name: vol
     name: found.vol
   spec: {}
   status:

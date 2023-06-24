@@ -184,6 +184,63 @@ func TestSecret(t *testing.T) {
 			wantOut: "NAME      TYPE      KEY       VALUE\n",
 		},
 		{
+			name: "acorn secret reveal secret.withdata", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"reveal", "secret.withdata"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "NAME              TYPE      KEY       VALUE\nsecret.withdata             baz       qux\nsecret.withdata             foo       bar\n",
+		},
+		{
+			name: "acorn secret reveal secret.withdata -o jsoncompact", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"reveal", "secret.withdata", "-o=jsoncompact"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "{\"items\":[{\"metadata\":{\"name\":\"secret.withdata\",\"creationTimestamp\":null},\"data\":{\"baz\":\"qux\",\"foo\":\"bar\"}}]}\n",
+		},
+		{
+			name: "acorn secret reveal secret.withdata secret.withdata2 -o jsoncompact", fields: fields{
+				All:    false,
+				Quiet:  false,
+				Output: "",
+			},
+			commandContext: CommandContext{
+				ClientFactory: &testdata.MockClientFactory{},
+				StdOut:        w,
+				StdErr:        w,
+				StdIn:         strings.NewReader("y\n"),
+			},
+			args: args{
+				args:   []string{"reveal", "secret.withdata", "secret.withdata2", "-o=jsoncompact"},
+				client: &testdata.MockClient{},
+			},
+			wantErr: false,
+			wantOut: "{\"items\":[{\"metadata\":{\"name\":\"secret.withdata\",\"creationTimestamp\":null},\"data\":{\"baz\":\"qux\",\"foo\":\"bar\"}},{\"metadata\":{\"name\":\"secret.withdata2\",\"creationTimestamp\":null},\"data\":{\"spam\":\"eggs\"}}]}\n",
+		},
+		{
 			name: "acorn secret reveal dne", fields: fields{
 				All:    false,
 				Quiet:  false,

@@ -126,6 +126,13 @@ func toKObject(obj any) (kclient.Object, bool) {
 }
 
 func cleanFields(obj any) any {
+	if ol, ok := obj.(objectList); ok {
+		for i, o := range ol.Items {
+			ol.Items[i] = cleanFields(o)
+		}
+		return ol
+	}
+
 	ro, ok := toKObject(obj)
 	if ok {
 		ro.SetManagedFields(nil)
@@ -147,9 +154,36 @@ func cleanFields(obj any) any {
 			}
 		}
 		ro.SetAnnotations(annotations)
+
+		// decode secret values
+		if sec, ok := ro.(*apiv1.Secret); ok {
+			return decodeSecret(sec)
+		}
+
 		return ro
 	}
 	return obj
+}
+
+func decodeSecret(sec *apiv1.Secret) any {
+	decodedSecret := struct {
+		metav1.TypeMeta   `json:",inline"`
+		metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+		Type string            `json:"type,omitempty"`
+		Data map[string]string `json:"data,omitempty"`
+		Keys []string          `json:"keys,omitempty"`
+	}{
+		TypeMeta:   sec.TypeMeta,
+		ObjectMeta: sec.ObjectMeta,
+		Type:       sec.Type,
+		Data:       map[string]string{},
+		Keys:       sec.Keys,
+	}
+	for k, v := range sec.Data {
+		decodedSecret.Data[k] = string(v)
+	}
+	return decodedSecret
 }
 
 func FormatYAML(data any) (string, error) {
