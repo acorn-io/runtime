@@ -19,6 +19,7 @@ import (
 )
 
 // handleNotAllowedError handles the case where an image is not allowed by IARs and prompts the user to create a basic one (image pattern only, no signatures, etc.)
+// @param opts can be either *client.AppRunOptions or *client.AppUpdateOptions and based on that we'll call either AppRun or AppUpdate in the end
 func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool, image string, err error, app *apiv1.App, opts any) (*apiv1.App, error) {
 	err.(*imageallowrules.ErrImageNotAllowed).Image = image
 
