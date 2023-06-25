@@ -36,8 +36,6 @@ func TestDefaultBasicSecret(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, "basic", secret.Type)
-	assert.Equal(t, map[string][]byte{
-		"username": []byte("username"),
-		"password": []byte("password"),
-	}, secret.Data)
+	assert.Equal(t, len(secret.Data["username"]), 8)
+	assert.Equal(t, len(secret.Data["password"]), 16)
 }
