@@ -43,6 +43,17 @@ func TestCollectPorts(t *testing.T) {
 			},
 		},
 		{
+			name: "one undefined hostname",
+			ports: []v1.PortDef{
+				{TargetPort: 8080, Port: 8000},
+				{TargetPort: 8080, Port: 8000, Hostname: "myapp.local"},
+			},
+			expected: []v1.PortDef{
+				{TargetPort: 8080, Port: 8000},
+				{TargetPort: 8080, Port: 8000, Hostname: "myapp.local"},
+			},
+		},
+		{
 			name: "duplicate everything",
 			ports: []v1.PortDef{
 				{TargetPort: 8080, Port: 8000, Hostname: "myapp.local"},
@@ -77,7 +88,6 @@ func TestCollectPorts(t *testing.T) {
 			},
 			expected: []v1.PortDef{
 				{TargetPort: 8080, Port: 8000, Hostname: "myapp.local"},
-				{TargetPort: 8080, Port: 9000, Hostname: "myapp.local"},
 			},
 		},
 		{
@@ -103,11 +113,10 @@ func TestCollectPorts(t *testing.T) {
 			name: "duplicate hostnames, different ports and target ports",
 			ports: []v1.PortDef{
 				{TargetPort: 8080, Port: 8000, Hostname: "myapp.local"},
-				{TargetPort: 8080, Port: 8000, Hostname: "myapp2.local"},
+				{TargetPort: 9090, Port: 9000, Hostname: "myapp.local"},
 			},
 			expected: []v1.PortDef{
 				{TargetPort: 8080, Port: 8000, Hostname: "myapp.local"},
-				{TargetPort: 8080, Port: 8000, Hostname: "myapp2.local"},
 			},
 		},
 		{
@@ -128,7 +137,8 @@ func TestCollectPorts(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			seen := map[int32][]hostnameAndTargetPort{}
-			assert.Equal(t, tt.expected, collectPorts(seen, tt.ports, false))
+			seenHostname := map[string]struct{}{}
+			assert.Equal(t, tt.expected, collectPorts(seen, seenHostname, tt.ports, false))
 		})
 	}
 }

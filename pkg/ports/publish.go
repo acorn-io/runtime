@@ -199,9 +199,14 @@ type hostnameAndTargetPort struct {
 	hostname string
 }
 
-func collectPorts(seen map[int32][]hostnameAndTargetPort, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
+func collectPorts(seen map[int32][]hostnameAndTargetPort, seenHostnames map[string]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 	for _, port := range ports {
 		if !devMode && port.Dev {
+			continue
+		}
+
+		// Can't have any duplicate hostnames, so check for that first
+		if _, exists := seenHostnames[port.Hostname]; exists {
 			continue
 		}
 
@@ -216,9 +221,10 @@ func collectPorts(seen map[int32][]hostnameAndTargetPort, ports []v1.PortDef, de
 			// Check for special case: the same port is exposed on multiple hostnames, so keep both.
 			if port.Hostname != "" {
 				for _, h := range hostnamesWithTarget {
-					if h.hostname != port.Hostname && h.target == port.TargetPort {
+					if h.target == port.TargetPort {
 						// Same port and target port but different hostnames, so keep both
 						seen[port.Port] = append(hostnamesWithTarget, hostnameAndTargetPort{hostname: port.Hostname, target: port.TargetPort})
+						seenHostnames[port.Hostname] = struct{}{}
 						result = append(result, port)
 						break
 					}
@@ -228,6 +234,9 @@ func collectPorts(seen map[int32][]hostnameAndTargetPort, ports []v1.PortDef, de
 		}
 
 		seen[port.Port] = []hostnameAndTargetPort{{hostname: port.Hostname, target: port.TargetPort}}
+		if port.Hostname != "" {
+			seenHostnames[port.Hostname] = struct{}{}
+		}
 		result = append(result, port)
 	}
 	return
@@ -246,10 +255,11 @@ func FilterDevPorts(ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 func CollectContainerPorts(container *v1.Container, devMode bool) (result []v1.PortDef) {
 	// seen represents a mapping of public port numbers to a combination of hostname and target port
 	seen := map[int32][]hostnameAndTargetPort{}
+	seenHostnames := map[string]struct{}{}
 
-	result = append(result, collectPorts(seen, container.Ports, devMode)...)
+	result = append(result, collectPorts(seen, seenHostnames, container.Ports, devMode)...)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		result = append(result, collectPorts(seen, entry.Value.Ports, devMode)...)
+		result = append(result, collectPorts(seen, seenHostnames, entry.Value.Ports, devMode)...)
 	}
 
 	return
