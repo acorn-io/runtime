@@ -206,7 +206,7 @@ func collectPorts(seen map[int32][]hostnameAndTargetPort, seenHostnames map[stri
 		}
 
 		// Can't have any duplicate hostnames, so check for that first
-		if _, exists := seenHostnames[port.Hostname]; exists {
+		if _, exists := seenHostnames[port.Hostname]; port.Hostname != "" && exists {
 			continue
 		}
 
