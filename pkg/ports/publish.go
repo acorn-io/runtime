@@ -248,7 +248,7 @@ func FilterDevPorts(ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 }
 
 func CollectContainerPorts(container *v1.Container, devMode bool) (result []v1.PortDef) {
-	// seen represents a mapping of public port numbers to a combination of hostname and target port
+	// seen represents a mapping of public port numbers to target port numbers
 	seen := map[int32][]int32{}
 	seenHostnames := map[string]struct{}{}
 
