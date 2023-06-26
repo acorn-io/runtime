@@ -12,7 +12,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
-	"github.com/acorn-io/runtime/pkg/hub"
+	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -54,8 +54,8 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 
 	var serverAddress string
 	if len(args) == 0 && a.Password != "" {
-		// HubServer slice length is guaranteed to be >=1 by the ReadCLIConfig method
-		serverAddress = cfg.HubServers[0]
+		// ManagerServer slice length is guaranteed to be >=1 by the ReadCLIConfig method
+		serverAddress = cfg.AcornServers[0]
 	} else if len(args) > 0 {
 		serverAddress = args[0]
 	}
@@ -92,13 +92,13 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	isHub, err := hub.IsHub(cfg, serverAddress)
+	isManager, err := manager.IsManager(cfg, serverAddress)
 	if err != nil {
 		return err
 	}
 
-	if isHub {
-		user, pass, err := hub.Login(cmd.Context(), a.Password, serverAddress)
+	if isManager {
+		user, pass, err := manager.Login(cmd.Context(), a.Password, serverAddress)
 		if err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if isHub {
+	if isManager {
 		// reload config, could have changed
 		cfg, err = config.ReadCLIConfig()
 		if err != nil {
@@ -142,7 +142,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		}
 
 		var projectSet bool
-		def, err := hub.DefaultProject(cmd.Context(), serverAddress, a.Username, a.Password)
+		def, err := manager.DefaultProject(cmd.Context(), serverAddress, a.Username, a.Password)
 		if err != nil {
 			return err
 		}

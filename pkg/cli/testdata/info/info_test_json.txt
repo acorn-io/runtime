@@ -4,7 +4,7 @@
             "tag": "v0.0.0-dev"
         },
         "cli": {
-            "hubServers": [
+            "acornServers": [
                 "acorn.io"
             ]
         }

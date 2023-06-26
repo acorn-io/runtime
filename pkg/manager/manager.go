@@ -1,4 +1,4 @@
-package hub
+package manager
 
 import (
 	"context"
@@ -16,8 +16,8 @@ import (
 	"k8s.io/utils/strings/slices"
 )
 
-func IsHub(cfg *config.CLIConfig, address string) (bool, error) {
-	if slices.Contains(cfg.HubServers, address) {
+func IsManager(cfg *config.CLIConfig, address string) (bool, error) {
+	if slices.Contains(cfg.AcornServers, address) {
 		return true, nil
 	}
 
@@ -45,7 +45,7 @@ func IsHub(cfg *config.CLIConfig, address string) (bool, error) {
 		return false, nil
 	}
 
-	cfg.HubServers = append(cfg.HubServers, address)
+	cfg.AcornServers = append(cfg.AcornServers, address)
 	return true, cfg.Save()
 }
 

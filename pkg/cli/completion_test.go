@@ -18,8 +18,8 @@ import (
 )
 
 func TestAppsThenContainersCompletion(t *testing.T) {
-	appNames := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
-	containerNames := []string{"test-1.container-1", "acorn-1.container-1", "acorn-2.container-1", "hub.container", "hub.other-container", "test-2.container-1"}
+	appNames := []string{"test-1", "acorn-1", "acorn-2", "manager", "test-2"}
+	containerNames := []string{"test-1.container-1", "acorn-1.container-1", "acorn-2.container-1", "manager.container", "manager.other-container", "test-2.container-1"}
 	apps := make([]apiv1.App, 0, len(appNames))
 	for _, name := range appNames {
 		apps = append(apps, apiv1.App{ObjectMeta: metav1.ObjectMeta{Name: name}})
@@ -68,9 +68,9 @@ func TestAppsThenContainersCompletion(t *testing.T) {
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete hub, only hub returned",
-			toComplete:    "hub",
-			wantNames:     []string{"hub"},
+			name:          "Complete manager, only manager returned",
+			toComplete:    "manager",
+			wantNames:     []string{"manager"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
@@ -80,27 +80,27 @@ func TestAppsThenContainersCompletion(t *testing.T) {
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete starting with hub.",
-			toComplete:    "hub.",
-			wantNames:     []string{"hub.container", "hub.other-container"},
+			name:          "Complete starting with manager.",
+			toComplete:    "manager.",
+			wantNames:     []string{"manager.container", "manager.other-container"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete starting with hub.c",
-			toComplete:    "hub.c",
-			wantNames:     []string{"hub.container"},
+			name:          "Complete starting with manager.c",
+			toComplete:    "manager.c",
+			wantNames:     []string{"manager.container"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete hub.container, only hub.container returned",
-			toComplete:    "hub.container",
-			wantNames:     []string{"hub.container"},
+			name:          "Complete manager.container, only manager.container returned",
+			toComplete:    "manager.container",
+			wantNames:     []string{"manager.container"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete hub.c, but hub.container already in args",
-			args:          []string{"hub.container"},
-			toComplete:    "hub.c",
+			name:          "Complete manager.c, but manager.container already in args",
+			args:          []string{"manager.container"},
+			toComplete:    "manager.c",
 			wantNames:     []string{},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
@@ -129,7 +129,7 @@ func TestAppsThenContainersCompletion(t *testing.T) {
 }
 
 func TestAppsCompletion(t *testing.T) {
-	names := []string{"test-1", "acorn-1", "acorn-2", "hub", "test-2"}
+	names := []string{"test-1", "acorn-1", "acorn-2", "manager", "test-2"}
 	apps := make([]apiv1.App, 0, len(names))
 	for _, name := range names {
 		apps = append(apps, apiv1.App{ObjectMeta: metav1.ObjectMeta{Name: name}})
@@ -173,9 +173,9 @@ func TestAppsCompletion(t *testing.T) {
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete hub, only hub returned",
-			toComplete:    "hub",
-			wantNames:     []string{"hub"},
+			name:          "Complete manager, only manager returned",
+			toComplete:    "manager",
+			wantNames:     []string{"manager"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
@@ -203,7 +203,7 @@ func TestAppsCompletion(t *testing.T) {
 }
 
 func TestContainersCompletion(t *testing.T) {
-	names := []string{"test-1.container-1", "acorn-1.container-1", "acorn-2.container-1", "hub.container", "hub.other-container", "test-2.container-1"}
+	names := []string{"test-1.container-1", "acorn-1.container-1", "acorn-2.container-1", "manager.container", "manager.other-container", "test-2.container-1"}
 	containers := make([]apiv1.ContainerReplica, 0, len(names))
 	for _, name := range names {
 		containers = append(containers, apiv1.ContainerReplica{ObjectMeta: metav1.ObjectMeta{Name: name}, Spec: apiv1.ContainerReplicaSpec{AppName: strings.Split(name, ".")[0]}})
@@ -246,21 +246,21 @@ func TestContainersCompletion(t *testing.T) {
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete starting with hub.",
-			toComplete:    "hub.",
-			wantNames:     []string{"hub.container", "hub.other-container"},
+			name:          "Complete starting with manager.",
+			toComplete:    "manager.",
+			wantNames:     []string{"manager.container", "manager.other-container"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete starting with hub.c",
-			toComplete:    "hub.c",
-			wantNames:     []string{"hub.container"},
+			name:          "Complete starting with manager.c",
+			toComplete:    "manager.c",
+			wantNames:     []string{"manager.container"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
-			name:          "Complete hub.container, only hub.container returned",
-			toComplete:    "hub.container",
-			wantNames:     []string{"hub.container"},
+			name:          "Complete manager.container, only manager.container returned",
+			toComplete:    "manager.container",
+			wantNames:     []string{"manager.container"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
@@ -423,7 +423,7 @@ func TestAcornContainerCompletion(t *testing.T) {
 		"test-2": {
 			"container-1": {},
 		},
-		"hub": {
+		"manager": {
 			"web":        {},
 			"db":         {},
 			"controller": {},
@@ -488,7 +488,7 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 		"test-2": {
 			"container-1": {},
 		},
-		"hub": {
+		"manager": {
 			"web":        {},
 			"db":         {},
 			"controller": {},
@@ -528,12 +528,12 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 	}{
 		{
 			name:          "Nothing to complete and no container, return apps",
-			wantNames:     []string{"hub", "test-1", "test-2"},
+			wantNames:     []string{"manager", "test-1", "test-2"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
 			name:          "Nothing to complete and no container, return apps except those in args",
-			args:          []string{"hub", "test-2"},
+			args:          []string{"manager", "test-2"},
 			wantNames:     []string{"test-1"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
@@ -545,15 +545,15 @@ func TestOnlyAppsWithAcornContainer(t *testing.T) {
 		},
 		{
 			name:          "Something with '.' to complete and no container should be the k8s container completion",
-			toComplete:    "hub.",
-			wantNames:     []string{"hub.controller", "hub.db", "hub.web"},
+			toComplete:    "manager.",
+			wantNames:     []string{"manager.controller", "manager.db", "manager.web"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{
 			name:          "Something with '.' to complete and no container should be the k8s container completion except those in args",
-			toComplete:    "hub.",
-			args:          []string{"hub.db"},
-			wantNames:     []string{"hub.controller", "hub.web"},
+			toComplete:    "manager.",
+			args:          []string{"manager.db"},
+			wantNames:     []string{"manager.controller", "manager.web"},
 			wantDirective: cobra.ShellCompDirectiveNoFileComp,
 		},
 		{

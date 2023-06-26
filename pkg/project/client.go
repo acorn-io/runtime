@@ -10,7 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
-	"github.com/acorn-io/runtime/pkg/hub"
+	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/acorn-io/runtime/pkg/system"
 	"k8s.io/client-go/rest"
 )
@@ -210,7 +210,7 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 		New: func() (client.Client, error) {
 			url := cfg.TestProjectURLs[serverOrKubeconfig+"/"+account]
 			if url == "" {
-				url, err = hub.ProjectURL(ctx, serverOrKubeconfig, account, cred.Password)
+				url, err = manager.ProjectURL(ctx, serverOrKubeconfig, account, cred.Password)
 				if err != nil {
 					return nil, err
 				}

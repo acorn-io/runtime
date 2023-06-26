@@ -24,25 +24,25 @@ func TestParseProject(t *testing.T) {
 			wantNamespace: "foo",
 		},
 		{
-			name: "Hub reference",
+			name: "Manager reference",
 			args: args{
-				project: "hub.example.com/account/project",
+				project: "manager.example.com/account/project",
 			},
 			wantNamespace: "project",
 			wantAccount:   "account",
-			wantServer:    "hub.example.com",
+			wantServer:    "manager.example.com",
 		},
 		{
-			name: "Hub reference",
+			name: "Manager reference",
 			args: args{
-				project: "hub.example.com/account/project",
+				project: "manager.example.com/account/project",
 			},
 			wantNamespace: "project",
 			wantAccount:   "account",
-			wantServer:    "hub.example.com",
+			wantServer:    "manager.example.com",
 		},
 		{
-			name: "Hub default reference",
+			name: "Manager default reference",
 			args: args{
 				project: "account/project",
 			},

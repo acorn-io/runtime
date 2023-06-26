@@ -107,7 +107,7 @@ var (
 	Info = [][]string{
 		{"Version", "Client.Version"},
 		{"Current Project", "Client.CLI.CurrentProject"},
-		{"Hub Servers", "{{ arrayNoSpace .Client.CLI.HubServers }}"},
+		{"Manager Servers", "{{ arrayNoSpace .Client.CLI.AcornServers }}"},
 	}
 	InfoConverter = MustConverter(Info)
 

@@ -41,8 +41,8 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	var client client.Client
-	if slices.Contains(cfg.HubServers, args[0]) {
-		// force local storage for known hub addresses
+	if slices.Contains(cfg.AcornServers, args[0]) {
+		// force local storage for known manager addresses
 		a.LocalStorage = true
 	}
 
