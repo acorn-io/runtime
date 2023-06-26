@@ -115,7 +115,8 @@ spec:
     acorn.io/container-name: nginx
     acorn.io/managed: "true"
   ports:
-  - protocol: http
+  - port: 80
+    protocol: http
     targetPort: 80
 status: {}
 
