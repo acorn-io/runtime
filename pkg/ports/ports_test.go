@@ -136,7 +136,7 @@ func TestCollectPorts(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			seen := map[int32][]hostnameAndTargetPort{}
+			seen := map[int32][]int32{}
 			seenHostname := map[string]struct{}{}
 			assert.Equal(t, tt.expected, collectPorts(seen, seenHostname, tt.ports, false))
 		})

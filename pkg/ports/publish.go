@@ -194,12 +194,7 @@ func matches(binding v1.PortPublish, port v1.PortDef) bool {
 		portMatches(binding, port)
 }
 
-type hostnameAndTargetPort struct {
-	target   int32
-	hostname string
-}
-
-func collectPorts(seen map[int32][]hostnameAndTargetPort, seenHostnames map[string]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
+func collectPorts(seen map[int32][]int32, seenHostnames map[string]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 	for _, port := range ports {
 		if !devMode && port.Dev {
 			continue
@@ -217,13 +212,13 @@ func collectPorts(seen map[int32][]hostnameAndTargetPort, seenHostnames map[stri
 			port.Port = port.TargetPort
 		}
 
-		if hostnamesWithTarget, ok := seen[port.Port]; ok {
+		if targets, ok := seen[port.Port]; ok {
 			// Check for special case: the same port is exposed on multiple hostnames, so keep both.
 			if port.Hostname != "" {
-				for _, h := range hostnamesWithTarget {
-					if h.target == port.TargetPort {
+				for _, t := range targets {
+					if t == port.TargetPort {
 						// Same port and target port but different hostnames, so keep both
-						seen[port.Port] = append(hostnamesWithTarget, hostnameAndTargetPort{hostname: port.Hostname, target: port.TargetPort})
+						seen[port.Port] = append(targets, port.TargetPort)
 						seenHostnames[port.Hostname] = struct{}{}
 						result = append(result, port)
 						break
@@ -233,7 +228,7 @@ func collectPorts(seen map[int32][]hostnameAndTargetPort, seenHostnames map[stri
 			continue
 		}
 
-		seen[port.Port] = []hostnameAndTargetPort{{hostname: port.Hostname, target: port.TargetPort}}
+		seen[port.Port] = []int32{port.TargetPort}
 		if port.Hostname != "" {
 			seenHostnames[port.Hostname] = struct{}{}
 		}
@@ -254,7 +249,7 @@ func FilterDevPorts(ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 
 func CollectContainerPorts(container *v1.Container, devMode bool) (result []v1.PortDef) {
 	// seen represents a mapping of public port numbers to a combination of hostname and target port
-	seen := map[int32][]hostnameAndTargetPort{}
+	seen := map[int32][]int32{}
 	seenHostnames := map[string]struct{}{}
 
 	result = append(result, collectPorts(seen, seenHostnames, container.Ports, devMode)...)
