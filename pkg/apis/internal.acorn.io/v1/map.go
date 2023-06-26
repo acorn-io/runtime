@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/sirupsen/logrus"
 )
 
 type GenericMap map[string]interface{}
@@ -49,8 +49,14 @@ func (in *GenericMap) UnmarshalJSON(data []byte) error {
 
 func (in *GenericMap) DeepCopyInto(out *GenericMap) {
 	*out = map[string]interface{}{}
-	for k, v := range runtime.DeepCopyJSON(*in) {
-		(*out)[k] = v
+	data, err := in.MarshalJSON()
+	if err != nil {
+		logrus.Errorf("failed to marshal [%T] during deep copy: [%s]", out, err)
+		return
+	}
+
+	if err := out.UnmarshalJSON(data); err != nil {
+		logrus.Errorf("failed to unmarshal [%T] during deep copy: [%s]", out, err)
 	}
 }
 
