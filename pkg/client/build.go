@@ -2,13 +2,16 @@ package client
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 
 	"github.com/acorn-io/aml/pkg/cue"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/buildclient"
+	"github.com/acorn-io/runtime/pkg/digest"
 	"github.com/acorn-io/runtime/pkg/vcs"
+	"github.com/denisbrodbeck/machineid"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -41,6 +44,20 @@ func (c *DefaultClient) AcornImageBuildList(ctx context.Context) ([]apiv1.AcornI
 	return builders.Items, err
 }
 
+func BuildClientID(image, file string) string {
+	hashSource := file
+	if hashSource == "" {
+		hashSource = image
+	}
+	cwd, _ := os.Getwd()
+	id, _ := machineid.ProtectedID("acorn")
+	if id == "" {
+		id, _ = os.Hostname()
+	}
+	hashSource = filepath.Join(cwd, hashSource)
+	return digest.SHA256(id, hashSource)[:12]
+}
+
 func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *AcornImageBuildOptions) (*v1.AppImage, error) {
 	opts, err := opts.complete()
 	if err != nil {
@@ -66,12 +83,13 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 			Namespace:    c.Namespace,
 		},
 		Spec: v1.AcornImageBuildInstanceSpec{
-			BuilderName: opts.BuilderName,
-			Acornfile:   string(fileData),
-			Platforms:   opts.Platforms,
-			Args:        opts.Args,
-			Profiles:    opts.Profiles,
-			VCS:         vcs,
+			ContextCacheKey: BuildClientID("", file),
+			BuilderName:     opts.BuilderName,
+			Acornfile:       string(fileData),
+			Platforms:       opts.Platforms,
+			Args:            opts.Args,
+			Profiles:        opts.Profiles,
+			VCS:             vcs,
 		},
 	}
 
