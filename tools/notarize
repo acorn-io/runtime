@@ -21,6 +21,7 @@ fi
 echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG=${DMG}"
 
 sudo apt-get update -y  
+exit 0
 
 if [[ "${SIGN}" != "0" ]]; then
   echo "Signing"
