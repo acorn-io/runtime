@@ -30,7 +30,11 @@ func (a *appStatusRenderer) readRouter() error {
 			s.Defined = true
 		}
 
-		s.Ready, _ = a.isServiceReady(routerName)
+		s.Ready, _, err = a.isServiceReady(routerName)
+		if err != nil {
+			return err
+		}
+
 		s.Ready = s.Defined && s.Ready
 		a.app.Status.AppStatus.Routers[routerName] = s
 	}

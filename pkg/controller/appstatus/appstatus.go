@@ -60,6 +60,18 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 		app.Status.AppStatus.Jobs = map[string]v1.JobStatus{}
 	}
 
+	if app.Status.AppStatus.Acorns == nil {
+		app.Status.AppStatus.Acorns = map[string]v1.AcornStatus{}
+	}
+
+	if app.Status.AppStatus.Services == nil {
+		app.Status.AppStatus.Services = map[string]v1.ServiceStatus{}
+	}
+
+	if app.Status.AppStatus.Secrets == nil {
+		app.Status.AppStatus.Secrets = map[string]v1.SecretStatus{}
+	}
+
 	return nil
 }
 

@@ -26,8 +26,12 @@ func (a *appStatusRenderer) readAcorns() error {
 		}
 
 		if s.LinkOverride != "" {
+			var err error
 			s.UpToDate = true
-			s.Ready, _ = a.isServiceReady(acornName)
+			s.Ready, _, err = a.isServiceReady(acornName)
+			if err != nil {
+				return err
+			}
 			a.app.Status.AppStatus.Acorns[acornName] = s
 			continue
 		}

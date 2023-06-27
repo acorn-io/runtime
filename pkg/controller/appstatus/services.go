@@ -7,14 +7,17 @@ import (
 
 	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
+	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
+	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (a *appStatusRenderer) readServices() error {
@@ -23,7 +26,8 @@ func (a *appStatusRenderer) readServices() error {
 	// reset state
 	a.app.Status.AppStatus.Services = make(map[string]v1.ServiceStatus, len(a.app.Status.AppSpec.Services))
 
-	for serviceName, serviceDef := range a.app.Status.AppSpec.Services {
+	for _, entry := range typed.Sorted(a.app.Status.AppSpec.Services) {
+		serviceName, serviceDef := entry.Key, entry.Value
 		s := v1.ServiceStatus{
 			CommonStatus: v1.CommonStatus{
 				LinkOverride: ports.LinkService(a.app, serviceName),
@@ -31,7 +35,11 @@ func (a *appStatusRenderer) readServices() error {
 			ExpressionErrors: existingStatus[serviceName].ExpressionErrors,
 		}
 
-		s.Ready, s.Defined = a.isServiceReady(serviceName)
+		var err error
+		s.Ready, s.Defined, err = a.isServiceReady(serviceName)
+		if err != nil {
+			return err
+		}
 
 		if s.LinkOverride == "" && serviceDef.Image != "" {
 			s.ServiceAcornName = publicname.ForChild(a.app, serviceName)
@@ -59,6 +67,7 @@ func (a *appStatusRenderer) readServices() error {
 		s.Defined = s.Defined || !service.Status.HasService
 		s.UpToDate = service.Namespace != a.app.Status.Namespace ||
 			service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+		s.UpToDate = s.Defined && s.UpToDate
 		s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
 		if s.ServiceAcornName != "" {
 			s.Ready = s.Ready && s.ServiceAcornReady
@@ -109,57 +118,60 @@ func (a *appStatusRenderer) readServices() error {
 	return nil
 }
 
-func (a *appStatusRenderer) isServiceReady(svc string) (ready bool, found bool) {
-	return a.isServiceReadyByNamespace(a.app.Status.Namespace, svc)
+func (a *appStatusRenderer) isServiceReady(svc string) (ready bool, found bool, err error) {
+	return a.isServiceReadyByNamespace(nil, a.app.Status.Namespace, svc)
 }
 
-func (a *appStatusRenderer) isServiceReadyByNamespace(namespace, svc string) (ready bool, found bool) {
+func (a *appStatusRenderer) isServiceReadyByNamespace(seen []client.ObjectKey, namespace, svc string) (ready bool, found bool, err error) {
+	if slices.Contains(seen, router.Key(namespace, svc)) {
+		return false, false, fmt.Errorf("circular service dependency on %s/%s: %v", namespace, svc, seen)
+	}
+	seen = append(seen, router.Key(namespace, svc))
+
 	var svcDep corev1.Service
-	err := a.c.Get(a.ctx, router.Key(namespace, svc), &svcDep)
+	err = a.c.Get(a.ctx, router.Key(namespace, svc), &svcDep)
 	if apierrors.IsNotFound(err) {
-		return false, false
+		return false, false, nil
 	}
 	if err != nil {
 		// if err just return it as not ready
-		return false, true
+		return false, true, err
 	}
 
 	if svcDep.Labels[labels.AcornManaged] != "true" {
 		// for services we don't manage, just return ready always
-		return true, true
+		return true, true, nil
 	}
 
 	if svcDep.Spec.ExternalName != "" {
 		cfg, err := config.Get(a.ctx, a.c)
 		if err != nil {
 			// if err just return it as not ready
-			return false, true
+			return false, true, nil
 		}
 		if strings.HasSuffix(svcDep.Spec.ExternalName, cfg.InternalClusterDomain) {
 			parts := strings.Split(svcDep.Spec.ExternalName, ".")
 			if len(parts) > 2 {
-				return a.isServiceReadyByNamespace(parts[1], parts[0])
+				return a.isServiceReadyByNamespace(seen, parts[1], parts[0])
 			}
 		}
 		// for unknown external names we just assume they are always ready
-		return true, true
+		return true, true, nil
 	}
 
 	var endpoints corev1.Endpoints
 	err = a.c.Get(a.ctx, router.Key(namespace, svc), &endpoints)
 	if apierrors.IsNotFound(err) {
-		return false, false
-	}
-	if err != nil {
-		// if err just return it as not ready
-		return false, true
+		return false, false, nil
+	} else if err != nil {
+		return false, true, err
 	}
 
 	for _, subset := range endpoints.Subsets {
 		if len(subset.Addresses) > 0 {
-			return true, true
+			return true, true, nil
 		}
 	}
 
-	return false, true
+	return false, true, nil
 }

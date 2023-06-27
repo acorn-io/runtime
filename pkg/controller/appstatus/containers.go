@@ -64,8 +64,12 @@ func (a *appStatusRenderer) readContainers() error {
 		}
 
 		if cs.LinkOverride != "" {
+			var err error
 			cs.UpToDate = true
-			cs.Ready, cs.Defined = a.isServiceReady(containerName)
+			cs.Ready, cs.Defined, err = a.isServiceReady(containerName)
+			if err != nil {
+				return err
+			}
 		}
 
 		if len(cs.TransitioningMessages) > 0 {

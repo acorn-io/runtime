@@ -117,6 +117,10 @@ func (i *Interpolator) Incomplete() bool {
 		return i.incomplete[i.jobName]
 	} else if i.containerName != "" {
 		return i.incomplete[i.containerName]
+	} else if i.acornName != "" {
+		return i.incomplete[i.acornName]
+	} else if i.serviceName != "" {
+		return i.incomplete[i.serviceName]
 	}
 	return len(i.incomplete) > 0
 }
@@ -443,6 +447,15 @@ func (i *Interpolator) saveError(err error) {
 }
 
 func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
+	newKey, err := i.replace(key)
+	if err != nil {
+		i.saveError(err)
+		return corev1.EnvVar{
+			Name:  key,
+			Value: value,
+		}
+	}
+
 	newValue, err := i.replace(value)
 	if err != nil {
 		i.saveError(err)
@@ -453,13 +466,13 @@ func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
 	}
 	if value == newValue {
 		return corev1.EnvVar{
-			Name:  key,
+			Name:  newKey,
 			Value: value,
 		}
 	}
 
 	return corev1.EnvVar{
-		Name: key,
+		Name: newKey,
 		ValueFrom: &corev1.EnvVarSource{
 			SecretKeyRef: &corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{

@@ -91,8 +91,12 @@ func (a *appStatusRenderer) readJobs() error {
 		}
 
 		if c.LinkOverride != "" {
+			var err error
 			c.UpToDate = true
-			c.Ready, c.Defined = a.isServiceReady(jobName)
+			c.Ready, c.Defined, err = a.isServiceReady(jobName)
+			if err != nil {
+				return err
+			}
 			if c.Ready {
 				c.CreateEventSucceeded = true
 			}
