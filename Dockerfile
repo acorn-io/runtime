@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.3-labs
 
 FROM ghcr.io/acorn-io/images-mirror/tonistiigi/binfmt:qemu-v6.2.0 AS binfmt
-FROM ghcr.io/acorn-io/images-mirror/moby/buildkit:v0.10.6 AS buildkit
+FROM ghcr.io/acorn-io/images-mirror/moby/buildkit:v0.11.6 AS buildkit
 FROM ghcr.io/acorn-io/images-mirror/registry:2.8.1 AS registry
 FROM ghcr.io/acorn-io/images-mirror/rancher/klipper-lb:v0.3.5 AS klipper-lb
 
