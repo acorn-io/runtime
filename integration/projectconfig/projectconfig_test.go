@@ -146,7 +146,7 @@ func TestCLIConfig(t *testing.T) {
 			wantNamespace: "something",
 		},
 		{
-			name: "User set hub reference",
+			name: "User set manager reference",
 			opt: project.Options{
 				Project: "example.com/foo/bar",
 				CLIConfig: &config.CLIConfig{

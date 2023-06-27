@@ -47,7 +47,7 @@ type CLIConfig struct {
 	Auths             map[string]AuthConfig `json:"auths,omitempty"`
 	CredentialsStore  string                `json:"credsStore,omitempty"`
 	CredentialHelpers map[string]string     `json:"credHelpers,omitempty"`
-	HubServers        []string              `json:"hubServers,omitempty"`
+	AcornServers      []string              `json:"acornServers,omitempty"`
 	Kubeconfigs       map[string]string     `json:"-"`
 	ProjectAliases    map[string]string     `json:"projectAliases,omitempty"`
 	CurrentProject    string                `json:"currentProject,omitempty"`
@@ -136,8 +136,8 @@ func ReadCLIConfig() (*CLIConfig, error) {
 
 	result.filename = filename
 
-	if len(result.HubServers) == 0 {
-		result.HubServers = []string{system.DefaultHubAddress}
+	if len(result.AcornServers) == 0 {
+		result.AcornServers = []string{system.DefaultHubAddress}
 	}
 
 	result.Kubeconfigs = map[string]string{}
@@ -201,15 +201,15 @@ func RemoveServer(cfg *CLIConfig, serverAddress string) error {
 		modified = true
 	}
 
-	var newHubServers []string
-	for _, server := range cfg.HubServers {
+	var newAcornServer []string
+	for _, server := range cfg.AcornServers {
 		if server != serverAddress {
-			newHubServers = append(newHubServers, server)
+			newAcornServer = append(newAcornServer, server)
 		}
 	}
 
-	if len(newHubServers) != len(cfg.HubServers) {
-		cfg.HubServers = newHubServers
+	if len(newAcornServer) != len(cfg.AcornServers) {
+		cfg.AcornServers = newAcornServer
 		modified = true
 	}
 

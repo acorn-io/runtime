@@ -123,7 +123,7 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error
 
 // shouldLookupAcornDNSDomain determines if given the current configuration, Acorn DNS domain should be used if
 // found. Extra care is taken to ensure we only do extra API object lookups when necessary. Most importantly some objects
-// like v1.Node won't exist in hub and will fail there, so there should be a user configuration that will make lookups
+// like v1.Node won't exist in manager and will fail there, so there should be a user configuration that will make lookups
 // not happen.
 func shouldLookupAcornDNSDomain(ctx context.Context, c *apiv1.Config, getter kclient.Reader) (bool, error) {
 	if strings.EqualFold(*c.AcornDNS, "enabled") {
@@ -181,7 +181,7 @@ func useLocalWildcardDomain(ctx context.Context, getter kclient.Reader) (bool, e
 	var nodes corev1.NodeList
 	if err := getter.List(ctx, &nodes); err != nil {
 		if meta.IsNoMatchError(err) {
-			// Node type doesn't exist probably because we are running against hub
+			// Node type doesn't exist probably because we are running against manager
 			return false, nil
 		}
 		return false, err

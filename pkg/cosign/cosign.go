@@ -151,7 +151,7 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 
 // VerifySignature checks if the image is signed with the given key and if the annotations match the given rules
 // This does a lot of image and image manifest juggling to fetch artifacts, digests, etc. from the registry, so we have to be
-// careful to not do too many GET requests that count against registry rate limits (e.g. for DockerHub).
+// careful to not do too many GET requests that count against registry rate limits (e.g. for Docker Hub).
 // Crane uses HEAD (with GET as a fallback) wherever it can, so it's a good choice here e.g. for fetching digests.
 func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 	sigs, err := ociremote.Signatures(opts.SignatureRef, opts.OciRemoteOpts...) // this runs against our internal registry, so it should not count against the rate limits

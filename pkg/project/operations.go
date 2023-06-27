@@ -12,7 +12,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
-	"github.com/acorn-io/runtime/pkg/hub"
+	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
@@ -129,28 +129,25 @@ type DetailProject struct {
 	Err      error
 }
 
-func listHubServers(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
-	for _, hubServer := range cfg.HubServers {
-		// copy for usage in goroutine
-		hubServer := hubServer
-
+func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
+	for _, managerServer := range cfg.AcornServers {
 		wg.Add(1)
-		go func() {
+		go func(managerServer string) {
 			defer wg.Done()
 
 			var projects []string
-			cred, ok, err := creds.Get(ctx, hubServer)
+			cred, ok, err := creds.Get(ctx, managerServer)
 			if err == nil && ok {
 				subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-				projects, err = hub.Projects(subCtx, hubServer, cred.Password)
+				projects, err = manager.Projects(subCtx, managerServer, cred.Password)
 				cancel()
 			}
 			result <- listResult{
-				source:   hubServer,
+				source:   managerServer,
 				err:      err,
 				projects: projects,
 			}
-		}()
+		}(managerServer)
 	}
 }
 
@@ -181,7 +178,7 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 
 	listLocalKubeconfig(ctx, &wg, result, opts)
 	if !onlyListLocalKubeconfig {
-		listHubServers(ctx, &wg, creds, cfg, result)
+		listAcornServer(ctx, &wg, creds, cfg, result)
 	}
 
 	go func() {

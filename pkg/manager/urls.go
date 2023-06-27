@@ -1,4 +1,4 @@
-package hub
+package manager
 
 import (
 	"fmt"
@@ -10,15 +10,15 @@ func isLocal(address string) bool {
 }
 
 func toDiscoverURL(address string) string {
-	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1", scheme(address), address)
+	return fmt.Sprintf("%s://%s/apis/manager.acorn.io/v1", scheme(address), address)
 }
 
 func toProjectMembershipURL(address string) string {
-	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1/projectmemberships", scheme(address), address)
+	return fmt.Sprintf("%s://%s/apis/manager.acorn.io/v1/projectmemberships", scheme(address), address)
 }
 
 func toAccountURL(address, account string) string {
-	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1/accounts/%s", scheme(address), address, account)
+	return fmt.Sprintf("%s://%s/apis/manager.acorn.io/v1/accounts/%s", scheme(address), address, account)
 }
 
 func scheme(address string) string {
@@ -33,5 +33,5 @@ func toLoginURL(address, password string) string {
 }
 
 func toTokenRequestURL(address, password string) string {
-	return fmt.Sprintf("%s://%s/apis/hub.acorn.io/v1/tokenrequests/%s", scheme(address), address, password)
+	return fmt.Sprintf("%s://%s/apis/manager.acorn.io/v1/tokenrequests/%s", scheme(address), address, password)
 }
