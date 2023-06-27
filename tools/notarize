@@ -4,7 +4,7 @@ set -e
 cd $(dirname $0)/..
 
 : ${KEYCHAIN="build.keychain"}
-: ${SIGN="1"}
+: ${SIGN=""}
 : ${NOTARIZE=""}
 : ${AC_BUNDLE="io.acorn.cli"}
 
@@ -20,17 +20,17 @@ fi
 
 echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG=${DMG}"
 
-apt-get update -y  
+sudo apt-get update -y  
 
-if [[ "${SIGN}" == 1 ]]; then
+if [[ "${SIGN}" != "0" ]]; then
   echo "Signing"
 
   # Install the necessary tools, specifically cargo, to install rcodesign, a Rust 
   # implementation of codesign.
-  which curl || apt-get install curl -y
-  which gcc || apt-get install gcc -y
-  which cargo || curl https://sh.rustup.rs -sSf | sh -s -- -y && bash
-  which rcodesign || cargo install apple-codesign
+  which curl || sudo apt-get install curl -y
+  which gcc || sudo apt-get install gcc -y
+  which cargo || sudo curl https://sh.rustup.rs -sSf | sh -s -- -y && bash
+  which rcodesign || sudo cargo install apple-codesign
 
   # Sign the binary using rcodesign.
   echo "${AC_P12}" | base64 --decode > signing.p12
@@ -39,10 +39,10 @@ else
   echo "Skipping signing"
 fi
 
-if [[ "${NOTARIZE}" == 1 ]]; then
+if [[ "${NOTARIZE}" == "1" ]]; then
   echo "Notarizing…"
 
-  which mkfs.hfsplus || apt-get install hfsprogs -y
+  which mkfs.hfsplus || sudo apt-get install hfsprogs -y
 
   # Build the DMG
   cp LICENSE README.md "${DIR}/"
