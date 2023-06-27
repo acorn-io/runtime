@@ -18,11 +18,11 @@ func NewStorage(c kclient.WithWatch, cf *client.Factory) rest.Storage {
 		remote.NewRemote(&v1.DevSessionInstance{}, c))
 
 	appValidator := apps.NewValidator(c, cf, nil)
-	strategy := NewValidator(c, appValidator)
+	devSessionValidator := NewValidator(c, appValidator)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.DevSession{}).
-		WithValidateCreate(strategy).
-		WithValidateUpdate(strategy).
+		WithValidateCreate(devSessionValidator).
+		WithValidateUpdate(devSessionValidator).
 		WithCompleteCRUD(remoteResource).
 		WithValidateName(validator.ValidDNSSubdomain).
 		Build()

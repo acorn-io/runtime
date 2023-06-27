@@ -38,9 +38,10 @@ import (
 )
 
 type Validator struct {
-	client        kclient.Client
-	clientFactory *client.Factory
-	deleter       strategy.Deleter
+	client            kclient.Client
+	clientFactory     *client.Factory
+	deleter           strategy.Deleter
+	allowNestedUpdate bool
 }
 
 func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter strategy.Deleter) *Validator {
@@ -49,6 +50,20 @@ func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter 
 		clientFactory: clientFactory,
 		deleter:       deleter,
 	}
+}
+
+func (s *Validator) ValidateName(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+	name := obj.(kclient.Object).GetName()
+	if errs := validation.IsDNS1035Label(name); len(errs) > 0 {
+		result = append(result, field.Invalid(field.NewPath("metadata", "name"), name, strings.Join(errs, ",")))
+	}
+	return
+}
+
+func (s *Validator) AllowNestedUpdate() *Validator {
+	cp := *s
+	cp.allowNestedUpdate = true
+	return &cp
 }
 
 func (s *Validator) Get(ctx context.Context, namespace, name string) (types.Object, error) {
@@ -173,9 +188,11 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	newParams := obj.(*apiv1.App)
 	oldParams := old.(*apiv1.App)
 
-	if len(strings.Split(newParams.Name, ".")) == 2 && newParams.Name == oldParams.Name && newParams.Labels[labels.AcornParentAcornName] != "" {
-		result = append(result, field.Invalid(field.NewPath("metadata", "name"), newParams.Name, "To update a nested Acorn or a service, update the parent Acorn instead."))
-		return result
+	if !s.allowNestedUpdate {
+		if len(strings.Split(newParams.Name, ".")) == 2 && newParams.Name == oldParams.Name && newParams.Labels[labels.AcornParentAcornName] != "" {
+			result = append(result, field.Invalid(field.NewPath("metadata", "name"), newParams.Name, "To update a nested Acorn or a service, update the parent Acorn instead."))
+			return result
+		}
 	}
 
 	if oldParams.Status.GetDevMode() {
@@ -194,11 +211,6 @@ func (s *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 func (s *Validator) validateName(app *apiv1.App) error {
 	if app.Name == "" {
 		return fmt.Errorf("name is required")
-	}
-
-	errs := validation.IsDNS1035Label(app.Name)
-	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, ": "))
 	}
 
 	return nil

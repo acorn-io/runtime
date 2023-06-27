@@ -11,47 +11,47 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type Strategy struct {
+type Validator struct {
 	client       kclient.Client
 	appValidator *apps.Validator
 }
 
-func NewValidator(c kclient.Client, appValidator *apps.Validator) *Strategy {
-	return &Strategy{
+func NewValidator(c kclient.Client, appValidator *apps.Validator) *Validator {
+	return &Validator{
 		client:       c,
 		appValidator: appValidator,
 	}
 }
 
-func (s *Strategy) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	devSession := obj.(*apiv1.DevSession)
-	if devSession.Spec.SpecOverride == nil {
-		return nil
-	}
-
 	app := &apiv1.App{}
-	if err := s.client.Get(ctx, router.Key(devSession.Namespace, devSession.Name), app); err != nil {
+	if err := v.client.Get(ctx, router.Key(devSession.Namespace, devSession.Name), app); err != nil {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), devSession.Name, err.Error()))
 		return
 	}
 
+	if devSession.Spec.SpecOverride == nil {
+		return nil
+	}
+
 	app.Spec = *devSession.Spec.SpecOverride
 	app.Status.DevSession = nil
-	return s.appValidator.Validate(ctx, app)
+	return v.appValidator.Validate(ctx, app)
 }
 
-func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
+func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
 	oldObj := old.(*apiv1.DevSession)
 	newObj := obj.(*apiv1.DevSession)
 
 	if oldObj.Spec.SpecOverride == nil {
-		return s.Validate(ctx, obj)
+		return v.Validate(ctx, obj)
 	} else if newObj.Spec.SpecOverride == nil {
 		return nil
 	}
 
 	app := &apiv1.App{}
-	if err := s.client.Get(ctx, router.Key(newObj.Namespace, newObj.Name), app); err != nil {
+	if err := v.client.Get(ctx, router.Key(newObj.Namespace, newObj.Name), app); err != nil {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), newObj.Name, err.Error()))
 		return
 	}
@@ -64,5 +64,5 @@ func (s *Strategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) 
 	newApp.Spec = *newObj.Spec.SpecOverride
 	newApp.Status.DevSession = nil
 
-	return s.appValidator.ValidateUpdate(ctx, newApp, oldApp)
+	return v.appValidator.AllowNestedUpdate().ValidateUpdate(ctx, newApp, oldApp)
 }
