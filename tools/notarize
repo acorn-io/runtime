@@ -4,7 +4,7 @@ set -e
 cd $(dirname $0)/..
 
 : ${KEYCHAIN="build.keychain"}
-: ${SIGN=""}
+: ${SIGN="1"}
 : ${NOTARIZE=""}
 : ${AC_BUNDLE="io.acorn.cli"}
 
@@ -13,48 +13,52 @@ DIR="releases/mac_darwin_all"
 DMG="releases/$2.dmg"
 CHECKSUMS="releases/checksums.txt"
 
-if [[ -z "${SIGN}" && "$(uname)" == "Darwin" ]]; then
-  SIGN="1"
-fi
-
-if [[ -z "${NOTARIZE}" && "$(uname)" == "Darwin" && "${GITHUB_REF}" =~ "refs/tags/v" ]]; then
+if [[ -z "${NOTARIZE}" && "${GITHUB_REF}" =~ "refs/tags/v" ]]; then
   echo "Enabling notarize"
   NOTARIZE="1"
 fi
 
 echo "SIGN=${SIGN} NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} DMG=${DMG}"
 
+apt-get update -y  
+
 if [[ "${SIGN}" == 1 ]]; then
   echo "Signing"
 
-  echo "${AC_P12}" | base64 --decode > signing.p12
-  security import signing.p12 -P "${AC_P12_PASSWORD}" -A -t cert -f pkcs12 -k $KEYCHAIN || true
+  # Install the necessary tools, specifically cargo, to install rcodesign, a Rust 
+  # implementation of codesign.
+  which curl || apt-get install curl -y
+  which gcc || apt-get install gcc -y
+  which cargo || curl https://sh.rustup.rs -sSf | sh -s -- -y && bash
+  which rcodesign || cargo install apple-codesign
 
-  codesign -s "${AC_IDENTITY}" -f -v --timestamp --options runtime "${BINARY}"
+  # Sign the binary using rcodesign.
+  echo "${AC_P12}" | base64 --decode > signing.p12
+  rcodesign sign --team-name "${AC_IDENTITY}" --p12-file signing.p12 --p12-password "${AC_P12_PASSWORD}" --code-signature-flags runtime "${BINARY}"
 else
   echo "Skipping signing"
-  exit 0
 fi
 
-if [[ "${SIGN}" == 1 && "${NOTARIZE}" == 1 ]]; then
+if [[ "${NOTARIZE}" == 1 ]]; then
   echo "Notarizing…"
 
+  which mkfs.hfsplus || apt-get install hfsprogs -y
+
+  # Build the DMG
   cp LICENSE README.md "${DIR}/"
-  hdiutil create -volname "Acorn" -size 1g -srcfolder "${DIR}" -ov -format UDZO "${DMG}"
-  which gon || (go install github.com/mitchellh/gon/cmd/gon@latest)
+  SIZE="$(du -s ${DIR} | awk '{print $1 + 1024*1024}')" # The size of the directory + 1MB for any overhead
+  mkfile -n "${SIZE}" "${DMG}"
+  mkfs.hfsplus -v "Acorn" "${DMG}"
+  mkdir -p /tmp/acorn_mount
+  mount -t hfsplus -o loop "${DMG}" /tmp/acorn_mount
+  cp -R "${DIR}"/* /tmp/acorn_mount
+  umount /tmp/acorn_mount
 
-  cat <<EOF > "gon.hcl"
-notarize {
-  path = "${DMG}"
-  bundle_id = "${AC_BUNDLE}"
-  staple = true
-}
-EOF
+  # Notarize and staple the DMG
+  rcodesign notary-submit "${DMG}" --staple 
 
-  gon gon.hcl
-  shasum -a 256 "${DMG}" >> "${CHECKSUMS}"
-
-  rm gon.hcl
+  # Add the sha256sum of the DMG to the checksums file
+  sha256sum "${DMG}" >> "${CHECKSUMS}"
 else
   echo "Skipping notarizing & disk image creation"
 fi
