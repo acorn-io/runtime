@@ -2,7 +2,6 @@ package autoupgrade
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -235,7 +234,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			if updated || strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
 				if !updated && digest != "" {
 					if err := d.client.checkImageAllowed(ctx, app.Namespace, nextAppImage); err != nil {
-						if errors.Is(err, &imageallowrules.ErrImageNotAllowed{}) {
+						if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {
 							logrus.Debugf("Updated image %s for %s/%s is not allowed: %v", nextAppImage, app.Namespace, app.Name, err)
 							d.appKeysPrevCheck[appKey] = updateTime
 							continue

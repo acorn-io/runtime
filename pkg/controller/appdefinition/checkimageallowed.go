@@ -1,7 +1,6 @@
 package appdefinition
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -39,7 +38,7 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 		targetImageDigest := appInstance.Status.AppImage.Digest
 
 		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, targetImageDigest, remote.WithTransport(transport)); err != nil {
-			if errors.Is(err, &imageallowrules.ErrImageNotAllowed{}) {
+			if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {
 				cond.Error(err)
 				return nil
 			} else {
