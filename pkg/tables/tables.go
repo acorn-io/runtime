@@ -162,8 +162,8 @@ var (
 
 	RuleRequests = [][]string{
 		{"Service", "Service"},
-		{"Verbs", "Verbs"},
-		{"Resource", "Resource"},
+		{"Verbs/Actions", "Verbs"},
+		{"Resources/API", "Resource"},
 		{"Scope", "Scope"},
 	}
 
