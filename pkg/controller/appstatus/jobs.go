@@ -31,6 +31,7 @@ func (a *appStatusRenderer) readJobs() error {
 			CreateEventSucceeded: existingStatus[jobName].CreateEventSucceeded,
 			Skipped:              existingStatus[jobName].Skipped,
 			ExpressionErrors:     existingStatus[jobName].ExpressionErrors,
+			Dependencies:         existingStatus[jobName].Dependencies,
 		}
 		summary := summary[jobName]
 

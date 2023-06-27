@@ -273,9 +273,6 @@ func (in *VolumeBinding) UnmarshalJSON(data []byte) error {
 
 func impliedSecretsForContainer(app *AppSpec, container Container) {
 	for _, env := range container.Environment {
-		if strings.Contains(env.Secret.Name, ".") {
-			continue
-		}
 		if _, ok := app.Secrets[env.Secret.Name]; env.Secret.Name != "" && !ok {
 			app.Secrets[env.Secret.Name] = Secret{
 				Type: "opaque",
@@ -283,9 +280,6 @@ func impliedSecretsForContainer(app *AppSpec, container Container) {
 		}
 	}
 	for _, dir := range container.Dirs {
-		if strings.Contains(dir.Secret.Name, ".") {
-			continue
-		}
 		if _, ok := app.Secrets[dir.Secret.Name]; dir.Secret.Name != "" && !ok {
 			app.Secrets[dir.Secret.Name] = Secret{
 				Type: "opaque",
@@ -293,9 +287,6 @@ func impliedSecretsForContainer(app *AppSpec, container Container) {
 		}
 	}
 	for _, file := range container.Files {
-		if strings.Contains(file.Secret.Name, ".") {
-			continue
-		}
 		if _, ok := app.Secrets[file.Secret.Name]; file.Secret.Name != "" && !ok {
 			app.Secrets[file.Secret.Name] = Secret{
 				Type: "opaque",

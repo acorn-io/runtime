@@ -156,7 +156,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		},
 	}
 
-	interpolator.AddMissingAnnotations(baseAnnotations)
+	interpolator.AddMissingAnnotations(appInstance.GetStopped(), baseAnnotations)
 
 	if container.Schedule == "" {
 		jobSpec.BackoffLimit = &[]int32{1000}[0]

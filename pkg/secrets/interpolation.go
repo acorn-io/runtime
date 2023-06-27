@@ -123,9 +123,11 @@ func (i *Interpolator) Incomplete() bool {
 	return len(i.incomplete) > 0
 }
 
-func (i *Interpolator) AddMissingAnnotations(annotations map[string]string) {
+func (i *Interpolator) AddMissingAnnotations(stopped bool, annotations map[string]string) {
 	if i.Incomplete() {
-		annotations[apply.AnnotationUpdate] = "false"
+		if !stopped {
+			annotations[apply.AnnotationUpdate] = "false"
+		}
 		annotations[apply.AnnotationCreate] = "false"
 	}
 }
@@ -422,6 +424,12 @@ func (i *Interpolator) replace(content string) (string, error) {
 func (i *Interpolator) saveError(err error) {
 	exprError := v1.ExpressionError{
 		Error: err.Error(),
+	}
+	if ee := (*ErrInterpolation)(nil); errors.As(err, &ee) {
+		exprError = ee.ExpressionError
+		if exprError.Error == "" {
+			exprError.Error = exprError.String()
+		}
 	}
 	if i.containerName != "" {
 		i.incomplete[i.containerName] = true

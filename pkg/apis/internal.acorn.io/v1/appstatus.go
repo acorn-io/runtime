@@ -30,6 +30,9 @@ func (e *ExpressionError) String() string {
 	if e.DependencyNotFound == nil {
 		return "error [" + e.Error + "] expression [" + e.Expression + "]"
 	}
+	if e.Expression != "" {
+		return fmt.Sprintf("missing %s [%s] from expression [%s]", e.DependencyNotFound.DependencyType, e.DependencyNotFound.Name, e.Expression)
+	}
 	return fmt.Sprintf("missing %s [%s]", e.DependencyNotFound.DependencyType, e.DependencyNotFound.Name)
 }
 

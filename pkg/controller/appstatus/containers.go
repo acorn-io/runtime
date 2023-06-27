@@ -38,6 +38,7 @@ func (a *appStatusRenderer) readContainers() error {
 		cs.LinkOverride = ports.LinkService(a.app, containerName)
 		cs.ErrorMessages = append(cs.ErrorMessages, summary.ErrorMessages...)
 		cs.ExpressionErrors = existingStatus[containerName].ExpressionErrors
+		cs.Dependencies = existingStatus[containerName].Dependencies
 		cs.TransitioningMessages = append(cs.TransitioningMessages, summary.TransitioningMessages...)
 		cs.MaxReplicaRestartCount = summary.MaxReplicaRestartCount
 
