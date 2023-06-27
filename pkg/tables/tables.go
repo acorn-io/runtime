@@ -9,7 +9,7 @@ var (
 
 	App = [][]string{
 		{"Name", "{{ . | name }}"},
-		{"Image", "{{ trunc .Status.AppImage.Name }}"},
+		{"Image", "{{ . | imageName }}"},
 		{"Healthy", "Status.Columns.Healthy"},
 		{"Up-To-Date", "Status.Columns.UpToDate"},
 		{"Created", "{{ago .CreationTimestamp}}"},

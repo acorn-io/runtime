@@ -9,6 +9,7 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +41,7 @@ var (
 		"memoryToRange": MemoryToRange,
 		"defaultMemory": DefaultMemory,
 		"ownerName":     OwnerReferenceName,
+		"imageName":     ImageName,
 	}
 )
 
@@ -291,4 +293,16 @@ func OwnerReferenceName(obj metav1.Object) string {
 	}
 
 	return owners[0].Name
+}
+
+func ImageName(obj metav1.Object) string {
+	app, ok := obj.(*apiv1.App)
+	if !ok {
+		return ""
+	}
+
+	if original, exists := app.ObjectMeta.Annotations[labels.AcornOriginalImage]; exists {
+		return original
+	}
+	return app.Status.AppImage.Name
 }
