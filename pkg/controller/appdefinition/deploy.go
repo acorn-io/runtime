@@ -47,7 +47,7 @@ func FilterLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
 		// Note that IgnoreUserLabelsAndAnnotations will not be nil here because
 		// config.Get "completes" the config object to fill in default values.
 		if *cfg.IgnoreUserLabelsAndAnnotations {
-			req.Object = labels.FilterUserDefined(appInstance, cfg.AllowUserLabels, cfg.AllowUserAnnotations)
+			req.Object = labels.FilterUserDefined(appInstance, cfg.AllowUserLabels, cfg.AllowUserAnnotations, cfg.AllowUserMetadataNamespaces)
 		}
 
 		return h.Handle(req, resp)

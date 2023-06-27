@@ -466,6 +466,11 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.AllowUserMetadataNamespaces != nil {
+		in, out := &in.AllowUserMetadataNamespaces, &out.AllowUserMetadataNamespaces
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.WorkloadMemoryDefault != nil {
 		in, out := &in.WorkloadMemoryDefault, &out.WorkloadMemoryDefault
 		*out = new(int64)

@@ -117,8 +117,6 @@ func (i *Interpolator) Incomplete() bool {
 		return i.incomplete[i.jobName]
 	} else if i.containerName != "" {
 		return i.incomplete[i.containerName]
-	} else if i.acornName != "" {
-		return i.incomplete[i.acornName]
 	} else if i.serviceName != "" {
 		return i.incomplete[i.serviceName]
 	}

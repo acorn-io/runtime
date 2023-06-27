@@ -129,7 +129,13 @@ func GatherScoped(resourceName, resourceType string, globalLabels, resourceLabel
 	return ExcludeAcornKey(m)
 }
 
-func FilterUserDefined(appInstance *v1.AppInstance, allowedLabels, allowedAnnotations []string) *v1.AppInstance {
+func FilterUserDefined(appInstance *v1.AppInstance, allowedLabels, allowedAnnotations, allowedNamespaces []string) *v1.AppInstance {
+	for _, ns := range allowedNamespaces {
+		if appInstance.Namespace == ns {
+			return appInstance
+		}
+	}
+
 	appInstance.Spec.Labels = filterScoped(appInstance.Spec.Labels, allowedLabels)
 	appInstance.Spec.Annotations = filterScoped(appInstance.Spec.Annotations, allowedAnnotations)
 
