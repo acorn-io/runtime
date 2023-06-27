@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"context"
 	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -43,7 +45,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		out.Write(app)
+		writeApp(cmd.Context(), app, out, c)
 		return out.Err()
 	}
 
@@ -58,10 +60,10 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		}
 		if len(args) > 0 {
 			if slices.Contains(args, app.Name) {
-				out.Write(&app)
+				writeApp(cmd.Context(), &app, out, c)
 			}
 		} else {
-			out.Write(&app)
+			writeApp(cmd.Context(), &app, out, c)
 		}
 	}
 
@@ -74,4 +76,33 @@ func inactive(app apiv1.App) bool {
 		app.Status.Columns.Healthy == "0" &&
 		app.Status.Columns.UpToDate == "0" &&
 		app.Status.Columns.Message == "OK"
+}
+
+func writeApp(ctx context.Context, app *apiv1.App, out table.Writer, c client.Client) {
+	images, err := c.ImageList(ctx)
+	if err != nil {
+		// Give up and write the app
+		out.Write(app)
+		return
+	}
+
+	// Loop through the images and make sure the image name is still a valid tag on that image
+	// If it isn't, set the image name to match the digest instead
+	var tagIsValid bool
+	for _, image := range images {
+		if image.Digest == app.Status.AppImage.Digest {
+			for _, tag := range image.Tags {
+				// Use strings.HasSuffix on Docker Hub images to account for the possible disparity between index.docker.io, docker.io, and no explicitly specified registry
+				if tag == app.Status.AppImage.Name || (strings.Contains(tag, "docker.io") && strings.HasSuffix(tag, app.Status.AppImage.Name)) {
+					tagIsValid = true
+					break
+				}
+			}
+			break
+		}
+	}
+	if !tagIsValid {
+		app.Status.AppImage.Name = strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
+	}
+	out.Write(app)
 }
