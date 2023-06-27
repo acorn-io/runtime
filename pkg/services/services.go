@@ -148,6 +148,18 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 		servicePorts = ports.ToServicePorts(targetService.Spec.Ports)
 	}
 
+	serviceType := corev1.ServiceTypeExternalName
+	clusterIP := ""
+	externalName := fmt.Sprintf("%s.%s.%s", targetService.Name, targetService.Namespace, cfg.InternalClusterDomain)
+	if service.Name == targetService.Name &&
+		service.Namespace == targetService.Namespace {
+		// Don't create a circular service.  This can happen when we are creating a ServiceInstance that is supposed
+		// to point to an app that has yet to be created
+		serviceType = corev1.ServiceTypeClusterIP
+		clusterIP = "None"
+		externalName = ""
+	}
+
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
@@ -156,8 +168,9 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Type:         corev1.ServiceTypeExternalName,
-			ExternalName: fmt.Sprintf("%s.%s.%s", targetService.Name, targetService.Namespace, cfg.InternalClusterDomain),
+			Type:         serviceType,
+			ClusterIP:    clusterIP,
+			ExternalName: externalName,
 			Ports:        servicePorts,
 		},
 	}

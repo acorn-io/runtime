@@ -59,7 +59,7 @@ func TestValidateAppName(t *testing.T) {
 					Name: tt.appName,
 				},
 			}
-			err := validator.validateName(app)
+			err := validator.ValidateName(context.Background(), app)
 			if tt.expectValid && err != nil {
 				t.Fatalf("Expected valid, got error: %v", err)
 			}

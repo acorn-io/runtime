@@ -2,19 +2,33 @@ package buildkit
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/build/authprovider"
 	"github.com/acorn-io/runtime/pkg/buildclient"
+	"github.com/acorn-io/runtime/pkg/digest"
 	cplatforms "github.com/containerd/containerd/platforms"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/uuid"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/sirupsen/logrus"
 )
+
+type cacheKey struct{}
+
+func WithContextCacheKey(ctx context.Context, key string) context.Context {
+	return context.WithValue(ctx, cacheKey{}, key)
+}
+
+func getCacheKey(ctx context.Context) string {
+	v, _ := ctx.Value(cacheKey{}).(string)
+	return v
+}
 
 func Build(ctx context.Context, pushRepo string, local bool, cwd string, platforms []v1.Platform, build v1.Build, messages buildclient.Messages, keychain authn.Keychain) ([]v1.Platform, []string, error) {
 	bkc, err := buildkit.New(ctx, "")
@@ -50,9 +64,15 @@ func Build(ctx context.Context, pushRepo string, local bool, cwd string, platfor
 		}
 	}
 
+	buildData, _ := json.Marshal(build)
+	sharedKey := digest.SHA256(getCacheKey(ctx), cwd, string(buildData), fmt.Sprint(local))
+	logrus.Debugf("sharedKey=[%s] cacheKey=[%s] cwd=[%s], buildData=[%s] local=[%v]",
+		sharedKey, getCacheKey(ctx), cwd, buildData, local)
+
 	for _, platform := range platforms {
 		options := buildkit.SolveOpt{
-			Frontend: "dockerfile.v0",
+			SharedKey: sharedKey,
+			Frontend:  "dockerfile.v0",
 			FrontendAttrs: map[string]string{
 				"target":   build.Target,
 				"filename": dockerfileName,

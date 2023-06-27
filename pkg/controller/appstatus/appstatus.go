@@ -28,11 +28,13 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 		// dependency status will be set correctly.
 		status.Ready = status.Ready && app.Generation == app.Status.ObservedGeneration
 		status.ExpressionErrors = nil
+		status.Dependencies = nil
 		app.Status.AppStatus.Containers[name] = status
 	}
 
 	for name, status := range app.Status.AppStatus.Jobs {
 		status.ExpressionErrors = nil
+		status.Dependencies = nil
 		if app.Generation != app.Status.ObservedGeneration && jobs.ShouldRun(name, app) {
 			// If a job is going to run again, then set its status to not ready so that the controller will run it again and the
 			// dependency status will be set correctly.
@@ -58,6 +60,18 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 
 	if app.Status.AppStatus.Jobs == nil {
 		app.Status.AppStatus.Jobs = map[string]v1.JobStatus{}
+	}
+
+	if app.Status.AppStatus.Acorns == nil {
+		app.Status.AppStatus.Acorns = map[string]v1.AcornStatus{}
+	}
+
+	if app.Status.AppStatus.Services == nil {
+		app.Status.AppStatus.Services = map[string]v1.ServiceStatus{}
+	}
+
+	if app.Status.AppStatus.Secrets == nil {
+		app.Status.AppStatus.Secrets = map[string]v1.SecretStatus{}
 	}
 
 	return nil

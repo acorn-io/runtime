@@ -29,5 +29,6 @@ func NewStorage(c kclient.WithWatch, clientFactory *client.Factory, recorder eve
 		WithValidateUpdate(validator).
 		WithValidateCreate(validator).
 		WithTableConverter(tables.AppConverter).
+		WithValidateName(validator).
 		Build()
 }

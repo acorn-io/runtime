@@ -10,6 +10,7 @@ import (
 
 	"github.com/moby/buildkit/session/filesync"
 	"github.com/sirupsen/logrus"
+	"github.com/tonistiigi/fsutil"
 	"github.com/tonistiigi/fsutil/types"
 	fstypes "github.com/tonistiigi/fsutil/types"
 	"google.golang.org/grpc/metadata"
@@ -22,6 +23,7 @@ var (
 )
 
 type fileSyncClient struct {
+	compress  bool
 	sessionID string
 	messages  Messages
 	msg       <-chan *Message
@@ -54,8 +56,9 @@ func newFileSyncClient(ctx context.Context, cwd, sessionID string, messages Mess
 		keyExporterMetaPrefix: opts.ExporterMetaPrefix,
 	}
 
-	logrus.Tracef("starting file sync client %s", sessionID)
+	logrus.Tracef("starting file sync client %s, compress=%v", sessionID, opts.Compress)
 	fsClient := &fileSyncClient{
+		compress:  opts.Compress,
 		sessionID: sessionID,
 		messages:  messages,
 		tempDir:   tempDir,
@@ -104,7 +107,7 @@ func createFileMapInput(cwd string, opts *SyncOptions) (string, map[string]strin
 	}, nil
 }
 
-func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPaths []string) ([]filesync.SyncedDir, error) {
+func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPaths []string) (filesync.StaticDirSource, error) {
 	for localDirName, d := range localDirs {
 		fi, err := os.Stat(d)
 		if os.IsNotExist(err) {
@@ -141,19 +144,20 @@ func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPat
 			}
 		}
 	}
-	resetUIDAndGID := func(p string, st *fstypes.Stat) bool {
+	resetUIDAndGID := func(p string, st *fstypes.Stat) fsutil.MapResult {
 		st.Uid = 0
 		st.Gid = 0
-		return true
+		return fsutil.MapResultKeep
 	}
 
-	dirs := make([]filesync.SyncedDir, 0, len(localDirs))
+	dirs := make(filesync.StaticDirSource, len(localDirs))
 	for name, d := range localDirs {
-		dirs = append(dirs, filesync.SyncedDir{Name: name, Dir: d, Map: resetUIDAndGID})
+		dirs[name] = filesync.SyncedDir{Dir: d, Map: resetUIDAndGID}
 	}
 
 	return dirs, nil
 }
+
 func (s *fileSyncClient) Send(obj *types.Packet) error {
 	return s.SendMsg(obj)
 }
@@ -188,6 +192,7 @@ func (s *fileSyncClient) Close() {
 
 func (s *fileSyncClient) SendMsg(m interface{}) error {
 	return s.messages.Send(&Message{
+		Compress:      s.compress,
 		FileSessionID: s.sessionID,
 		Packet:        m.(*types.Packet),
 	})

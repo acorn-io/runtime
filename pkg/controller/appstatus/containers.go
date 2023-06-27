@@ -38,6 +38,7 @@ func (a *appStatusRenderer) readContainers() error {
 		cs.LinkOverride = ports.LinkService(a.app, containerName)
 		cs.ErrorMessages = append(cs.ErrorMessages, summary.ErrorMessages...)
 		cs.ExpressionErrors = existingStatus[containerName].ExpressionErrors
+		cs.Dependencies = existingStatus[containerName].Dependencies
 		cs.TransitioningMessages = append(cs.TransitioningMessages, summary.TransitioningMessages...)
 		cs.MaxReplicaRestartCount = summary.MaxReplicaRestartCount
 
@@ -64,8 +65,12 @@ func (a *appStatusRenderer) readContainers() error {
 		}
 
 		if cs.LinkOverride != "" {
+			var err error
 			cs.UpToDate = true
-			cs.Ready, cs.Defined = a.isServiceReady(containerName)
+			cs.Ready, cs.Defined, err = a.isServiceReady(containerName)
+			if err != nil {
+				return err
+			}
 		}
 
 		if len(cs.TransitioningMessages) > 0 {

@@ -31,6 +31,7 @@ func (a *appStatusRenderer) readJobs() error {
 			CreateEventSucceeded: existingStatus[jobName].CreateEventSucceeded,
 			Skipped:              existingStatus[jobName].Skipped,
 			ExpressionErrors:     existingStatus[jobName].ExpressionErrors,
+			Dependencies:         existingStatus[jobName].Dependencies,
 		}
 		summary := summary[jobName]
 
@@ -91,8 +92,12 @@ func (a *appStatusRenderer) readJobs() error {
 		}
 
 		if c.LinkOverride != "" {
+			var err error
 			c.UpToDate = true
-			c.Ready, c.Defined = a.isServiceReady(jobName)
+			c.Ready, c.Defined, err = a.isServiceReady(jobName)
+			if err != nil {
+				return err
+			}
 			if c.Ready {
 				c.CreateEventSucceeded = true
 			}

@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -47,7 +46,7 @@ func FilterLabelsAndAnnotationsConfig(h router.Handler) router.Handler {
 		// Note that IgnoreUserLabelsAndAnnotations will not be nil here because
 		// config.Get "completes" the config object to fill in default values.
 		if *cfg.IgnoreUserLabelsAndAnnotations {
-			req.Object = labels.FilterUserDefined(appInstance, cfg.AllowUserLabels, cfg.AllowUserAnnotations)
+			req.Object = labels.FilterUserDefined(appInstance, cfg.AllowUserLabels, cfg.AllowUserAnnotations, cfg.AllowUserMetadataNamespaces)
 		}
 
 		return h.Handle(req, resp)
@@ -551,36 +550,40 @@ func getRevision(req router.Request, namespace, secretName string) (string, erro
 
 func getSecretAnnotations(req router.Request, appInstance *v1.AppInstance, container v1.Container, interpolator *secrets.Interpolator) (map[string]string, error) {
 	var (
-		secrets []string
-		result  = map[string]string{}
+		secretNames = sets.New[string]()
+		result      = map[string]string{}
 	)
 
 	for _, env := range container.Environment {
 		if env.Secret.OnChange == v1.ChangeTypeRedeploy {
-			secrets = append(secrets, env.Secret.Name)
+			secretNames.Insert(env.Secret.Name)
 		}
 	}
 	for _, file := range container.Files {
 		if file.Secret.OnChange == v1.ChangeTypeRedeploy {
-			secrets = append(secrets, file.Secret.Name)
+			secretNames.Insert(file.Secret.Name)
 		}
 	}
 	for _, dir := range container.Dirs {
 		if dir.Secret.OnChange == v1.ChangeTypeRedeploy {
-			secrets = append(secrets, dir.Secret.Name)
+			secretNames.Insert(dir.Secret.Name)
 		}
 	}
 
-	for _, secret := range secrets {
+	for _, secret := range sets.List(secretNames) {
 		if secret == "" {
 			continue
 		}
 		rev, err := getRevision(req, appInstance.Status.Namespace, secret)
 		if apierror.IsNotFound(err) {
-			if !appInstance.GetStopped() {
-				result[apply.AnnotationUpdate] = "false"
-			}
-			result[apply.AnnotationCreate] = "false"
+			interpolator.AddError(&secrets.ErrInterpolation{
+				ExpressionError: v1.ExpressionError{
+					DependencyNotFound: &v1.DependencyNotFound{
+						DependencyType: v1.DependencySecret,
+						Name:           secret,
+					},
+				},
+			})
 		} else if err != nil {
 			return nil, err
 		}
@@ -659,7 +662,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
 		dep.Spec.Replicas = new(int32)
 	} else {
-		interpolator.AddMissingAnnotations(dep.Annotations)
+		interpolator.AddMissingAnnotations(appInstance.GetStopped(), dep.Annotations)
 	}
 
 	return dep, nil

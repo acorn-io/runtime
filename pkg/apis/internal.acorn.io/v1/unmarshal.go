@@ -273,9 +273,6 @@ func (in *VolumeBinding) UnmarshalJSON(data []byte) error {
 
 func impliedSecretsForContainer(app *AppSpec, container Container) {
 	for _, env := range container.Environment {
-		if strings.Contains(env.Secret.Name, ".") {
-			continue
-		}
 		if _, ok := app.Secrets[env.Secret.Name]; env.Secret.Name != "" && !ok {
 			app.Secrets[env.Secret.Name] = Secret{
 				Type: "opaque",
@@ -406,6 +403,9 @@ func addImpliedResources(in *AppSpec) error {
 
 	for _, a := range in.Acorns {
 		for _, volumeBinding := range a.Volumes {
+			if strings.Contains(volumeBinding.Volume, ".") {
+				continue
+			}
 			if _, ok := in.Volumes[volumeBinding.Volume]; !ok {
 				in.Volumes[volumeBinding.Volume] = VolumeRequest{
 					Size:        volumeBinding.Size,
@@ -414,6 +414,9 @@ func addImpliedResources(in *AppSpec) error {
 			}
 		}
 		for _, secretBinding := range a.Secrets {
+			if strings.Contains(secretBinding.Secret, ".") {
+				continue
+			}
 			if _, ok := in.Secrets[secretBinding.Secret]; !ok {
 				in.Secrets[secretBinding.Secret] = Secret{
 					Type: "opaque",

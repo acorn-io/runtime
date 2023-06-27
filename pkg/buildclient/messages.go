@@ -1,8 +1,11 @@
 package buildclient
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
+	"io"
 	"sync"
 
 	"github.com/acorn-io/mink/pkg/channel"
@@ -42,7 +45,84 @@ type Message struct {
 	RegistryAuth     *apiv1.RegistryAuth `json:"registryAuth,omitempty"`
 	SyncOptions      *SyncOptions        `json:"syncOptions,omitempty"`
 	Packet           *types.Packet       `json:"packet,omitempty"`
+	PacketData       []byte              `json:"packetData,omitempty"`
 	Status           *client.SolveStatus `json:"status,omitempty"`
+	Compress         bool                `json:"compress,omitempty"`
+}
+
+type message Message
+
+func (m *Message) UnmarshalJSON(data []byte) error {
+	if err := json.Unmarshal(data, (*message)(m)); err != nil {
+		return err
+	}
+	if len(m.PacketData) == 0 {
+		return nil
+	}
+
+	packetData, err := decompress(m.PacketData)
+	if err != nil {
+		return err
+	}
+	p := &types.Packet{}
+	if err := p.Unmarshal(packetData); err != nil {
+		return err
+	}
+
+	m.Packet = p
+	m.PacketData = nil
+	return nil
+}
+
+func decompress(data []byte) ([]byte, error) {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	newData, err := io.ReadAll(r)
+	if err != nil {
+		return data, err
+	}
+
+	return newData, nil
+}
+
+func compress(data []byte) []byte {
+	buf := &bytes.Buffer{}
+	w := gzip.NewWriter(buf)
+	_, err := w.Write(data)
+	if err != nil {
+		return data
+	}
+
+	if err := w.Close(); err != nil {
+		return data
+	}
+	return buf.Bytes()
+}
+
+func (m *Message) MarshalJSON() ([]byte, error) {
+	if !m.Compress || m.Packet == nil || m.Packet.Type != types.PACKET_DATA {
+		return json.Marshal((*message)(m))
+	}
+
+	data, err := m.Packet.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	data = compress(data)
+
+	cp := (message)(*m)
+	cp.PacketData = data
+	if len(cp.PacketData) > 0 {
+		pcp := *cp.Packet
+		pcp.Data = nil
+		cp.Packet = &pcp
+	}
+
+	return json.Marshal(cp)
 }
 
 func (m *Message) String() string {
@@ -61,6 +141,7 @@ type SyncOptions struct {
 	FollowPaths        []string
 	DirName            []string
 	ExporterMetaPrefix []string
+	Compress           bool
 }
 
 type WebsocketMessages struct {

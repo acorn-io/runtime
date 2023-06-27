@@ -53,7 +53,7 @@ type buildContext struct {
 func Build(ctx context.Context, messages buildclient.Messages, pushRepo, buildNamespace string, opts v1.AcornImageBuildInstanceSpec, keychain authn.Keychain, remoteOpts ...remote.Option) (*v1.AppImage, error) {
 	remoteKc := NewRemoteKeyChain(messages, keychain)
 	buildContext := &buildContext{
-		ctx:            ctx,
+		ctx:            buildkit.WithContextCacheKey(ctx, opts.ContextCacheKey),
 		cwd:            "",
 		pushRepo:       pushRepo,
 		buildNamespace: buildNamespace,

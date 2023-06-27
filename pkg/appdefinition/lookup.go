@@ -1,7 +1,6 @@
 package appdefinition
 
 import (
-	"reflect"
 	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -93,12 +92,11 @@ func findAcornImage(imageData v1.ImagesData, image string, acornBuild *v1.AcornB
 		if testBuild == nil {
 			continue
 		}
-		if !reflect.DeepEqual(*acornBuild, *testBuild) {
+		if !equality.Semantic.DeepEqual(*acornBuild, *testBuild) {
 			continue
 		}
 		if build.ImageKey != "" {
-			image, ok := imageData.Acorns[build.ImageKey]
-			return image.Image, ok
+			return findImageInImageData(imageData, build.ImageKey)
 		}
 		return image, image != ""
 	}

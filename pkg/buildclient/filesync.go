@@ -47,6 +47,7 @@ func (f *FileServer) DiffCopy(server filesync.FileSync_DiffCopyServer) error {
 	err := f.messages.Send(&Message{
 		FileSessionID: sessionID,
 		SyncOptions: &SyncOptions{
+			Compress:           true,
 			Context:            f.context,
 			Dockerfile:         f.dockerfilePath,
 			DockerfileContents: f.dockerfileContents,

@@ -1,3 +1,4 @@
 #!/bin/sh
 mkfifo /tmp/.fifo
 echo > /tmp/.fifo
+sleep .2

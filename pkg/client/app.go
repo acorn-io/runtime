@@ -275,7 +275,7 @@ func translatePermissions(err error) error {
 			}
 		}
 	}
-	return nil
+	return err
 }
 
 func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error) {

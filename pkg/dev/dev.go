@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,7 +14,6 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/digest"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/log"
@@ -146,7 +144,7 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case <-time.After(2 * time.Minute):
 			}
 			if failed.Swap(false) {
@@ -434,22 +432,16 @@ type clientHash struct {
 	Hash   string
 }
 
-func setAppNameAndGetHash(ctx context.Context, client client.Client, opts *Options) (clientHash, *Options, error) {
+func setAppNameAndGetHash(ctx context.Context, c client.Client, opts *Options) (clientHash, *Options, error) {
 	image, file, err := opts.ImageSource.ResolveImageAndFile()
 	if err != nil {
 		return clientHash{}, nil, err
 	}
-	hashSource := file
-	if hashSource == "" {
-		hashSource = image
-	}
-	cwd, _ := os.Getwd()
 	hostname, _ := os.Hostname()
-	hashSource = filepath.Join(cwd, hashSource)
-	hash := digest.SHA256(hostname, hashSource)[:12]
+	hash := client.BuildClientID(image, file)
 
 	if opts.Run.Name == "" {
-		existingName, err := getAppName(ctx, client, hash)
+		existingName, err := getAppName(ctx, c, hash)
 		if err != nil {
 			return clientHash{}, nil, err
 		}

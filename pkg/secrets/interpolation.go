@@ -117,13 +117,17 @@ func (i *Interpolator) Incomplete() bool {
 		return i.incomplete[i.jobName]
 	} else if i.containerName != "" {
 		return i.incomplete[i.containerName]
+	} else if i.serviceName != "" {
+		return i.incomplete[i.serviceName]
 	}
 	return len(i.incomplete) > 0
 }
 
-func (i *Interpolator) AddMissingAnnotations(annotations map[string]string) {
+func (i *Interpolator) AddMissingAnnotations(stopped bool, annotations map[string]string) {
 	if i.Incomplete() {
-		annotations[apply.AnnotationUpdate] = "false"
+		if !stopped {
+			annotations[apply.AnnotationUpdate] = "false"
+		}
 		annotations[apply.AnnotationCreate] = "false"
 	}
 }
@@ -421,6 +425,12 @@ func (i *Interpolator) saveError(err error) {
 	exprError := v1.ExpressionError{
 		Error: err.Error(),
 	}
+	if ee := (*ErrInterpolation)(nil); errors.As(err, &ee) {
+		exprError = ee.ExpressionError
+		if exprError.Error == "" {
+			exprError.Error = exprError.String()
+		}
+	}
 	if i.containerName != "" {
 		i.incomplete[i.containerName] = true
 		c := i.app.Status.AppStatus.Containers[i.containerName]
@@ -443,6 +453,15 @@ func (i *Interpolator) saveError(err error) {
 }
 
 func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
+	newKey, err := i.replace(key)
+	if err != nil {
+		i.saveError(err)
+		return corev1.EnvVar{
+			Name:  key,
+			Value: value,
+		}
+	}
+
 	newValue, err := i.replace(value)
 	if err != nil {
 		i.saveError(err)
@@ -453,13 +472,13 @@ func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
 	}
 	if value == newValue {
 		return corev1.EnvVar{
-			Name:  key,
+			Name:  newKey,
 			Value: value,
 		}
 	}
 
 	return corev1.EnvVar{
-		Name: key,
+		Name: newKey,
 		ValueFrom: &corev1.EnvVarSource{
 			SecretKeyRef: &corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{
