@@ -325,6 +325,13 @@ func TestImageDetails(t *testing.T) {
 	}
 
 	assert.True(t, strings.Contains(details.AppImage.Acornfile, "nginx"))
+
+	// Test an auto-upgrade pattern that matches no local images, and make sure the proper error is returned
+	_, err = c.ImageDetails(ctx, "dne:v#.#.#", nil)
+	if err == nil {
+		t.Fatal("expected error for auto-upgrade pattern that matches no local images")
+	}
+	assert.ErrorContains(t, err, "unable to find an image for dne:v#.#.# matching pattern v#.#.# - if you are trying to use a remote image, specify the full registry")
 }
 
 func TestImageDeleteTwoTags(t *testing.T) {

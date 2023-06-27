@@ -1,0 +1,9 @@
+---
+apiVersion: api.acorn.io/v1
+kind: Image
+metadata:
+  name: myimage:latest
+  namespace: app-namespace
+digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+tags:
+  - myimage:latest

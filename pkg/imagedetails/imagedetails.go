@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/tags"
+	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,6 +25,13 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern); err != nil {
 			return nil, err
 		} else if !found {
+			// Check and see if no registry was specified on the image.
+			// If this is the case, notify the user that they need to explicitly specify docker.io if that is what they are trying to use.
+			ref, err := imagename.ParseReference(strings.TrimSuffix(imageName, ":"+tagPattern), imagename.WithDefaultRegistry(images.NoDefaultRegistry))
+			if err == nil && ref.Context().Registry.Name() == images.NoDefaultRegistry {
+				return nil, fmt.Errorf("unable to find an image for %v matching pattern %v - if you are trying to use a remote image, specify the full registry", imageName, tagPattern)
+			}
+
 			return nil, fmt.Errorf("unable to find an image for %v matching pattern %v", imageName, tagPattern)
 		} else {
 			imageName = latestImage

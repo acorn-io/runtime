@@ -18,6 +18,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apiv1config "github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/pullsecret"
@@ -86,6 +87,21 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		}
 
 		if !local {
+			if _, autoUpgradeOn := autoupgrade.Mode(params.Spec); autoUpgradeOn {
+				// Make sure there is a registry specified here
+				// If there isn't one, return an error in order to avoid checking Docker Hub implicitly
+				ref, err := name.ParseReference(params.Spec.Image, name.WithDefaultRegistry(images.NoDefaultRegistry))
+				if err != nil {
+					result = append(result, field.InternalError(field.NewPath("spec", "image"), err))
+					return
+				}
+
+				if ref.Context().RegistryStr() == images.NoDefaultRegistry {
+					result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image,
+						fmt.Sprintf("could not find local image for %v - if you are trying to use a remote image, specify the full registry", params.Spec.Image)))
+				}
+			}
+
 			if err := s.checkRemoteAccess(ctx, params.Namespace, image); err != nil {
 				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
 				return
