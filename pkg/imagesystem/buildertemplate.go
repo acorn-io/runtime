@@ -51,7 +51,6 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							Image:   buildKitImage,
 							Command: []string{"/usr/local/bin/setup-binfmt"},
 							Args: []string{
-								"--debug",
 								"--addr",
 								"unix:///run/buildkit/buildkitd.sock",
 							},
@@ -100,7 +99,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 						{
 							Name:    "service",
 							Image:   buildKitImage,
-							Command: []string{"acorn", "--debug", "--debug-level=9"},
+							Command: []string{"acorn"},
 							Env: []corev1.EnvVar{
 								{
 									Name:  "ACORN_BUILD_SERVER_UUID",
