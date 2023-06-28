@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
@@ -67,9 +68,14 @@ type query struct {
 
 	// tail when > 0, determines the number of latest events to return.
 	tail int64
+
+	// prefix of an event name or source string.
+	// Only events with matching names or source strings are included in query results.
+	// As a special case, the empty string "" matches all events.
+	prefix prefix
 }
 
-// filterChannel applies the query to every event recieved from unfiltered and forwards the result to filtered, if any.
+// filterChannel applies the query to every event received from unfiltered and forwards the result to filtered, if any.
 //
 // It blocks until the context is closed.
 func (q query) filterChannel(ctx context.Context, unfiltered <-chan watch.Event, filtered chan<- watch.Event) error {
@@ -92,8 +98,7 @@ func (q query) filterList(list *apiv1.EventList) *apiv1.EventList {
 
 // filterEvent applies the query to a watch.Event.
 //
-// It returns nil for events that don't meet the query criteria and
-// a potentially modified event for those that do.
+// It returns nil for events that don't meet the query criteria and a potentially modified event for those that do.
 func (q query) filterEvent(e watch.Event) *watch.Event {
 	switch e.Type {
 	case watch.Added, watch.Modified:
@@ -117,6 +122,11 @@ func (q query) filterEvent(e watch.Event) *watch.Event {
 
 // filter returns the result of applying the query to a slice of events.
 func (q query) filter(events ...apiv1.Event) []apiv1.Event {
+	if len(events) < 1 {
+		// Nothing to filter
+		return events
+	}
+
 	// Sort into chronological order (by observed)
 	sort.Slice(events, func(i, j int) bool {
 		return events[i].Observed.Before(events[j].Observed.Time)
@@ -127,22 +137,33 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 		tail = int(q.tail)
 	}
 
-	events = events[len(events)-tail:]
-
-	if q.details {
-		return events
+	if q.details && q.prefix.all() {
+		// Query selects all remaining events and includes details
+		return events[len(events)-tail:]
 	}
 
-	for i, event := range events {
-		event.Details = nil
-		events[i] = event
+	results := make([]apiv1.Event, 0, tail)
+	for _, event := range events {
+		if !q.prefix.matches(event) {
+			// Exclude from results
+			continue
+		}
+
+		if !q.details {
+			event.Details = nil
+		}
+
+		results = append(results, event)
 	}
 
-	return events
+	if len(results) < 1 {
+		return nil
+	}
+
+	return results
 }
 
-// stripQuery extracts the query from the given options, returning the query
-// and new options sans the query.
+// stripQuery extracts the query from the given options, returning the query and new options sans the query.
 func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions, err error) {
 	stripped = opts
 
@@ -151,6 +172,8 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 		switch f {
 		case "details":
 			q.details, err = strconv.ParseBool(v)
+		case "prefix":
+			q.prefix = prefix(v)
 		default:
 			return f, v, nil
 		}
@@ -164,4 +187,16 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 	q.tail, stripped.Predicate.Limit = stripped.Predicate.Limit, 0
 
 	return
+}
+
+type prefix string
+
+func (p prefix) matches(e apiv1.Event) bool {
+	return p.all() ||
+		strings.HasPrefix(e.Name, string(p)) ||
+		strings.HasPrefix(e.Source.String(), string(p))
+}
+
+func (p prefix) all() bool {
+	return p == ""
 }

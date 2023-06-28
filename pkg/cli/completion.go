@@ -380,9 +380,24 @@ func eventsCompletion(ctx context.Context, c client.Client, toComplete string) (
 		return nil, err
 	}
 
+	matched := make(map[string]struct{})
 	if err := channels.ForEach(ctx, events, func(e apiv1.Event) error {
-		if strings.HasPrefix(e.Name, toComplete) {
-			result = append(result, e.Name)
+		for _, completion := range []string{
+			// Name prefix completion
+			e.Name,
+			// Source prefix completion
+			e.Source.String(),
+			e.Source.Kind,
+		} {
+			if _, ok := matched[completion]; ok {
+				// Completion already added to results
+				return nil
+			}
+
+			if strings.HasPrefix(completion, toComplete) {
+				result = append(result, completion)
+				matched[completion] = struct{}{}
+			}
 		}
 		return nil
 	}); !channels.NilOrCanceled(err) {
