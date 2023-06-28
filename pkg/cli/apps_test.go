@@ -119,68 +119,10 @@ func TestApp(t *testing.T) {
 	}
 }
 
-var imageList = []v1.Image{
-	{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		},
-		Digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-		Tags:   []string{"myimage:latest"},
-	},
-	{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-		},
-		Digest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-		Tags:   []string{"index.docker.io/myimage:latest", "myimage:v1"},
-	},
-	{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-		},
-		Digest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-		Tags:   []string{"docker.io/myotherimage:latest"},
-	},
-	{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-		},
-		Digest: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-		Tags:   nil,
-	},
-	{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-		},
-		Digest: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-		Tags:   []string{"acorn.io/acornimage:latest"},
-	},
-	{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-		},
-		Digest: "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-		Tags:   []string{"acornimage:latest"},
-	},
-}
-
 func TestWriteApp(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	c := mocks.NewMockClient(ctrl)
-	c.EXPECT().ImageGet(gomock.Any(), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").
-		Return(&imageList[0], nil).AnyTimes()
-	c.EXPECT().ImageGet(gomock.Any(), "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").
-		Return(&imageList[1], nil).AnyTimes()
-	c.EXPECT().ImageGet(gomock.Any(), "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc").
-		Return(&imageList[2], nil).AnyTimes()
-	c.EXPECT().ImageGet(gomock.Any(), "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd").
-		Return(&imageList[3], nil).AnyTimes()
-	c.EXPECT().ImageGet(gomock.Any(), "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee").
-		Return(&imageList[4], nil).AnyTimes()
-	c.EXPECT().ImageGet(gomock.Any(), "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").
-		Return(&imageList[5], nil).AnyTimes()
-	c.EXPECT().ImageGet(gomock.Any(), "1111111111111111111111111111111111111111111111111111111111111111").
-		Return(nil, fmt.Errorf("dne")).AnyTimes()
+	registerMockCalls(t, c)
 
 	cases := []struct {
 		name           string
@@ -253,4 +195,59 @@ func TestWriteApp(t *testing.T) {
 			assert.Equal(t, tt.expected, string(output))
 		})
 	}
+}
+
+func registerMockCalls(t *testing.T, c *mocks.MockClient) {
+	t.Helper()
+
+	c.EXPECT().ImageGet(gomock.Any(), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa").
+		Return(&v1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			Digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			Tags:   []string{"myimage:latest"},
+		}, nil).AnyTimes()
+	c.EXPECT().ImageGet(gomock.Any(), "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").
+		Return(&v1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			},
+			Digest: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+			Tags:   []string{"index.docker.io/myimage:latest", "myimage:v1"},
+		}, nil).AnyTimes()
+	c.EXPECT().ImageGet(gomock.Any(), "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc").
+		Return(&v1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+			},
+			Digest: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+			Tags:   []string{"docker.io/myotherimage:latest"},
+		}, nil).AnyTimes()
+	c.EXPECT().ImageGet(gomock.Any(), "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd").
+		Return(&v1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+			},
+			Digest: "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+			Tags:   nil,
+		}, nil).AnyTimes()
+	c.EXPECT().ImageGet(gomock.Any(), "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee").
+		Return(&v1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			},
+			Digest: "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+			Tags:   []string{"acorn.io/acornimage:latest"},
+		}, nil).AnyTimes()
+	c.EXPECT().ImageGet(gomock.Any(), "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").
+		Return(&v1.Image{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+			},
+			Digest: "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+			Tags:   []string{"acornimage:latest"},
+		}, nil).AnyTimes()
+	c.EXPECT().ImageGet(gomock.Any(), "1111111111111111111111111111111111111111111111111111111111111111").
+		Return(nil, fmt.Errorf("dne")).AnyTimes()
 }
