@@ -24,17 +24,25 @@ type Server struct {
 }
 
 // StartServerWithDefaults starts the server with default values
-func StartServerWithDefaults() {
+func StartServerWithDefaults() error {
 	s := Server{
 		SocketLocation: DefaultSocketLocation,
 	}
-	s.Start()
+	return s.Start()
 }
 
 // Start the server
-func (s *Server) Start() {
-	os.Remove(s.SocketLocation)
-	go s.ListenAndServe()
+func (s *Server) Start() error {
+	if err := os.Remove(s.SocketLocation); err != nil {
+		return err
+	}
+	go func() {
+		err := s.ListenAndServe()
+		if err != nil {
+			return
+		}
+	}()
+	return nil
 }
 
 // ListenAndServe is used to setup handlers and
@@ -55,21 +63,21 @@ func (s *Server) loglevel(rw http.ResponseWriter, req *http.Request) {
 	logrus.Debugf("Received loglevel request")
 	if req.Method == http.MethodGet {
 		level := logrus.GetLevel().String()
-		rw.Write([]byte(fmt.Sprintf("%s\n", level)))
+		_, _ = rw.Write([]byte(fmt.Sprintf("%s\n", level)))
 	}
 
 	if req.Method == http.MethodPost {
 		if err := req.ParseForm(); err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Write([]byte(fmt.Sprintf("Failed to parse form: %v\n", err)))
+			_, _ = rw.Write([]byte(fmt.Sprintf("Failed to parse form: %v\n", err)))
 		}
 		level, err := logrus.ParseLevel(req.Form.Get("level"))
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Write([]byte(fmt.Sprintf("Failed to parse loglevel: %v\n", err)))
+			_, _ = rw.Write([]byte(fmt.Sprintf("Failed to parse loglevel: %v\n", err)))
 		} else {
 			logrus.SetLevel(level)
-			rw.Write([]byte("OK\n"))
+			_, _ = rw.Write([]byte("OK\n"))
 		}
 	}
 }

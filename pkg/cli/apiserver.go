@@ -43,7 +43,9 @@ func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	logrus.SetLevel(logrus.InfoLevel)
-	logserver.StartServerWithDefaults()
+	if err := logserver.StartServerWithDefaults(); err != nil {
+		logrus.Warnf("failed to start log server: %v", err)
+	}
 
 	<-cmd.Context().Done()
 	return cmd.Context().Err()

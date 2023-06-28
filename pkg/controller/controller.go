@@ -106,7 +106,10 @@ func (c *Controller) Start(ctx context.Context) error {
 		go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriodHours)
 
 		autoupgrade.StartSync(ctx, c.Router.Backend())
-		logserver.StartServerWithDefaults()
+		if err := logserver.StartServerWithDefaults(); err != nil {
+			logrus.Warnf("failed to start log server: %v", err)
+			return
+		}
 	}()
 
 	return c.Router.Start(ctx)
