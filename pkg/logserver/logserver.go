@@ -24,25 +24,19 @@ type Server struct {
 }
 
 // StartServerWithDefaults starts the server with default values
-func StartServerWithDefaults() error {
+func StartServerWithDefaults() {
 	s := Server{
 		SocketLocation: DefaultSocketLocation,
 	}
-	return s.Start()
+	s.Start()
 }
 
 // Start the server
-func (s *Server) Start() error {
-	if err := os.Remove(s.SocketLocation); err != nil {
-		return err
-	}
+func (s *Server) Start() {
+	_ = os.Remove(s.SocketLocation)
 	go func() {
-		err := s.ListenAndServe()
-		if err != nil {
-			return
-		}
+		_ = s.ListenAndServe()
 	}()
-	return nil
 }
 
 // ListenAndServe is used to setup handlers and
