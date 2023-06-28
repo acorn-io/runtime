@@ -194,29 +194,44 @@ func matches(binding v1.PortPublish, port v1.PortDef) bool {
 		portMatches(binding, port)
 }
 
-func collectPorts(seen, seenTargets map[int32]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
+func collectPorts(seen map[int32][]int32, seenHostnames map[string]struct{}, ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 	for _, port := range ports {
 		if !devMode && port.Dev {
 			continue
 		}
 
-		if _, ok := seen[port.Port]; ok {
-			continue
-		} else if _, ok := seenTargets[port.TargetPort]; ok {
+		// Can't have any duplicate hostnames, so check for that first
+		if _, exists := seenHostnames[port.Hostname]; port.Hostname != "" && exists {
 			continue
 		}
 
-		if port.Port != 0 {
-			seen[port.Port] = struct{}{}
-		} else {
-			// If port.Port is 0, that means only the TargetPort has been defined, and not the public-facing Port.
-			// The public-facing Port will ultimately use the same number as the TargetPort, so we add TargetPort to
-			// the Port "seen" map in that case.
-			seen[port.TargetPort] = struct{}{}
+		// If port.Port is 0, that means only the TargetPort has been defined, and not the public-facing Port.
+		// The public-facing Port will ultimately use the same number as the TargetPort, so we'll set it here
+		// so that the logic is correct for the rest of this function.
+		if port.Port == 0 {
+			port.Port = port.TargetPort
 		}
 
-		seenTargets[port.TargetPort] = struct{}{}
+		if targets, ok := seen[port.Port]; ok {
+			// Check for special case: the same port is exposed on multiple hostnames, so keep both.
+			if port.Hostname != "" {
+				for _, t := range targets {
+					if t == port.TargetPort {
+						// Same port and target port but different hostnames, so keep both
+						seen[port.Port] = append(targets, port.TargetPort)
+						seenHostnames[port.Hostname] = struct{}{}
+						result = append(result, port)
+						break
+					}
+				}
+			}
+			continue
+		}
 
+		seen[port.Port] = []int32{port.TargetPort}
+		if port.Hostname != "" {
+			seenHostnames[port.Hostname] = struct{}{}
+		}
 		result = append(result, port)
 	}
 	return
@@ -233,12 +248,13 @@ func FilterDevPorts(ports []v1.PortDef, devMode bool) (result []v1.PortDef) {
 }
 
 func CollectContainerPorts(container *v1.Container, devMode bool) (result []v1.PortDef) {
-	seen := map[int32]struct{}{}
-	seenTargets := map[int32]struct{}{}
+	// seen represents a mapping of public port numbers to target port numbers
+	seen := map[int32][]int32{}
+	seenHostnames := map[string]struct{}{}
 
-	result = append(result, collectPorts(seen, seenTargets, container.Ports, devMode)...)
+	result = append(result, collectPorts(seen, seenHostnames, container.Ports, devMode)...)
 	for _, entry := range typed.Sorted(container.Sidecars) {
-		result = append(result, collectPorts(seen, seenTargets, entry.Value.Ports, devMode)...)
+		result = append(result, collectPorts(seen, seenHostnames, entry.Value.Ports, devMode)...)
 	}
 
 	return
