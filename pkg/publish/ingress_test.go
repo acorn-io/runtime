@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/profiles"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -197,7 +197,7 @@ func TestToEndpoint(t *testing.T) {
 			args: args{
 				domain:      "custom-domain.io",
 				serviceName: "app-name-that-is-very-long-and-should-cause-issues",
-				pattern:     config.DefaultHttpEndpointPattern,
+				pattern:     profiles.DefaultHttpEndpointPattern,
 				appInstance: &v1.AppInstance{
 					TypeMeta:   metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{Name: "green-star", Namespace: "namespace"},

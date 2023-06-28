@@ -7,8 +7,8 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/profiles"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -88,7 +88,7 @@ func StartSync(ctx context.Context, client kclient.Client) {
 
 func (d *daemon) sync(ctx context.Context, now time.Time) (time.Duration, error) {
 	logrus.Debugf("Performing auto-upgrade sync")
-	defaultNextCheckInterval, _ := time.ParseDuration(config.DefaultImageCheckIntervalDefault)
+	defaultNextCheckInterval, _ := time.ParseDuration(profiles.DefaultImageCheckIntervalDefault)
 	cfg, err := d.client.getConfig(ctx)
 	if err != nil {
 		return defaultNextCheckInterval, err
@@ -96,7 +96,7 @@ func (d *daemon) sync(ctx context.Context, now time.Time) (time.Duration, error)
 
 	// cfg.AutoUpgradeInterval will never be nil here because config.Get will set a default.
 	if cfgNextCheckInterval, err := time.ParseDuration(*cfg.AutoUpgradeInterval); err != nil {
-		logrus.Warnf("Error parsing auto-upgrade interval in config %s is invalid, using default of %s: %v", *cfg.AutoUpgradeInterval, config.DefaultImageCheckIntervalDefault, err)
+		logrus.Warnf("Error parsing auto-upgrade interval in config %s is invalid, using default of %s: %v", *cfg.AutoUpgradeInterval, profiles.DefaultImageCheckIntervalDefault, err)
 	} else {
 		defaultNextCheckInterval = cfgNextCheckInterval
 	}

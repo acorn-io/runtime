@@ -7,6 +7,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/system"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -15,108 +16,116 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var (
-	ClusterDomainDefault         = ".local.oss-acorn.io"
-	InternalClusterDomainDefault = "svc.cluster.local"
-
-	AcornDNSEndpointDefault = "https://oss-dns.acrn.io/v1"
-	AcornDNSStateDefault    = "auto"
-
-	// LetsEncryptOptionDefault is the default state for the Let's Encrypt integration
-	LetsEncryptOptionDefault = "disabled"
-
-	// DefaultImageCheckIntervalDefault is the default value for the DefaultImageCheckInterval field
-	DefaultImageCheckIntervalDefault = "5m"
-
-	// Default HttpEndpointPattern set to enable Let's Encrypt
-	DefaultHttpEndpointPattern = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
-
-	// Features
-	FeatureImageAllowRules = "image-allow-rules"
-	FeatureDefaults        = map[string]bool{
-		FeatureImageAllowRules: false,
-	}
-)
-
 func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
+	profile := profiles.Get(c.Profile)
 	if c.SetPodSecurityEnforceProfile == nil {
-		c.SetPodSecurityEnforceProfile = &[]bool{true}[0]
+		c.SetPodSecurityEnforceProfile = profile.SetPodSecurityEnforceProfile
 	}
 	if c.PodSecurityEnforceProfile == "" && *c.SetPodSecurityEnforceProfile {
-		c.PodSecurityEnforceProfile = "baseline"
+		c.PodSecurityEnforceProfile = profile.PodSecurityEnforceProfile
 	}
 	if c.AcornDNS == nil {
-		c.AcornDNS = &AcornDNSStateDefault
+		c.AcornDNS = profile.AcornDNS
 	}
 	if c.AcornDNSEndpoint == nil || *c.AcornDNSEndpoint == "" {
-		c.AcornDNSEndpoint = &AcornDNSEndpointDefault
+		c.AcornDNSEndpoint = profile.AcornDNSEndpoint
 	}
 	err := setClusterDomains(ctx, c, getter)
 	if err != nil {
 		return err
 	}
 	if c.InternalClusterDomain == "" {
-		c.InternalClusterDomain = InternalClusterDomainDefault
+		c.InternalClusterDomain = profile.InternalClusterDomain
 	}
 	if c.LetsEncrypt == nil {
-		c.LetsEncrypt = &LetsEncryptOptionDefault
+		c.LetsEncrypt = profile.LetsEncrypt
 	}
 	if c.LetsEncryptTOSAgree == nil {
-		c.LetsEncryptTOSAgree = new(bool)
+		c.LetsEncryptTOSAgree = profile.LetsEncryptTOSAgree
 	}
 	if c.AutoUpgradeInterval == nil || *c.AutoUpgradeInterval == "" {
-		c.AutoUpgradeInterval = &DefaultImageCheckIntervalDefault
+		c.AutoUpgradeInterval = profile.AutoUpgradeInterval
 	}
 	if c.RecordBuilds == nil {
-		c.RecordBuilds = new(bool)
+		c.RecordBuilds = profile.RecordBuilds
 	}
 	if c.PublishBuilders == nil {
-		c.PublishBuilders = new(bool)
+		c.PublishBuilders = profile.PublishBuilders
 	}
 	if c.BuilderPerProject == nil {
-		c.BuilderPerProject = new(bool)
+		c.BuilderPerProject = profile.BuilderPerProject
 	}
 	if c.HttpEndpointPattern == nil || *c.HttpEndpointPattern == "" {
-		c.HttpEndpointPattern = &DefaultHttpEndpointPattern
+		c.HttpEndpointPattern = profile.HttpEndpointPattern
 	}
 	if c.WorkloadMemoryDefault == nil {
-		c.WorkloadMemoryDefault = new(int64)
+		c.WorkloadMemoryDefault = profile.WorkloadMemoryDefault
 	}
 	if c.WorkloadMemoryMaximum == nil {
-		c.WorkloadMemoryMaximum = new(int64)
+		c.WorkloadMemoryMaximum = profile.WorkloadMemoryMaximum
 	}
 	if c.InternalRegistryPrefix == nil {
-		c.InternalRegistryPrefix = new(string)
+		c.InternalRegistryPrefix = profile.InternalRegistryPrefix
 	}
 	if c.IgnoreUserLabelsAndAnnotations == nil {
-		c.IgnoreUserLabelsAndAnnotations = new(bool)
+		c.IgnoreUserLabelsAndAnnotations = profile.IgnoreUserLabelsAndAnnotations
 	}
 	if c.ManageVolumeClasses == nil {
-		c.ManageVolumeClasses = new(bool)
+		c.ManageVolumeClasses = profile.ManageVolumeClasses
 	}
 	if c.UseCustomCABundle == nil {
-		c.UseCustomCABundle = new(bool)
+		c.UseCustomCABundle = profile.UseCustomCABundle
 	}
 	if c.NetworkPolicies == nil {
-		c.NetworkPolicies = new(bool)
+		c.NetworkPolicies = profile.NetworkPolicies
 	}
 	if c.IngressControllerNamespace == nil {
-		c.IngressControllerNamespace = new(string)
+		c.IngressControllerNamespace = profile.IngressControllerNamespace
 	}
 	if c.AWSIdentityProviderARN == nil {
-		c.AWSIdentityProviderARN = new(string)
+		c.AWSIdentityProviderARN = profile.AWSIdentityProviderARN
+	}
+	if c.RegistryMemory == nil {
+		c.RegistryMemory = profile.RegistryMemory
+	}
+	if c.RegistryCPU == nil {
+		c.RegistryCPU = profile.RegistryCPU
+	}
+	if c.BuildkitdMemory == nil {
+		c.BuildkitdMemory = profile.BuildkitdMemory
+	}
+	if c.BuildkitdCPU == nil {
+		c.BuildkitdCPU = profile.BuildkitdCPU
+	}
+	if c.BuildkitdServiceMemory == nil {
+		c.BuildkitdServiceMemory = profile.BuildkitdServiceMemory
+	}
+	if c.BuildkitdServiceCPU == nil {
+		c.BuildkitdServiceCPU = profile.BuildkitdServiceCPU
+	}
+	if c.ControllerMemory == nil {
+		c.ControllerMemory = profile.ControllerMemory
+	}
+	if c.ControllerCPU == nil {
+		c.ControllerCPU = profile.ControllerCPU
+	}
+	if c.APIServerMemory == nil {
+		c.APIServerMemory = profile.APIServerMemory
+	}
+	if c.APIServerCPU == nil {
+		c.APIServerCPU = profile.APIServerCPU
 	}
 	if c.Features == nil {
-		c.Features = FeatureDefaults
+		c.Features = profile.Features
 	} else {
-		for k, v := range FeatureDefaults {
+		for k, v := range profiles.FeatureDefaults {
 			if _, ok := c.Features[k]; !ok {
 				c.Features[k] = v
 			}
 		}
 	}
 	if c.CertManagerIssuer == nil {
-		c.CertManagerIssuer = new(string)
+		c.CertManagerIssuer = profile.CertManagerIssuer
 	}
 	return nil
 }
@@ -170,7 +179,7 @@ func setClusterDomains(ctx context.Context, c *apiv1.Config, getter kclient.Read
 	// If a clusterDomain hasn't been set yet and acorn-dns hasn't been explicitly disabled,
 	// use the localhost wildcard domain
 	if len(c.ClusterDomains) == 0 && !strings.EqualFold(*c.AcornDNS, "disabled") {
-		c.ClusterDomains = []string{ClusterDomainDefault}
+		c.ClusterDomains = []string{profiles.ClusterDomainDefault}
 	}
 	return nil
 }
@@ -224,7 +233,7 @@ func IsDockerDesktop(ctx context.Context, getter kclient.Reader) (bool, error) {
 // merge merges two Config objects. The newConfig object takes precedence over the oldConfig object.
 //
 // WARNING: We have had many bugs with this merge logic. To avoid this when adding fields here, there
-// are two main cases to be considered when adding a new field to the Config object and merging it here:
+// are three main cases to be considered when adding a new field to the Config object and merging it here:
 //
 // 1. If the newConfig does not pass a field at all, the field in the oldConfig should be used.
 // 2. The newConfig should have a way of unsetting the values in the oldConfig.
@@ -247,6 +256,10 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 
 	if newConfig.ManageVolumeClasses != nil {
 		mergedConfig.ManageVolumeClasses = newConfig.ManageVolumeClasses
+	}
+
+	if newConfig.Profile != nil {
+		mergedConfig.Profile = newConfig.Profile
 	}
 
 	// This is to provide a way to reset value to empty if user passes --flag "" as empty string
@@ -330,7 +343,21 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.UseCustomCABundle != nil {
 		mergedConfig.UseCustomCABundle = newConfig.UseCustomCABundle
 	}
-
+	if newConfig.NetworkPolicies != nil {
+		mergedConfig.NetworkPolicies = newConfig.NetworkPolicies
+	}
+	if newConfig.IngressControllerNamespace != nil {
+		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
+	}
+	if newConfig.AWSIdentityProviderARN != nil {
+		mergedConfig.AWSIdentityProviderARN = newConfig.AWSIdentityProviderARN
+	}
+	if newConfig.EventTTL != nil {
+		mergedConfig.EventTTL = newConfig.EventTTL
+	}
+	if newConfig.CertManagerIssuer != nil {
+		mergedConfig.CertManagerIssuer = newConfig.CertManagerIssuer
+	}
 	if newConfig.Features != nil {
 		mergedConfig.Features = newConfig.Features
 	}
@@ -359,24 +386,35 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.ServiceLBAnnotations = newConfig.ServiceLBAnnotations
 	}
 
-	if newConfig.NetworkPolicies != nil {
-		mergedConfig.NetworkPolicies = newConfig.NetworkPolicies
+	if newConfig.RegistryMemory != nil {
+		mergedConfig.RegistryMemory = newConfig.RegistryMemory
 	}
-
-	if newConfig.IngressControllerNamespace != nil {
-		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
+	if newConfig.RegistryCPU != nil {
+		mergedConfig.RegistryCPU = newConfig.RegistryCPU
 	}
-
-	if newConfig.AWSIdentityProviderARN != nil {
-		mergedConfig.AWSIdentityProviderARN = newConfig.AWSIdentityProviderARN
+	if newConfig.BuildkitdMemory != nil {
+		mergedConfig.BuildkitdMemory = newConfig.BuildkitdMemory
 	}
-
-	if newConfig.EventTTL != nil {
-		mergedConfig.EventTTL = newConfig.EventTTL
+	if newConfig.BuildkitdCPU != nil {
+		mergedConfig.BuildkitdCPU = newConfig.BuildkitdCPU
 	}
-
-	if newConfig.CertManagerIssuer != nil {
-		mergedConfig.CertManagerIssuer = newConfig.CertManagerIssuer
+	if newConfig.BuildkitdServiceMemory != nil {
+		mergedConfig.BuildkitdServiceMemory = newConfig.BuildkitdServiceMemory
+	}
+	if newConfig.BuildkitdServiceCPU != nil {
+		mergedConfig.BuildkitdServiceCPU = newConfig.BuildkitdServiceCPU
+	}
+	if newConfig.ControllerMemory != nil {
+		mergedConfig.ControllerMemory = newConfig.ControllerMemory
+	}
+	if newConfig.ControllerCPU != nil {
+		mergedConfig.ControllerCPU = newConfig.ControllerCPU
+	}
+	if newConfig.APIServerMemory != nil {
+		mergedConfig.APIServerMemory = newConfig.APIServerMemory
+	}
+	if newConfig.APIServerCPU != nil {
+		mergedConfig.APIServerCPU = newConfig.APIServerCPU
 	}
 
 	return &mergedConfig

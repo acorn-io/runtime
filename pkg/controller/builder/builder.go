@@ -42,7 +42,7 @@ func createBuilderObjects(req router.Request, resp router.Response) (string, str
 	}
 
 	objs := imagesystem.BuilderObjects(name, system.ImagesNamespace, forNamespace, system.DefaultImage(),
-		pubKey, privKey, builder.Status.UUID, registryDNS, *cfg.UseCustomCABundle, *cfg.PublishBuilders)
+		pubKey, privKey, builder.Status.UUID, registryDNS, cfg)
 
 	if *cfg.BuilderPerProject {
 		resp.Objects(objs...)

@@ -38,7 +38,7 @@ func registryService(namespace string) []client.Object {
 	}
 }
 
-func registryDeployment(namespace, registryImage string) []client.Object {
+func registryDeployment(namespace, registryImage string, requirements corev1.ResourceRequirements) []client.Object {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      system.RegistryName,
@@ -69,7 +69,7 @@ func registryDeployment(namespace, registryImage string) []client.Object {
 									Value: "true",
 								},
 							},
-							Resources: system.RegistryResources(),
+							Resources: requirements,
 							Image:     registryImage,
 							Command:   []string{"/usr/local/bin/registry", "serve", "/etc/docker/registry/config.yml"},
 							LivenessProbe: &corev1.Probe{
