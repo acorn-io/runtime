@@ -7,8 +7,8 @@ import (
 	"github.com/acorn-io/runtime/pkg/services"
 )
 
-func addServices(req router.Request, app *v1.AppInstance, interpolar *secrets.Interpolator, resp router.Response) error {
-	objs, err := services.ToAcornServices(req.Ctx, req.Client, interpolar, app)
+func addServices(req router.Request, app *v1.AppInstance, interpolator *secrets.Interpolator, resp router.Response) error {
+	objs, err := services.ToAcornServices(req.Ctx, req.Client, interpolator, app)
 	if err != nil {
 		return err
 	}
