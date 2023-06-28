@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-
 FROM ghcr.io/acorn-io/images-mirror/golang:1.20-alpine AS loglevel
 WORKDIR /usr/src
 RUN apk -U add curl
-RUN curl -sfL https://github.com/rancher/loglevel/archive/refs/tags/v0.1.5.tar.gz | tar xzf - --strip-components=1
+RUN curl -sfL https://github.com/acorn-io/loglevel/archive/refs/tags/v0.1.6.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/loglevel -ldflags "-s -w"
 
 FROM ghcr.io/acorn-io/images-mirror/golang:1.20 AS build
