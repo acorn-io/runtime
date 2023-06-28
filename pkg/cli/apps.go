@@ -79,30 +79,24 @@ func inactive(app apiv1.App) bool {
 }
 
 func writeApp(ctx context.Context, app *apiv1.App, out table.Writer, c client.Client) {
-	images, err := c.ImageList(ctx)
+	image, err := c.ImageGet(ctx, strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:"))
 	if err != nil {
-		// Give up and write the app
+		// Give up and write the app with its digest as its name
+		app.Status.AppImage.Name = strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
 		out.Write(app)
 		return
 	}
 
-	// Loop through the images and make sure the image name is still a valid tag on that image
-	// If it isn't, set the image name to match the digest instead
 	var tagIsValid bool
-	for _, image := range images {
-		if image.Digest == app.Status.AppImage.Digest {
-			for _, tag := range image.Tags {
-				// Use strings.HasSuffix on Docker Hub images to account for the possible disparity between index.docker.io, docker.io, and no explicitly specified registry
-				if tag == app.Status.AppImage.Name || (strings.Contains(tag, "docker.io") && strings.HasSuffix(tag, app.Status.AppImage.Name)) {
-					tagIsValid = true
-					break
-				}
-			}
+	for _, tag := range image.Tags {
+		if tag == app.Status.AppImage.Name || (strings.Contains(tag, "docker.io") && strings.HasSuffix(tag, app.Status.AppImage.Name)) {
+			tagIsValid = true
 			break
 		}
 	}
 	if !tagIsValid {
 		app.Status.AppImage.Name = strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
 	}
+
 	out.Write(app)
 }
