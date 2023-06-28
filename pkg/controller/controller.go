@@ -17,7 +17,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/logserver"
 	"github.com/acorn-io/runtime/pkg/scheme"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,6 +76,8 @@ func New() (*Controller, error) {
 }
 
 func (c *Controller) Start(ctx context.Context) error {
+	logrus.SetLevel(logrus.InfoLevel)
+
 	if err := crds.Create(ctx, c.Scheme, v1.SchemeGroupVersion); err != nil {
 		return err
 	}
@@ -102,6 +106,7 @@ func (c *Controller) Start(ctx context.Context) error {
 		go wait.UntilWithContext(ctx, dnsInit.RenewAndSync, dnsRenewPeriodHours)
 
 		autoupgrade.StartSync(ctx, c.Router.Backend())
+		logserver.StartServerWithDefaults()
 	}()
 
 	return c.Router.Start(ctx)

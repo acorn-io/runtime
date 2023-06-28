@@ -11,6 +11,12 @@ RUN apk -U add curl
 RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v6.3.2.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/acorn-helper -ldflags "-s -w" ./helper
 
+FROM ghcr.io/acorn-io/images-mirror/golang:1.20-alpine AS loglevel
+WORKDIR /usr/src
+RUN apk -U add curl
+RUN curl -sfL https://github.com/rancher/loglevel/archive/refs/tags/v0.1.5.tar.gz | tar xzf - --strip-components=1
+RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/loglevel -ldflags "-s -w"
+
 FROM ghcr.io/acorn-io/images-mirror/golang:1.20 AS build
 COPY / /src
 WORKDIR /src
@@ -31,6 +37,7 @@ COPY --from=klipper-lb /usr/bin/entry /usr/local/bin/klipper-lb
 COPY ./scripts/ds-containerd-config-path-entry /usr/local/bin
 COPY ./scripts/setup-binfmt /usr/local/bin
 COPY --from=helper /usr/local/bin/acorn-helper /usr/local/bin/
+COPY --from=loglevel /usr/local/bin/loglevel /usr/local/bin/
 VOLUME /var/lib/buildkit
 
 COPY /scripts/acorn-helper-init /usr/local/bin

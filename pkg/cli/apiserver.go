@@ -3,7 +3,9 @@ package cli
 import (
 	minkserver "github.com/acorn-io/mink/pkg/server"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/logserver"
 	"github.com/acorn-io/runtime/pkg/server"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +41,9 @@ func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
 	if err := cfg.Run(cmd.Context()); err != nil {
 		return err
 	}
+
+	logrus.SetLevel(logrus.InfoLevel)
+	logserver.StartServerWithDefaults()
 
 	<-cmd.Context().Done()
 	return cmd.Context().Err()
