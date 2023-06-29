@@ -1,6 +1,7 @@
 // Adapted from https://github.com/rancher/log/blob/52031d45f5fdb71cecb9a314865624b42514dbed/server/server.go
-// The only real difference here is that we are using logrus directly instead of a wrapper around it.
-// This is still compatible with the client: https://github.com/rancher/loglevel
+// The only real differences here are that we are using logrus directly instead of a wrapper around it,
+// and that we are using an abstract namespace (non-file) socket.
+// This is only compatible with our fork of the client: https://github.com/acorn-io/loglevel
 
 package logserver
 
