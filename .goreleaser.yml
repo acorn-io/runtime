@@ -30,6 +30,7 @@ universal_binaries:
   - id: mac
     ids:
       - default
+    name_template: acorn
     replace: true
     hooks:
       post:
