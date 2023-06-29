@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	internalv1 "github.com/acorn-io/acorn/pkg/apis/internal.acorn.io/v1"
 	cli "github.com/acorn-io/acorn/pkg/cli/builder"
@@ -71,7 +72,7 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 	if a.Key == "" { // TODO: use default identity if no key is given
 		return fmt.Errorf("key is required")
 	}
-	pterm.Info.Printf("Verifying Image %s (digest: %s)\n", targetName, targetDigest)
+	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
 
 	annotationRules := internalv1.SignatureAnnotations{
 		Match: a.Annotations,
@@ -82,6 +83,14 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		SignatureAlgorithm: "sha256",
 		Key:                a.Key,
 		NoCache:            true,
+	}
+
+	if strings.HasPrefix(a.Key, "ac://") {
+		key, err := c.KeyGet(cmd.Context(), strings.TrimPrefix(a.Key, "ac://"))
+		if err != nil {
+			return err
+		}
+		verifyOpts.Key = key.Key
 	}
 
 	cc, err := c.GetClient()

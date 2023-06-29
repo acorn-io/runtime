@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"regexp"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -23,6 +24,8 @@ var (
 		ssh.KeyAlgoECDSA384: nil,
 		ssh.KeyAlgoECDSA521: nil,
 	}
+
+	PubkeyPrefixPattern = regexp.MustCompile(`^-----BEGIN (RSA|ED25519|ECDSA) PUBLIC KEY-----\n(.*\n)+-----END (RSA|ED25519|ECDSA) PUBLIC KEY-----\s*$`)
 )
 
 func PemEncodeCryptoPublicKey(pubKey crypto.PublicKey) ([]byte, string, error) {

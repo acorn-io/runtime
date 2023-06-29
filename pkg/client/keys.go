@@ -8,7 +8,6 @@ import (
 	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
 	acornsign "github.com/acorn-io/acorn/pkg/cosign"
 	"github.com/acorn-io/baaah/pkg/name"
-	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,8 +18,6 @@ func (c *DefaultClient) KeyCreate(ctx context.Context, key crypto.PublicKey) (*a
 	if err != nil {
 		return nil, err
 	}
-
-	logrus.Infof("Importing key %s\n%s\n", fingerprint, pem)
 
 	pk := &apiv1.PublicKey{
 		ObjectMeta: metav1.ObjectMeta{

@@ -36,7 +36,11 @@ func (a *Key) Run(cmd *cobra.Command, args []string) error {
 	var keys []apiv1.PublicKey
 
 	if len(args) != 0 {
-		return nil
+		key, err := client.KeyGet(cmd.Context(), args[0])
+		if err != nil {
+			return err
+		}
+		keys = append(keys, *key)
 	} else {
 		keys, err = client.KeyList(cmd.Context())
 		if err != nil {

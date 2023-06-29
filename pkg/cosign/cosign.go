@@ -39,6 +39,7 @@ type VerifyOpts struct {
 	OciRemoteOpts      []ociremote.Option
 	CraneOpts          []crane.Option
 	NoCache            bool
+	Verifiers          []signature.Verifier
 }
 
 // EnsureReferences will enrich the VerifyOpts with the image digest and signature reference.
@@ -174,15 +175,22 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		IgnoreTlog:         true,
 	}
 
+	if opts.Verifiers == nil {
+		opts.Verifiers = []signature.Verifier{}
+	}
+
 	// --- parse key
-	verifiers, err := LoadVerifiers(ctx, opts.Key, opts.SignatureAlgorithm)
-	if err != nil {
-		return fmt.Errorf("failed to load key: %w", err)
+	if opts.Key != "" {
+		verifiers, err := LoadVerifiers(ctx, opts.Key, opts.SignatureAlgorithm)
+		if err != nil {
+			return fmt.Errorf("failed to load key: %w", err)
+		}
+		opts.Verifiers = append(opts.Verifiers, verifiers...)
 	}
 
 	verified := false
 	var errs []error
-	for _, v := range verifiers {
+	for _, v := range opts.Verifiers {
 		cosignOpts.SigVerifier = v
 		err := verifySignature(ctx, sigs, imgDigestHash, opts, cosignOpts)
 		if err == nil {
@@ -193,7 +201,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 	}
 
 	if !verified {
-		err := cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(verifiers))
+		err := cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))
 		err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
 		logrus.Debugf("%s: %v", err, merr.NewErrors(errs...))
 		return err
@@ -356,9 +364,20 @@ var algorithms = map[string]crypto.Hash{
 }
 
 func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
-	if strings.HasPrefix(strings.TrimSpace(keyRef), "-----BEGIN PUBLIC KEY-----") {
+	if PubkeyPrefixPattern.MatchString(strings.TrimSpace(keyRef)) {
 		// no scheme, inline PEM
 		v, err := decodePEM([]byte(keyRef), algorithms[algorithm])
+		if err != nil {
+			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
+		}
+		verifiers = append(verifiers, v)
+	} else if strings.HasPrefix(keyRef, "-----BEGIN") {
+		key, err := ParsePublicKey(keyRef)
+		if err != nil {
+			return nil, err
+		}
+		logrus.Infof("Parsed key: %#v", key)
+		v, err := signature.LoadVerifier(key, algorithms[algorithm])
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
