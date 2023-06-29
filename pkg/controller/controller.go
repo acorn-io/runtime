@@ -37,7 +37,14 @@ type Controller struct {
 	apply  apply.Apply
 }
 
-func New() (*Controller, error) {
+func New(ctx context.Context) (*Controller, error) {
+	if err := crds.Create(ctx, scheme.Scheme, v1.SchemeGroupVersion); err != nil {
+		return nil, err
+	}
+	if err := crds.Create(ctx, scheme.Scheme, adminv1.SchemeGroupVersion); err != nil {
+		return nil, err
+	}
+
 	router, err := baaah.DefaultRouter("acorn-controller", scheme.Scheme)
 	if err != nil {
 		return nil, err
@@ -74,12 +81,6 @@ func New() (*Controller, error) {
 }
 
 func (c *Controller) Start(ctx context.Context) error {
-	if err := crds.Create(ctx, c.Scheme, v1.SchemeGroupVersion); err != nil {
-		return err
-	}
-	if err := crds.Create(ctx, c.Scheme, adminv1.SchemeGroupVersion); err != nil {
-		return err
-	}
 	if err := c.initData(ctx); err != nil {
 		return err
 	}
