@@ -53,7 +53,7 @@ if [[ "${NOTARIZE}" == "1" ]]; then
   mkfs.hfsplus -v "Acorn" "${DMG}"
   mkdir -p /tmp/acorn_mount
   sudo mount -t hfsplus -o loop "${DMG}" /tmp/acorn_mount
-  cp -R "${DIR}"/* /tmp/acorn_mount
+  sudo cp -R "${DIR}"/* /tmp/acorn_mount
   sudo umount /tmp/acorn_mount
 
   # Notarize and staple the DMG
