@@ -226,7 +226,7 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 	if err != nil {
 		// It's a failure, overwrite with failure event values
 		e.Type = AppImagePullFailureEventType
-		e.Severity = v1.EventSeverityWarn
+		e.Severity = v1.EventSeverityError
 		e.Description = fmt.Sprintf("Failed to pull %s", target.Name)
 		details.Err = err.Error()
 	}

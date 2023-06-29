@@ -97,15 +97,10 @@ func (t *MicroTime) UnmarshalJSON(b []byte) error {
 
 const (
 	// EventSeverityInfo indicates an event describes a system operating "as expected".
-	// It is the lowest severity level.
 	EventSeverityInfo EventSeverity = "info"
 
-	// EventSeverityWarn indicates an event describes a recoverable error.
-	EventSeverityWarn EventSeverity = "warn"
-
-	// EventSeverityCritical indicates an event describes an unrecoverable error.
-	// It is the highest severity level.
-	EventSeverityCritical EventSeverity = "critical"
+	// EventSeverityError indicates an event describes an error.
+	EventSeverityError EventSeverity = "warn"
 )
 
 // EventSeverity indicates the severity of an event.
