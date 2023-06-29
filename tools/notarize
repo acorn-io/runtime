@@ -48,7 +48,7 @@ if [[ "${NOTARIZE}" == "1" ]]; then
 
   # Build the DMG
   cp LICENSE README.md "${DIR}/"
-  SIZE="$(du -sm "${DIR}" | awk '{print $1 + 1}')" # The size of the directory + 1 megabyte for any overhead
+  SIZE="$(du -sm "${DIR}" | awk '{print $1 + 30}')" # The size of the directory + 30 megabytes for any overhead
   dd if=/dev/zero of="${DMG}" bs=1M count="${SIZE}"
   mkfs.hfsplus -v "Acorn" "${DMG}"
   mkdir -p /tmp/acorn_mount
