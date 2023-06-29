@@ -333,25 +333,19 @@ type ContainerReplicaPortForwardOptions struct {
 
 const (
 	SecretTypeCredential = "acorn.io/credential"
-	SecretTypeCryptoKey  = "acorn.io/crypto-key"
 	SecretTypeContext    = "acorn.io/context"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type CryptoKey struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-
-	Key string `json:"key,omitempty"`
-}
+type PublicKey v1.PublicKeyInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type CryptoKeyList struct {
+type PublicKeyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []CryptoKey `json:"items"`
+	Items           []PublicKey `json:"items"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

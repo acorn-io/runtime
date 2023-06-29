@@ -103,6 +103,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"regions":                       regions.NewStorage(c),
 		"imageallowrules":               imageallowrules.NewStorage(c),
 		"events":                        events.NewStorage(c),
+		"publickeys":                    keys.NewStorage(c),
 	}
 
 	return stores, nil

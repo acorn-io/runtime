@@ -2,7 +2,6 @@ package cosign
 
 import (
 	"crypto"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,17 +9,6 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh"
-)
-
-var (
-	supportedKeyTypes = map[string]interface{}{
-		ssh.KeyAlgoRSA:      nil,
-		ssh.KeyAlgoED25519:  nil,
-		ssh.KeyAlgoECDSA256: nil,
-		ssh.KeyAlgoECDSA384: nil,
-		ssh.KeyAlgoECDSA521: nil,
-	}
 )
 
 type ErrNoSupportedKeys struct {
@@ -64,24 +52,11 @@ func getGitHubPublicKeys(username string) ([]crypto.PublicKey, error) {
 
 	for _, key := range keys {
 		keyData := strings.Fields(key.Key)[1]
-		keyBytes, err := base64.StdEncoding.DecodeString(keyData)
-		if err != nil {
-			logrus.Warnf("Failed to decode public key data for GitHub user %s - Key ID #%d: %v", username, key.ID, err)
-			continue
-		}
-
-		parsedKey, err := ssh.ParsePublicKey(keyBytes)
+		parsedCryptoKey, err := ParsePublicKey(keyData)
 		if err != nil {
 			logrus.Warnf("Failed to parse public key for GitHub user %s - Key ID #%d: %v", username, key.ID, err)
 			continue
 		}
-
-		if _, ok := supportedKeyTypes[parsedKey.Type()]; !ok {
-			logrus.Debugf("Unsupported key type '%s' for GitHub user %s - Key ID #%d: %v", parsedKey.Type(), username, key.ID, err)
-			continue
-		}
-
-		parsedCryptoKey := parsedKey.(ssh.CryptoPublicKey).CryptoPublicKey()
 
 		validKeys = append(validKeys, parsedCryptoKey)
 	}
