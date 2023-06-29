@@ -25,6 +25,7 @@ type Server struct {
 
 // StartServerWithDefaults starts the server with default values
 func StartServerWithDefaults() {
+	logrus.SetLevel(logrus.InfoLevel)
 	s := Server{
 		SocketLocation: DefaultSocketLocation,
 	}
