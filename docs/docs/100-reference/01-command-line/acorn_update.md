@@ -9,6 +9,20 @@ Update a deployed app
 acorn update [flags] APP_NAME [deploy flags]
 ```
 
+### Examples
+
+```
+
+  # Change the image on an Acorn called "my-app"
+    acorn update --image <new image> my-app
+
+  # Change the image on an Acorn called "my-app" to the contents of the current directory (which must include an Acornfile)
+    acorn update --image . my-app
+
+  # Enable auto-upgrade on an Acorn called "my-app"
+    acorn update --auto-upgrade my-app
+```
+
 ### Options
 
 ```

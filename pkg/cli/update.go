@@ -25,8 +25,7 @@ func NewUpdate(c CommandContext) *cobra.Command {
     acorn update --image . my-app
 
   # Enable auto-upgrade on an Acorn called "my-app"
-    acorn update --auto-upgrade my-app
-		`,
+    acorn update --auto-upgrade my-app`,
 	})
 
 	toggleHiddenFlags(cmd, hideUpdateFlags, true)
