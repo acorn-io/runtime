@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	DefaultSocketLocation = "\x00loglevel"
+	DefaultSocketLocation = "\x00logserver"
 )
 
 // Server structure is used to the store backend information
