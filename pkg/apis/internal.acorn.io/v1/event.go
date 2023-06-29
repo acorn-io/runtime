@@ -100,7 +100,7 @@ const (
 	EventSeverityInfo EventSeverity = "info"
 
 	// EventSeverityError indicates an event describes an error.
-	EventSeverityError EventSeverity = "warn"
+	EventSeverityError EventSeverity = "error"
 )
 
 // EventSeverity indicates the severity of an event.
