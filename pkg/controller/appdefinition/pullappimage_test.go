@@ -171,7 +171,7 @@ func TestPullAppImageEvents(t *testing.T) {
 		&apiv1.Event{
 			Type:        AppImagePullFailureEventType,
 			Actor:       "acorn-system",
-			Severity:    v1.EventSeverityWarn,
+			Severity:    v1.EventSeverityError,
 			Description: "Failed to pull acorn.io/img:1",
 			Source:      v1.EventSource{Kind: "app", Name: "foo"},
 			Observed:    now,
