@@ -15,7 +15,7 @@ func NewUpdate(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:               "update [flags] APP_NAME [deploy flags]",
 		SilenceUsage:      true,
-		Short:             "Update a deployed app",
+		Short:             "Update a deployed Acorn",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 		Example: `
   # Change the image on an Acorn called "my-app"
