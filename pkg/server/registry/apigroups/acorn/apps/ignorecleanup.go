@@ -3,6 +3,7 @@ package apps
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -25,15 +27,19 @@ func NewIgnoreCleanup(c client.WithWatch) rest.Storage {
 		WithCreate(&ignoreCleanupStrategy{
 			client: c,
 		}).
-		// Use a custom validator to allow any name.
-		// This is necessary to get around the default validation, which will fail on services, since they have a dot in the name.
 		WithValidateName(ignoreCleanupValidator{}).
 		Build()
 }
 
 type ignoreCleanupValidator struct{}
 
-func (s ignoreCleanupValidator) ValidateName(_ context.Context, _ runtime.Object) (result field.ErrorList) {
+func (s ignoreCleanupValidator) ValidateName(ctx context.Context, _ runtime.Object) (result field.ErrorList) {
+	ri, _ := request.RequestInfoFrom(ctx)
+	for _, piece := range strings.Split(ri.Name, ".") {
+		if errs := validation.IsDNS1035Label(piece); len(errs) > 0 {
+			result = append(result, field.Invalid(field.NewPath("metadata", "name"), ri.Name, strings.Join(errs, ",")))
+		}
+	}
 	return
 }
 

@@ -1,0 +1,3 @@
+services: myservice: build: "./service"
+
+containers: nginx: image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
