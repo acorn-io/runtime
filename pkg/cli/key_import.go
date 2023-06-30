@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	acornsign "github.com/acorn-io/acorn/pkg/cosign"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/sigstore/sigstore/pkg/signature"
 	"github.com/spf13/cobra"
 )

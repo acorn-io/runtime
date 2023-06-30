@@ -1,10 +1,10 @@
 package cli
 
 import (
-	apiv1 "github.com/acorn-io/acorn/pkg/apis/api.acorn.io/v1"
-	cli "github.com/acorn-io/acorn/pkg/cli/builder"
-	"github.com/acorn-io/acorn/pkg/cli/builder/table"
-	"github.com/acorn-io/acorn/pkg/tables"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +50,7 @@ func (a *Key) Run(cmd *cobra.Command, args []string) error {
 
 	out := table.NewWriter(tables.PublicKey, false, a.Output)
 	for _, key := range keys {
-		out.Write(key)
+		out.Write(&key)
 	}
 
 	return out.Err()

@@ -119,8 +119,6 @@ github.com/ThalesIgnite/crypto11 v1.2.5 h1:1IiIIEqYmBvUYFeMnHqRft4bwf/O36jryEUpY
 github.com/ThalesIgnite/crypto11 v1.2.5/go.mod h1:ILDKtnCKiQ7zRoNxcp36Y1ZR8LBPmR2E23+wTQe/MlE=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
-github.com/acorn-io/acorn v0.7.1 h1:An3mOtLhuba9B3frbrBARvq9j8BGrKB1BKpLiyW7nWg=
-github.com/acorn-io/acorn v0.7.1/go.mod h1:wBjZxfQCO3QZW5tw9BdFK+QDT/+hdlk6R3qlHc9Ucs4=
 github.com/acorn-io/aml v0.0.0-20230721050626-ddd76a9874fd h1:garYcFPFPRFp7NsY8BPg38OV09pC1DeEYt01lh11JAM=
 github.com/acorn-io/aml v0.0.0-20230721050626-ddd76a9874fd/go.mod h1:UEx5RRLFjryCEHN2pM59+d8A0mPJ3VAxggJOTzPymwg=
 github.com/acorn-io/baaah v0.0.0-20230801200744-5fdf278d0c4c h1:6AM6ZGNYJfihPDRiIZZc6ctZunijutgJd2MuCYyUjt8=

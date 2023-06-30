@@ -18,6 +18,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/imageallowrules"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/images"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/info"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/keys"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/projects"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/regions"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/secrets"
