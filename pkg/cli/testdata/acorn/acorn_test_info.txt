@@ -19,6 +19,7 @@ Available Commands:
   image        Manage images
   info         Info about acorn installation
   install      Install and configure acorn in the cluster
+  key          Manage (public) keys
   login        Add registry credentials
   logout       Remove registry credentials
   logs         Log all workloads from an app

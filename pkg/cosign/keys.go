@@ -25,7 +25,7 @@ var (
 		ssh.KeyAlgoECDSA521: nil,
 	}
 
-	PubkeyPrefixPattern = regexp.MustCompile(`^-----BEGIN (RSA|ED25519|ECDSA) PUBLIC KEY-----\n(.*\n)+-----END (RSA|ED25519|ECDSA) PUBLIC KEY-----\s*$`)
+	PubkeyPrefixPattern = regexp.MustCompile(`^-----BEGIN (RSA |ED25519 |ECDSA ){0,1}PUBLIC KEY-----\n(.*\n)+-----END (RSA |ED25519 |ECDSA ){0,1}PUBLIC KEY-----\s*$`)
 )
 
 func PemEncodeCryptoPublicKey(pubKey crypto.PublicKey) ([]byte, string, error) {
