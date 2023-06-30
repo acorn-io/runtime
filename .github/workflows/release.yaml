@@ -57,6 +57,9 @@ jobs:
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
           AC_P12: ${{ secrets.AC_P12 }}
           AC_P12_PASSWORD: ${{ secrets.AC_P12_PASSWORD }}
+          AC_ISSUER_ID: ${{ secrets.AC_ISSUER_ID }}
+          AC_KEY_ID: ${{ secrets.AC_KEY_ID }}
+          AC_PRIVATE_KEY: ${{ secrets.AC_PRIVATE_KEY }}
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
       - name: report failure to slack
         if: failure()
