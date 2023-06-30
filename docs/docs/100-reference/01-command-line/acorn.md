@@ -55,7 +55,7 @@ acorn [flags]
 * [acorn stop](acorn_stop.md)	 - Stop an app
 * [acorn tag](acorn_tag.md)	 - Tag an image
 * [acorn uninstall](acorn_uninstall.md)	 - Uninstall acorn and associated resources
-* [acorn update](acorn_update.md)	 - Update a deployed app
+* [acorn update](acorn_update.md)	 - Update a deployed Acorn
 * [acorn version](acorn_version.md)	 - Version information for acorn
 * [acorn volume](acorn_volume.md)	 - Manage volumes
 * [acorn wait](acorn_wait.md)	 - Wait an app to be ready then exit with status code 0
