@@ -32,6 +32,7 @@ which cargo || sudo curl https://sh.rustup.rs -sSf | sh -s -- -y && bash
 which rcodesign || cargo install apple-codesign
 
 # Sign the binary using rcodesign.
+echo "Signing ${BINARY}..."
 echo "${AC_P12}" | base64 --decode > signing.p12
 rcodesign sign \
   --team-name "${AC_IDENTITY}" \
@@ -40,13 +41,13 @@ rcodesign sign \
   --p12-password "${AC_P12_PASSWORD}" \
   --code-signature-flags runtime \
   "${BINARY}"
+echo "Signed ${BINARY}!"
 
 if [[ "${NOTARIZE}" == "1" ]]; then
-  echo "Building and notarizing the DMG…"
-
   which mkfs.hfsplus || sudo apt-get install hfsprogs -y
 
   # Build the DMG
+  echo "Building ${DMG}..."
   cp LICENSE README.md "${DIR}/"
   SIZE="$(du -sm "${DIR}" | awk '{print $1 + 30}')" # The size of the directory + 30 megabytes for any overhead
   dd if=/dev/zero of="${DMG}" bs=1M count="${SIZE}"
@@ -55,18 +56,27 @@ if [[ "${NOTARIZE}" == "1" ]]; then
   sudo mount -t hfsplus -o loop "${DMG}" /tmp/acorn_mount
   sudo cp -R "${DIR}"/* /tmp/acorn_mount
   sudo umount /tmp/acorn_mount
+  echo "Built ${DMG}!"
 
   # Notarize and staple the DMG
+  echo "Building app-store-connect-api-key..."
   echo "${AC_PRIVATE_KEY}" | base64 --decode > private.p8
   rcodesign encode-app-store-connect-api-key \
     -o ./key.json \
     "${AC_ISSUER_ID}" \
     "${AC_KEY_ID}" \
-    private.pem
+    private.p8
+  echo "Built app-store-connect-api-key!"
+
+  echo "Notarizing and stapling ${DMG}..."
   rcodesign notary-submit --api-key-path ./key.json "${DMG}" --staple 
+  echo "${DMG} has been notarized and stapled!"
 
   # Add the sha256sum of the DMG to the checksums file
+  echo "Adding ${DMG}'s checksum to the checksums file..."
   sha256sum "${DMG}" >> "${CHECKSUMS}"
+  echo "Added ${DMG}'s checksums!"
+
 else
   echo "Skipping notarizing & disk image creation"
 fi
