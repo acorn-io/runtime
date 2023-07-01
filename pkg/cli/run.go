@@ -325,11 +325,9 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 		updateOpts.DeployArgs = deployArgs
 	} else if len(imageSource.Args) > 0 {
 		imageSource.Image = app.Status.AppImage.Name
-		_, deployArgs, err := imageSource.GetImageAndDeployArgs(ctx, c)
-		if err != nil {
+		if _, updateOpts.DeployArgs, err = imageSource.GetImageAndDeployArgs(ctx, c); err != nil {
 			return nil, false, err
 		}
-		updateOpts.DeployArgs = deployArgs
 	}
 
 	app, err = rulerequest.PromptUpdate(ctx, c, s.Dangerous, app.Name, updateOpts)
