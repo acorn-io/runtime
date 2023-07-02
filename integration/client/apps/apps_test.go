@@ -482,18 +482,50 @@ func TestAppRunImageVariations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for desc, imageName := range map[string]string{
-		"ref":         "foo/bar:baz",
-		"id":          imageID,
-		"sha256":      fmt.Sprintf("sha256:%s", imageID),
-		"short":       imageID[:8],
-		"autoupgrade": "foo/bar:**",
-	} {
-		imageName := imageName
-		t.Run(desc, func(t *testing.T) {
+	testCases := []struct {
+		name      string
+		image     string
+		options   *client.AppRunOptions
+		expectErr bool
+	}{
+		{
+			name:  "ref",
+			image: "foo/bar:baz",
+		},
+		{
+			name:  "id",
+			image: imageID,
+		},
+		{
+			name:  "sha256",
+			image: fmt.Sprintf("sha256:%s", imageID),
+		},
+		{
+			name:  "short",
+			image: imageID[:8],
+		},
+		{
+			name:  "autoupgrade",
+			image: "foo/bar:**",
+			options: &client.AppRunOptions{
+				AutoUpgrade: &[]bool{true}[0],
+			},
+		},
+		{
+			name:      "autoupgrade-fail",
+			image:     "foo/bar:**",
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			_, err := c.AppRun(ctx, imageName, nil)
-			assert.NoError(t, err)
+			_, err := c.AppRun(ctx, tc.image, tc.options)
+			if err != nil && !tc.expectErr {
+				t.Fatal("unexpected error:", err)
+			}
 		})
 	}
 }
