@@ -197,7 +197,7 @@ func TestToEndpoint(t *testing.T) {
 			args: args{
 				domain:      "custom-domain.io",
 				serviceName: "app-name-that-is-very-long-and-should-cause-issues",
-				pattern:     profiles.DefaultHttpEndpointPattern,
+				pattern:     profiles.HttpEndpointPatternDefault,
 				appInstance: &v1.AppInstance{
 					TypeMeta:   metav1.TypeMeta{},
 					ObjectMeta: metav1.ObjectMeta{Name: "green-star", Namespace: "namespace"},

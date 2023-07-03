@@ -13,11 +13,11 @@ var (
 	// LetsEncryptOptionDefault is the default state for the Let's Encrypt integration
 	LetsEncryptOptionDefault = "disabled"
 
-	// DefaultImageCheckIntervalDefault is the default value for the DefaultImageCheckInterval field
-	DefaultImageCheckIntervalDefault = "5m"
+	// AutoUpgradeIntervalDefault is the default value for the DefaultImageCheckInterval field
+	AutoUpgradeIntervalDefault = "5m"
 
-	// Default HttpEndpointPattern set to enable Let's Encrypt
-	DefaultHttpEndpointPattern = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
+	// HttpEndpointPatternDefault is a pattern that works with Let's Encrypt
+	HttpEndpointPatternDefault = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
 
 	// Features
 	FeatureImageAllowRules = "image-allow-rules"
@@ -30,13 +30,13 @@ func defaultProfile() apiv1.Config {
 	return apiv1.Config{
 		AcornDNS:                       ptr(AcornDNSStateDefault),
 		AcornDNSEndpoint:               ptr(AcornDNSEndpointDefault),
-		AutoUpgradeInterval:            ptr(DefaultImageCheckIntervalDefault),
+		AutoUpgradeInterval:            ptr(AutoUpgradeIntervalDefault),
 		AWSIdentityProviderARN:         new(string),
 		BuilderPerProject:              new(bool),
 		CertManagerIssuer:              new(string),
 		EventTTL:                       new(string),
 		Features:                       FeatureDefaults,
-		HttpEndpointPattern:            ptr(DefaultHttpEndpointPattern),
+		HttpEndpointPattern:            ptr(HttpEndpointPatternDefault),
 		IgnoreUserLabelsAndAnnotations: new(bool),
 		IngressClassName:               new(string),
 		IngressControllerNamespace:     new(string),

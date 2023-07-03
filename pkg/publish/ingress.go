@@ -71,7 +71,7 @@ func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace st
 	// This should not happen since the pattern in the config (passed to this through pattern) should
 	// always be set to the default if the pattern is "". However,if it is not somehow, set it here.
 	if pattern == "" {
-		pattern = profiles.DefaultHttpEndpointPattern
+		pattern = profiles.HttpEndpointPatternDefault
 	}
 
 	endpointOpts := struct {

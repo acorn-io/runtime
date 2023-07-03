@@ -88,7 +88,7 @@ func StartSync(ctx context.Context, client kclient.Client) {
 
 func (d *daemon) sync(ctx context.Context, now time.Time) (time.Duration, error) {
 	logrus.Debugf("Performing auto-upgrade sync")
-	defaultNextCheckInterval, _ := time.ParseDuration(profiles.DefaultImageCheckIntervalDefault)
+	defaultNextCheckInterval, _ := time.ParseDuration(profiles.AutoUpgradeIntervalDefault)
 	cfg, err := d.client.getConfig(ctx)
 	if err != nil {
 		return defaultNextCheckInterval, err
@@ -96,7 +96,7 @@ func (d *daemon) sync(ctx context.Context, now time.Time) (time.Duration, error)
 
 	// cfg.AutoUpgradeInterval will never be nil here because config.Get will set a default.
 	if cfgNextCheckInterval, err := time.ParseDuration(*cfg.AutoUpgradeInterval); err != nil {
-		logrus.Warnf("Error parsing auto-upgrade interval in config %s is invalid, using default of %s: %v", *cfg.AutoUpgradeInterval, profiles.DefaultImageCheckIntervalDefault, err)
+		logrus.Warnf("Error parsing auto-upgrade interval in config %s is invalid, using default of %s: %v", *cfg.AutoUpgradeInterval, profiles.AutoUpgradeIntervalDefault, err)
 	} else {
 		defaultNextCheckInterval = cfgNextCheckInterval
 	}

@@ -23,10 +23,7 @@ func ValidateResources(resources ...string) error {
 		req, limit, both := strings.Cut(rs, ":")
 		if !both {
 			_, err := resource.ParseQuantity(rs)
-			if err != nil {
-				return err
-			}
-			return nil
+			return err
 		}
 
 		parsedReq, err := resource.ParseQuantity(req)
