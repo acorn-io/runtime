@@ -43,6 +43,22 @@ rcodesign sign \
   "${BINARY}"
 echo "Signed ${BINARY}!"
 
+# Currently, NOTARIZE is always set to 0. In effect, this means that the
+# binary is signed, but not zipped up, notarized or stapled. Since all of the 
+# official installation processes are through brew or wget, the notarized DMG we were
+# creating was not necessary. Where this does become a problem is if a user 
+# wants to install from a browser. In this situation, there will need to be 
+# a notarization process otherwise MacOS will mark our binary as unsafe and 
+# the user will need to go through hoops to install it. In this instance,
+# setting NOTARIZE to 1 will create a ZIP file (since it was difficult to create
+# a DMG while not on MacOS) and Notarize it.
+#
+# Note - If you want to staple that ZIP, you will need to staple each individual
+#        item in the zip file.
+#
+# References: 
+# https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
+# https://gregoryszorc.com/docs/apple-codesign/0.17.0/apple_codesign_rcodesign.html
 if [[ "${NOTARIZE}" == "1" ]]; then
   which zip || sudo apt-get install zip -y
 
@@ -72,6 +88,6 @@ if [[ "${NOTARIZE}" == "1" ]]; then
   echo "Added ${ZIP}'s checksums!"
 
 else
-  echo "Skipping notarizing & disk image creation"
+  echo "Skipping zip creation and notarization"
 fi
 
