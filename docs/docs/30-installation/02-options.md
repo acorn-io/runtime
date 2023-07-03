@@ -135,3 +135,10 @@ For strings array flags, you can reset the slice to empty by pass empty string "
 ```bash
 acorn install --propagate-project-annotation ""
 ```
+
+## Install Profiles
+When you are installing Acorn, you can specify a profile to use. A profile is a set of installation flag defaults that are pre-defined. You can see the list of available profiles by running `acorn install --help`. The default profile is `default`, and it is used if no profile is specified.
+
+:::note
+Once a profile is set, this will set new default values based on the profile. Any default values previously used will be switched to the new profile defaults. However, any install flags that were specified, or have specified, will still be respected.
+:::

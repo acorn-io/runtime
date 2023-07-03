@@ -58,7 +58,7 @@ acorn install
       --network-policies                                Create Kubernetes NetworkPolicies which block cross-project network traffic (default false)
   -o, --output string                                   Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string             The name of the PodSecurity profile to set (default baseline)
-      --profile string                                  The name of the profile to use for the installation
+      --profile string                                  The name of the profile to use for the installation. Profiles options are production (prod) and default. (default profile is default)
       --propagate-project-annotation strings            The list of keys of annotations to propagate from acorn project to app namespaces
       --propagate-project-label strings                 The list of keys of labels to propagate from acorn project to app namespaces
       --publish-builders                                Publish the builders through ingress to so build traffic does not traverse the api-server
