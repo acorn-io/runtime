@@ -36,6 +36,7 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ImageTag{},
 		&ImagePush{},
 		&ImagePull{},
+		&ImageCopy{},
 		&Info{},
 		&InfoList{},
 		&LogOptions{},

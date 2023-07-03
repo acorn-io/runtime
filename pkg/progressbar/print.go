@@ -36,6 +36,7 @@ func Print(progress <-chan client.ImageProgress) error {
 			fmt.Printf("[%d/%d]\n", last.Total, last.Total)
 		}
 	} else {
+		var currentTask string
 		for update := range progress {
 			if update.Error != "" {
 				err = errors.New(update.Error)
@@ -47,10 +48,23 @@ func Print(progress <-chan client.ImageProgress) error {
 				continue
 			}
 
+			if update.CurrentTask != "" && update.CurrentTask != currentTask {
+				if bar != nil {
+					bar.Add(bar.Total - bar.Current)
+					_, _ = bar.Stop()
+					bar = nil
+				}
+				currentTask = update.CurrentTask
+			}
+
 			if bar == nil {
-				bar, _ = pterm.DefaultProgressbar.
+				bar = pterm.DefaultProgressbar.
 					WithTotal(int(update.Total)).
-					WithCurrent(int(update.Complete)).Start()
+					WithCurrent(int(update.Complete))
+				if currentTask != "" {
+					bar = bar.WithTitle(currentTask)
+				}
+				bar, _ = bar.Start()
 			}
 
 			if int(update.Complete) > bar.Current {

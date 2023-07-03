@@ -146,6 +146,18 @@ type ImagePull struct {
 	Auth            *RegistryAuth `json:"auth,omitempty"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ImageCopy struct {
+	metav1.TypeMeta `json:",inline"`
+	Source          string        `json:"source,omitempty"`
+	Dest            string        `json:"dest,omitempty"`
+	SourceAuth      *RegistryAuth `json:"sourceAuth,omitempty"`
+	DestAuth        *RegistryAuth `json:"destAuth,omitempty"`
+	AllTags         bool          `json:"allTags,omitempty"`
+	Force           bool          `json:"force,omitempty"`
+}
+
 type LogMessage struct {
 	Line          string      `json:"line,omitempty"`
 	AppName       string      `json:"appName,omitempty"`

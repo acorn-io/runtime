@@ -56,6 +56,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Image":                                      schema_pkg_apis_apiacornio_v1_Image(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRule":                             schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRuleList":                         schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageCopy":                                  schema_pkg_apis_apiacornio_v1_ImageCopy(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageDetails":                               schema_pkg_apis_apiacornio_v1_ImageDetails(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageList":                                  schema_pkg_apis_apiacornio_v1_ImageList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImagePull":                                  schema_pkg_apis_apiacornio_v1_ImagePull(ref),
@@ -3495,6 +3496,68 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRuleList(ref common.ReferenceCallba
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRule", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_ImageCopy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"source": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"dest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"sourceAuth": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
+					"destAuth": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
+					"allTags": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"force": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"},
 	}
 }
 

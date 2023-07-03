@@ -31,6 +31,7 @@ acorn [flags]
 * [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
 * [acorn check](acorn_check.md)	 - Check if the cluster is ready for Acorn
 * [acorn container](acorn_container.md)	 - Manage containers
+* [acorn copy](acorn_copy.md)	 - Copy Acorn images between registries
 * [acorn credential](acorn_credential.md)	 - Manage registry credentials
 * [acorn dev](acorn_dev.md)	 - Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
 * [acorn events](acorn_events.md)	 - List events about Acorn resources

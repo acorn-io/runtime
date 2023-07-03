@@ -193,7 +193,7 @@ func isNotInternalRepo(prefix, image string) error {
 	}
 
 	if prefix == "" {
-		return nil
+		prefix = fmt.Sprintf("%s.%s", system.RegistryName, system.ImagesNamespace)
 	}
 
 	if strings.HasPrefix(image, prefix) {

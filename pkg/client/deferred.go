@@ -304,6 +304,13 @@ func (d *DeferredClient) ImageDetails(ctx context.Context, imageName string, opt
 	return d.Client.ImageDetails(ctx, imageName, opts)
 }
 
+func (d *DeferredClient) ImageCopy(ctx context.Context, srcImage, dstImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.ImageCopy(ctx, srcImage, dstImage, opts)
+}
+
 func (d *DeferredClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	if err := d.create(); err != nil {
 		return nil, err
