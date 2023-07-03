@@ -1,0 +1,16 @@
+containers: "never-ready": {
+	image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+	probes: readiness: tcp: url: "tcp://localhost:5555"
+}
+
+jobs: "fail-on-delete": {
+	image: "ghcr.io/acorn-io/images-mirror/nginx:latest"
+	events: ["delete"]
+	entrypoint: ["/script.sh"]
+	files: "/script.sh": """
+		#!/bin/sh
+		echo Starting
+		sleep 3
+		dne
+		"""
+}
