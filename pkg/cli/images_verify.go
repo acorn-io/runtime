@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
@@ -83,14 +82,6 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		SignatureAlgorithm: "sha256",
 		Key:                a.Key,
 		NoCache:            true,
-	}
-
-	if strings.HasPrefix(a.Key, "ac://") {
-		key, err := c.KeyGet(cmd.Context(), strings.TrimPrefix(a.Key, "ac://"))
-		if err != nil {
-			return err
-		}
-		verifyOpts.Key = key.Key
 	}
 
 	cc, err := c.GetClient()

@@ -2,7 +2,6 @@ package testdata
 
 import (
 	"context"
-	"crypto"
 	"fmt"
 	"net"
 
@@ -118,8 +117,6 @@ type MockClient struct {
 	RegionItem       *apiv1.Region
 	Events           []apiv1.Event
 	EventItem        *apiv1.Event
-	PublicKeyItem    *apiv1.PublicKey
-	PublicKeys       []apiv1.PublicKey
 }
 
 func (m *MockClient) KubeProxyAddress(ctx context.Context) (string, error) {
@@ -286,51 +283,6 @@ func (m *MockClient) AppLog(ctx context.Context, name string, opts *client.LogOp
 		close(progresses)
 		return progresses, fmt.Errorf("error: tag %s does not exist", name)
 	}
-}
-
-func (m *MockClient) KeyCreate(ctx context.Context, key crypto.PublicKey) (*apiv1.PublicKey, error) {
-	return nil, nil
-}
-
-func (m *MockClient) KeyGet(ctx context.Context, name string) (*apiv1.PublicKey, error) {
-	if m.PublicKeyItem != nil {
-		return m.PublicKeyItem, nil
-	}
-	switch name {
-	case "dne":
-		return nil, fmt.Errorf("error: key %s does not exist", name)
-	case "found":
-		return &apiv1.PublicKey{
-			TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "found",
-			},
-			Fingerprint: "found",
-			Key:         "found",
-		}, nil
-	}
-	return nil, fmt.Errorf("error: key %s does not exist", name)
-}
-
-func (m *MockClient) KeyList(ctx context.Context) ([]apiv1.PublicKey, error) {
-	if m.PublicKeys != nil {
-		return m.PublicKeys, nil
-	}
-	return []apiv1.PublicKey{{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "test-key",
-		},
-		Fingerprint: "test-fingerprint",
-		Key:         "test-key",
-	}}, nil
-}
-
-func (m *MockClient) KeyDelete(ctx context.Context, name string) (*apiv1.PublicKey, error) {
-	if m.PublicKeyItem != nil {
-		return m.PublicKeyItem, nil
-	}
-	return nil, nil
 }
 
 func (m *MockClient) CredentialCreate(ctx context.Context, serverAddress, username, password string, skipChecks bool) (*apiv1.Credential, error) {

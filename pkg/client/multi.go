@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"crypto"
 	"fmt"
 	"reflect"
 	"sort"
@@ -261,30 +260,6 @@ func (m *MultiClient) CredentialUpdate(ctx context.Context, serverAddress, usern
 func (m *MultiClient) CredentialDelete(ctx context.Context, serverAddress string) (*apiv1.Credential, error) {
 	return onOne(ctx, m.Factory, serverAddress, func(name string, c Client) (*apiv1.Credential, error) {
 		return c.CredentialDelete(ctx, name)
-	})
-}
-
-func (m *MultiClient) KeyCreate(ctx context.Context, key crypto.PublicKey) (*apiv1.PublicKey, error) {
-	return onOne(ctx, m.Factory, "", func(name string, c Client) (*apiv1.PublicKey, error) {
-		return c.KeyCreate(ctx, key)
-	})
-}
-
-func (m *MultiClient) KeyList(ctx context.Context) ([]apiv1.PublicKey, error) {
-	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.PublicKey, error) {
-		return c.KeyList(ctx)
-	})
-}
-
-func (m *MultiClient) KeyGet(ctx context.Context, fingerprint string) (*apiv1.PublicKey, error) {
-	return onOne(ctx, m.Factory, fingerprint, func(name string, c Client) (*apiv1.PublicKey, error) {
-		return c.KeyGet(ctx, name)
-	})
-}
-
-func (m *MultiClient) KeyDelete(ctx context.Context, fingerprint string) (*apiv1.PublicKey, error) {
-	return onOne(ctx, m.Factory, fingerprint, func(name string, c Client) (*apiv1.PublicKey, error) {
-		return c.KeyDelete(ctx, name)
 	})
 }
 

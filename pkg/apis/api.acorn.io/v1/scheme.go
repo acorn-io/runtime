@@ -46,8 +46,6 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&VolumeClassList{},
 		&Credential{},
 		&CredentialList{},
-		&PublicKey{},
-		&PublicKeyList{},
 		&ContainerReplica{},
 		&ContainerReplicaList{},
 		&ContainerReplicaExecOptions{},

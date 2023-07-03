@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"crypto"
 	"sync"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -156,34 +155,6 @@ func (d *DeferredClient) CredentialDelete(ctx context.Context, serverAddress str
 		return nil, err
 	}
 	return d.Client.CredentialDelete(ctx, serverAddress)
-}
-
-func (d *DeferredClient) KeyCreate(ctx context.Context, key crypto.PublicKey) (*apiv1.PublicKey, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.KeyCreate(ctx, key)
-}
-
-func (d *DeferredClient) KeyList(ctx context.Context) ([]apiv1.PublicKey, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.KeyList(ctx)
-}
-
-func (d *DeferredClient) KeyGet(ctx context.Context, fingerprint string) (*apiv1.PublicKey, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.KeyGet(ctx, fingerprint)
-}
-
-func (d *DeferredClient) KeyDelete(ctx context.Context, fingerprint string) (*apiv1.PublicKey, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.KeyDelete(ctx, fingerprint)
 }
 
 func (d *DeferredClient) SecretCreate(ctx context.Context, name, secretType string, data map[string][]byte) (*apiv1.Secret, error) {

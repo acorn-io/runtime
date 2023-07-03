@@ -24,8 +24,6 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&AppInstanceList{},
 		&ServiceInstance{},
 		&ServiceInstanceList{},
-		&PublicKeyInstance{},
-		&PublicKeyInstanceList{},
 		&ImageInstance{},
 		&ImageInstanceList{},
 		&ImageAllowRuleInstance{},

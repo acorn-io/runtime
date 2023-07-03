@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"crypto"
 	"net"
 	"net/http"
 	"os"
@@ -261,11 +260,6 @@ type Client interface {
 
 	ComputeClassList(ctx context.Context) ([]apiv1.ComputeClass, error)
 	ComputeClassGet(ctx context.Context, name string) (*apiv1.ComputeClass, error)
-
-	KeyCreate(ctx context.Context, key crypto.PublicKey) (*apiv1.PublicKey, error)
-	KeyGet(ctx context.Context, name string) (*apiv1.PublicKey, error)
-	KeyList(ctx context.Context) ([]apiv1.PublicKey, error)
-	KeyDelete(ctx context.Context, name string) (*apiv1.PublicKey, error)
 
 	RegionList(ctx context.Context) ([]apiv1.Region, error)
 	RegionGet(ctx context.Context, name string) (*apiv1.Region, error)
