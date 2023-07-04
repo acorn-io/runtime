@@ -111,6 +111,15 @@ func (a *appStatusRenderer) readServices() error {
 		default:
 		}
 
+		// The ref.Lookup call above will find what the service resolves to, but not the actually local service object.
+		// Here we lookup the local object so we can determine if it's the default or not
+		localService := &v1.ServiceInstance{}
+		if err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, serviceName), localService); err == nil {
+			s.Default = localService.Spec.Default
+		} else if !apierrors.IsNotFound(err) {
+			return err
+		}
+
 		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
 
 		a.app.Status.AppStatus.Services[serviceName] = s
