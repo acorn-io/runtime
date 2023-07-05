@@ -6,7 +6,8 @@
         "cli": {
             "acornServers": [
                 "acorn.io"
-            ]
+            ],
+            "acornConfig": "/fake-file"
         }
     },
     "projects": {

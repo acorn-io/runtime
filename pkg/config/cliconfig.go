@@ -55,6 +55,7 @@ type CLIConfig struct {
 	ProjectAliases    map[string]string     `json:"projectAliases,omitempty"`
 	DefaultContext    string                `json:"defaultContext,omitempty"`
 	CurrentProject    string                `json:"currentProject,omitempty"`
+	AcornConfig       string                `json:"acornConfig,omitempty"`
 
 	// ProjectURLs is used for testing to return EndpointURLs for remote projects
 	ProjectURLs map[string]string `json:"projectURLs,omitempty"`
@@ -128,7 +129,8 @@ func ReadCLIConfig(kubeconfigOnly bool) (*CLIConfig, error) {
 		return nil, err
 	}
 	result := &CLIConfig{
-		authsLock: &sync.Mutex{},
+		authsLock:   &sync.Mutex{},
+		AcornConfig: filename,
 	}
 	if err := yaml.Unmarshal(data, result); err != nil {
 		return nil, err

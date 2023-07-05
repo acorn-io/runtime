@@ -169,6 +169,7 @@ func TestInfo(t *testing.T) {
 
 			r, w, _ := os.Pipe()
 			os.Stdout = w
+			os.Setenv("ACORN_CONFIG_FILE", "/fake-file")
 
 			// Mock client factory just returns the gomock client.
 			cmd := NewInfo(CommandContext{
