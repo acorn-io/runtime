@@ -1,6 +1,7 @@
 ---
 client:
   cli:
+    acornConfig: /fake-file
     acornServers:
     - acorn.io
   version:
