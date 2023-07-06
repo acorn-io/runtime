@@ -73,7 +73,7 @@ func PemEncodeSSHPublicKey(key ssh.PublicKey) ([]byte, error) {
 	return pem, err
 }
 
-func ParsePublicKey(keystr string) (crypto.PublicKey, error) {
+func ParseSSHPublicKey(keystr string) (crypto.PublicKey, error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(keystr)
 	if err != nil {
 		return nil, err

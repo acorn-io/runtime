@@ -1,30 +1,20 @@
 package cosign
 
 import (
-	"crypto"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 )
-
-type ErrNoSupportedKeys struct {
-	Username string
-}
-
-func (e ErrNoSupportedKeys) Error() string {
-	return fmt.Sprintf("no supported keys found for GitHub user %s", e.Username)
-}
 
 type GitHubPublicKey struct {
 	ID  int    `json:"id,omitempty"`
 	Key string `json:"key,omitempty"`
 }
 
-func getGitHubPublicKeys(username string) ([]crypto.PublicKey, error) {
+func getGitHubPublicKeys(username string) ([]GitHubPublicKey, error) {
 	logrus.Debugf("Getting public keys for GitHub user %s", username)
 	url := fmt.Sprintf("https://api.github.com/users/%s/keys", username)
 	resp, err := http.Get(url)
@@ -45,25 +35,8 @@ func getGitHubPublicKeys(username string) ([]crypto.PublicKey, error) {
 	}
 
 	if len(keys) == 0 {
-		return nil, err
+		return nil, fmt.Errorf("no keys found for user %s", username)
 	}
 
-	var validKeys []crypto.PublicKey
-
-	for _, key := range keys {
-		keyData := strings.Fields(key.Key)[1]
-		parsedCryptoKey, err := ParsePublicKey(keyData)
-		if err != nil {
-			logrus.Warnf("Failed to parse public key for GitHub user %s - Key ID #%d: %v", username, key.ID, err)
-			continue
-		}
-
-		validKeys = append(validKeys, parsedCryptoKey)
-	}
-
-	if len(validKeys) == 0 {
-		return nil, ErrNoSupportedKeys{Username: username}
-	}
-
-	return validKeys, nil
+	return keys, nil
 }

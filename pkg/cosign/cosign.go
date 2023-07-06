@@ -371,8 +371,19 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
 		verifiers = append(verifiers, v)
+	} else if strings.HasPrefix(keyRef, "ssh-") {
+		keyData := strings.Fields(keyRef)[1]
+		parsedCryptoKey, err := ParseSSHPublicKey(keyData)
+		if err != nil {
+			return nil, err
+		}
+		v, err := signature.LoadVerifier(parsedCryptoKey, algorithms[algorithm])
+		if err != nil {
+			return nil, fmt.Errorf("failed to load public key from SSH: %w", err)
+		}
+		verifiers = append(verifiers, v)
 	} else if strings.HasPrefix(keyRef, "-----BEGIN") {
-		key, err := ParsePublicKey(keyRef)
+		key, err := ParseSSHPublicKey(keyRef)
 		if err != nil {
 			return nil, err
 		}
@@ -382,21 +393,51 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
 		verifiers = append(verifiers, v)
+	} else if strings.HasPrefix(keyRef, "ac://") {
+		// Acorn Manager
+		acKeys, err := getAcornPublicKeys(strings.TrimPrefix(keyRef, "ac://"))
+		if err != nil {
+			return nil, fmt.Errorf("failed to load public keys from Acorn Manager: %w", err)
+		}
+
+		var acVerifiers []signature.Verifier
+		for _, key := range acKeys {
+			v, err := LoadVerifiers(ctx, key.Key, algorithm)
+			if err != nil {
+				logrus.Debugf("failed to load public key from Acorn Manager for %s: %v", keyRef, err)
+				continue
+			}
+			acVerifiers = append(acVerifiers, v...)
+		}
+
+		if len(acVerifiers) == 0 {
+			return nil, fmt.Errorf("no supported public keys found in Acorn Manager for %s", keyRef)
+		}
+
+		verifiers = append(verifiers, acVerifiers...)
 	} else if strings.HasPrefix(keyRef, "gh://") {
 		// gh://
-		sshPubKeys, err := getGitHubPublicKeys(strings.TrimPrefix(keyRef, "gh://"))
+		ghKeys, err := getGitHubPublicKeys(strings.TrimPrefix(keyRef, "gh://"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public keys from GitHub: %w", err)
 		}
 
-		for _, pubKey := range sshPubKeys {
-			v, err := signature.LoadVerifier(pubKey, algorithms[algorithm])
+		var ghVerifiers []signature.Verifier
+
+		for _, key := range ghKeys {
+			v, err := LoadVerifiers(ctx, key.Key, algorithm)
 			if err != nil {
-				logrus.Errorf("failed to load verifier for public key from GitHub (type %T): %v", pubKey, err)
+				logrus.Debugf("failed to load verifier for public key from GitHub (type %T): %v", key, err)
 				continue
 			}
-			verifiers = append(verifiers, v)
+			ghVerifiers = append(ghVerifiers, v...)
 		}
+
+		if len(ghVerifiers) == 0 {
+			return nil, fmt.Errorf("no supported public keys found in GitHub for %s", keyRef)
+		}
+
+		verifiers = append(verifiers, ghVerifiers...)
 	} else {
 		// schemes: k8s://, pkcs11://, gitlab://
 		v, err := cosignature.PublicKeyFromKeyRef(ctx, keyRef)
