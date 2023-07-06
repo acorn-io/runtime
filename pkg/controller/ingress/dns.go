@@ -39,6 +39,11 @@ func NewDNSHandler() router.Handler {
 
 // Handle calls the AcornDNS service to create records for ingresses if the acorn-dns feature is enabled
 func (h *handler) Handle(req router.Request, resp router.Response) error {
+	ingress := req.Object.(*netv1.Ingress)
+	if ingress.Name != system.IngressName {
+		return nil
+	}
+
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
 		return err
@@ -59,7 +64,6 @@ func (h *handler) Handle(req router.Request, resp router.Response) error {
 		return nil
 	}
 
-	ingress := req.Object.(*netv1.Ingress)
 	var hash string
 	var requests []dns.RecordRequest
 	if slices.Contains(cfg.ClusterDomains, domain) {
@@ -84,6 +88,9 @@ func (h *handler) Handle(req router.Request, resp router.Response) error {
 	}
 
 	if hash != ingress.Annotations[labels.AcornDNSHash] {
+		if ingress.Annotations == nil {
+			ingress.Annotations = map[string]string{}
+		}
 		ingress.Annotations[labels.AcornDNSHash] = hash
 		err = req.Client.Update(req.Ctx, ingress)
 		if err != nil {

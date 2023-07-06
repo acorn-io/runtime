@@ -2,6 +2,8 @@ package dns
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -14,7 +16,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -42,14 +43,14 @@ func (d *Daemon) RenewAndSync(ctx context.Context) {
 		Steps:    10,
 		Cap:      300 * time.Second,
 	}, func(ctx context.Context) (done bool, err error) {
-		return d.internal(ctx)
+		return d.renewAndSync(ctx)
 	})
 	if err != nil {
 		logrus.Errorf("Couldn't complete RenewAndSync: %v", err)
 	}
 }
 
-func (d *Daemon) internal(ctx context.Context) (bool, error) {
+func (d *Daemon) renewAndSync(ctx context.Context) (bool, error) {
 	cfg, err := config.Get(ctx, d.client)
 	if err != nil {
 		logrus.Errorf("Failed to get config: %v", err)
@@ -61,71 +62,74 @@ func (d *Daemon) internal(ctx context.Context) (bool, error) {
 		return true, nil
 	}
 
-	logrus.Infof("Renewing and syncing AcornDNS")
+	logrus.Infof("Renewing and syncing AcornDNS...")
 
+	dnsSecret, domain, token, err := d.getDNSSecret(ctx)
+	if err != nil {
+		logrus.Errorf("Failed to get DNS secret: %v", err)
+		return false, nil
+	}
+
+	if err := d.syncIngress(ctx, domain, token, *cfg.AcornDNSEndpoint, dnsSecret); err != nil {
+		logrus.Errorf("Failed to sync ingress: %v", err)
+		return false, nil
+	}
+
+	logrus.Infof("Renewed and synced AcornDNS!")
+
+	return true, nil
+}
+
+func (d *Daemon) getDNSSecret(ctx context.Context) (secret *corev1.Secret, domain string, token string, err error) {
 	dnsSecret := &corev1.Secret{}
 	err = d.client.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			logrus.Infof("DNS secret %v/%v not found, not proceeding with DNS renewal", system.Namespace, system.DNSSecretName)
-			return true, nil
+			return secret, domain, token, fmt.Errorf("DNS secret %v/%v not found, not proceeding with DNS renewal", system.Namespace, system.DNSSecretName)
 		}
-		logrus.Errorf("Problem getting DNS secret %v/%v: %v", system.Namespace, system.DNSSecretName, err)
-		return false, nil
+		return secret, domain, token, fmt.Errorf("problem getting DNS secret %v/%v: %v", system.Namespace, system.DNSSecretName, err)
 	}
 
-	var domain, token string
 	domain = string(dnsSecret.Data["domain"])
 	token = string(dnsSecret.Data["token"])
 	if domain == "" || token == "" {
-		logrus.Errorf("DNS secret %v/%v exists but is missing domain (%v) or token", system.Namespace, system.DNSSecretName, domain)
-		return false, nil
+		return secret, domain, token, fmt.Errorf("DNS secret %v/%v exists but is missing domain (%v) or token", system.Namespace, system.DNSSecretName, domain)
 	}
+	return secret, domain, token, nil
+}
 
-	var ingresses netv1.IngressList
-	err = d.client.List(ctx, &ingresses, &kclient.ListOptions{
-		LabelSelector: klabels.SelectorFromSet(map[string]string{
-			labels.AcornManaged: "true",
-		}),
-	})
+func (d *Daemon) syncIngress(ctx context.Context, domain, token, acornDNSEndpoint string, secret *corev1.Secret) error {
+	var ingress netv1.Ingress
+	err := d.client.Get(ctx, router.Key(system.Namespace, system.IngressName), &ingress)
 	if err != nil {
-		logrus.Errorf("Failed to list ingresses for DNS renewal: %v", err)
-		return false, nil
+		return fmt.Errorf("failed to get %v for DNS renewal: %v", system.IngressName, err)
 	}
 
-	var recordRequests []RecordRequest
-	ingressMap := make(map[FQDNTypePair]netv1.Ingress)
-	for _, ingress := range ingresses.Items {
-		rrs, _ := ToRecordRequestsAndHash(domain, &ingress)
-		recordRequests = append(recordRequests, rrs...)
-		for _, r := range rrs {
-			ingressMap[FQDNTypePair{FQDN: r.Name, Type: string(r.Type)}] = ingress
-		}
-	}
+	// Build the system.IngressName ingress into a list of RecordRequests
+	recordRequests, _ := ToRecordRequestsAndHash(domain, &ingress)
 
+	// Send the recordRequests to AcornDNS to renew and find any out of sync records
 	dnsClient := NewClient()
-	response, err := dnsClient.Renew(*cfg.AcornDNSEndpoint, domain, token, RenewRequest{Records: recordRequests, Version: version.Get().Tag})
+	response, err := dnsClient.Renew(acornDNSEndpoint, domain, token, RenewRequest{Records: recordRequests, Version: version.Get().Tag})
 	if err != nil {
 		if IsDomainAuthError(err) {
-			if err := ClearDNSToken(ctx, d.client, dnsSecret); err != nil {
-				logrus.Errorf("Failed to clear DNS token: %v", err)
+			if clearErr := ClearDNSToken(ctx, d.client, secret); err != nil {
+				err = errors.Join(fmt.Errorf("failed to clear DNS token: %v", clearErr))
 			}
 		}
-		logrus.Errorf("Failed to complete DNS renew call with error: %v", err)
-		return false, nil
+		return err
 	}
 
-	for _, outOfSync := range response.OutOfSyncRecords {
-		i, ok := ingressMap[outOfSync]
-		if ok {
-			delete(i.Annotations, labels.AcornDNSHash)
-			err = d.client.Update(ctx, &i)
-			if err != nil {
-				logrus.Errorf("Problem updating ingress %v: %v", i.Name, err)
-				return false, nil
-			}
+	// If there were any out of sync records, remove the hash from the ingress so it
+	// gets reprocessed by the acorn-controller. This will cause any out of sync records
+	// to be created or updated as necessary.
+	if len(response.OutOfSyncRecords) > 0 {
+		delete(ingress.Annotations, labels.AcornDNSHash)
+		err = d.client.Update(ctx, &ingress)
+		if err != nil {
+			return fmt.Errorf("problem updating %v ingress: %v", ingress.Name, err)
 		}
 	}
 
-	return true, nil
+	return nil
 }

@@ -8,6 +8,8 @@ const (
 	LEAccountSecretName  = "acorn-le-account"
 	DefaultUserNamespace = "acorn"
 	DNSSecretName        = "acorn-dns"
+	IngressName          = "acorn-ingress"
+	ServiceName          = "acorn-service"
 
 	CustomCABundleSecretName = "cabundle"
 	CustomCABundleSecretVolumeName

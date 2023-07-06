@@ -33,7 +33,9 @@ func ToRecordRequestsAndHash(domain string, ingress *v1.Ingress) ([]RecordReques
 
 	var hosts []string
 	for _, rule := range ingress.Spec.Rules {
-		if strings.HasSuffix(rule.Host, domain) {
+		if rule.Host == strings.TrimPrefix(domain, ".") {
+			hosts = append(hosts, "*")
+		} else if strings.HasSuffix(rule.Host, domain) {
 			hosts = append(hosts, strings.TrimSuffix(rule.Host, domain))
 		}
 	}

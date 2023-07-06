@@ -11,9 +11,11 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/tls"
 	"github.com/acorn-io/runtime/pkg/dns"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/publish"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	netv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
@@ -40,71 +42,13 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	dnsSecret := &corev1.Secret{}
-	err = req.Client.Get(req.Ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	domain := string(dnsSecret.Data["domain"])
-	token := string(dnsSecret.Data["token"])
-
-	state, err := purgeRecordsIfDisabling(req, domain, cfg, dnsSecret, token, h.dns)
+	domain, err := h.handleSecret(req, resp, cfg)
 	if err != nil {
 		return err
 	}
 
-	if !strings.EqualFold(*cfg.AcornDNS, "disabled") && (domain == "" || token == "") {
-		if domain != "" {
-			logrus.Infof("Clearing AcornDNS domain  %v", domain)
-		}
-		domain, token, err = h.dns.ReserveDomain(*cfg.AcornDNSEndpoint)
-		if err != nil {
-			return fmt.Errorf("problem reserving domain: %w", err)
-		}
-		logrus.Infof("Obtained AcornDNS domain: %v", domain)
-	}
-
-	if dnsSecret.Name == "" {
-		// Secret doesn't exist. Create it
-		return req.Client.Create(req.Ctx, &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      system.DNSSecretName,
-				Namespace: system.Namespace,
-				Annotations: map[string]string{
-					labels.AcornDNSState: state,
-				},
-				Labels: map[string]string{
-					labels.AcornManaged: "true",
-				},
-			},
-			Data: map[string][]byte{"domain": []byte(domain), "token": []byte(token)},
-		})
-	}
-
-	// Secret exists. Update it
-	sec := &corev1.Secret{}
-	err = req.Client.Get(req.Ctx, client.ObjectKey{
-		Name:      system.DNSSecretName,
-		Namespace: system.Namespace,
-	}, uncached.Get(sec))
-	if err != nil {
+	if err = h.handleIngress(req, resp, domain, cfg.AcornDNS, cfg.IngressClassName); err != nil {
 		return err
-	}
-
-	if sec.Annotations[labels.AcornDNSState] != state ||
-		string(sec.Data["domain"]) != domain ||
-		string(sec.Data["token"]) != token {
-		sec.Annotations[labels.AcornDNSState] = state
-		sec.Data = map[string][]byte{"domain": []byte(domain), "token": []byte(token)}
-		if err := req.Client.Update(req.Ctx, sec); err != nil {
-			return err
-		}
-	}
-
-	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
-		if err := tls.ProvisionWildcardCert(req, resp, domain, token); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -143,4 +87,143 @@ func purgeRecordsIfDisabling(req router.Request, domain string, cfg *apiv1.Confi
 		}
 	}
 	return state, nil
+}
+
+func (h *configHandler) handleSecret(req router.Request, resp router.Response, cfg *apiv1.Config) (string, error) {
+	dnsSecret := &corev1.Secret{}
+	err := req.Client.Get(req.Ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return "", err
+	}
+	domain := string(dnsSecret.Data["domain"])
+	token := string(dnsSecret.Data["token"])
+
+	state, err := purgeRecordsIfDisabling(req, domain, cfg, dnsSecret, token, h.dns)
+	if err != nil {
+		return "", err
+	}
+
+	if !strings.EqualFold(*cfg.AcornDNS, "disabled") && (domain == "" || token == "") {
+		if domain != "" {
+			logrus.Infof("Clearing AcornDNS domain  %v", domain)
+		}
+		domain, token, err = h.dns.ReserveDomain(*cfg.AcornDNSEndpoint)
+		if err != nil {
+			return "", fmt.Errorf("problem reserving domain: %w", err)
+		}
+		logrus.Infof("Obtained AcornDNS domain: %v", domain)
+	}
+
+	if dnsSecret.Name == "" {
+		// Secret doesn't exist. Create it
+		return domain, req.Client.Create(req.Ctx, &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      system.DNSSecretName,
+				Namespace: system.Namespace,
+				Annotations: map[string]string{
+					labels.AcornDNSState: state,
+				},
+				Labels: map[string]string{
+					labels.AcornManaged: "true",
+				},
+			},
+			Data: map[string][]byte{"domain": []byte(domain), "token": []byte(token)},
+		})
+	}
+
+	// Secret exists. Update it
+	sec := &corev1.Secret{}
+	err = req.Client.Get(req.Ctx, client.ObjectKey{
+		Name:      system.DNSSecretName,
+		Namespace: system.Namespace,
+	}, uncached.Get(sec))
+	if err != nil {
+		return "", err
+	}
+
+	if sec.Annotations[labels.AcornDNSState] != state ||
+		string(sec.Data["domain"]) != domain ||
+		string(sec.Data["token"]) != token {
+		sec.Annotations[labels.AcornDNSState] = state
+		sec.Data = map[string][]byte{"domain": []byte(domain), "token": []byte(token)}
+		if err := req.Client.Update(req.Ctx, sec); err != nil {
+			return "", err
+		}
+	}
+
+	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
+		if err := tls.ProvisionWildcardCert(req, resp, domain, token); err != nil {
+			return "", err
+		}
+	}
+
+	return domain, nil
+}
+
+func (h *configHandler) handleIngress(req router.Request, resp router.Response, domain string, acornDNS *string, ingressClassName *string) error {
+	if acornDNS == nil || *acornDNS == "disabled" {
+		return nil
+	}
+
+	var err error
+	if ingressClassName == nil {
+		ingressClassName, err = publish.IngressClassNameIfNoDefault(req.Ctx, req.Client)
+		if err != nil {
+			return err
+		}
+	}
+
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      system.ServiceName,
+			Namespace: system.Namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
+				Port: 80,
+			}},
+			Selector: map[string]string{
+				"app": system.Namespace,
+			},
+		},
+	}
+
+	pt := netv1.PathTypeImplementationSpecific
+	ingress := &netv1.Ingress{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: system.IngressName,
+			Labels: map[string]string{
+				labels.AcornManaged: "true",
+			},
+		},
+		Spec: netv1.IngressSpec{
+			IngressClassName: ingressClassName,
+			Rules: []netv1.IngressRule{
+				{
+					Host: strings.TrimPrefix(domain, "."), // Needed since domain starts with a "."
+					IngressRuleValue: netv1.IngressRuleValue{
+						HTTP: &netv1.HTTPIngressRuleValue{
+							Paths: []netv1.HTTPIngressPath{
+								{
+									Path:     "/",
+									PathType: &pt,
+									Backend: netv1.IngressBackend{
+										Service: &netv1.IngressServiceBackend{
+											Name: system.ServiceName,
+											Port: netv1.ServiceBackendPort{
+												Number: 80,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resp.Objects(svc, ingress)
+	return nil
 }

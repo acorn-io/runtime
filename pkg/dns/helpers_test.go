@@ -28,6 +28,11 @@ func TestToRecordRequests(t *testing.T) {
 
 	// If the only hostname is "localhost", we can't actually CNAME to localhost, so expect an A record for 127.0.0.1
 	assrt(t, ".foo.com", []string{"app.foo.com"}, nil, nil, []string{"localhost"}, []RecordRequest{{"app", RecordTypeA, []string{"127.0.0.1"}}})
+
+	// Wildcard record cases for IPv4, IPv6 and Hostnames being in the Ingress' status.
+	assrt(t, ".foo.com", []string{"foo.com"}, []string{"127.0.0.1"}, nil, nil, []RecordRequest{{"*", RecordTypeA, []string{"127.0.0.1"}}})
+	assrt(t, ".foo.com", []string{"foo.com"}, nil, []string{"::1"}, nil, []RecordRequest{{"*", RecordTypeAAAA, []string{"::1"}}})
+	assrt(t, ".foo.com", []string{"foo.com"}, nil, nil, []string{"hostname.com"}, []RecordRequest{{"*", RecordTypeCname, []string{"hostname.com"}}})
 }
 
 func assrt(t *testing.T, domain string, specRulesHosts, statusIPv4s, statusIPv6s, statusHosts []string, expectedRRs []RecordRequest) {
