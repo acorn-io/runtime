@@ -76,6 +76,14 @@ acorn:project:view
 acorn:project:view-logs
 ```
 
+### Shared Image Registry
+
+Default installations of Acorn Runtime will deploy an OCI registry into Kubernetes, which will be the default image storage for all projects.
+This registry is not secured with credentials.
+Acorn's API server performs basic checks to try to prevent users from trivially accessing images that belong to other projects, but this is not guaranteed.
+
+You can configure Acorn to use an external OCI registry, but the credentials are shared between all projects, so the security implications around image access are the same. Future releases will improve upon this by providing a framework for isolating registries.
+
 ## Credentials
 
 Credentials refer to credentials used to pull from and/or push to OCI registries.
