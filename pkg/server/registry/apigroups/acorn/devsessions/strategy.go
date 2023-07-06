@@ -37,7 +37,11 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 
 	app.Spec = *devSession.Spec.SpecOverride
 	app.Status.DevSession = nil
-	return v.appValidator.Validate(ctx, app)
+
+	errs := v.appValidator.Validate(ctx, app)
+	// Super important that we set the image perms from validation
+	devSession.Spec.SpecOverride.ImageGrantedPermissions = app.Spec.ImageGrantedPermissions
+	return errs
 }
 
 func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) (result field.ErrorList) {
@@ -64,5 +68,8 @@ func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	newApp.Spec = *newObj.Spec.SpecOverride
 	newApp.Status.DevSession = nil
 
-	return v.appValidator.AllowNestedUpdate().ValidateUpdate(ctx, newApp, oldApp)
+	errs := v.appValidator.AllowNestedUpdate().ValidateUpdate(ctx, newApp, oldApp)
+	// Super important that we set the image perms from validation
+	newObj.Spec.SpecOverride.ImageGrantedPermissions = newApp.Spec.ImageGrantedPermissions
+	return errs
 }

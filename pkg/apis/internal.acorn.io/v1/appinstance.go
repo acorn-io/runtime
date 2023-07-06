@@ -3,6 +3,8 @@
 package v1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -83,26 +85,31 @@ const (
 )
 
 type AppInstanceSpec struct {
-	Region              string           `json:"region,omitempty"`
-	Labels              []ScopedLabel    `json:"labels,omitempty"`
-	Annotations         []ScopedLabel    `json:"annotations,omitempty"`
-	Image               string           `json:"image,omitempty"`
-	Stop                *bool            `json:"stop,omitempty"`
-	Profiles            []string         `json:"profiles,omitempty"`
-	Volumes             []VolumeBinding  `json:"volumes,omitempty"`
-	Secrets             []SecretBinding  `json:"secrets,omitempty"`
-	Environment         []NameValue      `json:"environment,omitempty"`
-	PublishMode         PublishMode      `json:"publishMode,omitempty"`
-	TargetNamespace     string           `json:"targetNamespace,omitempty"`
-	Links               []ServiceBinding `json:"services,omitempty"`
-	Publish             []PortBinding    `json:"ports,omitempty"`
-	DeployArgs          GenericMap       `json:"deployArgs,omitempty"`
-	Permissions         []Permissions    `json:"permissions,omitempty"`
-	AutoUpgrade         *bool            `json:"autoUpgrade,omitempty"`
-	NotifyUpgrade       *bool            `json:"notifyUpgrade,omitempty"`
-	AutoUpgradeInterval string           `json:"autoUpgradeInterval,omitempty"`
-	ComputeClasses      ComputeClassMap  `json:"computeClass,omitempty"`
-	Memory              MemoryMap        `json:"memory,omitempty"`
+	Region                  string           `json:"region,omitempty"`
+	Labels                  []ScopedLabel    `json:"labels,omitempty"`
+	Annotations             []ScopedLabel    `json:"annotations,omitempty"`
+	Image                   string           `json:"image,omitempty"`
+	Stop                    *bool            `json:"stop,omitempty"`
+	Profiles                []string         `json:"profiles,omitempty"`
+	Volumes                 []VolumeBinding  `json:"volumes,omitempty"`
+	Secrets                 []SecretBinding  `json:"secrets,omitempty"`
+	Environment             []NameValue      `json:"environment,omitempty"`
+	PublishMode             PublishMode      `json:"publishMode,omitempty"`
+	TargetNamespace         string           `json:"targetNamespace,omitempty"`
+	Links                   []ServiceBinding `json:"services,omitempty"`
+	Publish                 []PortBinding    `json:"ports,omitempty"`
+	DeployArgs              GenericMap       `json:"deployArgs,omitempty"`
+	Permissions             []Permissions    `json:"permissions,omitempty"`
+	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"`
+	AutoUpgrade             *bool            `json:"autoUpgrade,omitempty"`
+	NotifyUpgrade           *bool            `json:"notifyUpgrade,omitempty"`
+	AutoUpgradeInterval     string           `json:"autoUpgradeInterval,omitempty"`
+	ComputeClasses          ComputeClassMap  `json:"computeClass,omitempty"`
+	Memory                  MemoryMap        `json:"memory,omitempty"`
+}
+
+func (in *AppInstanceSpec) GetPermissions() []Permissions {
+	return append(in.Permissions, in.ImageGrantedPermissions...)
 }
 
 func (in *AppInstance) GetStopped() bool {
@@ -117,20 +124,34 @@ func (in *AppInstanceSpec) GetNotifyUpgrade() bool {
 	return in.NotifyUpgrade != nil && *in.NotifyUpgrade
 }
 
-func (in *AppInstanceSpec) GetProfiles(devMode bool) []string {
-	if devMode {
-		found := false
-		for _, profile := range in.Profiles {
-			if profile == "dev?" {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return append([]string{"dev?"}, in.Profiles...)
+func addProfile(profiles []string, toAdd string) []string {
+	found := true
+	optional := strings.HasSuffix(toAdd, "?")
+	nonOptionalName := toAdd[:len(toAdd)-1]
+	for _, profile := range profiles {
+		if profile == toAdd {
+			found = true
+			break
+		} else if optional && profile == nonOptionalName {
+			found = true
+			break
 		}
 	}
-	return in.Profiles
+	if !found {
+		return append([]string{toAdd}, profiles...)
+	}
+	return profiles
+}
+
+func (in *AppInstanceSpec) GetProfiles(devMode bool) []string {
+	profiles := in.Profiles
+	if devMode {
+		profiles = addProfile(profiles, "devMode?")
+	}
+	if in.GetAutoUpgrade() {
+		profiles = addProfile(profiles, "autoUpgrade?")
+	}
+	return profiles
 }
 
 type ServiceBindings []ServiceBinding

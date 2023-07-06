@@ -51,12 +51,8 @@ func (w *watcher) Trigger() {
 	}
 }
 
-func (w *watcher) readFiles(ctx context.Context) []string {
-	files, err := w.imageAndArgs.WatchFiles(ctx, w.c)
-	if err != nil {
-		logrus.Errorf("failed to resolve files to watch: %v", err)
-	}
-	return files
+func (w *watcher) readFiles(ctx context.Context) ([]string, error) {
+	return w.imageAndArgs.WatchFiles(ctx, w.c)
 }
 
 func (w *watcher) foundChanges() bool {
@@ -89,15 +85,19 @@ func timestamps(files []string) []time.Time {
 }
 
 func (w *watcher) updateTimestamps(ctx context.Context) {
-	files := w.readFiles(ctx)
-	w.watching = files
-	w.watchingTS = timestamps(files)
+	files, err := w.readFiles(ctx)
+	if err == nil {
+		w.watching = files
+	} else {
+		logrus.Errorf("failed to resolve files to watch: %v", err)
+	}
+	w.watchingTS = timestamps(w.watching)
 }
 
 func (w *watcher) Wait(ctx context.Context) error {
 	init := false
 	w.initOnce.Do(func() {
-		w.watching = w.readFiles(ctx)
+		w.watching, _ = w.readFiles(ctx)
 		init = true
 	})
 
@@ -153,7 +153,6 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 		}
 	}()
 
-outer:
 	for {
 		if err := watcher.Wait(ctx); err != nil {
 			return err
@@ -183,7 +182,8 @@ outer:
 				continue
 			} else if err != nil {
 				logrus.Errorf("Failed to run/update app: %v", err)
-				continue outer
+				time.Sleep(5 * time.Second)
+				continue
 			} else {
 				lockOnce.Do(func() {
 					go func() {
@@ -467,7 +467,7 @@ func Dev(ctx context.Context, client client.Client, opts *Options) error {
 	}
 
 	optsCopy := *opts
-	optsCopy.ImageSource.Profiles = append([]string{"dev?"}, opts.ImageSource.Profiles...)
+	optsCopy.ImageSource.Profiles = append([]string{"devMode?"}, opts.ImageSource.Profiles...)
 
 	err = buildLoop(ctx, client, hash, &optsCopy)
 	if errors.Is(err, context.Canceled) {

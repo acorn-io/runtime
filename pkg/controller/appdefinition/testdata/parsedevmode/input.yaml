@@ -8,7 +8,7 @@ status:
   appImage:
     acornfile: |
       args: image: "not-foo"
-      profiles: dev: image: "foo"
+      profiles: devMode: image: "foo"
       containers: {
         oneimage: image: args.image
       }

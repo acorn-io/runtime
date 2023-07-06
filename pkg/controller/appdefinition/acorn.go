@@ -95,11 +95,6 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 		pullSecrets.ForAcorn(acornName, image)
 	}
 
-	originalImage := acorn.Image
-	if acorn.Build != nil && acorn.Build.OriginalImage != "" {
-		originalImage = acorn.Build.OriginalImage
-	}
-
 	labelMap := labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Labels, appInstance.Spec.Labels, acorn.Labels),
 		labels.Managed(appInstance,
 			labels.AcornAcornName, acornName,
@@ -118,7 +113,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Labels:    labelMap,
 			Annotations: labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
 				map[string]string{
-					labels.AcornOriginalImage: originalImage,
+					labels.AcornOriginalImage: acorn.GetOriginalImage(),
 					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
 				}),
 		},
@@ -135,8 +130,8 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			DeployArgs:          acorn.DeployArgs,
 			Publish:             acorn.Publish,
 			Stop:                typed.Pointer(appInstance.GetStopped()),
-			Environment:         append(acorn.Environment, appInstance.Spec.Environment...),
-			Permissions:         trimPermPrefix(appInstance.Spec.Permissions, acornName),
+			Environment:         append(acorn.Environment, trimEnvPrefix(appInstance.Spec.Environment, acornName)...),
+			Permissions:         trimPermPrefix(appInstance.Spec.GetPermissions(), acornName),
 			AutoUpgrade:         acorn.AutoUpgrade,
 			AutoUpgradeInterval: acorn.AutoUpgradeInterval,
 			NotifyUpgrade:       acorn.NotifyUpgrade,
@@ -146,9 +141,26 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 	return acornInstance
 }
 
+func trimEnvPrefix(envs []v1.NameValue, name string) (result []v1.NameValue) {
+	prefix := name + "."
+	for _, env := range envs {
+		if strings.Contains(env.Name, ".") {
+			if strings.HasPrefix(env.Name, prefix) {
+				result = append(result, v1.NameValue{
+					Name:  strings.TrimPrefix(env.Name, prefix),
+					Value: env.Value,
+				})
+			}
+		} else {
+			result = append(result, env)
+		}
+	}
+	return
+}
+
 func trimPermPrefix(perms []v1.Permissions, name string) (result []v1.Permissions) {
+	prefix := name + "."
 	for _, perm := range perms {
-		prefix := name + "."
 		if strings.HasPrefix(perm.ServiceName, prefix) {
 			result = append(result, v1.Permissions{
 				ServiceName: strings.TrimPrefix(perm.ServiceName, prefix),

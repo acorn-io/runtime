@@ -146,7 +146,10 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 			if appEnvNames.Has(env.Name) {
 				continue
 			}
-			result = append(result, interpolator.ToEnv(env.Name, env.Value))
+			interpolated, ok := interpolator.ToEnv(env.Name, env.Value)
+			if ok {
+				result = append(result, interpolated)
+			}
 		} else {
 			if env.Secret.Key == "" {
 				continue
@@ -168,7 +171,10 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 		}
 	}
 	for _, appEnv := range appEnvs {
-		result = append(result, interpolator.ToEnv(appEnv.Name, appEnv.Value))
+		interpolated, ok := interpolator.ToEnv(appEnv.Name, appEnv.Value)
+		if ok {
+			result = append(result, interpolated)
+		}
 	}
 	return
 }
@@ -439,7 +445,7 @@ func jobLabels(appInstance *v1.AppInstance, container v1.Container, name string,
 
 func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
 	labelMap := labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
-	return mergeConLabels(labelMap, appInstance, name, kv...)
+	return mergeConLabels(labelMap, appInstance, name, append([]string{labels.AcornAppPublicName, publicname.Get(appInstance)}, kv...)...)
 }
 
 func routerLabels(appInstance *v1.AppInstance, router v1.Router, name string, kv ...string) map[string]string {
@@ -612,7 +618,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
-	podLabels := containerLabels(appInstance, container, name, labels.AcornAppPublicName, publicname.Get(appInstance))
+	podLabels := containerLabels(appInstance, container, name)
 	deploymentLabels := containerLabels(appInstance, container, name)
 	matchLabels := selectorMatchLabels(appInstance, name)
 
@@ -681,7 +687,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.Permissions); perms.HasRules() {
+		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.GetPermissions()); perms.HasRules() {
 			result = append(result, toPermissions(perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)...)
 		}
 		result = append(result, sa, dep, pdb.ToPodDisruptionBudget(dep))

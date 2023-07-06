@@ -1368,7 +1368,8 @@ func ParseNameValues(fillEnv bool, s ...string) (result []NameValue) {
 	for _, s := range s {
 		k, v, _ := strings.Cut(s, "=")
 		if v == "" && fillEnv {
-			v = os.Getenv(k)
+			parts := strings.Split(k, ".")
+			v = os.Getenv(parts[len(parts)-1])
 		}
 		result = append(result, NameValue{
 			Name:  k,
