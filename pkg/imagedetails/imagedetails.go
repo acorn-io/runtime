@@ -17,7 +17,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, opts ...remote.Option) (*apiv1.ImageDetails, error) {
+func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, noDefaultReg bool, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
 
@@ -43,7 +43,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 	err := c.Get(ctx, router.Key(namespace, name), image)
 	if err != nil && !apierror.IsNotFound(err) {
 		return nil, err
-	} else if err != nil && apierror.IsNotFound(err) && tags.IsLocalReference(name) {
+	} else if err != nil && apierror.IsNotFound(err) && (tags.IsLocalReference(name) || (noDefaultReg && tags.HasNoSpecifiedRegistry(imageName))) {
 		return nil, err
 	} else if err == nil {
 		namespace = image.Namespace

@@ -24,7 +24,7 @@ func TestParamsHelp(t *testing.T) {
 		"--i-default=3",
 		"--complex",
 		"@testdata/params/test.cue",
-	}, nil, nil).GetAppDefinition(context.Background(), nil)
+	}, nil, nil, false).GetAppDefinition(context.Background(), nil)
 	assert.Equal(t, pflag.ErrHelp, err)
 }
 
@@ -42,7 +42,7 @@ func TestParams(t *testing.T) {
 		"--i-default=3",
 		"--complex",
 		"@testdata/params/test.cue",
-	}, nil, nil).GetAppDefinition(context.Background(), nil)
+	}, nil, nil, false).GetAppDefinition(context.Background(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}

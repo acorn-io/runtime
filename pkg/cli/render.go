@@ -32,7 +32,7 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	imageAndArgs := imagesource.NewImageSource(s.File, args, s.Profile, nil)
+	imageAndArgs := imagesource.NewImageSource(s.File, args, s.Profile, nil, false)
 
 	appDef, _, err := imageAndArgs.GetAppDefinition(cmd.Context(), c)
 	if err != nil {

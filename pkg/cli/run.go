@@ -229,7 +229,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	var (
-		imageSource = imagesource.NewImageSource(s.File, args, s.Profile, nil)
+		imageSource = imagesource.NewImageSource(s.File, args, s.Profile, nil, s.AutoUpgrade != nil && *s.AutoUpgrade)
 		app         *apiv1.App
 		updated     bool
 	)

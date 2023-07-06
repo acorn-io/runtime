@@ -36,7 +36,7 @@ type ImageDetailStrategy struct {
 }
 
 func (s *ImageDetailStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
-	return imagedetails.GetImageDetails(ctx, s.client, namespace, name, nil, nil, "", s.remoteOpt)
+	return imagedetails.GetImageDetails(ctx, s.client, namespace, name, nil, nil, "", false, s.remoteOpt)
 }
 
 func (s *ImageDetailStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
@@ -56,7 +56,7 @@ func (s *ImageDetailStrategy) Create(ctx context.Context, obj types.Object) (typ
 			opts = append(opts, remote.WithAuthFromKeychain(images.NewSimpleKeychain(ref.Context(), *details.Auth, nil)))
 		}
 	}
-	return imagedetails.GetImageDetails(ctx, s.client, ns, details.Name, details.Profiles, details.DeployArgs, details.NestedDigest, opts...)
+	return imagedetails.GetImageDetails(ctx, s.client, ns, details.Name, details.Profiles, details.DeployArgs, details.NestedDigest, details.NoDefaultRegistry, opts...)
 }
 
 func (s *ImageDetailStrategy) New() types.Object {
