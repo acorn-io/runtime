@@ -88,6 +88,10 @@ func (c *Controller) initData(ctx context.Context) error {
 			Name:      "acorn-builder",
 			Namespace: system.ImagesNamespace,
 		},
+	}, &v1.ProjectInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "acorn",
+		},
 	})
 	if err != nil {
 		return err

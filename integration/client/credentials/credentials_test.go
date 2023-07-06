@@ -21,9 +21,9 @@ func TestCredentialCreate(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,9 +67,9 @@ func TestCredentialList(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,9 +117,9 @@ func TestCredentialGet(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,9 +153,9 @@ func TestCredentialUpdate(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,9 +196,9 @@ func TestCredentialDelete(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

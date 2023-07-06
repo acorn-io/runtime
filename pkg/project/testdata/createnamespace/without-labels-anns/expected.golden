@@ -1,0 +1,11 @@
+`apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/project: "true"
+  name: acorn
+spec: {}
+status: {}
+`

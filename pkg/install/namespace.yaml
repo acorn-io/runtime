@@ -7,14 +7,6 @@ metadata:
 kind: Namespace
 apiVersion: v1
 metadata:
-  name: acorn-system
-
----
-kind: Namespace
-apiVersion: v1
-metadata:
-  name: acorn
-  labels:
-    acorn.io/project: "true"
   annotations:
-    acorn.io/calculated-project-default-region: "local"
+    apply.acorn.io/create: "false"
+  name: acorn-system

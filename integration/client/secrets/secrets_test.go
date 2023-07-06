@@ -14,9 +14,9 @@ func TestSecretCreate(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,9 +43,9 @@ func TestSecretList(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,9 +82,9 @@ func TestSecretGet(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,9 +113,9 @@ func TestSecretReveal(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,9 +145,9 @@ func TestSecretUpdate(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,9 +185,9 @@ func TestSecretDelete(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -20,9 +20,9 @@ func TestDefaultClientInfoOneNamespace(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempProject(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, ns.Name, ns.Name)
+	c, err := client.New(restConfig, project.Name, project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,11 +44,11 @@ func TestDefaultClientInfoTwoNamespace(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 
 	// Create two projects
-	ns1Spec := helper.NamedTempProject(t, kclient, "test2-project1")
-	_ = helper.NamedTempProject(t, kclient, "test2-project2")
+	project1 := helper.TempProject(t, kclient)
+	_ = helper.TempProject(t, kclient)
 
 	// create instance of default-client for a single namespace
-	c, err := client.New(restConfig, ns1Spec.Name, ns1Spec.Namespace)
+	c, err := client.New(restConfig, project1.Name, project1.Namespace)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,8 +74,8 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 
 	// interface directly with k8 client to create projects
 	kclient := helper.MustReturn(kclient.Default)
-	ns1 := helper.TempProject(t, kclient)
-	ns2 := helper.TempProject(t, kclient)
+	project1 := helper.TempProject(t, kclient)
+	project2 := helper.TempProject(t, kclient)
 	time.Sleep(time.Millisecond * 100)
 
 	// Create multiclient to test commands off of
@@ -84,7 +84,7 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	projectNames := []string{ns1.Name, ns2.Name}
+	projectNames := []string{project1.Name, project2.Name}
 
 	infos, err := mc.Info(ctx)
 	if err != nil {

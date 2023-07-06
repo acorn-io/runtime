@@ -19,14 +19,14 @@ func TestImageListGetDelete(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -59,10 +59,10 @@ func TestImageListGetDelete(t *testing.T) {
 }
 
 func TestImageTagMove(t *testing.T) {
-	c, ns := helper.ClientAndNamespace(t)
+	c, project := helper.ClientAndProject(t)
 	ctx := helper.GetCTX(t)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	image2, err := c.AcornImageBuild(ctx, "../testdata/nginx2/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "../testdata/nginx2",
 	})
@@ -102,14 +102,14 @@ func TestImageTag(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_ = client2.NewImage(t, ns.Name)
+	_ = client2.NewImage(t, project.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -156,14 +156,14 @@ func TestImagePush(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_ = client2.NewImage(t, ns.Name)
+	_ = client2.NewImage(t, project.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -199,14 +199,14 @@ func TestImagePull(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	id := client2.NewImage(t, ns.Name)
+	id := client2.NewImage(t, project.Name)
 	tagName := registry + "/test:ci"
 
 	err = c.ImageTag(ctx, id, tagName)
@@ -225,9 +225,9 @@ func TestImagePull(t *testing.T) {
 		}
 	}
 
-	ns = helper.TempNamespace(t, kclient)
+	project = helper.TempProject(t, kclient)
 
-	c, err = client.New(restConfig, "", ns.Name)
+	c, err = client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,14 +262,14 @@ func TestImageDetails(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	id := client2.NewImage(t, ns.Name)
+	id := client2.NewImage(t, project.Name)
 	remoteTagName := registry + "/test:ci"
 
 	err = c.ImageTag(ctx, id, remoteTagName)
@@ -288,14 +288,14 @@ func TestImageDetails(t *testing.T) {
 		}
 	}
 
-	ns = helper.TempNamespace(t, kclient)
+	project = helper.TempProject(t, kclient)
 
-	c, err = client.New(restConfig, "", ns.Name)
+	c, err = client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
 	err = c.ImageTag(ctx, imageID, "foo")
 	if err != nil {
@@ -340,14 +340,14 @@ func TestImageDeleteTwoTags(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -389,14 +389,14 @@ func TestImageBadTag(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	images, err := c.ImageList(ctx)
 	if err != nil {
 		t.Fatal(err)

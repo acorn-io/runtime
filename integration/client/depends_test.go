@@ -41,7 +41,7 @@ func toRevision(t *testing.T, obj kclient.Object) int {
 
 func TestDependsOn(t *testing.T) {
 	ctx := context.Background()
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 	k8sclient := helper.MustReturn(k8sclient.Default)
 	image := depImage(t, c)
 

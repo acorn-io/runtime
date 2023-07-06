@@ -15,7 +15,7 @@ func TestServices(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/main/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/main",
@@ -43,7 +43,7 @@ func TestServiceIgnoreCleanup(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/ignorecleanup/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/ignorecleanup",

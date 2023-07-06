@@ -10,9 +10,6 @@ spec:
     "": sample-compute-class
 status:
   observedGeneration: 1
-  defaults:
-    memory:
-      oneimage: 1048576 # 1Mi
   scheduling:
     oneimage:
       affinity:

@@ -80,7 +80,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		return
 	}
 
-	project := new(apiv1.Project)
+	project := new(v1.ProjectInstance)
 	if err := s.client.Get(ctx, kclient.ObjectKey{Name: app.Namespace}, project); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "images"), app.Spec.Image, err.Error()))
 		return
@@ -241,7 +241,7 @@ func (s *Validator) validateName(app *apiv1.App) error {
 	return nil
 }
 
-func (s *Validator) validateRegion(app *apiv1.App, project *apiv1.Project) error {
+func (s *Validator) validateRegion(app *apiv1.App, project *v1.ProjectInstance) error {
 	if app.Spec.Region == "" {
 		if project.Spec.DefaultRegion == "" && project.Status.DefaultRegion == "" {
 			return fmt.Errorf("no region can be determined because project default region is not set")
@@ -463,7 +463,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 }
 
 // checkScheduling must use apiv1.ComputeCLass to validate the scheduling instead of the Instance counterparts.
-func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *apiv1.Project, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
+func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *v1.ProjectInstance, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	var (
 		memory        = params.Spec.Memory
 		computeClass  = params.Spec.ComputeClasses
@@ -570,7 +570,7 @@ func validateMemoryRunFlags(memory v1.MemoryMap, workloads map[string]v1.Contain
 	return validationErrors
 }
 
-func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace string, appInstanceSpec v1.AppInstanceSpec, appSpec *v1.AppSpec, project *apiv1.Project) *field.Error {
+func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace string, appInstanceSpec v1.AppInstanceSpec, appSpec *v1.AppSpec, project *v1.ProjectInstance) *field.Error {
 	if len(appInstanceSpec.Volumes) == 0 && len(appSpec.Volumes) == 0 {
 		return nil
 	}

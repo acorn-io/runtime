@@ -1,0 +1,16 @@
+`apiVersion: internal.acorn.io/v1
+kind: ProjectInstance
+metadata:
+  creationTimestamp: null
+  name: acorn
+spec:
+  defaultRegion: my-region
+  supportedRegions:
+  - my-region
+  - my-other-region
+status:
+  defaultRegion: my-region
+  supportedRegions:
+  - my-region
+  - my-other-region
+`

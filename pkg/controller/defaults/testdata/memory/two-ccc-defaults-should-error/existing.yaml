@@ -41,9 +41,12 @@ affinity:
           values:
           - bar
 ---
-kind: Namespace
-apiVersion: v1
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app-namespace
-  labels:
-    acorn.io/project: "true"
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local

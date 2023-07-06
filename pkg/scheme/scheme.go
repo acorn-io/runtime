@@ -10,6 +10,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
 	batchv1 "k8s.io/api/batch/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -51,6 +52,7 @@ func AddToScheme(scheme *runtime.Scheme) error {
 	errs = append(errs, apiextensionv1.AddToScheme(scheme))
 	errs = append(errs, discoveryv1.AddToScheme(scheme))
 	errs = append(errs, schedulingv1.AddToScheme(scheme))
+	errs = append(errs, coordinationv1.AddToScheme(scheme))
 	return merr.NewErrors(errs...)
 }
 

@@ -10,7 +10,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/acorn-io/runtime/integration/helper"
 	adminapiv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -41,7 +40,7 @@ func TestVolume(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/volume/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/volume",
@@ -103,7 +102,7 @@ func TestVolumeBadClass(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/volume-bad-class/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/volume-bad-class",
@@ -123,7 +122,7 @@ func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -184,7 +183,7 @@ func TestVolumeBoundBadClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	if err := kclient.List(ctx, storageClasses); err != nil {
@@ -231,7 +230,7 @@ func TestVolumeClassInactive(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta:       metav1.ObjectMeta{Name: "acorn-test-custom"},
@@ -265,7 +264,7 @@ func TestVolumeClassSizeTooSmall(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{Name: "acorn-test-custom"},
@@ -309,7 +308,7 @@ func TestVolumeClassSizeTooLarge(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	volumeClass := adminapiv1.ClusterVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{Name: "acorn-test-custom"},
@@ -353,7 +352,7 @@ func TestVolumeClassRemoved(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -419,7 +418,7 @@ func TestClusterVolumeClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -482,7 +481,7 @@ func TestClusterVolumeClassValuesInAcornfile(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -541,7 +540,7 @@ func TestProjectVolumeClass(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -604,7 +603,7 @@ func TestProjectVolumeClassDefaultSizeValidation(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -671,7 +670,7 @@ func TestProjectVolumeClassDefaultSizeBadValidation(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -718,7 +717,7 @@ func TestProjectVolumeClassValuesInAcornfile(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -777,7 +776,7 @@ func TestImageNameAnnotation(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	k8sclient := helper.MustReturn(kclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/named/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/simple",
@@ -816,7 +815,7 @@ func TestSimple(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/simple",
@@ -840,7 +839,7 @@ func TestDeployParam(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, ns := helper.ClientAndNamespace(t)
+	c, project := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(kclient.Default)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/params/Acornfile", &client.AcornImageBuildOptions{
@@ -863,7 +862,7 @@ func TestDeployParam(t *testing.T) {
 	appInstance, err := run.Run(helper.GetCTX(t), kclient, &v1.AppInstance{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,
@@ -886,9 +885,9 @@ func TestDeployParam(t *testing.T) {
 func TestUsingComputeClasses(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
+	project := helper.TempProject(t, helper.MustReturn(kclient.Default))
 	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
+	c, err := client.New(cfg, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1179,7 +1178,7 @@ func TestJobDelete(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/jobfinalize/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/jobfinalize",
@@ -1211,7 +1210,7 @@ func TestAppWithBadRegion(t *testing.T) {
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/simple",
@@ -1231,7 +1230,7 @@ func TestAppWithBadDefaultRegion(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	c, ns := helper.ClientAndNamespace(t)
+	c, project := helper.ClientAndProject(t)
 
 	storageClasses := new(storagev1.StorageClassList)
 	err := kclient.List(ctx, storageClasses)
@@ -1242,7 +1241,7 @@ func TestAppWithBadDefaultRegion(t *testing.T) {
 
 	volumeClass := adminapiv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ns.Name,
+			Namespace: project.Name,
 			Name:      "acorn-test-custom",
 		},
 		StorageClassName: getStorageClassName(t, storageClasses),
@@ -1296,7 +1295,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 		t.Fatal("error while getting rest config:", err)
 	}
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 	kc := helper.MustReturn(kclient.Default)
 
 	cfg, err := config.Get(ctx, kc)
@@ -1311,7 +1310,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
-	proj1Client, err := client.New(rc, proj1.Name, proj1.Status.Namespace)
+	proj1Client, err := client.New(rc, proj1.Name, proj1.Name)
 	if err != nil {
 		t.Fatal("error creating client for proj1:", err)
 	}
@@ -1320,7 +1319,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while creating project:", err)
 	}
-	proj2Client, err := client.New(rc, proj2.Name, proj2.Status.Namespace)
+	proj2Client, err := client.New(rc, proj2.Name, proj2.Name)
 	if err != nil {
 		t.Fatal("error creating client for proj2:", err)
 	}
@@ -1344,10 +1343,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while building image:", err)
 	}
-	fooApp, err := proj1Client.AppRun(ctx, fooImage.ID, &client.AppRunOptions{
-		Name:            "foo",
-		TargetNamespace: proj1.Namespace,
-	})
+	fooApp, err := proj1Client.AppRun(ctx, fooImage.ID, &client.AppRunOptions{Name: "foo"})
 	if err != nil {
 		t.Fatal("error while running app:", err)
 	}
@@ -1356,10 +1352,7 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("error while building image:", err)
 	}
-	barApp, err := proj2Client.AppRun(ctx, barImage.ID, &client.AppRunOptions{
-		Name:            "bar",
-		TargetNamespace: proj2.Namespace,
-	})
+	barApp, err := proj2Client.AppRun(ctx, barImage.ID, &client.AppRunOptions{Name: "bar"})
 	if err != nil {
 		t.Fatal("error while running app:", err)
 	}
@@ -1394,11 +1387,10 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 		expectFailure bool
 	}{
 		{
-			name:          "curl-foo-proj1",
-			client:        proj1Client,
-			podIP:         fooIP,
-			imageID:       curlImage1.ID,
-			expectFailure: false,
+			name:    "curl-foo-proj1",
+			client:  proj1Client,
+			podIP:   fooIP,
+			imageID: curlImage1.ID,
 		},
 		{
 			name:    "curl-bar-proj1",
@@ -1417,11 +1409,10 @@ func TestCrossProjectNetworkConnection(t *testing.T) {
 			expectFailure: true,
 		},
 		{
-			name:          "curl-bar-proj2",
-			client:        proj2Client,
-			podIP:         barIP,
-			imageID:       curlImage2.ID,
-			expectFailure: false,
+			name:    "curl-bar-proj2",
+			client:  proj2Client,
+			podIP:   barIP,
+			imageID: curlImage2.ID,
 		},
 	}
 	for _, check := range checks {
@@ -1481,7 +1472,7 @@ func TestProjectUpdate(t *testing.T) {
 		t.Fatal("error while getting rest config:", err)
 	}
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 	projectName := uuid.New().String()[:8]
 	proj1, err := c.ProjectCreate(ctx, projectName, apiv1.LocalRegion, []string{apiv1.LocalRegion})
 	if err != nil {
@@ -1491,10 +1482,6 @@ func TestProjectUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal("error creating client for project:", err)
 	}
-	watchClient, err := proj1Client.GetClient()
-	if err != nil {
-		t.Fatal("error creating watch client for project:", err)
-	}
 	t.Cleanup(func() {
 		// clean up projects
 		_, err := proj1Client.ProjectDelete(ctx, projectName)
@@ -1502,27 +1489,18 @@ func TestProjectUpdate(t *testing.T) {
 			t.Logf("failed to delete project '%s': %s", projectName, err)
 		}
 	})
-	var latestProject *apiv1.Project
+
 	var updatedProj *apiv1.Project
-	latestProject, err = watcher.New[*apiv1.Project](watchClient).ByObject(ctx, proj1, func(latestProject *apiv1.Project) (bool, error) {
-		if latestProject != nil && latestProject.Status.Namespace != "" {
-			return true, nil
-		}
-		return false, nil
-	})
-	if err != nil {
-		t.Fatal("error while waiting for project to be created:", err)
-	}
 	// update default
 	for i := 0; i < 10; i++ {
-		updatedProj, err = proj1Client.ProjectUpdate(ctx, latestProject, "new-default", []string{apiv1.LocalRegion})
+		updatedProj, err = proj1Client.ProjectUpdate(ctx, proj1, "new-default", []string{apiv1.LocalRegion})
 		if err == nil {
 			break
 		}
 		if !apierrors.IsConflict(err) {
 			t.Fatal("error while updating project:", err)
 		}
-		latestProject, err = proj1Client.ProjectGet(ctx, projectName)
+		proj1, err = proj1Client.ProjectGet(ctx, projectName)
 		if err != nil {
 			t.Fatal("error while getting project:", err)
 		}
@@ -1602,7 +1580,7 @@ func TestEnforcedQuota(t *testing.T) {
 	}
 
 	// Annotate the project to enforce quota.
-	helper.WaitForObject(t, helper.Watcher(t, c), &corev1.NamespaceList{}, project, func(obj *corev1.Namespace) bool {
+	helper.WaitForObject(t, helper.Watcher(t, c), &v1.ProjectInstanceList{}, project, func(obj *v1.ProjectInstance) bool {
 		if obj.Annotations == nil {
 			obj.Annotations = make(map[string]string)
 		}

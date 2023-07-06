@@ -23,14 +23,14 @@ func TestVolumeListGetDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -53,7 +53,7 @@ func TestVolumeListGetDelete(t *testing.T) {
 	assert.Len(t, vols, 1)
 	assert.Equal(t, "10G", vols[0].Spec.Capacity.String())
 	assert.Equal(t, "local-path", vols[0].Spec.Class)
-	assert.Equal(t, ns.Name, vols[0].Namespace)
+	assert.Equal(t, project.Name, vols[0].Namespace)
 
 	vol, err := c.VolumeGet(ctx, vols[0].Name)
 	if err != nil {
@@ -61,7 +61,7 @@ func TestVolumeListGetDelete(t *testing.T) {
 	}
 
 	assert.Equal(t, vols[0].UID, vol.UID)
-	assert.Equal(t, ns.Name, vol.Namespace)
+	assert.Equal(t, project.Name, vol.Namespace)
 
 	delVol, err := c.VolumeDelete(ctx, vol.Name)
 	if err != nil {
@@ -87,14 +87,14 @@ func TestVolumeWatch(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)

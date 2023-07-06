@@ -16,9 +16,9 @@ import (
 func TestCreatingComputeClasses(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(kclient.Default))
+	project := helper.TempProject(t, helper.MustReturn(kclient.Default))
 	kclient := helper.MustReturn(kclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
+	c, err := client.New(cfg, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

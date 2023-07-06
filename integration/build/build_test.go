@@ -173,9 +173,9 @@ func TestBuildDefault(t *testing.T) {
 func TestMultiArch(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
+	project := helper.TempProject(t, helper.MustReturn(k8sclient.Default))
 	kclient := helper.MustReturn(k8sclient.Default)
-	c, err := client.New(cfg, "", ns.Name)
+	c, err := client.New(cfg, "", project.Name)
 	if err != nil {
 		t.Fatal()
 	}
@@ -204,7 +204,7 @@ func TestMultiArch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	opts, err := images.GetAuthenticationRemoteOptions(context.Background(), kclient, ns.Name, remote.WithTransport(transport))
+	opts, err := images.GetAuthenticationRemoteOptions(context.Background(), kclient, project.Name, remote.WithTransport(transport))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -234,8 +234,8 @@ func TestMultiArch(t *testing.T) {
 func TestBuildNestedAcornWithLocalImage(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
-	ns := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
-	c, err := client.New(cfg, "", ns.Name)
+	project := helper.TempProject(t, helper.MustReturn(k8sclient.Default))
+	c, err := client.New(cfg, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,8 +261,8 @@ func TestBuildNestedAcornWithLocalImage(t *testing.T) {
 	assert.Equal(t, strings.Split(nestedImage.ImageData.Acorns["nginx"].Image, "sha256:")[1], image)
 
 	// create a second project and make sure we can't access the local image from the first project
-	ns2 := helper.TempNamespace(t, helper.MustReturn(k8sclient.Default))
-	c2, err := client.New(cfg, "", ns2.Name)
+	project2 := helper.TempProject(t, helper.MustReturn(k8sclient.Default))
+	c2, err := client.New(cfg, "", project2.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

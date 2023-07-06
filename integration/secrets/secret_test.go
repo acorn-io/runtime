@@ -26,7 +26,7 @@ const (
 func TestText(t *testing.T) {
 	helper.StartController(t)
 
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(k8sclient.Default)
 	ctx := helper.GetCTX(t)
 	image, err := c.AcornImageBuild(ctx, "./testdata/generated/Acornfile", &client.AcornImageBuildOptions{
@@ -71,7 +71,7 @@ func TestJSON(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(k8sclient.Default)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(ctx, "./testdata/generated-json/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/generated-json",
@@ -101,7 +101,7 @@ func TestJSON(t *testing.T) {
 }
 
 func TestIssue552(t *testing.T) {
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(k8sclient.Default)
 	ctx := helper.GetCTX(t)
 
@@ -132,7 +132,7 @@ func TestIssue552(t *testing.T) {
 }
 
 func TestEncryptionEndToEnd(t *testing.T) {
-	c1, _ := helper.ClientAndNamespace(t)
+	c1, _ := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(k8sclient.Default)
 
 	info, err := c1.Info(helper.GetCTX(t))
@@ -188,8 +188,8 @@ func TestEncryptionEndToEnd(t *testing.T) {
 
 func TestNamespacedDecryption(t *testing.T) {
 	ctx := helper.GetCTX(t)
-	c1, _ := helper.ClientAndNamespace(t)
-	c2, _ := helper.ClientAndNamespace(t)
+	c1, _ := helper.ClientAndProject(t)
+	c2, _ := helper.ClientAndProject(t)
 
 	encdata := helper.EncryptData(t, c1, nil, plainTextData)
 
@@ -218,8 +218,8 @@ func TestNamespacedDecryption(t *testing.T) {
 }
 
 func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
-	c1, _ := helper.ClientAndNamespace(t)
-	c2, _ := helper.ClientAndNamespace(t)
+	c1, _ := helper.ClientAndProject(t)
+	c2, _ := helper.ClientAndProject(t)
 	k8sclient := helper.MustReturn(k8sclient.Default)
 	ctx := helper.GetCTX(t)
 
@@ -258,7 +258,7 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 }
 
 func TestCreateDefaultSecret(t *testing.T) {
-	c, ns := helper.ClientAndNamespace(t)
+	c, project := helper.ClientAndProject(t)
 	kc, err := c.GetClient()
 	assert.NoError(t, err)
 	secName := "test-secret"
@@ -266,13 +266,13 @@ func TestCreateDefaultSecret(t *testing.T) {
 		Type: "basic",
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      secName,
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 	}
 	err = kc.Create(context.Background(), secret)
 	assert.NoError(t, err)
 	gs := &apiv1.Secret{}
-	err = kc.Get(context.Background(), router.Key(ns.Name, secName), gs)
+	err = kc.Get(context.Background(), router.Key(project.Name, secName), gs)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, gs.Keys)
 	assert.Contains(t, gs.Keys, "username")
