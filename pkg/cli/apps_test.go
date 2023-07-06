@@ -48,7 +48,7 @@ func TestApp(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME      IMAGE     HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE\nfound                                      292y ago               \n",
+			wantOut: "NAME      IMAGE     DIGEST    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE\nfound                                                292y ago               \n",
 		},
 		{
 			name: "acorn app found", fields: fields{
@@ -67,7 +67,7 @@ func TestApp(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME      IMAGE     HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE\nfound                                      292y ago               \n",
+			wantOut: "NAME      IMAGE     DIGEST    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE\nfound                                                292y ago               \n",
 		},
 		{
 			name: "acorn app dne", fields: fields{

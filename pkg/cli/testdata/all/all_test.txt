@@ -1,7 +1,7 @@
 
 APPS:
-NAME      IMAGE     HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE
-found                                      292y ago               
+NAME      IMAGE     DIGEST    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE
+found                                                292y ago
 
 CONTAINERS:
 NAME              APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE
