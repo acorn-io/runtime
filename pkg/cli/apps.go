@@ -1,9 +1,6 @@
 package cli
 
 import (
-	"strings"
-
-	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
 	"github.com/acorn-io/runtime/pkg/tables"
@@ -66,12 +63,4 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return out.Err()
-}
-
-func inactive(app apiv1.App) bool {
-	return strings.Contains(app.Name, ".") &&
-		app.Status.Ready &&
-		app.Status.Columns.Healthy == "0" &&
-		app.Status.Columns.UpToDate == "0" &&
-		app.Status.Columns.Message == "OK"
 }
