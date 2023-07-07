@@ -22,7 +22,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	"github.com/rancher/wrangler/pkg/merr"
-	"github.com/rancher/wrangler/pkg/randomtoken"
 	"golang.org/x/exp/maps"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -252,8 +251,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 
 	for i, key := range []string{corev1.BasicAuthUsernameKey, corev1.BasicAuthPasswordKey} {
 		if len(secret.Data[key]) == 0 {
-			// TODO: Improve with more characters (special, upper/lowercase, etc)
-			v, err := randomtoken.Generate()
+			v, err := GenerateRandomSecret(54)
 			v = v[:(i+1)*8]
 			if err != nil {
 				return nil, err
@@ -261,6 +259,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 			secret.Data[key] = []byte(v)
 		}
 	}
+
 	return updateOrCreate(req, existing, secret)
 }
 

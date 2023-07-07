@@ -19,11 +19,13 @@ func NewStorage(c kclient.WithWatch, middlewares ...middleware.CompleteStrategy)
 	}, remote.NewRemote(&corev1.Secret{}, c))
 	remoteResource := publicname.NewStrategy(translated)
 	remoteResource = middleware.ForCompleteStrategy(remoteResource, middlewares...)
-
+	defaultSecret := &defaultSecretGenerateStrategy{
+		strategy: remoteResource,
+	}
 	validator := &Validator{}
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.Secret{}).
-		WithCreate(remoteResource).
+		WithCreate(defaultSecret).
 		WithGet(remoteResource).
 		WithList(remoteResource).
 		WithUpdate(remoteResource).

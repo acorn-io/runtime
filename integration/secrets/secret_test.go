@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -254,4 +255,26 @@ func TestMultiKeyDecryptionEndToEnd(t *testing.T) {
 	})
 
 	assert.Equal(t, plainTextData, string(secret.Data["key"]))
+}
+
+func TestCreateDefaultSecret(t *testing.T) {
+	c, ns := helper.ClientAndNamespace(t)
+	kc, err := c.GetClient()
+	assert.NoError(t, err)
+	secName := "test-secret"
+	secret := &apiv1.Secret{
+		Type: "basic",
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secName,
+			Namespace: ns.Name,
+		},
+	}
+	err = kc.Create(context.Background(), secret)
+	assert.NoError(t, err)
+	gs := &apiv1.Secret{}
+	err = kc.Get(context.Background(), router.Key(ns.Name, secName), gs)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, gs.Keys)
+	assert.Contains(t, gs.Keys, "username")
+	assert.Contains(t, gs.Keys, "password")
 }
