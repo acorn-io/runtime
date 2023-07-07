@@ -13,6 +13,7 @@ type AppStatus struct {
 
 	Endpoints []Endpoint `json:"endpoints,omitempty"`
 	Stopped   bool       `json:"stopped,omitempty"`
+	Completed bool       `json:"completed,omitempty"`
 }
 
 type DependencyNotFound struct {

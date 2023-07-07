@@ -17,6 +17,17 @@ func CLIStatus(req router.Request, resp router.Response) (err error) {
 	app.Status.Columns.Healthy = healthy(app)
 	app.Status.Columns.Message = message(app)
 	app.Status.Columns.Endpoints, err = endpoints(req, app)
+
+	// There's clearly a better way to do this, but it works and I'm lazy. The intention is that we want
+	// to detect that the acorn doesn't have any running containers (or needs to run containers) and has
+	// produced whatever it needs to and the status is not really helpful anymore, because it's done.
+	app.Status.AppStatus.Completed = strings.Contains(app.Name, ".") &&
+		app.Status.Ready &&
+		app.Status.Columns.Healthy == "0" &&
+		app.Status.Columns.UpToDate == "0" &&
+		app.Status.Columns.Message == "OK" &&
+		app.Status.Columns.Endpoints == ""
+
 	resp.Objects(app)
 	return
 }
