@@ -2,11 +2,12 @@ package services
 
 import (
 	"testing"
-	"time"
 
 	"github.com/acorn-io/runtime/integration/helper"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -56,8 +57,10 @@ func TestServiceIgnoreCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Sleep for 1 second to give the controller time to create the service.
-	time.Sleep(1 * time.Second)
+	helper.Wait(t, helper.Watcher(t, c), &apiv1.AppList{}, func(obj *apiv1.App) bool {
+		// Just wait for the service to go through the controller successfully
+		return obj.Labels[labels.AcornPublicName] == "myapp.myservice" && obj.Status.Condition(v1.AppInstanceConditionController).Success
+	})
 
 	// Delete the app.
 	if _, err := c.AppDelete(ctx, "myapp"); err != nil {
@@ -73,6 +76,10 @@ func TestServiceIgnoreCleanup(t *testing.T) {
 
 	assert.Len(t, list, 1)
 	assert.Equal(t, "myapp.myservice", list[0].Name)
+
+	helper.Wait(t, helper.Watcher(t, c), &apiv1.AppList{}, func(obj *apiv1.App) bool {
+		return obj.Labels[labels.AcornPublicName] == "myapp.myservice" && !obj.DeletionTimestamp.IsZero()
+	})
 
 	// Delete it next.
 	if err := c.AppIgnoreDeleteCleanup(ctx, "myapp.myservice"); err != nil {
