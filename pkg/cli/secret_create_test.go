@@ -26,16 +26,3 @@ func TestBuildSecret(t *testing.T) {
 		"key4": []byte("value4"),
 	}, secret.Data)
 }
-
-func TestDefaultBasicSecret(t *testing.T) {
-	c := SecretCreate{
-		Type: "basic",
-	}
-	secret, err := c.buildSecret()
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, "basic", secret.Type)
-	assert.Equal(t, len(secret.Data["username"]), 8)
-	assert.Equal(t, len(secret.Data["password"]), 16)
-}

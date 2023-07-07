@@ -251,7 +251,7 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 
 	for i, key := range []string{corev1.BasicAuthUsernameKey, corev1.BasicAuthPasswordKey} {
 		if len(secret.Data[key]) == 0 {
-			v, err := GenerateRandomSecret(16)
+			v, err := GenerateRandomSecret(54)
 			v = v[:(i+1)*8]
 			if err != nil {
 				return nil, err

@@ -8,7 +8,6 @@ import (
 	"github.com/acorn-io/aml/pkg/cue"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
-	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/spf13/cobra"
 )
 
@@ -43,27 +42,6 @@ func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
 		apiv1.Secret `json:",inline"`
 		StringData   map[string]string `json:"stringData,omitempty"`
 	}{}
-
-	// If the secret is of type 'basic' and no file or data is provided,
-	// default username and password values are set.
-	if a.Type == "basic" && a.File == "" && len(a.Data) == 0 {
-		username, err := secrets.GenerateRandomSecret(8)
-		if err != nil {
-			return nil, err
-		}
-
-		password, err := secrets.GenerateRandomSecret(16)
-		if err != nil {
-			return nil, err
-		}
-
-		if secret.Data == nil {
-			secret.Data = map[string][]byte{}
-		}
-
-		secret.Data["username"] = []byte(username)
-		secret.Data["password"] = []byte(password)
-	}
 
 	if a.File != "" {
 		err := cue.UnmarshalFile(a.File, secret)

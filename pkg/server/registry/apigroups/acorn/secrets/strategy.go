@@ -28,9 +28,7 @@ func (d *defaultSecretGenerateStrategy) Create(ctx context.Context, object types
 			return nil, err
 		}
 
-		if secret.Data == nil {
-			secret.Data = map[string][]byte{}
-		}
+		secret.Data = map[string][]byte{}
 
 		secret.Data["username"] = []byte(username)
 		secret.Data["password"] = []byte(password)
