@@ -14,7 +14,7 @@ import (
 )
 
 func TestProjectCreateValidation(t *testing.T) {
-	validator := &Validator{DefaultRegion: apiv1.LocalRegion}
+	validator := &Validator{}
 
 	tests := []struct {
 		name      string
@@ -24,7 +24,7 @@ func TestProjectCreateValidation(t *testing.T) {
 		{
 			name: "Create project with no region",
 			project: apiv1.Project{
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion: "",
 				},
 			},
@@ -32,7 +32,7 @@ func TestProjectCreateValidation(t *testing.T) {
 		{
 			name: "Create project with existing region",
 			project: apiv1.Project{
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "acorn-test-region",
 					SupportedRegions: []string{"acorn-test-region"},
 				},
@@ -41,7 +41,7 @@ func TestProjectCreateValidation(t *testing.T) {
 		{
 			name: "Create project with non-existent region is valid",
 			project: apiv1.Project{
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "acorn-test-dne",
 					SupportedRegions: []string{"acorn-test-dne"},
 				},
@@ -51,7 +51,7 @@ func TestProjectCreateValidation(t *testing.T) {
 			name:      "Create project with default that is not supported",
 			wantError: true,
 			project: apiv1.Project{
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "acorn-test-region",
 					SupportedRegions: []string{},
 				},
@@ -60,7 +60,7 @@ func TestProjectCreateValidation(t *testing.T) {
 		{
 			name: "Create project with supported region that does not exist is valid",
 			project: apiv1.Project{
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "acorn-test-region",
 					SupportedRegions: []string{"acorn-test-region", "acorn-test-dne"},
 				},
@@ -69,7 +69,7 @@ func TestProjectCreateValidation(t *testing.T) {
 		{
 			name: "Create project with supported regions and no default is valid",
 			project: apiv1.Project{
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					SupportedRegions: []string{"acorn-test-region", "acorn-test-dne"},
 				},
 			},
@@ -82,21 +82,7 @@ func TestProjectCreateValidation(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-
-				// Ensure that if supported regions were supplied, then they were copied to the status.
-				if len(tt.project.Spec.SupportedRegions) != 0 {
-					assert.Equal(t, tt.project.Spec.SupportedRegions, tt.project.Status.SupportedRegions)
-				}
-				// Ensure that if a default region was supplied, then it was copied to the status.
-				if len(tt.project.Spec.DefaultRegion) != 0 {
-					assert.Equal(t, tt.project.Spec.DefaultRegion, tt.project.Status.DefaultRegion)
-				}
-				// Ensure that if no default and no supported regions were supplied, then the default region was set to the value passed to the validator.
-				if len(tt.project.Spec.DefaultRegion) == 0 && len(tt.project.Spec.SupportedRegions) == 0 {
-					assert.Equal(t, validator.DefaultRegion, tt.project.Status.DefaultRegion)
-					assert.Equal(t, []string{validator.DefaultRegion}, tt.project.Status.SupportedRegions)
-				}
-			} else if tt.wantError && err == nil {
+			} else if err == nil {
 				t.Fatal("expected error for test case")
 			}
 		})
@@ -104,7 +90,7 @@ func TestProjectCreateValidation(t *testing.T) {
 }
 
 func TestProjectUpdateValidation(t *testing.T) {
-	validator := &Validator{DefaultRegion: apiv1.LocalRegion}
+	validator := &Validator{}
 	tests := []struct {
 		name                   string
 		newProject, oldProject apiv1.Project
@@ -118,7 +104,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion: "my-region",
 				},
 			},
@@ -129,7 +115,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Status: apiv1.ProjectStatus{
+				Status: v1.ProjectInstanceStatus{
 					DefaultRegion: "my-region",
 				},
 			},
@@ -137,7 +123,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
@@ -149,7 +135,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Status: apiv1.ProjectStatus{
+				Status: v1.ProjectInstanceStatus{
 					DefaultRegion: "my-region",
 				},
 			},
@@ -157,7 +143,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "dne-region"},
 				},
@@ -170,7 +156,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-other-region"},
 				},
@@ -182,7 +168,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
@@ -191,7 +177,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
@@ -204,7 +190,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
@@ -213,7 +199,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
@@ -240,7 +226,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
@@ -249,7 +235,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
@@ -277,11 +263,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
-				Status: apiv1.ProjectStatus{
+				Status: v1.ProjectInstanceStatus{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
@@ -290,7 +276,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
@@ -318,11 +304,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
-				Status: apiv1.ProjectStatus{
+				Status: v1.ProjectInstanceStatus{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
@@ -331,7 +317,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
@@ -359,11 +345,11 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
-				Status: apiv1.ProjectStatus{
+				Status: v1.ProjectInstanceStatus{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region", "my-other-region"},
 				},
@@ -372,7 +358,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
 				},
-				Spec: apiv1.ProjectSpec{
+				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},

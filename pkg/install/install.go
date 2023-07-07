@@ -202,7 +202,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 	}
 
-	apply, err := newApply(ctx)
+	apply, err := newApply()
 	if err != nil {
 		return err
 	}
@@ -493,7 +493,7 @@ func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, 
 	}
 
 	objs = append(objs, deps...)
-	return apply.Apply(ctx, nil, objs...)
+	return apply.WithNoPrune().Apply(ctx, nil, objs...)
 }
 
 func applyRoles(ctx context.Context, apply apply.Apply) error {
@@ -677,7 +677,7 @@ func upgradeFromV03(ctx context.Context, c kclient.Client) error {
 	return buildserver.DeleteOld(ctx, c)
 }
 
-func newApply(ctx context.Context) (apply.Apply, error) {
+func newApply() (apply.Apply, error) {
 	c, err := k8sclient.Default()
 	if err != nil {
 		return nil, err
@@ -687,6 +687,7 @@ func newApply(ctx context.Context) (apply.Apply, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return apply.WithOwnerSubContext("acorn-install"), nil
 }
 

@@ -99,8 +99,8 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		if projectItem.Project != nil {
-			supportedRegions := projectItem.Project.GetSupportedRegions()
-			defaultRegion := projectItem.Project.GetRegion()
+			supportedRegions := projectItem.Project.Status.SupportedRegions
+			defaultRegion := projectItem.Project.Status.DefaultRegion
 			for i, supportedRegion := range supportedRegions {
 				if supportedRegion == defaultRegion {
 					supportedRegions[i] = supportedRegion + "*"

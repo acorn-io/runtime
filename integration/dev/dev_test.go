@@ -34,7 +34,7 @@ func TestDev(t *testing.T) {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	c := helper.MustReturn(hclient.Default)
-	ns := helper.TempNamespace(t, c)
+	project := helper.TempProject(t, c)
 	tmp, err := os.MkdirTemp("", "acorn-test-dev")
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +59,7 @@ func TestDev(t *testing.T) {
 
 	eg := errgroup.Group{}
 	eg.Go(func() error {
-		return dev.Dev(subCtx, helper.BuilderClient(t, ns.Name), &dev.Options{
+		return dev.Dev(subCtx, helper.BuilderClient(t, project.Name), &dev.Options{
 			ImageSource: imagesource.NewImageSource(acornCueFile, []string{tmp}, nil, nil, false),
 			Run: client.AppRunOptions{
 				Name: "test-app",
@@ -67,7 +67,7 @@ func TestDev(t *testing.T) {
 		})
 	})
 
-	app, err := appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
+	app, err := appWatcher.ByName(ctx, project.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
 		return app.Spec.Image != "", nil
 	})
 	if err != nil {
@@ -80,7 +80,7 @@ func TestDev(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
+	_, err = appWatcher.ByName(ctx, project.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
 		return app.Spec.Image == oldImage && app.Status.DevSession != nil && app.Status.DevSession.SpecOverride.Image != "", nil
 	})
 	if err != nil {
@@ -88,7 +88,7 @@ func TestDev(t *testing.T) {
 	}
 
 	cancel()
-	_, err = appWatcher.ByName(ctx, ns.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
+	_, err = appWatcher.ByName(ctx, project.Name, "test-app", func(app *v1.AppInstance) (bool, error) {
 		return app.Spec.Stop != nil && *app.Spec.Stop, nil
 	})
 	if err != nil {

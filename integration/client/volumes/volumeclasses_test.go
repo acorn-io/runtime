@@ -19,12 +19,12 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
 	volumeClass := adminv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-default",
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 		Default: true,
 	}
@@ -48,7 +48,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-default",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Default: true,
 			},
@@ -58,7 +58,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-inactive",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Inactive: true,
 			},
@@ -68,7 +68,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-inactive-default",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Default:  true,
 				Inactive: true,
@@ -80,7 +80,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-inverse-limits",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Size: v1.VolumeClassSize{
 					Min: "2Gi",
@@ -94,7 +94,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-inverse-limits",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Size: v1.VolumeClassSize{
 					Min:     "2Gi",
@@ -108,7 +108,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-inverse-limits",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Size: v1.VolumeClassSize{
 					Default: "2Gi",
@@ -121,7 +121,7 @@ func TestProjectVolumeClassCreateValidation(t *testing.T) {
 			volumeClass: adminv1.ProjectVolumeClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "new-equal-limits",
-					Namespace: ns.Name,
+					Namespace: project.Name,
 				},
 				Size: v1.VolumeClassSize{
 					Min:     "5Gi",
@@ -151,12 +151,12 @@ func TestEnsureCanUpdateProjectVolumeClassDefault(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
 	volumeClass := adminv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-default",
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 		Default: true,
 	}
@@ -382,7 +382,7 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	_, ns := helper.ClientAndNamespace(t)
+	_, project := helper.ClientAndProject(t)
 
 	clusterVolumeClass := adminv1.ClusterVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
@@ -408,7 +408,7 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 	projectVolumeClass := adminv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-project-default",
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 		Default: true,
 	}
@@ -423,7 +423,7 @@ func TestCreateProjectDefaultWithExistingClusterDefault(t *testing.T) {
 
 	helper.Wait(t, kclient.Watch, new(adminv1.ProjectVolumeClassList), func(obj *adminv1.ProjectVolumeClass) bool {
 		return obj.Name == "acorn-test-project-default" &&
-			obj.Namespace == ns.Name &&
+			obj.Namespace == project.Name &&
 			obj.Default
 	})
 }
@@ -433,12 +433,12 @@ func TestProjectVolumeClassUpdateValidation(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
 	volumeClass := adminv1.ProjectVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "acorn-test-default",
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 		Default: true,
 	}
@@ -534,13 +534,13 @@ func TestClusterVolumeClassUpdateValidation(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
 	className := "acorn-test-default"
 	volumeClass := adminv1.ClusterVolumeClass{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      className,
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 	}
 	if err := kclient.Create(ctx, &volumeClass); err != nil {

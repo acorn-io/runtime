@@ -24,14 +24,14 @@ func TestContainerList(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -61,14 +61,14 @@ func TestContainerDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -109,14 +109,14 @@ func TestContainerGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -153,14 +153,14 @@ func TestContainerExec(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -207,14 +207,14 @@ func TestContainerDebugExec(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -263,14 +263,14 @@ func TestContainerWithSidecarExec(t *testing.T) {
 		t.Fatal(err)
 	}
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImageWithSidecar(t, ns.Name)
+	imageID := client2.NewImageWithSidecar(t, project.Name)
 	app, err := c.AppRun(ctx, imageID, nil)
 	if err != nil {
 		t.Fatal(err)

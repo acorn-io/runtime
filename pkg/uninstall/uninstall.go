@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
@@ -15,6 +16,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/term"
 	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/merr"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apiextensionv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -78,6 +80,13 @@ func baseResources(ctx context.Context, c kclient.Client) (resources []kclient.O
 			c := crd
 			resources = append(resources, &c)
 		}
+	}
+
+	controllerLease := &coordinationv1.Lease{}
+	if err := c.Get(ctx, kclient.ObjectKey{Namespace: "kube-system", Name: "acorn-controller"}, controllerLease); !apierror.IsNotFound(err) && err != nil {
+		return nil, err
+	} else if err == nil {
+		resources = append(resources, controllerLease)
 	}
 
 	for i, resource := range resources {
@@ -228,6 +237,28 @@ func Uninstall(ctx context.Context, opts *Options) error {
 		}
 	}
 
+	// Delete projects first. This will allow the acorn-controller to do all the cleanup it needs to do.
+	pterm.Info.Println("Deleting projects")
+	projectList := new(apiv1.ProjectList)
+	if err = c.List(ctx, projectList); err != nil {
+		return err
+	}
+
+	projects := make([]kclient.Object, 0, len(projectList.Items))
+	for _, project := range projectList.Items {
+		p := project.DeepCopy()
+		pterm.Info.Printf("Deleting project %s\n", project.Name)
+		if err = c.Delete(ctx, p); err != nil && !apierror.IsNotFound(err) {
+			return err
+		}
+		projects = append(projects, p)
+	}
+
+	if err := waitForObjectsToBeRemoved(ctx, c, projects); err != nil {
+		return err
+	}
+	pterm.Info.Println("All projects deleted")
+
 	var errs []error
 	for _, resource := range toDelete {
 		apiVersion, kind := resource.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
@@ -241,7 +272,17 @@ func Uninstall(ctx context.Context, opts *Options) error {
 		return err
 	}
 
-	for _, resource := range toDelete {
+	if err := waitForObjectsToBeRemoved(ctx, c, toDelete); err != nil {
+		return err
+	}
+
+	pterm.Success.Println("Acorn uninstalled")
+	return nil
+}
+
+func waitForObjectsToBeRemoved(ctx context.Context, c kclient.Client, objs []kclient.Object) error {
+	var errs []error
+	for _, resource := range objs {
 		gvk := resource.GetObjectKind().GroupVersionKind()
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
@@ -274,8 +315,7 @@ func Uninstall(ctx context.Context, opts *Options) error {
 		}
 	}
 
-	pterm.Success.Println("Acorn uninstalled")
-	return nil
+	return merr.NewErrors(errs...)
 }
 
 func shouldContinue(toDelete, toKeep []kclient.Object) (bool, error) {

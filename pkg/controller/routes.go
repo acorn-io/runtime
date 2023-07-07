@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/controller/acornimagebuildinstance"
@@ -27,6 +28,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/tls"
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/volume"
 	appsv1 "k8s.io/api/apps/v1"
@@ -52,6 +54,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 		return err
 	}
 
+	apply.AddValidOwnerChange("acorn-install", "acorn-controller")
 	router.OnErrorHandler = appdefinition.OnError
 
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(devsession.OverlayDevSession).IncludeFinalizing()
@@ -82,14 +85,19 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 
 	appRouter.HandlerFunc(appstatus.CLIStatus)
 
+	projectRouter := router.Type(&v1.ProjectInstance{})
+	projectRouter.HandlerFunc(project.SetProjectSupportedRegions)
+	projectRouter.HandlerFunc(project.CreateNamespace)
+	projectRouter.FinalizeFunc(labels.Prefix+"project-app-delete", project.EnsureAllAppsRemoved)
+
 	router.Type(&v1.DevSessionInstance{}).HandlerFunc(devsession.ExpireDevSession)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 
-	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.SetRegion)
+	router.Type(&v1.BuilderInstance{}).HandlerFunc(defaults.SetDefaultRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
 
-	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.SetRegion)
+	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(defaults.SetDefaultRegion)
 	router.Type(&v1.AcornImageBuildInstance{}).HandlerFunc(acornimagebuildinstance.MarkRecorded)
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(gc.GCOrphans)
@@ -102,6 +110,8 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&corev1.PersistentVolumeClaim{}).Selector(managedSelector).HandlerFunc(pvc.MarkAndSave)
 	router.Type(&corev1.PersistentVolume{}).Selector(managedSelector).HandlerFunc(appdefinition.ReleaseVolume)
 	router.Type(&corev1.Namespace{}).Selector(managedSelector).HandlerFunc(namespace.DeleteOrphaned)
+	// This will only catch namespace deletes when the controller is running, but that's fine for now.
+	router.Type(&corev1.Namespace{}).IncludeRemoved().HandlerFunc(namespace.DeleteProjectOnNamespaceDelete)
 	router.Type(&appsv1.DaemonSet{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)

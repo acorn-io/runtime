@@ -1,8 +1,9 @@
-kind: Namespace
-apiVersion: v1
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
 metadata:
   name: app-namespace
-  labels:
-    acorn.io/project: "true"
-  annotations:
-    acorn.io/project-default-region: local
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local

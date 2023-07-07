@@ -20,30 +20,19 @@ import (
 
 func createMockedDefaultClient(t *testing.T, projectName string, namespace string) (client.DefaultClient, v12.InfoList, error) {
 	t.Helper()
-	ns := corev1.Namespace{
+	project := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: projectName,
 			Labels: map[string]string{
-				"test.acorn.io/namespace": "true",
-				labels.AcornProject:       "true",
+				"test.acorn.io/project": "true",
+				labels.AcornProject:     "true",
 			},
 		},
-		Spec:   corev1.NamespaceSpec{},
-		Status: corev1.NamespaceStatus{},
 	}
 
 	infoListObj := v12.InfoList{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "",
-			APIVersion: "",
-		},
-		ListMeta: metav1.ListMeta{},
 		Items: []v12.Info{
 			{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "",
-					APIVersion: "",
-				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      projectName,
 					Namespace: namespace,
@@ -59,7 +48,7 @@ func createMockedDefaultClient(t *testing.T, projectName string, namespace strin
 
 	testK8ClientBuilder := testcontrollerclient.NewClientBuilder()
 	testK8ClientBuilder.WithScheme(testingScheme)
-	testK8ClientBuilder.WithObjects(&ns)
+	testK8ClientBuilder.WithObjects(project)
 	testK8ClientBuilder.WithLists(&infoListObj)
 	testK8Client := testK8ClientBuilder.Build()
 	defaultClient := client.DefaultClient{

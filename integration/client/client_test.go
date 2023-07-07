@@ -20,7 +20,7 @@ import (
 
 func TestAppsSSA(t *testing.T) {
 	cfg := helper.StartAPI(t)
-	c, ns := helper.ClientAndNamespace(t)
+	c, project := helper.ClientAndProject(t)
 	ctx := helper.GetCTX(t)
 
 	dyn, err := dynamic.NewForConfig(cfg)
@@ -42,7 +42,7 @@ func TestAppsSSA(t *testing.T) {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
-			Namespace: ns.Name,
+			Namespace: project.Name,
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,
@@ -53,7 +53,7 @@ func TestAppsSSA(t *testing.T) {
 	}
 
 	_, err = dyn.Resource(apiv1.SchemeGroupVersion.WithResource("apps")).
-		Namespace(ns.Name).
+		Namespace(project.Name).
 		Patch(ctx, "test", types.ApplyPatchType, appBytes, metav1.PatchOptions{
 			FieldManager: "unit-test",
 		})
@@ -73,7 +73,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
 
-	c, ns := helper.ClientAndNamespace(t)
+	c, project := helper.ClientAndProject(t)
 	ctx := helper.GetCTX(t)
 	client, err := k8sclient.New(cfg)
 	if err != nil {
@@ -90,7 +90,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 	appInstance := &apiv1.App{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "simple-app",
-			Namespace:    ns.Name,
+			Namespace:    project.Name,
 			Labels: map[string]string{
 				labels.AcornManaged: "true",
 			},
@@ -109,7 +109,7 @@ func TestFriendlyNameInContainer(t *testing.T) {
 		return obj.Status.AppStatus.Containers["default"].ReadyReplicaCount == 1
 	})
 
-	c, err = hclient.New(cfg, "", ns.Name)
+	c, err = hclient.New(cfg, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

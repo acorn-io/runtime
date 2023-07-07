@@ -32,6 +32,8 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&EventInstanceList{},
 		&DevSessionInstance{},
 		&DevSessionInstanceList{},
+		&ProjectInstance{},
+		&ProjectInstanceList{},
 	)
 
 	// Add common types

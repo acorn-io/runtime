@@ -6,26 +6,24 @@ import (
 	"testing"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	scheme2 "github.com/acorn-io/runtime/pkg/scheme"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	testcontrollerclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func createMockedDefaultClient(t *testing.T) (*DefaultClient, error) {
 	t.Helper()
-	ns := corev1.Namespace{
+	project := &v1.ProjectInstance{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "acorn",
 			Labels: map[string]string{
-				"test.acorn.io/namespace": "true",
-				labels.AcornProject:       "true",
+				"test.acorn.io/project": "true",
+				labels.AcornProject:     "true",
 			},
 		},
-		Spec:   corev1.NamespaceSpec{},
-		Status: corev1.NamespaceStatus{},
 	}
 
 	testingScheme := scheme2.Scheme
@@ -34,7 +32,7 @@ func createMockedDefaultClient(t *testing.T) (*DefaultClient, error) {
 		return &DefaultClient{}, err
 	}
 
-	imageListObj := apiv1.ImageList{
+	imageListObj := &apiv1.ImageList{
 		Items: []apiv1.Image{
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -61,8 +59,8 @@ func createMockedDefaultClient(t *testing.T) (*DefaultClient, error) {
 
 	testK8ClientBuilder := testcontrollerclient.NewClientBuilder()
 	testK8ClientBuilder.WithScheme(testingScheme)
-	testK8ClientBuilder.WithObjects(&ns)
-	testK8ClientBuilder.WithLists(&imageListObj)
+	testK8ClientBuilder.WithObjects(project)
+	testK8ClientBuilder.WithLists(imageListObj)
 	testK8Client := testK8ClientBuilder.Build()
 	defaultClient := DefaultClient{
 		Project:    "acorn",

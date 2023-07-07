@@ -20,11 +20,11 @@ func TestAppStartStop(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,11 +67,11 @@ func TestAppDelete(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,12 +103,12 @@ func TestAppUpdate(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
-	imageID2 := client2.NewImage2(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
+	imageID2 := client2.NewImage2(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -316,11 +316,11 @@ func TestAppGet(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,11 +345,11 @@ func TestAppList(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -376,11 +376,11 @@ func TestAppLog(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -421,11 +421,11 @@ func TestAppRun(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -455,7 +455,7 @@ func TestAppRun(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, ns.Name, app.Namespace)
+	assert.Equal(t, project.Name, app.Namespace)
 	assert.NotEqual(t, "", app.Name)
 	assert.Equal(t, v1.PublishModeAll, app.Spec.PublishMode)
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
@@ -469,11 +469,11 @@ func TestAppRunImageVariations(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,14 +17,14 @@ func TestUpdatePull(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 	kclient := helper.MustReturn(kclient.Default)
-	ns := helper.TempNamespace(t, kclient)
+	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", ns.Name)
+	c, err := client.New(restConfig, "", project.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	imageID := client2.NewImage(t, ns.Name)
+	imageID := client2.NewImage(t, project.Name)
 	err = c.ImageTag(ctx, imageID, "foo")
 	if err != nil {
 		t.Fatal(err)
@@ -41,7 +41,7 @@ func TestUpdatePull(t *testing.T) {
 	assert.NotEmpty(t, app.Status.Namespace)
 	assert.Equal(t, app.Status.AppImage.ID, imageID)
 
-	imageID2 := client2.NewImage2(t, ns.Name)
+	imageID2 := client2.NewImage2(t, project.Name)
 	err = c.ImageTag(ctx, imageID2, "foo:latest")
 	if err != nil {
 		t.Fatal(err)

@@ -4,7 +4,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/runtime/pkg/controller/defaults"
 )
 
 func MarkRecorded(req router.Request, resp router.Response) error {
@@ -17,8 +16,4 @@ func MarkRecorded(req router.Request, resp router.Response) error {
 	}
 	req.Object.(*v1.AcornImageBuildInstance).Status.Recorded = true
 	return nil
-}
-
-func SetRegion(req router.Request, _ router.Response) error {
-	return defaults.AddDefaultRegion(req.Ctx, req.Client, req.Object.(*v1.AcornImageBuildInstance))
 }

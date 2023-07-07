@@ -1,0 +1,8 @@
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: acorn
+spec:
+  supportedRegions:
+    - my-region
+    - my-other-region

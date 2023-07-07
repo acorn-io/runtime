@@ -19,16 +19,14 @@ type regionNamer interface {
 }
 
 type Validator struct {
-	DefaultRegion string
-	Client        kclient.Client
+	Client kclient.Client
 }
 
 func (v *Validator) Validate(_ context.Context, obj runtime.Object) field.ErrorList {
 	var result field.ErrorList
 	project := obj.(*apiv1.Project)
-	project.SetDefaultRegion(v.DefaultRegion)
 
-	if !project.HasRegion(project.Spec.DefaultRegion) {
+	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) {
 		return append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
 	}
 
@@ -45,7 +43,7 @@ func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object)
 	oldProject, newProject := old.(*apiv1.Project), obj.(*apiv1.Project)
 	var removedRegions []string
 	for _, region := range oldProject.Status.SupportedRegions {
-		if !newProject.HasRegion(region) {
+		if !slices.Contains(newProject.Status.SupportedRegions, region) {
 			removedRegions = append(removedRegions, region)
 		}
 	}

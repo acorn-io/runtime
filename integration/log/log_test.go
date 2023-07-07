@@ -25,7 +25,7 @@ line 2-4`
 
 func TestLog(t *testing.T) {
 	logrus.SetLevel(logrus.TraceLevel)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata",
@@ -83,7 +83,7 @@ func TestLog(t *testing.T) {
 }
 
 func TestContainerLog(t *testing.T) {
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata",
@@ -141,7 +141,7 @@ func TestContainerLog(t *testing.T) {
 }
 
 func TestSidecarContainerLog(t *testing.T) {
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata",

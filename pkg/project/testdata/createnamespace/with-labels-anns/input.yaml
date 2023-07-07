@@ -1,0 +1,9 @@
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  annotations:
+    acorn.io/my-annotation: my-anno-value
+  labels:
+    acorn.io/my-label: my-label-value
+  name: acorn
+spec: {}
