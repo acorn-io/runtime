@@ -82,6 +82,11 @@ func (c *DefaultClient) ImagePull(ctx context.Context, imageName string, opts *I
 		return nil, err
 	}
 
+	go func() {
+		<-ctx.Done()
+		_ = conn.Close()
+	}()
+
 	if err := conn.WriteJSON(body); err != nil {
 		return nil, err
 	}
@@ -137,6 +142,11 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		<-ctx.Done()
+		_ = conn.Close()
+	}()
 
 	if err := conn.WriteJSON(body); err != nil {
 		return nil, err

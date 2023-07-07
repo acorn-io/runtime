@@ -2379,14 +2379,14 @@ profiles: "foo - bar": {
 		t.Fatal(err)
 	}
 	assert.Equal(t, map[string]any{"a": "b"}, args)
-	assert.Equal(t, map[string]any{"a": "b", "dev": false}, getVals(t, defaultAppDef))
+	assert.Equal(t, map[string]any{"a": "b", "dev": false, "autoUpgrade": false}, getVals(t, defaultAppDef))
 
 	appDef, args, err = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"foo - bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, map[string]any{"a": "c", "c": "d"}, args)
-	assert.Equal(t, map[string]any{"a": "c", "c": "d", "dev": false}, getVals(t, appDef))
+	assert.Equal(t, map[string]any{"a": "c", "c": "d", "dev": false, "autoUpgrade": false}, getVals(t, appDef))
 }
 
 func TestArgsDefaulting(t *testing.T) {
@@ -2409,25 +2409,27 @@ containers: default: files: "a": std.toJSON(args)
 	}
 
 	assert.Equal(t, map[string]any{
-		"dev": false,
-		"s":   "s",
-		"i":   4.0,
-		"f":   6.0,
-		"b":   true,
-		"bn":  false,
-		"e":   "x",
-		"a":   []any{"val"},
-		"o":   map[string]any{},
+		"autoUpgrade": false,
+		"dev":         false,
+		"s":           "s",
+		"i":           4.0,
+		"f":           6.0,
+		"b":           true,
+		"bn":          false,
+		"e":           "x",
+		"a":           []any{"val"},
+		"o":           map[string]any{},
 	}, getVals(t, appDef))
 
 	newValues := map[string]any{
-		"dev": true,
-		"s":   "s2",
-		"i":   5.0,
-		"f":   5.1,
-		"b":   false,
-		"bn":  true,
-		"a":   []any{"1", "2", "3"},
+		"autoUpgrade": false,
+		"dev":         true,
+		"s":           "s2",
+		"i":           5.0,
+		"f":           5.1,
+		"b":           false,
+		"bn":          true,
+		"a":           []any{"1", "2", "3"},
 		"o": map[string]any{
 			"x": "y",
 		},

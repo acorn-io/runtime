@@ -129,6 +129,12 @@ func addExpressionErrors(status *v1.CommonStatus, expressionErrors []v1.Expressi
 		status.Ready = false
 		if ee.DependencyNotFound != nil {
 			missing[ee.DependencyNotFound.Name] = ee.DependencyNotFound.DependencyType
+		} else if ee.Error != "" {
+			if ee.Expression == "" {
+				status.ErrorMessages = append(status.ErrorMessages, ee.Error)
+			} else {
+				status.ErrorMessages = append(status.ErrorMessages, fmt.Sprintf("[%s]: %s", ee.Expression, ee.Error))
+			}
 		}
 	}
 

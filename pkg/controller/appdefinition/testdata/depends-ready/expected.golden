@@ -5,6 +5,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: container-name
     acorn.io/managed: "true"
   name: container-name
@@ -18,6 +19,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: container-name
     acorn.io/managed: "true"
   name: container-name
@@ -62,6 +64,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: container-name
     acorn.io/managed: "true"
   name: container-name
@@ -88,6 +91,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: web
     acorn.io/managed: "true"
   name: web
@@ -101,6 +105,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: web
     acorn.io/managed: "true"
   name: web
@@ -145,6 +150,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: web
     acorn.io/managed: "true"
   name: web

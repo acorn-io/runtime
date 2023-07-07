@@ -322,6 +322,11 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 		return nil, err
 	}
 
+	go func() {
+		<-ctx.Done()
+		_ = conn.Close()
+	}()
+
 	result := make(chan apiv1.LogMessage)
 	go func() {
 		defer close(result)
@@ -331,7 +336,9 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				break
 			} else if err != nil {
-				logrus.Errorf("error reading websocket: %v", err)
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					logrus.Errorf("error reading websocket: %v", err)
+				}
 				break
 			}
 			message := apiv1.LogMessage{}

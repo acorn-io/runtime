@@ -30,7 +30,7 @@ func TestBuildDev(t *testing.T) {
 	c := helper.BuilderClient(t, system.DefaultUserNamespace)
 	img, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/dev/Acornfile", &client.AcornImageBuildOptions{
 		Cwd:      "./testdata/dev",
-		Profiles: []string{"dev"},
+		Profiles: []string{"devMode"},
 	})
 	assert.NoError(t, err)
 	_, ok := img.ImageData.Containers["default"]

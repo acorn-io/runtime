@@ -74,6 +74,9 @@ func findAcornImage(imageData v1.ImagesData, image string, acornBuild *v1.AcornB
 			if build.ImageKey == "" && build.AcornBuild != nil && build.AcornBuild.Image == image {
 				return image, true
 			}
+			if build.ImageKey != "" && build.AcornBuild != nil && build.AcornBuild.Image == image && build.AcornBuild.Build == nil && !build.AcornBuild.AutoUpgrade {
+				return findImageInImageData(imageData, build.ImageKey)
+			}
 		}
 		return "", false
 	}

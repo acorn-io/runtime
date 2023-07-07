@@ -27,8 +27,8 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"golang.org/x/exp/slices"
+	"golang.org/x/sync/errgroup"
 	authv1 "k8s.io/api/authorization/v1"
-	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -70,116 +70,140 @@ func (s *Validator) Get(ctx context.Context, namespace, name string) (types.Obje
 	return s.deleter.Get(ctx, namespace, name)
 }
 
+// Validate will validate the App but also populate the spec.ImageGrantedPermissions on the object.
+// This is a bit odd but hard to do in a different way and not be terribly inefficient with API calls
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
-	params := obj.(*apiv1.App)
+	app := obj.(*apiv1.App)
 
-	if err := s.validateName(params); err != nil {
-		result = append(result, field.Invalid(field.NewPath("metadata", "name"), params.Name, err.Error()))
+	if err := s.validateName(app); err != nil {
+		result = append(result, field.Invalid(field.NewPath("metadata", "name"), app.Name, err.Error()))
 		return
 	}
 
 	project := new(apiv1.Project)
-	if err := s.client.Get(ctx, kclient.ObjectKey{Name: params.Namespace}, project); err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "images"), params.Spec.Image, err.Error()))
+	if err := s.client.Get(ctx, kclient.ObjectKey{Name: app.Namespace}, project); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "images"), app.Spec.Image, err.Error()))
 		return
 	}
 
-	if err := s.validateRegion(params, project); err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "region"), params.Spec.Region, err.Error()))
+	if err := s.validateRegion(app, project); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "region"), app.Spec.Region, err.Error()))
 		return
 	}
 
-	if err := imagesystem.IsNotInternalRepo(ctx, s.client, params.Namespace, params.Spec.Image); err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+	if err := imagesystem.IsNotInternalRepo(ctx, s.client, app.Namespace, app.Spec.Image); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 		return
 	}
 
-	if _, isPattern := autoupgrade.AutoUpgradePattern(params.Spec.Image); !isPattern {
-		image, local, err := s.resolveLocalImage(ctx, params.Namespace, params.Spec.Image)
+	var (
+		imageGrantedPerms []v1.Permissions
+		checkImage        = app.Spec.Image
+	)
+
+	tagPattern, isPattern := autoupgrade.AutoUpgradePattern(app.Spec.Image)
+	if isPattern {
+		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, s.client, "", app.Namespace, app.Spec.Image, tagPattern); err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
+			return
+		} else if found {
+			checkImage = latestImage
+		} else {
+			checkImage = ""
+		}
+	}
+
+	if checkImage == "" {
+		app.Spec.ImageGrantedPermissions = imageGrantedPerms
+	} else {
+		image, local, err := s.resolveLocalImage(ctx, app.Namespace, checkImage)
 		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 			return
 		}
 
 		if !local {
-			if _, autoUpgradeOn := autoupgrade.Mode(params.Spec); autoUpgradeOn {
+			if _, autoUpgradeOn := autoupgrade.Mode(app.Spec); autoUpgradeOn {
 				// Make sure there is a registry specified here
 				// If there isn't one, return an error in order to avoid checking Docker Hub implicitly
-				ref, err := name.ParseReference(params.Spec.Image, name.WithDefaultRegistry(images.NoDefaultRegistry))
+				ref, err := name.ParseReference(checkImage, name.WithDefaultRegistry(images.NoDefaultRegistry))
 				if err != nil {
 					result = append(result, field.InternalError(field.NewPath("spec", "image"), err))
 					return
 				}
 
 				if ref.Context().RegistryStr() == images.NoDefaultRegistry {
-					result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image,
-						fmt.Sprintf("could not find local image for %v - if you are trying to use a remote image, specify the full registry", params.Spec.Image)))
+					result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image,
+						fmt.Sprintf("could not find local image for %v - if you are trying to use a remote image, specify the full registry", app.Spec.Image)))
 					return
 				}
 			}
 
-			if err := s.checkRemoteAccess(ctx, params.Namespace, image); err != nil {
-				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			if err := s.checkRemoteAccess(ctx, app.Namespace, image); err != nil {
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 				return
 			}
 		}
 
-		imageDetails, err := s.getImageDetails(ctx, params.Namespace, params.Spec.Profiles, params.Spec.DeployArgs, image, "")
+		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.Profiles, app.Spec.DeployArgs, image, "")
 		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 			return
 		}
 
 		disableCheckImageAllowRules := false
-		if params.Spec.Stop != nil && *params.Spec.Stop {
+		if app.Spec.Stop != nil && *app.Spec.Stop {
 			// app was stopped, so we don't need to check image allow rules (this could prevent stopping an app if the image allow rules changed)
 			disableCheckImageAllowRules = true
 		}
 
 		if !disableCheckImageAllowRules {
-			if err := s.checkImageAllowed(ctx, params.Namespace, params.Spec.Image); err != nil {
-				result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			if err := s.checkImageAllowed(ctx, app.Namespace, checkImage); err != nil {
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 				return
 			}
 		}
 
 		workloadsFromImage, err := s.getWorkloads(imageDetails)
 		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "image"), params.Spec.Image, err.Error()))
+			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 			return
 		}
 
 		apiv1cfg, err := apiv1config.Get(ctx, s.client)
 		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("config"), params.Spec.Image, err.Error()))
+			result = append(result, field.Invalid(field.NewPath("config"), app.Spec.Image, err.Error()))
 			return
 		}
 
-		errs := s.checkScheduling(ctx, params, project, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
+		errs := s.checkScheduling(ctx, app, project, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
 		if len(errs) != 0 {
 			result = append(result, errs...)
 			return
 		}
 
-		if err := validateVolumeClasses(ctx, s.client, params.Namespace, params.Spec, imageDetails.AppSpec, project); err != nil {
+		if err := validateVolumeClasses(ctx, s.client, app.Namespace, app.Spec, imageDetails.AppSpec, project); err != nil {
 			result = append(result, err)
 			return
 		}
 
-		permsFromImage, err := s.getPermissions(ctx, "", params.Namespace, image, imageDetails)
+		var imageRequestedPerms []v1.Permissions
+		imageRequestedPerms, imageGrantedPerms, err = s.getPermissions(ctx, "", app.Namespace, image, imageDetails)
 		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 			return
 		}
 
-		if err := s.checkRequestedPermsSatisfyImagePerms(permsFromImage, params.Spec.Permissions); err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+		if err := s.checkRequestedPermsSatisfyImagePerms(app.Namespace, imageRequestedPerms, app.Spec.Permissions, imageGrantedPerms); err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 			return
 		}
+
+		app.Spec.ImageGrantedPermissions = imageGrantedPerms
 	}
 
-	if err := s.checkPermissionsForPrivilegeEscalation(ctx, params.Spec.Permissions); err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), params.Spec.Permissions, err.Error()))
+	if err := s.checkPermissionsForPrivilegeEscalation(ctx, app.Spec.Permissions); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 	}
 
 	return result
@@ -252,6 +276,19 @@ func (s *Validator) checkRemoteAccess(ctx context.Context, namespace, image stri
 	return nil
 }
 
+func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) error {
+	eg, ctx := errgroup.WithContext(ctx)
+	eg.SetLimit(5)
+	for _, sar := range sars {
+		sar := sar
+		eg.Go(func() error {
+			return s.check(ctx, &sar.SAR, sar.Rule)
+		})
+	}
+
+	return eg.Wait()
+}
+
 func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
 	err := s.client.Create(ctx, sar)
 	if err != nil {
@@ -265,13 +302,18 @@ func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, 
 	return nil
 }
 
-func (s *Validator) checkNonResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
+type sarRequest struct {
+	SAR  authv1.SubjectAccessReview
+	Rule v1.PolicyRule
+}
+
+func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, rule v1.PolicyRule) (result []sarRequest, _ error) {
 	if len(rule.Verbs) == 0 {
-		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
+		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
 
 	if len(rule.APIGroups) != 0 {
-		return fmt.Errorf("can not deploy acorn due to requesting role nonResourceURLs %v and non-empty apiGroups set %v", rule.NonResourceURLs, rule.APIGroups)
+		return nil, fmt.Errorf("can not deploy acorn due to requesting role nonResourceURLs %v and non-empty apiGroups set %v", rule.NonResourceURLs, rule.APIGroups)
 	}
 
 	for _, url := range rule.NonResourceURLs {
@@ -281,21 +323,22 @@ func (s *Validator) checkNonResourceRole(ctx context.Context, sar *authv1.Subjec
 				Path: url,
 				Verb: verb,
 			}
-			if err := s.check(ctx, sar, rule); err != nil {
-				return err
-			}
+			result = append(result, sarRequest{
+				SAR:  *sar,
+				Rule: rule,
+			})
 		}
 	}
 
-	return nil
+	return result, nil
 }
 
-func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) error {
+func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) (result []sarRequest, _ error) {
 	if len(rule.APIGroups) == 0 {
-		return fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
+		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
 	}
 	if len(rule.Verbs) == 0 {
-		return fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
+		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
 	if len(rule.Resources) == 0 {
 		rule.Resources = []string{"*"}
@@ -314,9 +357,10 @@ func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAc
 						Resource:    resource,
 						Subresource: subResource,
 					}
-					if err := s.check(ctx, sar, rule); err != nil {
-						return err
-					}
+					result = append(result, sarRequest{
+						SAR:  *sar,
+						Rule: rule,
+					})
 				} else {
 					for _, resourceName := range rule.ResourceNames {
 						sar := sar.DeepCopy()
@@ -329,53 +373,52 @@ func (s *Validator) checkResourceRole(ctx context.Context, sar *authv1.SubjectAc
 							Subresource: subResource,
 							Name:        resourceName,
 						}
-						if err := s.check(ctx, sar, rule); err != nil {
-							return err
-						}
+						result = append(result, sarRequest{
+							SAR:  *sar,
+							Rule: rule,
+						})
 					}
 				}
 			}
 		}
 	}
 
-	return nil
+	return result, nil
 }
 
-func (s *Validator) checkRules(ctx context.Context, sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, currentNamespace string) error {
+func (s *Validator) getSARs(sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, currentNamespace string) (result []sarRequest, _ error) {
 	var errs []error
 	for _, rule := range rules {
 		if len(rule.NonResourceURLs) > 0 {
-			if err := s.checkNonResourceRole(ctx, sar, rule); err != nil {
+			requests, err := s.getSARNonResourceRole(sar, rule)
+			if err == nil {
+				result = append(result, requests...)
+			} else {
 				errs = append(errs, err)
 			}
 		} else {
 			for _, namespace := range rule.ResolveNamespaces(currentNamespace) {
-				if err := s.checkResourceRole(ctx, sar, rule, namespace); err != nil {
+				requests, err := s.getSARResourceRole(sar, rule, namespace)
+				if err == nil {
+					result = append(result, requests...)
+				} else {
 					errs = append(errs, err)
 				}
 			}
 		}
 	}
-	return merr.NewErrors(errs...)
+	return result, merr.NewErrors(errs...)
 }
 
 // checkRequestedPermsSatisfyImagePerms checks that the user requested permissions are enough to satisfy the permissions
 // specified by the image's Acornfile
-func (s *Validator) checkRequestedPermsSatisfyImagePerms(perms []v1.Permissions, requestedPerms []v1.Permissions) error {
-	if len(perms) == 0 {
-		return nil
-	}
+func (s *Validator) checkRequestedPermsSatisfyImagePerms(currentNamespace string, requestedPerms []v1.Permissions, grantedUserPerms, grantedImagePerms []v1.Permissions) error {
+	grantedPermsByService := v1.GroupByServiceName(append(grantedUserPerms, grantedImagePerms...))
 
-	for _, perm := range perms {
-		if len(perm.GetRules()) == 0 {
-			continue
-		}
-
-		if specPerms := v1.FindPermission(perm.ServiceName, requestedPerms); !specPerms.HasRules() ||
-			!equality.Semantic.DeepEqual(perm.GetRules(), specPerms.Get().GetRules()) {
-			// If any perm doesn't match then return all perms
+	for serviceName, requestedPerm := range v1.GroupByServiceName(requestedPerms) {
+		if _, granted := v1.Grants(grantedPermsByService[serviceName], currentNamespace, requestedPerm); !granted {
 			return &client.ErrRulesNeeded{
-				Permissions: perms,
+				Permissions: requestedPerms,
 			}
 		}
 	}
@@ -391,7 +434,9 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 		return fmt.Errorf("failed to find active user to check current privileges")
 	}
 
-	var errs []error
+	var (
+		sars []sarRequest
+	)
 	for _, perm := range requestedPerms {
 		sar := &authv1.SubjectAccessReview{
 			Spec: authv1.SubjectAccessReviewSpec{
@@ -407,12 +452,14 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 		}
 
 		ns, _ := request.NamespaceFrom(ctx)
-		if err := s.checkRules(ctx, sar, perm.GetRules(), ns); err != nil {
-			errs = append(errs, err)
+		requests, err := s.getSARs(sar, perm.GetRules(), ns)
+		if err != nil {
+			return err
 		}
+		sars = append(sars, requests...)
 	}
 
-	return merr.NewErrors(errs...)
+	return s.checkSARs(ctx, sars)
 }
 
 // checkScheduling must use apiv1.ComputeCLass to validate the scheduling instead of the Instance counterparts.
@@ -588,84 +635,160 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 	return nil
 }
 
-func (s *Validator) getPermissions(ctx context.Context, servicePrefix, namespace, image string, details *client.ImageDetails) (result []v1.Permissions, _ error) {
-	result = append(result, buildPermissionsFrom(servicePrefix, details.AppSpec.Containers)...)
-	result = append(result, buildPermissionsFrom(servicePrefix, details.AppSpec.Jobs)...)
+func (s *Validator) imageGrants(ctx context.Context, details client.ImageDetails, perms []v1.Permissions) (bool, error) {
+	sar := &authv1.SubjectAccessReview{
+		Spec: authv1.SubjectAccessReviewSpec{
+			User: "image://" + details.AppImage.Name,
+			Extra: map[string]authv1.ExtraValue{
+				"digest": {
+					details.AppImage.Digest,
+				},
+			},
+		},
+	}
 
-	subResults, err := s.buildNestedPermissions(ctx, servicePrefix, details.AppSpec, namespace, image, details.AppImage.ImageData)
+	ns, _ := request.NamespaceFrom(ctx)
+	var sars []sarRequest
+	for _, perm := range perms {
+		newSARs, err := s.getSARs(sar, perm.GetRules(), ns)
+		if err != nil {
+			return false, err
+		}
+		sars = append(sars, newSARs...)
+	}
+
+	err := s.checkSARs(ctx, sars)
+	if ruleErr := (*client.ErrRulesNeeded)(nil); errors.As(err, &ruleErr) {
+		return false, nil
+	}
+	if ruleErr := (*client.ErrNotAuthorized)(nil); errors.As(err, &ruleErr) {
+		return false, nil
+	}
+
+	return false, err
+}
+
+func (s *Validator) getPermissions(ctx context.Context, servicePrefix, namespace, image string, details *client.ImageDetails) (result, granted []v1.Permissions, _ error) {
+	var imagePermissions []v1.Permissions
+	imagePermissions = append(imagePermissions, buildPermissionsFrom(servicePrefix, details.AppSpec.Containers)...)
+	imagePermissions = append(imagePermissions, buildPermissionsFrom(servicePrefix, details.AppSpec.Jobs)...)
+
+	if isGranted, err := s.imageGrants(ctx, *details, imagePermissions); err != nil {
+		return nil, nil, err
+	} else if isGranted {
+		granted = append(granted, imagePermissions...)
+	} else {
+		result = append(result, imagePermissions...)
+	}
+
+	subResults, subGranted, err := s.buildNestedImagePermissions(ctx, servicePrefix, details.AppSpec, namespace, image, details.AppImage.ImageData)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	result = append(result, subResults...)
+	granted = append(granted, subGranted...)
 
-	return result, nil
+	return result, granted, nil
 }
 
-func (s *Validator) getImagePermissions(ctx context.Context, servicePrefix string, profiles []string, args map[string]any, namespace, image, nestedDigest string) (result []v1.Permissions, _ error) {
+func (s *Validator) getImageRequestedPermissions(ctx context.Context, servicePrefix string, profiles []string, args map[string]any, namespace, image, nestedName, nestedDigest string) (imageRequested, imageGranted []v1.Permissions, _ error) {
 	details, err := s.getImageDetails(ctx, namespace, profiles, args, image, nestedDigest)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
+	if nestedName == "" {
+		details.AppImage.Name = image
+	} else {
+		details.AppImage.Name = nestedName
+	}
 	return s.getPermissions(ctx, servicePrefix, namespace, image, details)
 }
 
-func (s *Validator) buildNestedPermissions(ctx context.Context, servicePrefix string, app *v1.AppSpec, namespace, image string, imageData v1.ImagesData) (result []v1.Permissions, err error) {
+func (s *Validator) mergeInRules(servicePrefix string, existing []v1.Permissions, newRules map[string]v1.Permissions) (result []v1.Permissions) {
+	result = append(result, existing...)
+outerLoop:
+	for _, entry := range typed.Sorted(newRules) {
+		serviceName, permissions := entry.Key, entry.Value
+		if !permissions.HasRules() {
+			continue
+		}
+
+		newServiceName := servicePrefix + serviceName
+		for i, existingRule := range result {
+			if existingRule.ServiceName == newServiceName {
+				existingRule.Rules = append(existingRule.Rules, permissions.GetRules()...)
+				result[i] = existingRule
+				continue outerLoop
+			}
+		}
+
+		result = append(result, v1.Permissions{
+			ServiceName: newServiceName,
+			Rules:       permissions.GetRules(),
+		})
+	}
+	return
+}
+
+func (s *Validator) buildNestedImagePermissions(ctx context.Context, servicePrefix string, app *v1.AppSpec, namespace, image string, imageData v1.ImagesData) (imageRequested, imageGranted []v1.Permissions, err error) {
 	for _, entry := range typed.Sorted(app.Acorns) {
 		var (
-			acornName, acorn = entry.Key, entry.Value
-			subResult        []v1.Permissions
+			acornName, acorn                   = entry.Key, entry.Value
+			subImageRequested, subImageGranted []v1.Permissions
 		)
 
 		acornImage, ok := appdefinition.GetImageReferenceForServiceName(acornName, app, imageData)
 		if !ok {
-			return nil, fmt.Errorf("failed to find image information for nested acorn [%s]", acornName)
+			return nil, nil, fmt.Errorf("failed to find image information for nested acorn [%s]", acornName)
 		}
 
 		if tags.IsImageDigest(acornImage) {
-			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, image, acornImage)
+			subImageRequested, subImageGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, image, acorn.GetOriginalImage(), acornImage)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		} else {
-			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, acornImage, "")
+			subImageRequested, subImageGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, acornImage, "", "")
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 
-		result = append(result, subResult...)
+		imageGranted = append(imageGranted, subImageGranted...)
+
+		imageRequested = append(imageRequested, subImageRequested...)
+		imageRequested = s.mergeInRules(servicePrefix+acornName+".", imageRequested, acorn.Permissions)
 	}
 
 	for _, entry := range typed.Sorted(app.Services) {
 		var (
-			serviceName, service = entry.Key, entry.Value
-			subResult            []v1.Permissions
+			serviceName, service  = entry.Key, entry.Value
+			subResult, subGranted []v1.Permissions
 		)
-
-		if service.Image == "" && service.Build == nil {
-			continue
-		}
 
 		acornImage, ok := appdefinition.GetImageReferenceForServiceName(serviceName, app, imageData)
 		if !ok {
-			return nil, fmt.Errorf("failed to find image information for service [%s]", serviceName)
+			// not a service acorn
+			continue
 		}
 
 		if tags.IsImageDigest(acornImage) {
-			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, image, acornImage)
+			subResult, subGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, image, service.GetOriginalImage(), acornImage)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		} else {
-			subResult, err = s.getImagePermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, acornImage, "")
+			subResult, subGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, acornImage, "", "")
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 		}
 
-		result = append(result, subResult...)
+		imageGranted = append(imageGranted, subGranted...)
+
+		imageRequested = append(imageRequested, subResult...)
+		imageRequested = s.mergeInRules(servicePrefix+serviceName+".", imageRequested, service.Permissions)
 	}
 
 	return

@@ -5149,11 +5149,25 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 							},
 						},
 					},
+					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeBinding"},
 	}
 }
 
@@ -5920,6 +5934,19 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 						},
 					},
 					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
+					"imageGrantedPermissions": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
@@ -9922,11 +9949,25 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 							},
 						},
 					},
+					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.GeneratedService", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornBuild", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.GeneratedService", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PortDef", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ScopedLabel", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretBinding", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceBinding"},
 	}
 }
 

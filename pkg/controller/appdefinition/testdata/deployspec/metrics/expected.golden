@@ -5,6 +5,7 @@ metadata:
   labels:
     acorn.io/app-name: app-with-metrics
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-with-metrics
     acorn.io/container-name: nginx
     acorn.io/managed: "true"
   name: nginx
@@ -18,6 +19,7 @@ metadata:
   labels:
     acorn.io/app-name: app-with-metrics
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-with-metrics
     acorn.io/container-name: nginx
     acorn.io/managed: "true"
   name: nginx
@@ -71,6 +73,7 @@ metadata:
   labels:
     acorn.io/app-name: app-with-metrics
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-with-metrics
     acorn.io/container-name: nginx
     acorn.io/managed: "true"
   name: nginx

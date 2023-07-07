@@ -233,6 +233,60 @@ type PolicyRule struct {
 	Scopes            []string `json:"scopes,omitempty"`
 }
 
+func matches(allowed, requested []string, emptyAllowedIsAll bool) bool {
+	for _, requested := range requested {
+		if !matchesSingle(allowed, requested, emptyAllowedIsAll) {
+			return false
+		}
+	}
+	return true
+}
+
+func matchesSingle(allowed []string, requested string, emptyAllowedIsAll bool) bool {
+	if len(requested) == 0 {
+		return true
+	}
+	if emptyAllowedIsAll && len(allowed) == 0 {
+		return true
+	}
+	for _, allow := range allowed {
+		if allow == "*" || requested == allow {
+			return true
+		}
+		if strings.HasSuffix(allow, "*") && strings.HasPrefix(requested, allow[:len(allow)-1]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (p PolicyRule) Grants(currentNamespace string, requested PolicyRule) bool {
+	if len(p.NonResourceURLs) > 0 && len(p.Resources) == 0 {
+		return len(p.Scopes) == 0 &&
+			len(requested.Scopes) == 0 &&
+			matches(p.NonResourceURLs, requested.NonResourceURLs, false)
+	}
+
+	if len(p.NonResourceURLs) > 0 {
+		return false
+	}
+
+	for _, ns := range p.ResolveNamespaces(currentNamespace) {
+		for _, requestedNamespace := range requested.ResolveNamespaces(currentNamespace) {
+			if ns == requestedNamespace &&
+				matches(p.Verbs, requested.Verbs, false) &&
+				matches(p.APIGroups, requested.APIGroups, false) &&
+				matches(p.Resources, requested.Resources, false) &&
+				matches(p.ResourceNames, requested.ResourceNames, true) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (p PolicyRule) IsAccountScoped() bool {
 	for _, scope := range p.Scopes {
 		if scope == "" {
@@ -289,11 +343,36 @@ func (p PolicyRule) Namespaces() (result []string) {
 	return
 }
 
+func GroupByServiceName(perms []Permissions) map[string]Permissions {
+	byServiceName := map[string]Permissions{}
+
+	for _, perm := range perms {
+		existing := byServiceName[perm.ServiceName]
+		existing.ServiceName = perm.ServiceName
+		existing.Rules = append(existing.Rules, perm.Rules...)
+		byServiceName[perm.ServiceName] = existing
+	}
+
+	return byServiceName
+}
+
 type Permissions struct {
 	ServiceName string       `json:"serviceName,omitempty"`
 	Rules       []PolicyRule `json:"rules,omitempty"`
 	// Deprecated, use Rules with the 'scopes: ["cluster"]' field
 	ZZ_ClusterRules []PolicyRule `json:"clusterRules,omitempty"`
+}
+
+func (in Permissions) Grants(currentNamespace string, forService string, requested PolicyRule) bool {
+	if in.ServiceName != forService {
+		return false
+	}
+	for _, granted := range in.GetRules() {
+		if granted.Grants(currentNamespace, requested) {
+			return true
+		}
+	}
+	return false
 }
 
 func (in Permissions) GetRules() []PolicyRule {
@@ -321,13 +400,27 @@ func (in *Permissions) Get() Permissions {
 	return *in
 }
 
-func FindPermission(serviceName string, perms []Permissions) Permissions {
+func Grants(grantedPermissions Permissions, currentNamespace string, requestedPermissions Permissions) (missing Permissions, granted bool) {
+	missing.ServiceName = requestedPermissions.ServiceName
+
+	for _, requested := range requestedPermissions.Rules {
+		if grantedPermissions.Grants(currentNamespace, requestedPermissions.ServiceName, requested) {
+			continue
+		}
+		missing.Rules = append(missing.Rules, requested)
+	}
+
+	return missing, len(missing.Rules) == 0
+}
+
+func FindPermission(serviceName string, perms []Permissions) (result Permissions) {
+	result.ServiceName = serviceName
 	for _, perm := range perms {
-		if serviceName == perm.ServiceName {
-			return perm
+		if perm.ServiceName == serviceName {
+			result.Rules = append(result.Rules, perm.GetRules()...)
 		}
 	}
-	return Permissions{}
+	return
 }
 
 type Files map[string]File
@@ -418,24 +511,33 @@ type Router struct {
 	Routes      Routes            `json:"routes,omitempty"`
 }
 
+func (in Acorn) GetOriginalImage() string {
+	originalImage := in.Image
+	if in.Build != nil && in.Build.OriginalImage != "" {
+		originalImage = in.Build.OriginalImage
+	}
+	return originalImage
+}
+
 type Acorn struct {
-	Labels              ScopedLabels    `json:"labels,omitempty"`
-	Annotations         ScopedLabels    `json:"annotations,omitempty"`
-	Image               string          `json:"image,omitempty"`
-	Build               *AcornBuild     `json:"build,omitempty"`
-	Profiles            []string        `json:"profiles,omitempty"`
-	DeployArgs          GenericMap      `json:"deployArgs,omitempty"`
-	Publish             PortBindings    `json:"publish,omitempty"`
-	PublishMode         PublishMode     `json:"publishMode,omitempty"`
-	Environment         NameValues      `json:"environment,omitempty"`
-	Secrets             SecretBindings  `json:"secrets,omitempty"`
-	Volumes             VolumeBindings  `json:"volumes,omitempty"`
-	Links               ServiceBindings `json:"links,omitempty"`
-	AutoUpgrade         *bool           `json:"autoUpgrade,omitempty"`
-	NotifyUpgrade       *bool           `json:"notifyUpgrade,omitempty"`
-	AutoUpgradeInterval string          `json:"autoUpgradeInterval,omitempty"`
-	Memory              MemoryMap       `json:"memory,omitempty"`
-	ComputeClasses      ComputeClassMap `json:"computeClasses,omitempty"`
+	Labels              ScopedLabels           `json:"labels,omitempty"`
+	Annotations         ScopedLabels           `json:"annotations,omitempty"`
+	Image               string                 `json:"image,omitempty"`
+	Build               *AcornBuild            `json:"build,omitempty"`
+	Profiles            []string               `json:"profiles,omitempty"`
+	DeployArgs          GenericMap             `json:"deployArgs,omitempty"`
+	Publish             PortBindings           `json:"publish,omitempty"`
+	PublishMode         PublishMode            `json:"publishMode,omitempty"`
+	Environment         NameValues             `json:"environment,omitempty"`
+	Secrets             SecretBindings         `json:"secrets,omitempty"`
+	Volumes             VolumeBindings         `json:"volumes,omitempty"`
+	Links               ServiceBindings        `json:"links,omitempty"`
+	AutoUpgrade         *bool                  `json:"autoUpgrade,omitempty"`
+	NotifyUpgrade       *bool                  `json:"notifyUpgrade,omitempty"`
+	AutoUpgradeInterval string                 `json:"autoUpgradeInterval,omitempty"`
+	Memory              MemoryMap              `json:"memory,omitempty"`
+	ComputeClasses      ComputeClassMap        `json:"computeClasses,omitempty"`
+	Permissions         map[string]Permissions `json:"permissions,omitempty"`
 }
 
 type Secret struct {
@@ -474,31 +576,40 @@ type GeneratedService struct {
 }
 
 type Service struct {
-	Labels              ScopedLabels      `json:"labels,omitempty"`
-	Annotations         ScopedLabels      `json:"annotations,omitempty"`
-	Default             bool              `json:"default,omitempty"`
-	External            string            `json:"external,omitempty"`
-	Alias               string            `json:"alias,omitempty"`
-	Address             string            `json:"address,omitempty"`
-	Ports               Ports             `json:"ports,omitempty"`
-	Container           string            `json:"container,omitempty"`
-	Data                GenericMap        `json:"data,omitempty"`
-	Generated           *GeneratedService `json:"generated,omitempty"`
-	Image               string            `json:"image,omitempty"`
-	Build               *AcornBuild       `json:"build,omitempty"`
-	ServiceArgs         GenericMap        `json:"serviceArgs,omitempty"`
-	Environment         NameValues        `json:"environment,omitempty"`
-	Secrets             SecretBindings    `json:"secrets,omitempty"`
-	Links               ServiceBindings   `json:"links,omitempty"`
-	AutoUpgrade         *bool             `json:"autoUpgrade,omitempty"`
-	NotifyUpgrade       *bool             `json:"notifyUpgrade,omitempty"`
-	AutoUpgradeInterval string            `json:"autoUpgradeInterval,omitempty"`
-	Memory              MemoryMap         `json:"memory,omitempty"`
+	Labels              ScopedLabels           `json:"labels,omitempty"`
+	Annotations         ScopedLabels           `json:"annotations,omitempty"`
+	Default             bool                   `json:"default,omitempty"`
+	External            string                 `json:"external,omitempty"`
+	Alias               string                 `json:"alias,omitempty"`
+	Address             string                 `json:"address,omitempty"`
+	Ports               Ports                  `json:"ports,omitempty"`
+	Container           string                 `json:"container,omitempty"`
+	Data                GenericMap             `json:"data,omitempty"`
+	Generated           *GeneratedService      `json:"generated,omitempty"`
+	Image               string                 `json:"image,omitempty"`
+	Build               *AcornBuild            `json:"build,omitempty"`
+	ServiceArgs         GenericMap             `json:"serviceArgs,omitempty"`
+	Environment         NameValues             `json:"environment,omitempty"`
+	Secrets             SecretBindings         `json:"secrets,omitempty"`
+	Links               ServiceBindings        `json:"links,omitempty"`
+	AutoUpgrade         *bool                  `json:"autoUpgrade,omitempty"`
+	NotifyUpgrade       *bool                  `json:"notifyUpgrade,omitempty"`
+	AutoUpgradeInterval string                 `json:"autoUpgradeInterval,omitempty"`
+	Memory              MemoryMap              `json:"memory,omitempty"`
+	Permissions         map[string]Permissions `json:"permissions,omitempty"`
 }
 
-func (s Service) GetJob() string {
-	if s.Generated == nil {
+func (in Service) GetOriginalImage() string {
+	originalImage := in.Image
+	if in.Build != nil && in.Build.OriginalImage != "" {
+		originalImage = in.Build.OriginalImage
+	}
+	return originalImage
+}
+
+func (in Service) GetJob() string {
+	if in.Generated == nil {
 		return ""
 	}
-	return s.Generated.Job
+	return in.Generated.Job
 }

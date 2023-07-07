@@ -22,6 +22,7 @@ const (
 	ImageDataFile = "images.json"
 	VCSDataFile   = "vcs.json"
 	BuildDataFile = "build.json"
+	messageSuffix = ", you may need to define the image/build in the images section of the Acornfile"
 )
 
 var (
@@ -165,14 +166,14 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		if image, ok := GetImageReferenceForServiceName(containerName, spec, imagesData); ok {
 			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
 		} else {
-			return nil, fmt.Errorf("failed to find image for container [%s] in Acornfile", containerName)
+			return nil, fmt.Errorf("failed to find image for container [%s] in Acornfile"+messageSuffix, containerName)
 		}
 		for sidecarName, sidecarSpec := range conSpec.Sidecars {
 			if image, ok := GetImageReferenceForServiceName(containerName+"."+sidecarName, spec, imagesData); ok {
 				sidecarSpec.Image, sidecarSpec.Build = assignImage(sidecarSpec.Image, sidecarSpec.Build, image)
 				conSpec.Sidecars[sidecarName] = sidecarSpec
 			} else {
-				return nil, fmt.Errorf("failed to find image for sidecar [%s] in container [%s] in Acornfile", sidecarName, containerName)
+				return nil, fmt.Errorf("failed to find image for sidecar [%s] in container [%s] in Acornfile"+messageSuffix, sidecarName, containerName)
 			}
 		}
 		spec.Containers[containerName] = conSpec
@@ -182,14 +183,14 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		if image, ok := GetImageReferenceForServiceName(containerName, spec, imagesData); ok {
 			conSpec.Image, conSpec.Build = assignImage(conSpec.Image, conSpec.Build, image)
 		} else {
-			return nil, fmt.Errorf("failed to find image for job [%s] in Acornfile", containerName)
+			return nil, fmt.Errorf("failed to find image for job [%s] in Acornfile"+messageSuffix, containerName)
 		}
 		for sidecarName, sidecarSpec := range conSpec.Sidecars {
 			if image, ok := GetImageReferenceForServiceName(containerName+"."+sidecarName, spec, imagesData); ok {
 				sidecarSpec.Image, sidecarSpec.Build = assignImage(sidecarSpec.Image, sidecarSpec.Build, image)
 				conSpec.Sidecars[sidecarName] = sidecarSpec
 			} else {
-				return nil, fmt.Errorf("failed to find image for sidecar [%s] in job [%s] in Acornfile", sidecarName, containerName)
+				return nil, fmt.Errorf("failed to find image for sidecar [%s] in job [%s] in Acornfile"+messageSuffix, sidecarName, containerName)
 			}
 		}
 		spec.Jobs[containerName] = conSpec
@@ -203,7 +204,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 				imgSpec.Image, imgSpec.Build = assignImage(imgSpec.Image, imgSpec.Build, image)
 			}
 		} else {
-			return nil, fmt.Errorf("failed to find image for image definition [%s] in Acornfile", imageName)
+			return nil, fmt.Errorf("failed to find image for image definition [%s] in Acornfile"+messageSuffix, imageName)
 		}
 		spec.Images[imageName] = imgSpec
 	}
@@ -212,7 +213,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		if image, ok := GetImageReferenceForServiceName(acornName, spec, imagesData); ok {
 			acornSpec.Image, acornSpec.Build = assignAcornImage(acornSpec.Image, acornSpec.Build, image)
 		} else {
-			return nil, fmt.Errorf("failed to find image for acorn [%s] in Acornfile", acornName)
+			return nil, fmt.Errorf("failed to find image for acorn [%s] in Acornfile"+messageSuffix, acornName)
 		}
 		spec.Acorns[acornName] = acornSpec
 	}
@@ -224,7 +225,7 @@ func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 		if image, ok := GetImageReferenceForServiceName(serviceName, spec, imagesData); ok {
 			serviceSpec.Image, serviceSpec.Build = assignAcornImage(serviceSpec.Image, serviceSpec.Build, image)
 		} else {
-			return nil, fmt.Errorf("failed to find image for service [%s] in Acornfile", serviceName)
+			return nil, fmt.Errorf("failed to find image for service [%s] in Acornfile"+messageSuffix, serviceName)
 		}
 		spec.Services[serviceName] = serviceSpec
 	}

@@ -29,7 +29,7 @@ func addAWS(req router.Request, appInstance *v1.AppInstance, sa *corev1.ServiceA
 	perms := v1.Permissions{
 		ServiceName: sa.Name,
 	}
-	for _, perm := range appInstance.Spec.Permissions {
+	for _, perm := range appInstance.Spec.GetPermissions() {
 		if perm.ServiceName == sa.Name {
 			perms.Rules = append(perms.Rules, perm.Rules...)
 		}

@@ -8,6 +8,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
     both: con1val
@@ -26,6 +27,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
     both: con1val
@@ -87,6 +89,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
     both: con1val
@@ -118,6 +121,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con2
     acorn.io/managed: "true"
     both: con2val
@@ -136,6 +140,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con2
     acorn.io/managed: "true"
     both: con2val
@@ -197,6 +202,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con2
     acorn.io/managed: "true"
     both: con2val
@@ -225,6 +231,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con3
     acorn.io/managed: "true"
   name: con3
@@ -238,6 +245,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con3
     acorn.io/managed: "true"
   name: con3
@@ -285,6 +293,7 @@ metadata:
   labels:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
+    acorn.io/app-public-name: app-name
     acorn.io/container-name: con3
     acorn.io/managed: "true"
   name: con3

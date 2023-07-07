@@ -452,29 +452,39 @@ func (i *Interpolator) saveError(err error) {
 	}
 }
 
-func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
+func (i *Interpolator) getContainerOrJobName() string {
+	if i.containerName != "" {
+		return i.containerName
+	}
+	return i.jobName
+}
+
+func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
+	prefix := i.getContainerOrJobName()
+	key = strings.TrimPrefix(key, prefix+".")
+
 	newKey, err := i.replace(key)
 	if err != nil {
 		i.saveError(err)
 		return corev1.EnvVar{
 			Name:  key,
 			Value: value,
-		}
+		}, !strings.Contains(key, ".")
 	}
 
 	newValue, err := i.replace(value)
 	if err != nil {
 		i.saveError(err)
 		return corev1.EnvVar{
-			Name:  key,
+			Name:  newKey,
 			Value: value,
-		}
+		}, !strings.Contains(key, ".")
 	}
 	if value == newValue {
 		return corev1.EnvVar{
 			Name:  newKey,
 			Value: value,
-		}
+		}, !strings.Contains(newKey, ".")
 	}
 
 	return corev1.EnvVar{
@@ -487,7 +497,7 @@ func (i *Interpolator) ToEnv(key, value string) corev1.EnvVar {
 				Key: i.addContent(newValue),
 			},
 		},
-	}
+	}, !strings.Contains(newKey, ".")
 }
 
 func (i *Interpolator) Objects() []kclient.Object {
