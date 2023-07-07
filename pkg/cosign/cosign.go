@@ -11,10 +11,12 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/merr"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/oci"
@@ -40,6 +42,24 @@ type VerifyOpts struct {
 	CraneOpts          []crane.Option
 	NoCache            bool
 	Verifiers          []signature.Verifier
+}
+
+func (o *VerifyOpts) WithRemoteOpts(ctx context.Context, c client.Reader, namespace string, remoteOpts ...remote.Option) error {
+	opts, err := images.GetAuthenticationRemoteOptions(ctx, c, namespace, remoteOpts...)
+	if err != nil {
+		return err
+	}
+
+	keychain, err := images.GetAuthenticationRemoteKeychainWithLocalAuth(ctx, nil, nil, c, namespace)
+	if err != nil {
+		return err
+	}
+
+	o.OciRemoteOpts = append(o.OciRemoteOpts, ociremote.WithRemoteOptions(opts...))
+
+	o.CraneOpts = append(o.CraneOpts, crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain))
+
+	return nil
 }
 
 // EnsureReferences will enrich the VerifyOpts with the image digest and signature reference.

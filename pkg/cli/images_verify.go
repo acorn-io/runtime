@@ -68,7 +68,7 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 
 	target := ref.Context().Digest(targetDigest)
 
-	if a.Key == "" { // TODO: use default identity if no key is given
+	if a.Key == "" {
 		return fmt.Errorf("key is required")
 	}
 	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
@@ -77,22 +77,27 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		Match: a.Annotations,
 	}
 
-	verifyOpts := acornsign.VerifyOpts{ // TODO: add ociremote opts
+	cc, err := c.GetClient()
+	if err != nil {
+		return err
+	}
+
+	verifyOpts := &acornsign.VerifyOpts{
 		AnnotationRules:    annotationRules,
 		SignatureAlgorithm: "sha256",
 		Key:                a.Key,
 		NoCache:            true,
 	}
-
-	cc, err := c.GetClient()
-	if err != nil {
-		return err
-	}
-	if err := acornsign.EnsureReferences(cmd.Context(), cc, target.String(), &verifyOpts); err != nil {
-		return err
+	if err := verifyOpts.WithRemoteOpts(cmd.Context(), cc, c.GetNamespace()); err != nil {
+		pterm.Debug.Printf("Error getting remote opts: %v\n", err)
+		pterm.Warning.Println("Unable to get remote opts for registry authentication, trying without.")
 	}
 
-	if err := acornsign.VerifySignature(cmd.Context(), verifyOpts); err != nil {
+	if err := acornsign.EnsureReferences(cmd.Context(), cc, target.String(), verifyOpts); err != nil {
+		return err
+	}
+
+	if err := acornsign.VerifySignature(cmd.Context(), *verifyOpts); err != nil {
 		return err
 	}
 

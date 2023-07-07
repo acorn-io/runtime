@@ -96,13 +96,6 @@ var (
 	}
 	CredentialConverter = MustConverter(Credential)
 
-	PublicKey = [][]string{
-		{"Name", "{{ . | name }}"},
-		//{"Fingerprint", "{{fingerprint .Key}}"}, // TODO: implement fingerprint func
-		{"Created", "{{ago .CreationTimestamp}}"},
-	}
-	PublicKeyConverter = MustConverter(PublicKey)
-
 	Secret = [][]string{
 		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},

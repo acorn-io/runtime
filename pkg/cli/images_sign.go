@@ -78,7 +78,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	target := ref.Context().Digest(targetDigest)
 
-	if a.Key == "" { // TODO: use default identity if no key is given
+	if a.Key == "" {
 		return fmt.Errorf("key is required")
 	}
 	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
@@ -131,7 +131,17 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ociEntity, err := ociremote.SignedEntity(ref) // TODO: here and in other places we may want to add remote opts, especially for registry auth
+	cc, err := c.GetClient()
+	if err != nil {
+		return err
+	}
+
+	remoteopts, err := images.GetAuthenticationRemoteOptions(cmd.Context(), cc, c.GetNamespace())
+	if err != nil {
+		return err
+	}
+
+	ociEntity, err := ociremote.SignedEntity(ref, ociremote.WithRemoteOptions(remoteopts...))
 	if err != nil {
 		return fmt.Errorf("accessing entity: %w", err)
 	}
@@ -143,7 +153,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	if a.Push {
 		targetRepo := ref.Context()
-		if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity); err != nil { // TODO: need remote opts
+		if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity, ociremote.WithRemoteOptions(remoteopts...)); err != nil {
 			return err
 		}
 		pterm.Success.Printf("Done: Pushed signature to %s\n", targetRepo.String())
