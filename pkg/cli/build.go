@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
@@ -39,12 +40,25 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 	if s.Push && (len(s.Tag) == 0 || s.Tag[0] == "") {
 		return fmt.Errorf("--push must be used with --tag")
 	}
+
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
+	// Check if we can parse the name/tag
+	for _, tag := range s.Tag {
+		if strings.HasPrefix(tag, "-") {
+			return fmt.Errorf("invalid image tag: %v", tag)
+		}
+
+		if _, err := name.ParseReference(tag); err != nil {
+			return err
+		}
+	}
+
 	helper := imagesource.NewImageSource(s.File, args, s.Profile, s.Platform, false)
+
 	image, _, err := helper.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
 		return err

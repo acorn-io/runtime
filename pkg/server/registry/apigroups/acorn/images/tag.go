@@ -80,6 +80,10 @@ func (t *TagStrategy) ImageTag(ctx context.Context, namespace, imageName string,
 	}
 	set := sets.NewString(res...)
 
+	if strings.HasPrefix(tagToAdd, "-") {
+		return nil, fmt.Errorf("invalid image tag: %v", tagToAdd)
+	}
+
 	imageRef, err := name.ParseReference(tagToAdd, name.WithDefaultRegistry(""))
 	if err != nil {
 		return nil, err
