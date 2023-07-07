@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -99,13 +100,22 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		if projectItem.Project != nil {
+			if projectItem.Project.Annotations == nil {
+				projectItem.Project.Annotations = map[string]string{}
+			}
+			projectItem.Project.Annotations["project-name"] = projectItem.FullName
+			projectItem.Project.Annotations["default-project"] = fmt.Sprint(defaultProject == projectItem.FullName)
+
 			supportedRegions := projectItem.Project.Status.SupportedRegions
 			defaultRegion := projectItem.Project.Status.DefaultRegion
-			for i, supportedRegion := range supportedRegions {
-				if supportedRegion == defaultRegion {
-					supportedRegions[i] = supportedRegion + "*"
+			if len(supportedRegions) > 1 {
+				for i, supportedRegion := range supportedRegions {
+					if supportedRegion == defaultRegion {
+						supportedRegions[i] = supportedRegion + "*"
+					}
 				}
 			}
+
 			out.WriteFormatted(projectEntry{
 				Name:    projectItem.FullName,
 				Default: defaultProject == projectItem.FullName,
