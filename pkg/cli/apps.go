@@ -55,7 +55,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, app := range apps {
-		if (app.Status.AppStatus.Stopped || inactive(app)) && !a.All {
+		if (app.Status.AppStatus.Stopped || app.Status.AppStatus.Completed) && !a.All {
 			continue
 		}
 		if len(args) > 0 {
@@ -68,14 +68,6 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return out.Err()
-}
-
-func inactive(app apiv1.App) bool {
-	return strings.Contains(app.Name, ".") &&
-		app.Status.Ready &&
-		app.Status.Columns.Healthy == "0" &&
-		app.Status.Columns.UpToDate == "0" &&
-		app.Status.Columns.Message == "OK"
 }
 
 func writeApp(ctx context.Context, app *apiv1.App, out table.Writer, c client.Client) {

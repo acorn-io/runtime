@@ -6405,6 +6405,12 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 							Format: "",
 						},
 					},
+					"completed": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
