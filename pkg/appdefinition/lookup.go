@@ -120,6 +120,15 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 		containerName = svcName
 	}
 
+	// This logic is here to support where autoUpgrade is true but it wasn't true during the build.  So the build actually
+	// as an embedded image. But since autoUpgrade is on we want to fall back to the behavior of grabbing the external
+	// image.
+	if serviceDef, ok := appSpec.Services[svcName]; ok && serviceDef.AutoUpgrade != nil && *serviceDef.AutoUpgrade && serviceDef.Image != "" {
+		return serviceDef.Image, true
+	} else if acornDef, ok := appSpec.Acorns[svcName]; ok && acornDef.AutoUpgrade != nil && *acornDef.AutoUpgrade && acornDef.Image != "" {
+		return acornDef.Image, true
+	}
+
 	image, ok := findImageInImageData(imageData, svcName)
 	if ok {
 		return image, true

@@ -22,7 +22,7 @@ status:
     containers:
       oneimage:
         build:
-          baseImage: not-foo
+          baseImage: foo
           context: .
           dockerfile: Dockerfile
         image: sha256:build-image

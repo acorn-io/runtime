@@ -125,7 +125,7 @@ func (in *AppInstanceSpec) GetNotifyUpgrade() bool {
 }
 
 func addProfile(profiles []string, toAdd string) []string {
-	found := true
+	found := false
 	optional := strings.HasSuffix(toAdd, "?")
 	nonOptionalName := toAdd[:len(toAdd)-1]
 	for _, profile := range profiles {
