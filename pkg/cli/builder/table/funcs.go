@@ -42,6 +42,7 @@ var (
 		"defaultMemory": DefaultMemory,
 		"ownerName":     OwnerReferenceName,
 		"imageName":     ImageName,
+		"imageDigest":   ImageDigest,
 	}
 )
 
@@ -305,4 +306,13 @@ func ImageName(obj metav1.Object) string {
 		return original
 	}
 	return app.Status.AppImage.Name
+}
+
+func ImageDigest(obj metav1.Object) string {
+	app, ok := obj.(*apiv1.App)
+	if !ok {
+		return ""
+	}
+
+	return strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
 }

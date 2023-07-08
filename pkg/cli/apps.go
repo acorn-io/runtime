@@ -1,13 +1,8 @@
 package cli
 
 import (
-	"context"
-	"strings"
-
-	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
-	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -45,7 +40,7 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		writeApp(cmd.Context(), app, out, c)
+		out.Write(app)
 		return out.Err()
 	}
 
@@ -60,35 +55,12 @@ func (a *App) Run(cmd *cobra.Command, args []string) error {
 		}
 		if len(args) > 0 {
 			if slices.Contains(args, app.Name) {
-				writeApp(cmd.Context(), &app, out, c)
+				out.Write(&app)
 			}
 		} else {
-			writeApp(cmd.Context(), &app, out, c)
+			out.Write(&app)
 		}
 	}
 
 	return out.Err()
-}
-
-func writeApp(ctx context.Context, app *apiv1.App, out table.Writer, c client.Client) {
-	image, err := c.ImageGet(ctx, strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:"))
-	if err != nil {
-		// Give up and write the app with its digest as its name
-		app.Status.AppImage.Name = strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
-		out.Write(app)
-		return
-	}
-
-	var tagIsValid bool
-	for _, tag := range image.Tags {
-		if tag == app.Status.AppImage.Name || (strings.Contains(tag, "docker.io") && strings.HasSuffix(tag, app.Status.AppImage.Name)) {
-			tagIsValid = true
-			break
-		}
-	}
-	if !tagIsValid {
-		app.Status.AppImage.Name = strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
-	}
-
-	out.Write(app)
 }
