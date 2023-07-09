@@ -1,14 +1,14 @@
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: acorn-ingress
+  name: acorn-dns-ingress
   namespace: acorn-system
   labels:
     "acorn.io/managed": "true"
   # Note the absence of acorn.io/dns-hash annotation
 spec:
   rules:
-    - host: oss-acorn.io
+    - host: acorn-dns-ingress.oss-acorn.io
       http:
         paths:
           - backend:

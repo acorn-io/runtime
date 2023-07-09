@@ -11,12 +11,12 @@ import (
 )
 
 // TestBasicDNS is a simple test that asserts the basic logic of calling the DNS service to create an FQDN for the
-// acorn-ingress Ingress.
+// acorn-dns-ingress Ingress.
 //
 // To turn on AcornDNS integration, existing.yaml supplies the acorn-config configMap and acorn-dns secret. The configMap
 // sets acornDNS to "enabled". The secret has the expected domain and token fields.
 //
-// input.yaml supplies an ingress that reflects what acorn-ingress will look like where its status.LoadBalancer.ingress
+// input.yaml supplies an ingress that reflects what acorn-dns-ingress will look like where its status.LoadBalancer.ingress
 // field is set (required to create an FQDN).
 //
 // expected.yaml has the same ingress that is in input.yaml, but with the acorn.io/dns-hash annotation set, which indicates

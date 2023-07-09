@@ -110,7 +110,8 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobs.JobPodOrphanCleanup)
 	router.Type(&corev1.Pod{}).Selector(managedSelector).HandlerFunc(jobsHandler.SaveJobOutput)
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).Namespace(system.ImagesNamespace).HandlerFunc(gc.GCOrphans)
-	router.Type(&netv1.Ingress{}).Selector(managedSelector).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
+	router.Type(&netv1.Ingress{}).Selector(managedSelector).Name(system.DNSIngressName).Namespace(system.Namespace).Middleware(ingress.RequireLBs).Handler(ingress.NewDNSHandler())
+	router.Type(&corev1.Secret{}).Selector(managedSelector).Name(system.DNSIngressName).Namespace(system.Namespace).HandlerFunc(secrets.HandleDNSSecret)
 	router.Type(&corev1.Secret{}).Selector(managedSelector).Middleware(tls.RequireSecretTypeTLS).HandlerFunc(tls.RenewCert) // renew (expired) TLS certificates, including the oss-acorn.io wildcard cert
 	router.Type(&storagev1.StorageClass{}).HandlerFunc(volume.SyncVolumeClasses)
 	router.Type(&corev1.Service{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForService)

@@ -37,12 +37,12 @@ func NewDNSHandler() router.Handler {
 	return s
 }
 
-// Handle calls the AcornDNS service to create records for ingresses if the acorn-dns feature is enabled
+// Handle calls the AcornDNS service to create a wild card record based on
+// the acorn-dns-ingress Ingress. Depending on the Ingress' resolved host,
+// a different record will be created. IPv4 creates an A Record, IPv6 creates an AAAA
+// record and a hostname creates a CNAME record.
 func (h *handler) Handle(req router.Request, resp router.Response) error {
 	ingress := req.Object.(*netv1.Ingress)
-	if ingress.Name != system.IngressName {
-		return nil
-	}
 
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {

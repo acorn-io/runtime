@@ -64,10 +64,15 @@ func (d *Daemon) renewAndSync(ctx context.Context) (bool, error) {
 
 	logrus.Infof("Renewing and syncing AcornDNS...")
 
-	dnsSecret, domain, token, err := d.getDNSSecret(ctx)
+	dnsSecret, err := d.getDNSSecret(ctx)
 	if err != nil {
 		logrus.Errorf("Failed to get DNS secret: %v", err)
 		return false, nil
+	}
+
+	domain, token := string(dnsSecret.Data["domain"]), string(dnsSecret.Data["token"])
+	if domain == "" || token == "" {
+		return false, fmt.Errorf("DNS secret %v/%v exists but is missing domain (%v) or token", system.Namespace, system.DNSSecretName, domain)
 	}
 
 	if err := d.syncIngress(ctx, domain, token, *cfg.AcornDNSEndpoint, dnsSecret); err != nil {
@@ -80,29 +85,26 @@ func (d *Daemon) renewAndSync(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (d *Daemon) getDNSSecret(ctx context.Context) (secret *corev1.Secret, domain string, token string, err error) {
+func (d *Daemon) getDNSSecret(ctx context.Context) (*corev1.Secret, error) {
 	dnsSecret := &corev1.Secret{}
-	err = d.client.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
+	err := d.client.Get(ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return secret, domain, token, fmt.Errorf("DNS secret %v/%v not found, not proceeding with DNS renewal", system.Namespace, system.DNSSecretName)
+			return dnsSecret, fmt.Errorf("DNS secret %v/%v not found, not proceeding with DNS renewal", system.Namespace, system.DNSSecretName)
 		}
-		return secret, domain, token, fmt.Errorf("problem getting DNS secret %v/%v: %v", system.Namespace, system.DNSSecretName, err)
+		return nil, fmt.Errorf("problem getting DNS secret %v/%v: %v", system.Namespace, system.DNSSecretName, err)
 	}
-
-	domain = string(dnsSecret.Data["domain"])
-	token = string(dnsSecret.Data["token"])
-	if domain == "" || token == "" {
-		return secret, domain, token, fmt.Errorf("DNS secret %v/%v exists but is missing domain (%v) or token", system.Namespace, system.DNSSecretName, domain)
-	}
-	return secret, domain, token, nil
+	return dnsSecret, nil
 }
 
 func (d *Daemon) syncIngress(ctx context.Context, domain, token, acornDNSEndpoint string, secret *corev1.Secret) error {
 	var ingress netv1.Ingress
-	err := d.client.Get(ctx, router.Key(system.Namespace, system.IngressName), &ingress)
+	err := d.client.Get(ctx, router.Key(system.Namespace, system.DNSIngressName), &ingress)
 	if err != nil {
-		return fmt.Errorf("failed to get %v for DNS renewal: %v", system.IngressName, err)
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("failed to get %v for DNS renewal: %w", system.DNSIngressName, err)
 	}
 
 	// Build the system.IngressName ingress into a list of RecordRequests

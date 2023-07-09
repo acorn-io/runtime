@@ -13,8 +13,9 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ToRecordRequestsAndHash creates DNS records based on the ingress and domain supplied. It also returns a hash of those
-// records, suitable for using overtime to determine if the ingress's records need to change.
+// ToRecordRequestsAndHash creates wildcard DNS records based on the ingress and domain supplied. It
+// also returns a hash of those records, suitable for using over time to determine if the ingress's
+// records need to change.
 func ToRecordRequestsAndHash(domain string, ingress *v1.Ingress) ([]RecordRequest, string) {
 	var ipv4s, ipv6s, lbHosts, recordValues []string
 
@@ -33,10 +34,9 @@ func ToRecordRequestsAndHash(domain string, ingress *v1.Ingress) ([]RecordReques
 
 	var hosts []string
 	for _, rule := range ingress.Spec.Rules {
-		if rule.Host == strings.TrimPrefix(domain, ".") {
+		if strings.HasSuffix(rule.Host, domain) {
 			hosts = append(hosts, "*")
-		} else if strings.HasSuffix(rule.Host, domain) {
-			hosts = append(hosts, strings.TrimSuffix(rule.Host, domain))
+			break
 		}
 	}
 
