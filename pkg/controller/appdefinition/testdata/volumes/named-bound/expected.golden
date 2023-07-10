@@ -101,7 +101,7 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
-    acorn.io/public-name: app-name.foo
+    acorn.io/public-name: other-app.foo
     acorn.io/volume-class: custom-class
     acorn.io/volume-name: foo
   name: foo-bind
@@ -141,7 +141,7 @@ spec:
   image: test
   volumes:
   - target: foo
-    volume: existing-foo
+    volume: other-app.foo
 status:
   appImage:
     id: test

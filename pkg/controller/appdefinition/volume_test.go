@@ -205,7 +205,7 @@ func TestFindPVForBinding(t *testing.T) {
 				},
 			},
 			volumeBinding: v1.VolumeBinding{
-				Volume: "pv2",
+				Volume: "app2.volume",
 				Target: "targetVol",
 			},
 			expectedPVName: "pv2",
@@ -219,7 +219,7 @@ func TestFindPVForBinding(t *testing.T) {
 				},
 			},
 			volumeBinding: v1.VolumeBinding{
-				Volume: "pv3",
+				Volume: "app3.volume",
 				Target: "targetVol",
 			},
 			expectNotFoundError: true,
