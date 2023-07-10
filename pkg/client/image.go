@@ -66,6 +66,64 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 	}, nil
 }
 
+func (c *DefaultClient) ImageCopy(ctx context.Context, srcImage, dstImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error) {
+	body := &apiv1.ImageCopy{
+		Source: srcImage,
+		Dest:   dstImage,
+	}
+
+	if opts != nil {
+		body.SourceAuth = opts.SourceAuth
+		body.DestAuth = opts.DestAuth
+		body.AllTags = opts.AllTags
+		body.Force = opts.Force
+	}
+
+	url := c.RESTClient.Get().
+		Namespace(c.Namespace).
+		Resource("images").
+		Name(strings.ReplaceAll(fmt.Sprintf("%s-%s", srcImage, dstImage), "/", "+")).
+		SubResource("copy").
+		URL()
+
+	conn, _, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := conn.WriteJSON(body); err != nil {
+		return nil, err
+	}
+
+	result := make(chan ImageProgress, 1000)
+	go func() {
+		defer close(result)
+		defer conn.Close()
+		for {
+			_, data, err := conn.ReadMessage()
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				break
+			} else if err != nil {
+				result <- ImageProgress{
+					Error: err.Error(),
+				}
+				break
+			}
+
+			progress := ImageProgress{}
+			if err := json.Unmarshal(data, &progress); err == nil {
+				result <- progress
+			} else {
+				result <- ImageProgress{
+					Error: err.Error(),
+				}
+			}
+		}
+	}()
+
+	return result, nil
+}
+
 func (c *DefaultClient) ImagePull(ctx context.Context, imageName string, opts *ImagePullOptions) (<-chan ImageProgress, error) {
 	body := &apiv1.ImagePull{}
 	if opts != nil {

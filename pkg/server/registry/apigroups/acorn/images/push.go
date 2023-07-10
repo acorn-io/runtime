@@ -117,9 +117,10 @@ func (i *ImagePush) ConnectMethods() []string {
 }
 
 type ImageProgress struct {
-	Total    int64  `json:"total,omitempty"`
-	Complete int64  `json:"complete,omitempty"`
-	Error    string `json:"error,omitempty"`
+	Total       int64  `json:"total,omitempty"`
+	Complete    int64  `json:"complete,omitempty"`
+	Error       string `json:"error,omitempty"`
+	CurrentTask string `json:"currentTask,omitempty"`
 }
 
 func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ggcrv1.Update, error) {

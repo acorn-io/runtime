@@ -413,6 +413,14 @@ func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *
 	return c.ImageDetails(ctx, imageName, opts)
 }
 
+func (m *MultiClient) ImageCopy(ctx context.Context, srcImage, dstImage string, opts *ImageCopyOptions) (result <-chan ImageProgress, err error) {
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	if err != nil {
+		return nil, err
+	}
+	return c.ImageCopy(ctx, srcImage, dstImage, opts)
+}
+
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {

@@ -10,6 +10,7 @@ Available Commands:
   build        Build an app from a Acornfile file
   check        Check if the cluster is ready for Acorn
   container    Manage containers
+  copy         Copy Acorn images between registries
   credential   Manage registry credentials
   dev          Run an app from an image or Acornfile in dev mode or attach a dev session to a currently running app
   events       List events about Acorn resources

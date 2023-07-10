@@ -177,9 +177,10 @@ func (a AppUpdateOptions) ToRun() AppRunOptions {
 }
 
 type ImageProgress struct {
-	Total    int64  `json:"total,omitempty"`
-	Complete int64  `json:"complete,omitempty"`
-	Error    string `json:"error,omitempty"`
+	Total       int64  `json:"total,omitempty"`
+	Complete    int64  `json:"complete,omitempty"`
+	Error       string `json:"error,omitempty"`
+	CurrentTask string `json:"currentTask,omitempty"`
 }
 
 type ImageDetails struct {
@@ -237,6 +238,7 @@ type Client interface {
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (<-chan ImageProgress, error)
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
+	ImageCopy(ctx context.Context, srcImage, destImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error)
 
 	AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
 	AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error)
@@ -315,6 +317,13 @@ type ImageDetailsOptions struct {
 
 type ImageDeleteOptions struct {
 	Force bool `json:"force,omitempty"`
+}
+
+type ImageCopyOptions struct {
+	AllTags    bool                `json:"allTags,omitempty"`
+	Force      bool                `json:"force,omitempty"`
+	SourceAuth *apiv1.RegistryAuth `json:"sourceAuth,omitempty"`
+	DestAuth   *apiv1.RegistryAuth `json:"destAuth,omitempty"`
 }
 
 type ContainerReplicaExecOptions struct {
