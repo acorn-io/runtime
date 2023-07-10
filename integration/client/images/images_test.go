@@ -426,7 +426,7 @@ func TestImageCopy(t *testing.T) {
 	t.Cleanup(closeRegistry)
 
 	ctx := helper.GetCTX(t)
-	c, _ := helper.ClientAndNamespace(t)
+	c, _ := helper.ClientAndProject(t)
 
 	// Step 1: build an image and copy it to the registry
 	image, err := c.AcornImageBuild(ctx, "../testdata/nginx/Acornfile", &client.AcornImageBuildOptions{
