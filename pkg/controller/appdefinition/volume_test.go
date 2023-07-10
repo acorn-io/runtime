@@ -175,13 +175,28 @@ func TestFindPVForBinding(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                string
-		appInstance         v1.AppInstance
-		volumeBinding       v1.VolumeBinding
-		expectedPVName      string
-		expectNotFoundError bool
-		extraPV             *corev1.PersistentVolume
+		name           string
+		appInstance    v1.AppInstance
+		volumeBinding  v1.VolumeBinding
+		expectedPVName string
+		expectErr      bool
+		errContains    string
 	}{
+		{
+			name: "Bind PV that is already bound",
+			appInstance: v1.AppInstance{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myApp",
+					Namespace: "proj1",
+				},
+			},
+			volumeBinding: v1.VolumeBinding{
+				Volume: "app1.volume",
+				Target: "targetVol",
+			},
+			expectErr:   true,
+			errContains: "volume \"app1.volume\" is not available for binding",
+		},
 		{
 			name: "Bind nonexistent PV",
 			appInstance: v1.AppInstance{
@@ -194,7 +209,8 @@ func TestFindPVForBinding(t *testing.T) {
 				Volume: "dne",
 				Target: "targetVol",
 			},
-			expectNotFoundError: true,
+			expectErr:   true,
+			errContains: "no Acorn-managed volume found",
 		},
 		{
 			name: "Bind PV created by another app, same project",
@@ -222,7 +238,8 @@ func TestFindPVForBinding(t *testing.T) {
 				Volume: "app3.volume",
 				Target: "targetVol",
 			},
-			expectNotFoundError: true,
+			expectErr:   true,
+			errContains: "no Acorn-managed volume found",
 		},
 		{
 			name: "Bind PV created outside of Acorn",
@@ -236,7 +253,8 @@ func TestFindPVForBinding(t *testing.T) {
 				Volume: "not-acorn-managed",
 				Target: "targetVol",
 			},
-			expectNotFoundError: true,
+			expectErr:   true,
+			errContains: "no Acorn-managed volume found",
 		},
 	}
 
@@ -244,18 +262,12 @@ func TestFindPVForBinding(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := tester.NewRequest(t, scheme.Scheme, &tt.appInstance, pvList...)
 
-			if tt.extraPV != nil {
-				if err := req.Client.Create(req.Ctx, tt.extraPV); err != nil {
-					t.Fatal(err)
-				}
-			}
-
 			pv, err := getPVForVolumeBinding(req, &tt.appInstance, tt.volumeBinding)
 			if err != nil {
-				if !strings.Contains(err.Error(), "no Acorn-managed volume found") || !tt.expectNotFoundError {
+				if !tt.expectErr || !strings.Contains(err.Error(), tt.errContains) {
 					t.Fatalf("Unexpected error: %v", err)
 				}
-			} else if tt.expectNotFoundError {
+			} else if tt.expectErr {
 				t.Fatalf("Found PersistentVolume [%s] when none was expected", pv.Name)
 			} else if pv.Name != tt.expectedPVName {
 				t.Fatalf("Expected PersistentVolume [%s] but found [%s]", tt.expectedPVName, pv.Name)
@@ -270,12 +282,28 @@ func buildPVs(t *testing.T) []kclient.Object {
 	pvList := []kclient.Object{
 		&corev1.PersistentVolume{
 			ObjectMeta: metav1.ObjectMeta{
+				Name: "pv1",
+				Labels: map[string]string{
+					labels.AcornAppNamespace: "proj1",
+					labels.AcornPublicName:   "app1.volume",
+					labels.AcornManaged:      "true",
+				},
+			},
+			Status: corev1.PersistentVolumeStatus{
+				Phase: corev1.VolumeBound,
+			},
+		},
+		&corev1.PersistentVolume{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "pv2",
 				Labels: map[string]string{
 					labels.AcornAppNamespace: "proj1",
 					labels.AcornPublicName:   "app2.volume",
 					labels.AcornManaged:      "true",
 				},
+			},
+			Status: corev1.PersistentVolumeStatus{
+				Phase: corev1.VolumeAvailable,
 			},
 		},
 		&corev1.PersistentVolume{
