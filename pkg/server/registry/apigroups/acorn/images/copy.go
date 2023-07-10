@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/router"
@@ -126,6 +125,7 @@ func (i *ImageCopy) Validate(ctx context.Context, args apiv1.ImageCopy, namespac
 }
 
 func (i *ImageCopy) ImageCopy(ctx context.Context, namespace, sourceImage, destImage string, srcAuth, dstAuth *apiv1.RegistryAuth, force bool) (<-chan ImageProgress, error) {
+	// The source is allowed to be a local image, so we use getImageReference, which checks locally and remotely if it wasn't found.
 	sourceRef, err := i.getImageReference(ctx, sourceImage, namespace)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (i *ImageCopy) ImageCopy(ctx context.Context, namespace, sourceImage, destI
 		return nil, err
 	}
 
-	if sourceRef.Context().RegistryStr() == images.NoDefaultRegistry {
+	if destRef.Context().RegistryStr() == images.NoDefaultRegistry {
 		return nil, fmt.Errorf("missing registry name (i.e. docker.io, ghcr.io) from destination %s", destImage)
 	}
 
@@ -170,11 +170,9 @@ func (i *ImageCopy) ImageCopy(ctx context.Context, namespace, sourceImage, destI
 	// we can control closing the result channel in case we need to write an error.
 	progress2 := make(chan ImageProgress)
 	destOpts = append(destOpts, remote.WithProgress(progress))
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 
 	go func() {
-		defer wg.Done()
+		defer close(progress2)
 		for update := range progress {
 			var errString = ""
 			if update.Error != nil {
@@ -190,12 +188,8 @@ func (i *ImageCopy) ImageCopy(ctx context.Context, namespace, sourceImage, destI
 	}()
 
 	go func() {
-		defer func() {
-			wg.Wait()
-			close(progress2)
-		}()
-
-		// Don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex()
+		// Don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex().
+		// remote.WriteIndex will also close the currProgress channel on its own.
 		if err := remote.WriteIndex(destRef, sourceIndex, destOpts...); err != nil {
 			handleWriteIndexError(err, progress)
 		}
@@ -249,54 +243,46 @@ func (i *ImageCopy) RepoCopy(ctx context.Context, namespace, source, dest string
 		sourceIndexes = newIndexSlice
 	}
 
+	type updates struct {
+		updateChan chan ggcrv1.Update
+		currentTag string
+	}
+
 	// metachannel is used to send another channel with updates for each tag to be copied
-	metachannel := make(chan chan ggcrv1.Update)
+	metachannel := make(chan updates)
 	// progress is the channel returned by this function and used to write websocket messages to the client
 	progress := make(chan ImageProgress)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	// We create an RWMutex for the currentTag variable, since it is used by both goroutines
-	m := sync.RWMutex{}
-	currentTag := ""
 
 	go func() {
-		defer wg.Done()
-		for currProgress := range metachannel {
-			for update := range currProgress {
+		defer close(progress)
+		for c := range metachannel {
+			for update := range c.updateChan {
 				var errString = ""
 				if update.Error != nil {
 					errString = update.Error.Error()
 				}
-				m.RLock()
 				progress <- ImageProgress{
 					Total:       update.Total,
 					Complete:    update.Complete,
 					Error:       errString,
-					CurrentTask: fmt.Sprintf("Copying %s:%s to %s:%s", source, currentTag, dest, currentTag),
+					CurrentTask: fmt.Sprintf("Copying %s:%s to %s:%s", source, c.currentTag, dest, c.currentTag),
 				}
-				m.RUnlock()
 			}
 		}
 	}()
 
 	go func() {
-		defer func() {
-			close(metachannel)
-			wg.Wait()
-			close(progress)
-		}()
-
+		defer close(metachannel)
 		for i, imageIndex := range sourceIndexes {
 			currProgress := make(chan ggcrv1.Update)
-			metachannel <- currProgress
+			metachannel <- updates{
+				updateChan: currProgress,
+				currentTag: sourceTags[i],
+			}
 
-			m.Lock()
-			currentTag = sourceTags[i]
-			m.Unlock()
-
-			// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex()
-			if err := remote.WriteIndex(destRepo.Tag(currentTag), imageIndex, append(destOpts, remote.WithProgress(currProgress))...); err != nil {
+			// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex().
+			// remote.WriteIndex will also close the currProgress channel on its own.
+			if err := remote.WriteIndex(destRepo.Tag(sourceTags[i]), imageIndex, append(destOpts, remote.WithProgress(currProgress))...); err != nil {
 				handleWriteIndexError(err, currProgress)
 			}
 		}
