@@ -16,7 +16,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/volume"
 	name2 "github.com/rancher/wrangler/pkg/name"
-	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -106,7 +105,7 @@ func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 	case 0:
 		return "", nil
 	case 1:
-		if !slices.Contains([]corev1.PersistentVolumePhase{corev1.VolumeAvailable, corev1.VolumeReleased}, pv.Items[0].Status.Phase) {
+		if !isPVAvailable(&pv.Items[0], appInstance.Name) {
 			return "", fmt.Errorf("cannot use existing volume %s - it is in phase %s", pv.Items[0].Name, pv.Items[0].Status.Phase)
 		}
 		return pv.Items[0].Name, nil
@@ -247,8 +246,8 @@ func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 		}
 
 		// Check the PV phase
-		if slices.Contains([]corev1.PersistentVolumePhase{corev1.VolumePending, corev1.VolumeBound, corev1.VolumeFailed}, pv.Status.Phase) {
-			return nil, fmt.Errorf("volume %q is not currently available", binding.Volume)
+		if !isPVAvailable(pv, appInstance.Name) {
+			return nil, fmt.Errorf("volume %q is not available for binding", binding.Volume)
 		}
 
 		return pv, nil
@@ -271,6 +270,11 @@ func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
 		}
 		return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", binding.Volume, len(pvList.Items))
+	}
+
+	// Check the PV phase
+	if !isPVAvailable(&pvList.Items[0], appInstance.Name) {
+		return nil, fmt.Errorf("volume %q is not available for binding", binding.Volume)
 	}
 
 	return &pvList.Items[0], nil
@@ -472,4 +476,9 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator
 	})
 
 	return
+}
+
+func isPVAvailable(pv *corev1.PersistentVolume, appName string) bool {
+	return pv.Status.Phase == corev1.VolumeAvailable || pv.Status.Phase == corev1.VolumeReleased ||
+		pv.Labels[labels.AcornAppName] == appName
 }
