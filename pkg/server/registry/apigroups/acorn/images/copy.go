@@ -174,7 +174,7 @@ func (i *ImageCopy) ImageCopy(ctx context.Context, namespace, sourceImage, destI
 	go func() {
 		defer close(progress2)
 		for update := range progress {
-			var errString = ""
+			var errString string
 			if update.Error != nil {
 				errString = update.Error.Error()
 			}
@@ -257,7 +257,7 @@ func (i *ImageCopy) RepoCopy(ctx context.Context, namespace, source, dest string
 		defer close(progress)
 		for c := range metachannel {
 			for update := range c.updateChan {
-				var errString = ""
+				var errString string
 				if update.Error != nil {
 					errString = update.Error.Error()
 				}
