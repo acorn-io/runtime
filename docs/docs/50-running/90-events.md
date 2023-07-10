@@ -18,9 +18,6 @@ acorn events --tail 10
 
 # List the last 5 events and follow the event log
 acorn events --tail 5 -f
-
-# Print more information about each event
-acorn events --details -o yaml
 ```
 
 The command prints events in chronological order, printing the oldest events first.

@@ -44,12 +44,6 @@ acorn events [flags] [PREFIX]
   # Get a single event by name
   acorn events 4b2ba097badf2031c4718609b9179fb5
 
-  # Getting Details 
-  # The 'details' field provides additional information about an event.
-  # By default, this field is elided from this command's output, but can be enabled via the '--details' flag.
-  # This flag must be used in conjunction with a non-table output format, like '-o=yaml'.
-  acorn events --details -o yaml
-
 ```
 
 ### Options
