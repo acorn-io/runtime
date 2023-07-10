@@ -442,6 +442,19 @@ type Config struct {
 	EventTTL                       *string         `json:"eventTTL" name:"event-ttl" usage:"Amount of time an Acorn event will be stored before being deleted (default '168h' - 7 days)"`
 	Features                       map[string]bool `json:"features" name:"features" boolmap:"true" usage:"Enable or disable features. (example foo=true,bar=false)"`
 	CertManagerIssuer              *string         `json:"certManagerIssuer" name:"cert-manager-issuer" usage:"The name of the cert-manager cluster issuer to use for TLS certificates on custom domains" default:""`
+	Profile                        *string         `json:"profile" name:"profile" usage:"The name of the profile to use for the installation. Profiles options are production (prod) and default. (default profile is default)"`
+
+	// Flags for setting resource request and limits on sytem components
+	ControllerMemory       *string `json:"controllerMemory" name:"controller-memory" usage:"The memory to allocate to the runtime-controller in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	ControllerCPU          *string `json:"controllerCPU" name:"controller-cpu" usage:"The CPU to allocate to the runtime-controller in the format of <req>:<limit> (example 200m:1000m)"`
+	APIServerMemory        *string `json:"apiServerMemory" name:"api-server-memory" usage:"The memory to allocate to the runtime-api-server in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	APIServerCPU           *string `json:"apiServerCPU" name:"api-server-cpu" usage:"The CPU to allocate to the runtime-api-server in the format of <req>:<limit> (example 200m:1000m)"`
+	BuildkitdMemory        *string `json:"buildkitdMemory" name:"buildkitd-memory" usage:"The memory to allocate to buildkitd in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	BuildkitdCPU           *string `json:"buildkitdCPU" name:"buildkitd-cpu" usage:"The CPU to allocate to buildkitd in the format of <req>:<limit> (example 200m:1000m)"`
+	BuildkitdServiceMemory *string `json:"buildkitdServiceMemory" name:"buildkitd-service-memory" usage:"The memory to allocate to the buildkitd service in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	BuildkitdServiceCPU    *string `json:"buildkitdServiceCPU" name:"buildkitd-service-cpu" usage:"The CPU to allocate to the buildkitd service in the format of <req>:<limit> (example 200m:1000m)"`
+	RegistryMemory         *string `json:"registryMemory" name:"registry-memory" usage:"The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)"`
+	RegistryCPU            *string `json:"registryCPU" name:"registry-cpu" usage:"The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)"`
 }
 
 type EncryptionKey struct {

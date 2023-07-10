@@ -25,12 +25,20 @@ acorn install
       --allow-user-annotation strings                   Allow these annotations to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --allow-user-label strings                        Allow these labels to propagate to dependent objects, no effect if --ignore-user-labels-and-annotations not true
       --allow-user-metadata-namespace strings           Allow these namespaces to propagate labels and annotations to dependent objects, no effect if --ignore-user-labels-and-annotations not true
+      --api-server-cpu string                           The CPU to allocate to the runtime-api-server in the format of <req>:<limit> (example 200m:1000m)
+      --api-server-memory string                        The memory to allocate to the runtime-api-server in the format of <req>:<limit> (example 256Mi:1Gi)
       --api-server-replicas int                         acorn-api deployment replica count
       --auto-upgrade-interval string                    For apps configured with automatic upgrades enabled, the interval at which to check for new versions. Upgrade intervals configured at the application level cannot be smaller than this. (default '5m' - 5 minutes)
       --aws-identity-provider-arn string                ARN of cluster's OpenID Connect provider registered in AWS
       --builder-per-project                             Create a dedicated builder per project
+      --buildkitd-cpu string                            The CPU to allocate to buildkitd in the format of <req>:<limit> (example 200m:1000m)
+      --buildkitd-memory string                         The memory to allocate to buildkitd in the format of <req>:<limit> (example 256Mi:1Gi)
+      --buildkitd-service-cpu string                    The CPU to allocate to the buildkitd service in the format of <req>:<limit> (example 200m:1000m)
+      --buildkitd-service-memory string                 The memory to allocate to the buildkitd service in the format of <req>:<limit> (example 256Mi:1Gi)
       --cert-manager-issuer string                      The name of the cert-manager cluster issuer to use for TLS certificates on custom domains
       --cluster-domain strings                          The externally addressable cluster domain (default .oss-acorn.io)
+      --controller-cpu string                           The CPU to allocate to the runtime-controller in the format of <req>:<limit> (example 200m:1000m)
+      --controller-memory string                        The memory to allocate to the runtime-controller in the format of <req>:<limit> (example 256Mi:1Gi)
       --controller-replicas int                         acorn-controller deployment replica count
       --controller-service-account-annotation strings   annotation to apply to the acorn-system service account
       --event-ttl string                                Amount of time an Acorn event will be stored before being deleted (default '168h' - 7 days)
@@ -50,10 +58,13 @@ acorn install
       --network-policies                                Create Kubernetes NetworkPolicies which block cross-project network traffic (default false)
   -o, --output string                                   Output manifests instead of applying them (json, yaml)
       --pod-security-enforce-profile string             The name of the PodSecurity profile to set (default baseline)
+      --profile string                                  The name of the profile to use for the installation. Profiles options are production (prod) and default. (default profile is default)
       --propagate-project-annotation strings            The list of keys of annotations to propagate from acorn project to app namespaces
       --propagate-project-label strings                 The list of keys of labels to propagate from acorn project to app namespaces
       --publish-builders                                Publish the builders through ingress to so build traffic does not traverse the api-server
       --record-builds                                   Keep a record of each acorn build that happens
+      --registry-cpu string                             The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)
+      --registry-memory string                          The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)
       --service-lb-annotation strings                   Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)
       --set-pod-security-enforce-profile                Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                                     Bypass installation checks

@@ -1,76 +1,75 @@
 package system
 
 import (
-	"os"
+	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// Values will likely need to be tweaked as we get more usage data. They are currently based
-// on metrics we have collected from internal use. You can override these values by setting
-// the corresponding environment variable.
-var (
-	mi = int64(1 << 20) // 1 MiB in bytes
-	gi = int64(1 << 30) // 1 GiB in bytes.
+var ErrInvalidResourceSpecification = fmt.Errorf("invalid resource specification")
 
-	registryMemoryRequest = *resource.NewQuantity(128*mi, resource.BinarySI)    // REGISTRY_MEMORY_REQUEST
-	registryMemoryLimit   = *resource.NewQuantity(512*mi, resource.BinarySI)    // REGISTRY_MEMORY_LIMIT
-	registryCPURequest    = *resource.NewMilliQuantity(200, resource.DecimalSI) // REGISTRY_CPU_REQUEST
+// ValidateResources is used by the CLI to validate that the values passed
+// can be parsed as a resource.Quantity and that the request is not higher
+// than the limit.
+func ValidateResources(resources ...string) error {
+	for _, rs := range resources {
+		if rs == "" {
+			continue
+		}
 
-	buildkitdMemoryRequest = *resource.NewQuantity(256*mi, resource.BinarySI)    // BUILDKITD_MEMORY_REQUEST
-	buildkitdMemoryLimit   = *resource.NewQuantity(10*gi, resource.BinarySI)     // BUILDKITD_MEMORY_LIMIT
-	buildkitdCPURequest    = *resource.NewMilliQuantity(800, resource.DecimalSI) // BUILDKITD_CPU_REQUEST
+		req, limit, both := strings.Cut(rs, ":")
+		if !both {
+			_, err := resource.ParseQuantity(rs)
+			return err
+		}
 
-	buildkitdServiceMemoryRequest = *resource.NewQuantity(128*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_REQUEST
-	buildkitdServiceMemoryLimit   = *resource.NewQuantity(256*mi, resource.BinarySI)    // BUILDKITD_SERVICE_MEMORY_LIMIT
-	buildkitdServiceCPURequest    = *resource.NewMilliQuantity(200, resource.DecimalSI) // BUILDKITD_SERVICE_CPU_REQUEST
-)
-
-func RegistryResources() corev1.ResourceRequirements {
-	return corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceMemory: envOrDefault("REGISTRY_MEMORY_REQUEST", registryMemoryRequest),
-			corev1.ResourceCPU:    envOrDefault("REGISTRY_CPU_REQUEST", registryCPURequest),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceMemory: envOrDefault("REGISTRY_MEMORY_LIMIT", registryMemoryLimit),
-		},
+		parsedReq, err := resource.ParseQuantity(req)
+		if err != nil {
+			return err
+		}
+		parsedLimit, err := resource.ParseQuantity(limit)
+		if err != nil {
+			return err
+		}
+		if parsedReq.Cmp(parsedLimit) > 0 {
+			return fmt.Errorf("%w: resource request cannot be higher than the limit", ErrInvalidResourceSpecification)
+		}
 	}
+	return nil
 }
 
-func BuildkitdResources() corev1.ResourceRequirements {
-	return corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceMemory: envOrDefault("BUILDKITD_MEMORY_REQUEST", buildkitdMemoryRequest),
-			corev1.ResourceCPU:    envOrDefault("BUILDKITD_CPU_REQUEST", buildkitdCPURequest),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceMemory: envOrDefault("BUILDKITD_MEMORY_LIMIT", buildkitdMemoryLimit),
-		},
-	}
-}
+// ResourceRequirementsFor is used by components to create a ResourceRequirements struct
+// based on strings found in the apiv1.Config struct.
+func ResourceRequirementsFor(memory, cpu string) corev1.ResourceRequirements {
+	requirements := corev1.ResourceRequirements{Requests: corev1.ResourceList{}, Limits: corev1.ResourceList{}}
 
-func BuildkitdServiceResources() corev1.ResourceRequirements {
-	return corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceMemory: envOrDefault("BUILDKITD_SERVICE_MEMORY_REQUEST", buildkitdServiceMemoryRequest),
-			corev1.ResourceCPU:    envOrDefault("BUILDKITD_SERVICE_CPU_REQUEST", buildkitdServiceCPURequest),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceMemory: envOrDefault("BUILDKITD_SERVICE_MEMORY_LIMIT", buildkitdServiceMemoryLimit),
-		},
-	}
-}
+	for resourceType, resourceString := range map[corev1.ResourceName]string{
+		corev1.ResourceMemory: memory,
+		corev1.ResourceCPU:    cpu,
+	} {
+		reqString, limitString, both := strings.Cut(resourceString, ":")
 
-func envOrDefault(env string, def resource.Quantity) resource.Quantity {
-	if env = os.Getenv(env); env == "" {
-		return def
+		if !both {
+			parsedReq, err := resource.ParseQuantity(resourceString)
+			if err == nil {
+				requirements.Requests[resourceType] = parsedReq
+			}
+			continue
+		}
+
+		parsedReq, err := resource.ParseQuantity(reqString)
+		if err == nil {
+			requirements.Requests[resourceType] = parsedReq
+		}
+
+		parsedLimit, err := resource.ParseQuantity(limitString)
+		if err == nil {
+			requirements.Limits[resourceType] = parsedLimit
+		}
 	}
 
-	quantity, err := resource.ParseQuantity(env)
-	if err == nil {
-		return quantity
-	}
-	return def
+	return requirements
 }

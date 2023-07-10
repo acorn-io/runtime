@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/imagepattern"
 	"github.com/acorn-io/runtime/pkg/images"
+	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -70,7 +71,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 	}
 
 	// IAR not enabled? Allow all images.
-	if cfg.Features == nil || !cfg.Features[config.FeatureImageAllowRules] {
+	if cfg.Features == nil || !cfg.Features[profiles.FeatureImageAllowRules] {
 		return nil
 	}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/system"
@@ -16,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, builderUID, forwardAddress string, useCustomCabundle, publishBuilder bool) []client.Object {
+func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, builderUID, forwardAddress string, cfg *apiv1.Config) []client.Object {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -54,7 +55,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 								"--addr",
 								"unix:///run/buildkit/buildkitd.sock",
 							},
-							Resources: system.BuildkitdResources(),
+							Resources: system.ResourceRequirementsFor(*cfg.BuildkitdMemory, *cfg.BuildkitdCPU),
 							LivenessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									Exec: &corev1.ExecAction{
@@ -139,7 +140,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 							Args: []string{
 								"build-server",
 							},
-							Resources: system.BuildkitdServiceResources(),
+							Resources: system.ResourceRequirementsFor(*cfg.BuildkitdServiceMemory, *cfg.BuildkitdServiceCPU),
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
@@ -213,13 +214,13 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 				{
 					Port:     8080,
 					Protocol: v1.ProtocolHTTP,
-					Publish:  publishBuilder,
+					Publish:  *cfg.PublishBuilders,
 				},
 			},
 		},
 	}
 
-	if useCustomCabundle {
+	if *cfg.UseCustomCABundle {
 		for i := range deployment.Spec.Template.Spec.Containers {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
 				Name:      system.CustomCABundleSecretVolumeName,

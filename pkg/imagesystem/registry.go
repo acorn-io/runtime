@@ -121,7 +121,11 @@ func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.O
 		return nil, err
 	}
 
-	result = append(result, registryDeployment(system.ImagesNamespace, system.DefaultImage())...)
+	result = append(result, registryDeployment(
+		system.ImagesNamespace,
+		system.DefaultImage(),
+		system.ResourceRequirementsFor(*cfg.RegistryMemory, *cfg.RegistryCPU))...)
+
 	return result, nil
 }
 

@@ -31,7 +31,6 @@ import (
 	"k8s.io/klog"
 	klogv2 "k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/util/storage"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -367,7 +366,7 @@ func CheckIngressCapability(ctx context.Context, opts CheckOptions) CheckResult 
 		},
 	}
 
-	resources := []client.Object{ep, svc, ing}
+	resources := []kclient.Object{ep, svc, ing}
 
 	// Cleanup resources
 	defer func() {

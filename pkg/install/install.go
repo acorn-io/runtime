@@ -161,6 +161,16 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
+	if err = system.ValidateResources(
+		*finalConfForValidation.ControllerMemory, *finalConfForValidation.ControllerCPU,
+		*finalConfForValidation.APIServerMemory, *finalConfForValidation.APIServerCPU,
+		*finalConfForValidation.RegistryMemory, *finalConfForValidation.RegistryCPU,
+		*finalConfForValidation.BuildkitdMemory, *finalConfForValidation.BuildkitdCPU,
+		*finalConfForValidation.BuildkitdServiceMemory, *finalConfForValidation.BuildkitdServiceCPU,
+	); err != nil {
+		return err
+	}
+
 	opts = opts.complete()
 	if opts.OutputFormat != "" {
 		return printObject(image, opts)

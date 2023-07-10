@@ -19,6 +19,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
+	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/rancher/wrangler/pkg/name"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,7 +71,7 @@ func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace st
 	// This should not happen since the pattern in the config (passed to this through pattern) should
 	// always be set to the default if the pattern is "". However,if it is not somehow, set it here.
 	if pattern == "" {
-		pattern = config.DefaultHttpEndpointPattern
+		pattern = profiles.HttpEndpointPatternDefault
 	}
 
 	endpointOpts := struct {
