@@ -58,7 +58,9 @@ func getDependencyAnnotations(app *v1.AppInstance, containerOrJobName string, de
 
 	if !allReady {
 		result[apply.AnnotationCreate] = "false"
-		result[apply.AnnotationUpdate] = "false"
+		if !app.GetStopped() {
+			result[apply.AnnotationUpdate] = "false"
+		}
 	}
 
 	if _, ok := app.Status.AppSpec.Containers[containerOrJobName]; ok {
