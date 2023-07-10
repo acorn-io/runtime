@@ -10,12 +10,15 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/dev"
+	"github.com/acorn-io/runtime/pkg/imageallowrules"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
 	"github.com/acorn-io/runtime/pkg/wait"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -281,6 +284,21 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	image, deployArgs, err := imageSource.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
+		if naErr := client.TranslateNotAllowed(err); naErr != nil {
+			if _, isPattern := autoupgrade.AutoUpgradePattern(image); isPattern {
+				naErr.(*imageallowrules.ErrImageNotAllowed).Image = image
+				logrus.Debugf("Valid tags for pattern %s were not allowed to run: %v", image, naErr)
+				if choice, promptErr := rulerequest.HandleNotAllowed(s.Dangerous, image); promptErr != nil {
+					return promptErr
+				} else if choice != "NO" {
+					iarErr := rulerequest.CreateImageAllowRule(cmd.Context(), c, image, choice)
+					if iarErr != nil {
+						return iarErr
+					}
+					return s.Run(cmd, args)
+				}
+			}
+		}
 		return err
 	}
 	opts.DeployArgs = deployArgs

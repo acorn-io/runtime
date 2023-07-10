@@ -47,6 +47,9 @@ func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, curre
 	if newTag == "" {
 		newTag = invalidTag
 	}
+
+	var notAllowedErr error // denote that we found a tag that is not allowed by IAR rules
+
 	newImage := strings.TrimPrefix(ref.Context().Tag(newTag).Name(), defaultNoReg+"/")
 	for len(tags) > 0 {
 		nTag, err := FindLatest(newTag, pattern, tags)
@@ -55,19 +58,23 @@ func findLatestTagForImageWithPattern(ctx context.Context, c daemonClient, curre
 			break
 		}
 		img := strings.TrimPrefix(ref.Context().Tag(nTag).Name(), defaultNoReg+"/")
-		if err := c.checkImageAllowed(ctx, namespace, img); err != nil {
+		if notAllowedErr = c.checkImageAllowed(ctx, namespace, img); notAllowedErr != nil {
 			// remove the tag from the list and try again
 			tags = slices.Filter(nil, tags, func(tag string) bool { return tag != nTag })
-		} else {
-			// found a valid tag that is allowed by all rules, so use it
-			newTag = nTag
-			newImage = img
-			break
+			continue
 		}
+
+		// found a valid tag that is allowed by all rules, so use it
+		newTag = nTag
+		newImage = img
+		break
 	}
 
 	// no new image needs to be returned since no new tags were found
 	if newTag == invalidTag {
+		if notAllowedErr != nil {
+			return "", false, notAllowedErr
+		}
 		return "", false, err
 	}
 
