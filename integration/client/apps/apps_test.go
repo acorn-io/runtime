@@ -11,6 +11,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/z"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -508,7 +509,7 @@ func TestAppRunImageVariations(t *testing.T) {
 			name:  "autoupgrade",
 			image: "foo/bar:**",
 			options: &client.AppRunOptions{
-				AutoUpgrade: &[]bool{true}[0],
+				AutoUpgrade: z.P(true),
 			},
 		},
 		{

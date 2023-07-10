@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/tolerations"
+	"github.com/acorn-io/z"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -83,7 +84,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 								PeriodSeconds:       30,
 							},
 							SecurityContext: &corev1.SecurityContext{
-								Privileged: &[]bool{true}[0],
+								Privileged: z.P(true),
 							},
 							Ports: []corev1.ContainerPort{
 								{

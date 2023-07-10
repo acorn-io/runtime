@@ -24,6 +24,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/volume"
+	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/data/convert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -645,7 +646,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 					Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
 					PriorityClassName:             appInstance.Status.Scheduling[name].PriorityClassName,
-					TerminationGracePeriodSeconds: &[]int64{5}[0],
+					TerminationGracePeriodSeconds: z.P[int64](5),
 					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 					EnableServiceLinks:            new(bool),
 					Containers:                    containers,
@@ -658,7 +659,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	}
 
 	if stateful {
-		dep.Spec.Replicas = &[]int32{1}[0]
+		dep.Spec.Replicas = z.P[int32](1)
 		dep.Spec.Template.Spec.Hostname = dep.Name
 		dep.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 	} else if dep.Spec.Replicas == nil || *dep.Spec.Replicas == 1 {

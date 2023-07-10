@@ -13,6 +13,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/imageallowrules"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
@@ -81,7 +82,7 @@ func TestDetermineAppsToRefresh(t *testing.T) {
 	now := time.Now()
 	thirtySecondsAgo := now.Add(-30 * time.Second)
 	oneMinuteAgo := now.Add(-time.Minute)
-	ptrTrue := &[]bool{true}[0]
+	ptrTrue := z.P(true)
 	appImages := map[string]string{
 		"test-1":          "acorn/test-1:v#.*.**",
 		"acorn-1":         "acorn/acorn-1:v1.1.1-*",
@@ -188,7 +189,7 @@ func TestDetermineAppsToRefresh(t *testing.T) {
 func TestRefreshImages(t *testing.T) {
 	now := time.Now()
 	thirtySecondsAgo := now.Add(-30 * time.Second)
-	ptrTrue := &[]bool{true}[0]
+	ptrTrue := z.P(true)
 	appImages := map[string]string{
 		"test-1":               "acorn/test-1:v#.#.#",
 		"acorn-1":              "docker.io/acorn/acorn-1:v1.1.1-*",
@@ -450,7 +451,7 @@ func TestDaemonSync(t *testing.T) {
 	start := time.Now()
 	tenMinutesAgo := time.Now().Add(-10 * time.Minute)
 	fiftySecondsAgo := time.Now().Add(-50 * time.Second)
-	ptrTrue := &[]bool{true}[0]
+	ptrTrue := z.P(true)
 	appImages := map[string]string{
 		"test-1":          "30s",
 		"acorn-1":         "1m",

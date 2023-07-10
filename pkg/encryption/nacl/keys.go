@@ -9,6 +9,7 @@ import (
 
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/z"
 	"golang.org/x/crypto/nacl/box"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -121,7 +122,7 @@ func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, ex
 
 	naclKey.acornNamespaceUID = string(ns.UID)
 	if existing == nil {
-		naclKey.Primary = &[]bool{true}[0]
+		naclKey.Primary = z.P(true)
 	}
 
 	return naclKey, createOrUpdateNaclKeySecret(ctx, c, naclKey, existing)

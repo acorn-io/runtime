@@ -27,7 +27,3 @@ func Get(p *string) apiv1.Config {
 		return profiles[Default]
 	}
 }
-
-func ptr[T any](v T) *T {
-	return &v
-}

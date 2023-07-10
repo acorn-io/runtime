@@ -28,6 +28,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/roles"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/term"
+	"github.com/acorn-io/z"
 	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/yaml"
@@ -76,11 +77,11 @@ func (o *Options) complete() *Options {
 	}
 
 	if o.APIServerReplicas == nil {
-		o.APIServerReplicas = &[]int{1}[0]
+		o.APIServerReplicas = z.P(1)
 	}
 
 	if o.ControllerReplicas == nil {
-		o.ControllerReplicas = &[]int{1}[0]
+		o.ControllerReplicas = z.P(1)
 	}
 
 	if o.Config.UseCustomCABundle == nil {
@@ -207,7 +208,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 				return err
 			}
 			if installIngressController {
-				opts.Config.IngressClassName = &[]string{"traefik"}[0]
+				opts.Config.IngressClassName = z.P("traefik")
 			}
 		}
 	}

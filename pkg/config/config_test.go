@@ -6,6 +6,7 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	mocks "github.com/acorn-io/runtime/pkg/mocks/k8s"
+	"github.com/acorn-io/z"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,7 +42,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is explicitly disabled, expect no clusterDomain to be returned
 			name: "acornDNS disabled expect no clusterdomains",
 			conf: &apiv1.Config{
-				AcornDNS: &[]string{"disabled"}[0], // hack for one-liner string pointer
+				AcornDNS: z.P("disabled"),
 			},
 			expectedClusterDomains: nil,
 		},
@@ -49,7 +50,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is explicitly disabled. User defined domain, expect just user defined domain
 			name: "acornDNS disabled expect custom clusterdomains",
 			conf: &apiv1.Config{
-				AcornDNS:       &[]string{"disabled"}[0],
+				AcornDNS:       z.P("disabled"),
 				ClusterDomains: []string{".custom.com"},
 			},
 			expectedClusterDomains: []string{".custom.com"},
@@ -58,7 +59,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is in "auto" mode. No user configured domain, expect local as a fallback
 			name: "acornDNS auto expect local clusterdomain",
 			conf: &apiv1.Config{
-				AcornDNS: &[]string{"auto"}[0],
+				AcornDNS: z.P("auto"),
 			},
 			expectedClusterDomains: []string{".local.oss-acorn.io"},
 			prepare: func(f *mocks.MockReader) {
@@ -70,7 +71,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is in "auto" mode, but user configured a domain, expect just the user configured domain
 			name: "acornDNS auto expect custom clusterdomain",
 			conf: &apiv1.Config{
-				AcornDNS:       &[]string{"auto"}[0],
+				AcornDNS:       z.P("auto"),
 				ClusterDomains: []string{".custom.com"},
 			},
 			expectedClusterDomains: []string{".custom.com"},

@@ -24,6 +24,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/run"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/tolerations"
+	"github.com/acorn-io/z"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -1660,7 +1661,7 @@ func TestAutoUpgradeImageValidation(t *testing.T) {
 
 	app, err := c.AppRun(ctx, "ghcr.io/acorn-io/library/nginx:latest", &client.AppRunOptions{
 		Name:        "myapp",
-		AutoUpgrade: &[]bool{true}[0],
+		AutoUpgrade: z.P(true),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1696,7 +1697,7 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 
 	// Attempt to run an auto-upgrade app with a non-existent local image. Should get an error.
 	_, err = c.AppRun(ctx, "mylocalimage", &client.AppRunOptions{
-		AutoUpgrade: &[]bool{true}[0],
+		AutoUpgrade: z.P(true),
 	})
 	if err == nil {
 		t.Fatalf("expected to get a not found error, instead got %v", err)
@@ -1723,7 +1724,7 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 	}
 
 	_, err = c.AppRun(ctx, appImage, &client.AppRunOptions{
-		AutoUpgrade: &[]bool{true}[0],
+		AutoUpgrade: z.P(true),
 	})
 	if err != nil {
 		t.Fatal(err)

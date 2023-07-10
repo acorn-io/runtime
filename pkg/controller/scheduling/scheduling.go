@@ -1,14 +1,14 @@
 package scheduling
 
 import (
+	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	"github.com/acorn-io/runtime/pkg/condition"
-	tl "github.com/acorn-io/runtime/pkg/tolerations"
-
-	"github.com/acorn-io/baaah/pkg/router"
-	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
+	tl "github.com/acorn-io/runtime/pkg/tolerations"
+	"github.com/acorn-io/z"
 	corev1 "k8s.io/api/core/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -149,7 +149,7 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 			if err != nil {
 				return nil, err
 			}
-			memMax = &[]int64{maxQuantity.Value()}[0]
+			memMax = z.P(maxQuantity.Value())
 		}
 	}
 

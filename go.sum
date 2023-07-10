@@ -102,6 +102,8 @@ github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78 h1:5zs9L/CX
 github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78/go.mod h1:/5647+1/L7m7Aq7upTLtfLznTLYttURzH7Y23LKrW0M=
 github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c h1:4k4uuDw+PT3neNLCALme0hGe67XjoR/0cUXnxaT5d+g=
 github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c/go.mod h1:D6Tu6oVX8aGtCHsMCtYaysgVK3ad920MTSeAu7rzb5U=
+github.com/acorn-io/z v0.0.0-20230710161405-78afed0850a8 h1:E8/GtUHuIBRNLXv/uHwjjZqQg2B6BDCU5RXQA/OgDCQ=
+github.com/acorn-io/z v0.0.0-20230710161405-78afed0850a8/go.mod h1:5UO0+eOne2Zhvn7Ox5IiK4u+4dlCSLmHfTQWORRdEyo=
 github.com/adrg/xdg v0.4.0 h1:RzRqFcjH4nE5C6oTAxhBtoE2IRyjBSa62SCbyPidvls=
 github.com/adrg/xdg v0.4.0/go.mod h1:N6ag73EX4wyxeaoeHctc1mas01KZgsj5tYiAIwqJE/E=
 github.com/agnivade/levenshtein v1.1.1 h1:QY8M92nrzkmr798gCo3kmMyqXFzdQVpxLlGPRBij0P8=

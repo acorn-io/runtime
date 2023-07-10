@@ -17,6 +17,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/run"
 	"github.com/acorn-io/runtime/pkg/scheme"
+	"github.com/acorn-io/z"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -568,7 +569,7 @@ func (c *DefaultClient) appStop(ctx context.Context, name string) error {
 		return err
 	}
 	if app.Spec.Stop == nil || !*app.Spec.Stop {
-		app.Spec.Stop = &[]bool{true}[0]
+		app.Spec.Stop = z.P(true)
 		return c.Client.Update(ctx, app)
 	}
 	return nil
