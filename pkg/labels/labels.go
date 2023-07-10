@@ -60,6 +60,9 @@ const (
 	ProjectEnforcedQuotaAnnotation         = Prefix + "enforced-quota"
 	AcornPermissions                       = Prefix + "permissions"
 
+	IdentityPrefix                = "identity." + Prefix
+	AcornIdentityAccountServerURL = IdentityPrefix + "account-server-url"
+
 	PrometheusScrape = "prometheus.io/scrape"
 	PrometheusPath   = "prometheus.io/path"
 	PrometheusPort   = "prometheus.io/port"
