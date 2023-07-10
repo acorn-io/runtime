@@ -46,12 +46,6 @@ func NewEvent(c CommandContext) *cobra.Command {
 
   # Get a single event by name
   acorn events 4b2ba097badf2031c4718609b9179fb5
-
-  # Getting Details 
-  # The 'details' field provides additional information about an event.
-  # By default, this field is elided from this command's output, but can be enabled via the '--details' flag.
-  # This flag must be used in conjunction with a non-table output format, like '-o=yaml'.
-  acorn events --details -o yaml
 `})
 	return cmd
 }
@@ -71,9 +65,8 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := &client.EventStreamOptions{
-		Tail:    e.Tail,
-		Follow:  e.Follow,
-		Details: e.Details,
+		Tail:   e.Tail,
+		Follow: e.Follow,
 	}
 
 	if len(args) > 0 {

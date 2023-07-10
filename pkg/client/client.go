@@ -328,7 +328,6 @@ type ContainerReplicaListOptions struct {
 type EventStreamOptions struct {
 	Tail            int    `json:"tail,omitempty"`
 	Follow          bool   `json:"follow,omitempty"`
-	Details         bool   `json:"details,omitempty"`
 	Prefix          string `json:"prefix,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
 }
@@ -338,9 +337,9 @@ func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
 	if o.Prefix != "" {
 		fieldSet["prefix"] = o.Prefix
 	}
-	if o.Details {
-		fieldSet["details"] = strconv.FormatBool(o.Details)
-	}
+
+	// Set details selector to get details from older runtime APIs that don't return details by default.
+	fieldSet["details"] = strconv.FormatBool(true)
 
 	return &kclient.ListOptions{
 		Limit:         int64(o.Tail),
