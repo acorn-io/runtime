@@ -24,7 +24,7 @@ func getAcornPublicKeys(username string) ([]AcornPublicKey, error) {
 		return nil, fmt.Errorf("invalid username: %s", username)
 	}
 
-	host := "https://hub.acornlabs.com"
+	host := "https://acorn.io"
 
 	if len(parts) == 2 {
 		username = parts[0]
