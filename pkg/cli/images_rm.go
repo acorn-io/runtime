@@ -49,7 +49,7 @@ func (a *ImageDelete) Run(cmd *cobra.Command, args []string) error {
 		for _, tag := range removedTags {
 			fmt.Printf("Untagged %s\n", tag)
 		}
-		if img != nil {
+		if img != nil && !img.DeletionTimestamp.IsZero() {
 			fmt.Printf("Deleted %s\n", img.Name)
 		}
 	}

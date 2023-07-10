@@ -241,7 +241,8 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	update.DeployArgs = deployArgs
 	update.Replace = opts.Replace
 	update.Stop = new(bool)
-	logrus.Infof("Updating app [%s] to image [%s]", appName, image)
+	update.AutoUpgrade = new(bool)
+	logrus.Infof("Updating acorn [%s] to image [%s]", appName, image)
 	app, err := rulerequest.PromptUpdate(ctx, c, opts.Dangerous, appName, update)
 	if err != nil {
 		return "", err

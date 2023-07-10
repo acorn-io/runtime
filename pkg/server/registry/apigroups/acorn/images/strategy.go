@@ -35,10 +35,10 @@ func NewStrategy(getter strategy.Getter, c kclient.WithWatch) *Strategy {
 	}
 }
 
-func (s *Strategy) validateDelete(ctx context.Context, obj types.Object) error {
+func (s *Strategy) validateDelete(ctx context.Context, obj types.Object) (types.Object, error) {
 	img := obj.(*apiv1.Image)
 	if img.Digest == "" {
-		return nil
+		return nil, nil
 	}
 
 	apps := &v1.AppInstanceList{}
@@ -46,15 +46,21 @@ func (s *Strategy) validateDelete(ctx context.Context, obj types.Object) error {
 		Namespace: img.Namespace,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, app := range apps.Items {
 		if app.Status.AppImage.Digest != "" && app.Status.AppImage.Digest == img.Digest {
+			if len(img.Tags) > 0 {
+				img.Tags = nil
+				img.DeletionTimestamp = nil
+				return img, s.client.Update(ctx, img)
+			}
+
 			name := publicname.Get(&app)
 			if app.GetStopped() {
 				name = name + " (stopped)"
 			}
-			return apierrors.NewInvalid(schema.GroupKind{
+			return nil, apierrors.NewInvalid(schema.GroupKind{
 				Group: api.Group,
 				Kind:  "Image",
 			}, img.Name, field.ErrorList{
@@ -62,7 +68,7 @@ func (s *Strategy) validateDelete(ctx context.Context, obj types.Object) error {
 			})
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func (s *Strategy) validateObject(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
@@ -151,8 +157,10 @@ func (s *Strategy) Update(ctx context.Context, obj types.Object) (types.Object, 
 }
 
 func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, error) {
-	if err := s.validateDelete(ctx, obj); err != nil {
+	if obj, err := s.validateDelete(ctx, obj); err != nil {
 		return nil, err
+	} else if obj != nil {
+		return obj, nil
 	}
 	image := obj.(*apiv1.Image)
 	imageToDelete := &v1.ImageInstance{}

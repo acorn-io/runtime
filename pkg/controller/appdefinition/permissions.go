@@ -1,11 +1,16 @@
 package appdefinition
 
 import (
+	"context"
+
+	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/rancher/wrangler/pkg/name"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -100,7 +105,15 @@ func toRoleAndRoleBinding(roleName, roleNamespace, serviceAccountName, serviceAc
 	return
 }
 
-func toPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object) {
+func toPermissions(ctx context.Context, c kclient.Client, permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+	var ns corev1.Namespace
+	if err := c.Get(ctx, router.Key("", appInstance.Namespace), &ns); err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	}
+	if ns.Annotations[labels.AcornIdentityAccountServerURL] != "" {
+		// Project is managed by acorn identity so don't assume permissions
+		return nil, nil
+	}
 	result = append(result, toClusterPermissions(permissions, labelMap, annotations, appInstance)...)
-	return result
+	return result, nil
 }

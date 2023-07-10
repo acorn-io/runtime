@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/acorn-io/runtime/pkg/labels"
-
+	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/client/term"
+	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/project"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -595,7 +595,7 @@ func (m *MockClient) ImageDelete(ctx context.Context, name string, opts *client.
 	}
 
 	img := &apiv1.Image{TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "ff12345"},
+		ObjectMeta: metav1.ObjectMeta{Name: "ff12345", DeletionTimestamp: typed.Pointer(metav1.Now())},
 		Tags:       []string{"testtag1:latest", "testtag2:latest", "foo:v1", "foo:v2"},
 	}
 

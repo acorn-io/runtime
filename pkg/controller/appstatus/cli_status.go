@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/publicname"
 )
 
 func CLIStatus(req router.Request, resp router.Response) (err error) {
@@ -21,7 +22,7 @@ func CLIStatus(req router.Request, resp router.Response) (err error) {
 	// There's clearly a better way to do this, but it works and I'm lazy. The intention is that we want
 	// to detect that the acorn doesn't have any running containers (or needs to run containers) and has
 	// produced whatever it needs to and the status is not really helpful anymore, because it's done.
-	app.Status.AppStatus.Completed = strings.Contains(app.Name, ".") &&
+	app.Status.AppStatus.Completed = strings.Contains(publicname.Get(app), ".") &&
 		app.Status.Ready &&
 		app.Status.Columns.Healthy == "0" &&
 		app.Status.Columns.UpToDate == "0" &&

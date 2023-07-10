@@ -152,6 +152,8 @@ func (c *ContainerExec) execEphemeral(ctx context.Context, container *apiv1.Cont
 	var (
 		execName     = name.SafeConcatName(containerName, "exec", unique[:8])
 		volumeMounts []corev1.VolumeMount
+		envs         []corev1.EnvVar
+		envFroms     []corev1.EnvFromSource
 	)
 
 	for _, container := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
@@ -161,6 +163,8 @@ func (c *ContainerExec) execEphemeral(ctx context.Context, container *apiv1.Cont
 					volumeMounts = append(volumeMounts, volumeMount)
 				}
 			}
+			envs = container.Env
+			envFroms = container.EnvFrom
 			break
 		}
 	}
@@ -172,7 +176,9 @@ func (c *ContainerExec) execEphemeral(ctx context.Context, container *apiv1.Cont
 			Command:         []string{"sleep"},
 			Args:            []string{"3600"},
 			VolumeMounts:    volumeMounts,
-			ImagePullPolicy: corev1.PullIfNotPresent,
+			Env:             envs,
+			EnvFrom:         envFroms,
+			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: nil,
 			Stdin:           true,
 			TTY:             execOpts.TTY,

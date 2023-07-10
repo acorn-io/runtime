@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/images"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/gorilla/websocket"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -182,7 +184,19 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 }
 
 // ImageDelete handles two use cases: remove a tag from an image or delete an image entirely. Both may go hand in hand when deleting the last remaining tag.
-func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (*apiv1.Image, []string, error) {
+func (c *DefaultClient) ImageDelete(ctx context.Context, imageName string, opts *ImageDeleteOptions) (imgResult *apiv1.Image, _ []string, err error) {
+	defer func() {
+		// This is to set DeletionTimestamp to non-zero on delete. This helps the CLI know if the image was
+		// deleted or just untagged
+		if err == nil && imgResult != nil && imgResult.DeletionTimestamp.IsZero() {
+			var checkImg apiv1.Image
+			if err := c.Client.Get(ctx, router.Key(imgResult.Namespace, imgResult.Name), &checkImg); apierrors.IsNotFound(err) {
+				now := metav1.Now()
+				imgResult.DeletionTimestamp = &now
+			}
+		}
+	}()
+
 	image, err := c.ImageGet(ctx, imageName)
 	if err != nil {
 		return nil, nil, err
