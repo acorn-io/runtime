@@ -30,6 +30,10 @@ func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
 	return dc.Client, nil
 }
 
+func (dc *MockClientFactoryManual) CreateWithAllProjects() (client.Client, error) {
+	return dc.Client, nil
+}
+
 type MockClientFactory struct {
 	AppList          []apiv1.App
 	AppItem          *apiv1.App
@@ -84,6 +88,10 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		Events:           dc.EventList,
 		EventItem:        dc.EventItem,
 	}, nil
+}
+
+func (dc *MockClientFactory) CreateWithAllProjects() (client.Client, error) {
+	return dc.CreateDefault()
 }
 
 type MockClient struct {

@@ -3,32 +3,42 @@ package cli
 import (
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
 
-func NewApp(c CommandContext) *cobra.Command {
-	return cli.Command(&App{client: c.ClientFactory}, cobra.Command{
-		Use:     "app [flags] [APP_NAME...]",
-		Aliases: []string{"apps", "a", "ps"},
+func NewPs(c CommandContext) *cobra.Command {
+	return cli.Command(&Ps{client: c.ClientFactory}, cobra.Command{
+		Use:     "ps [flags] [APP_NAME...]",
+		Aliases: []string{"app", "apps", "a"},
 		Example: `
-acorn app`,
+acorn ps`,
 		SilenceUsage:      true,
 		Short:             "List or get apps",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 	})
 }
 
-type App struct {
-	All    bool   `usage:"Include stopped apps" short:"a"`
-	Quiet  bool   `usage:"Output only names" short:"q"`
-	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client ClientFactory
+type Ps struct {
+	All         bool   `usage:"Include stopped apps" short:"a"`
+	AllProjects bool   `usage:"Include all projects" short:"A"`
+	Quiet       bool   `usage:"Output only names" short:"q"`
+	Output      string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client      ClientFactory
 }
 
-func (a *App) Run(cmd *cobra.Command, args []string) error {
-	c, err := a.client.CreateDefault()
+func (a *Ps) Run(cmd *cobra.Command, args []string) error {
+	var (
+		c   client.Client
+		err error
+	)
+	if a.AllProjects {
+		c, err = a.client.CreateWithAllProjects()
+	} else {
+		c, err = a.client.CreateDefault()
+	}
 	if err != nil {
 		return err
 	}

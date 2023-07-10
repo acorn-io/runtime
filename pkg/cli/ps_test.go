@@ -93,7 +93,7 @@ func TestApp(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r, w, _ := os.Pipe()
 			os.Stdout = w
-			tt.args.cmd = NewApp(tt.commandContext)
+			tt.args.cmd = NewPs(tt.commandContext)
 			tt.args.cmd.SetArgs(tt.args.args)
 			err := tt.args.cmd.Execute()
 			if err != nil && !tt.wantErr {

@@ -35,7 +35,6 @@ func New() *cobra.Command {
 	root.AddCommand(
 		NewAll(cmdContext),
 		NewApiServer(cmdContext),
-		NewApp(cmdContext),
 		NewBuild(cmdContext),
 		NewBuildServer(cmdContext),
 		NewCheck(cmdContext),
@@ -58,6 +57,7 @@ func New() *cobra.Command {
 		NewCredentialLogin(true, cmdContext),
 		NewCredentialLogout(true, cmdContext),
 		NewProject(cmdContext),
+		NewPs(cmdContext),
 		NewPull(cmdContext),
 		NewPush(cmdContext),
 		NewRm(cmdContext),
@@ -81,11 +81,10 @@ func New() *cobra.Command {
 }
 
 type Acorn struct {
-	Kubeconfig  string `usage:"Explicitly use kubeconfig file, overriding current project"`
-	Project     string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
-	AllProjects bool   `usage:"Use all known projects" short:"A" env:"ACORN_ALL_PROJECTS"`
-	Debug       bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
-	DebugLevel  int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
+	Kubeconfig string `usage:"Explicitly use kubeconfig file, overriding current project"`
+	Project    string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
+	Debug      bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
+	DebugLevel int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
 }
 
 func setEnv(key, value string) error {
