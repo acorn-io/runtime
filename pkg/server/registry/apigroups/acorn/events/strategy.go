@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -62,10 +61,6 @@ func (s *eventStrategy) List(ctx context.Context, namespace string, opts storage
 }
 
 type query struct {
-	// details determines if the details field is elided from query results.
-	// If true keep details, otherwise strip them.
-	details bool
-
 	// tail when > 0, determines the number of latest events to return.
 	tail int64
 
@@ -137,8 +132,8 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 		tail = int(q.tail)
 	}
 
-	if q.details && q.prefix.all() {
-		// Query selects all remaining events and includes details
+	if q.prefix.all() {
+		// Query selects all remaining events
 		return events[len(events)-tail:]
 	}
 
@@ -147,10 +142,6 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 		if !q.prefix.matches(event) {
 			// Exclude from results
 			continue
-		}
-
-		if !q.details {
-			event.Details = nil
 		}
 
 		results = append(results, event)
@@ -171,7 +162,9 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 		var err error
 		switch f {
 		case "details":
-			q.details, err = strconv.ParseBool(v)
+			// Detail elision is deprecated, so clients should always get details.
+			// We still strip it from the selector here in order to maintain limited backwards compatibility with old
+			// clients that still specify it.
 		case "prefix":
 			q.prefix = prefix(v)
 		default:
