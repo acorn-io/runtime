@@ -8,8 +8,8 @@ NAME              APP       IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAG
 found.container                                 0              292y ago   
 
 VOLUMES:
-NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
-found.vol   found      vol            <nil>                                              292y ago
+NAME        BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
+found.vol   vol            <nil>                                              292y ago
 
 SECRETS:
 NAME           TYPE      KEYS      CREATED
