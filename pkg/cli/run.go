@@ -10,6 +10,7 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/dev"
@@ -237,6 +238,11 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	opts, err := s.ToOpts()
 	if err != nil {
 		return err
+	}
+
+	// Ensure opts.AutoUpgrade is set if is implied by opts.AutoUpgradeInterval or imageSource.Image's pattern.
+	if opts.AutoUpgrade == nil || !*opts.AutoUpgrade {
+		opts.AutoUpgrade = &[]bool{autoupgrade.ImpliedAutoUpgrade(opts.AutoUpgradeInterval, imageSource.Image)}[0]
 	}
 
 	// Force install prompt if needed
