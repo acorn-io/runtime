@@ -1,26 +1,27 @@
 ---
-title: "acorn app"
+title: "acorn ps"
 ---
-## acorn app
+## acorn ps
 
 List or get apps
 
 ```
-acorn app [flags] [APP_NAME...]
+acorn ps [flags] [APP_NAME...]
 ```
 
 ### Examples
 
 ```
 
-acorn app
+acorn ps
 ```
 
 ### Options
 
 ```
   -a, --all             Include stopped apps
-  -h, --help            help for app
+  -A, --all-projects    Include all projects
+  -h, --help            help for ps
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -q, --quiet           Output only names
 ```
@@ -28,7 +29,6 @@ acorn app
 ### Options inherited from parent commands
 
 ```
-  -A, --all-projects        Use all known projects
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
       --kubeconfig string   Explicitly use kubeconfig file, overriding current project

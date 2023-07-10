@@ -16,7 +16,6 @@ acorn [flags]
 ### Options
 
 ```
-  -A, --all-projects        Use all known projects
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
   -h, --help                help for acorn
@@ -27,7 +26,6 @@ acorn [flags]
 ### SEE ALSO
 
 * [acorn all](acorn_all.md)	 - List (almost) all objects
-* [acorn app](acorn_app.md)	 - List or get apps
 * [acorn build](acorn_build.md)	 - Build an app from a Acornfile file
 * [acorn check](acorn_check.md)	 - Check if the cluster is ready for Acorn
 * [acorn container](acorn_container.md)	 - Manage containers
@@ -46,6 +44,7 @@ acorn [flags]
 * [acorn offerings](acorn_offerings.md)	 - Show infrastructure offerings
 * [acorn port-forward](acorn_port-forward.md)	 - Forward a container port locally
 * [acorn project](acorn_project.md)	 - Manage projects
+* [acorn ps](acorn_ps.md)	 - List or get apps
 * [acorn pull](acorn_pull.md)	 - Pull an image from a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry
 * [acorn render](acorn_render.md)	 - Evaluate and display an Acornfile with args
