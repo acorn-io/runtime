@@ -6,7 +6,6 @@ Usage:
 
 Available Commands:
   all          List (almost) all objects
-  app          List or get apps
   build        Build an app from a Acornfile file
   check        Check if the cluster is ready for Acorn
   container    Manage containers
@@ -26,6 +25,7 @@ Available Commands:
   offerings    Show infrastructure offerings
   port-forward Forward a container port locally
   project      Manage projects
+  ps           List or get apps
   pull         Pull an image from a remote registry
   push         Push an image to a remote registry
   render       Evaluate and display an Acornfile with args
@@ -42,7 +42,6 @@ Available Commands:
   wait         Wait an app to be ready then exit with status code 0
 
 Flags:
-  -A, --all-projects        Use all known projects
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
   -h, --help                help for acorn
