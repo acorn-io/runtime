@@ -37,10 +37,6 @@ func getAcornPublicKeys(username string) ([]AcornPublicKey, error) {
 		return nil, err
 	}
 
-	// TODO: maybe use token if user is logged in, so that we could rate-limit anonymous requests?
-	// token := "g4xc25zkb6b2dkld5fjwvqf6p9lns6lp2h9rbctrqtqf7cb6fr75rd"
-	// req.Header.Set("Authorization", "Bearer "+token)
-
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
