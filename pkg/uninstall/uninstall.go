@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
@@ -24,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	klabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/selection"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -237,28 +237,6 @@ func Uninstall(ctx context.Context, opts *Options) error {
 		}
 	}
 
-	// Delete projects first. This will allow the acorn-controller to do all the cleanup it needs to do.
-	pterm.Info.Println("Deleting projects")
-	projectList := new(apiv1.ProjectList)
-	if err = c.List(ctx, projectList); err != nil {
-		return err
-	}
-
-	projects := make([]kclient.Object, 0, len(projectList.Items))
-	for _, project := range projectList.Items {
-		p := project.DeepCopy()
-		pterm.Info.Printf("Deleting project %s\n", project.Name)
-		if err = c.Delete(ctx, p); err != nil && !apierror.IsNotFound(err) {
-			return err
-		}
-		projects = append(projects, p)
-	}
-
-	if err := waitForObjectsToBeRemoved(ctx, c, projects); err != nil {
-		return err
-	}
-	pterm.Info.Println("All projects deleted")
-
 	var errs []error
 	for _, resource := range toDelete {
 		apiVersion, kind := resource.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
@@ -311,6 +289,14 @@ func waitForObjectsToBeRemoved(ctx context.Context, c kclient.Client, objs []kcl
 				_ = pb.Fail(err)
 				errs = append(errs, err)
 				break
+			}
+			if kind == "CustomResourceDefinition" {
+				// Clear finalizers on these objects
+				if err = clearFinalizersForObjects(ctx, c, u); err != nil {
+					_ = pb.Fail(err)
+					errs = append(errs, err)
+					break
+				}
 			}
 		}
 	}
@@ -391,4 +377,34 @@ func shouldContinue(toDelete, toKeep []kclient.Object) (bool, error) {
 	}
 	return prompt.Bool("Do you want to delete/keep the above resources? "+
 		"To delete all resources pass run \"acorn uninstall --all\"", false)
+}
+
+func clearFinalizersForObjects(ctx context.Context, c kclient.Client, crd *unstructured.Unstructured) error {
+	if crd.GroupVersionKind().Kind != "CustomResourceDefinition" {
+		return nil
+	}
+
+	spec := crd.Object["spec"].(map[string]interface{})
+	gvk := schema.GroupVersionKind{
+		Group: spec["group"].(string),
+		Kind:  spec["names"].(map[string]interface{})["listKind"].(string),
+	}
+	for _, version := range spec["versions"].([]interface{}) {
+		gvk.Version = version.(map[string]interface{})["name"].(string)
+		u := &unstructured.UnstructuredList{}
+		u.SetGroupVersionKind(gvk)
+		if err := c.List(ctx, u); err != nil && !apierror.IsNotFound(err) {
+			// A not found error means the listKind is gone and the CRD is already deleted.
+			return err
+		}
+
+		for _, resource := range u.Items {
+			resource.SetFinalizers(nil)
+			if err := c.Update(ctx, &resource); err != nil && !apierror.IsNotFound(err) && !apierror.IsConflict(err) {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
