@@ -10,6 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var ErrTokenNotFound = fmt.Errorf("token not found")
+
 type tokenRequest struct {
 	Spec   tokenRequestSpec   `json:"spec,omitempty"`
 	Status tokenRequestStatus `json:"status,omitempty"`
@@ -74,7 +76,12 @@ func httpGet(ctx context.Context, url, token string, into interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	switch resp.StatusCode {
+	case http.StatusOK:
+		break
+	case http.StatusNotFound:
+		return fmt.Errorf("%w: %v", ErrTokenNotFound, resp.StatusCode)
+	default:
 		return fmt.Errorf("invalid status code: %v", resp.StatusCode)
 	}
 

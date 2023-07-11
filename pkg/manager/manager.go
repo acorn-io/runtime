@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -76,7 +77,8 @@ func ProjectURL(ctx context.Context, serverAddress, accountName, token string) (
 }
 
 func Login(ctx context.Context, password, address string) (user string, pass string, err error) {
-	if password == "" {
+	passwordIsSpecified := password != ""
+	if !passwordIsSpecified {
 		password, err = randomtoken.Generate()
 		if err != nil {
 			return "", "", err
@@ -107,6 +109,8 @@ func Login(ctx context.Context, password, address string) (user string, pass str
 			} else {
 				logrus.Debugf("tokenRequest.Status.Token is empty")
 			}
+		} else if passwordIsSpecified && errors.Is(err, ErrTokenNotFound) {
+			return "", "", fmt.Errorf("specified token does not exist; please create a token via the web UI or omit the --password flag to request one via your browser")
 		} else {
 			logrus.Debugf("error getting tokenrequest: %v", err)
 		}
