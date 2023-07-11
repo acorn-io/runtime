@@ -32,7 +32,7 @@ func HandleDNSSecret(req router.Request, resp router.Response) error {
 	}
 
 	ingressClassName := cfg.IngressClassName
-	if *ingressClassName == "" {
+	if ingressClassName == nil || *ingressClassName == "" {
 		ingressClassName, err = publish.IngressClassNameIfNoDefault(req.Ctx, req.Client)
 		if err != nil {
 			return err
