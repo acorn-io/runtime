@@ -17,12 +17,12 @@ import (
 )
 
 var (
-	supportedKeyTypes = map[string]interface{}{
-		ssh.KeyAlgoRSA:      nil,
-		ssh.KeyAlgoED25519:  nil,
-		ssh.KeyAlgoECDSA256: nil,
-		ssh.KeyAlgoECDSA384: nil,
-		ssh.KeyAlgoECDSA521: nil,
+	supportedKeyTypes = map[string]struct{}{
+		ssh.KeyAlgoRSA:      {},
+		ssh.KeyAlgoED25519:  {},
+		ssh.KeyAlgoECDSA256: {},
+		ssh.KeyAlgoECDSA384: {},
+		ssh.KeyAlgoECDSA521: {},
 	}
 
 	PubkeyPrefixPattern = regexp.MustCompile(`^-----BEGIN (RSA |ED25519 |ECDSA ){0,1}PUBLIC KEY-----\n(.*\n)+-----END (RSA |ED25519 |ECDSA ){0,1}PUBLIC KEY-----\s*$`)

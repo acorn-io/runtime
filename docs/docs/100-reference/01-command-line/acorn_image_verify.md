@@ -12,7 +12,15 @@ acorn image verify IMAGE_NAME [flags]
 ### Examples
 
 ```
+# Verify using a locally stored public key file
 acorn image verify my-image --key ./my-key.pub
+
+# Verify using a public key belonging to a GitHub Identity
+acorn image verify my-image --key gh://ibuildthecloud
+
+# Verify using a public key belonging to an Acorn Manager Identity
+acorn image verify my-image --key ac://ibuildthecloud
+
 ```
 
 ### Options

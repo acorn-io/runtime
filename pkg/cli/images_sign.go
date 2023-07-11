@@ -49,10 +49,14 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if a.Key == "" {
+		return fmt.Errorf("key is required")
+	}
+
 	targetName := args[0]
 	targetDigest := ""
 
-	img, tag, err := client.FindImage(cmd.Context(), c, args[0])
+	img, tag, err := client.FindImage(cmd.Context(), c, targetName)
 	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 		return err
 	}
@@ -78,9 +82,6 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	target := ref.Context().Digest(targetDigest)
 
-	if a.Key == "" {
-		return fmt.Errorf("key is required")
-	}
 	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
 
 	pass, err := generate.GetPass(false)
@@ -114,7 +115,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	var annotations map[string]interface{}
 	if a.Annotations != nil {
-		annotations = make(map[string]interface{})
+		annotations = make(map[string]interface{}, len(a.Annotations))
 		for k, v := range a.Annotations {
 			annotations[k] = v
 		}

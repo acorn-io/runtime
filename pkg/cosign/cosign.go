@@ -195,10 +195,6 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		IgnoreTlog:         true,
 	}
 
-	if opts.Verifiers == nil {
-		opts.Verifiers = []signature.Verifier{}
-	}
-
 	// --- parse key
 	if opts.Key != "" {
 		verifiers, err := LoadVerifiers(ctx, opts.Key, opts.SignatureAlgorithm)
@@ -208,26 +204,20 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		opts.Verifiers = append(opts.Verifiers, verifiers...)
 	}
 
-	verified := false
 	var errs []error
 	for _, v := range opts.Verifiers {
 		cosignOpts.SigVerifier = v
 		err := verifySignature(ctx, sigs, imgDigestHash, opts, cosignOpts)
 		if err == nil {
-			verified = true
-			break
+			return nil
 		}
 		errs = append(errs, err)
 	}
 
-	if !verified {
-		err := cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))
-		err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
-		logrus.Debugf("%s: %v", err, merr.NewErrors(errs...))
-		return err
-	}
-
-	return nil
+	err = cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))
+	err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+	logrus.Debugf("%s: %v", err, merr.NewErrors(errs...))
+	return err
 }
 
 func verifySignature(ctx context.Context, sigs oci.Signatures, imgDigestHash ggcrv1.Hash, opts VerifyOpts, cosignOpts *cosign.CheckOpts) error {

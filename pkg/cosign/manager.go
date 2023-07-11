@@ -47,7 +47,7 @@ func getAcornPublicKeys(username string) ([]AcornPublicKey, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode > 400 {
+	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("failed to get public keys for user %s: %d (%s)", username, resp.StatusCode, resp.Status)
 	}
 

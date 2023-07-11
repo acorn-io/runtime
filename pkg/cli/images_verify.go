@@ -16,8 +16,16 @@ import (
 
 func NewImageVerify(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&ImageVerify{client: c.ClientFactory}, cobra.Command{
-		Use:               "verify IMAGE_NAME [flags]",
-		Example:           `acorn image verify my-image --key ./my-key.pub`,
+		Use: "verify IMAGE_NAME [flags]",
+		Example: `# Verify using a locally stored public key file
+acorn image verify my-image --key ./my-key.pub
+
+# Verify using a public key belonging to a GitHub Identity
+acorn image verify my-image --key gh://ibuildthecloud
+
+# Verify using a public key belonging to an Acorn Manager Identity
+acorn image verify my-image --key ac://ibuildthecloud
+`,
 		SilenceUsage:      true,
 		Short:             "Verify Image Signatures",
 		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).complete,
@@ -34,6 +42,13 @@ type ImageVerify struct {
 }
 
 func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
+	if a.Key == "" {
+		return fmt.Errorf("key is required")
+	}
+
+	targetName := args[0]
+	targetDigest := ""
+
 	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
@@ -43,9 +58,6 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 		return err
 	}
-
-	targetName := args[0]
-	targetDigest := ""
 
 	if err == nil && tag == "" {
 		return fmt.Errorf("Verifying a local image without specifying the repository is not supported")
@@ -68,9 +80,6 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 
 	target := ref.Context().Digest(targetDigest)
 
-	if a.Key == "" {
-		return fmt.Errorf("key is required")
-	}
 	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
 
 	annotationRules := internalv1.SignatureAnnotations{
