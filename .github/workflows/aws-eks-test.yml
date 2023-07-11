@@ -54,6 +54,7 @@ jobs:
           KUBECONFIG: "/home/runner/.kube/config"
 
       - name: run acorn integration tests
+        id: test
         run: |
           TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile test-summary.xml" GO_TEST_FLAGS="-timeout=7m" make integration
         env:
@@ -61,6 +62,7 @@ jobs:
 
       - name: Build test summary
         id: test_summary
+        needs: [test]
         uses: test-summary/action@v2
         if: success() || failure()
         with:
@@ -84,6 +86,17 @@ jobs:
           slack-message: " ✅ Nightly EKS test passed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         env:
           SLACK_BOT_TOKEN: '${{ secrets.SLACK_BOT_TOKEN }}'
+
+      - name: Upload test results to Datadog
+        uses: datadog/junit-upload-github-action@v1
+        if: '!cancelled()'
+        needs: [test_summary]
+        with:
+          api-key: ${{ secrets.DD_API_KEY }}
+          service: runtime-eks-tests
+          env: ci
+          files: test-summary.xml
+          datadog-site: us3.datadoghq.com
 
       - name: create run artifacts
         if: always()
