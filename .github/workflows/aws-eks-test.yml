@@ -64,7 +64,7 @@ jobs:
         id: test_summary
         needs: [test]
         uses: test-summary/action@v2
-        if: success() || failure()
+        if: "!cancelled() && steps.test.conclusion != 'skipped'"
         with:
           paths: test-summary.xml
 
@@ -89,7 +89,7 @@ jobs:
 
       - name: Upload test results to Datadog
         uses: datadog/junit-upload-github-action@v1
-        if: '!cancelled()'
+        if: '!cancelled() && steps.test_summary.conclusion != "skipped"'
         needs: [test_summary]
         with:
           api-key: ${{ secrets.DD_API_KEY }}
