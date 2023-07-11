@@ -46,6 +46,14 @@ func NewEvent(c CommandContext) *cobra.Command {
 
   # Get a single event by name
   acorn events 4b2ba097badf2031c4718609b9179fb5
+
+  # Filtering by Time
+  # The --since and --until options can be Unix timestamps, date formatted timestamps, or Go duration strings (relative to system time).
+  # List events observed within the last 15 minutes 
+  acorn events --since 15m
+
+  # List events observed between 2023-05-08T15:04:05 and 2023-05-08T15:05:05 (inclusive)
+  acorn events --since '2023-05-08T15:04:05' --until '2023-05-08T15:05:05'
 `})
 	return cmd
 }
@@ -53,6 +61,8 @@ func NewEvent(c CommandContext) *cobra.Command {
 type Events struct {
 	Tail   int    `usage:"Return this number of latest events" short:"t"`
 	Follow bool   `usage:"Follow the event log" short:"f"`
+	Since  string `usage:"Show all events created since timestamp" short:"s"`
+	Until  string `usage:"Stream events until this timestamp" short:"u"`
 	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client ClientFactory
 }
@@ -66,6 +76,8 @@ func (e *Events) Run(cmd *cobra.Command, args []string) error {
 	opts := &client.EventStreamOptions{
 		Tail:   e.Tail,
 		Follow: e.Follow,
+		Since:  e.Since,
+		Until:  e.Until,
 	}
 
 	if len(args) > 0 {

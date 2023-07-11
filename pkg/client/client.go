@@ -338,6 +338,8 @@ type EventStreamOptions struct {
 	Tail            int    `json:"tail,omitempty"`
 	Follow          bool   `json:"follow,omitempty"`
 	Prefix          string `json:"prefix,omitempty"`
+	Since           string `json:"since,omitempty"`
+	Until           string `json:"until,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
 }
 
@@ -345,6 +347,12 @@ func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
 	fieldSet := make(fields.Set)
 	if o.Prefix != "" {
 		fieldSet["prefix"] = o.Prefix
+	}
+	if o.Since != "" {
+		fieldSet["since"] = o.Since
+	}
+	if o.Until != "" {
+		fieldSet["until"] = o.Until
 	}
 
 	// Set details selector to get details from older runtime APIs that don't return details by default.

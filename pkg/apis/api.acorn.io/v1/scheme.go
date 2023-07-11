@@ -91,7 +91,7 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		gvk := schemeGroupVersion.WithKind("Event")
 		flcf := func(label, value string) (string, string, error) {
 			switch label {
-			case "prefix", "details", "metadata.name", "metadata.namespace":
+			case "prefix", "since", "until", "details", "metadata.name", "metadata.namespace":
 				return label, value, nil
 			}
 			return "", "", fmt.Errorf("unsupported field selection [%s]", label)

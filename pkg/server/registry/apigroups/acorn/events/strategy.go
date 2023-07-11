@@ -2,15 +2,18 @@ package events
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/channels"
+	"github.com/acorn-io/z"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -83,7 +86,7 @@ func setDefaults(ctx context.Context, e *apiv1.Event) *apiv1.Event {
 	}
 
 	if e.Observed.IsZero() {
-		e.Observed = v1.MicroTime(metav1.NowMicro())
+		e.Observed = internalv1.NowMicro()
 	}
 
 	return e
@@ -97,6 +100,12 @@ type query struct {
 	// Only events with matching names or source strings are included in query results.
 	// As a special case, the empty string "" matches all events.
 	prefix prefix
+
+	// since excludes events observed before it when not nil.
+	since *internalv1.MicroTime
+
+	// until excludes events observed after it when not nil.
+	until *internalv1.MicroTime
 }
 
 // filterChannel applies the query to every event received from unfiltered and forwards the result to filtered, if any.
@@ -131,7 +140,7 @@ func (q query) filterEvent(e watch.Event) *watch.Event {
 		return &e
 	}
 
-	// Attempt to filter
+	// Filter
 	obj := e.Object.(*apiv1.Event)
 	filtered := q.filter(*obj)
 	if len(filtered) < 1 {
@@ -142,6 +151,24 @@ func (q query) filterEvent(e watch.Event) *watch.Event {
 	e.Object = filtered[0].DeepCopy()
 
 	return &e
+}
+
+func (q query) afterWindow(observation internalv1.MicroTime) bool {
+	if q.until == nil {
+		// Window includes all future events
+		return false
+	}
+
+	return observation.After(q.until.Time)
+}
+
+func (q query) beforeWindow(observation internalv1.MicroTime) bool {
+	if q.since == nil {
+		// Window includes all existing events
+		return false
+	}
+
+	return observation.Before(q.since.Time)
 }
 
 // filter returns the result of applying the query to a slice of events.
@@ -161,15 +188,22 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 		tail = int(q.tail)
 	}
 
-	if q.prefix.all() {
-		// Query selects all remaining events
-		return events[len(events)-tail:]
-	}
-
 	results := make([]apiv1.Event, 0, tail)
 	for _, event := range events {
+		observed := event.Observed
+		if q.beforeWindow(observed) {
+			// Exclude events observed before the observation window starts
+			continue
+		}
+
+		if q.afterWindow(observed) {
+			// Exclude all events observed after the observation window ends.
+			// Since the slice is sorted chronologically, we can stop filtering here.
+			break
+		}
+
 		if !q.prefix.matches(event) {
-			// Exclude from results
+			// Exclude event, it doesn't match the given prefix
 			continue
 		}
 
@@ -187,6 +221,7 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions, err error) {
 	stripped = opts
 
+	now := internalv1.MicroTime(metav1.NowMicro())
 	stripped.Predicate.Field, err = stripped.Predicate.Field.Transform(func(f, v string) (string, string, error) {
 		var err error
 		switch f {
@@ -194,6 +229,10 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 			// Detail elision is deprecated, so clients should always get details.
 			// We still strip it from the selector here in order to maintain limited backwards compatibility with old
 			// clients that still specify it.
+		case "since":
+			q.since, err = parseTimeBound(v, now, true)
+		case "until":
+			q.until, err = parseTimeBound(v, now, false)
 		case "prefix":
 			q.prefix = prefix(v)
 		default:
@@ -209,6 +248,49 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 	q.tail, stripped.Predicate.Limit = stripped.Predicate.Limit, 0
 
 	return
+}
+
+func parseTimeBound(raw string, now internalv1.MicroTime, lower bool) (*internalv1.MicroTime, error) {
+	// Try to parse raw as a duration string
+	var errs []error
+	duration, err := time.ParseDuration(raw)
+	if err == nil {
+		if lower {
+			duration *= -1
+		}
+
+		return z.P(internalv1.NewMicroTime(now.Add(duration))), nil
+	}
+	errs = append(errs, fmt.Errorf("%s is not a valid duration: %w", raw, err))
+
+	t, err := parseTime(raw)
+	if err == nil {
+		return t, nil
+	}
+	errs = append(errs, fmt.Errorf("%s is not a valid time: %w", raw, err))
+
+	return nil, errors.Join(errs...)
+}
+
+var (
+	supportedLayouts = []string{
+		time.RFC3339,
+		metav1.RFC3339Micro,
+	}
+)
+
+func parseTime(raw string) (*internalv1.MicroTime, error) {
+	var errs []error
+	for _, layout := range supportedLayouts {
+		since, err := time.Parse(layout, raw)
+		if err == nil {
+			return z.P(internalv1.NewMicroTime(since)), nil
+		}
+
+		errs = append(errs, err)
+	}
+
+	return nil, errors.Join(errs...)
 }
 
 type prefix string
