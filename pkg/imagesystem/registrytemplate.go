@@ -3,6 +3,7 @@ package imagesystem
 import (
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/tolerations"
+	"github.com/acorn-io/z"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -45,7 +46,7 @@ func registryDeployment(namespace, registryImage string, requirements corev1.Res
 			Namespace: namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &[]int32{1}[0],
+			Replicas: z.P[int32](1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": system.RegistryName,
@@ -101,9 +102,9 @@ func registryDeployment(namespace, registryImage string, requirements corev1.Res
 								FailureThreshold:    3,
 							},
 							SecurityContext: &corev1.SecurityContext{
-								RunAsUser:                &[]int64{1000}[0],
-								RunAsNonRoot:             &[]bool{true}[0],
-								ReadOnlyRootFilesystem:   &[]bool{true}[0],
+								RunAsUser:                z.P[int64](1000),
+								RunAsNonRoot:             z.P(true),
+								ReadOnlyRootFilesystem:   z.P(true),
 								AllowPrivilegeEscalation: new(bool),
 							},
 							VolumeMounts: []corev1.VolumeMount{
@@ -196,7 +197,7 @@ func containerdConfigPathDaemonSet(namespace, image, registryServiceNodePort str
 									},
 								},
 								SecurityContext: &corev1.SecurityContext{
-									RunAsUser: &[]int64{0}[0],
+									RunAsUser: new(int64),
 								},
 							},
 						},

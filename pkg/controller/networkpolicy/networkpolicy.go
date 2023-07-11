@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/z"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -166,7 +167,7 @@ func ForIngress(req router.Request, resp router.Response) error {
 				if (svcPort.Name != "" && svcPort.Name == port.Name) || svcPort.Port == port.Number {
 					targetPort := svcPort.TargetPort
 					netPolPorts = append(netPolPorts, networkingv1.NetworkPolicyPort{
-						Protocol: &[]corev1.Protocol{corev1.ProtocolTCP}[0],
+						Protocol: z.P(corev1.ProtocolTCP),
 						Port:     &targetPort,
 					})
 					netPolName = name.SafeConcatName(netPolName, strconv.Itoa(int(targetPort.IntVal)))

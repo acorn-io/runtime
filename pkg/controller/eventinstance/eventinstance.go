@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/z"
 	"golang.org/x/sync/semaphore"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -96,16 +97,12 @@ func (h handler) gcExpired(
 	if err := req.Client.Delete(req.Ctx, req.Object, kclient.Preconditions{
 		// Adding these preconditions prevents us from deleting an event based on old information.
 		// e.g. The observed time has been updated and the event is no longer expired.
-		UID:             ptr(e.GetUID()),
-		ResourceVersion: ptr(e.GetResourceVersion()),
+		UID:             z.P(e.GetUID()),
+		ResourceVersion: z.P(e.GetResourceVersion()),
 	}); err != nil && !apierrors.IsNotFound(err) {
 		// Assume any error other than not found is transient, return error to requeue w/ backoff
 		return err
 	}
 
 	return nil
-}
-
-func ptr[T any](t T) *T {
-	return &t
 }

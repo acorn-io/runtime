@@ -18,6 +18,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/log"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
+	"github.com/acorn-io/z"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -268,7 +269,7 @@ func createApp(ctx context.Context, client client.Client, hash clientHash, image
 
 	runArgs := opts.Run
 	runArgs.DeployArgs = deployArgs
-	runArgs.Stop = &[]bool{true}[0]
+	runArgs.Stop = z.P(true)
 
 	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, runArgs)
 	if err != nil {

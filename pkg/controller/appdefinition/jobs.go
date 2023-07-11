@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -140,7 +141,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Spec: corev1.PodSpec{
 				Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 				Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
-				TerminationGracePeriodSeconds: &[]int64{5}[0],
+				TerminationGracePeriodSeconds: z.P[int64](5),
 				ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 				EnableServiceLinks:            new(bool),
 				RestartPolicy:                 corev1.RestartPolicyNever,
@@ -163,7 +164,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 	interpolator.AddMissingAnnotations(appInstance.GetStopped(), baseAnnotations)
 
 	if container.Schedule == "" {
-		jobSpec.BackoffLimit = &[]int32{1000}[0]
+		jobSpec.BackoffLimit = z.P[int32](1000)
 		job := &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        name,
@@ -192,8 +193,8 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 			Annotations: labels.Merge(getDependencyAnnotations(appInstance, name, container.Dependencies), baseAnnotations),
 		},
 		Spec: batchv1.CronJobSpec{
-			FailedJobsHistoryLimit:     &[]int32{3}[0],
-			SuccessfulJobsHistoryLimit: &[]int32{1}[0],
+			FailedJobsHistoryLimit:     z.P[int32](3),
+			SuccessfulJobsHistoryLimit: z.P[int32](1),
 			ConcurrencyPolicy:          batchv1.ReplaceConcurrent,
 			Schedule:                   toCronJobSchedule(container.Schedule),
 			JobTemplate: batchv1.JobTemplateSpec{

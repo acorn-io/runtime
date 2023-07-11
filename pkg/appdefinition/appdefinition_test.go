@@ -11,6 +11,7 @@ import (
 	"cuelang.org/go/cue/errors"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/z"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1696,7 +1697,7 @@ acorns: first: {
 	assert.True(t, *acorn.NotifyUpgrade)
 	assert.Equal(t, "20s", acorn.AutoUpgradeInterval)
 	assert.Equal(t, v1.MemoryMap{
-		"": &[]int64{1 << 30}[0],
+		"": z.P[int64](1 << 30),
 	}, acorn.Memory)
 	assert.Equal(t, v1.NameValue{
 		Name:  "a",
@@ -1796,7 +1797,7 @@ acorns: first: {
 		Target:  "def",
 	}, acorn.Links[0])
 	assert.Equal(t, v1.MemoryMap{
-		"foo": &[]int64{1 << 30}[0],
+		"foo": z.P[int64](1 << 30),
 	}, acorn.Memory)
 	assert.Equal(t, v1.NameValues{
 		{

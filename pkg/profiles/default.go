@@ -1,6 +1,9 @@
 package profiles
 
-import apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+import (
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/z"
+)
 
 // Default values
 var (
@@ -28,21 +31,21 @@ var (
 
 func defaultProfile() apiv1.Config {
 	return apiv1.Config{
-		AcornDNS:                       ptr(AcornDNSStateDefault),
-		AcornDNSEndpoint:               ptr(AcornDNSEndpointDefault),
-		AutoUpgradeInterval:            ptr(AutoUpgradeIntervalDefault),
+		AcornDNS:                       z.P(AcornDNSStateDefault),
+		AcornDNSEndpoint:               z.P(AcornDNSEndpointDefault),
+		AutoUpgradeInterval:            z.P(AutoUpgradeIntervalDefault),
 		AWSIdentityProviderARN:         new(string),
 		BuilderPerProject:              new(bool),
 		CertManagerIssuer:              new(string),
 		EventTTL:                       new(string),
 		Features:                       FeatureDefaults,
-		HttpEndpointPattern:            ptr(HttpEndpointPatternDefault),
+		HttpEndpointPattern:            z.P(HttpEndpointPatternDefault),
 		IgnoreUserLabelsAndAnnotations: new(bool),
 		IngressClassName:               new(string),
 		IngressControllerNamespace:     new(string),
 		InternalClusterDomain:          InternalClusterDomainDefault,
 		InternalRegistryPrefix:         new(string),
-		LetsEncrypt:                    ptr(LetsEncryptOptionDefault),
+		LetsEncrypt:                    z.P(LetsEncryptOptionDefault),
 		LetsEncryptEmail:               "",
 		LetsEncryptTOSAgree:            new(bool),
 		ManageVolumeClasses:            new(bool),
@@ -51,7 +54,7 @@ func defaultProfile() apiv1.Config {
 		Profile:                        new(string),
 		PublishBuilders:                new(bool),
 		RecordBuilds:                   new(bool),
-		SetPodSecurityEnforceProfile:   ptr(true),
+		SetPodSecurityEnforceProfile:   z.P(true),
 		UseCustomCABundle:              new(bool),
 		WorkloadMemoryDefault:          new(int64),
 		WorkloadMemoryMaximum:          new(int64),

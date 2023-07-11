@@ -20,6 +20,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/profiles"
+	"github.com/acorn-io/z"
 	"github.com/rancher/wrangler/pkg/name"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -313,7 +314,7 @@ func getIngressRule(svc *v1.ServiceInstance, host string, port int32) networking
 				Paths: []networkingv1.HTTPIngressPath{
 					{
 						Path:     "/",
-						PathType: &[]networkingv1.PathType{networkingv1.PathTypePrefix}[0],
+						PathType: z.P(networkingv1.PathTypePrefix),
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
 								Name: svc.Name,

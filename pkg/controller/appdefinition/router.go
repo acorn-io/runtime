@@ -15,6 +15,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/tolerations"
+	"github.com/acorn-io/z"
 	name2 "github.com/rancher/wrangler/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -73,7 +74,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 					Annotations: deploymentAnnotations,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: &[]int64{5}[0],
+					TerminationGracePeriodSeconds: z.P[int64](5),
 					EnableServiceLinks:            new(bool),
 					Containers: []corev1.Container{
 						{
