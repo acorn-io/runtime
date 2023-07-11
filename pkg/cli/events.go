@@ -51,11 +51,10 @@ func NewEvent(c CommandContext) *cobra.Command {
 }
 
 type Events struct {
-	Tail    int    `usage:"Return this number of latest events" short:"t"`
-	Follow  bool   `usage:"Follow the event log" short:"f"`
-	Details bool   `usage:"Don't strip event details from response" short:"d"`
-	Output  string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
-	client  ClientFactory
+	Tail   int    `usage:"Return this number of latest events" short:"t"`
+	Follow bool   `usage:"Follow the event log" short:"f"`
+	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
+	client ClientFactory
 }
 
 func (e *Events) Run(cmd *cobra.Command, args []string) error {

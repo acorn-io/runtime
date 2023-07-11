@@ -49,7 +49,6 @@ acorn events [flags] [PREFIX]
 ### Options
 
 ```
-  -d, --details         Don't strip event details from response
   -f, --follow          Follow the event log
   -h, --help            help for events
   -o, --output string   Output format (json, yaml, {{gotemplate}})
