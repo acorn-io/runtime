@@ -39,7 +39,7 @@ func NewImageSign(c CommandContext) *cobra.Command {
 type ImageSign struct {
 	client      ClientFactory
 	Key         string            `usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
-	Annotations map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true"`
+	Annotations map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true" name:"annotation"`
 	Push        bool              `usage:"Push the signature to the signature repository" short:"p" local:"true" default:"true"`
 }
 

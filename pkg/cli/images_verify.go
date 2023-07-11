@@ -38,7 +38,7 @@ acorn image verify my-image --key ac://ibuildthecloud
 type ImageVerify struct {
 	client      ClientFactory
 	Key         string            `usage:"Key to use for verifying" short:"k" local:"true" default:"./cosign.pub"`
-	Annotations map[string]string `usage:"Annotations to check for in the signature" short:"a" local:"true"`
+	Annotations map[string]string `usage:"Annotations to check for in the signature" short:"a" local:"true" name:"annotation"`
 }
 
 func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
