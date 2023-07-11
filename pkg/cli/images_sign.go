@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
@@ -12,7 +14,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
-	"github.com/sigstore/cosign/v2/cmd/cosign/cli/generate"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/cosign/remote"
 	"github.com/sigstore/cosign/v2/pkg/oci/mutate"
@@ -21,6 +22,8 @@ import (
 	"github.com/sigstore/cosign/v2/pkg/signature"
 	sigsig "github.com/sigstore/sigstore/pkg/signature"
 	"github.com/spf13/cobra"
+
+	"github.com/acorn-io/runtime/pkg/prompt"
 )
 
 func NewImageSign(c CommandContext) *cobra.Command {
@@ -84,7 +87,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
 
-	pass, err := generate.GetPass(false)
+	pass, err := getPrivateKeyPass(a.Key)
 	if err != nil {
 		return err
 	}
@@ -163,4 +166,23 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// Get password for private key from environment, prompt or stdin (piped)
+// Adapted from Cosign's readPasswordFn
+func getPrivateKeyPass(keyfile string) ([]byte, error) {
+	pw, ok := os.LookupEnv("ACORN_IMAGE_SIGN_PASSWORD")
+	switch {
+	case ok:
+		return []byte(pw), nil
+	case isTerm():
+		return prompt.Password(fmt.Sprintf("Enter password for private key %s:", keyfile))
+	default:
+		return io.ReadAll(os.Stdin)
+	}
+}
+
+func isTerm() bool {
+	stat, _ := os.Stdin.Stat()
+	return (stat.Mode() & os.ModeCharDevice) != 0
 }
