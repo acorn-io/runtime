@@ -212,7 +212,6 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			labels.AcornPublicName: pvc.Labels[labels.AcornPublicName],
 			// Make sure we only list volumes that are part of the same Acorn project
 			labels.AcornAppNamespace: appInstance.Namespace,
-			labels.AcornManaged:      "true",
 		})
 		pvList := new(corev1.PersistentVolumeList)
 		if err := req.Client.List(req.Ctx, pvList, &kclient.ListOptions{LabelSelector: selector}); err != nil {
@@ -258,7 +257,6 @@ func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, bind
 		labels.AcornPublicName: binding.Volume,
 		// Make sure we only list volumes that are part of the same Acorn project
 		labels.AcornAppNamespace: appInstance.Namespace,
-		labels.AcornManaged:      "true",
 	})
 
 	pvList := new(corev1.PersistentVolumeList)
