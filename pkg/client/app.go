@@ -244,14 +244,14 @@ func translateErr(err error) error {
 		return e
 	}
 
-	if e := translateNotAllowed(err); e != nil {
+	if e := TranslateNotAllowed(err); e != nil {
 		return e
 	}
 
 	return err
 }
 
-func translateNotAllowed(err error) error {
+func TranslateNotAllowed(err error) error {
 	if err == nil {
 		return err
 	}

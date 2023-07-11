@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	iarutil "github.com/acorn-io/runtime/pkg/imageallowrules/util"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/prompt"
 	"github.com/acorn-io/runtime/pkg/run"
@@ -44,10 +45,10 @@ func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool,
 	}
 
 	// Prompt user to create an simple IAR for this image
-	if choice, promptErr := handleNotAllowed(dangerous, image); promptErr != nil {
+	if choice, promptErr := HandleNotAllowed(dangerous, image); promptErr != nil {
 		return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
 	} else if choice != "NO" {
-		iarErr := createImageAllowRule(ctx, c, image, choice, existingImgName) // existingImgName to ensure that this exact image ID is allowed in addition to whatever pattern we're allowing
+		iarErr := CreateImageAllowRule(ctx, c, image, choice, existingImgName) // existingImgName to ensure that this exact image ID is allowed in addition to whatever pattern we're allowing
 		if iarErr != nil {
 			return nil, iarErr
 		}
@@ -133,9 +134,9 @@ application. If you are unsure say no.`)
 	return prompt.Bool("Do you want to allow this app to have these (POTENTIALLY DANGEROUS) permissions?", false)
 }
 
-func handleNotAllowed(dangerous bool, image string) (string, error) {
+func HandleNotAllowed(dangerous bool, image string) (string, error) {
 	if dangerous {
-		return string(imageallowrules.SimpleImageScopeExact), nil
+		return string(iarutil.SimpleImageScopeExact), nil
 	}
 
 	pterm.Warning.Printfln(
@@ -157,7 +158,7 @@ application. If you are unsure say no.`, image)
 
 		choiceMap = map[string]string{
 			choices[0]: "NO",
-			choices[1]: string(imageallowrules.SimpleImageScopeExact),
+			choices[1]: string(iarutil.SimpleImageScopeExact),
 		}
 	} else {
 		choices = []string{
@@ -170,10 +171,10 @@ application. If you are unsure say no.`, image)
 
 		choiceMap = map[string]string{
 			choices[0]: "NO",
-			choices[1]: string(imageallowrules.SimpleImageScopeExact),
-			choices[2]: string(imageallowrules.SimpleImageScopeRepository),
-			choices[3]: string(imageallowrules.SimpleImageScopeRegistry),
-			choices[4]: string(imageallowrules.SimpleImageScopeAll),
+			choices[1]: string(iarutil.SimpleImageScopeExact),
+			choices[2]: string(iarutil.SimpleImageScopeRepository),
+			choices[3]: string(iarutil.SimpleImageScopeRegistry),
+			choices[4]: string(iarutil.SimpleImageScopeAll),
 		}
 	}
 
@@ -182,8 +183,8 @@ application. If you are unsure say no.`, image)
 	return choiceMap[choice], err
 }
 
-func createImageAllowRule(ctx context.Context, c client.Client, image, choice string, extraExactMatches ...string) error {
-	iar, err := imageallowrules.GenerateSimpleAllowRule(c.GetProject(), run.NameGenerator.Generate(), image, choice)
+func CreateImageAllowRule(ctx context.Context, c client.Client, image, choice string, extraExactMatches ...string) error {
+	iar, err := iarutil.GenerateSimpleAllowRule(c.GetProject(), run.NameGenerator.Generate(), image, choice)
 	if err != nil {
 		return fmt.Errorf("error generating ImageAllowRule: %w", err)
 	}

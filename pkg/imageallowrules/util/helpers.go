@@ -1,10 +1,11 @@
-package imageallowrules
+package util
 
 import (
 	"fmt"
 	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -19,12 +20,18 @@ const (
 )
 
 func GenerateSimpleAllowRule(namespace string, name string, image string, scope string) (*v1.ImageAllowRule, error) {
+	pattern, isPattern := autoupgrade.AutoUpgradePattern(image)
+
+	if isPattern {
+		image = strings.TrimRight(image, ":"+pattern)
+	}
+
 	ref, err := imagename.ParseReference(image, imagename.WithDefaultTag(""), imagename.WithDefaultRegistry(""))
 	if err != nil {
 		return nil, fmt.Errorf("error parsing image: %w", err)
 	}
 
-	is, err := buildImageScope(ref, scope)
+	is, err := buildImageScope(ref, scope, pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +45,7 @@ func GenerateSimpleAllowRule(namespace string, name string, image string, scope 
 	}, nil
 }
 
-func buildImageScope(image imagename.Reference, scope string) (string, error) {
+func buildImageScope(image imagename.Reference, scope, tagPattern string) (string, error) {
 	var is string
 
 	switch SimpleImageScope(scope) {
@@ -48,6 +55,9 @@ func buildImageScope(image imagename.Reference, scope string) (string, error) {
 		is = fmt.Sprintf("%s/%s:**", image.Context().RegistryStr(), image.Context().RepositoryStr())
 	case SimpleImageScopeExact:
 		is = strings.TrimSuffix(image.Name(), ":")
+		if tagPattern != "" {
+			is = image.Context().Tag(tagPattern).Name()
+		}
 	case SimpleImageScopeAll:
 		is = "**"
 	default:
