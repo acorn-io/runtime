@@ -45,7 +45,7 @@ func GenerateSimpleAllowRule(namespace string, name string, image string, scope 
 	}, nil
 }
 
-func buildImageScope(image imagename.Reference, scope string, tagPattern string) (string, error) {
+func buildImageScope(image imagename.Reference, scope, tagPattern string) (string, error) {
 	var is string
 
 	switch SimpleImageScope(scope) {
