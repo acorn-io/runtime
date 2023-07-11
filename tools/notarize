@@ -22,14 +22,14 @@ echo "NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} ZIP=${ZIP}"
 
 sudo apt-get update -y  
 
-# Sign the binary using rcodesign, a Rust implementation of codesign. This
-# requires that gcc and cargo are installed.
+# Sign the binary using rcodesign, a Rust implementation of codesign.
 echo "Signing the binary..."
 
-which curl || sudo apt-get install curl -y
-which gcc || sudo apt-get install gcc -y
-which cargo || sudo curl https://sh.rustup.rs -sSf | sh -s -- -y && bash
-which rcodesign || cargo install apple-codesign
+# Install rcodesign from the release page.
+which wget || sudo apt-get install wget -y
+wget https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz
+tar -xvf apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz
+mv apple-codesign-0.22.0-x86_64-unknown-linux-musl/rcodesign /usr/local/bin
 
 # Sign the binary using rcodesign.
 echo "Signing ${BINARY}..."
