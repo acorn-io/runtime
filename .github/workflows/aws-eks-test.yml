@@ -88,7 +88,7 @@ jobs:
 
       - name: Upload test results to Datadog
         uses: datadog/junit-upload-github-action@v1
-        if: '!cancelled() && steps.test_summary.conclusion != "skipped"'
+        if: "!cancelled() && steps.test_summary.conclusion != 'skipped'"
         with:
           api-key: ${{ secrets.DD_API_KEY }}
           service: runtime-eks-tests
