@@ -62,7 +62,6 @@ jobs:
 
       - name: Build test summary
         id: test_summary
-        needs: [test]
         uses: test-summary/action@v2
         if: "!cancelled() && steps.test.conclusion != 'skipped'"
         with:
@@ -90,7 +89,6 @@ jobs:
       - name: Upload test results to Datadog
         uses: datadog/junit-upload-github-action@v1
         if: '!cancelled() && steps.test_summary.conclusion != "skipped"'
-        needs: [test_summary]
         with:
           api-key: ${{ secrets.DD_API_KEY }}
           service: runtime-eks-tests
