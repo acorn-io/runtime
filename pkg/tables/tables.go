@@ -21,7 +21,6 @@ var (
 
 	Volume = [][]string{
 		{"Name", "{{ . | name }}"},
-		{"App-Name", "Status.AppPublicName"},
 		{"Bound-Volume", "Status.VolumeName"},
 		{"Capacity", "Spec.Capacity"},
 		{"Volume-Class", "{{ .Spec.Class }}"},

@@ -25,13 +25,15 @@ metadata:
   name: container-name
   namespace: app-created-namespace
 spec:
+  replicas: 1
   selector:
     matchLabels:
       acorn.io/app-name: app-name
       acorn.io/app-namespace: app-namespace
       acorn.io/container-name: container-name
       acorn.io/managed: "true"
-  strategy: {}
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -60,7 +62,7 @@ spec:
       volumes:
       - name: foo
         persistentVolumeClaim:
-          claimName: foo-bind
+          claimName: foo
 status: {}
 
 ---
@@ -77,7 +79,7 @@ metadata:
   name: container-name
   namespace: app-created-namespace
 spec:
-  maxUnavailable: 25%
+  maxUnavailable: 1
   selector:
     matchLabels:
       acorn.io/app-name: app-name
@@ -99,17 +101,16 @@ metadata:
     acorn.io/app-name: app-name
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
-    acorn.io/public-name: other-app.foo
-    acorn.io/volume-class: custom-class
+    acorn.io/public-name: app-name.foo
     acorn.io/volume-name: foo
-  name: foo-bind
+  name: foo
   namespace: app-created-namespace
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 5M
+      storage: 10G
   volumeName: existing-foo
 status: {}
 
@@ -137,9 +138,6 @@ metadata:
   uid: 1234567890abcdef
 spec:
   image: test
-  volumes:
-  - target: foo
-    volume: other-app.foo
 status:
   appImage:
     id: test
@@ -157,7 +155,6 @@ status:
         probes: null
     volumes:
       foo:
-        class: ephemeral
         size: 10G
   appStatus: {}
   columns: {}

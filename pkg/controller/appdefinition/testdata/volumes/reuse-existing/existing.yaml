@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    acorn.io/app-name: other-app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/volume-name: foo-bind
+    acorn.io/public-name: app-name.foo
+  name: existing-foo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10G
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: foo-bind
+    namespace: other-namespace
+    resourceVersion: "5110"
+    uid: 0a53e9de-113c-461e-bd9c-51704ac9fc5f
+  hostPath:
+    path: /var/lib/rancher/k3s/storage/pvc-0a53e9de-113c-461e-bd9c-51704ac9fc5f_hub-dev-a0a9fc89-1f5_go-cache
+    type: DirectoryOrCreate
+status:
+  phase: Released

@@ -100,7 +100,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   found      vol            <nil>                                              292y ago\n",
+			wantOut: "NAME        BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   vol            <nil>                                              292y ago\n",
 		},
 		{
 			name: "acorn volume -o json", fields: fields{
@@ -139,7 +139,7 @@ func TestVolume(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   found      vol            <nil>                                              292y ago\n",
+			wantOut: "NAME        BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nfound.vol   vol            <nil>                                              292y ago\n",
 		},
 		{
 			name: "acorn volume dne", fields: fields{
@@ -204,7 +204,7 @@ func TestVolume(t *testing.T) {
 				args:   []string{},
 				client: &testdata.MockClient{},
 			},
-			wantOut: "NAME        APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nmy-volume                             <nil>      my-class                                10y ago\n",
+			wantOut: "NAME        BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED\nmy-volume                  <nil>      my-class                                10y ago\n",
 		},
 	}
 	for _, tt := range tests {

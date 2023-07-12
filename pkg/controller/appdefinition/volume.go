@@ -93,9 +93,8 @@ func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 	err := req.List(uncached.List(&pv), &kclient.ListOptions{
 		LabelSelector: klabels.SelectorFromSet(map[string]string{
 			labels.AcornManaged:      "true",
-			labels.AcornAppName:      appInstance.Name,
 			labels.AcornAppNamespace: appInstance.Namespace,
-			labels.AcornVolumeName:   volumeName,
+			labels.AcornPublicName:   publicname.ForChild(appInstance, volumeName),
 		}),
 	})
 	if err != nil {
@@ -106,6 +105,9 @@ func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeNam
 	case 0:
 		return "", nil
 	case 1:
+		if !isPVAvailable(&pv.Items[0], appInstance.Name) {
+			return "", fmt.Errorf("cannot use existing volume %s - it is in phase %s", pv.Items[0].Name, pv.Items[0].Status.Phase)
+		}
 		return pv.Items[0].Name, nil
 	default:
 		names := typed.MapSlice(pv.Items, func(pv corev1.PersistentVolume) string {
@@ -158,6 +160,10 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 				return nil, err
 			}
 
+			if pv.Labels[labels.AcornPublicName] != "" {
+				pvc.Labels[labels.AcornPublicName] = pv.Labels[labels.AcornPublicName]
+			}
+
 			pvc.Name = bindName(vol)
 			pvc.Spec.VolumeName = pv.Name
 			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MinSize
@@ -201,27 +207,75 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			}
 		}
 
+		// Ensure that no other PersistentVolume exists with the same public name
+		selector := klabels.SelectorFromSet(map[string]string{
+			labels.AcornPublicName: pvc.Labels[labels.AcornPublicName],
+			// Make sure we only list volumes that are part of the same Acorn project
+			labels.AcornAppNamespace: appInstance.Namespace,
+		})
+		pvList := new(corev1.PersistentVolumeList)
+		if err := req.Client.List(req.Ctx, pvList, &kclient.ListOptions{LabelSelector: selector}); err != nil {
+			return nil, err
+		}
+
+		if len(pvList.Items) > 1 || (len(pvList.Items) == 1 && pvList.Items[0].Name != pvc.Spec.VolumeName) {
+			return nil, fmt.Errorf("a volume with the name %q already exists", pvc.Labels[labels.AcornPublicName])
+		}
+
 		result = append(result, &pvc)
 	}
 	return
 }
 
 func getPVForVolumeBinding(req router.Request, appInstance *v1.AppInstance, binding v1.VolumeBinding) (*corev1.PersistentVolume, error) {
+	// binding.Volume can either be the actual name of the PersistentVolume, or its public name in Acorn.
+	// Check for the actual name first.
 	pv := new(corev1.PersistentVolume)
 	if err := req.Client.Get(req.Ctx, kclient.ObjectKey{Name: binding.Volume}, pv); err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
+	} else if err == nil {
+		// Make sure this PV is managed by acorn
+		if _, ok := pv.Labels[labels.AcornManaged]; !ok {
+			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
+		}
+
+		// Make sure this PV has the Acorn app namespace label with the same value as the AppInstance's namespace
+		if appNamespace, ok := pv.Labels[labels.AcornAppNamespace]; !ok || appNamespace != appInstance.Namespace {
+			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
+		}
+
+		// Check the PV phase
+		if !isPVAvailable(pv, appInstance.Name) {
+			return nil, fmt.Errorf("volume %q is not available for binding", binding.Volume)
+		}
+
+		return pv, nil
 	}
 
-	// make sure this PV is managed by acorn
-	if _, ok := pv.Labels[labels.AcornManaged]; !ok {
-		return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
+	// If we didn't find it by name, then look for it by public name.
+	selector := klabels.SelectorFromSet(map[string]string{
+		labels.AcornPublicName: binding.Volume,
+		// Make sure we only list volumes that are part of the same Acorn project
+		labels.AcornAppNamespace: appInstance.Namespace,
+	})
+
+	pvList := new(corev1.PersistentVolumeList)
+	if err := req.Client.List(req.Ctx, pvList, &kclient.ListOptions{LabelSelector: selector}); err != nil {
+		return nil, err
+	}
+	if len(pvList.Items) != 1 {
+		if len(pvList.Items) == 0 {
+			return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
+		}
+		return nil, fmt.Errorf("expected 1 PV for volume %s, found %d", binding.Volume, len(pvList.Items))
 	}
 
-	// make sure this PV has the Acorn app namespace label with the same value as the AppInstance's namespace
-	if appNamespace, ok := pv.Labels[labels.AcornAppNamespace]; !ok || appNamespace != appInstance.Namespace {
-		return nil, fmt.Errorf("no Acorn-managed volume found with name %q in project %q", binding.Volume, appInstance.Namespace)
+	// Check the PV phase
+	if !isPVAvailable(&pvList.Items[0], appInstance.Name) {
+		return nil, fmt.Errorf("volume %q is not available for binding", binding.Volume)
 	}
-	return pv, nil
+
+	return &pvList.Items[0], nil
 }
 
 func volumeLabels(appInstance *v1.AppInstance, volume string, volumeRequest v1.VolumeRequest) map[string]string {
@@ -420,4 +474,9 @@ func toVolumes(appInstance *v1.AppInstance, container v1.Container, interpolator
 	})
 
 	return
+}
+
+func isPVAvailable(pv *corev1.PersistentVolume, appName string) bool {
+	return pv.Status.Phase == corev1.VolumeAvailable || pv.Status.Phase == corev1.VolumeReleased ||
+		pv.Labels[labels.AcornAppName] == appName
 }
