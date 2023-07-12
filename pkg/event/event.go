@@ -35,7 +35,6 @@ func NewRecorder(c kclient.Client) RecorderFunc {
 		}
 
 		// Set a generated name based on the event content.
-		// NOTE: This is validated server-side, so it's important that this is done, just before sending the request.
 		id, err := ContentID(e)
 		if err != nil {
 			return fmt.Errorf("failed to generate event name from content: %w", err)
