@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/acorn-io/baaah/pkg/merr"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
@@ -216,7 +215,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 
 	err = cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))
 	err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
-	logrus.Debugf("%s: %v", err, merr.NewErrors(errs...))
+	logrus.Debugf("%s: %v", err, errors.Join(errs...))
 	return err
 }
 
