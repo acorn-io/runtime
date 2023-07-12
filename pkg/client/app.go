@@ -6,6 +6,7 @@ import (
 	"errors"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
@@ -325,10 +326,15 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 
 	go func() {
 		<-ctx.Done()
+		// Set a past read deadline with `conn.SetReadDeadline`
+		// to trigger a "use of closed network connection" error
+		// for graceful closure handling without printing the error.
+		_ = conn.SetReadDeadline(time.Now())
 		_ = conn.Close()
 	}()
 
 	result := make(chan apiv1.LogMessage)
+
 	go func() {
 		defer close(result)
 		defer conn.Close()
