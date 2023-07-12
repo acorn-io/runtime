@@ -62,7 +62,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 			isLocal          bool
 		)
 		// Only attempt to resolve locally if auto-upgrade is not on, or if auto-upgrade is on but we know the image is not remote.
-		if !autoUpgradeOn || !images.IsImageRemote(target, true, remote.WithTransport(transport)) {
+		if !autoUpgradeOn || !images.IsImageRemote(req.Ctx, req.Client, appInstance.Namespace, target, true, remote.WithTransport(transport)) {
 			resolved, isLocal, err = client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
 			if err != nil {
 				cond.Error(err)
