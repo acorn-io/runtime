@@ -119,7 +119,7 @@ func ResolveTag(tag imagename.Reference, image string) string {
 // IsImageRemote checks the remote registry to see if the given image name exists.
 // If noDefaultRegistry is true, and the image does not have a specified registry, this function will return false
 // without attempting to check any remote registries.
-func IsImageRemote(image string, noDefaultRegistry bool, opts ...remote.Option) bool {
+func IsImageRemote(ctx context.Context, c client.Reader, namespace, image string, noDefaultRegistry bool, opts ...remote.Option) bool {
 	var (
 		ref imagename.Reference
 		err error
@@ -131,6 +131,11 @@ func IsImageRemote(image string, noDefaultRegistry bool, opts ...remote.Option) 
 	}
 
 	if err != nil || ref.Context().RegistryStr() == NoDefaultRegistry {
+		return false
+	}
+
+	opts, err = GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
+	if err != nil {
 		return false
 	}
 
