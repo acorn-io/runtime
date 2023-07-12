@@ -196,6 +196,7 @@ type AppInstanceStatus struct {
 	DevSession             *DevSessionInstanceSpec `json:"devSession,omitempty"`
 	ObservedGeneration     int64                   `json:"observedGeneration,omitempty"`
 	ObservedImageDigest    string                  `json:"observedImageDigest,omitempty"`
+	ObservedAutoUpgrade    bool                    `json:"observedAutoUpgrade,omitempty"`
 	Columns                AppColumns              `json:"columns,omitempty"`
 	Ready                  bool                    `json:"ready,omitempty"`
 	Namespace              string                  `json:"namespace,omitempty"`

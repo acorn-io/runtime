@@ -6099,6 +6099,12 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
+					"observedAutoUpgrade": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
