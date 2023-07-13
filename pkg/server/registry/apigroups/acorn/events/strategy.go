@@ -12,11 +12,20 @@ import (
 	"github.com/acorn-io/runtime/pkg/channels"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/storage"
 )
 
 type eventStrategy struct {
 	strategy.CompleteStrategy
+}
+
+func (s *eventStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
+	return s.CompleteStrategy.Create(ctx, setDefaults(ctx, obj.(*apiv1.Event)))
+}
+
+func (s *eventStrategy) Update(ctx context.Context, obj types.Object) (types.Object, error) {
+	return s.CompleteStrategy.Update(ctx, setDefaults(ctx, obj.(*apiv1.Event)))
 }
 
 func (s *eventStrategy) Watch(ctx context.Context, namespace string, opts storage.ListOptions) (<-chan watch.Event, error) {
@@ -58,6 +67,20 @@ func (s *eventStrategy) List(ctx context.Context, namespace string, opts storage
 	}
 
 	return q.filterList(unfiltered.(*apiv1.EventList)), nil
+}
+
+func setDefaults(ctx context.Context, e *apiv1.Event) *apiv1.Event {
+	if e.Actor == "" {
+		// Set actor from ctx if possible
+		logrus.Debug("No Actor set, attempting to set default from request context")
+		if user, ok := request.UserFrom(ctx); ok {
+			e.Actor = user.GetName()
+		} else {
+			logrus.Debug("Request context has no user info, creating anonymous event")
+		}
+	}
+
+	return e
 }
 
 type query struct {
