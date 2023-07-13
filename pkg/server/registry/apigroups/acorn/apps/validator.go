@@ -96,12 +96,6 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		return
 	}
 
-	au := app.Spec.AutoUpgrade
-	if (au == nil || !*au) && autoupgrade.ImpliedAutoUpgrade(app.Spec.AutoUpgradeInterval, app.Spec.Image) {
-		result = append(result, field.Invalid(field.NewPath("spec", "autoUpgrade"), app.Spec.AutoUpgrade, "must be true if autoupgrade options are set"))
-		return
-	}
-
 	var (
 		imageGrantedPerms []v1.Permissions
 		checkImage        = app.Spec.Image
