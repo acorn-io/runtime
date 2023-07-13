@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/publicname"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func CLIStatus(req router.Request, resp router.Response) (err error) {
@@ -28,6 +29,15 @@ func CLIStatus(req router.Request, resp router.Response) (err error) {
 		app.Status.Columns.UpToDate == "0" &&
 		app.Status.Columns.Message == "OK" &&
 		app.Status.Columns.Endpoints == ""
+	if app.Status.AppStatus.Completed {
+		var parent v1.AppInstance
+		parentName, _ := publicname.Split(publicname.Get(app))
+		if err := req.Get(&parent, app.Namespace, parentName); apierrors.IsNotFound(err) {
+			app.Status.AppStatus.Completed = false
+		} else if err != nil {
+			return err
+		}
+	}
 
 	resp.Objects(app)
 	return
