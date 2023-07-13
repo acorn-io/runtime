@@ -81,6 +81,9 @@ rules:
   - verbs: ["get", "list", "watch"]
     apiGroups: ["scheduling.k8s.io"]
     resources: ["priorityclasses"]
+  - apiGroups: ["management.cattle.io"]
+    resources: ["projects"]
+    verbs: ["updatepsa"]
 
 ---
 kind: ClusterRoleBinding
