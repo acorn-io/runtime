@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/digest"
 	"github.com/acorn-io/runtime/pkg/encryption/nacl"
+	"github.com/acorn-io/runtime/pkg/externalid"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
@@ -167,34 +168,59 @@ func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.Volum
 	}
 }
 
+func (i *Interpolator) getExternalID() (string, error) {
+	accountID, err := i.getAccountID()
+	if err != nil {
+		return "", err
+	}
+
+	projectName, err := i.getProjectName()
+	if err != nil {
+		return "", err
+	}
+
+	appName := publicname.Get(i.app)
+	return externalid.ExternalID(accountID, projectName, appName), nil
+}
+
+func (i *Interpolator) getAccountID() (string, error) {
+	ns := &corev1.Namespace{}
+	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
+		return "", err
+	}
+	name := ns.Labels[labels.AcornAccountID]
+	if name == "" {
+		ns := &corev1.Namespace{}
+		if err := i.client.Get(i.ctx, router.Key("", "kube-system"), ns); err != nil {
+			return "", err
+		}
+		return "runtime-" + string(ns.UID[:8]), nil
+	}
+	return name, nil
+}
+
+func (i *Interpolator) getProjectName() (string, error) {
+	ns := &corev1.Namespace{}
+	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
+		return "", err
+	}
+	name := ns.Labels[labels.AcornProjectName]
+	if name == "" {
+		return i.app.Namespace, nil
+	}
+	return name, nil
+}
+
 func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
-	switch keyName {
+	switch strings.ToLower(keyName) {
 	case "name":
 		return publicname.Get(i.app), true, nil
 	case "account":
-		ns := &corev1.Namespace{}
-		if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
-			return "", false, err
-		}
-		name := ns.Labels[labels.AcornAccountID]
-		if name == "" {
-			ns := &corev1.Namespace{}
-			if err := i.client.Get(i.ctx, router.Key("", "kube-system"), ns); err != nil {
-				return "", false, err
-			}
-			return "runtime-" + string(ns.UID[:8]), true, nil
-		}
-		return name, true, nil
+		accountID, err := i.getAccountID()
+		return accountID, true, err
 	case "project":
-		ns := &corev1.Namespace{}
-		if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
-			return "", false, err
-		}
-		name := ns.Labels[labels.AcornProjectName]
-		if name == "" {
-			return i.app.Namespace, true, nil
-		}
-		return name, true, nil
+		projectName, err := i.getProjectName()
+		return projectName, true, err
 	case "namespace":
 		return i.app.Status.Namespace, true, nil
 	case "image":
@@ -207,10 +233,13 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 			}
 			return tag.Digest(i.app.Status.AppImage.Digest).String(), true, nil
 		}
-	case "imageName":
+	case "imagename":
 		return i.app.Status.AppImage.Name, true, nil
-	case "commitSha":
+	case "commitsha":
 		return i.app.Status.AppImage.VCS.Revision, true, nil
+	case "externalid":
+		externalID, err := i.getExternalID()
+		return externalID, true, err
 	}
 	return "", false, nil
 }
