@@ -323,7 +323,7 @@ type prefix string
 func (p prefix) matches(e apiv1.Event) bool {
 	return p.all() ||
 		strings.HasPrefix(e.Name, string(p)) ||
-		strings.HasPrefix(e.Source.String(), string(p))
+		strings.HasPrefix(z.Dereference(e.Resource).String(), string(p))
 }
 
 func (p prefix) all() bool {

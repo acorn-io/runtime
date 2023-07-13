@@ -95,7 +95,7 @@ func withMeta[T kclient.Object](name, uid, resourceVersion string, obj T) T {
 
 func TestPullAppImageEvents(t *testing.T) {
 	// Test cases below this comment ensure the handler produces the correct events
-	now := v1.MicroTime(metav1.NowMicro())
+	now := v1.NowMicro()
 	// Manual upgrade should record an event
 	testRecordPullEvent(t,
 		"ImageChange",
@@ -108,7 +108,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
 			AppName:     "foo",
-			Source:      v1.EventSource{Kind: "app", Name: "foo", UID: types.UID("foo-uid")},
+			Resource:    &v1.EventResource{Kind: "app", Name: "foo", UID: types.UID("foo-uid")},
 			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				ResourceVersion: "1",
@@ -131,7 +131,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
 			AppName:     "foo",
-			Source:      v1.EventSource{Kind: "app", Name: "foo"},
+			Resource:    &v1.EventResource{Kind: "app", Name: "foo"},
 			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				AutoUpgrade: true,
@@ -152,7 +152,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
 			AppName:     "foo",
-			Source:      v1.EventSource{Kind: "app", Name: "foo"},
+			Resource:    &v1.EventResource{Kind: "app", Name: "foo"},
 			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				AutoUpgrade: true,
@@ -173,7 +173,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Severity:    v1.EventSeverityError,
 			Description: "Failed to pull acorn.io/img:1",
 			AppName:     "foo",
-			Source:      v1.EventSource{Kind: "app", Name: "foo"},
+			Resource:    &v1.EventResource{Kind: "app", Name: "foo"},
 			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				Target: ImageSummary{Name: "acorn.io/img:1"},

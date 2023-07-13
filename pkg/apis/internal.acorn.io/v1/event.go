@@ -3,7 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,8 +40,9 @@ type EventInstance struct {
 	// +optional
 	AppName string `json:"appName,omitempty"`
 
-	// Source identifies the object the Event is regarding.
-	Source EventSource `json:"source"`
+	// Resource identifies the object the Event is regarding.
+	// +optional
+	Resource *EventResource `json:"resource,omitempty"`
 
 	// Description is a human-readable description of the Event.
 	// +optional
@@ -120,24 +121,32 @@ const (
 // EventSeverity indicates the severity of an event.
 type EventSeverity string
 
-// EventSource identifies an object related to an Event.
+// EventResource identifies a resource related to an Event.
 //
-// The referenced object may or may not exist.
+// The referenced resource may or may not exist.
 //
 // Note: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged.
 // See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919
 // for more details.
-type EventSource struct {
-	// Kind is the source object kind.
+type EventResource struct {
+	// Kind is the resource kind.
 	Kind string `json:"kind"`
 
-	// Name is the name of the source object.
+	// Name is the name of the resource.
 	Name string `json:"name"`
 
-	// UID uniquely identifies the source object.
+	// UID uniquely identifies the resource.
 	UID types.UID `json:"uuid"`
 }
 
-func (e EventSource) String() string {
-	return fmt.Sprintf("%s/%s", e.Kind, e.Name)
+func (e EventResource) String() string {
+	components := make([]string, 0, 2)
+	if e.Kind != "" {
+		components = append(components, e.Kind)
+	}
+	if e.Name != "" {
+		components = append(components, e.Name)
+	}
+
+	return strings.Join(components, "/")
 }

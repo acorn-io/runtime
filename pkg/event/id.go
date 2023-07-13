@@ -7,21 +7,22 @@ import (
 	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/z"
 )
 
 // ContentID returns a deterministic ID based on the content of a given event.
 // The returned ID is a valid kubernetes resource name (metadata.name).
 func ContentID(e *apiv1.Event) (string, error) {
-	fieldSet := strings.Join([]string{
+	fieldSet := []string{
 		e.Type,
 		string(e.Severity),
-		e.Source.String(),
+		z.Dereference(e.Resource).String(),
 		e.Description,
 		strconv.FormatInt(e.Observed.UnixMicro(), 10),
-	}, ",")
+	}
 
 	h := fnv.New128a()
-	if _, err := h.Write([]byte(fieldSet)); err != nil {
+	if _, err := h.Write([]byte(strings.Join(fieldSet, ","))); err != nil {
 		return "", err
 	}
 
