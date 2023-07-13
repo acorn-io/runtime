@@ -23,7 +23,6 @@ func NewStorage(c kclient.WithWatch) rest.Storage {
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.Event{}).
 		WithTableConverter(tables.EventConverter).
-		WithValidateName(new(validator)).
 		WithCompleteCRUD(strategy).
 		Build()
 }
