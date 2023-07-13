@@ -20,6 +20,8 @@ func PurgeDevConfig(req router.Request, resp router.Response) error {
 		expiration, err := time.Parse(time.RFC3339, ttlString)
 		if err == nil {
 			if time.Now().Before(expiration) {
+				// Look 15 minutes later (stupid simple logic)
+				resp.RetryAfter(15 * time.Minute)
 				return nil
 			}
 			logrus.Infof("Time on dev config has expired [%s]", ttlString)

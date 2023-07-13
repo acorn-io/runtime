@@ -10,24 +10,39 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
+	"github.com/acorn-io/runtime/pkg/controller/jobs"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/google/go-containerregistry/pkg/name"
+	"golang.org/x/exp/slices"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) {
+func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
 	for _, acorn := range toAcorns(appInstance, tag, pullSecrets) {
 		var devSession v1.DevSessionInstance
 		err := req.Get(&devSession, acorn.Namespace, acorn.Name)
 		if err == nil {
 			// Don't update app in dev mode
 			acorn.Annotations[apply.AnnotationUpdate] = "false"
+		} else if !apierrors.IsNotFound(err) {
+			return err
+		}
+		var existingApp v1.AppInstance
+		err = req.Get(&existingApp, acorn.Namespace, acorn.Name)
+		if err == nil {
+			if slices.Contains(existingApp.Finalizers, jobs.DestroyJobFinalizer) {
+				acorn.Annotations[apply.AnnotationPrune] = "false"
+			}
+		} else if !apierrors.IsNotFound(err) {
+			return err
 		}
 		resp.Objects(acorn)
 	}
+	return nil
 }
 
 func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []*v1.AppInstance) {
