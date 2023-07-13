@@ -150,27 +150,7 @@ func ParseProject(project string, kubeconfigs map[string]string) (serverOrKubeco
 func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
 	if opts.AllProjects {
 		projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
-		if err != nil {
-			return nil, err
-		}
-
-		// If the current project belongs to a Manager instance, only show projects from that Manager instance.
-		// Otherwise, remove all projects that contain a '/' since they belong to a Manager instance.
-		if managerHost, _, exists := strings.Cut(cfg.CurrentProject, "/"); exists {
-			for _, p := range projects {
-				if strings.HasPrefix(p, managerHost) {
-					result = append(result, p)
-				}
-			}
-		} else {
-			for _, p := range projects {
-				if !strings.Contains(p, "/") {
-					result = append(result, p)
-				}
-			}
-		}
-
-		return result, err
+		return projects, err
 	}
 
 	p := strings.TrimSpace(opts.Project)

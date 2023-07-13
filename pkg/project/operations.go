@@ -92,29 +92,24 @@ func timeoutProjectList(ctx context.Context, c client.Client) ([]apiv1.Project, 
 	return c.ProjectList(ctx)
 }
 
-func listLocalKubeconfig(ctx context.Context, wg *sync.WaitGroup, result chan<- listResult, opts Options) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+func listLocalKubeconfig(ctx context.Context, opts Options) listResult {
+	c, err := clientFromFile(opts.Kubeconfig, "", opts.ContextEnv)
+	if err != nil {
+		logrus.Debugf("local kubeconfig client ignored file=[%s] context=[%s]: %v", opts.Kubeconfig, opts.ContextEnv, err)
+		// just ignore invalid clients
+		return listResult{}
+	}
 
-		c, err := clientFromFile(opts.Kubeconfig, "", opts.ContextEnv)
-		if err != nil {
-			logrus.Debugf("local kubeconfig client ignored file=[%s] context=[%s]: %v", opts.Kubeconfig, opts.ContextEnv, err)
-			// just ignore invalid clients
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-		projects, err := timeoutProjectList(ctx, c)
-		cancel()
-		result <- listResult{
-			source: "local kubeconfig",
-			err:    err,
-			projects: typed.MapSlice(projects, func(project apiv1.Project) string {
-				return project.Name
-			}),
-		}
-	}()
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	projects, err := timeoutProjectList(ctx, c)
+	cancel()
+	return listResult{
+		source: "local kubeconfig",
+		err:    err,
+		projects: typed.MapSlice(projects, func(project apiv1.Project) string {
+			return project.Name
+		}),
+	}
 }
 
 type listResult struct {
@@ -129,25 +124,18 @@ type DetailProject struct {
 	Err      error
 }
 
-func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
-	for _, managerServer := range cfg.AcornServers {
-		wg.Add(1)
-		go func(managerServer string) {
-			defer wg.Done()
-
-			var projects []string
-			cred, ok, err := creds.Get(ctx, managerServer)
-			if err == nil && ok {
-				subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-				projects, err = manager.Projects(subCtx, managerServer, cred.Password)
-				cancel()
-			}
-			result <- listResult{
-				source:   managerServer,
-				err:      err,
-				projects: projects,
-			}
-		}(managerServer)
+func listAcornServer(ctx context.Context, server string, creds *credentials.Store) listResult {
+	var projects []string
+	cred, ok, err := creds.Get(ctx, server)
+	if err == nil && ok {
+		subCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		projects, err = manager.Projects(subCtx, server, cred.Password)
+		cancel()
+	}
+	return listResult{
+		source:   server,
+		err:      err,
+		projects: projects,
 	}
 }
 
@@ -155,7 +143,8 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 	var (
 		cfg = opts.CLIConfig
 		// if the user sets --kubeconfig we only consider kubeconfig and no other source for listing
-		onlyListLocalKubeconfig = opts.Kubeconfig != ""
+		onlyListLocalKubeconfig           = opts.Kubeconfig != ""
+		managerHost, _, managerHostExists = strings.Cut(cfg.CurrentProject, "/")
 	)
 
 	if cfg == nil {
@@ -170,28 +159,19 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 		return nil, nil, err
 	}
 
-	var (
-		wg     sync.WaitGroup
-		result = make(chan listResult)
-	)
+	var result listResult
 	warnings = map[string]error{}
 
-	listLocalKubeconfig(ctx, &wg, result, opts)
-	if !onlyListLocalKubeconfig {
-		listAcornServer(ctx, &wg, creds, cfg, result)
+	if onlyListLocalKubeconfig || !managerHostExists {
+		result = listLocalKubeconfig(ctx, opts)
+	} else {
+		result = listAcornServer(ctx, managerHost, creds)
 	}
 
-	go func() {
-		wg.Wait()
-		close(result)
-	}()
-
-	for listResult := range result {
-		if listResult.err != nil {
-			warnings[listResult.source] = listResult.err
-		}
-		projects = append(projects, listResult.projects...)
+	if result.err != nil {
+		warnings[result.source] = result.err
 	}
+	projects = append(projects, result.projects...)
 
 	sort.Strings(projects)
 	return projects, warnings, nil
