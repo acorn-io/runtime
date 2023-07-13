@@ -250,12 +250,12 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 	return
 }
 
-func parseTimeBound(raw string, now internalv1.MicroTime, lower bool) (*internalv1.MicroTime, error) {
+func parseTimeBound(raw string, now internalv1.MicroTime, since bool) (*internalv1.MicroTime, error) {
 	// Try to parse raw as a duration string
 	var errs []error
 	duration, err := time.ParseDuration(raw)
 	if err == nil {
-		if lower {
+		if since {
 			duration *= -1
 		}
 
