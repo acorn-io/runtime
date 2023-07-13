@@ -143,8 +143,7 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 	var (
 		cfg = opts.CLIConfig
 		// if the user sets --kubeconfig we only consider kubeconfig and no other source for listing
-		onlyListLocalKubeconfig           = opts.Kubeconfig != ""
-		managerHost, _, managerHostExists = strings.Cut(cfg.CurrentProject, "/")
+		onlyListLocalKubeconfig = opts.Kubeconfig != ""
 	)
 
 	if cfg == nil {
@@ -153,6 +152,8 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 			return nil, nil, err
 		}
 	}
+
+	managerHost, _, managerHostExists := strings.Cut(cfg.CurrentProject, "/")
 
 	creds, err := credentials.NewLocalOnlyStore(cfg)
 	if err != nil {
