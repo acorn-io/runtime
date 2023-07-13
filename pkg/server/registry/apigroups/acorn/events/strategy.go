@@ -9,8 +9,10 @@ import (
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/channels"
 	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/storage"
@@ -78,6 +80,10 @@ func setDefaults(ctx context.Context, e *apiv1.Event) *apiv1.Event {
 		} else {
 			logrus.Debug("Request context has no user info, creating anonymous event")
 		}
+	}
+
+	if e.Observed.IsZero() {
+		e.Observed = v1.MicroTime(metav1.NowMicro())
 	}
 
 	return e
