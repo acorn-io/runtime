@@ -129,8 +129,13 @@ type DetailProject struct {
 	Err      error
 }
 
-func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult) {
-	for _, managerServer := range cfg.AcornServers {
+func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials.Store, cfg *config.CLIConfig, result chan<- listResult, managerHost string) {
+	managerServers := cfg.AcornServers
+	if managerHost != "" {
+		managerServers = []string{managerHost}
+	}
+
+	for _, managerServer := range managerServers {
 		wg.Add(1)
 		go func(managerServer string) {
 			defer wg.Done()
@@ -151,7 +156,10 @@ func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials
 	}
 }
 
-func List(ctx context.Context, opts Options) (projects []string, warnings map[string]error, err error) {
+// List lists all projects available to the user.
+// onlyUseCurrentServer: if true, only list projects from the current Acorn server. This can be an Acorn Manager instsance
+// or a local kubeconfig. If false, list projects from all Acorn servers and the local kubeconfig.
+func List(ctx context.Context, onlyUseCurrentServer bool, opts Options) (projects []string, warnings map[string]error, err error) {
 	var (
 		cfg = opts.CLIConfig
 		// if the user sets --kubeconfig we only consider kubeconfig and no other source for listing
@@ -165,6 +173,8 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 		}
 	}
 
+	managerHost, _, managerHostExists := strings.Cut(cfg.CurrentProject, "/")
+
 	creds, err := credentials.NewLocalOnlyStore(cfg)
 	if err != nil {
 		return nil, nil, err
@@ -176,9 +186,17 @@ func List(ctx context.Context, opts Options) (projects []string, warnings map[st
 	)
 	warnings = map[string]error{}
 
-	listLocalKubeconfig(ctx, &wg, result, opts)
-	if !onlyListLocalKubeconfig {
-		listAcornServer(ctx, &wg, creds, cfg, result)
+	if onlyUseCurrentServer {
+		if onlyListLocalKubeconfig || !managerHostExists {
+			listLocalKubeconfig(ctx, &wg, result, opts)
+		} else {
+			listAcornServer(ctx, &wg, creds, cfg, result, managerHost)
+		}
+	} else {
+		listLocalKubeconfig(ctx, &wg, result, opts)
+		if !onlyListLocalKubeconfig {
+			listAcornServer(ctx, &wg, creds, cfg, result, "")
+		}
 	}
 
 	go func() {

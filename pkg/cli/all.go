@@ -31,13 +31,13 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 		fmt.Println("")
 		fmt.Println("APPS:")
 	}
-	app := &App{
+	ps := &Ps{
 		Quiet:  a.Quiet,
 		Output: a.Output,
 		All:    a.All,
 		client: a.client,
 	}
-	appErr := app.Run(cmd, nil)
+	psErr := ps.Run(cmd, nil)
 
 	con := &Container{
 		Quiet:  a.Quiet,
@@ -89,5 +89,5 @@ func (a *All) Run(cmd *cobra.Command, args []string) error {
 		imgErr = img.Run(cmd, nil)
 	}
 
-	return merr.NewErrors(appErr, conErr, volErr, secErr, imgErr)
+	return merr.NewErrors(psErr, conErr, volErr, secErr, imgErr)
 }

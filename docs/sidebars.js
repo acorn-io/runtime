@@ -99,7 +99,6 @@ const sidebars = {
           "items": [
             "reference/command-line/acorn",
             "reference/command-line/acorn_all",
-            "reference/command-line/acorn_app",
             "reference/command-line/acorn_build",
             "reference/command-line/acorn_check",
             "reference/command-line/acorn_container",
@@ -120,6 +119,7 @@ const sidebars = {
             "reference/command-line/acorn_project_create",
             "reference/command-line/acorn_project_rm",
             "reference/command-line/acorn_project_use",
+            "reference/command-line/acorn_ps",
             "reference/command-line/acorn_pull",
             "reference/command-line/acorn_push",
             "reference/command-line/acorn_offerings",

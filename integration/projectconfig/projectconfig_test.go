@@ -17,7 +17,7 @@ import (
 )
 
 func TestSlashBreaksList(t *testing.T) {
-	p, _, err := project.List(context.Background(), project.Options{
+	p, _, err := project.List(context.Background(), false, project.Options{
 		Project: "acorn.io/fake/fake",
 	})
 	assert.Nil(t, err)

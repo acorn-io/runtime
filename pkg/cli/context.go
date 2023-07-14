@@ -18,6 +18,7 @@ type CommandContext struct {
 
 type ClientFactory interface {
 	CreateDefault() (client.Client, error)
+	CreateWithAllProjects() (client.Client, error)
 	Options() project.Options
 }
 
@@ -28,13 +29,18 @@ type CommandClientFactory struct {
 
 func (c *CommandClientFactory) Options() project.Options {
 	return project.Options{
-		Project:     c.acorn.Project,
-		Kubeconfig:  c.acorn.Kubeconfig,
-		ContextEnv:  os.Getenv("CONTEXT"),
-		AllProjects: c.acorn.AllProjects,
+		Project:    c.acorn.Project,
+		Kubeconfig: c.acorn.Kubeconfig,
+		ContextEnv: os.Getenv("CONTEXT"),
 	}
 }
 
 func (c *CommandClientFactory) CreateDefault() (client.Client, error) {
 	return project.Client(c.cmd.Context(), c.Options())
+}
+
+func (c *CommandClientFactory) CreateWithAllProjects() (client.Client, error) {
+	opts := c.Options()
+	opts.AllProjects = true
+	return project.Client(c.cmd.Context(), opts)
 }
