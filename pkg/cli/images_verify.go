@@ -54,7 +54,7 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	img, tag, err := client.FindImage(cmd.Context(), c, args[0])
+	img, tag, err := client.FindImage(cmd.Context(), c, targetName)
 	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
 		return err
 	}
