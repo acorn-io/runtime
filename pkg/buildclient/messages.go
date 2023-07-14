@@ -132,6 +132,7 @@ func (m *Message) String() string {
 
 type SyncOptions struct {
 	Context            string
+	AdditionalContexts map[string]string
 	Dockerfile         string
 	DockerfileContents string
 
