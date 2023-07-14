@@ -11,7 +11,7 @@ var (
 	NoPromptRemove bool
 )
 
-func Password(msg string) (result []byte, _ error) {
+func Password(msg string) ([]byte, error) {
 	var res string
 	err := survey.AskOne(&survey.Password{
 		Message: msg,
