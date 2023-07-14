@@ -33,7 +33,8 @@ type EventInstance struct {
 
 	// Actor is the ID of the entity that generated the Event.
 	// This can be the name of a particular user or controller.
-	Actor string `json:"actor"`
+	// +optional
+	Actor string `json:"actor,omitempty"`
 
 	// Source identifies the object the Event is regarding.
 	Source EventSource `json:"source"`
