@@ -21,7 +21,7 @@ func main() {
 	cmd := acorn.New()
 	cmd.DisableAutoGenTag = true
 
-	files, err := filepath.Glob("docs/docs/100-reference/01-command-line/acorn_*")
+	files, err := filepath.Glob("docs/docs/100-reference/01-command-line/acorn_*.md")
 	if err != nil {
 		log.Fatal(err)
 	}
