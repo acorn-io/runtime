@@ -20,7 +20,7 @@ acorn ps
 
 ```
   -a, --all             Include stopped apps
-  -A, --all-projects    Include all projects
+  -A, --all-projects    Include all projects in same Acorn instance as the current default project
   -h, --help            help for ps
   -o, --output string   Output format (json, yaml, {{gotemplate}})
   -q, --quiet           Output only names

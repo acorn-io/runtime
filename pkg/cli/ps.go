@@ -23,7 +23,7 @@ acorn ps`,
 
 type Ps struct {
 	All         bool   `usage:"Include stopped apps" short:"a"`
-	AllProjects bool   `usage:"Include all projects" short:"A"`
+	AllProjects bool   `usage:"Include all projects in same Acorn instance as the current default project" short:"A"`
 	Quiet       bool   `usage:"Output only names" short:"q"`
 	Output      string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o"`
 	client      ClientFactory
