@@ -3,6 +3,7 @@ package buildclient
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,11 +32,24 @@ type WebSocketDialer func(ctx context.Context, urlStr string, requestHeader http
 
 func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer WebSocketDialer,
 	creds CredentialLookup, build *apiv1.AcornImageBuild) (*v1.AppImage, error) {
-	conn, _, err := dialer(ctx, wsURL(build.Status.BuildURL), map[string][]string{
+	conn, response, err := dialer(ctx, wsURL(build.Status.BuildURL), map[string][]string{
 		"X-Acorn-Build-Token": {build.Status.Token},
 	})
+	if response.Body != nil {
+		defer response.Body.Close()
+	}
 	if err != nil {
-		return nil, err
+		if response.Body == nil {
+			return nil, err
+		}
+
+		// If there was a body and an error ocurred, read the body and write it
+		// into the error message.
+		body, readErr := io.ReadAll(response.Body)
+		if readErr != nil {
+			return nil, fmt.Errorf("%w: status %v, error occured while reading builder response body: %v", err, response.StatusCode, readErr)
+		}
+		return nil, fmt.Errorf("%w: %v, %v", err, response.StatusCode, string(body))
 	}
 
 	var (

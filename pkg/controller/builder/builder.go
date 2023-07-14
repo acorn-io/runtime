@@ -7,7 +7,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/system"
-	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -61,7 +60,7 @@ func DeployBuilder(req router.Request, resp router.Response) error {
 
 	if *cfg.BuilderPerProject {
 		if builder.Status.UUID == "" {
-			builder.Status.UUID = uuid.New().String()
+			builder.Status.UUID = string(builder.UID)
 		}
 	} else {
 		builder.Status.UUID = ""
