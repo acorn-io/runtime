@@ -12,7 +12,7 @@ on:
       - main
 
 jobs:
-  test:
+  validate:
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
       - uses: actions/checkout@v3
@@ -27,13 +27,51 @@ jobs:
           version: 'v1.27.2-k3s1'
       - run: make validate-code
       - run: make build
+  unit:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    needs: validate
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@v4
+        with:
+          cache: false
+          go-version: "1.20"
+      - uses: debianmaster/actions-k3s@v1.0.5
+        with:
+          version: 'v1.27.2-k3s1'
+      - name: Run unit tests
+        id: unit-test
+        run: TEST_FLAGS="--junitfile unit-test-summary.xml" make unit
+      - name: Build test summary
+        uses: test-summary/action@v1
+        if: "!cancelled() && steps.unit-test.conclusion != 'skipped'"
+        with:
+          paths: unit-test-summary.xml
+  integration:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    needs: validate
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@v4
+        with:
+          cache: false
+          go-version: "1.20"
+      - uses: debianmaster/actions-k3s@v1.0.5
+        with:
+          version: 'v1.27.2-k3s1'
+      - run: make build
       - run: docker buildx install
       - run: make setup-ci-image
       - run: ./bin/acorn install --image acorn:v-ci --skip-checks --acorn-dns=disabled --network-policies=true
-      - run: TEST_FLAGS="--junitfile test-summary.xml" make unit
-      - run: TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile test-summary.xml" make integration
+      - name: Run integration tests
+        id: integration-tests
+        run: TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile integration-test-summary.xml" make integration
       - name: Build test summary
         uses: test-summary/action@v1
-        if: "!cancelled() && steps.test.conclusion != 'skipped'"
+        if: "!cancelled() && steps.integration-tests.conclusion != 'skipped'"
         with:
-          paths: test-summary.xml
+          paths: integration-test-summary.xml
