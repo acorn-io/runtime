@@ -1661,7 +1661,7 @@ func TestAutoUpgradeImageValidation(t *testing.T) {
 
 	app, err := c.AppRun(ctx, "ghcr.io/acorn-io/library/nginx:latest", &client.AppRunOptions{
 		Name:        "myapp",
-		AutoUpgrade: z.P(true),
+		AutoUpgrade: z.Pointer(true),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1697,7 +1697,7 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 
 	// Attempt to run an auto-upgrade app with a non-existent local image. Should get an error.
 	_, err = c.AppRun(ctx, "mylocalimage", &client.AppRunOptions{
-		AutoUpgrade: z.P(true),
+		AutoUpgrade: z.Pointer(true),
 	})
 	if err == nil {
 		t.Fatalf("expected to get a not found error, instead got %v", err)
@@ -1724,7 +1724,7 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 	}
 
 	_, err = c.AppRun(ctx, appImage, &client.AppRunOptions{
-		AutoUpgrade: z.P(true),
+		AutoUpgrade: z.Pointer(true),
 	})
 	if err != nil {
 		t.Fatal(err)

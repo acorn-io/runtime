@@ -84,7 +84,7 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 								PeriodSeconds:       30,
 							},
 							SecurityContext: &corev1.SecurityContext{
-								Privileged: z.P(true),
+								Privileged: z.Pointer(true),
 							},
 							Ports: []corev1.ContainerPort{
 								{

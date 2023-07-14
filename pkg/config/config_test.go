@@ -42,7 +42,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is explicitly disabled, expect no clusterDomain to be returned
 			name: "acornDNS disabled expect no clusterdomains",
 			conf: &apiv1.Config{
-				AcornDNS: z.P("disabled"),
+				AcornDNS: z.Pointer("disabled"),
 			},
 			expectedClusterDomains: nil,
 		},
@@ -50,7 +50,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is explicitly disabled. User defined domain, expect just user defined domain
 			name: "acornDNS disabled expect custom clusterdomains",
 			conf: &apiv1.Config{
-				AcornDNS:       z.P("disabled"),
+				AcornDNS:       z.Pointer("disabled"),
 				ClusterDomains: []string{".custom.com"},
 			},
 			expectedClusterDomains: []string{".custom.com"},
@@ -59,7 +59,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is in "auto" mode. No user configured domain, expect local as a fallback
 			name: "acornDNS auto expect local clusterdomain",
 			conf: &apiv1.Config{
-				AcornDNS: z.P("auto"),
+				AcornDNS: z.Pointer("auto"),
 			},
 			expectedClusterDomains: []string{".local.oss-acorn.io"},
 			prepare: func(f *mocks.MockReader) {
@@ -71,7 +71,7 @@ func TestAcornDNSStates(t *testing.T) {
 			// acornDNS is in "auto" mode, but user configured a domain, expect just the user configured domain
 			name: "acornDNS auto expect custom clusterdomain",
 			conf: &apiv1.Config{
-				AcornDNS:       z.P("auto"),
+				AcornDNS:       z.Pointer("auto"),
 				ClusterDomains: []string{".custom.com"},
 			},
 			expectedClusterDomains: []string{".custom.com"},

@@ -46,7 +46,7 @@ func registryDeployment(namespace, registryImage string, requirements corev1.Res
 			Namespace: namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: z.P[int32](1),
+			Replicas: z.Pointer[int32](1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": system.RegistryName,
@@ -102,9 +102,9 @@ func registryDeployment(namespace, registryImage string, requirements corev1.Res
 								FailureThreshold:    3,
 							},
 							SecurityContext: &corev1.SecurityContext{
-								RunAsUser:                z.P[int64](1000),
-								RunAsNonRoot:             z.P(true),
-								ReadOnlyRootFilesystem:   z.P(true),
+								RunAsUser:                z.Pointer[int64](1000),
+								RunAsNonRoot:             z.Pointer(true),
+								ReadOnlyRootFilesystem:   z.Pointer(true),
 								AllowPrivilegeEscalation: new(bool),
 							},
 							VolumeMounts: []corev1.VolumeMount{

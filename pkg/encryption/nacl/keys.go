@@ -122,7 +122,7 @@ func generateNewKeys(ctx context.Context, c kclient.Client, namespace string, ex
 
 	naclKey.acornNamespaceUID = string(ns.UID)
 	if existing == nil {
-		naclKey.Primary = z.P(true)
+		naclKey.Primary = z.Pointer(true)
 	}
 
 	return naclKey, createOrUpdateNaclKeySecret(ctx, c, naclKey, existing)

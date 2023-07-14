@@ -77,11 +77,11 @@ func (o *Options) complete() *Options {
 	}
 
 	if o.APIServerReplicas == nil {
-		o.APIServerReplicas = z.P(1)
+		o.APIServerReplicas = z.Pointer(1)
 	}
 
 	if o.ControllerReplicas == nil {
-		o.ControllerReplicas = z.P(1)
+		o.ControllerReplicas = z.Pointer(1)
 	}
 
 	if o.Config.UseCustomCABundle == nil {
@@ -208,7 +208,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 				return err
 			}
 			if installIngressController {
-				opts.Config.IngressClassName = z.P("traefik")
+				opts.Config.IngressClassName = z.Pointer("traefik")
 			}
 		}
 	}

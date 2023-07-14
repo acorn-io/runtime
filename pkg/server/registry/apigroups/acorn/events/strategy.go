@@ -267,7 +267,7 @@ func parseTimeBound(raw string, now internalv1.MicroTime, since bool) (*internal
 			duration *= -1
 		}
 
-		return z.P(internalv1.NewMicroTime(now.Add(duration))), nil
+		return z.Pointer(internalv1.NewMicroTime(now.Add(duration))), nil
 	}
 	errs = append(errs, fmt.Errorf("%s is not a valid duration: %w", raw, err))
 
@@ -300,7 +300,7 @@ func parseTime(raw string) (*internalv1.MicroTime, error) {
 	for _, layout := range supportedLayouts {
 		t, err := time.Parse(layout, raw)
 		if err == nil {
-			return z.P(internalv1.NewMicroTime(t)), nil
+			return z.Pointer(internalv1.NewMicroTime(t)), nil
 		}
 
 		errs = append(errs, err)
@@ -315,7 +315,7 @@ func parseUnix(raw string) (*internalv1.MicroTime, error) {
 		return nil, err
 	}
 
-	return z.P(internalv1.NewMicroTime(time.Unix(sec, 0))), nil
+	return z.Pointer(internalv1.NewMicroTime(time.Unix(sec, 0))), nil
 }
 
 type prefix string

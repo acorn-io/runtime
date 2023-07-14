@@ -314,7 +314,7 @@ func getIngressRule(svc *v1.ServiceInstance, host string, port int32) networking
 				Paths: []networkingv1.HTTPIngressPath{
 					{
 						Path:     "/",
-						PathType: z.P(networkingv1.PathTypePrefix),
+						PathType: z.Pointer(networkingv1.PathTypePrefix),
 						Backend: networkingv1.IngressBackend{
 							Service: &networkingv1.IngressServiceBackend{
 								Name: svc.Name,
