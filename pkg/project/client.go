@@ -149,7 +149,7 @@ func ParseProject(project string, kubeconfigs map[string]string) (serverOrKubeco
 
 func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
 	if opts.AllProjects {
-		projects, _, err := List(ctx, opts.WithCLIConfig(cfg))
+		projects, _, err := List(ctx, true, opts.WithCLIConfig(cfg))
 		return projects, err
 	}
 

@@ -60,7 +60,7 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 		}
 		projectNames = append(projectNames, args[0])
 	} else {
-		projects, warnings, err := project.List(cmd.Context(), a.client.Options().WithCLIConfig(cfg))
+		projects, warnings, err := project.List(cmd.Context(), false, a.client.Options().WithCLIConfig(cfg))
 		if err != nil {
 			return err
 		}
