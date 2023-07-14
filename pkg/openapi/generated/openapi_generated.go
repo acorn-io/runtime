@@ -3240,7 +3240,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						},
 					},
 				},
-				Required: []string{"type", "actor", "source", "observed"},
+				Required: []string{"type", "actor", "source"},
 			},
 		},
 		Dependencies: []string{
@@ -7933,7 +7933,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						},
 					},
 				},
-				Required: []string{"type", "actor", "source", "observed"},
+				Required: []string{"type", "actor", "source"},
 			},
 		},
 		Dependencies: []string{

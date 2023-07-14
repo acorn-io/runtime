@@ -15,7 +15,6 @@ func ContentID(e *apiv1.Event) (string, error) {
 	fieldSet := strings.Join([]string{
 		e.Type,
 		string(e.Severity),
-		e.Actor,
 		e.Source.String(),
 		e.Description,
 		strconv.FormatInt(e.Observed.UnixMicro(), 10),
