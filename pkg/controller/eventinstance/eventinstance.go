@@ -97,8 +97,8 @@ func (h handler) gcExpired(
 	if err := req.Client.Delete(req.Ctx, req.Object, kclient.Preconditions{
 		// Adding these preconditions prevents us from deleting an event based on old information.
 		// e.g. The observed time has been updated and the event is no longer expired.
-		UID:             z.P(e.GetUID()),
-		ResourceVersion: z.P(e.GetResourceVersion()),
+		UID:             z.Pointer(e.GetUID()),
+		ResourceVersion: z.Pointer(e.GetResourceVersion()),
 	}); err != nil && !apierrors.IsNotFound(err) {
 		// Assume any error other than not found is transient, return error to requeue w/ backoff
 		return err

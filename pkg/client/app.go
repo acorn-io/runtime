@@ -575,7 +575,7 @@ func (c *DefaultClient) appStop(ctx context.Context, name string) error {
 		return err
 	}
 	if app.Spec.Stop == nil || !*app.Spec.Stop {
-		app.Spec.Stop = z.P(true)
+		app.Spec.Stop = z.Pointer(true)
 		return c.Client.Update(ctx, app)
 	}
 	return nil

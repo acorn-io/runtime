@@ -167,7 +167,7 @@ func ForIngress(req router.Request, resp router.Response) error {
 				if (svcPort.Name != "" && svcPort.Name == port.Name) || svcPort.Port == port.Number {
 					targetPort := svcPort.TargetPort
 					netPolPorts = append(netPolPorts, networkingv1.NetworkPolicyPort{
-						Protocol: z.P(corev1.ProtocolTCP),
+						Protocol: z.Pointer(corev1.ProtocolTCP),
 						Port:     &targetPort,
 					})
 					netPolName = name.SafeConcatName(netPolName, strconv.Itoa(int(targetPort.IntVal)))

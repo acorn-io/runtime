@@ -646,7 +646,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
 					Tolerations:                   appInstance.Status.Scheduling[name].Tolerations,
 					PriorityClassName:             appInstance.Status.Scheduling[name].PriorityClassName,
-					TerminationGracePeriodSeconds: z.P[int64](5),
+					TerminationGracePeriodSeconds: z.Pointer[int64](5),
 					ImagePullSecrets:              pullSecrets.ForContainer(name, append(containers, initContainers...)),
 					EnableServiceLinks:            new(bool),
 					Containers:                    containers,
@@ -659,7 +659,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	}
 
 	if stateful {
-		dep.Spec.Replicas = z.P[int32](1)
+		dep.Spec.Replicas = z.Pointer[int32](1)
 		dep.Spec.Template.Spec.Hostname = dep.Name
 		dep.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 	} else if dep.Spec.Replicas == nil || *dep.Spec.Replicas == 1 {

@@ -509,7 +509,7 @@ func TestAppRunImageVariations(t *testing.T) {
 			name:  "autoupgrade",
 			image: "foo/bar:**",
 			options: &client.AppRunOptions{
-				AutoUpgrade: z.P(true),
+				AutoUpgrade: z.Pointer(true),
 			},
 		},
 		{

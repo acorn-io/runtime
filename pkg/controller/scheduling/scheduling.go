@@ -149,7 +149,7 @@ func ResourceRequirements(req router.Request, app *v1.AppInstance, containerName
 			if err != nil {
 				return nil, err
 			}
-			memMax = z.P(maxQuantity.Value())
+			memMax = z.Pointer(maxQuantity.Value())
 		}
 	}
 

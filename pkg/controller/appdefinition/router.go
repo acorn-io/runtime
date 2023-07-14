@@ -74,7 +74,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 					Annotations: deploymentAnnotations,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: z.P[int64](5),
+					TerminationGracePeriodSeconds: z.Pointer[int64](5),
 					EnableServiceLinks:            new(bool),
 					Containers: []corev1.Container{
 						{

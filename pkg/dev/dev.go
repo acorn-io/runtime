@@ -269,7 +269,7 @@ func createApp(ctx context.Context, client client.Client, hash clientHash, image
 
 	runArgs := opts.Run
 	runArgs.DeployArgs = deployArgs
-	runArgs.Stop = z.P(true)
+	runArgs.Stop = z.Pointer(true)
 
 	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, runArgs)
 	if err != nil {

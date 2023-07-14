@@ -1697,7 +1697,7 @@ acorns: first: {
 	assert.True(t, *acorn.NotifyUpgrade)
 	assert.Equal(t, "20s", acorn.AutoUpgradeInterval)
 	assert.Equal(t, v1.MemoryMap{
-		"": z.P[int64](1 << 30),
+		"": z.Pointer[int64](1 << 30),
 	}, acorn.Memory)
 	assert.Equal(t, v1.NameValue{
 		Name:  "a",
@@ -1797,7 +1797,7 @@ acorns: first: {
 		Target:  "def",
 	}, acorn.Links[0])
 	assert.Equal(t, v1.MemoryMap{
-		"foo": z.P[int64](1 << 30),
+		"foo": z.Pointer[int64](1 << 30),
 	}, acorn.Memory)
 	assert.Equal(t, v1.NameValues{
 		{

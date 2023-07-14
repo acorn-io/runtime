@@ -82,7 +82,7 @@ func TestDetermineAppsToRefresh(t *testing.T) {
 	now := time.Now()
 	thirtySecondsAgo := now.Add(-30 * time.Second)
 	oneMinuteAgo := now.Add(-time.Minute)
-	ptrTrue := z.P(true)
+	ptrTrue := z.Pointer(true)
 	appImages := map[string]string{
 		"test-1":          "acorn/test-1:v#.*.**",
 		"acorn-1":         "acorn/acorn-1:v1.1.1-*",
@@ -189,7 +189,7 @@ func TestDetermineAppsToRefresh(t *testing.T) {
 func TestRefreshImages(t *testing.T) {
 	now := time.Now()
 	thirtySecondsAgo := now.Add(-30 * time.Second)
-	ptrTrue := z.P(true)
+	ptrTrue := z.Pointer(true)
 	appImages := map[string]string{
 		"test-1":               "acorn/test-1:v#.#.#",
 		"acorn-1":              "docker.io/acorn/acorn-1:v1.1.1-*",
@@ -451,7 +451,7 @@ func TestDaemonSync(t *testing.T) {
 	start := time.Now()
 	tenMinutesAgo := time.Now().Add(-10 * time.Minute)
 	fiftySecondsAgo := time.Now().Add(-50 * time.Second)
-	ptrTrue := z.P(true)
+	ptrTrue := z.Pointer(true)
 	appImages := map[string]string{
 		"test-1":          "30s",
 		"acorn-1":         "1m",

@@ -17,7 +17,7 @@ require (
 	github.com/acorn-io/baaah v0.0.0-20230707151126-5d519d272865
 	github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
-	github.com/acorn-io/z v0.0.0-20230710161405-78afed0850a8
+	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
 	github.com/adrg/xdg v0.4.0
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.23
