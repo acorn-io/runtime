@@ -109,5 +109,16 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 	}
 
 	logrus.Debugf("Building with URL: %s", build.Status.BuildURL)
-	return buildclient.Stream(ctx, opts.Cwd, opts.Streams, dialer, (buildclient.CredentialLookup)(opts.Credentials), build)
+
+	// Retry building 5 times to avoid any issues with the builder becoming ready
+	var appImage *v1.AppImage
+	for retry := 1; retry <= 5; retry++ {
+		appImage, err = buildclient.Stream(ctx, opts.Cwd, opts.Streams, dialer, (buildclient.CredentialLookup)(opts.Credentials), build)
+		if err == nil {
+			break
+		}
+		logrus.Debugf("Build failed, retrying (%v of 5)...: %v", retry, err)
+	}
+
+	return appImage, err
 }
