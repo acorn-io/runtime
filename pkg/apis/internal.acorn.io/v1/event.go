@@ -65,6 +65,14 @@ func (e EventInstance) GetObserved() MicroTime {
 // It extends metav1.MicroTime to allow unmarshaling from RFC3339.
 type MicroTime metav1.MicroTime
 
+func NewMicroTime(t time.Time) MicroTime {
+	return MicroTime(metav1.NewMicroTime(t))
+}
+
+func NowMicro() MicroTime {
+	return NewMicroTime(time.Now())
+}
+
 // DeepCopyInto returns a deep-copy of the MicroTime value.  The underlying time.Time
 // type is effectively immutable in the time API, so it is safe to
 // copy-by-assign, despite the presence of (unexported) Pointer fields.

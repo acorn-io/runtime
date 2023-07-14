@@ -44,6 +44,14 @@ acorn events [flags] [PREFIX]
   # Get a single event by name
   acorn events 4b2ba097badf2031c4718609b9179fb5
 
+  # Filtering by Time
+  # The --since and --until options can be Unix timestamps, date formatted timestamps, or Go duration strings (relative to system time).
+  # List events observed within the last 15 minutes 
+  acorn events --since 15m
+
+  # List events observed between 2023-05-08T15:04:05 and 2023-05-08T15:05:05 (inclusive)
+  acorn events --since '2023-05-08T15:04:05' --until '2023-05-08T15:05:05'
+
 ```
 
 ### Options
@@ -52,7 +60,9 @@ acorn events [flags] [PREFIX]
   -f, --follow          Follow the event log
   -h, --help            help for events
   -o, --output string   Output format (json, yaml, {{gotemplate}})
+  -s, --since string    Show all events created since timestamp
   -t, --tail int        Return this number of latest events
+  -u, --until string    Stream events until this timestamp
 ```
 
 ### Options inherited from parent commands
