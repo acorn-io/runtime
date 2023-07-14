@@ -298,9 +298,9 @@ var (
 func parseTime(raw string) (*internalv1.MicroTime, error) {
 	var errs []error
 	for _, layout := range supportedLayouts {
-		since, err := time.Parse(layout, raw)
+		t, err := time.Parse(layout, raw)
 		if err == nil {
-			return z.P(internalv1.NewMicroTime(since)), nil
+			return z.P(internalv1.NewMicroTime(t)), nil
 		}
 
 		errs = append(errs, err)
