@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -191,19 +192,16 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 	results := make([]apiv1.Event, 0, tail)
 	for _, event := range events {
 		observed := event.Observed
-		if q.beforeWindow(observed) {
-			// Exclude events observed before the observation window starts
-			continue
-		}
-
 		if q.afterWindow(observed) {
 			// Exclude all events observed after the observation window ends.
 			// Since the slice is sorted chronologically, we can stop filtering here.
 			break
 		}
 
-		if !q.prefix.matches(event) {
-			// Exclude event, it doesn't match the given prefix
+		if q.beforeWindow(observed) || !q.prefix.matches(event) {
+			// Exclude events:
+			// - observed before the observation window starts
+			// - that don't match the given prefix
 			continue
 		}
 
@@ -221,7 +219,7 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions, err error) {
 	stripped = opts
 
-	now := internalv1.MicroTime(metav1.NowMicro())
+	now := internalv1.NowMicro()
 	stripped.Predicate.Field, err = stripped.Predicate.Field.Transform(func(f, v string) (string, string, error) {
 		var err error
 		switch f {
@@ -250,6 +248,16 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 	return
 }
 
+// parseTimeBound parses a time bound from a string.
+//
+// It attempts to parse raw as one of the following formats, in order, returning the result of the first successful parse:
+// 1. Go duration; e.g. "5m"
+//   - time is calculated relative to now
+//   - if since is true, then the duration is subtracted from now, otherwise it is added
+//
+// 2. RFC3339; e.g. "2006-01-02T15:04:05Z07:00"
+// 3. RFC3339Micro; e.g. "2006-01-02T15:04:05.999999Z07:00"
+// 4. Unix timestamp; e.g. "1136239445"
 func parseTimeBound(raw string, now internalv1.MicroTime, since bool) (*internalv1.MicroTime, error) {
 	// Try to parse raw as a duration string
 	var errs []error
@@ -263,11 +271,19 @@ func parseTimeBound(raw string, now internalv1.MicroTime, since bool) (*internal
 	}
 	errs = append(errs, fmt.Errorf("%s is not a valid duration: %w", raw, err))
 
+	// Try to parse raw as a time string
 	t, err := parseTime(raw)
 	if err == nil {
 		return t, nil
 	}
 	errs = append(errs, fmt.Errorf("%s is not a valid time: %w", raw, err))
+
+	// Try to parse raw as a unix timestamp
+	unix, err := parseUnix(raw)
+	if err == nil {
+		return unix, nil
+	}
+	errs = append(errs, fmt.Errorf("%s is not a valid unix timestamp: %w", raw, err))
 
 	return nil, errors.Join(errs...)
 }
@@ -291,6 +307,15 @@ func parseTime(raw string) (*internalv1.MicroTime, error) {
 	}
 
 	return nil, errors.Join(errs...)
+}
+
+func parseUnix(raw string) (*internalv1.MicroTime, error) {
+	sec, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return z.P(internalv1.NewMicroTime(time.Unix(sec, 0))), nil
 }
 
 type prefix string
