@@ -97,9 +97,15 @@ func Build(ctx context.Context, pushRepo string, local bool, cwd string, platfor
 				"dockerfile": filepath.Dir(filepath.Join(cwd, build.Dockerfile)),
 			}
 		} else {
+			additionalContext := map[string]string{}
+			for k, v := range build.AdditionalContexts {
+				options.FrontendAttrs["context:"+k] = "local:" + k
+				additionalContext[k] = filepath.Join(cwd, v)
+			}
 			options.Session = append(options.Session,
 				buildclient.NewFileServer(messages,
 					filepath.Join(cwd, build.Context),
+					additionalContext,
 					filepath.Join(cwd, build.Dockerfile),
 					build.DockerfileContents))
 		}

@@ -20,14 +20,16 @@ const (
 type FileServer struct {
 	messages           Messages
 	context            string
+	additionalContexts map[string]string
 	dockerfilePath     string
 	dockerfileContents string
 }
 
-func NewFileServer(messages Messages, context, dockerfilePath, dockerFileContents string) *FileServer {
+func NewFileServer(messages Messages, context string, additionalContexts map[string]string, dockerfilePath, dockerFileContents string) *FileServer {
 	return &FileServer{
 		messages:           messages,
 		context:            context,
+		additionalContexts: additionalContexts,
 		dockerfilePath:     dockerfilePath,
 		dockerfileContents: dockerFileContents,
 	}
@@ -49,6 +51,7 @@ func (f *FileServer) DiffCopy(server filesync.FileSync_DiffCopyServer) error {
 		SyncOptions: &SyncOptions{
 			Compress:           true,
 			Context:            f.context,
+			AdditionalContexts: f.additionalContexts,
 			Dockerfile:         f.dockerfilePath,
 			DockerfileContents: f.dockerfileContents,
 			OverrideExcludes:   ctx.Get(keyOverrideExcludes),
@@ -77,8 +80,8 @@ func (f *FileServer) DiffCopy(server filesync.FileSync_DiffCopyServer) error {
 	}()
 
 	for msg := range msgs {
-		logrus.Tracef("file sync message msg.FileSessionID=%s sessionID=%s close=%v", msg.FileSessionID, sessionID, msg.FileSessionClose)
 		if msg.FileSessionID == sessionID {
+			logrus.Tracef("file sync message msg.FileSessionID=%s sessionID=%s close=%v", msg.FileSessionID, sessionID, msg.FileSessionClose)
 			if msg.FileSessionClose {
 				cancel()
 			} else {

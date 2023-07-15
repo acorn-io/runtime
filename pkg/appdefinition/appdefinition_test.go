@@ -1017,25 +1017,28 @@ images: {
 			},
 			"build": {
 				Build: &v1.Build{
-					BuildArgs:  map[string]string{},
-					Context:    ".",
-					Dockerfile: "Dockerfile",
+					BuildArgs:          map[string]string{},
+					AdditionalContexts: map[string]string{},
+					Context:            ".",
+					Dockerfile:         "Dockerfile",
 				},
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							BuildArgs:  map[string]string{},
-							Context:    ".",
-							Dockerfile: "Dockerfile",
+							BuildArgs:          map[string]string{},
+							AdditionalContexts: map[string]string{},
+							Context:            ".",
+							Dockerfile:         "Dockerfile",
 						},
 					},
 				},
 			},
 			"buildcontext": {
 				Build: &v1.Build{
-					BuildArgs:  map[string]string{},
-					Context:    ".",
-					Dockerfile: "Dockerfile",
+					BuildArgs:          map[string]string{},
+					AdditionalContexts: map[string]string{},
+					Context:            ".",
+					Dockerfile:         "Dockerfile",
 					ContextDirs: map[string]string{
 						"/var/tmp": "./foo/bar",
 					},
@@ -1043,9 +1046,10 @@ images: {
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							BuildArgs:  map[string]string{},
-							Context:    ".",
-							Dockerfile: "Dockerfile",
+							BuildArgs:          map[string]string{},
+							AdditionalContexts: map[string]string{},
+							Context:            ".",
+							Dockerfile:         "Dockerfile",
 							ContextDirs: map[string]string{
 								"/var/tmp": "./foo/bar",
 							},

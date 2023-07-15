@@ -6499,6 +6499,21 @@ func schema_pkg_apis_internalacornio_v1_Build(ref common.ReferenceCallback) comm
 							Format: "",
 						},
 					},
+					"additionalContexts": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 					"dockerfile": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},

@@ -1,0 +1,11 @@
+containers: {
+	simple: {
+		build: {
+            dockerfile: "Dockerfile"
+			context: "./files"
+			additionalContexts: {
+				"other-context": "./files/subdir"
+			}
+		}
+	}
+}

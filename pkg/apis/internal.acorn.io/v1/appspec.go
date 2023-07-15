@@ -41,6 +41,7 @@ type AcornBuild struct {
 
 type Build struct {
 	Context            string            `json:"context,omitempty"`
+	AdditionalContexts map[string]string `json:"additionalContexts,omitempty"`
 	Dockerfile         string            `json:"dockerfile,omitempty"`
 	DockerfileContents string            `json:"dockerfileContents,omitempty"`
 	Target             string            `json:"target,omitempty"`

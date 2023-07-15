@@ -89,6 +89,7 @@ func createFileMapInput(cwd string, opts *SyncOptions) (string, map[string]strin
 		err        error
 		context    = filepath.Join(cwd, opts.Context)
 		dockerfile = filepath.Dir(filepath.Join(cwd, opts.Dockerfile))
+		dirs       = map[string]string{}
 	)
 	if opts.DockerfileContents != "" {
 		tempDir, err = os.MkdirTemp("", "acorn")
@@ -101,10 +102,17 @@ func createFileMapInput(cwd string, opts *SyncOptions) (string, map[string]strin
 			return "", nil, err
 		}
 	}
-	return tempDir, map[string]string{
-		"context":    context,
-		"dockerfile": dockerfile,
-	}, nil
+
+	if len(opts.DirName) > 0 {
+		if opts.DirName[0] == "context" {
+			dirs["context"] = context
+		} else if dir, ok := opts.AdditionalContexts[opts.DirName[0]]; ok {
+			dirs[opts.DirName[0]] = filepath.Join(cwd, dir)
+		}
+	}
+
+	dirs["dockerfile"] = dockerfile
+	return tempDir, dirs, nil
 }
 
 func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPaths []string) (filesync.StaticDirSource, error) {
@@ -122,7 +130,7 @@ func prepareSyncedDirs(localDirs map[string]string, dirNames []string, followPat
 			return nil, fmt.Errorf("%s not a directory", d)
 		}
 		for _, dirName := range dirNames {
-			if dirName == "context" && localDirName == dirName {
+			if dirName != "dockerfile" && localDirName == dirName {
 				for _, followPath := range followPaths {
 					if ignoreLocalFiles[followPath] {
 						continue
@@ -204,10 +212,10 @@ func (s *fileSyncClient) RecvMsg(m interface{}) error {
 		if !ok {
 			return io.EOF
 		}
-		logrus.Tracef("fileSyncClient msg.fileSessionID=%s sessionID=%s packetNil=%v", nextMessage.FileSessionID, s.sessionID, nextMessage.Packet == nil)
 		if nextMessage.Packet == nil || nextMessage.FileSessionID != s.sessionID {
 			continue
 		}
+		logrus.Tracef("fileSyncClient msg.fileSessionID=%s sessionID=%s packetNil=%v", nextMessage.FileSessionID, s.sessionID, nextMessage.Packet == nil)
 		n := m.(*types.Packet)
 		*n = *nextMessage.Packet
 		return nil

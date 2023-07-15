@@ -170,6 +170,17 @@ func TestBuildDefault(t *testing.T) {
 	assert.Len(t, image.ImageData.Containers, 1)
 }
 
+func TestBuildMulticontext(t *testing.T) {
+	c := helper.BuilderClient(t, system.DefaultUserNamespace)
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/multicontextdir/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/multicontextdir",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Len(t, image.ImageData.Containers, 1)
+}
+
 func TestMultiArch(t *testing.T) {
 	helper.StartController(t)
 	cfg := helper.StartAPI(t)
