@@ -639,3 +639,11 @@ func (m *MultiClient) GetClient() (kclient.WithWatch, error) {
 	}
 	return c.GetClient()
 }
+
+func (m *MultiClient) KubeProxyAddress(ctx context.Context) (string, error) {
+	c, err := m.Factory.ForProject(context.Background(), m.Factory.DefaultProject())
+	if err != nil {
+		panic(err)
+	}
+	return c.KubeProxyAddress(ctx)
+}

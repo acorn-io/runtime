@@ -119,6 +119,11 @@ type MockClient struct {
 	EventItem        *apiv1.Event
 }
 
+func (m *MockClient) KubeProxyAddress(ctx context.Context) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *MockClient) DevSessionRenew(ctx context.Context, name string, client v1.DevSessionInstanceClient) error {
 	//TODO implement me
 	panic("implement me")

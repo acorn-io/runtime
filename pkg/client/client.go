@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client/term"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/proxy"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/streams"
 	"github.com/acorn-io/runtime/pkg/system"
@@ -267,6 +269,7 @@ type Client interface {
 	GetProject() string
 	GetNamespace() string
 	GetClient() (kclient.WithWatch, error)
+	KubeProxyAddress(ctx context.Context) (string, error)
 }
 
 type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
@@ -374,6 +377,30 @@ type DefaultClient struct {
 	RESTConfig *rest.Config
 	RESTClient *rest.RESTClient
 	Dialer     *k8schannel.Dialer
+}
+
+func (c *DefaultClient) KubeProxyAddress(ctx context.Context) (string, error) {
+	handler, err := proxy.Handler(c.RESTConfig)
+	if err != nil {
+		return "", err
+	}
+
+	ln, err := net.Listen("tcp", "127.0.0.1:")
+	if err != nil {
+		return "", err
+	}
+
+	srv := &http.Server{
+		Handler: handler,
+		BaseContext: func(listener net.Listener) context.Context {
+			return ctx
+		},
+	}
+	go func() {
+		_ = srv.Serve(ln)
+		os.Exit(1)
+	}()
+	return "http://" + ln.Addr().String(), nil
 }
 
 func (c *DefaultClient) GetProject() string {
