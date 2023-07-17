@@ -3,7 +3,7 @@ package cli
 import (
 	minkserver "github.com/acorn-io/mink/pkg/server"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
-	_ "github.com/acorn-io/runtime/pkg/logserver"
+	_ "github.com/acorn-io/runtime/pkg/logserver/init"
 	"github.com/acorn-io/runtime/pkg/server"
 	"github.com/spf13/cobra"
 )
