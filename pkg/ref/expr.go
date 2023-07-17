@@ -59,6 +59,16 @@ func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespa
 		}
 
 		if validSecrets == nil {
+			switch v := out.(type) {
+			case *corev1.Secret:
+				// Support binding existing secrets with "." in the name, i.e. my-old-app.secret-name
+				if err := r.getSecret(v, namespace, fmt.Sprintf("%s.%s", name, parts[i+1]), validSecrets); err == nil {
+					return nil
+				}
+			}
+		}
+
+		if validSecrets == nil {
 			app, err := r.getAcorn(namespace, name)
 			if apierrors.IsNotFound(err) {
 				svc := &v1.ServiceInstance{}
@@ -146,7 +156,28 @@ func (r *resolver) getSecret(secret *corev1.Secret, namespace, name string, vali
 			}, name)
 		}
 	}
-	return r.req.Get(r.ctx, router.Key(namespace, name), secret)
+	if err := r.req.Get(r.ctx, router.Key(namespace, name), secret); err != nil {
+		if apierrors.IsNotFound(err) {
+			// Try finding by public name
+			secretList := &corev1.SecretList{}
+			if err := r.req.List(r.ctx, secretList, &kclient.ListOptions{
+				LabelSelector: klabels.SelectorFromSet(map[string]string{
+					labels.AcornPublicName: name,
+				}),
+				Namespace: namespace,
+			}); err != nil {
+				return err
+			}
+
+			if len(secretList.Items) == 1 {
+				secretList.Items[0].DeepCopyInto(secret)
+				return nil
+			}
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (r *resolver) getAcorn(namespace, name string) (*v1.AppInstance, error) {

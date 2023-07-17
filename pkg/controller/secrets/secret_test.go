@@ -375,3 +375,7 @@ func TestSecretLabelsAnnotations(t *testing.T) {
 	assert.Contains(t, secret.Annotations, "globalfromacornfilea")
 	assert.NotContains(t, secret.Annotations, "sec1fromacornfilea")
 }
+
+func TestSecretBinding(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/binding", CreateSecrets)
+}
