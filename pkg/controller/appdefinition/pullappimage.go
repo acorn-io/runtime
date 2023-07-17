@@ -208,7 +208,6 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 	previous, target := newImageSummary(previousImage), newImageSummary(targetImage)
 	e := apiv1.Event{
 		Type:        AppImagePullSuccessEventType,
-		Actor:       "acorn-system",
 		Severity:    v1.EventSeverityInfo,
 		Description: fmt.Sprintf("Pulled %s", target.Name),
 		Source:      event.ObjectSource(obj),

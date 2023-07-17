@@ -7,6 +7,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -22,6 +23,13 @@ func (r RecorderFunc) Record(ctx context.Context, e *apiv1.Event) error {
 
 func NewRecorder(c kclient.Client) RecorderFunc {
 	return func(ctx context.Context, e *apiv1.Event) error {
+		if e.Actor == "" {
+			// Set actor from ctx if possible
+			if user, ok := request.UserFrom(ctx); ok {
+				e.Actor = user.GetName()
+			}
+		}
+
 		// Set a generated name based on the event content.
 		id, err := ContentID(e)
 		if err != nil {

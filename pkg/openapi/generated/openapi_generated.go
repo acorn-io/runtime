@@ -3198,7 +3198,6 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 					"actor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -3240,7 +3239,7 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						},
 					},
 				},
-				Required: []string{"type", "actor", "source"},
+				Required: []string{"type", "source"},
 			},
 		},
 		Dependencies: []string{
@@ -7906,7 +7905,6 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 					"actor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -7948,7 +7946,7 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						},
 					},
 				},
-				Required: []string{"type", "actor", "source"},
+				Required: []string{"type", "source"},
 			},
 		},
 		Dependencies: []string{
