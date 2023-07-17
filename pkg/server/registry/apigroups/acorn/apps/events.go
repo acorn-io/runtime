@@ -82,6 +82,7 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 		Severity:    v1.EventSeverityInfo,
 		Details:     details,
 		Description: fmt.Sprintf("App %s/%s created", obj.GetNamespace(), obj.GetName()),
+		AppName:     obj.GetName(),
 		Source:      event.ObjectSource(obj),
 		Observed:    v1.MicroTime(metav1.NowMicro()),
 	}); err != nil {
@@ -115,6 +116,7 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 		Severity:    v1.EventSeverityInfo,
 		Details:     details,
 		Description: fmt.Sprintf("App %s/%s deleted", obj.GetNamespace(), obj.GetName()),
+		AppName:     obj.GetName(),
 		Source:      event.ObjectSource(obj),
 		Observed:    v1.MicroTime(metav1.NowMicro()),
 	}); err != nil {
@@ -169,6 +171,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 		Severity:    v1.EventSeverityInfo,
 		Details:     details,
 		Description: fmt.Sprintf("Spec field updated for App %s/%s", obj.GetNamespace(), obj.GetName()),
+		AppName:     obj.GetName(),
 		Source:      event.ObjectSource(obj),
 		Observed:    v1.MicroTime(metav1.NowMicro()),
 	}); err != nil {
