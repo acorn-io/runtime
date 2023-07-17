@@ -168,7 +168,7 @@ var (
 	}
 
 	Event = [][]string{
-		{"Source", "Source"},
+		{"Resource", "Resource"},
 		{"Name", "{{ . | name }}"},
 		{"Type", "Type"},
 		{"Actor", "Actor"},

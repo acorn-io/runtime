@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/z"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,13 +47,10 @@ var (
 )
 
 func init() {
-	must := func(err error) {
-		if err != nil {
-			panic(fmt.Sprintf("failed to add to scheme: %s", err.Error()))
-		}
-	}
-	must(apiv1.AddToScheme(scheme))
-	must(v1.AddToScheme(scheme))
+	z.Must(
+		apiv1.AddToScheme(scheme),
+		internalv1.AddToScheme(scheme),
+	)
 }
 
 func publicKind(obj runtime.Object) string {
@@ -66,8 +64,9 @@ func publicKind(obj runtime.Object) string {
 	return ""
 }
 
-func ObjectSource(obj kclient.Object) v1.EventSource {
-	return v1.EventSource{
+// Resource returns a non-nil pointer to a v1.EventResource for the given object.
+func Resource(obj kclient.Object) *internalv1.EventResource {
+	return &internalv1.EventResource{
 		Kind: publicKind(obj),
 		Name: obj.GetName(),
 		UID:  obj.GetUID(),

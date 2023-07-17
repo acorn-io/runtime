@@ -131,7 +131,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EnvVar":                                schema_pkg_apis_internalacornio_v1_EnvVar(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventInstance":                         schema_pkg_apis_internalacornio_v1_EventInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventInstanceList":                     schema_pkg_apis_internalacornio_v1_EventInstanceList(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource":                           schema_pkg_apis_internalacornio_v1_EventSource(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventResource":                         schema_pkg_apis_internalacornio_v1_EventResource(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExecProbe":                             schema_pkg_apis_internalacornio_v1_ExecProbe(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ExpressionError":                       schema_pkg_apis_internalacornio_v1_ExpressionError(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.File":                                  schema_pkg_apis_internalacornio_v1_File(ref),
@@ -3209,11 +3209,10 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 							Format:      "",
 						},
 					},
-					"source": {
+					"resource": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Source identifies the object the Event is regarding.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource"),
+							Description: "Resource identifies the object the Event is regarding.",
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventResource"),
 						},
 					},
 					"description": {
@@ -3246,11 +3245,11 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 						},
 					},
 				},
-				Required: []string{"type", "source"},
+				Required: []string{"type"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventResource", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -7923,11 +7922,10 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 							Format:      "",
 						},
 					},
-					"source": {
+					"resource": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Source identifies the object the Event is regarding.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource"),
+							Description: "Resource identifies the object the Event is regarding.",
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventResource"),
 						},
 					},
 					"description": {
@@ -7960,11 +7958,11 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 						},
 					},
 				},
-				Required: []string{"type", "source"},
+				Required: []string{"type"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventSource", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.EventResource", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MicroTime", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -8016,16 +8014,16 @@ func schema_pkg_apis_internalacornio_v1_EventInstanceList(ref common.ReferenceCa
 	}
 }
 
-func schema_pkg_apis_internalacornio_v1_EventSource(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_internalacornio_v1_EventResource(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EventSource identifies an object related to an Event.\n\nThe referenced object may or may not exist.\n\nNote: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged. See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919 for more details.",
+				Description: "EventResource identifies a resource related to an Event.\n\nThe referenced resource may or may not exist.\n\nNote: corev1.ObjectReference was explicitly avoided because its use in new schemas is discouraged. See https://github.com/kubernetes/api/blob/cdff1d4efea5d7ddc52c4085f82748c5f3e5cc8e/core/v1/types.go#L5919 for more details.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is the source object kind.",
+							Description: "Kind is the resource kind.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -8033,7 +8031,7 @@ func schema_pkg_apis_internalacornio_v1_EventSource(ref common.ReferenceCallback
 					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the source object.",
+							Description: "Name is the name of the resource.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
@@ -8041,7 +8039,7 @@ func schema_pkg_apis_internalacornio_v1_EventSource(ref common.ReferenceCallback
 					},
 					"uuid": {
 						SchemaProps: spec.SchemaProps{
-							Description: "UID uniquely identifies the source object.",
+							Description: "UID uniquely identifies the resource.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",

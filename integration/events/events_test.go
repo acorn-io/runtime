@@ -52,7 +52,7 @@ func TestAppEvents(t *testing.T) {
 	// Ensure an event of each type has been recorded
 	var created, updated, deleted bool
 	helper.Wait(t, helper.Watcher(t, c), &apiv1.EventList{}, func(obj *apiv1.Event) bool {
-		if obj.Namespace != project.Name || obj.Source.Kind != "app" || obj.Source.Name != app.Name {
+		if obj.Namespace != project.Name || obj.Resource.Kind != "app" || obj.Resource.Name != app.Name {
 			// This event isn't for our app
 			return false
 		}

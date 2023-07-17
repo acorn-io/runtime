@@ -1062,7 +1062,11 @@ func (in *Event) DeepCopyInto(out *Event) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	out.Source = in.Source
+	if in.Resource != nil {
+		in, out := &in.Resource, &out.Resource
+		*out = new(internal_acorn_iov1.EventResource)
+		**out = **in
+	}
 	in.Observed.DeepCopyInto(&out.Observed)
 	out.Details = in.Details.DeepCopy()
 }

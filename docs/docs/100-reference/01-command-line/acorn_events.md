@@ -25,13 +25,13 @@ acorn events [flags] [PREFIX]
   # List the last 5 events and follow the event log
   acorn events --tail 5 -f
 
-  # Filter by Event Source 
+  # Filter by Related Resource 
   # If a PREFIX is given in the form '<kind>/<name>', the results of this command are pruned to include
-  # only those events sourced by resources matching the given kind and name.
-  # List events sourced by the 'hello' app in the current project
+  # only those events related to resources matching the given kind and name.
+  # List events related to the 'hello' app in the current project
   acorn events app/hello
   
-  # If the '/<name>' suffix is omitted, '<kind>' will match events sourced by any resource of the given kind.
+  # If the '/<name>' suffix is omitted, '<kind>' will match events related to any resource of the given kind.
   # List events related to any app in the current project
   acorn events app 
 

@@ -382,13 +382,20 @@ func eventsCompletion(ctx context.Context, c client.Client, toComplete string) (
 
 	matched := make(map[string]struct{})
 	if err := channels.ForEach(ctx, events, func(e apiv1.Event) error {
-		for _, completion := range []string{
+		completions := []string{
 			// Name prefix completion
 			e.Name,
-			// Source prefix completion
-			e.Source.String(),
-			e.Source.Kind,
-		} {
+		}
+
+		if e.Resource != nil {
+			// Resource prefix completions
+			completions = append(completions,
+				e.Resource.String(),
+				e.Resource.Kind,
+			)
+		}
+
+		for _, completion := range completions {
 			if _, ok := matched[completion]; ok {
 				// Completion already added to results
 				return nil
@@ -399,6 +406,7 @@ func eventsCompletion(ctx context.Context, c client.Client, toComplete string) (
 				matched[completion] = struct{}{}
 			}
 		}
+
 		return nil
 	}); !channels.NilOrCanceled(err) {
 		return nil, err
