@@ -66,9 +66,7 @@ func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespa
 					return nil
 				}
 			}
-		}
 
-		if validSecrets == nil {
 			app, err := r.getAcorn(namespace, name)
 			if apierrors.IsNotFound(err) {
 				svc := &v1.ServiceInstance{}
