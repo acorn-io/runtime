@@ -61,8 +61,8 @@ func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespa
 		if validSecrets == nil {
 			if v, ok := out.(*corev1.Secret); ok {
 				// Support binding existing secrets with "." in the name, i.e. my-old-app.secret-name
-				if err := r.getSecret(v, namespace, strings.Join(parts, "."), validSecrets); err == nil {
-					return nil
+				if err := r.getSecret(v, namespace, strings.Join(parts, "."), validSecrets); err == nil || !apierrors.IsNotFound(err) {
+					return err
 				}
 			}
 
