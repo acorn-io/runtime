@@ -89,6 +89,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"images/pull":                   images.NewImagePull(c, clientFactory, transport),
 		"images/details":                images.NewImageDetails(c, transport),
 		"images/copy":                   images.NewImageCopy(c, transport),
+		"images/sign":                   images.NewImageSign(c, transport),
 		"projects":                      projects.NewStorage(c, true),
 		"volumes":                       volumesStorage,
 		"volumeclasses":                 class.NewClassStorage(c),

@@ -248,6 +248,19 @@ type ImageList struct {
 	Items []Image `json:"items"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ImageSignature struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	PublicKey       []byte        `json:"publicKey,omitempty"`
+	Auth            *RegistryAuth `json:"auth,omitempty"`
+	Payload         []byte        `json:"payload,omitempty"`
+	SignatureB64    string        `json:"signature,omitempty"`
+	SignatureDigest string        `json:"signatureDigest,omitempty"`
+}
+
 type VolumeCreateOptions struct {
 	AccessModes []v1.AccessMode `json:"accessModes,omitempty"`
 	Class       string          `json:"class,omitempty"`

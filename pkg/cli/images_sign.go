@@ -15,10 +15,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
-	"github.com/sigstore/cosign/v2/pkg/cosign/remote"
-	"github.com/sigstore/cosign/v2/pkg/oci/mutate"
-	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
-	"github.com/sigstore/cosign/v2/pkg/oci/static"
 	"github.com/sigstore/cosign/v2/pkg/signature"
 	sigsig "github.com/sigstore/sigstore/pkg/signature"
 	"github.com/spf13/cobra"
@@ -43,7 +39,6 @@ type ImageSign struct {
 	client      ClientFactory
 	Key         string            `usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
 	Annotations map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true" name:"annotation"`
-	Push        bool              `usage:"Push the signature to the signature repository" short:"p" local:"true" default:"true"`
 }
 
 func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
@@ -114,8 +109,6 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	dupeDetector := remote.NewDupeDetector(sigSigner)
-
 	var annotations map[string]interface{}
 	if a.Annotations != nil {
 		annotations = make(map[string]interface{}, len(a.Annotations))
@@ -130,40 +123,24 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	signatureB64 := base64.StdEncoding.EncodeToString(signature)
-	signatureOCI, err := static.NewSignature(payload, signatureB64)
+
+	imageSignOpts := &client.ImageSignOptions{}
+
+	pubkey, err := sigSigner.PublicKey()
 	if err != nil {
 		return err
 	}
 
-	cc, err := c.GetClient()
+	if pubkey != nil {
+		imageSignOpts.PublicKey = &pubkey
+	}
+
+	sig, err := c.ImageSign(cmd.Context(), targetName, payload, signatureB64, imageSignOpts)
 	if err != nil {
 		return err
 	}
 
-	remoteopts, err := images.GetAuthenticationRemoteOptions(cmd.Context(), cc, c.GetNamespace())
-	if err != nil {
-		return err
-	}
-
-	ociEntity, err := ociremote.SignedEntity(ref, ociremote.WithRemoteOptions(remoteopts...))
-	if err != nil {
-		return fmt.Errorf("accessing entity: %w", err)
-	}
-
-	mutatedOCIEntity, err := mutate.AttachSignatureToEntity(ociEntity, signatureOCI, mutate.WithDupeDetector(dupeDetector))
-	if err != nil {
-		return err
-	}
-
-	if a.Push {
-		targetRepo := ref.Context()
-		if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity, ociremote.WithRemoteOptions(remoteopts...)); err != nil {
-			return err
-		}
-		pterm.Success.Printf("Done: Pushed signature to %s\n", targetRepo.String())
-	} else {
-		pterm.Success.Println("Done: Did not push signature")
-	}
+	pterm.Success.Printf("Done: Pushed signature %s\n", sig.SignatureDigest)
 
 	return nil
 }

@@ -631,6 +631,21 @@ func (mr *MockClientMockRecorder) ImagePush(arg0, arg1, arg2 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImagePush", reflect.TypeOf((*MockClient)(nil).ImagePush), arg0, arg1, arg2)
 }
 
+// ImageSign mocks base method.
+func (m *MockClient) ImageSign(arg0 context.Context, arg1 string, arg2 []byte, arg3 string, arg4 *client.ImageSignOptions) (*v1.ImageSignature, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImageSign", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(*v1.ImageSignature)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImageSign indicates an expected call of ImageSign.
+func (mr *MockClientMockRecorder) ImageSign(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageSign", reflect.TypeOf((*MockClient)(nil).ImageSign), arg0, arg1, arg2, arg3, arg4)
+}
+
 // ImageTag mocks base method.
 func (m *MockClient) ImageTag(arg0 context.Context, arg1, arg2 string) error {
 	m.ctrl.T.Helper()

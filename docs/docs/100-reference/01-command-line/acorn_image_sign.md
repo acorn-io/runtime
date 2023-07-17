@@ -21,13 +21,11 @@ acorn image sign my-image --key ./my-key
   -a, --annotation strings   Annotations to add to the signature
   -h, --help                 help for sign
   -k, --key string           Key to use for signing (default "./cosign.key")
-  -p, --push                 Push the signature to the signature repository
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -A, --all-projects        Use all known projects
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
       --kubeconfig string   Explicitly use kubeconfig file, overriding current project

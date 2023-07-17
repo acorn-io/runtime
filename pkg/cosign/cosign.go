@@ -249,7 +249,7 @@ func verifySignature(ctx context.Context, sigs oci.Signatures, imgDigestHash ggc
 	return nil
 }
 
-func decodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, error) {
+func DecodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, error) {
 	// PEM encoded file.
 	pubKey, err := cryptoutils.UnmarshalPEMToPublicKey(raw)
 	if err != nil {
@@ -376,7 +376,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 	if PubkeyPrefixPattern.MatchString(strings.TrimSpace(keyRef)) {
 		// no scheme, inline PEM
 		logrus.Debugf("Loading public key from PEM: %s", keyRef)
-		v, err := decodePEM([]byte(keyRef), algorithms[algorithm])
+		v, err := DecodePEM([]byte(keyRef), algorithms[algorithm])
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}

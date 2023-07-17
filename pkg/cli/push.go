@@ -69,7 +69,6 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 			client:      s.client,
 			Key:         s.Key,
 			Annotations: s.SignatureAnnotations,
-			Push:        true,
 		}
 		if err := sign.Run(cmd, args); err != nil {
 			return err

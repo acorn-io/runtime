@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto"
 	"net"
 	"net/http"
 	"os"
@@ -242,6 +243,7 @@ type Client interface {
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
 	ImageCopy(ctx context.Context, srcImage, destImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error)
+	ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error)
 
 	AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
 	AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error)
@@ -345,6 +347,10 @@ type EventStreamOptions struct {
 	Since           string `json:"since,omitempty"`
 	Until           string `json:"until,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
+}
+
+type ImageSignOptions struct {
+	PublicKey *crypto.PublicKey `json:"publicKey,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {
