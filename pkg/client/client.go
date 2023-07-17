@@ -186,10 +186,11 @@ type ImageProgress struct {
 }
 
 type ImageDetails struct {
-	AppImage   v1.AppImage   `json:"appImage,omitempty"`
-	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params     *v1.ParamSpec `json:"params,omitempty"`
-	ParseError string        `json:"parseError,omitempty"`
+	AppImage        v1.AppImage   `json:"appImage,omitempty"`
+	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
+	Params          *v1.ParamSpec `json:"params,omitempty"`
+	SignatureDigest string        `json:"signatureDigest,omitempty"`
+	ParseError      string        `json:"parseError,omitempty"`
 }
 
 type PortForwardDialer func(ctx context.Context) (net.Conn, error)

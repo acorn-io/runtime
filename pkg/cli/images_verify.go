@@ -1,14 +1,14 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	"github.com/acorn-io/runtime/pkg/images"
+	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -47,38 +47,38 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	targetName := args[0]
-	targetDigest := ""
 
 	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
-
-	img, tag, err := client.FindImage(cmd.Context(), c, targetName)
-	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
-		return err
-	}
-
-	if err == nil && tag == "" {
-		return fmt.Errorf("Verifying a local image without specifying the repository is not supported")
-	} else if tag != "" {
-		targetName = tag
-		targetDigest = img.Digest
-	}
-
 	ref, err := name.ParseReference(targetName)
 	if err != nil {
 		return err
 	}
-
-	if targetDigest == "" {
-		targetDigest, err = acornsign.SimpleDigest(ref)
-		if err != nil {
-			return err
-		}
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return err
 	}
 
-	target := ref.Context().Digest(targetDigest)
+	creds, err := credentials.NewStore(cfg, c)
+	if err != nil {
+		return err
+	}
+
+	auth, _, err := creds.Get(cmd.Context(), ref.Context().RegistryStr())
+	if err != nil {
+		return err
+	}
+
+	details, err := c.ImageDetails(cmd.Context(), args[0], &client.ImageDetailsOptions{
+		Auth: auth,
+	})
+	if err != nil {
+		return err
+	}
+
+	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
 	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
 
@@ -102,7 +102,7 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		pterm.Warning.Println("Unable to get remote opts for registry authentication, trying without.")
 	}
 
-	if err := acornsign.EnsureReferences(cmd.Context(), cc, target.String(), verifyOpts); err != nil {
+	if err := acornsign.EnsureReferences(cmd.Context(), cc, targetDigest.String(), verifyOpts); err != nil {
 		return err
 	}
 

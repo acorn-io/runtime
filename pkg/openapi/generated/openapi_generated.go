@@ -3664,6 +3664,12 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParamSpec"),
 						},
 					},
+					"signatureDigest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"parseError": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},

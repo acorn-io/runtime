@@ -7,8 +7,10 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
+	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/sirupsen/logrus"
 )
 
@@ -65,4 +67,28 @@ func makeOptions(opts ...crane.Option) crane.Options {
 		o(&opt)
 	}
 	return opt
+}
+
+func FindSignature(imageDigest name.Digest, opts ...remote.Option) (name.Tag, ggcrv1.Hash, error) {
+	ociremoteOpts := []ociremote.Option{ociremote.WithRemoteOptions(opts...)}
+
+	var tag name.Tag
+	var hash ggcrv1.Hash
+	var err error
+
+	tag, err = ociremote.SignatureTag(imageDigest, ociremoteOpts...)
+	if err != nil {
+		return tag, hash, fmt.Errorf("failed to get signature tag: %w", err)
+	}
+	desc, err := remote.Head(tag, opts...) // HEAD request first to check if it exists (avoid rate limits)
+	if err != nil {
+		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
+			logrus.Infof("no signature found for image %s", imageDigest.String())
+			return tag, hash, nil
+		}
+		return tag, hash, fmt.Errorf("error getting signature for image %s: %w", imageDigest.String(), err)
+	}
+	hash = desc.Digest
+
+	return tag, hash, nil
 }

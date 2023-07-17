@@ -19,7 +19,9 @@ import (
 	"github.com/acorn-io/mink/pkg/strategy"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
+	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
+	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/gorilla/websocket"
@@ -109,6 +111,20 @@ func (i *ImagePull) ConnectMethods() []string {
 	return []string{"GET"}
 }
 
+func findSignatureImage(imageDigest name.Digest, opts ...remote.Option) (name.Tag, ggcrv1.Image, error) {
+	tag, hash, err := acornsign.FindSignature(imageDigest, opts...)
+	if err != nil {
+		return name.Tag{}, nil, err
+	}
+	if hash.Hex == "" {
+		return name.Tag{}, nil, nil
+	}
+
+	img, err := remote.Image(tag, opts...)
+
+	return tag, img, err
+}
+
 func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ggcrv1.Update, error) {
 	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, namespace, imageName)
 	if err != nil {
@@ -140,6 +156,22 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 	recordRepo := ""
 	if externalRepo {
 		recordRepo = repo.String()
+	}
+
+	sigTag, sig, err := findSignatureImage(pullTag.Context().Digest(hash.String()), opts...)
+	if err != nil {
+		return nil, err
+	}
+	if sig != nil {
+		sigHash, err := sig.Digest()
+		if err != nil {
+			return nil, err
+		}
+		logrus.Infof("Pulling signature %s for %s", sigHash.String(), pullTag.String())
+		if err = remote.Write(repo.Tag(sigTag.TagStr()), sig, opts...); err != nil {
+			logrus.Errorf("Error writing signature %s for image %s: %v", sigHash.String(), pullTag.String(), err)
+			return nil, err
+		}
 	}
 
 	progress := make(chan ggcrv1.Update)
