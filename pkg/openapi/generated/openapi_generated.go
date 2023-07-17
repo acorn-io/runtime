@@ -3202,6 +3202,13 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 							Format:      "",
 						},
 					},
+					"appName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AppName is the name of the app that the event is related to, if any.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"source": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Source identifies the object the Event is regarding.",
@@ -7905,6 +7912,13 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 					"actor": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Actor is the ID of the entity that generated the Event. This can be the name of a particular user or controller.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"appName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AppName is the name of the app that the event is related to, if any.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
