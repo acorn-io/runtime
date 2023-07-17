@@ -62,7 +62,7 @@ func Lookup(ctx context.Context, req kclient.Client, out kclient.Object, namespa
 			switch v := out.(type) {
 			case *corev1.Secret:
 				// Support binding existing secrets with "." in the name, i.e. my-old-app.secret-name
-				if err := r.getSecret(v, namespace, fmt.Sprintf("%s.%s", name, parts[i+1]), validSecrets); err == nil {
+				if err := r.getSecret(v, namespace, strings.Join(parts, "."), validSecrets); err == nil {
 					return nil
 				}
 			}
