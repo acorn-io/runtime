@@ -36,6 +36,10 @@ type EventInstance struct {
 	// +optional
 	Actor string `json:"actor,omitempty"`
 
+	// AppName is the name of the app that the event is related to, if any.
+	// +optional
+	AppName string `json:"appName,omitempty"`
+
 	// Source identifies the object the Event is regarding.
 	Source EventSource `json:"source"`
 

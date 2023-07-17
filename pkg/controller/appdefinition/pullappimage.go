@@ -210,6 +210,7 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 		Type:        AppImagePullSuccessEventType,
 		Severity:    v1.EventSeverityInfo,
 		Description: fmt.Sprintf("Pulled %s", target.Name),
+		AppName:     obj.GetName(),
 		Source:      event.ObjectSource(obj),
 		Observed:    v1.MicroTime(observed),
 	}

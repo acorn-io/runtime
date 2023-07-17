@@ -107,8 +107,9 @@ func TestPullAppImageEvents(t *testing.T) {
 			Type:        AppImagePullSuccessEventType,
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
+			AppName:     "foo",
 			Source:      v1.EventSource{Kind: "app", Name: "foo", UID: types.UID("foo-uid")},
-			Observed:    v1.MicroTime(now),
+			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				ResourceVersion: "1",
 				AutoUpgrade:     false,
@@ -129,8 +130,9 @@ func TestPullAppImageEvents(t *testing.T) {
 			Type:        AppImagePullSuccessEventType,
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
+			AppName:     "foo",
 			Source:      v1.EventSource{Kind: "app", Name: "foo"},
-			Observed:    v1.MicroTime(now),
+			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				AutoUpgrade: true,
 				Previous:    ImageSummary{Name: "acorn.io/img:1"},
@@ -149,8 +151,9 @@ func TestPullAppImageEvents(t *testing.T) {
 			Type:        AppImagePullSuccessEventType,
 			Severity:    v1.EventSeverityInfo,
 			Description: "Pulled acorn.io/img:1",
+			AppName:     "foo",
 			Source:      v1.EventSource{Kind: "app", Name: "foo"},
-			Observed:    v1.MicroTime(now),
+			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
 				AutoUpgrade: true,
 				Target:      ImageSummary{Name: "acorn.io/img:1"},
@@ -169,6 +172,7 @@ func TestPullAppImageEvents(t *testing.T) {
 			Type:        AppImagePullFailureEventType,
 			Severity:    v1.EventSeverityError,
 			Description: "Failed to pull acorn.io/img:1",
+			AppName:     "foo",
 			Source:      v1.EventSource{Kind: "app", Name: "foo"},
 			Observed:    now,
 			Details: mustMapify(t, AppImagePullEventDetails{
