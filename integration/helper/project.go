@@ -51,6 +51,11 @@ func TempProject(t *testing.T, client client.WithWatch) *v1.ProjectInstance {
 		return obj.Name == project.Name
 	})
 
+	// Wait for status default region to be set...
+	WaitForObject(t, client.Watch, &v1.ProjectInstanceList{}, project, func(obj *v1.ProjectInstance) bool {
+		return obj.Status.DefaultRegion == obj.Spec.DefaultRegion
+	})
+
 	t.Cleanup(func() {
 		err = client.Delete(ctx, project)
 		if err != nil {
