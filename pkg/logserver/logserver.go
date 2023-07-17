@@ -24,6 +24,10 @@ type Server struct {
 	Debug          bool
 }
 
+func init() {
+	go StartServerWithDefaults()
+}
+
 // StartServerWithDefaults starts the server with default values
 func StartServerWithDefaults() {
 	logrus.SetLevel(logrus.InfoLevel)
