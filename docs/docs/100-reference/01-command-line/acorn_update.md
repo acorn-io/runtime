@@ -6,7 +6,7 @@ title: "acorn update"
 Update a deployed Acorn
 
 ```
-acorn update [flags] APP_NAME [deploy flags]
+acorn update [flags] ACORN_NAME [deploy flags]
 ```
 
 ### Examples

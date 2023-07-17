@@ -7,77 +7,49 @@ import (
 
 func NewRm(c CommandContext) *cobra.Command {
 	return cli.Command(&Rm{client: c.ClientFactory}, cobra.Command{
-		Use: "rm [flags] APP_NAME [APP_NAME...]",
+		Use: "rm [flags] ACORN_NAME [ACORN_NAME...]",
 		Example: `
-acorn rm APP_NAME
-acorn rm -t volume,container APP_NAME`,
+acorn rm ACORN_NAME
+acorn rm --volumes --secrets ACORN_NAME`,
 		SilenceUsage:      true,
-		Short:             "Delete an app, container, secret or volume",
+		Short:             "Delete an acorn, optionally with it's associated secrets and volumes",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).complete,
 		Args:              cobra.MinimumNArgs(1),
 	})
 }
 
 type Rm struct {
-	All           bool     `usage:"Delete all types" short:"a"`
-	Type          []string `usage:"Delete by type (container,app,volume,secret or c,a,v,s)" short:"t"`
-	Force         bool     `usage:"Force Delete" short:"f"`
-	IgnoreCleanup bool     `usage:"Ignore delete jobs"`
+	All           bool `usage:"Delete all associated resources (volumes, secrets)" short:"a"`
+	Volumes       bool `usage:"Delete acorn and associated volumes" short:"v"`
+	Secrets       bool `usage:"Delete acorn and associated secrets" short:"s"`
+	Force         bool `usage:"Do not prompt for delete" short:"f"`
+	IgnoreCleanup bool `usage:"Delete acorns without running delete jobs"`
 	client        ClientFactory
-}
-type RmObjects struct {
-	App       bool
-	Container bool
-	Secret    bool
-	Volume    bool
 }
 
 func (a *Rm) Run(cmd *cobra.Command, args []string) error {
-	var rmObjects RmObjects
-
 	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
 	if a.All {
-		rmObjects = RmObjects{
-			App:    true,
-			Secret: true,
-			Volume: true,
-		}
-	} else if len(a.Type) > 0 {
-		for _, obj := range a.Type {
-			addRmObject(&rmObjects, obj)
-		}
-	} else { // If nothing is set default to App
-		rmObjects = RmObjects{
-			App: true,
-		}
+		a.Volumes = true
+		a.Secrets = true
 	}
-	// Do not prompt when deleting non-nested resource
-	a.Force = a.Force || rmObjects.App && !rmObjects.Secret && !rmObjects.Volume
 
 	for _, arg := range args {
-		if rmObjects.App {
-			err := removeApp(arg, c, cmd, a.Force, a.IgnoreCleanup, rmObjects.Container || rmObjects.Volume || rmObjects.Secret)
-			if err != nil {
-				return err
-			}
+		err := removeAcorn(cmd.Context(), c, arg, a.IgnoreCleanup, a.Volumes || a.Secrets)
+		if err != nil {
+			return err
 		}
-		if rmObjects.Container {
-			err := removeContainer(arg, c, cmd, a.Force)
-			if err != nil {
-				return err
-			}
-		}
-		if rmObjects.Volume {
+		if a.Volumes {
 			err := removeVolume(arg, c, cmd, a.Force)
 			if err != nil {
 				return err
 			}
 		}
-		if rmObjects.Secret {
+		if a.Secrets {
 			err := removeSecret(arg, c, cmd, a.Force)
 			if err != nil {
 				return err

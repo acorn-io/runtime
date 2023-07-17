@@ -117,7 +117,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
+			wantOut: "NAME               ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
 		},
 		{
 			name: "acorn container -a", fields: fields{
@@ -138,7 +138,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                       stopped   0              10y ago   \n",
+			wantOut: "NAME               ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                       stopped   0              10y ago   \n",
 		},
 		{
 			name: "acorn container found.container1", fields: fields{
@@ -159,7 +159,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
+			wantOut: "NAME               ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
 		},
 		{
 			name: "acorn container found", fields: fields{
@@ -180,7 +180,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
+			wantOut: "NAME               ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \n",
 		},
 		{
 			name: "acorn container found -a", fields: fields{
@@ -201,7 +201,7 @@ func TestContainer(t *testing.T) {
 				client: mClient,
 			},
 			wantErr: false,
-			wantOut: "NAME               APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                       stopped   0              10y ago   \n",
+			wantOut: "NAME               ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE\nfound.container1                                 0              10y ago   \nfound.container2                       stopped   0              10y ago   \n",
 		},
 		{
 			name: "acorn container kill found.container1", fields: fields{

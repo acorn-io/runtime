@@ -15,7 +15,7 @@ var (
 func NewApiServer(c CommandContext) *cobra.Command {
 	api := &APIServer{client: c.ClientFactory}
 	cmd := cli.Command(api, cobra.Command{
-		Use:          "api-server [flags] [APP_NAME...]",
+		Use:          "api-server [flags] [ACORN_NAME...]",
 		SilenceUsage: true,
 		Short:        "Run api-server",
 		Hidden:       true,

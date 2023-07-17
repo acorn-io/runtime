@@ -10,7 +10,7 @@ Forward a container port locally
 Forward a container port locally
 
 ```
-acorn port-forward [flags] APP_NAME|CONTAINER_NAME PORT
+acorn port-forward [flags] ACORN_NAME|CONTAINER_NAME PORT
 ```
 
 ### Options

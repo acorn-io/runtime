@@ -13,7 +13,7 @@ var hideUpdateFlags = []string{"dangerous", "memory", "target-namespace", "secre
 
 func NewUpdate(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
-		Use:               "update [flags] APP_NAME [deploy flags]",
+		Use:               "update [flags] ACORN_NAME [deploy flags]",
 		SilenceUsage:      true,
 		Short:             "Update a deployed Acorn",
 		ValidArgsFunction: newCompletion(c.ClientFactory, appsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,

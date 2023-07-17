@@ -9,7 +9,7 @@ import (
 func NewPortForward(c CommandContext) *cobra.Command {
 	exec := &PortForward{client: c.ClientFactory}
 	cmd := cli.Command(exec, cobra.Command{
-		Use:               "port-forward [flags] APP_NAME|CONTAINER_NAME PORT",
+		Use:               "port-forward [flags] ACORN_NAME|CONTAINER_NAME PORT",
 		SilenceUsage:      true,
 		Short:             "Forward a container port locally",
 		Long:              "Forward a container port locally",

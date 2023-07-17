@@ -6,7 +6,7 @@ title: "acorn ps"
 List or get apps
 
 ```
-acorn ps [flags] [APP_NAME...]
+acorn ps [flags] [ACORN_NAME...]
 ```
 
 ### Examples

@@ -10,7 +10,7 @@ Run a command in a container
 Run a command in a container
 
 ```
-acorn exec [flags] APP_NAME|CONTAINER_NAME CMD
+acorn exec [flags] ACORN_NAME|CONTAINER_NAME CMD
 ```
 
 ### Options

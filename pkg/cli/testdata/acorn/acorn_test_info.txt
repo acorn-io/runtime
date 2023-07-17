@@ -29,7 +29,7 @@ Available Commands:
   pull         Pull an image from a remote registry
   push         Push an image to a remote registry
   render       Evaluate and display an Acornfile with args
-  rm           Delete an app, container, secret or volume
+  rm           Delete an acorn, optionally with it's associated secrets and volumes
   run          Run an app from an image or Acornfile
   secret       Manage secrets
   start        Start an app

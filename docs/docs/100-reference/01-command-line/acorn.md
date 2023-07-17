@@ -48,7 +48,7 @@ acorn [flags]
 * [acorn pull](acorn_pull.md)	 - Pull an image from a remote registry
 * [acorn push](acorn_push.md)	 - Push an image to a remote registry
 * [acorn render](acorn_render.md)	 - Evaluate and display an Acornfile with args
-* [acorn rm](acorn_rm.md)	 - Delete an app, container, secret or volume
+* [acorn rm](acorn_rm.md)	 - Delete an acorn, optionally with it's associated secrets and volumes
 * [acorn run](acorn_run.md)	 - Run an app from an image or Acornfile
 * [acorn secret](acorn_secret.md)	 - Manage secrets
 * [acorn start](acorn_start.md)	 - Start an app
