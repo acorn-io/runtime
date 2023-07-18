@@ -17,7 +17,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/event"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
-	_ "github.com/acorn-io/runtime/pkg/logserver/init"
+	"github.com/acorn-io/runtime/pkg/logserver"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -105,6 +105,8 @@ func (c *Controller) Start(ctx context.Context) error {
 
 		autoupgrade.StartSync(ctx, c.Router.Backend())
 	}()
+
+	logserver.StartServerWithDefaults()
 
 	return c.Router.Start(ctx)
 }
