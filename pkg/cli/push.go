@@ -53,17 +53,6 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	prog, err := c.ImagePush(cmd.Context(), args[0], &client.ImagePushOptions{
-		Auth: auth,
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := progressbar.Print(prog); err != nil {
-		return err
-	}
-
 	if s.Sign {
 		sign := ImageSign{
 			client:      s.client,
@@ -74,7 +63,18 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		pterm.Success.Printf("Pushed and signed %s\n", args[0])
+		pterm.Success.Printf("Signed %s\n", args[0])
+	}
+
+	prog, err := c.ImagePush(cmd.Context(), args[0], &client.ImagePushOptions{
+		Auth: auth,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := progressbar.Print(prog); err != nil {
+		return err
 	}
 
 	return nil

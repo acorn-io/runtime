@@ -3,6 +3,7 @@ package images
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -87,14 +88,7 @@ func (i *ImagePush) Connect(ctx context.Context, id string, options runtime.Obje
 		}
 
 		for update := range process {
-			p := ImageProgress{
-				Total:    update.Total,
-				Complete: update.Complete,
-			}
-			if update.Error != nil {
-				p.Error = update.Error.Error()
-			}
-			data, err := json.Marshal(p)
+			data, err := json.Marshal(update)
 			if err != nil {
 				panic("failed to marshal update: " + err.Error())
 			}
@@ -123,7 +117,7 @@ type ImageProgress struct {
 	CurrentTask string `json:"currentTask,omitempty"`
 }
 
-func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ggcrv1.Update, error) {
+func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ImageProgress, error) {
 	pushTag, err := name.NewTag(tagName, name.WithDefaultRegistry(DefaultRegistry))
 	if err != nil {
 		return nil, nil, err
@@ -162,12 +156,73 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 		return nil, nil, err
 	}
 
-	progress := make(chan ggcrv1.Update)
-	opts = append(opts, remote.WithProgress(progress))
+	// Signature
+	sigTag, sig, err := findSignatureImage(repo.Digest(image.Digest), opts...)
+	if err != nil {
+		return nil, nil, err
+	}
+	sigPushTag := pushTag.Context().Tag(sigTag.TagStr())
+
+	type updates struct {
+		updateChan chan ggcrv1.Update
+		sourceName string
+		destTag    name.Tag
+	}
+
+	// metachannel is used to send updates to another channel for each index to be copied
+	metachannel := make(chan updates)
+
+	// progress is the channel returned by this function and used to write websocket messages to the client
+	progress := make(chan ImageProgress)
+
 	go func() {
-		err := remote.WriteIndex(pushTag, remoteImage, opts...)
-		handleWriteIndexError(err, progress)
+		defer close(progress)
+		for c := range metachannel {
+			for update := range c.updateChan {
+				var errString string
+				if update.Error != nil {
+					errString = update.Error.Error()
+				}
+				progress <- ImageProgress{
+					Total:       update.Total,
+					Complete:    update.Complete,
+					Error:       errString,
+					CurrentTask: fmt.Sprintf("Pushing %s %s ", c.sourceName, c.destTag.String()),
+				}
+			}
+		}
 	}()
+
+	// Copy the image and signature
+	go func() {
+		defer close(metachannel)
+		imageProgress := make(chan ggcrv1.Update)
+		metachannel <- updates{
+			updateChan: imageProgress,
+			sourceName: "image",
+			destTag:    pushTag,
+		}
+
+		// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex().
+		// remote.WriteIndex will also close the currProgress channel on its own.
+		if err := remote.WriteIndex(pushTag, remoteImage, append(opts, remote.WithProgress(imageProgress))...); err != nil {
+			handleWriteIndexError(err, imageProgress)
+		}
+
+		if sig != nil {
+			signatureProgress := make(chan ggcrv1.Update)
+			logrus.Infof("Pushing signature %s", sigPushTag.String())
+			metachannel <- updates{
+				updateChan: signatureProgress,
+				sourceName: "signature",
+				destTag:    sigPushTag,
+			}
+			if err := remote.Write(sigPushTag, sig, append(opts, remote.WithProgress(signatureProgress))...); err != nil {
+				handleWriteIndexError(err, signatureProgress)
+			}
+		}
+	}()
+
 	return image, typed.Every(500*time.Millisecond, progress), nil
 }
 

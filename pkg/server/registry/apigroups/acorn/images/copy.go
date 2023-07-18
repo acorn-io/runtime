@@ -60,7 +60,7 @@ func (i *ImageCopy) Connect(ctx context.Context, _ string, _ runtime.Object, _ r
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
 		if err != nil {
-			logrus.Errorf("Error during handshake for image pull: %v", err)
+			logrus.Errorf("Error during handshake for image copy: %v", err)
 			return
 		}
 		defer conn.Close()
