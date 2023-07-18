@@ -23,6 +23,9 @@ spec:
       containers:
         - name: acorn-controller
           image: ghcr.io/acorn-io/runtime
+          env:
+            - name: LEGO_DISABLE_CNAME_SUPPORT
+              value: "true"
           args:
             - controller
           securityContext:
