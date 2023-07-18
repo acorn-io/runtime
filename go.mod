@@ -7,7 +7,7 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/wrangler => github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c
-	k8s.io/client-go => k8s.io/client-go v0.27.2
+	k8s.io/client-go => k8s.io/client-go v0.27.3
 )
 
 require (
@@ -58,16 +58,16 @@ require (
 	google.golang.org/grpc v1.55.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	inet.af/tcpproxy v0.0.0-20221017015627-91f861402626
-	k8s.io/api v0.27.2
-	k8s.io/apiextensions-apiserver v0.27.2
-	k8s.io/apimachinery v0.27.2
-	k8s.io/apiserver v0.27.2
+	k8s.io/api v0.27.3
+	k8s.io/apiextensions-apiserver v0.27.3
+	k8s.io/apimachinery v0.27.3
+	k8s.io/apiserver v0.27.3
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.100.1
-	k8s.io/kube-aggregator v0.27.0
+	k8s.io/kube-aggregator v0.27.3
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f
-	k8s.io/kubectl v0.25.2
+	k8s.io/kubectl v0.27.3
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
 	sigs.k8s.io/controller-runtime v0.15.0-beta.0
 	sigs.k8s.io/yaml v1.3.0
@@ -287,9 +287,9 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.27.2 // indirect
+	k8s.io/component-base v0.27.3 // indirect
 	k8s.io/gengo v0.0.0-20220902162205-c0856e24416d // indirect
-	k8s.io/kms v0.27.2 // indirect
+	k8s.io/kms v0.27.3 // indirect
 	mvdan.cc/gofumpt v0.4.0 // indirect
 	mvdan.cc/sh/v3 v3.5.1 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.1.2 // indirect
