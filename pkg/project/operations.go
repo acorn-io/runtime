@@ -173,7 +173,12 @@ func List(ctx context.Context, onlyUseCurrentServer bool, opts Options) (project
 		}
 	}
 
-	managerHost, _, managerHostExists := strings.Cut(cfg.CurrentProject, "/")
+	currentProject := cfg.CurrentProject
+	if opts.Project != "" {
+		currentProject = opts.Project
+	}
+
+	managerHost, _, managerHostExists := strings.Cut(currentProject, "/")
 
 	creds, err := credentials.NewLocalOnlyStore(cfg)
 	if err != nil {
