@@ -3,7 +3,7 @@ package cli
 import (
 	minkserver "github.com/acorn-io/mink/pkg/server"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
-	"github.com/acorn-io/runtime/pkg/logserver"
+	_ "github.com/acorn-io/runtime/pkg/logserver/init"
 	"github.com/acorn-io/runtime/pkg/server"
 	"github.com/spf13/cobra"
 )
@@ -40,8 +40,6 @@ func (a *APIServer) Run(cmd *cobra.Command, args []string) error {
 	if err := cfg.Run(cmd.Context()); err != nil {
 		return err
 	}
-
-	logserver.StartServerWithDefaults()
 
 	<-cmd.Context().Done()
 	return cmd.Context().Err()
