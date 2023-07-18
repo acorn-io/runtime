@@ -16,7 +16,30 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
+func devConfig(ctx context.Context, c *apiv1.Config, getter kclient.Reader) error {
+	var devConfig corev1.ConfigMap
+	if err := getter.Get(ctx, router.Key(system.Namespace, system.DevConfigName), &devConfig); apierror.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	devCfg, err := unmarshal(&devConfig)
+	if err != nil {
+		return err
+	}
+
+	*c = *merge(c, devCfg)
+	return nil
+}
+
+func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, includeDev bool) error {
+	if includeDev {
+		if err := devConfig(ctx, c, getter); err != nil {
+			return err
+		}
+	}
+
 	profile := profiles.Get(c.Profile)
 	if c.SetPodSecurityEnforceProfile == nil {
 		c.SetPodSecurityEnforceProfile = profile.SetPodSecurityEnforceProfile
@@ -453,7 +476,7 @@ func UnmarshalAndComplete(ctx context.Context, cm *corev1.ConfigMap, getter kcli
 		return nil, err
 	}
 
-	return config, complete(ctx, config, getter)
+	return config, complete(ctx, config, getter, true)
 }
 
 func unmarshal(cm *corev1.ConfigMap) (*apiv1.Config, error) {
@@ -499,7 +522,7 @@ func TestSetGet(ctx context.Context, client kclient.Client, cfg *apiv1.Config) (
 	}
 
 	newConfig := merge(existing, cfg)
-	return newConfig, complete(ctx, newConfig, client)
+	return newConfig, complete(ctx, newConfig, client, false)
 }
 
 func Set(ctx context.Context, client kclient.Client, cfg *apiv1.Config) error {
@@ -534,6 +557,6 @@ func Get(ctx context.Context, getter kclient.Reader) (*apiv1.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = complete(ctx, cfg, getter)
+	err = complete(ctx, cfg, getter, true)
 	return cfg, err
 }

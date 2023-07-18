@@ -16,7 +16,7 @@ func TestAcornDNSDisabledNoLookupsHappen(t *testing.T) {
 		" auto or enabled should be treated as disabled"
 	_ = complete(context.Background(), &apiv1.Config{
 		AcornDNS: &s,
-	}, nil)
+	}, nil, false)
 	// if a lookup is going to happen this method would panic as the getter is nil
 }
 
@@ -25,7 +25,7 @@ func TestAcornDNSStates(t *testing.T) {
 	conf := &apiv1.Config{
 		AcornDNS: &s,
 	}
-	err := complete(context.Background(), conf, nil)
+	err := complete(context.Background(), conf, nil, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestAcornDNSStates(t *testing.T) {
 				tt.prepare(r)
 			}
 
-			err := complete(context.Background(), tt.conf, r)
+			err := complete(context.Background(), tt.conf, r, false)
 			if err != nil {
 				t.Fatal(err)
 			}

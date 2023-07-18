@@ -135,5 +135,8 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	configRouter.HandlerFunc(config.HandleAutoUpgradeInterval)
 	configRouter.HandlerFunc(volume.CreateEphemeralVolumeClass)
 
+	devConfigRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.DevConfigName)
+	devConfigRouter.HandlerFunc(config.PurgeDevConfig)
+
 	return nil
 }
