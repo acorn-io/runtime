@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/restconfig"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/runtime/integration/helper"
@@ -1194,7 +1193,7 @@ func TestJobDelete(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), new(apiv1.AppList), app, func(app *apiv1.App) bool {
-		return len(app.Finalizers) > 0 && app.Annotations[apply.AnnotationPrune] == "false"
+		return len(app.Finalizers) > 0
 	})
 
 	app, err = c.AppDelete(ctx, app.Name)

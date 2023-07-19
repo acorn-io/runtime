@@ -4,7 +4,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
@@ -89,16 +88,6 @@ func NeedsDestroyJobFinalization(next router.Handler) router.Handler {
 		}
 
 		if shouldFinalize(app) {
-			if app.Annotations[apply.AnnotationPrune] != "false" {
-				if app.Annotations == nil {
-					app.Annotations = map[string]string{}
-				}
-				app.Annotations[apply.AnnotationPrune] = "false"
-				if err := req.Client.Update(req.Ctx, app); err != nil {
-					return err
-				}
-			}
-
 			return next.Handle(req, resp)
 		}
 

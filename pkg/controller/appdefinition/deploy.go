@@ -102,7 +102,9 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addPVCs(req, appInstance, resp); err != nil {
 		return err
 	}
-	addAcorns(req, appInstance, tag, pullSecrets, resp)
+	if err := addAcorns(req, appInstance, tag, pullSecrets, resp); err != nil {
+		return err
+	}
 
 	resp.Objects(pullSecrets.Objects()...)
 	resp.Objects(interpolator.Objects()...)

@@ -141,6 +141,7 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 			targetService.Namespace = k8sService.Namespace
 		} else {
 			missing = append(missing, refName)
+			return nil, missing, nil
 		}
 	} else if err != nil {
 		return nil, nil, err

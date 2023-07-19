@@ -67,6 +67,11 @@ func TestServiceIgnoreCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Delete the service.
+	if _, err := c.AppDelete(ctx, "myapp.myservice"); err != nil {
+		t.Fatal(err)
+	}
+
 	// This app's service has a delete event job that will fail to run.
 	// Make sure it still shows up in the app list.
 	list, err := c.AppList(ctx)
