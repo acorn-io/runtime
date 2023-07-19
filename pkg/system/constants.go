@@ -4,6 +4,7 @@ const (
 	Namespace            = "acorn-system"
 	ImagesNamespace      = "acorn-image-system"
 	ConfigName           = "acorn-config"
+	DevConfigName        = "acorn-config-dev"
 	TLSSecretName        = "acorn-tls"
 	LEAccountSecretName  = "acorn-le-account"
 	DefaultUserNamespace = "acorn"

@@ -1,18 +1,22 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
 func NewInstall(c CommandContext) *cobra.Command {
-	return cli.Command(&Install{client: c.ClientFactory}, cobra.Command{
+	cmd := cli.Command(&Install{client: c.ClientFactory}, cobra.Command{
 		Use: "install [flags]",
 		Example: `
 acorn install`,
@@ -21,6 +25,8 @@ acorn install`,
 		Short:        "Install and configure acorn in the cluster",
 		Args:         cobra.NoArgs,
 	})
+	cmd.PersistentFlags().Lookup("dev").Hidden = true
+	return cmd
 }
 
 type Install struct {
@@ -33,8 +39,43 @@ type Install struct {
 	ControllerReplicas                 *int     `usage:"acorn-controller deployment replica count"`
 	ControllerServiceAccountAnnotation []string `usage:"annotation to apply to the acorn-system service account"`
 
+	Dev string `usage:"Development overlay install"`
+
 	apiv1.Config
 	client ClientFactory
+}
+
+func (i *Install) dev(ctx context.Context, imageName string, opts *install.Options) error {
+	c, err := i.client.CreateDefault()
+	if err != nil {
+		return err
+	}
+
+	ref, err := name.ParseReference(imageName)
+	if err != nil {
+		return err
+	}
+
+	cfg, err := config.ReadCLIConfig()
+	if err != nil {
+		return err
+	}
+
+	creds, err := credentials.NewStore(cfg, c)
+	if err != nil {
+		return err
+	}
+
+	auth, ok, err := creds.Get(ctx, ref.Context().RegistryStr())
+	if err != nil {
+		return err
+	}
+
+	if !ok {
+		return fmt.Errorf("credential not found for %s, run acorn/docker login first", imageName)
+	}
+
+	return install.Dev(ctx, imageName, auth, opts)
 }
 
 func (i *Install) Run(cmd *cobra.Command, args []string) error {
@@ -52,12 +93,18 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 		annotations[k] = v
 	}
 
-	return install.Install(cmd.Context(), image, &install.Options{
+	opts := &install.Options{
 		SkipChecks:                          i.SkipChecks,
 		OutputFormat:                        i.Output,
 		Config:                              i.Config,
 		APIServerReplicas:                   i.APIServerReplicas,
 		ControllerReplicas:                  i.ControllerReplicas,
 		ControllerServiceAccountAnnotations: annotations,
-	})
+	}
+
+	if i.Dev != "" {
+		return i.dev(cmd.Context(), i.Dev, opts)
+	}
+
+	return install.Install(cmd.Context(), image, opts)
 }

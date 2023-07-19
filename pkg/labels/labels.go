@@ -63,6 +63,11 @@ const (
 	IdentityPrefix                = "identity." + Prefix
 	AcornIdentityAccountServerURL = IdentityPrefix + "account-server-url"
 
+	DevPrefix         = "dev." + Prefix
+	DevTTL            = DevPrefix + "ttl-seconds"
+	DevCredentialName = DevPrefix + "credential-name"
+	DevImageName      = DevPrefix + "image-name"
+
 	PrometheusScrape = "prometheus.io/scrape"
 	PrometheusPath   = "prometheus.io/path"
 	PrometheusPort   = "prometheus.io/port"

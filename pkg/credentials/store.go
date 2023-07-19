@@ -12,6 +12,7 @@ import (
 	"github.com/docker/cli/cli/config/credentials"
 	"github.com/docker/cli/cli/config/types"
 	credentials3 "github.com/docker/docker-credential-helpers/credentials"
+	"github.com/google/go-containerregistry/pkg/authn"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -41,6 +42,33 @@ func normalize(cred apiv1.Credential) apiv1.Credential {
 	return cred
 }
 
+type registryAddress string
+
+func (r registryAddress) String() string {
+	return string(r)
+}
+
+func (r registryAddress) RegistryStr() string {
+	return string(r)
+}
+
+func (s *Store) getFromDocker(serverAddress string) (*apiv1.RegistryAuth, bool, error) {
+	a, err := authn.DefaultKeychain.Resolve((registryAddress)(serverAddress))
+	if err != nil {
+		return nil, false, nil
+	}
+	cfg, err := a.Authorization()
+	if err != nil {
+		return nil, false, nil
+	} else if cfg.Password == "" {
+		return nil, false, nil
+	}
+	return &apiv1.RegistryAuth{
+		Username: cfg.Username,
+		Password: cfg.Password,
+	}, true, nil
+}
+
 func (s *Store) Get(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error) {
 	serverAddress = imagesystem.NormalizeServerAddress(serverAddress)
 	store, err := s.getStore(serverAddress)
@@ -49,11 +77,11 @@ func (s *Store) Get(ctx context.Context, serverAddress string) (*apiv1.RegistryA
 	}
 	auth, err := store.Get(serverAddress)
 	if IsErrCredentialsNotFound(err) {
-		return nil, false, nil
+		return s.getFromDocker(serverAddress)
 	} else if err != nil {
 		return nil, false, err
 	} else if auth.Password == "" {
-		return nil, false, nil
+		return s.getFromDocker(serverAddress)
 	}
 	return &apiv1.RegistryAuth{
 		Username: auth.Username,

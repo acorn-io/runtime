@@ -32,6 +32,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/rancher/wrangler/pkg/yaml"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -96,6 +97,21 @@ func validMailAddress(address string) bool {
 	return err == nil
 }
 
+func getDevImageOverride(ctx context.Context, c kclient.Client, image string) (string, error) {
+	var cm corev1.ConfigMap
+	err := c.Get(ctx, router.Key(system.Namespace, system.DevConfigName), &cm)
+	if err == nil {
+		devImage := cm.Annotations[labels2.DevImageName]
+		if devImage != "" {
+			logrus.Warnf("Overriding image %s with %s from dev config", image, devImage)
+			return devImage, nil
+		}
+	} else if apierror.IsNotFound(err) {
+		return image, nil
+	}
+	return image, err
+}
+
 func Install(ctx context.Context, image string, opts *Options) error {
 	// I don't want these errors on the screen. Probably a better way to do this.
 	klog.SetOutput(io.Discard)
@@ -103,6 +119,11 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	utilruntime.ErrorHandlers = nil
 
 	c, err := k8sclient.Default()
+	if err != nil {
+		return err
+	}
+
+	image, err = getDevImageOverride(ctx, c, image)
 	if err != nil {
 		return err
 	}

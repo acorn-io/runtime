@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	"github.com/acorn-io/z"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -15,6 +17,20 @@ func toEntry(username, password string) entry {
 	return entry{
 		Auth: base64.StdEncoding.EncodeToString([]byte(username + ":" + password)),
 	}
+}
+
+func FromCredential(cred *apiv1.Credential) (*corev1.Secret, error) {
+	secret, err := FromCredentialData(map[string][]byte{
+		"serverAddress": []byte(cred.ServerAddress),
+		"username":      []byte(cred.Username),
+		"password":      []byte(z.Dereference(cred.Password)),
+	})
+	if err != nil {
+		return nil, err
+	}
+	secret.Name = cred.Name
+	secret.Namespace = cred.Namespace
+	return secret, nil
 }
 
 func FromCredentialData(data map[string][]byte) (*corev1.Secret, error) {
