@@ -44,11 +44,11 @@ func (s *Server) Start() {
 // ListenAndServe is used to setup handlers and
 // start listening on the specified location
 func (s *Server) ListenAndServe() error {
-	logrus.Infof("Listening on %s", s.SocketLocation)
 	server := http.Server{}
 	http.HandleFunc("/v1/loglevel", s.loglevel)
 	socketListener, err := net.Listen("unix", s.SocketLocation)
 	if err != nil {
+		logrus.Errorf("Failed to start logserver: %v", err)
 		return err
 	}
 	return server.Serve(socketListener)
