@@ -56,17 +56,23 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if !a.AllTags {
+		if _, err := c.ImageGet(cmd.Context(), args[0]); err == nil {
+			return a.copyLocalToRemote(cmd, c, args, creds)
+		}
+	}
+
 	source, err := name.ParseReference(args[0])
 	if err != nil {
 		return err
 	}
 
-	dest, err := name.ParseReference(args[1])
+	sourceAuth, _, err := creds.Get(cmd.Context(), source.Context().RegistryStr())
 	if err != nil {
 		return err
 	}
 
-	sourceAuth, _, err := creds.Get(cmd.Context(), source.Context().RegistryStr())
+	dest, err := name.ParseReference(args[1])
 	if err != nil {
 		return err
 	}
@@ -81,6 +87,29 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) error {
 		Force:      a.Force,
 		SourceAuth: sourceAuth,
 		DestAuth:   destAuth,
+	})
+	if err != nil {
+		return err
+	}
+
+	return progressbar.Print(progress)
+
+}
+
+func (a *ImageCopy) copyLocalToRemote(cmd *cobra.Command, c client.Client, args []string, creds *credentials.Store) error {
+	dest, err := name.ParseReference(args[1])
+	if err != nil {
+		return err
+	}
+
+	destAuth, _, err := creds.Get(cmd.Context(), dest.Context().RegistryStr())
+	if err != nil {
+		return err
+	}
+
+	progress, err := c.ImageCopy(cmd.Context(), args[0], args[1], &client.ImageCopyOptions{
+		Force:    a.Force,
+		DestAuth: destAuth,
 	})
 	if err != nil {
 		return err
