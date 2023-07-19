@@ -93,7 +93,6 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return progressbar.Print(progress)
-
 }
 
 func (a *ImageCopy) copyLocalToRemote(cmd *cobra.Command, c client.Client, args []string, creds *credentials.Store) error {
