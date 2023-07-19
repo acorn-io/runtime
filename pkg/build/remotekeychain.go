@@ -1,8 +1,10 @@
 package build
 
 import (
+	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/buildclient"
@@ -20,29 +22,50 @@ type RemoteKeyChain struct {
 	next     authn.Keychain
 }
 
-func NewRemoteKeyChain(messages buildclient.Messages, next authn.Keychain) *RemoteKeyChain {
+func NewRemoteKeyChain(ctx context.Context, messages buildclient.Messages, next authn.Keychain) *RemoteKeyChain {
 	keychain := &RemoteKeyChain{
 		messages: messages,
 		next:     next,
 		cond:     sync.NewCond(&sync.Mutex{}),
 	}
-	go keychain.run()
+	go keychain.run(ctx)
 	return keychain
 }
 
-func (r *RemoteKeyChain) run() {
+func (r *RemoteKeyChain) run(ctx context.Context) {
 	msgs, cancel := r.messages.Recv()
-	defer cancel()
-
-	for msg := range msgs {
-		if msg.RegistryServerAddress != "" {
-			r.cond.L.Lock()
-			if r.creds == nil {
-				r.creds = map[string]*apiv1.RegistryAuth{}
+	// Ensure we broadcast to wake up any waiting goroutines
+	defer func() {
+		cancel()
+		go func() {
+			for range msgs {
 			}
-			r.creds[msg.RegistryServerAddress] = msg.RegistryAuth
-			r.cond.Broadcast()
-			r.cond.L.Unlock()
+		}()
+		r.cond.L.Lock()
+		r.cond.Broadcast()
+		r.cond.L.Unlock()
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			logrus.Debugf("context cancelled, closing messages channel")
+			return
+		case msg, ok := <-msgs:
+			if !ok {
+				logrus.Debugf("channel closed, done...")
+				return
+			}
+
+			if msg.RegistryServerAddress != "" {
+				r.cond.L.Lock()
+				if r.creds == nil {
+					r.creds = map[string]*apiv1.RegistryAuth{}
+				}
+				r.creds[msg.RegistryServerAddress] = msg.RegistryAuth
+				r.cond.Broadcast()
+				r.cond.L.Unlock()
+			}
 		}
 	}
 }
@@ -74,8 +97,23 @@ func (r *RemoteKeyChain) Resolve(resource authn.Resource) (authenticator authn.A
 		}
 	}
 
-	sent := false
+	var (
+		sent    bool
+		moveOn  = make(chan struct{})
+		timeout = time.AfterFunc(15*time.Second, func() {
+			logrus.Debugf("timed out waiting for credentials for %s", resource.RegistryStr())
+			r.cond.L.Lock()
+			// Close the moveOn channel so the below for loop will break
+			close(moveOn)
+			r.cond.Broadcast()
+			r.cond.L.Unlock()
+		})
+	)
+	defer timeout.Stop()
+
+outer:
 	for {
+		logrus.Debugf("checking for credentials for %s", resource.RegistryStr())
 		if _, ok := r.creds[resource.RegistryStr()]; ok {
 			break
 		}
@@ -90,6 +128,14 @@ func (r *RemoteKeyChain) Resolve(resource authn.Resource) (authenticator authn.A
 			sent = true
 		}
 
+		select {
+		case <-moveOn:
+			break outer
+		default:
+		}
+
+		// This blocks until we are told to wake up.
+		logrus.Debugf("waiting for credentials for %s", resource.RegistryStr())
 		r.cond.Wait()
 	}
 
