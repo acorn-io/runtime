@@ -660,6 +660,21 @@ func (mr *MockClientMockRecorder) ImageTag(arg0, arg1, arg2 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageTag", reflect.TypeOf((*MockClient)(nil).ImageTag), arg0, arg1, arg2)
 }
 
+// ImageVerify mocks base method.
+func (m *MockClient) ImageVerify(arg0 context.Context, arg1 string, arg2 *client.ImageVerifyOptions) (*v1.ImageSignature, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImageVerify", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.ImageSignature)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImageVerify indicates an expected call of ImageVerify.
+func (mr *MockClientMockRecorder) ImageVerify(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageVerify", reflect.TypeOf((*MockClient)(nil).ImageVerify), arg0, arg1, arg2)
+}
+
 // Info mocks base method.
 func (m *MockClient) Info(arg0 context.Context) ([]v1.Info, error) {
 	m.ctrl.T.Helper()

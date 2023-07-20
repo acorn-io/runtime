@@ -3825,15 +3825,16 @@ func schema_pkg_apis_apiacornio_v1_ImageSignature(ref common.ReferenceCallback) 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"publicKey": {
+					"publicKeys": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
-							Format: "byte",
+							Format: "",
 						},
 					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+							Description: "either reference or PEM",
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
 						},
 					},
 					"payload": {
@@ -3854,11 +3855,17 @@ func schema_pkg_apis_apiacornio_v1_ImageSignature(ref common.ReferenceCallback) 
 							Format: "",
 						},
 					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 

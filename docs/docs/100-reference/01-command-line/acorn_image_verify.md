@@ -28,7 +28,7 @@ acorn image verify my-image --key ac://ibuildthecloud
 ```
   -a, --annotation strings   Annotations to check for in the signature
   -h, --help                 help for verify
-  -k, --key string           Key to use for verifying (default "./cosign.pub")
+  -k, --key string           Key to use for verifying
 ```
 
 ### Options inherited from parent commands

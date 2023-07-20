@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
-	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
@@ -37,7 +38,7 @@ acorn image verify my-image --key ac://ibuildthecloud
 
 type ImageVerify struct {
 	client      ClientFactory
-	Key         string            `usage:"Key to use for verifying" short:"k" local:"true" default:"./cosign.pub"`
+	Key         string            `usage:"Key to use for verifying" short:"k" local:"true"`
 	Annotations map[string]string `usage:"Annotations to check for in the signature" short:"a" local:"true" name:"annotation"`
 }
 
@@ -46,29 +47,30 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("key is required")
 	}
 
-	targetName := args[0]
+	imageName := args[0]
 
 	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
-	ref, err := name.ParseReference(targetName)
-	if err != nil {
-		return err
-	}
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return err
-	}
 
-	creds, err := credentials.NewStore(cfg, c)
-	if err != nil {
-		return err
-	}
+	var auth *apiv1.RegistryAuth
+	ref, err := name.ParseReference(imageName)
+	if err == nil { // not failing here, since it could be a local image
+		cfg, err := config.ReadCLIConfig()
+		if err != nil {
+			return err
+		}
 
-	auth, _, err := creds.Get(cmd.Context(), ref.Context().RegistryStr())
-	if err != nil {
-		return err
+		creds, err := credentials.NewStore(cfg, c)
+		if err != nil {
+			return err
+		}
+
+		auth, _, err = creds.Get(cmd.Context(), ref.Context().RegistryStr())
+		if err != nil {
+			return err
+		}
 	}
 
 	details, err := c.ImageDetails(cmd.Context(), args[0], &client.ImageDetailsOptions{
@@ -80,37 +82,40 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
-	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
+	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", imageName, targetDigest, a.Key)
 
-	annotationRules := internalv1.SignatureAnnotations{
-		Match: a.Annotations,
+	vOpts := &client.ImageVerifyOptions{
+		Annotations: a.Annotations,
+		PublicKey:   a.Key,
 	}
 
-	cc, err := c.GetClient()
-	if err != nil {
-		return err
+	// load public key from file (if it is a file, not a remote reference)
+	if _, err := os.Stat(a.Key); err == nil {
+		keyFileBytes, err := os.ReadFile(a.Key)
+		if err != nil {
+			return err
+		}
+
+		verifiers, err := acornsign.LoadVerifiers(cmd.Context(), string(keyFileBytes), "sha256")
+		if err != nil {
+			return err
+		}
+
+		pubkey, err := verifiers[0].PublicKey()
+		if err != nil {
+			return err
+		}
+		pem, _, err := acornsign.PemEncodeCryptoPublicKey(pubkey)
+		if err != nil {
+			return err
+		}
+		vOpts.PublicKey = string(pem)
 	}
 
-	verifyOpts := &acornsign.VerifyOpts{
-		AnnotationRules:    annotationRules,
-		SignatureAlgorithm: "sha256",
-		Key:                a.Key,
-		NoCache:            true,
-	}
-	if err := verifyOpts.WithRemoteOpts(cmd.Context(), cc, c.GetNamespace()); err != nil {
-		pterm.Debug.Printf("Error getting remote opts: %v\n", err)
-		pterm.Warning.Println("Unable to get remote opts for registry authentication, trying without.")
+	_, err = c.ImageVerify(cmd.Context(), imageName, vOpts)
+	if err == nil {
+		pterm.Success.Println("Signature verified")
 	}
 
-	if err := acornsign.EnsureReferences(cmd.Context(), cc, targetDigest.String(), verifyOpts); err != nil {
-		return err
-	}
-
-	if err := acornsign.VerifySignature(cmd.Context(), *verifyOpts); err != nil {
-		return err
-	}
-
-	pterm.Success.Println("Signature verified")
-
-	return nil
+	return err
 }

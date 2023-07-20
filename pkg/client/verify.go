@@ -2,16 +2,24 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 )
 
-func (c *DefaultClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error) {
+func (c *DefaultClient) ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error) {
 	sigInput := &apiv1.ImageSignature{
-		Payload:      payload,
-		SignatureB64: signatureB64,
-		PublicKey:    opts.PublicKey,
+		PublicKey: opts.PublicKey,
+	}
+
+	if opts.PublicKey == "" {
+		return nil, fmt.Errorf("public key required for verification")
+	}
+
+	sigInput.Annotations = internalv1.SignatureAnnotations{
+		Match: opts.Annotations,
 	}
 
 	imageDetails, err := c.ImageDetails(ctx, image, &ImageDetailsOptions{})
@@ -26,7 +34,7 @@ func (c *DefaultClient) ImageSign(ctx context.Context, image string, payload []b
 		Namespace(c.Namespace).
 		Resource("images").
 		Name(image).
-		SubResource("sign").
+		SubResource("verify").
 		Body(sigInput).Do(ctx).Into(sigResult)
 
 	return sigResult, err

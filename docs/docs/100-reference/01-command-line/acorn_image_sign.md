@@ -20,7 +20,7 @@ acorn image sign my-image --key ./my-key
 ```
   -a, --annotation strings   Annotations to add to the signature
   -h, --help                 help for sign
-  -k, --key string           Key to use for signing (default "./cosign.key")
+  -k, --key string           Key to use for signing
 ```
 
 ### Options inherited from parent commands

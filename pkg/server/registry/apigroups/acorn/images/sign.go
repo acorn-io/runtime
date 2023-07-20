@@ -2,7 +2,6 @@ package images
 
 import (
 	"context"
-	"crypto"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,14 +11,13 @@ import (
 	"github.com/acorn-io/mink/pkg/validator"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	"github.com/acorn-io/runtime/pkg/imagedetails"
 	"github.com/acorn-io/runtime/pkg/images"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	cremote "github.com/sigstore/cosign/v2/pkg/cosign/remote"
 	"github.com/sigstore/cosign/v2/pkg/oci/mutate"
 	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/sigstore/cosign/v2/pkg/oci/static"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -52,18 +50,10 @@ func (t *ImageSignStrategy) Create(ctx context.Context, obj types.Object) (types
 		}
 	}
 	ns, _ := request.NamespaceFrom(ctx)
-	opts := []remote.Option{t.transportOpt}
-	if isig.Auth != nil {
-		imageName := strings.ReplaceAll(isig.Name, "+", "/")
-		ref, err := name.ParseReference(imageName)
-		if err == nil {
-			opts = append(opts, remote.WithAuthFromKeychain(images.NewSimpleKeychain(ref.Context(), *isig.Auth, nil)))
-		}
-	}
 
 	isig.Name = strings.ReplaceAll(isig.Name, "+", "/")
 
-	isig.SignatureDigest, err = t.ImageSign(ctx, ns, *isig, opts...)
+	isig.SignatureDigest, err = t.ImageSign(ctx, ns, *isig)
 	if err != nil {
 		return nil, err
 	}
@@ -75,29 +65,31 @@ func (t *ImageSignStrategy) New() types.Object {
 	return &apiv1.ImageSignature{}
 }
 
-func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, signature apiv1.ImageSignature, remoteOpts ...remote.Option) (string, error) {
-	imageDetails, err := imagedetails.GetImageDetails(ctx, t.client, namespace, signature.Name, nil, nil, "", false, remoteOpts...)
+func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, signature apiv1.ImageSignature) (string, error) {
+	ref, err := images.GetImageReference(ctx, t.client, namespace, signature.Name)
 	if err != nil {
 		return "", err
 	}
 
-	targetName := imageDetails.Name
+	remoteOpts, err := images.GetAuthenticationRemoteOptionsWithLocalAuth(ctx, ref.Context(), signature.Auth, t.client, namespace, t.transportOpt)
+	if err != nil {
+		return "", err
+	}
 
 	var mutateOpts []mutate.SignOption
 
-	if signature.PublicKey != nil {
-		verifier, err := acornsign.DecodePEM(signature.PublicKey, crypto.SHA256)
+	if signature.PublicKey != "" {
+		verifiers, err := acornsign.LoadVerifiers(ctx, signature.PublicKey, "sha256")
 		if err != nil {
 			return "", err
 		}
-		dupeDetector := cremote.NewDupeDetector(verifier)
+		if len(verifiers) != 1 {
+			return "", fmt.Errorf("expected exactly one verifier from public key %s, got %d", signature.PublicKey, len(verifiers))
+		}
+
+		dupeDetector := cremote.NewDupeDetector(verifiers[0])
 
 		mutateOpts = append(mutateOpts, mutate.WithDupeDetector(dupeDetector))
-	}
-
-	ref, err := images.GetImageReference(ctx, t.client, namespace, targetName)
-	if err != nil {
-		return "", err
 	}
 
 	ociEntity, err := ociremote.SignedEntity(ref, ociremote.WithRemoteOptions(remoteOpts...))
@@ -124,6 +116,8 @@ func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, sig
 	if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity, ociremote.WithRemoteOptions(remoteOpts...)); err != nil {
 		return "", err
 	}
+
+	logrus.Debugf("Wrote signature %s to %s", sigOCIDigest, targetRepo.Name())
 
 	return sigOCIDigest.String(), nil
 }

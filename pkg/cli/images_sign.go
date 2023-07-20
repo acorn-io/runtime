@@ -37,7 +37,7 @@ func NewImageSign(c CommandContext) *cobra.Command {
 
 type ImageSign struct {
 	client      ClientFactory
-	Key         string            `usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
+	Key         string            `usage:"Key to use for signing" short:"k" local:"true"`
 	Annotations map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true" name:"annotation"`
 }
 
@@ -131,8 +131,13 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	pem, _, err := acornsign.PemEncodeCryptoPublicKey(pubkey)
+	if err != nil {
+		return err
+	}
+
 	if pubkey != nil {
-		imageSignOpts.PublicKey = &pubkey
+		imageSignOpts.PublicKey = string(pem)
 	}
 
 	sig, err := c.ImageSign(cmd.Context(), targetName, payload, signatureB64, imageSignOpts)

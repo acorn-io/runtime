@@ -13,11 +13,12 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/sigstore/sigstore/pkg/cryptoutils"
 	"golang.org/x/crypto/ssh"
 )
 
 var (
-	supportedKeyTypes = map[string]struct{}{
+	supportedSSHKeyAlgos = map[string]struct{}{
 		ssh.KeyAlgoRSA:      {},
 		ssh.KeyAlgoED25519:  {},
 		ssh.KeyAlgoECDSA256: {},
@@ -29,36 +30,9 @@ var (
 )
 
 func PemEncodeCryptoPublicKey(pubKey crypto.PublicKey) ([]byte, string, error) {
-	var encoded []byte
-	var b []byte
-	var err error
-	switch pubKey := pubKey.(type) {
-	case *rsa.PublicKey:
-		b = x509.MarshalPKCS1PublicKey(pubKey)
-		encoded = pem.EncodeToMemory(&pem.Block{
-			Type:  "RSA PUBLIC KEY",
-			Bytes: b,
-		})
-	case ed25519.PublicKey:
-		b, err = x509.MarshalPKIXPublicKey(pubKey)
-		if err != nil {
-			return nil, "", err
-		}
-		encoded = pem.EncodeToMemory(&pem.Block{
-			Type:  "ED25519 PUBLIC KEY",
-			Bytes: b,
-		})
-	case *ecdsa.PublicKey:
-		b, err = x509.MarshalPKIXPublicKey(pubKey)
-		if err != nil {
-			return nil, "", err
-		}
-		encoded = pem.EncodeToMemory(&pem.Block{
-			Type:  "ECDSA PUBLIC KEY",
-			Bytes: b,
-		})
-	default:
-		return nil, "", fmt.Errorf("unsupported key type %T", pubKey)
+	encoded, err := cryptoutils.MarshalPublicKeyToPEM(pubKey)
+	if err != nil {
+		return nil, "", err
 	}
 
 	hash := sha256.Sum256(encoded)
@@ -84,9 +58,53 @@ func ParseSSHPublicKey(keystr string) (crypto.PublicKey, error) {
 		return nil, err
 	}
 
-	if _, ok := supportedKeyTypes[parsedKey.Type()]; !ok {
+	if _, ok := supportedSSHKeyAlgos[parsedKey.Type()]; !ok {
 		return nil, fmt.Errorf("Unsupported key type '%s'", parsedKey.Type())
 	}
 
 	return parsedKey.(ssh.CryptoPublicKey).CryptoPublicKey(), nil
+}
+
+// UnmarshalPEMToPublicKey converts a PEM-encoded byte slice into a crypto.PublicKey
+func UnmarshalPEMToPublicKey(pemBytes []byte) (crypto.PublicKey, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, fmt.Errorf("PEM decoding failed")
+	}
+
+	switch block.Type {
+	case "RSA PUBLIC KEY":
+		return x509.ParsePKCS1PublicKey(block.Bytes)
+	case "ECDSA PUBLIC KEY":
+		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		if ecdsaPub, ok := pub.(*ecdsa.PublicKey); ok {
+			return ecdsaPub, nil
+		}
+	case "PUBLIC KEY":
+		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		switch key := pub.(type) {
+		case *rsa.PublicKey:
+			return key, nil
+		case *ecdsa.PublicKey:
+			return key, nil
+		case ed25519.PublicKey:
+			return key, nil
+		}
+	case "ED25519 PUBLIC KEY":
+		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		if ed25519Pub, ok := pub.(ed25519.PublicKey); ok {
+			return ed25519Pub, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unsupported public key type or format")
 }

@@ -713,6 +713,10 @@ func (m *MockClient) ImageSign(ctx context.Context, image string, payload []byte
 	}, nil
 }
 
+func (m *MockClient) ImageVerify(ctx context.Context, image string, opts *client.ImageVerifyOptions) (*apiv1.ImageSignature, error) {
+	return nil, nil
+}
+
 func (m *MockClient) BuilderCreate(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }
 
 func (m *MockClient) BuilderGet(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }

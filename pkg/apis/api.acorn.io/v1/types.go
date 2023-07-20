@@ -1,6 +1,7 @@
 package v1
 
 import (
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,8 +15,8 @@ type App struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Spec   v1.AppInstanceSpec   `json:"spec,omitempty"`
-	Status v1.AppInstanceStatus `json:"status,omitempty"`
+	Spec   internalv1.AppInstanceSpec   `json:"spec,omitempty"`
+	Status internalv1.AppInstanceStatus `json:"status,omitempty"`
 }
 
 func (in *App) GetStopped() bool {
@@ -29,7 +30,7 @@ func (in *App) GetRegion() string {
 	return in.Status.Defaults.Region
 }
 
-type Acornfile v1.AppSpec
+type Acornfile internalv1.AppSpec
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -61,7 +62,7 @@ type ContainerReplicaList struct {
 // not pick up the UnmarshalJSON method from v1.Container.  Otherwise the
 // type embedding v1.Container automatically inherits UnmarshalJSON and breaks
 // the unmarshalling
-type EmbeddedContainer v1.Container
+type EmbeddedContainer internalv1.Container
 
 type ContainerReplicaSpec struct {
 	EmbeddedContainer `json:",inline"`
@@ -215,19 +216,19 @@ type ImageDetails struct {
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Input Params
-	NestedDigest string        `json:"nestedDigest,omitempty"`
-	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
-	Profiles     []string      `json:"profiles,omitempty"`
-	Auth         *RegistryAuth `json:"auth,omitempty"`
+	NestedDigest string                `json:"nestedDigest,omitempty"`
+	DeployArgs   internalv1.GenericMap `json:"deployArgs,omitempty"`
+	Profiles     []string              `json:"profiles,omitempty"`
+	Auth         *RegistryAuth         `json:"auth,omitempty"`
 	// NoDefaultRegistry - if true, do not assume a default registry on the image if none is specified
 	NoDefaultRegistry bool `json:"noDefaultRegistry,omitempty"`
 
 	// Output Params
-	AppImage        v1.AppImage   `json:"appImage,omitempty"`
-	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params          *v1.ParamSpec `json:"params,omitempty"`
-	SignatureDigest string        `json:"signatureDigest,omitempty"`
-	ParseError      string        `json:"parseError,omitempty"`
+	AppImage        internalv1.AppImage   `json:"appImage,omitempty"`
+	AppSpec         *internalv1.AppSpec   `json:"appSpec,omitempty"`
+	Params          *internalv1.ParamSpec `json:"params,omitempty"`
+	SignatureDigest string                `json:"signatureDigest,omitempty"`
+	ParseError      string                `json:"parseError,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -254,16 +255,17 @@ type ImageSignature struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	PublicKey       []byte        `json:"publicKey,omitempty"`
-	Auth            *RegistryAuth `json:"auth,omitempty"`
-	Payload         []byte        `json:"payload,omitempty"`
-	SignatureB64    string        `json:"signature,omitempty"`
-	SignatureDigest string        `json:"signatureDigest,omitempty"`
+	PublicKey       string                          `json:"publicKeys,omitempty"` // either reference or PEM
+	Auth            *RegistryAuth                   `json:"auth,omitempty"`
+	Payload         []byte                          `json:"payload,omitempty"`
+	SignatureB64    string                          `json:"signature,omitempty"`
+	SignatureDigest string                          `json:"signatureDigest,omitempty"`
+	Annotations     internalv1.SignatureAnnotations `json:"annotations,omitempty"`
 }
 
 type VolumeCreateOptions struct {
-	AccessModes []v1.AccessMode `json:"accessModes,omitempty"`
-	Class       string          `json:"class,omitempty"`
+	AccessModes []internalv1.AccessMode `json:"accessModes,omitempty"`
+	Class       string                  `json:"class,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -285,10 +287,10 @@ type VolumeList struct {
 }
 
 type VolumeSpec struct {
-	Capacity    *resource.Quantity `json:"capacity,omitempty"`
-	AccessModes []v1.AccessMode    `json:"accessModes,omitempty"`
-	Class       string             `json:"class,omitempty"`
-	Region      string             `json:"region,omitempty"`
+	Capacity    *resource.Quantity      `json:"capacity,omitempty"`
+	AccessModes []internalv1.AccessMode `json:"accessModes,omitempty"`
+	Class       string                  `json:"class,omitempty"`
+	Region      string                  `json:"region,omitempty"`
 }
 
 type VolumeStatus struct {
@@ -498,7 +500,7 @@ type InfoList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Project v1.ProjectInstance
+type Project internalv1.ProjectInstance
 
 func (p *Project) NamespaceScoped() bool {
 	return false
@@ -514,7 +516,7 @@ type ProjectList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Builder v1.BuilderInstance
+type Builder internalv1.BuilderInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -526,7 +528,7 @@ type BuilderList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type AcornImageBuild v1.AcornImageBuildInstance
+type AcornImageBuild internalv1.AcornImageBuildInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -550,7 +552,7 @@ type VolumeClassList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Service v1.ServiceInstance
+type Service internalv1.ServiceInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -562,7 +564,7 @@ type ServiceList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ImageAllowRule v1.ImageAllowRuleInstance
+type ImageAllowRule internalv1.ImageAllowRuleInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

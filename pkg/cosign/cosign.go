@@ -22,7 +22,6 @@ import (
 	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/sigstore/cosign/v2/pkg/oci/static"
 	cosignature "github.com/sigstore/cosign/v2/pkg/signature"
-	"github.com/sigstore/sigstore/pkg/cryptoutils"
 	"github.com/sigstore/sigstore/pkg/signature"
 	"github.com/sigstore/sigstore/pkg/signature/payload"
 	"github.com/sirupsen/logrus"
@@ -251,8 +250,9 @@ func verifySignature(ctx context.Context, sigs oci.Signatures, imgDigestHash ggc
 
 func DecodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, error) {
 	// PEM encoded file.
-	pubKey, err := cryptoutils.UnmarshalPEMToPublicKey(raw)
+	pubKey, err := UnmarshalPEMToPublicKey(raw)
 	if err != nil {
+		logrus.Infof("error unmarshaling PEM: %v", string(raw))
 		return nil, fmt.Errorf("pem to public key: %w", err)
 	}
 
