@@ -3,9 +3,9 @@ package images
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/router"
@@ -86,14 +86,7 @@ func (i *ImagePull) Connect(ctx context.Context, id string, options runtime.Obje
 		}
 
 		for update := range progress {
-			p := ImageProgress{
-				Total:    update.Total,
-				Complete: update.Complete,
-			}
-			if update.Error != nil {
-				p.Error = update.Error.Error()
-			}
-			data, err := json.Marshal(p)
+			data, err := json.Marshal(update)
 			if err != nil {
 				panic("failed to marshal update: " + err.Error())
 			}
@@ -125,7 +118,7 @@ func findSignatureImage(imageDigest name.Digest, opts ...remote.Option) (name.Ta
 	return tag, img, err
 }
 
-func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ggcrv1.Update, error) {
+func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ImageProgress, error) {
 	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, namespace, imageName)
 	if err != nil {
 		return nil, err
@@ -174,40 +167,73 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		}
 	}
 
-	progress := make(chan ggcrv1.Update)
-	// progress gets closed by remote.WriteIndex so this second channel is so that
-	// we can control closing the result channel in case we need to write an error
-	progress2 := make(chan ggcrv1.Update)
-	opts = append(opts, remote.WithProgress(progress))
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	type updates struct {
+		updateChan chan ggcrv1.Update
+		sourceName string
+		destTag    name.Tag
+	}
+
+	// metachannel is used to send updates to another channel for each index to be copied
+	metachannel := make(chan updates)
+
+	// progress is the channel returned by this function and used to write websocket messages to the client
+	progress := make(chan ImageProgress)
 
 	go func() {
-		defer wg.Done()
-		for update := range progress {
-			progress2 <- update
+		defer close(progress)
+		for c := range metachannel {
+			for update := range c.updateChan {
+				var errString string
+				if update.Error != nil {
+					errString = update.Error.Error()
+				}
+				progress <- ImageProgress{
+					Total:       update.Total,
+					Complete:    update.Complete,
+					Error:       errString,
+					CurrentTask: fmt.Sprintf("Pulling %s %s ", c.sourceName, c.destTag.String()),
+				}
+			}
 		}
 	}()
 
+	// Copy the image and signature
 	go func() {
-		defer func() {
-			wg.Wait()
-			close(progress2)
-		}()
+		defer close(metachannel)
+		imageProgress := make(chan ggcrv1.Update)
+		metachannel <- updates{
+			updateChan: imageProgress,
+			sourceName: "image",
+			destTag:    pullTag.Context().Tag(pullTag.Identifier()),
+		}
 
-		// don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex()
-		if err = remote.WriteIndex(repo.Digest(hash.Hex), index, opts...); err == nil {
+		// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex().
+		// remote.WriteIndex will also close the currProgress channel on its own.
+		if err := remote.WriteIndex(repo.Digest(hash.Hex), index, append(opts, remote.WithProgress(imageProgress))...); err == nil {
 			if err := i.recordImage(ctx, hash, namespace, imageName, recordRepo); err != nil {
-				progress2 <- ggcrv1.Update{
+				imageProgress <- ggcrv1.Update{
 					Error: err,
 				}
 			}
 		} else {
-			handleWriteIndexError(err, progress)
+			handleWriteIndexError(err, imageProgress)
+		}
+
+		if sig != nil {
+			signatureProgress := make(chan ggcrv1.Update)
+			logrus.Infof("Pulling signature %s", sigTag.String())
+			metachannel <- updates{
+				updateChan: signatureProgress,
+				sourceName: "signature",
+				destTag:    sigTag,
+			}
+			if err := remote.Write(repo.Tag(sigTag.TagStr()), sig, append(opts, remote.WithProgress(signatureProgress))...); err != nil {
+				handleWriteIndexError(err, signatureProgress)
+			}
 		}
 	}()
 
-	return typed.Every(500*time.Millisecond, progress2), nil
+	return typed.Every(500*time.Millisecond, progress), nil
 }
 
 func (i *ImagePull) recordImage(ctx context.Context, hash ggcrv1.Hash, namespace, imageName, recordRepo string) error {
