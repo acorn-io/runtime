@@ -1619,7 +1619,7 @@ func TestEnforcedQuota(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, quotaRequest.Spec.Resources.Containers, 1)
+	assert.Equal(t, quotaRequest.Spec.Resources.Counts[adminv1.Containers], 1)
 
 	// Update the status of the QuotaRequest to communicate readiness.
 	quotaRequest.Status = adminv1.QuotaRequestInstanceStatus{

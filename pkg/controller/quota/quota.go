@@ -74,18 +74,24 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	// Create the quota request object and give calculate the standard numeric values
+	// Create the quota request object and calculate the standard numeric values
 	name, namespace, app := appInstance.Name, appInstance.Namespace, appInstance.Status.AppSpec
 	quotaRequest := &adminv1.QuotaRequestInstance{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
-		Spec: adminv1.QuotaRequestInstanceSpec{
-			Resources: adminv1.Resources{
-				Containers: len(app.Containers),
-				Jobs:       len(app.Jobs),
-				Volumes:    len(app.Volumes),
-				Images:     len(app.Images),
-			},
-		},
+		Spec:       adminv1.QuotaRequestInstanceSpec{Resources: adminv1.Resources{}},
+	}
+
+	// Instatiate the quota request's maps to prevent nil pointer errors
+	quotaRequest.Spec.Resources = adminv1.NewResources()
+
+	if containers := len(app.Containers); containers > 0 {
+		quotaRequest.Spec.Resources.Counts[adminv1.Containers] = containers
+	}
+	if jobs := len(app.Jobs); jobs > 0 {
+		quotaRequest.Spec.Resources.Counts[adminv1.Jobs] = jobs
+	}
+	if images := len(app.Images); images > 0 {
+		quotaRequest.Spec.Resources.Counts[adminv1.Images] = images
 	}
 
 	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuotaAllocated)
@@ -113,8 +119,13 @@ func addCompute(containers map[string]apiv1.Container, appInstance *apiv1.AppIns
 			requirements = all.Requirements
 		}
 
-		quotaRequest.Spec.Resources.CPU.Add(requirements.Requests["cpu"])
-		quotaRequest.Spec.Resources.Memory.Add(requirements.Requests["memory"])
+		cpu := quotaRequest.Spec.Resources.Quantities[adminv1.CPU]
+		cpu.Add(requirements.Requests["cpu"])
+		quotaRequest.Spec.Resources.Quantities[adminv1.CPU] = cpu
+
+		memory := quotaRequest.Spec.Resources.Quantities[adminv1.Memory]
+		memory.Add(requirements.Requests["memory"])
+		quotaRequest.Spec.Resources.Quantities[adminv1.Memory] = memory
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.
 		addCompute(container.Sidecars, appInstance, quotaRequest)
@@ -142,7 +153,9 @@ func addStorage(appInstance *apiv1.AppInstance, quotaRequest *adminv1.QuotaReque
 		if err != nil {
 			return err
 		}
-		quotaRequest.Spec.Resources.VolumeStorage.Add(parsedSize)
+		volumeStorage := quotaRequest.Spec.Resources.Quantities[adminv1.VolumeStorage]
+		volumeStorage.Add(parsedSize)
+		quotaRequest.Spec.Resources.PersistentCounts[adminv1.Volumes] += 1
 	}
 
 	// Add the secrets needed to the quota request. We only parse net new secrets, not
@@ -151,7 +164,7 @@ func addStorage(appInstance *apiv1.AppInstance, quotaRequest *adminv1.QuotaReque
 		if boundSecret(name, appInstance.Spec.Secrets) {
 			continue
 		}
-		quotaRequest.Spec.Resources.Secrets += 1
+		quotaRequest.Spec.Resources.PersistentCounts[adminv1.Secrets] += 1
 	}
 	return nil
 }
