@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -213,9 +214,20 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 		New: func() (client.Client, error) {
 			url := cfg.ProjectURLs[server+"/"+account]
 			if url == "" {
-				url, err = manager.ProjectURL(ctx, server, account, cred.Password)
-				if err != nil {
-					return nil, err
+				loginRetry := true
+				for {
+					url, err = manager.ProjectURL(ctx, server, account, cred.Password)
+					if loginRetry && errors.Is(err, manager.ErrForbidden) {
+						cred.Username, cred.Password, err = manager.Login(ctx, cfg, "", server)
+						if err != nil {
+							return nil, err
+						}
+						loginRetry = false
+						continue
+					} else if err != nil {
+						return nil, err
+					}
+					break
 				}
 			}
 			return client.New(&rest.Config{

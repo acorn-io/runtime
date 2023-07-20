@@ -6,11 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 
+	"github.com/acorn-io/runtime/pkg/version"
 	"github.com/sirupsen/logrus"
 )
 
-var ErrTokenNotFound = fmt.Errorf("token not found")
+var (
+	ErrTokenNotFound = fmt.Errorf("token not found")
+	ErrForbidden     = fmt.Errorf("forbidden")
+
+	userAgent = fmt.Sprintf("acorn/%s (%s; %s)", version.Get().String(), runtime.GOOS, runtime.GOARCH)
+)
 
 type tokenRequest struct {
 	Spec   tokenRequestSpec   `json:"spec,omitempty"`
@@ -46,11 +53,10 @@ type accountStatus struct {
 
 func httpDelete(ctx context.Context, url, token string) {
 	logrus.Debugf("Delete %s", url)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	req, err := newRequest(url, http.MethodDelete, token)
 	if err != nil {
 		return
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
@@ -61,13 +67,9 @@ func httpDelete(ctx context.Context, url, token string) {
 
 func httpGet(ctx context.Context, url, token string, into interface{}) error {
 	logrus.Debugf("Looking up %s", url)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := newRequest(url, http.MethodGet, token)
 	if err != nil {
 		return err
-	}
-
-	if token != "" {
-		req.Header.Add("Authorization", "Bearer "+token)
 	}
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
@@ -81,6 +83,8 @@ func httpGet(ctx context.Context, url, token string, into interface{}) error {
 		break
 	case http.StatusNotFound:
 		return fmt.Errorf("%w: %v", ErrTokenNotFound, resp.StatusCode)
+	case http.StatusForbidden:
+		return ErrForbidden
 	default:
 		return fmt.Errorf("invalid status code: %v", resp.StatusCode)
 	}
@@ -93,4 +97,18 @@ func httpGet(ctx context.Context, url, token string, into interface{}) error {
 	logrus.Debugf("Response code: %v. Response body: %s", resp.StatusCode, body)
 
 	return json.Unmarshal(body, into)
+}
+
+func newRequest(url, method, token string) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	}
+	req.Header.Add("User-Agent", userAgent)
+
+	return req, nil
 }

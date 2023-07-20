@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/randomtoken"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/pkg/browser"
 	"github.com/sirupsen/logrus"
@@ -77,7 +79,7 @@ func ProjectURL(ctx context.Context, serverAddress, accountName, token string) (
 	return obj.Status.EndpointURL, nil
 }
 
-func Login(ctx context.Context, password, address string) (user string, pass string, err error) {
+func Login(ctx context.Context, cfg *config.CLIConfig, password, address string) (user string, pass string, err error) {
 	passwordIsSpecified := password != ""
 	if !passwordIsSpecified {
 		password, err = randomtoken.Generate()
@@ -106,7 +108,9 @@ func Login(ctx context.Context, password, address string) (user string, pass str
 			}
 			if tokenRequest.Status.Token != "" {
 				httpDelete(ctx, tokenRequestURL, tokenRequest.Status.Token)
-				return tokenRequest.Spec.AccountName, tokenRequest.Status.Token, nil
+				user = tokenRequest.Spec.AccountName
+				pass = tokenRequest.Status.Token
+				break
 			} else {
 				logrus.Debugf("tokenRequest.Status.Token is empty")
 			}
@@ -122,9 +126,31 @@ func Login(ctx context.Context, password, address string) (user string, pass str
 			return "", "", ctx.Err()
 		}
 	}
+
+	store, err := credentials.NewStore(cfg, nil)
+	if err != nil {
+		return user, pass, err
+	}
+
+	if err = store.Add(ctx, apiv1.Credential{
+		ServerAddress: address,
+		Username:      user,
+		Password:      &pass,
+		LocalStorage:  true,
+	}, true); err != nil {
+		return user, pass, err
+	}
+
+	// reload config, could have changed
+	if newCfg, err := config.ReadCLIConfig(false); err != nil {
+		return user, pass, err
+	} else {
+		*cfg = *newCfg
+	}
+	return user, pass, nil
 }
 
-func DefaultProject(ctx context.Context, address, user, token string) (string, error) {
+func DefaultProject(ctx context.Context, address, token string) (string, error) {
 	projects, err := Projects(ctx, address, token)
 	if err != nil {
 		return "", err

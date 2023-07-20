@@ -96,52 +96,39 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if isManager {
-		user, pass, err := manager.Login(cmd.Context(), a.Password, serverAddress)
+	if !isManager {
+		if err = survey.Ask(q, a); err != nil {
+			return err
+		}
+
+		if !a.LocalStorage {
+			client, err = a.client.CreateDefault()
+			if err != nil {
+				return err
+			}
+		}
+
+		store, err := credentials.NewStore(cfg, client)
 		if err != nil {
 			return err
 		}
-		a.Username = user
-		a.Password = pass
-		a.LocalStorage = true
-		a.SkipChecks = true
+
+		if err = store.Add(cmd.Context(), apiv1.Credential{
+			ServerAddress: serverAddress,
+			Username:      a.Username,
+			Password:      &a.Password,
+			LocalStorage:  a.LocalStorage,
+		}, a.SkipChecks); err != nil {
+			return err
+		}
 	} else {
-		if err := survey.Ask(q, a); err != nil {
-			return err
-		}
-	}
-
-	if !a.LocalStorage {
-		client, err = a.client.CreateDefault()
-		if err != nil {
-			return err
-		}
-	}
-
-	store, err := credentials.NewStore(cfg, client)
-	if err != nil {
-		return err
-	}
-
-	err = store.Add(cmd.Context(), apiv1.Credential{
-		ServerAddress: serverAddress,
-		Username:      a.Username,
-		Password:      &a.Password,
-		LocalStorage:  a.LocalStorage,
-	}, a.SkipChecks)
-	if err != nil {
-		return err
-	}
-
-	if isManager {
-		// reload config, could have changed
-		cfg, err = a.client.Options().CLIConfig()
+		a.Username, a.Password, err = manager.Login(cmd.Context(), cfg, a.Password, serverAddress)
 		if err != nil {
 			return err
 		}
 
 		var projectSet bool
-		def, err := manager.DefaultProject(cmd.Context(), serverAddress, a.Username, a.Password)
+		def, err := manager.DefaultProject(cmd.Context(), serverAddress, a.Password)
 		if err != nil {
 			return err
 		}
