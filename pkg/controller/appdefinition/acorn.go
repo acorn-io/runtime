@@ -127,10 +127,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Namespace: appInstance.Namespace,
 			Labels:    labelMap,
 			Annotations: labels.Merge(appInstanceScoped(acornName, appInstance.Status.AppSpec.Annotations, appInstance.Spec.Annotations, acorn.Annotations),
-				map[string]string{
-					labels.AcornOriginalImage: acorn.GetOriginalImage(),
-					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
-				}),
+				map[string]string{labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10)}),
 		},
 		Spec: v1.AppInstanceSpec{
 			Region:              appInstance.GetRegion(),
@@ -151,6 +148,12 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			AutoUpgradeInterval: acorn.AutoUpgradeInterval,
 			NotifyUpgrade:       acorn.NotifyUpgrade,
 		},
+	}
+
+	// Only set the original image annotation if auto-upgrade is off. Setting the original image annotation
+	// on auto-upgrade apps will cause the pattern to be shown to the user instead of the actual image, which is bad.
+	if _, on := autoupgrade.Mode(acornInstance.Spec); !on {
+		acornInstance.Annotations[labels.AcornOriginalImage] = acorn.GetOriginalImage()
 	}
 
 	return acornInstance

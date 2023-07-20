@@ -55,7 +55,6 @@ kind: AppInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
-    acorn.io/original-image: foo
     myAnnotation: myValue
   creationTimestamp: null
   labels:
