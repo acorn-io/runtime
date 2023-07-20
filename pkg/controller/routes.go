@@ -6,6 +6,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/runtime/pkg/controller/appdefinition"
 	"github.com/acorn-io/runtime/pkg/controller/appstatus"
@@ -82,6 +83,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appMeetsPreconditions.HandlerFunc(networkpolicy.ForApp)
 	appMeetsPreconditions.HandlerFunc(appdefinition.AddAcornProjectLabel)
 	appMeetsPreconditions.HandlerFunc(appdefinition.UpdateObservedFields)
+	appMeetsPreconditions.Middleware(autoupgrade.AutoUpgradeOn).HandlerFunc(autoupgrade.SetOriginalImageAnnotation)
 
 	appRouter.HandlerFunc(appstatus.CLIStatus)
 
