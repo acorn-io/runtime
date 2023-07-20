@@ -150,8 +150,8 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 		},
 	}
 
-	// Only set the original image annotation if auto-upgrade is off.
-	// There is a separate route that handles it for auto-upgrade apps.
+	// Only set the original image annotation if auto-upgrade is off. Setting the original image annotation
+	// on auto-upgrade apps will cause the pattern to be shown to the user instead of the actual image, which is bad.
 	if _, on := autoupgrade.Mode(acornInstance.Spec); !on {
 		acornInstance.Annotations[labels.AcornOriginalImage] = acorn.GetOriginalImage()
 	}
