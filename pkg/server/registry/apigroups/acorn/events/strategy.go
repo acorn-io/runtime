@@ -51,8 +51,8 @@ func (s *eventStrategy) Watch(ctx context.Context, namespace string, opts storag
 	go func() {
 		defer close(result)
 
-		if err := q.filterChannel(ctx, events, result); !channels.NilOrCanceled(err) {
-			logrus.Warnf("error forwarding events: [%v]", err)
+		if err := q.filterChannel(ctx, events, result); !channels.NilOrCanceled(err) && !errors.Is(err, context.DeadlineExceeded) {
+			logrus.WithError(err).Warn("error forwarding events")
 		}
 	}()
 
