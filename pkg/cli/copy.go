@@ -58,7 +58,7 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) error {
 
 	if !a.AllTags {
 		// Check if the source argument matches the name of a local image, and use it if it does.
-		// If there is an error, ignore it and move on, assuming the argument is a remote image name.
+		// If there is an error, ignore it and move on, treating the argument as a remote image name.
 		if _, err := c.ImageGet(cmd.Context(), args[0]); err == nil {
 			return a.copyLocalToRemote(cmd, c, args, creds)
 		}
