@@ -32,3 +32,4 @@ apiVersion: internal.admin.acorn.io/v1
 kind: ClusterVolumeClassInstance
 metadata:
   name: custom-class
+storageClassName: foo
