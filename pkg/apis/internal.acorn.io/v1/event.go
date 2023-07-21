@@ -79,6 +79,16 @@ func NowMicro() MicroTime {
 	return NewMicroTime(time.Now())
 }
 
+// OpenAPISchemaType is used by the kube-openapi generator when constructing
+// the OpenAPI spec of this type.
+//
+// See: https://github.com/kubernetes/kube-openapi/tree/master/pkg/generators
+func (_ MicroTime) OpenAPISchemaType() []string { return []string{"string"} }
+
+// OpenAPISchemaFormat is used by the kube-openapi generator when constructing
+// the OpenAPI spec of this type.
+func (_ MicroTime) OpenAPISchemaFormat() string { return "date-time" }
+
 // DeepCopyInto returns a deep-copy of the MicroTime value.  The underlying time.Time
 // type is effectively immutable in the time API, so it is safe to
 // copy-by-assign, despite the presence of (unexported) Pointer fields.
@@ -108,6 +118,16 @@ func (t *MicroTime) UnmarshalJSON(b []byte) error {
 
 	t.Time = pt.Local()
 	return nil
+}
+
+// MarshalJSON implements the json.Marshaler interface.
+func (t MicroTime) MarshalJSON() ([]byte, error) {
+	if t.IsZero() {
+		// Encode unset/nil objects as JSON's "null".
+		return []byte("null"), nil
+	}
+
+	return json.Marshal(t.UTC().Format(metav1.RFC3339Micro))
 }
 
 const (
