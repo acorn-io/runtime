@@ -155,6 +155,7 @@ func addStorage(appInstance *apiv1.AppInstance, quotaRequest *adminv1.QuotaReque
 		}
 		volumeStorage := quotaRequest.Spec.Resources.Quantities[adminv1.VolumeStorage]
 		volumeStorage.Add(parsedSize)
+		quotaRequest.Spec.Resources.Quantities[adminv1.VolumeStorage] = volumeStorage
 		quotaRequest.Spec.Resources.PersistentCounts[adminv1.Volumes] += 1
 	}
 

@@ -68,9 +68,6 @@ func NewResources() Resources {
 // Add will add the resources of another Resources struct into the current one.
 func (current *Resources) Add(incoming Resources) {
 	// Add the incoming resources to the current ones
-	for flag, value := range incoming.Flags {
-		current.Flags[flag] = value
-	}
 	for count, value := range incoming.Counts {
 		current.Counts[count] += value
 	}

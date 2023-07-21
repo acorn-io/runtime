@@ -54,6 +54,19 @@ func TestAdd(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "does not change flags",
+			current: Resources{},
+			incoming: Resources{
+				Flags:      Flags{Unlimited: true},
+				Counts:     Counts{Apps: 1},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
+			},
+			expected: Resources{
+				Counts:     Counts{Apps: 1},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
+			},
+		},
 	}
 
 	// Run the test cases
@@ -109,6 +122,18 @@ func TestRemove(t *testing.T) {
 			},
 			all:      true,
 			expected: Resources{},
+		},
+		{
+			name: "does not remove persistent counts without all",
+			current: Resources{
+				PersistentCounts: PersistentCounts{Secrets: 1},
+			},
+			incoming: Resources{
+				PersistentCounts: PersistentCounts{Secrets: 1},
+			},
+			expected: Resources{
+				PersistentCounts: PersistentCounts{Secrets: 1},
+			},
 		},
 	}
 
@@ -242,10 +267,7 @@ func TestFits(t *testing.T) {
 	// Run the test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			current := NewResources()
-			current.Add(tc.current)
-
-			err := current.Fits(tc.incoming)
+			err := tc.current.Fits(tc.incoming)
 			if !errors.Is(err, tc.expectedErr) {
 				t.Errorf("expected %v, got %v", tc.expectedErr, err)
 			}
