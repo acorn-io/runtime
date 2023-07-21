@@ -25,9 +25,25 @@ func VCS(path string) (result v1.VCS) {
 		return
 	}
 
+	var (
+		modified, untracked bool
+	)
+	for _, status := range s {
+		if status.Worktree == git.Untracked {
+			untracked = true
+			continue
+		}
+		if status.Worktree != git.Unmodified || status.Staging != git.Unmodified {
+			modified = true
+			continue
+		}
+	}
+
 	result = v1.VCS{
-		Revision: head.Hash().String(),
-		Modified: !s.IsClean(),
+		Revision:  head.Hash().String(),
+		Clean:     !modified && !untracked,
+		Modified:  modified,
+		Untracked: untracked,
 	}
 
 	// Set optional remotes field

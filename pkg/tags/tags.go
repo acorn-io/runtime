@@ -16,6 +16,7 @@ import (
 var (
 	SHAPermissivePrefixPattern = regexp.MustCompile(`^[a-f\d]{3,64}$`)
 	SHAPattern                 = regexp.MustCompile(`^[a-f\d]{64}$`)
+	CommitPattern              = regexp.MustCompile(`^[a-f\d]{40}$`)
 	DigestPattern              = regexp.MustCompile(`^sha256:[a-f\d]{64}$`)
 	// Can't use the NoDefaultRegistry const from the images packages without causing a dependency cycle
 	noDefaultRegistry = "xxx-no-reg"

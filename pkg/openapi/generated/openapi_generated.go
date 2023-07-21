@@ -10883,10 +10883,25 @@ func schema_pkg_apis_internalacornio_v1_VCS(ref common.ReferenceCallback) common
 							Format: "",
 						},
 					},
+					"clean": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Clean a true value indicates the build contained no modified or untracked files according to git",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"modified": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Modified a true value indicates the build contained modified files according to git",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"untracked": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Untracked a true value indicates the build contained untracked files according to git",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 				},
