@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/acorn-io/z"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -26,7 +25,7 @@ type (
 	Flags            map[Flag]bool
 	Counts           map[Count]int
 	PersistentCounts map[PersistentCount]int
-	Quantities       map[Quantity]*resource.Quantity
+	Quantities       map[Quantity]resource.Quantity
 )
 
 var (
@@ -77,7 +76,8 @@ func (current *Resources) Add(incoming Resources) {
 	}
 	for quantity, value := range incoming.Quantities {
 		q := current.Quantities[quantity]
-		q.Add(z.Dereference(value))
+		q.Add(value)
+		current.Quantities[quantity] = q
 	}
 	for persistentCount, value := range incoming.PersistentCounts {
 		current.PersistentCounts[persistentCount] += value
@@ -104,7 +104,8 @@ func (current *Resources) Remove(incoming Resources, all bool) {
 
 	for quantity, value := range incoming.Quantities {
 		q := current.Quantities[quantity]
-		q.Sub(z.Dereference(value))
+		q.Sub(value)
+		current.Quantities[quantity] = q
 	}
 
 	// Don't proceed if persistent counts are not being removed
@@ -143,7 +144,7 @@ func (current *Resources) Fits(incoming Resources) error {
 		}
 	}
 	for quantity, value := range incoming.Quantities {
-		if q := current.Quantities[quantity]; q.Cmp(z.Dereference(value)) < 0 {
+		if q := current.Quantities[quantity]; q.Cmp(value) < 0 {
 			exceededResources = append(exceededResources, string(quantity))
 		}
 	}

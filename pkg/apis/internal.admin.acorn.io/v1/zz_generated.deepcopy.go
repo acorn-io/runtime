@@ -386,10 +386,7 @@ func (in Quantities) DeepCopyInto(out *Quantities) {
 		in := &in
 		*out = make(Quantities, len(*in))
 		for key, val := range *in {
-			{
-				x := val.DeepCopy()
-				(*out)[key] = &x
-			}
+			(*out)[key] = val.DeepCopy()
 		}
 	}
 }
@@ -535,10 +532,7 @@ func (in *Resources) DeepCopyInto(out *Resources) {
 		in, out := &in.Quantities, &out.Quantities
 		*out = make(Quantities, len(*in))
 		for key, val := range *in {
-			{
-				x := val.DeepCopy()
-				(*out)[key] = &x
-			}
+			(*out)[key] = val.DeepCopy()
 		}
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/acorn-io/z"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -21,18 +20,18 @@ func TestAdd(t *testing.T) {
 			current: Resources{},
 			incoming: Resources{
 				Counts:     Counts{Apps: 1},
-				Quantities: Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			expected: Resources{
 				Counts:     Counts{Apps: 1},
-				Quantities: Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 		},
 		{
 			name: "add to existing resources",
 			current: Resources{
 				Counts:     Counts{Apps: 1},
-				Quantities: Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts: Counts{
@@ -40,8 +39,8 @@ func TestAdd(t *testing.T) {
 					Images: 1,
 				},
 				Quantities: Quantities{
-					VolumeStorage: z.Pointer(resource.MustParse("1Mi")),
-					CPU:           z.Pointer(resource.MustParse("20m")),
+					VolumeStorage: resource.MustParse("1Mi"),
+					CPU:           resource.MustParse("20m"),
 				},
 			},
 			expected: Resources{
@@ -50,8 +49,8 @@ func TestAdd(t *testing.T) {
 					Images: 1,
 				},
 				Quantities: Quantities{
-					VolumeStorage: z.Pointer(resource.MustParse("2Mi")),
-					CPU:           z.Pointer(resource.MustParse("20m")),
+					VolumeStorage: resource.MustParse("2Mi"),
+					CPU:           resource.MustParse("20m"),
 				},
 			},
 		},
@@ -84,7 +83,7 @@ func TestRemove(t *testing.T) {
 			current: Resources{},
 			incoming: Resources{
 				Counts:     Counts{Apps: 1},
-				Quantities: Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			expected: Resources{},
 		},
@@ -92,11 +91,11 @@ func TestRemove(t *testing.T) {
 			name: "remove from existing resources",
 			current: Resources{
 				Counts:     Counts{Apps: 1},
-				Quantities: Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts:     Counts{Apps: 1},
-				Quantities: Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities: Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			expected: Resources{},
 		},
@@ -145,12 +144,12 @@ func TestEquals(t *testing.T) {
 			current: Resources{
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			expected: true,
 		},
@@ -159,12 +158,12 @@ func TestEquals(t *testing.T) {
 			current: Resources{
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts:           Counts{Apps: 2},
 				PersistentCounts: PersistentCounts{Secrets: 2},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			expected: false,
 		},
@@ -201,12 +200,12 @@ func TestFits(t *testing.T) {
 			current: Resources{
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 		},
 
@@ -215,12 +214,12 @@ func TestFits(t *testing.T) {
 			current: Resources{
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts:           Counts{Apps: 2},
 				PersistentCounts: PersistentCounts{Secrets: 2},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			expectedErr: ErrDoesNotFit,
 		},
@@ -230,12 +229,12 @@ func TestFits(t *testing.T) {
 				Flags:            Flags{Unlimited: true},
 				Counts:           Counts{Apps: 1},
 				PersistentCounts: PersistentCounts{Secrets: 1},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("1Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("1Mi")},
 			},
 			incoming: Resources{
 				Counts:           Counts{Apps: 2},
 				PersistentCounts: PersistentCounts{Secrets: 2},
-				Quantities:       Quantities{VolumeStorage: z.Pointer(resource.MustParse("2Mi"))},
+				Quantities:       Quantities{VolumeStorage: resource.MustParse("2Mi")},
 			},
 		},
 	}
