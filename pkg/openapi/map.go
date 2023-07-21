@@ -10,7 +10,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 	result := generated.GetOpenAPIDefinitions(ref)
 	for _, v := range result {
 		for name := range v.Schema.SchemaProps.Properties {
-			if name == "deployArgs" || name == "buildArgs" || name == "params" {
+			if name == "deployArgs" || name == "buildArgs" || name == "params" || name == "details" {
 				v.Schema.SchemaProps.Properties[name] = spec.Schema{
 					VendorExtensible: spec.VendorExtensible{
 						Extensions: spec.Extensions{
