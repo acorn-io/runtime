@@ -9,7 +9,7 @@ import (
 
 func NewStop(c CommandContext) *cobra.Command {
 	return cli.Command(&Stop{client: c.ClientFactory}, cobra.Command{
-		Use: "stop [flags] [APP_NAME...]",
+		Use: "stop [flags] [ACORN_NAME...]",
 		Example: `
 acorn stop my-app
 

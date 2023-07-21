@@ -74,7 +74,7 @@ var (
 
 	Container = [][]string{
 		{"Name", "{{ . | name }}"},
-		{"App", "Status.Columns.App"},
+		{"Acorn", "Status.Columns.App"},
 		{"Image", "Spec.Image"},
 		{"State", "Status.Columns.State"},
 		{"RestartCount", "Status.RestartCount"},

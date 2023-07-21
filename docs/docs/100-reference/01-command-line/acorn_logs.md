@@ -6,7 +6,7 @@ title: "acorn logs"
 Log all workloads from an app
 
 ```
-acorn logs [flags] [APP_NAME|CONTAINER_REPLICA_NAME]
+acorn logs [flags] [ACORN_NAME|CONTAINER_REPLICA_NAME]
 ```
 
 ### Options

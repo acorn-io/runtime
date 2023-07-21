@@ -11,7 +11,7 @@ import (
 
 func NewPs(c CommandContext) *cobra.Command {
 	return cli.Command(&Ps{client: c.ClientFactory}, cobra.Command{
-		Use:     "ps [flags] [APP_NAME...]",
+		Use:     "ps [flags] [ACORN_NAME...]",
 		Aliases: []string{"app", "apps", "a"},
 		Example: `
 acorn ps`,

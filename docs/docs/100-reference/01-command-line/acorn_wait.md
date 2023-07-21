@@ -6,7 +6,7 @@ title: "acorn wait"
 Wait an app to be ready then exit with status code 0
 
 ```
-acorn wait [flags] APP_NAME
+acorn wait [flags] ACORN_NAME
 ```
 
 ### Options

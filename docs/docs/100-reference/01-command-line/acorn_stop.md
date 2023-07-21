@@ -6,7 +6,7 @@ title: "acorn stop"
 Stop an app
 
 ```
-acorn stop [flags] [APP_NAME...]
+acorn stop [flags] [ACORN_NAME...]
 ```
 
 ### Examples

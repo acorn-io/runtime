@@ -9,7 +9,7 @@ import (
 
 func NewStart(c CommandContext) *cobra.Command {
 	return cli.Command(&Start{client: c.ClientFactory}, cobra.Command{
-		Use: "start [flags] [APP_NAME...]",
+		Use: "start [flags] [ACORN_NAME...]",
 		Example: `
 acorn start my-app
 

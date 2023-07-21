@@ -18,7 +18,7 @@ import (
 func NewExec(c CommandContext) *cobra.Command {
 	exec := &Exec{client: c.ClientFactory}
 	cmd := cli.Command(exec, cobra.Command{
-		Use:               "exec [flags] APP_NAME|CONTAINER_NAME CMD",
+		Use:               "exec [flags] ACORN_NAME|CONTAINER_NAME CMD",
 		SilenceUsage:      true,
 		Short:             "Run a command in a container",
 		Long:              "Run a command in a container",

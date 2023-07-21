@@ -8,7 +8,7 @@ import (
 
 func NewWait(c CommandContext) *cobra.Command {
 	return cli.Command(&Wait{client: c.ClientFactory}, cobra.Command{
-		Use:               "wait [flags] APP_NAME",
+		Use:               "wait [flags] ACORN_NAME",
 		SilenceUsage:      true,
 		Short:             "Wait an app to be ready then exit with status code 0",
 		Args:              cobra.ExactArgs(1),

@@ -12,7 +12,7 @@ import (
 func NewLogs(c CommandContext) *cobra.Command {
 	logs := &Logs{client: c.ClientFactory}
 	return cli.Command(logs, cobra.Command{
-		Use:               "logs [flags] [APP_NAME|CONTAINER_REPLICA_NAME]",
+		Use:               "logs [flags] [ACORN_NAME|CONTAINER_REPLICA_NAME]",
 		SilenceUsage:      true,
 		Short:             "Log all workloads from an app",
 		Args:              cobra.MaximumNArgs(1),

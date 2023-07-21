@@ -3,28 +3,29 @@ title: "acorn rm"
 ---
 ## acorn rm
 
-Delete an app, container, secret or volume
+Delete an acorn, optionally with it's associated secrets and volumes
 
 ```
-acorn rm [flags] APP_NAME [APP_NAME...]
+acorn rm [flags] ACORN_NAME [ACORN_NAME...]
 ```
 
 ### Examples
 
 ```
 
-acorn rm APP_NAME
-acorn rm -t volume,container APP_NAME
+acorn rm ACORN_NAME
+acorn rm --volumes --secrets ACORN_NAME
 ```
 
 ### Options
 
 ```
-  -a, --all              Delete all types
-  -f, --force            Force Delete
+  -a, --all              Delete all associated resources (volumes, secrets)
+  -f, --force            Do not prompt for delete
   -h, --help             help for rm
-      --ignore-cleanup   Ignore delete jobs
-  -t, --type strings     Delete by type (container,app,volume,secret or c,a,v,s)
+      --ignore-cleanup   Delete acorns without running delete jobs
+  -s, --secrets          Delete acorn and associated secrets
+  -v, --volumes          Delete acorn and associated volumes
 ```
 
 ### Options inherited from parent commands

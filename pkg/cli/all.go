@@ -29,7 +29,7 @@ type All struct {
 func (a *All) Run(cmd *cobra.Command, args []string) error {
 	if !a.Quiet {
 		fmt.Println("")
-		fmt.Println("APPS:")
+		fmt.Println("ACORNS:")
 	}
 	ps := &Ps{
 		Quiet:  a.Quiet,

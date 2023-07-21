@@ -6,7 +6,7 @@ title: "acorn start"
 Start an app
 
 ```
-acorn start [flags] [APP_NAME...]
+acorn start [flags] [ACORN_NAME...]
 ```
 
 ### Examples
