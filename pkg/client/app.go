@@ -242,13 +242,8 @@ func translateErr(err error) error {
 		return err
 	}
 
-	if e := translatePermissions(err); e != nil {
-		return e
-	}
-
-	if e := TranslateNotAllowed(err); e != nil {
-		return e
-	}
+	err = translatePermissions(err)
+	err = TranslateNotAllowed(err)
 
 	return err
 }
@@ -261,7 +256,7 @@ func TranslateNotAllowed(err error) error {
 		return &imageallowrules.ErrImageNotAllowed{} // we could actually extract the full error (including) image here, but that's probably not required
 	}
 
-	return nil
+	return err
 }
 
 func translatePermissions(err error) error {
