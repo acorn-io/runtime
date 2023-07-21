@@ -52,7 +52,7 @@ func waitForApp(ctx context.Context, c client.Client, app *apiv1.App) (*apiv1.Ap
 			return true, nil
 		}
 		for name, job := range app.Status.AppStatus.Jobs {
-			if !job.Ready && job.RunningCount == 0 && job.ErrorCount > 0 && len(job.ErrorMessages) > 0 {
+			if !job.Ready && job.RunningCount == 0 && job.ErrorCount > 2 && len(job.ErrorMessages) > 0 {
 				return false, fmt.Errorf("job %s failed: %s", name, job.ErrorMessages)
 			}
 		}
