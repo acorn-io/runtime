@@ -86,6 +86,6 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		Params:          details.Params,
 		AppSpec:         details.AppSpec,
 		AppImage:        *appImage,
-		SignatureDigest: sigHash.String(),
+		SignatureDigest: strings.Trim(sigHash.String(), ":"), // trim to avoid having just ':' as the digest
 	}, nil
 }

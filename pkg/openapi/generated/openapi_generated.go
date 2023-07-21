@@ -3825,22 +3825,31 @@ func schema_pkg_apis_apiacornio_v1_ImageSignature(ref common.ReferenceCallback) 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"publicKeys": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"auth": {
 						SchemaProps: spec.SchemaProps{
-							Description: "either reference or PEM",
+							Description: "Input Params - Generic",
 							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
+					"publicKeys": {
+						SchemaProps: spec.SchemaProps{
+							Description: "- Verification / Deduplication",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Description: "either reference or PEM encoded key",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
 						},
 					},
 					"payload": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "byte",
+							Description: "- Signing",
+							Type:        []string{"string"},
+							Format:      "byte",
 						},
 					},
 					"signature": {
@@ -3851,14 +3860,9 @@ func schema_pkg_apis_apiacornio_v1_ImageSignature(ref common.ReferenceCallback) 
 					},
 					"signatureDigest": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"annotations": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
+							Description: "Output",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},

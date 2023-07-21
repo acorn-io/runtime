@@ -93,7 +93,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	// Get a sigSigner-verifier from a private key and if the key type is not supported, try to import it first
 	var sigSigner sigsig.SignerVerifier
-	sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf) // TODO(iwilltry42): use our own style password prompt
+	sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf)
 	if err != nil {
 		if !strings.Contains(err.Error(), "unsupported pem type") {
 			return err
