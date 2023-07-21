@@ -16,7 +16,12 @@ type AppImage struct {
 type VCS struct {
 	Remotes  []string `json:"remotes,omitempty"`
 	Revision string   `json:"revision,omitempty"`
-	Modified bool     `json:"modified,omitempty"`
+	// Clean a true value indicates the build contained no modified or untracked files according to git
+	Clean bool `json:"clean,omitempty"`
+	// Modified a true value indicates the build contained modified files according to git
+	Modified bool `json:"modified,omitempty"`
+	// Untracked a true value indicates the build contained untracked files according to git
+	Untracked bool `json:"untracked,omitempty"`
 }
 
 type Platform struct {

@@ -42,7 +42,7 @@ var (
 		"defaultMemory": DefaultMemory,
 		"ownerName":     OwnerReferenceName,
 		"imageName":     ImageName,
-		"imageDigest":   ImageDigest,
+		"imageCommit":   ImageCommit,
 	}
 )
 
@@ -60,6 +60,9 @@ func Noop(obj any) string {
 
 func Trunc(s string) string {
 	if tags.SHAPattern.MatchString(s) && len(s) > 12 {
+		return s[:12]
+	}
+	if tags.CommitPattern.MatchString(s) && len(s) > 12 {
 		return s[:12]
 	}
 	return s
@@ -302,17 +305,22 @@ func ImageName(obj metav1.Object) string {
 		return ""
 	}
 
-	if original, exists := app.ObjectMeta.Annotations[labels.AcornOriginalImage]; exists {
-		return original
+	suffix := ""
+	if app.Status.ObservedAutoUpgrade {
+		suffix = "*"
 	}
-	return app.Status.AppImage.Name
+
+	if original, exists := app.ObjectMeta.Annotations[labels.AcornOriginalImage]; exists {
+		return original + suffix
+	}
+	return app.Status.AppImage.Name + suffix
 }
 
-func ImageDigest(obj metav1.Object) string {
+func ImageCommit(obj metav1.Object) string {
 	app, ok := obj.(*apiv1.App)
 	if !ok {
 		return ""
 	}
 
-	return strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:")
+	return app.Status.AppImage.VCS.Revision
 }

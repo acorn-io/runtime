@@ -1,6 +1,6 @@
 
 ACORNS:
-NAME      IMAGE     DIGEST    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE
+NAME      IMAGE     COMMIT    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE
 found                                                292y ago               
 
 CONTAINERS:
