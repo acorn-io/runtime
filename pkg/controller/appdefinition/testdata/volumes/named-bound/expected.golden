@@ -112,6 +112,7 @@ spec:
   resources:
     requests:
       storage: 5M
+  storageClassName: ""
   volumeName: existing-foo
 status: {}
 

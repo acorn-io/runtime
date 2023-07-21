@@ -26,3 +26,9 @@ spec:
     type: DirectoryOrCreate
 status:
   phase: Released
+
+---
+apiVersion: internal.admin.acorn.io/v1
+kind: ClusterVolumeClassInstance
+metadata:
+  name: custom-class
