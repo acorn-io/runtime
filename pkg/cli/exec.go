@@ -84,7 +84,7 @@ func filterContainers(containerName string, containers []apiv1.ContainerReplica)
 	for _, c := range containers {
 		if containerName == "" {
 			result = append(result, c)
-		} else if c.Spec.ContainerName == containerName {
+		} else if c.Spec.ContainerName == containerName || c.Spec.JobName == containerName || c.Spec.SidecarName == containerName {
 			result = append(result, c)
 			break
 		} else if c.Name == containerName {
