@@ -205,7 +205,7 @@ func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client)
 }
 
 func GetCreds(c client.Client) (client.CredentialLookup, error) {
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := config.ReadCLIConfig(false)
 	if err != nil {
 		return nil, err
 	}

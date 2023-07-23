@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 )
 
@@ -24,12 +25,10 @@ type Options struct {
 	Kubeconfig  string
 	ContextEnv  string
 	AllProjects bool
-	CLIConfig   *config.CLIConfig
 }
 
-func (o Options) WithCLIConfig(cfg *config.CLIConfig) Options {
-	o.CLIConfig = cfg
-	return o
+func (o Options) CLIConfig() (*config.CLIConfig, error) {
+	return config.ReadCLIConfig(o.Kubeconfig != "")
 }
 
 func Client(ctx context.Context, opts Options) (client.Client, error) {
@@ -37,17 +36,9 @@ func Client(ctx context.Context, opts Options) (client.Client, error) {
 }
 
 func lookup(ctx context.Context, opts Options) (client.Client, error) {
-	var (
-		cfg = opts.CLIConfig
-		err error
-	)
-
-	if cfg == nil {
-		cfg, err = config.ReadCLIConfig()
-		if err != nil {
-			return nil, err
-		}
-		opts.CLIConfig = cfg
+	cfg, err := opts.CLIConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	projects, err := getDesiredProjects(ctx, cfg, opts)
@@ -116,40 +107,59 @@ func clientFromFile(kubeconfig string, ns string, context string) (client.Client
 	return client.New(cfg, ns, ns)
 }
 
-func ParseProject(project string, kubeconfigs map[string]string) (serverOrKubeconfig, account, namespace string, isKubeconfig bool, err error) {
+func RenderProjectName(project string, defaultContext string) string {
+	defaultServer, defaultAccount, hasDefaultContext := strings.Cut(defaultContext, "/")
+	if !hasDefaultContext {
+		defaultServer = config.LocalServer
+		defaultAccount = ""
+	}
+
+	for _, prefix := range []string{defaultServer + "/" + defaultAccount + "/", defaultServer + "/"} {
+		if strings.HasPrefix(project, prefix) {
+			return strings.TrimPrefix(project, prefix)
+		}
+	}
+
+	return project
+}
+
+func ParseProject(project string, defaultContext string) (server, account, namespace string, isKubeconfig bool, err error) {
+	defaultServer, defaultAccount, hasDefaultContext := strings.Cut(defaultContext, "/")
+	if !hasDefaultContext {
+		if defaultContext != "" && defaultContext != config.LocalServer {
+			logrus.Errorf("Invalid default context set in the CLI config [%s], assuming to [%s/]", defaultContext, config.LocalServer)
+		}
+		defaultServer = config.LocalServer
+		defaultAccount = ""
+	}
+
 	parts := strings.Split(project, "/")
-	if len(parts) == 0 || len(parts) > 3 {
-		return "", "", "", false, fmt.Errorf("invalid project name [%s]: must contain zero, one or two slashes [/]", project)
+	if len(parts) < 3 {
+		switch len(parts) {
+		case 1:
+			parts = []string{defaultServer, defaultAccount, parts[0]}
+		case 2:
+			if parts[0] == config.LocalServer {
+				parts = []string{config.LocalServer, "", parts[1]}
+			} else {
+				parts = []string{defaultServer, parts[0], parts[1]}
+			}
+		}
+	} else if len(parts) != 3 {
+		return "", "", "", false, fmt.Errorf("invalid project name [%s]: can not contain more that two \"/\"", project)
 	}
-	switch len(parts) {
-	case 1:
-		if strings.Contains(parts[0], ".") {
-			return "", "", "", false, fmt.Errorf("invalid project name [%s]: can not contain \".\"", project)
-		}
-		if strings.Contains(parts[0], ":") {
-			return "", "", "", false, fmt.Errorf("invalid project name [%s]: can not contain \":\"", project)
-		}
-		return "", "", parts[0], true, nil
-	case 2:
-		if strings.Contains(parts[0], ".") {
-			return "", "", "", false, fmt.Errorf("invalid project name [%s]: part before / can not contain \".\" unless there are three parts (ex: acorn.io/account/name)", project)
-		}
-		if strings.Contains(parts[0], ":") {
-			return "", "", "", false, fmt.Errorf("invalid project name [%s]: part before / can not contain \":\" unless there are three parts (ex: acorn.io/account/name)", project)
-		}
-		if kubeconfig := kubeconfigs[parts[0]]; kubeconfig != "" {
-			return kubeconfig, parts[0], parts[1], true, nil
-		}
-		return system.DefaultHubAddress, parts[0], parts[1], false, nil
-	case 3:
-		return parts[0], parts[1], parts[2], false, nil
+	if strings.Contains(parts[2], ".") {
+		return "", "", "", false, fmt.Errorf("invalid project name [%s]: can not contain \".\"", parts[2])
 	}
-	panic(fmt.Sprintf("unreachable: parts len of %d not handled in %s", len(parts), project))
+	if parts[0] == config.LocalServer && parts[1] != "" {
+		return "", "", "", false, fmt.Errorf("invalid project name [%s]: account can not be set for local kubeconfig", project)
+	}
+	return parts[0], parts[1], parts[2], parts[0] == config.LocalServer, nil
 }
 
 func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
 	if opts.AllProjects {
-		projects, _, err := List(ctx, true, opts.WithCLIConfig(cfg))
+		projects, _, err := List(ctx, true, opts)
 		return projects, err
 	}
 
@@ -171,25 +181,17 @@ func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options
 }
 
 func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project string) (client.Client, error) {
-	serverOrKubeconfig, account, namespace, isKubeconfig, err := ParseProject(project, cfg.Kubeconfigs)
+	server, account, namespace, isKubeconfig, err := ParseProject(project, cfg.DefaultContext)
 	if err != nil {
 		return nil, err
 	}
 
 	if isKubeconfig {
-		if serverOrKubeconfig == "" {
-			c, err := restconfig.FromFile(opts.Kubeconfig, opts.ContextEnv)
-			if err != nil {
-				return nil, err
-			}
-			return client.New(c, project, namespace)
-		}
-
-		config, err := restconfig.FromFile(serverOrKubeconfig, opts.ContextEnv)
+		c, err := restconfig.FromFile(opts.Kubeconfig, opts.ContextEnv)
 		if err != nil {
 			return nil, err
 		}
-		return client.New(config, project, namespace)
+		return client.New(c, project, namespace)
 	}
 
 	credStore, err := credentials.NewStore(cfg, nil)
@@ -197,21 +199,21 @@ func getClient(ctx context.Context, cfg *config.CLIConfig, opts Options, project
 		return nil, err
 	}
 
-	cred, ok, err := credStore.Get(ctx, serverOrKubeconfig)
+	cred, ok, err := credStore.Get(ctx, server)
 	if err != nil {
 		return nil, err
 	} else if !ok {
 		return nil, fmt.Errorf("failed to find authentication token for server %s,"+
-			" please run 'acorn login %s' first", serverOrKubeconfig, serverOrKubeconfig)
+			" please run 'acorn login %s' first", server, server)
 	}
 
 	return &client.DeferredClient{
 		Project:   project,
 		Namespace: namespace,
 		New: func() (client.Client, error) {
-			url := cfg.TestProjectURLs[serverOrKubeconfig+"/"+account]
+			url := cfg.ProjectURLs[server+"/"+account]
 			if url == "" {
-				url, err = manager.ProjectURL(ctx, serverOrKubeconfig, account, cred.Password)
+				url, err = manager.ProjectURL(ctx, server, account, cred.Password)
 				if err != nil {
 					return nil, err
 				}

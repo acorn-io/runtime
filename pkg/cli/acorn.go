@@ -82,7 +82,7 @@ func New() *cobra.Command {
 }
 
 type Acorn struct {
-	Kubeconfig string `usage:"Explicitly use kubeconfig file, overriding current project"`
+	Kubeconfig string `usage:"Explicitly use kubeconfig file, overriding the default context" env:"ACORN_KUBECONFIG"`
 	Project    string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
 	Debug      bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
 	DebugLevel int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`

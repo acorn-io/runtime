@@ -51,7 +51,7 @@ func (s *Info) Run(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Testing/mocking ReadCLIConfig() is difficult. Any better way to test?
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := config.ReadCLIConfig(true)
 	if err != nil {
 		logrus.Errorf("failed to read CLI config: %v", err)
 		cfg = nil

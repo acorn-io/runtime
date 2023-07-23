@@ -28,7 +28,7 @@ acorn container kill app-name.containername-generated-hash
   -a, --all                 Include stopped containers
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
-      --kubeconfig string   Explicitly use kubeconfig file, overriding current project
+      --kubeconfig string   Explicitly use kubeconfig file, overriding the default context
   -o, --output string       Output format (json, yaml, {{gotemplate}})
   -j, --project string      Project to work in
   -q, --quiet               Output only names

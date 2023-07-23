@@ -35,7 +35,7 @@ type CredentialLogout struct {
 }
 
 func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := a.client.Options().CLIConfig()
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// reload config
-	cfg, err = config.ReadCLIConfig()
+	cfg, err = a.client.Options().CLIConfig()
 	if err != nil {
 		return fmt.Errorf("failed to remove server %s from CLI config: %v", args[0], err)
 	}

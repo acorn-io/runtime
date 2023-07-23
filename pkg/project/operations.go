@@ -42,7 +42,7 @@ func Remove(ctx context.Context, opts Options, name string) (*apiv1.Project, err
 	if err != nil {
 		return nil, err
 	}
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := opts.CLIConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func listLocalKubeconfig(ctx context.Context, wg *sync.WaitGroup, result chan<- 
 			source: "local kubeconfig",
 			err:    err,
 			projects: typed.MapSlice(projects, func(project apiv1.Project) string {
-				return project.Name
+				return config.LocalServer + "/" + project.Name
 			}),
 		}
 	}()
@@ -161,16 +161,13 @@ func listAcornServer(ctx context.Context, wg *sync.WaitGroup, creds *credentials
 // or a local kubeconfig. If false, list projects from all Acorn servers and the local kubeconfig.
 func List(ctx context.Context, onlyUseCurrentServer bool, opts Options) (projects []string, warnings map[string]error, err error) {
 	var (
-		cfg = opts.CLIConfig
 		// if the user sets --kubeconfig we only consider kubeconfig and no other source for listing
 		onlyListLocalKubeconfig = opts.Kubeconfig != ""
 	)
 
-	if cfg == nil {
-		cfg, err = config.ReadCLIConfig()
-		if err != nil {
-			return nil, nil, err
-		}
+	cfg, err := opts.CLIConfig()
+	if err != nil {
+		return nil, nil, err
 	}
 
 	currentProject := cfg.CurrentProject
@@ -244,7 +241,7 @@ func GetDetails(ctx context.Context, opts Options, projectNames []string) (proje
 }
 
 func getProjectDetails(ctx context.Context, wg *sync.WaitGroup, result chan<- DetailProject, opts Options, projectNames []string) error {
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := opts.CLIConfig()
 	if err != nil {
 		return err
 	}

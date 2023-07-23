@@ -7,7 +7,6 @@ import (
 	"github.com/acorn-io/runtime/integration/helper"
 	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/config"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/stretchr/testify/assert"
@@ -67,11 +66,6 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 
 	ctx := helper.GetCTX(t)
 
-	cliConfig, err := config.ReadCLIConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// interface directly with k8 client to create projects
 	kclient := helper.MustReturn(kclient.Default)
 	project1 := helper.TempProject(t, kclient)
@@ -79,7 +73,7 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 
 	// Create multiclient to test commands off of
-	mc, err := project.Client(ctx, project.Options{AllProjects: true, CLIConfig: cliConfig})
+	mc, err := project.Client(ctx, project.Options{AllProjects: true})
 	if err != nil {
 		t.Fatal(err)
 	}

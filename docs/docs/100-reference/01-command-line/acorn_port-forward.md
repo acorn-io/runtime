@@ -26,7 +26,7 @@ acorn port-forward [flags] ACORN_NAME|CONTAINER_NAME PORT
 ```
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
-      --kubeconfig string   Explicitly use kubeconfig file, overriding current project
+      --kubeconfig string   Explicitly use kubeconfig file, overriding the default context
   -j, --project string      Project to work in
 ```
 

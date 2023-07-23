@@ -7,7 +7,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
-	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/sirupsen/logrus"
@@ -47,20 +46,15 @@ type projectEntry struct {
 }
 
 func (a *Project) Run(cmd *cobra.Command, args []string) error {
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return err
-	}
-
 	var projectNames []string
 	if len(args) == 1 {
-		err := project.Exists(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
+		err := project.Exists(cmd.Context(), a.client.Options(), args[0])
 		if err != nil {
 			return err
 		}
 		projectNames = append(projectNames, args[0])
 	} else {
-		projects, warnings, err := project.List(cmd.Context(), false, a.client.Options().WithCLIConfig(cfg))
+		projects, warnings, err := project.List(cmd.Context(), false, a.client.Options())
 		if err != nil {
 			return err
 		}
@@ -76,6 +70,11 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 		for _, env := range typed.SortedKeys(warnings) {
 			logrus.Warnf("Could not list projects from [%s]: %v", env, warnings[env])
 		}
+	}
+
+	cfg, err := a.client.Options().CLIConfig()
+	if err != nil {
+		return err
 	}
 
 	defaultProject := cfg.CurrentProject
@@ -103,7 +102,7 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 			if projectItem.Project.Annotations == nil {
 				projectItem.Project.Annotations = map[string]string{}
 			}
-			projectItem.Project.Annotations["project-name"] = projectItem.FullName
+			projectItem.Project.Annotations["project-name"] = project.RenderProjectName(projectItem.FullName, cfg.DefaultContext)
 			projectItem.Project.Annotations["default-project"] = fmt.Sprint(defaultProject == projectItem.FullName)
 
 			supportedRegions := projectItem.Project.Status.SupportedRegions
@@ -117,7 +116,7 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 			}
 
 			out.WriteFormatted(projectEntry{
-				Name:    projectItem.FullName,
+				Name:    project.RenderProjectName(projectItem.FullName, cfg.DefaultContext),
 				Default: defaultProject == projectItem.FullName,
 				Regions: supportedRegions,
 			}, projectItem.Project)

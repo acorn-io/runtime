@@ -9,7 +9,6 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/channels"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
@@ -258,14 +257,7 @@ func secretsCompletion(ctx context.Context, c client.Client, toComplete string) 
 }
 
 func projectsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
-	cfg, err := config.ReadCLIConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	projects, _, err := project.List(ctx, false, project.Options{
-		CLIConfig: cfg,
-	})
+	projects, _, err := project.List(ctx, false, project.Options{})
 	if err != nil {
 		return nil, err
 	}

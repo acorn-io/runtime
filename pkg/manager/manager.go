@@ -11,6 +11,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/randomtoken"
 	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/pkg/browser"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -130,6 +131,9 @@ func DefaultProject(ctx context.Context, address, user, token string) (string, e
 	}
 	if len(projects) == 0 {
 		return "", err
+	}
+	if slices.Contains(projects, system.DefaultUserNamespace) {
+		return system.DefaultUserNamespace, nil
 	}
 	return projects[0], nil
 }
