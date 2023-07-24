@@ -89,11 +89,7 @@ func UnmarshalPEMToPublicKey(pemBytes []byte) (crypto.PublicKey, error) {
 			return nil, err
 		}
 		switch key := pub.(type) {
-		case *rsa.PublicKey:
-			return key, nil
-		case *ecdsa.PublicKey:
-			return key, nil
-		case ed25519.PublicKey:
+		case *rsa.PublicKey, *ecdsa.PublicKey, ed25519.PublicKey:
 			return key, nil
 		}
 	case "ED25519 PUBLIC KEY":

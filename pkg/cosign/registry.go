@@ -72,9 +72,11 @@ func makeOptions(opts ...crane.Option) crane.Options {
 func FindSignature(imageDigest name.Digest, opts ...remote.Option) (name.Tag, ggcrv1.Hash, error) {
 	ociremoteOpts := []ociremote.Option{ociremote.WithRemoteOptions(opts...)}
 
-	var tag name.Tag
-	var hash ggcrv1.Hash
-	var err error
+	var (
+		tag  name.Tag
+		hash ggcrv1.Hash
+		err  error
+	)
 
 	tag, err = ociremote.SignatureTag(imageDigest, ociremoteOpts...)
 	if err != nil {

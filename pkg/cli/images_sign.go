@@ -2,16 +2,17 @@ package cli
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/acorn-io/runtime/pkg/config"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	"github.com/acorn-io/runtime/pkg/images"
+	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
@@ -42,45 +43,46 @@ type ImageSign struct {
 }
 
 func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
+	if a.Key == "" {
+		return fmt.Errorf("key is required")
+	}
+
+	imageName := args[0]
+
 	c, err := a.client.CreateDefault()
 	if err != nil {
 		return err
 	}
 
-	if a.Key == "" {
-		return fmt.Errorf("key is required")
-	}
+	var auth *apiv1.RegistryAuth
+	ref, err := name.ParseReference(imageName)
+	if err == nil { // not failing here, since it could be a local image
+		cfg, err := config.ReadCLIConfig()
+		if err != nil {
+			return err
+		}
 
-	targetName := args[0]
-	targetDigest := ""
+		creds, err := credentials.NewStore(cfg, c)
+		if err != nil {
+			return err
+		}
 
-	img, tag, err := client.FindImage(cmd.Context(), c, targetName)
-	if err != nil && !errors.As(err, &images.ErrImageNotFound{}) {
-		return err
-	}
-
-	if err == nil && tag == "" {
-		return fmt.Errorf("Signing a local image without specifying the repository is not supported")
-	} else if tag != "" {
-		targetName = tag
-		targetDigest = img.Digest
-	}
-
-	ref, err := name.ParseReference(targetName)
-	if err != nil {
-		return err
-	}
-
-	if targetDigest == "" {
-		targetDigest, err = acornsign.SimpleDigest(ref)
+		auth, _, err = creds.Get(cmd.Context(), ref.Context().RegistryStr())
 		if err != nil {
 			return err
 		}
 	}
 
-	target := ref.Context().Digest(targetDigest)
+	details, err := c.ImageDetails(cmd.Context(), args[0], &client.ImageDetailsOptions{
+		Auth: auth,
+	})
+	if err != nil {
+		return err
+	}
 
-	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", targetName, targetDigest, a.Key)
+	targetDigest := ref.Context().Digest(details.AppImage.Digest)
+
+	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", imageName, targetDigest, a.Key)
 
 	pass, err := getPrivateKeyPass(a.Key)
 	if err != nil {
@@ -117,7 +119,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	payload, signature, err := sigsig.SignImage(sigSigner, target, annotations)
+	payload, signature, err := sigsig.SignImage(sigSigner, targetDigest, annotations)
 	if err != nil {
 		return err
 	}
@@ -140,7 +142,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		imageSignOpts.PublicKey = string(pem)
 	}
 
-	sig, err := c.ImageSign(cmd.Context(), targetName, payload, signatureB64, imageSignOpts)
+	sig, err := c.ImageSign(cmd.Context(), imageName, payload, signatureB64, imageSignOpts)
 	if err != nil {
 		return err
 	}
