@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
-	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +26,7 @@ type ProjectUse struct {
 }
 
 func (a *ProjectUse) Run(cmd *cobra.Command, args []string) error {
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := a.client.Options().CLIConfig()
 	if err != nil {
 		return err
 	}
@@ -38,7 +37,7 @@ func (a *ProjectUse) Run(cmd *cobra.Command, args []string) error {
 		return cfg.Save()
 	}
 
-	err = project.Exists(cmd.Context(), a.client.Options().WithCLIConfig(cfg), args[0])
+	err = project.Exists(cmd.Context(), a.client.Options(), args[0])
 	if err != nil {
 		return fmt.Errorf("failed to find project %s, use \"acorn projects\" to list valid project names: %w", args[0], err)
 	}

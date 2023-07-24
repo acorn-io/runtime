@@ -7,7 +7,6 @@ import (
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
-	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/install"
 	"github.com/acorn-io/runtime/pkg/system"
@@ -56,7 +55,7 @@ func (i *Install) dev(ctx context.Context, imageName string, opts *install.Optio
 		return err
 	}
 
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := i.client.Options().CLIConfig()
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,6 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/manager"
 	"github.com/pterm/pterm"
@@ -47,7 +46,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		client client.Client
 	)
 
-	cfg, err := config.ReadCLIConfig()
+	cfg, err := a.client.Options().CLIConfig()
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 
 	if isManager {
 		// reload config, could have changed
-		cfg, err = config.ReadCLIConfig()
+		cfg, err = a.client.Options().CLIConfig()
 		if err != nil {
 			return err
 		}
@@ -146,18 +145,33 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		var cfgModified bool
 		if cfg.CurrentProject == "" && def != "" {
 			pterm.Info.Printf("Setting default project to %s\n", def)
 			cfg.CurrentProject = def
+			projectSet = true
+			cfgModified = true
+		}
+
+		if cfg.DefaultContext == "" {
+			cfg.DefaultContext = fmt.Sprintf("%s/%s", serverAddress, a.Username)
+			cfgModified = true
+		}
+
+		if cfgModified {
 			if err := cfg.Save(); err != nil {
 				return err
 			}
-			projectSet = true
 		}
 
 		if !projectSet {
 			if def == "" {
-				def = fmt.Sprintf("%s/%s/acorn", serverAddress, a.Username)
+				if cfg.DefaultContext == serverAddress+"/"+a.Username {
+					def = "acorn"
+				} else {
+					def = fmt.Sprintf("%s/%s/acorn", serverAddress, a.Username)
+				}
 			}
 			pterm.Info.Printf("Run \"acorn projects\" to list available projects\n")
 			pterm.Info.Printf("Run \"acorn project use %s\" to set default project\n", def)

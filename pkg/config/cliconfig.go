@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -13,6 +12,10 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/docker/cli/cli/config/types"
 	"sigs.k8s.io/yaml"
+)
+
+const (
+	LocalServer = "kubeconfig"
 )
 
 type AuthConfig types.AuthConfig
@@ -48,12 +51,12 @@ type CLIConfig struct {
 	CredentialsStore  string                `json:"credsStore,omitempty"`
 	CredentialHelpers map[string]string     `json:"credHelpers,omitempty"`
 	AcornServers      []string              `json:"acornServers,omitempty"`
-	Kubeconfigs       map[string]string     `json:"-"`
 	ProjectAliases    map[string]string     `json:"projectAliases,omitempty"`
+	DefaultContext    string                `json:"defaultContext,omitempty"`
 	CurrentProject    string                `json:"currentProject,omitempty"`
 
-	// TestProjectURLs is used for testing to return EndpointURLs for remote projects
-	TestProjectURLs map[string]string `json:"-"`
+	// ProjectURLs is used for testing to return EndpointURLs for remote projects
+	ProjectURLs map[string]string `json:"projectURLs,omitempty"`
 
 	filename  string
 	auths     map[string]types.AuthConfig
@@ -114,12 +117,8 @@ func (c *CLIConfig) GetFilename() string {
 	return c.filename
 }
 
-func ReadCLIConfig() (*CLIConfig, error) {
+func ReadCLIConfig(kubeconfigOnly bool) (*CLIConfig, error) {
 	filename, err := CLIConfigFile()
-	if err != nil {
-		return nil, err
-	}
-	kubeconfigDir, err := KubeconfigDir()
 	if err != nil {
 		return nil, err
 	}
@@ -140,31 +139,12 @@ func ReadCLIConfig() (*CLIConfig, error) {
 		result.AcornServers = []string{system.DefaultHubAddress}
 	}
 
-	result.Kubeconfigs = map[string]string{}
-
-	entries, err := os.ReadDir(kubeconfigDir)
-	if os.IsNotExist(err) {
-	} else if err != nil {
-		return nil, err
-	} else {
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				name := entry.Name()
-				name = name[:len(name)-len(filepath.Ext(name))]
-				result.Kubeconfigs[name] = filepath.Join(kubeconfigDir, entry.Name())
-			}
-		}
+	if kubeconfigOnly {
+		result.DefaultContext = ""
+		result.CurrentProject = ""
 	}
 
 	return result, nil
-}
-
-func KubeconfigDir() (string, error) {
-	cfg, err := CLIConfigFile()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(filepath.Dir(cfg), "kubeconfigs"), nil
 }
 
 func CLIConfigFile() (string, error) {
@@ -210,6 +190,11 @@ func RemoveServer(cfg *CLIConfig, serverAddress string) error {
 
 	if len(newAcornServer) != len(cfg.AcornServers) {
 		cfg.AcornServers = newAcornServer
+		modified = true
+	}
+
+	if strings.HasPrefix(cfg.DefaultContext, serverAddress+"/") {
+		cfg.DefaultContext = ""
 		modified = true
 	}
 

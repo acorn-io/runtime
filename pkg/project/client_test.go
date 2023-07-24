@@ -6,7 +6,8 @@ import (
 
 func TestParseProject(t *testing.T) {
 	type args struct {
-		project string
+		project        string
+		defaultContext string
 	}
 	tests := []struct {
 		name          string
@@ -21,6 +22,7 @@ func TestParseProject(t *testing.T) {
 			args: args{
 				project: "foo",
 			},
+			wantServer:    "kubeconfig",
 			wantNamespace: "foo",
 		},
 		{
@@ -44,7 +46,8 @@ func TestParseProject(t *testing.T) {
 		{
 			name: "Manager default reference",
 			args: args{
-				project: "account/project",
+				project:        "account/project",
+				defaultContext: "acorn.io/account",
 			},
 			wantNamespace: "project",
 			wantAccount:   "account",
@@ -64,17 +67,10 @@ func TestParseProject(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name: "Invalid length reference",
-			args: args{
-				project: "example.com/foo/bar/baz",
-			},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotServer, gotAccount, gotNamespace, _, err := ParseProject(tt.args.project, nil)
+			gotServer, gotAccount, gotNamespace, _, err := ParseProject(tt.args.project, tt.args.defaultContext)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseProject() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -19,7 +19,7 @@ acorn [flags]
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
   -h, --help                help for acorn
-      --kubeconfig string   Explicitly use kubeconfig file, overriding current project
+      --kubeconfig string   Explicitly use kubeconfig file, overriding the default context
   -j, --project string      Project to work in
 ```
 

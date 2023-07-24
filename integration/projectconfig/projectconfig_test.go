@@ -2,6 +2,7 @@ package projectconfig
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -41,6 +42,7 @@ func TestCLIConfig(t *testing.T) {
 	tests := []struct {
 		name               string
 		opt                project.Options
+		cliConfig          config.CLIConfig
 		kubeconfigEnv      string
 		homeEnv            string
 		noEnv              bool
@@ -93,25 +95,24 @@ func TestCLIConfig(t *testing.T) {
 			opt: project.Options{
 				Kubeconfig: testRestConfig(t, "testhost", "testnamespace"),
 				Project:    "projectnamespace",
-				CLIConfig: &config.CLIConfig{
-					CurrentProject: "foo/bar",
-				},
+			},
+			cliConfig: config.CLIConfig{
+				CurrentProject: "foo/bar",
 			},
 			wantRestConfigHost: "testhost",
 			wantNamespace:      "projectnamespace",
 		},
 		{
 			name: "Current project is external",
-			opt: project.Options{
-				CLIConfig: &config.CLIConfig{
-					CurrentProject: "example.com/foo/bar",
-					TestProjectURLs: map[string]string{
-						"example.com/foo": "https://foo.example.com",
-					},
-					Auths: map[string]config.AuthConfig{
-						"example.com": {
-							Password: "pass",
-						},
+			opt:  project.Options{},
+			cliConfig: config.CLIConfig{
+				CurrentProject: "example.com/foo/bar",
+				ProjectURLs: map[string]string{
+					"example.com/foo": "https://foo.example.com",
+				},
+				Auths: map[string]config.AuthConfig{
+					"example.com": {
+						Password: "pass",
 					},
 				},
 			},
@@ -122,11 +123,11 @@ func TestCLIConfig(t *testing.T) {
 		{
 			name: "Project arg overrides current project",
 			opt: project.Options{
-				Project: "projectnamespace",
-				CLIConfig: &config.CLIConfig{
-					CurrentProject: "example.com/foo/bar",
-				},
+				Project:    "projectnamespace",
 				Kubeconfig: testAPIKubeconfig,
+			},
+			cliConfig: config.CLIConfig{
+				CurrentProject: "example.com/foo/bar",
 			},
 			wantNamespace: "projectnamespace",
 		},
@@ -149,15 +150,15 @@ func TestCLIConfig(t *testing.T) {
 			name: "User set manager reference",
 			opt: project.Options{
 				Project: "example.com/foo/bar",
-				CLIConfig: &config.CLIConfig{
-					Auths: map[string]config.AuthConfig{
-						"example.com": {
-							Password: "pass",
-						},
+			},
+			cliConfig: config.CLIConfig{
+				Auths: map[string]config.AuthConfig{
+					"example.com": {
+						Password: "pass",
 					},
-					TestProjectURLs: map[string]string{
-						"example.com/foo": "https://endpoint.example.com",
-					},
+				},
+				ProjectURLs: map[string]string{
+					"example.com/foo": "https://endpoint.example.com",
 				},
 			},
 			wantRestConfigHost: "https://endpoint.example.com",
@@ -168,24 +169,21 @@ func TestCLIConfig(t *testing.T) {
 		{
 			name:          "Use alias",
 			kubeconfigEnv: testAPIKubeconfig,
-			opt: project.Options{
-				Project: "foo",
-				CLIConfig: &config.CLIConfig{
-					ProjectAliases: map[string]string{
-						"foo": "kubeconf/ns2,example.com/acct/prj1,defns",
-					},
-					Kubeconfigs: map[string]string{
-						"kubeconf": testAPIKubeconfig2,
-					},
-					Auths: map[string]config.AuthConfig{
-						"example.com": {
-							Password: "pass",
-						},
-					},
-					TestProjectURLs: map[string]string{
-						"example.com/acct": "https://endpoint.example.com",
+			cliConfig: config.CLIConfig{
+				ProjectAliases: map[string]string{
+					"foo": "kubeconfig/ns2,example.com/acct/prj1,defns",
+				},
+				Auths: map[string]config.AuthConfig{
+					"example.com": {
+						Password: "pass",
 					},
 				},
+				ProjectURLs: map[string]string{
+					"example.com/acct": "https://endpoint.example.com",
+				},
+			},
+			opt: project.Options{
+				Project: "foo",
 			},
 			assert: func(t *testing.T, c client.Client) {
 				t.Helper()
@@ -195,9 +193,8 @@ func TestCLIConfig(t *testing.T) {
 				}
 				assert.Len(t, clients, 3)
 			},
-			wantRestConfigHost: "testhost2",
-			wantProject:        "kubeconf/ns2,example.com/acct/prj1,defns",
-			wantNamespace:      "ns2",
+			wantProject:   "kubeconfig/ns2,example.com/acct/prj1,defns",
+			wantNamespace: "ns2",
 		},
 	}
 
@@ -207,12 +204,27 @@ func TestCLIConfig(t *testing.T) {
 			oldHome := os.Getenv("HOME")
 			oldKubeconfig := os.Getenv("KUBECONFIG")
 			oldRecommendHomeFile := clientcmd.RecommendedHomeFile
+			oldAcornConfig := os.Getenv("ACORN_CONFIG_FILE")
 			if test.noEnv {
 				for _, env := range oldEnv {
 					k, _, _ := strings.Cut(env, "=")
 					os.Setenv(k, "")
 				}
 			}
+			tmp, err := os.CreateTemp("", "acorn-config")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := json.NewEncoder(tmp).Encode(test.cliConfig); err != nil {
+				t.Fatal(err)
+			}
+			if err := tmp.Close(); err != nil {
+				t.Fatal(err)
+			}
+			os.Setenv("ACORN_CONFIG_FILE", tmp.Name())
+			defer func() {
+				_ = os.Remove(tmp.Name())
+			}()
 			if test.kubeconfigEnv != "" {
 				os.Setenv("KUBECONFIG", test.kubeconfigEnv)
 			}
@@ -228,6 +240,7 @@ func TestCLIConfig(t *testing.T) {
 			}
 			os.Setenv("KUBECONFIG", oldKubeconfig)
 			os.Setenv("HOME", oldHome)
+			os.Setenv("ACORN_CONFIG_FILE", oldAcornConfig)
 			clientcmd.RecommendedHomeFile = oldRecommendHomeFile
 			if test.wantErr != nil {
 				assert.Equal(t, test.wantErr, err)
@@ -322,10 +335,6 @@ users:
 
 func testCLIConfig(t *testing.T, opt project.Options) (client.Client, error) {
 	t.Helper()
-
-	if opt.CLIConfig == nil {
-		opt.CLIConfig = &config.CLIConfig{}
-	}
 
 	return project.Client(context.Background(), opt)
 }
