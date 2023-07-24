@@ -243,20 +243,20 @@ func translateErr(err error) error {
 	}
 
 	err = translatePermissions(err)
-	err = TranslateNotAllowed(err)
+	err, _ = TranslateNotAllowed(err)
 
 	return err
 }
 
-func TranslateNotAllowed(err error) error {
+func TranslateNotAllowed(err error) (error, bool) {
 	if err == nil {
-		return err
+		return err, false
 	}
 	if strings.Contains(err.Error(), imageallowrules.ErrImageNotAllowedIdentifier) {
-		return &imageallowrules.ErrImageNotAllowed{} // we could actually extract the full error (including) image here, but that's probably not required
+		return &imageallowrules.ErrImageNotAllowed{}, true // we could actually extract the full error (including) image here, but that's probably not required
 	}
 
-	return err
+	return err, false
 }
 
 func translatePermissions(err error) error {
