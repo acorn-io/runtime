@@ -28,7 +28,7 @@ acorn image sign my-image --key ./my-key
 ```
       --debug               Enable debug logging
       --debug-level int     Debug log level (valid 0-9) (default 7)
-      --kubeconfig string   Explicitly use kubeconfig file, overriding current project
+      --kubeconfig string   Explicitly use kubeconfig file, overriding the default context
   -j, --project string      Project to work in
 ```
 

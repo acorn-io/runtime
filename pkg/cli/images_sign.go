@@ -10,9 +10,8 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/config"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	"github.com/acorn-io/runtime/pkg/credentials"
+	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
@@ -57,17 +56,12 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	var auth *apiv1.RegistryAuth
 	ref, err := name.ParseReference(imageName)
 	if err == nil { // not failing here, since it could be a local image
-		cfg, err := config.ReadCLIConfig()
+		creds, err := imagesource.GetCreds(c)
 		if err != nil {
 			return err
 		}
 
-		creds, err := credentials.NewStore(cfg, c)
-		if err != nil {
-			return err
-		}
-
-		auth, _, err = creds.Get(cmd.Context(), ref.Context().RegistryStr())
+		auth, _, err = creds(cmd.Context(), ref.Context().RegistryStr())
 		if err != nil {
 			return err
 		}
