@@ -108,6 +108,7 @@ var (
 					"apps/confirmupgrade",
 					"apps/pullimage",
 					"apps/ignorecleanup",
+					"events",
 				},
 			},
 			{
