@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -184,7 +185,11 @@ application. If you are unsure say no.`, image)
 }
 
 func CreateImageAllowRule(ctx context.Context, c client.Client, image, choice string, extraExactMatches ...string) error {
-	iar, err := iarutil.GenerateSimpleAllowRule(c.GetProject(), run.NameGenerator.Generate(), image, choice)
+	// Remove the "kubeconfig/" or "<server URL>/" prefix from the project name
+	projectParts := strings.Split(c.GetProject(), "/")
+	project := projectParts[len(projectParts)-1]
+
+	iar, err := iarutil.GenerateSimpleAllowRule(project, run.NameGenerator.Generate(), image, choice)
 	if err != nil {
 		return fmt.Errorf("error generating ImageAllowRule: %w", err)
 	}
