@@ -95,11 +95,16 @@ The default installation of Acorn will automatically create and sync any storage
 If an admin would rather manually manage the volume classes and not have these generated ones, then the `--manage-volume-classes` installation flag is available. The generated volume classes are not generated if this flag is used, and are deleted when the flag is set on an existing Acorn installation. If the flag is again switched off with `--manage-volume-classes=false`, then the volume classes will be generated again.
 
 ## Kubernetes NetworkPolicies
-Acorn can automatically create and manage Kubernetes [NetworkPolicies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to isolate Acorn projects on the network level. This behavior can be enabled by passing `--network-policies=true` to `acorn install`, and can later be disabled by passing `--network-policies=false`.
+Acorn can automatically create and manage Kubernetes [NetworkPolicies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to isolate Acorn projects on the network level.
+This behavior can be enabled by passing `--network-policies=true` to `acorn install`, and can later be disabled by passing `--network-policies=false`.
 
-When NetworkPolicies are enabled, Acorn workloads that publish ports that use HTTP will be allowed to receive traffic from internal (other pods in the cluster) and external (through the cluster's ingress) sources. To secure this further, you can require all traffic to Acorn workloads flow through your ingress by specifying the `--ingress-controller-namespace` parameter during installation.
+When NetworkPolicies are enabled, Acorn workloads that publish ports that use HTTP will be allowed to receive traffic from internal (other pods in the cluster) and external (through the cluster's ingress) sources.
+To secure this further, you can require all traffic to Acorn workloads flow through your ingress by specifying the `--ingress-controller-namespace` parameter during installation.
 
-To allow traffic from a specific namespace to all Acorn apps in the cluster, use `--allow-traffic-from-namespace=<namespace>`. This is useful if there is a monitoring namespace, for example, that needs to be able to connect to all the pods created by Acorn in order to scrape metrics.
+Acorn workloads that publish ports that use TCP will be allowed to receive traffic from any source, whether it comes from outside or inside of the cluster.
+
+To allow traffic from a specific namespace to all Acorn apps in the cluster, use `--allow-traffic-from-namespace=<namespace>`.
+This is useful if there is a monitoring namespace, for example, that needs to be able to connect to all the pods created by Acorn in order to scrape metrics.
 
 ## Working with external LoadBalancer controllers
 If you are using an external `LoadBalancer` controller that requires annotations on `LoadBalancer` Services to operate, such as the `aws-load-balancer-controller`, you can pass the `--service-lb-annotation` flag to `acorn install`. This will cause Acorn to add the specified annotations to all `LoadBalancer` Services it creates. The value of the flag should be a comma-separated list of key-value pairs, where the key is the annotation name and the value is the annotation value. For example:

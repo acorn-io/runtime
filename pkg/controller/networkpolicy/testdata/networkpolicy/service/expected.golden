@@ -11,14 +11,6 @@ spec:
   - from:
     - ipBlock:
         cidr: 0.0.0.0/0
-        except:
-        - 10.42.0.0/24
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: acorn-system
     ports:
     - port: 8080
       protocol: TCP
