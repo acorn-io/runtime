@@ -252,6 +252,15 @@ func ForService(req router.Request, resp router.Response) error {
 			Protocol: &proto,
 			Port:     &targetPort,
 		})
+
+		// Healthchecks in AWS that are performed on LoadBalancer Services use TCP even if the port is UDP,
+		// so we need to add TCP also in that case.
+		if proto == corev1.ProtocolUDP {
+			netPolPorts = append(netPolPorts, networkingv1.NetworkPolicyPort{
+				Protocol: z.Pointer(corev1.ProtocolTCP),
+				Port:     &targetPort,
+			})
+		}
 	}
 
 	// build the NetPol
