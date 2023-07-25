@@ -136,7 +136,7 @@ func ReadCLIConfig(kubeconfigOnly bool) (*CLIConfig, error) {
 	result.filename = filename
 
 	if len(result.AcornServers) == 0 {
-		result.AcornServers = []string{system.DefaultHubAddress}
+		result.AcornServers = []string{system.DefaultManagerAddress}
 	}
 
 	if kubeconfigOnly {
