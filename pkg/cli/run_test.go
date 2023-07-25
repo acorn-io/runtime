@@ -186,6 +186,28 @@ func TestRun(t *testing.T) {
 			wantOut: "open Acornfile: no such file or directory",
 		},
 		{
+			name: "acorn_run_pointed_at_nothing", fields: fields{
+				All:   false,
+				Force: true,
+			},
+
+			args: args{
+				args: []string{},
+			},
+			prepare: func(t *testing.T, f *mocks.MockClient) {
+				t.Helper()
+				f.EXPECT().Info(gomock.Any()).Return(
+					[]apiv1.Info{
+						{
+							TypeMeta:   metav1.TypeMeta{},
+							ObjectMeta: metav1.ObjectMeta{},
+						},
+					}, nil)
+			},
+			wantErr: true,
+			wantOut: "open Acornfile: no such file or directory",
+		},
+		{
 			name: "acorn_run_points_at_file", fields: fields{
 				All:   false,
 				Force: true,
