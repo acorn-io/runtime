@@ -21,6 +21,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -104,18 +105,26 @@ func (i *ImagePull) ConnectMethods() []string {
 	return []string{"GET"}
 }
 
-func findSignatureImage(imageDigest name.Digest, opts ...remote.Option) (name.Tag, ggcrv1.Image, error) {
-	tag, hash, err := acornsign.FindSignature(imageDigest, opts...)
-	if err != nil {
-		return name.Tag{}, nil, err
-	}
-	if hash.Hex == "" {
-		return name.Tag{}, nil, nil
-	}
+func findSignatureImage(imageRef name.Reference, opts ...remote.Option) (name.Tag, ggcrv1.Image, error) {
+	if digest, ok := imageRef.(name.Digest); ok {
+		tag, hash, err := acornsign.FindSignature(digest, opts...)
+		if err != nil {
+			return name.Tag{}, nil, err
+		}
+		if hash.Hex == "" {
+			return name.Tag{}, nil, nil
+		}
 
-	img, err := remote.Image(tag, opts...)
+		img, err := remote.Image(tag, opts...)
 
-	return tag, img, err
+		return tag, img, err
+	} else {
+		digeststr, err := acornsign.SimpleDigest(imageRef, func(o *crane.Options) { o.Remote = append(o.Remote, opts...) })
+		if err != nil {
+			return name.Tag{}, nil, err
+		}
+		return findSignatureImage(imageRef.Context().Digest(digeststr), opts...)
+	}
 }
 
 func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ImageProgress, error) {

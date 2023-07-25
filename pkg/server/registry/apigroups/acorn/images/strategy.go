@@ -11,10 +11,13 @@ import (
 	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/sirupsen/logrus"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -168,6 +171,25 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 	if err != nil {
 		return nil, err
 	}
+
+	// Prune signatures
+	ref, err := images.GetImageReference(ctx, s.client, image.Namespace, image.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	sigTag, sigDigest, err := acornsign.FindSignature(ref.Context().Digest(image.Digest))
+	if err != nil {
+		return nil, err
+	}
+
+	if sigDigest.Hex != "" {
+		logrus.Debugf("Deleting signature artifact %s (digest %s) from registry", sigTag.Name(), sigDigest.String())
+		if err := remote.Delete(sigTag.Context().Digest(sigDigest.String())); err != nil {
+			return nil, err
+		}
+	}
+
 	return image, s.client.Delete(ctx, imageToDelete)
 }
 
