@@ -12,6 +12,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/manager"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -33,12 +34,13 @@ acorn login ghcr.io`,
 }
 
 type CredentialLogin struct {
-	LocalStorage  bool   `usage:"Store credential on local client for push, pull, and build (not run)" short:"l"`
-	SkipChecks    bool   `usage:"Bypass login validation checks"`
-	PasswordStdin bool   `usage:"Take the password from stdin"`
-	Password      string `usage:"Password" short:"p"`
-	Username      string `usage:"Username" short:"u"`
-	client        ClientFactory
+	LocalStorage      bool   `usage:"Store credential on local client for push, pull, and build (not run)" short:"l"`
+	SkipChecks        bool   `usage:"Bypass login validation checks"`
+	SetDefaultContext bool   `usage:"Set default context for project names"`
+	PasswordStdin     bool   `usage:"Take the password from stdin"`
+	Password          string `usage:"Password" short:"p"`
+	Username          string `usage:"Username" short:"u"`
+	client            ClientFactory
 }
 
 func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
@@ -141,7 +143,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 			cfgModified = true
 		}
 
-		if cfg.DefaultContext == "" {
+		if (cfg.DefaultContext == "" && serverAddress == system.DefaultManagerAddress) || a.SetDefaultContext {
 			cfg.DefaultContext = fmt.Sprintf("%s/%s", serverAddress, a.Username)
 			cfgModified = true
 		}

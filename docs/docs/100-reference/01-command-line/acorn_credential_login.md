@@ -19,12 +19,13 @@ acorn login ghcr.io
 ### Options
 
 ```
-  -h, --help              help for login
-  -l, --local-storage     Store credential on local client for push, pull, and build (not run)
-  -p, --password string   Password
-      --password-stdin    Take the password from stdin
-      --skip-checks       Bypass login validation checks
-  -u, --username string   Username
+  -h, --help                  help for login
+  -l, --local-storage         Store credential on local client for push, pull, and build (not run)
+  -p, --password string       Password
+      --password-stdin        Take the password from stdin
+      --set-default-context   Set default context for project names
+      --skip-checks           Bypass login validation checks
+  -u, --username string       Username
 ```
 
 ### Options inherited from parent commands
