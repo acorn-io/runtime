@@ -4,6 +4,7 @@ go 1.20
 
 replace (
 	cuelang.org/go => cuelang.org/go v0.4.3
+
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/wrangler => github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c
@@ -14,7 +15,7 @@ require (
 	cuelang.org/go v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/acorn-io/aml v0.0.0-20230721050626-ddd76a9874fd
-	github.com/acorn-io/baaah v0.0.0-20230707151126-5d519d272865
+	github.com/acorn-io/baaah v0.0.0-20230727135555-ef06bde4f2ed
 	github.com/acorn-io/mink v0.0.0-20230523184405-ceaaa366d500
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
