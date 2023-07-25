@@ -16,6 +16,8 @@ spec:
       protocol: TCP
     - port: 9090
       protocol: UDP
+    - port: 9090
+      protocol: TCP
   podSelector:
     matchLabels:
       acorn.io/app-name: my-app
