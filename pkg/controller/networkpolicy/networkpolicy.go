@@ -217,7 +217,8 @@ func ForIngress(req router.Request, resp router.Response) error {
 }
 
 // ForService creates a Kubernetes NetworkPolicy to allow traffic to published TCP/UDP ports
-// on Acorn apps that are exposed with LoadBalancer Services.
+// on Acorn apps that are exposed with LoadBalancer Services. This NetworkPolicy will allow
+// traffic from all IP addresses.
 func ForService(req router.Request, resp router.Response) error {
 	cfg, err := config.Get(req.Ctx, req.Client)
 	if err != nil {
@@ -240,12 +241,6 @@ func ForService(req router.Request, resp router.Response) error {
 	// look for case where the service is Acorn-managed but isn't for a specific app
 	if appName == "" || projectName == "" || containerName == "" {
 		return nil
-	}
-
-	// build the ipBlock for the NetPol
-	ipBlock, err := buildExternalIPBlock(req)
-	if err != nil {
-		return err
 	}
 
 	// build the port slice for the NetPol
@@ -273,25 +268,9 @@ func ForService(req router.Request, resp router.Response) error {
 				MatchLabels: service.Spec.Selector, // the NetPol will target the same pods that the service targets
 			},
 			Ingress: []networkingv1.NetworkPolicyIngressRule{{
-				From: []networkingv1.NetworkPolicyPeer{
-					{
-						IPBlock: ipBlock,
-					},
-					{
-						NamespaceSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "kube-system",
-							},
-						},
-					},
-					{
-						NamespaceSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "acorn-system",
-							},
-						},
-					},
-				},
+				From: []networkingv1.NetworkPolicyPeer{{
+					IPBlock: &networkingv1.IPBlock{CIDR: "0.0.0.0/0"},
+				}},
 				Ports: netPolPorts,
 			}},
 			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
