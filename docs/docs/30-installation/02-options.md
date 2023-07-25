@@ -101,7 +101,9 @@ This behavior can be enabled by passing `--network-policies=true` to `acorn inst
 When NetworkPolicies are enabled, Acorn workloads that publish ports that use HTTP will be allowed to receive traffic from internal (other pods in the cluster) and external (through the cluster's ingress) sources.
 To secure this further, you can require all traffic to Acorn workloads flow through your ingress by specifying the `--ingress-controller-namespace` parameter during installation.
 
+:::caution
 Acorn workloads that publish ports that use TCP will be allowed to receive traffic from any source, whether it comes from outside or inside of the cluster.
+:::
 
 To allow traffic from a specific namespace to all Acorn apps in the cluster, use `--allow-traffic-from-namespace=<namespace>`.
 This is useful if there is a monitoring namespace, for example, that needs to be able to connect to all the pods created by Acorn in order to scrape metrics.
