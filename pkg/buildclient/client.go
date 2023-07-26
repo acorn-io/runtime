@@ -35,7 +35,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 	conn, response, err := dialer(ctx, wsURL(build.Status.BuildURL), map[string][]string{
 		"X-Acorn-Build-Token": {build.Status.Token},
 	})
-	if response != nil {
+	if response != nil && response.Body != nil {
 		defer response.Body.Close()
 	}
 	if err != nil {
