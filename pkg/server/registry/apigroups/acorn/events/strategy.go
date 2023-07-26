@@ -228,9 +228,9 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 			// We still strip it from the selector here in order to maintain limited backwards compatibility with old
 			// clients that still specify it.
 		case "since":
-			q.since, err = parseTimeBound(v, now, true)
+			q.since, err = parseTimeBound(v, now)
 		case "until":
-			q.until, err = parseTimeBound(v, now, false)
+			q.until, err = parseTimeBound(v, now)
 		case "prefix":
 			q.prefix = prefix(v)
 		default:
@@ -251,23 +251,16 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 // parseTimeBound parses a time bound from a string.
 //
 // It attempts to parse raw as one of the following formats, in order, returning the result of the first successful parse:
-// 1. Go duration; e.g. "5m"
-//   - time is calculated relative to now
-//   - if since is true, then the duration is subtracted from now, otherwise it is added
-//
+// 1. Go duration (subtracted from now); e.g. "5m"
 // 2. RFC3339; e.g. "2006-01-02T15:04:05Z07:00"
 // 3. RFC3339Micro; e.g. "2006-01-02T15:04:05.999999Z07:00"
 // 4. Unix timestamp; e.g. "1136239445"
-func parseTimeBound(raw string, now internalv1.MicroTime, since bool) (*internalv1.MicroTime, error) {
+func parseTimeBound(raw string, now internalv1.MicroTime) (*internalv1.MicroTime, error) {
 	// Try to parse raw as a duration string
 	var errs []error
 	duration, err := time.ParseDuration(raw)
 	if err == nil {
-		if since {
-			duration *= -1
-		}
-
-		return z.Pointer(internalv1.NewMicroTime(now.Add(duration))), nil
+		return z.Pointer(internalv1.NewMicroTime(now.Add(-1 * duration))), nil
 	}
 	errs = append(errs, fmt.Errorf("%s is not a valid duration: %w", raw, err))
 
@@ -288,12 +281,11 @@ func parseTimeBound(raw string, now internalv1.MicroTime, since bool) (*internal
 	return nil, errors.Join(errs...)
 }
 
-var (
-	supportedLayouts = []string{
-		time.RFC3339,
-		metav1.RFC3339Micro,
-	}
-)
+var supportedLayouts = []string{
+	time.RFC3339,
+	metav1.RFC3339Micro,
+	"2006-01-02T15:04:05",
+}
 
 func parseTime(raw string) (*internalv1.MicroTime, error) {
 	var errs []error
