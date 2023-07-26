@@ -640,11 +640,15 @@ func replaceImage(image string, objs []kclient.Object) ([]kclient.Object, error)
 			containers, _, _ := unstructured.NestedSlice(ustr.Object, "spec", "template", "spec", "containers")
 			for _, container := range containers {
 				container.(map[string]any)["image"] = image
-				container.(map[string]any)["env"] = []interface{}{
-					map[string]any{
-						"name":  "ACORN_IMAGE",
-						"value": image,
-					},
+				acornImageEnv := map[string]any{
+					"name":  "ACORN_IMAGE",
+					"value": image,
+				}
+				envs := container.(map[string]any)["env"]
+				if envs == nil {
+					container.(map[string]any)["env"] = []interface{}{acornImageEnv}
+				} else {
+					container.(map[string]any)["env"] = append(envs.([]interface{}), acornImageEnv)
 				}
 				if !strings.Contains(image, ":v") {
 					container.(map[string]any)["imagePullPolicy"] = "Always"
