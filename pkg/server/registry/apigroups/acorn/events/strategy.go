@@ -184,12 +184,7 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 		return events[i].Observed.Before(events[j].Observed.Time)
 	})
 
-	tail := len(events)
-	if q.tail > 0 && q.tail < int64(tail) {
-		tail = int(q.tail)
-	}
-
-	results := make([]apiv1.Event, 0, tail)
+	results := make([]apiv1.Event, 0, len(events))
 	for _, event := range events {
 		observed := event.Observed
 		if q.afterWindow(observed) {
@@ -212,7 +207,12 @@ func (q query) filter(events ...apiv1.Event) []apiv1.Event {
 		return nil
 	}
 
-	return results
+	tail := len(results)
+	if q.tail > 0 && q.tail < int64(tail) {
+		tail = int(q.tail)
+	}
+
+	return results[len(results)-tail:]
 }
 
 // stripQuery extracts the query from the given options, returning the query and new options sans the query.
