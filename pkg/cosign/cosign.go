@@ -71,7 +71,7 @@ func EnsureReferences(ctx context.Context, c client.Reader, img string, opts *Ve
 	if opts.SignatureRef == nil || opts.SignatureRef.Identifier() == "" {
 		signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.OciRemoteOpts, opts.CraneOpts)
 		if err != nil {
-			return fmt.Errorf("failed to ensure signature artifact: %w", err)
+			return err
 		}
 		opts.SignatureRef = signatureRef
 	}
@@ -91,9 +91,9 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 		var terr *transport.Error
 		if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
 			// signature artifact not found -> that's an actual verification error
-			cerr := cosign.NewVerificationError(cosign.ErrNoSignaturesFoundMessage)
+			cerr := cosign.NewVerificationError(fmt.Sprintf("signature verification failed: expected signature artifact %s not found", sigTag.Name()))
 			cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoSignaturesFoundType)
-			return nil, fmt.Errorf("%w: expected signature artifact %s not found", cerr, sigTag.Name())
+			return nil, cerr
 		}
 		return nil, fmt.Errorf("failed to get signature digest: %w", err)
 	}
