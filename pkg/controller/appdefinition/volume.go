@@ -168,17 +168,16 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			pvc.Spec.VolumeName = pv.Name
 			pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MinSize
 
-			if volumeBinding.Class != "" {
-				// Specifically allowing volume classes that are inactive.
-				if volClass, ok := volumeClasses[volumeBinding.Class]; !ok {
-					return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeBinding.Class)
-				} else {
-					pvc.Spec.StorageClassName = &volClass.StorageClassName
-					pvc.Labels[labels.AcornVolumeClass] = volClass.Name
-				}
+			volumeClassName := volumeBinding.Class
+			if volumeClassName == "" {
+				volumeClassName = pv.Labels[labels.AcornVolumeClass]
+			}
+
+			if volClass, ok := volumeClasses[volumeClassName]; !ok {
+				return nil, fmt.Errorf("%s has an invalid volume class %s", vol, volumeBinding.Class)
 			} else {
-				// User did not specify a class with the binding, so get the class from the existing volume.
-				pvc.Labels[labels.AcornVolumeClass] = pv.Labels[labels.AcornVolumeClass]
+				pvc.Spec.StorageClassName = &volClass.StorageClassName
+				pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 			}
 
 			if volumeBinding.Size != "" {
