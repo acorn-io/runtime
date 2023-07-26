@@ -173,3 +173,18 @@ func CopyVolumeDefaults(volumeRequest v1.VolumeRequest, volumeBinding v1.VolumeB
 
 	return volumeRequest
 }
+
+func FindDefaultStorageClass(ctx context.Context, c client.Reader) (string, error) {
+	storageClasses := &storagev1.StorageClassList{}
+	if err := c.List(ctx, storageClasses); err != nil {
+		return "", err
+	}
+
+	for _, sc := range storageClasses.Items {
+		if sc.Annotations[storage.IsDefaultStorageClassAnnotation] == "true" {
+			return sc.Name, nil
+		}
+	}
+
+	return "", nil
+}
