@@ -150,7 +150,7 @@ func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.Volum
 		return corev1.VolumeMount{}
 	}
 
-	newValue, err := i.replace(string(data))
+	newValue, err := i.Replace(string(data))
 	if err != nil {
 		i.saveError(err)
 		return corev1.VolumeMount{}
@@ -439,7 +439,7 @@ func (i *Interpolator) resolveImages(imageName string) (string, bool, error) {
 	return result, result != "", nil
 }
 
-func (i *Interpolator) replace(content string) (string, error) {
+func (i *Interpolator) Replace(content string) (string, error) {
 	content, err := replace.Replace(content, "@{", "}", i.resolve)
 	if err != nil {
 		return "", err
@@ -492,7 +492,7 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 	prefix := i.getContainerOrJobName()
 	key = strings.TrimPrefix(key, prefix+".")
 
-	newKey, err := i.replace(key)
+	newKey, err := i.Replace(key)
 	if err != nil {
 		i.saveError(err)
 		return corev1.EnvVar{
@@ -501,7 +501,7 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 		}, !strings.Contains(key, ".")
 	}
 
-	newValue, err := i.replace(value)
+	newValue, err := i.Replace(value)
 	if err != nil {
 		i.saveError(err)
 		return corev1.EnvVar{

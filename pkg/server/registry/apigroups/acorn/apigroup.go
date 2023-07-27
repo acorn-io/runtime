@@ -77,6 +77,8 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"acornimagebuilds":              buildsStorage,
 		"apps":                          appsStorage,
 		"apps/log":                      logsStorage,
+		"apps/info":                     apps.NewInfo(c),
+		"apps/icon":                     apps.NewIcon(c, transport),
 		"apps/confirmupgrade":           apps.NewConfirmUpgrade(c),
 		"apps/pullimage":                apps.NewPullAppImage(c),
 		"apps/ignorecleanup":            apps.NewIgnoreCleanup(c),

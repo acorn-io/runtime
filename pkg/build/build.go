@@ -96,6 +96,21 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		return nil, err
 	}
 
+	var dataFiles appdefinition.DataFiles
+	if buildSpec.Icon != "" {
+		dataFiles.Icon, err = getFile(ctx, buildSpec.Icon)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if buildSpec.Readme != "" {
+		dataFiles.Readme, err = getFile(ctx, buildSpec.Readme)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	imageData, err := fromSpec(ctx, *buildSpec)
 	appImage := &v1.AppImage{
 		Acornfile: string(acornfileData),
@@ -107,7 +122,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		return nil, err
 	}
 
-	id, err := fromAppImage(ctx, appImage)
+	id, err := fromAppImage(ctx, dataFiles, appImage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize app image: %w", err)
 	}
@@ -572,6 +587,32 @@ func toContextCopyDockerFile(baseImage string, contextDirs map[string]string) st
 		buf.WriteString("\"\n")
 	}
 	return buf.String()
+}
+
+func getFile(ctx *buildContext, path string) ([]byte, error) {
+	msg, cancel := ctx.messages.Recv()
+	defer cancel()
+
+	timeoutCtx, timeoutCancel := context.WithTimeout(ctx.ctx, 5*time.Second)
+	defer timeoutCancel()
+
+	err := ctx.messages.Send(&buildclient.Message{
+		ReadFile: path,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		select {
+		case <-timeoutCtx.Done():
+			return nil, fmt.Errorf("timeout waiting for acornfile [%s]", path)
+		case resp := <-msg:
+			if resp.ReadFile == path && resp.Packet != nil {
+				return resp.Packet.Data, nil
+			}
+		}
+	}
 }
 
 func getAcornfile(ctx *buildContext, path string) ([]byte, error) {

@@ -18,6 +18,8 @@ import (
 )
 
 const (
+	IconFile      = "icon"
+	ReadmeFile    = "README"
 	AcornCueFile  = "Acornfile"
 	ImageDataFile = "images.json"
 	VCSDataFile   = "vcs.json"
@@ -28,6 +30,11 @@ const (
 var (
 	ErrInvalidInput = errors.New("invalid input")
 )
+
+type DataFiles struct {
+	Icon   []byte
+	Readme []byte
+}
 
 type AppDefinition struct {
 	data         []byte
@@ -307,43 +314,71 @@ func (a *AppDefinition) BuilderSpec() (*v1.BuilderSpec, error) {
 	return spec, a.newDecoder().Decode(spec)
 }
 
-func AppImageFromTar(reader io.Reader) (*v1.AppImage, error) {
+func IconFromTar(reader io.Reader) ([]byte, error) {
 	tar := tar.NewReader(reader)
-	result := &v1.AppImage{}
 	for {
 		header, err := tar.Next()
 		if err == io.EOF {
 			break
 		}
 
-		if header.Name == AcornCueFile {
+		if header.Name == IconFile {
+			return io.ReadAll(tar)
+		}
+	}
+
+	return nil, nil
+}
+
+func AppImageFromTar(reader io.Reader) (*v1.AppImage, *DataFiles, error) {
+	tar := tar.NewReader(reader)
+	result := &v1.AppImage{}
+	dataFiles := &DataFiles{}
+	for {
+		header, err := tar.Next()
+		if err == io.EOF {
+			break
+		}
+
+		switch header.Name {
+		case AcornCueFile:
 			data, err := io.ReadAll(tar)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			result.Acornfile = string(data)
-		} else if header.Name == ImageDataFile {
+		case ImageDataFile:
 			err := json.NewDecoder(tar).Decode(&result.ImageData)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-		} else if header.Name == VCSDataFile {
+		case VCSDataFile:
 			err := json.NewDecoder(tar).Decode(&result.VCS)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-		} else if header.Name == BuildDataFile {
+		case BuildDataFile:
 			result.BuildArgs = map[string]any{}
 			err := json.NewDecoder(tar).Decode(&result.BuildArgs)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
+			}
+		case ReadmeFile:
+			dataFiles.Readme, err = io.ReadAll(tar)
+			if err != nil {
+				return nil, nil, err
+			}
+		case IconFile:
+			dataFiles.Icon, err = io.ReadAll(tar)
+			if err != nil {
+				return nil, nil, err
 			}
 		}
 	}
 
 	if result.Acornfile == "" {
-		return nil, fmt.Errorf("invalid image no Acornfile found")
+		return nil, nil, fmt.Errorf("invalid image no Acornfile found")
 	}
 
-	return result, nil
+	return result, dataFiles, nil
 }

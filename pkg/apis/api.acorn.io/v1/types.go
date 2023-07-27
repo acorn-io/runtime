@@ -168,6 +168,12 @@ type LogMessage struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+type IconOptions struct {
+	metav1.TypeMeta `json:",inline"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 type LogOptions struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -192,6 +198,15 @@ type PortForwardOptions struct {
 type AppPullImage struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type AppInfo struct {
+	metav1.TypeMeta    `json:",inline"`
+	metav1.ObjectMeta  `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Info               string `json:"info,omitempty"`
+	InterpolationError string `json:"interpolationError,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -227,6 +242,7 @@ type ImageDetails struct {
 	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
 	Params          *v1.ParamSpec `json:"params,omitempty"`
 	SignatureDigest string        `json:"signatureDigest,omitempty"`
+	Readme          string        `json:"readme,omitempty"`
 	ParseError      string        `json:"parseError,omitempty"`
 }
 

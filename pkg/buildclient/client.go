@@ -112,6 +112,20 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 			if err != nil {
 				return nil, err
 			}
+		} else if msg.ReadFile != "" {
+			data, err := os.ReadFile(filepath.Join(cwd, msg.ReadFile))
+			if err != nil {
+				return nil, err
+			}
+			err = messages.Send(&Message{
+				ReadFile: msg.ReadFile,
+				Packet: &types.Packet{
+					Data: data,
+				},
+			})
+			if err != nil {
+				return nil, err
+			}
 		} else if msg.Error != "" {
 			return nil, errors.New(msg.Error)
 		}

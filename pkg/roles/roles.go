@@ -43,6 +43,8 @@ var (
 				Verbs: []string{"get", "list", "watch"},
 				Resources: []string{
 					"apps",
+					"apps/info",
+					"apps/icon",
 					"acornimagebuilds",
 					"builders",
 					"devsessions",

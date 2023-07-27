@@ -183,7 +183,7 @@ func generateTemplate(secrets map[string]*corev1.Secret, req router.Request, app
 			return images.ResolveTag(tag, digest.Image)
 		})
 
-		template, err := tempInterpolator.replace(template)
+		template, err := tempInterpolator.Replace(template)
 		if err != nil {
 			return nil, err
 		}
