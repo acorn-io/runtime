@@ -9437,7 +9437,8 @@ func schema_pkg_apis_internalacornio_v1_ProjectInstanceStatus(ref common.Referen
 					},
 					"supportedRegions": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "SupportedRegions on the status field should be an explicit list of supported regions. That is, if the user specifies \"*\" for supported regions, then the status value should be the list of all regions. This is to avoid having to make another call to explicitly list all regions.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{

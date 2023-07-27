@@ -37,7 +37,7 @@ func (c *DefaultClient) ProjectCreate(ctx context.Context, name, defaultRegion s
 	}
 	if defaultRegion != "" {
 		project.Spec.DefaultRegion = defaultRegion
-		if !slices.Contains(supportedRegions, defaultRegion) {
+		if !slices.Contains(supportedRegions, defaultRegion) && !slices.Contains(supportedRegions, apiv1.AllRegions) {
 			supportedRegions = append([]string{defaultRegion}, supportedRegions...)
 		}
 	}
@@ -57,7 +57,7 @@ func (c *DefaultClient) ProjectUpdate(ctx context.Context, project *apiv1.Projec
 			project.Spec.SupportedRegions = supportedRegions
 		}
 	}
-	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) {
+	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) && !slices.Contains(project.Spec.SupportedRegions, apiv1.AllRegions) {
 		project.Spec.SupportedRegions = append(project.Spec.SupportedRegions, project.Spec.DefaultRegion)
 	}
 

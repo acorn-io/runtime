@@ -18,6 +18,7 @@ func TestSetProjectSupportedRegions(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/setsupportedregions/no-default", SetProjectSupportedRegions)
 	tester.DefaultTest(t, scheme.Scheme, "testdata/setsupportedregions/with-supported-regions", SetProjectSupportedRegions)
 	tester.DefaultTest(t, scheme.Scheme, "testdata/setsupportedregions/with-default-and-supported", SetProjectSupportedRegions)
+	tester.DefaultTest(t, scheme.Scheme, "testdata/setsupportedregions/all-supported-regions-with-default", SetProjectSupportedRegions)
 }
 
 func TestCreateNamespace(t *testing.T) {

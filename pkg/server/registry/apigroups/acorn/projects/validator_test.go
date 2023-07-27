@@ -48,12 +48,22 @@ func TestProjectCreateValidation(t *testing.T) {
 			},
 		},
 		{
-			name:      "Create project with default that is not supported",
+			name:      "Create project with default and no supported regions should fail",
 			wantError: true,
 			project: apiv1.Project{
 				Spec: v1.ProjectInstanceSpec{
 					DefaultRegion:    "acorn-test-region",
 					SupportedRegions: []string{},
+				},
+			},
+		},
+		{
+			name:      "Create project with default that is not supported",
+			wantError: true,
+			project: apiv1.Project{
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "acorn-test-region",
+					SupportedRegions: []string{"acorn-test-other"},
 				},
 			},
 		},
@@ -71,6 +81,15 @@ func TestProjectCreateValidation(t *testing.T) {
 			project: apiv1.Project{
 				Spec: v1.ProjectInstanceSpec{
 					SupportedRegions: []string{"acorn-test-region", "acorn-test-dne"},
+				},
+			},
+		},
+		{
+			name: "Create project with default region supporting all regions",
+			project: apiv1.Project{
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "acorn-test-region",
+					SupportedRegions: []string{apiv1.AllRegions},
 				},
 			},
 		},
@@ -128,6 +147,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 					SupportedRegions: []string{"my-region"},
 				},
 			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).Build(),
 		},
 		{
 			name: "Update project to have default region and non-existent supported regions",
@@ -148,6 +168,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 					SupportedRegions: []string{"my-region", "dne-region"},
 				},
 			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).Build(),
 		},
 		{
 			name:      "Remove default region as supported region",
@@ -163,7 +184,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 			},
 		},
 		{
-			name: "Update project remove a supported region, no apps",
+			name: "Update project to remove a supported region, no apps",
 			oldProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
@@ -185,7 +206,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).Build(),
 		},
 		{
-			name: "Update project remove a supported region, no apps in project",
+			name: "Update project to remove a supported region, no apps in project",
 			oldProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
@@ -221,7 +242,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 			).Build(),
 		},
 		{
-			name: "Update project remove a supported region, no apps in removed region",
+			name: "Update project to remove a supported region, no apps in removed region",
 			oldProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-project",
@@ -257,7 +278,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 			).Build(),
 		},
 		{
-			name:      "Update project remove a supported region with apps in removed region",
+			name:      "Update project to remove a supported region with apps in removed region",
 			wantError: true,
 			oldProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
@@ -298,7 +319,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 			).Build(),
 		},
 		{
-			name:      "Update project remove a supported region with volumes in removed region",
+			name:      "Update project to remove a supported region with volumes in removed region",
 			wantError: true,
 			oldProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
@@ -339,7 +360,7 @@ func TestProjectUpdateValidation(t *testing.T) {
 			).Build(),
 		},
 		{
-			name:      "Update project remove a supported region with apps defaulted to removed region",
+			name:      "Update project to remove a supported region with apps defaulted to removed region",
 			wantError: true,
 			oldProject: apiv1.Project{
 				ObjectMeta: metav1.ObjectMeta{
@@ -362,6 +383,10 @@ func TestProjectUpdateValidation(t *testing.T) {
 					DefaultRegion:    "my-region",
 					SupportedRegions: []string{"my-region"},
 				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
 			},
 			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithLists(
 				&apiv1.AppList{
@@ -375,6 +400,144 @@ func TestProjectUpdateValidation(t *testing.T) {
 								Defaults: v1.Defaults{
 									Region: "my-other-region",
 								},
+							},
+						},
+					},
+				},
+			).Build(),
+		},
+		{
+			name:      "Update project to remove a supported region with apps using removed region",
+			wantError: true,
+			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+			},
+			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region"},
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithLists(
+				&apiv1.AppList{
+					Items: []apiv1.App{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "my-app",
+								Namespace: "my-project",
+							},
+							Spec: v1.AppInstanceSpec{
+								Region: "my-other-region",
+							},
+						},
+					},
+				},
+			).Build(),
+		},
+		{
+			name: "Update project to change default region and still allow all regions",
+			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{apiv1.AllRegions},
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion: "my-region",
+				},
+			},
+			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "my-other-region",
+					SupportedRegions: []string{apiv1.AllRegions},
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion: "my-region",
+				},
+			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithLists(
+				&apiv1.AppList{
+					Items: []apiv1.App{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "my-other-app",
+								Namespace: "my-project",
+							},
+							Spec: v1.AppInstanceSpec{
+								Region: "my-other-region",
+							},
+						},
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "my-app",
+								Namespace: "my-project",
+							},
+							Spec: v1.AppInstanceSpec{
+								Region: "my-region",
+							},
+						},
+					},
+				},
+			).Build(),
+		},
+		{
+			name:      "Update project to remove supported regions, but app exists in removed region",
+			wantError: true,
+			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion: "my-region",
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion: "my-region",
+				},
+			},
+			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region"},
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion: "my-region",
+				},
+			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithLists(
+				&apiv1.AppList{
+					Items: []apiv1.App{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "my-app",
+								Namespace: "my-project",
+							},
+							Spec: v1.AppInstanceSpec{
+								Region: "my-other-region",
 							},
 						},
 					},

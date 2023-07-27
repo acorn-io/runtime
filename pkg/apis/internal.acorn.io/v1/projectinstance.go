@@ -20,8 +20,11 @@ type ProjectInstanceSpec struct {
 }
 
 type ProjectInstanceStatus struct {
-	Namespace        string   `json:"namespace,omitempty"`
-	DefaultRegion    string   `json:"defaultRegion,omitempty"`
+	Namespace     string `json:"namespace,omitempty"`
+	DefaultRegion string `json:"defaultRegion,omitempty"`
+	// SupportedRegions on the status field should be an explicit list of supported regions.
+	// That is, if the user specifies "*" for supported regions, then the status value should be the list of all regions.
+	// This is to avoid having to make another call to explicitly list all regions.
 	SupportedRegions []string `json:"supportedRegions,omitempty"`
 }
 
@@ -44,7 +47,7 @@ func (in *ProjectInstance) GetSupportedRegions() []string {
 func (in *ProjectInstance) SetDefaultRegion(region string) {
 	if in.Spec.DefaultRegion == "" && len(in.Spec.SupportedRegions) == 0 {
 		in.Status.DefaultRegion = region
-		in.Status.SupportedRegions = []string{region}
+		in.Status.SupportedRegions = []string{"*"}
 	} else {
 		// Set the status values to the provided spec values.
 		// The idea here is that internally, we only need to check the status values.
