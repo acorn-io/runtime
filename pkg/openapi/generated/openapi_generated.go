@@ -3210,6 +3210,13 @@ func schema_pkg_apis_apiacornio_v1_Event(ref common.ReferenceCallback) common.Op
 							Format:      "",
 						},
 					},
+					"serviceName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceName is the name of the service that the event is related to, if any.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"resource": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Resource identifies the object the Event is regarding.",
@@ -7919,6 +7926,13 @@ func schema_pkg_apis_internalacornio_v1_EventInstance(ref common.ReferenceCallba
 					"appName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "AppName is the name of the app that the event is related to, if any.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"serviceName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceName is the name of the service that the event is related to, if any.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
