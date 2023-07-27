@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/acorn-io/baaah/pkg/clientaggregator"
 	"github.com/acorn-io/baaah/pkg/restconfig"
+	"github.com/acorn-io/baaah/pkg/runtime/multi"
 	"github.com/acorn-io/mink/pkg/server"
 	adminapi "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io"
 	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
@@ -13,6 +13,7 @@ import (
 	apiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/apiserver/pkg/server/options"
 	"k8s.io/client-go/rest"
+	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Config struct {
@@ -41,10 +42,7 @@ func apiGroups(serverConfig Config) ([]*apiserver.APIGroupInfo, error) {
 		if err != nil {
 			return nil, err
 		}
-		aggr := clientaggregator.New(c)
-		aggr.AddGroup(api.Group, localClient)
-		aggr.AddGroup(adminapi.Group, localClient)
-		c = aggr
+		c = multi.NewWithWatch(c, map[string]kclient.WithWatch{api.Group: localClient, adminapi.Group: localClient})
 	}
 
 	return registry.APIGroups(c, restConfig, localCfg)
