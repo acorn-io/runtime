@@ -87,7 +87,8 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 
 	projectRouter := router.Type(&v1.ProjectInstance{})
 	projectRouter.HandlerFunc(project.SetProjectSupportedRegions)
-	projectRouter.HandlerFunc(project.CreateNamespace)
+	// Don't delete the namespace until the project instance is deleted.
+	projectRouter.IncludeFinalizing().HandlerFunc(project.CreateNamespace)
 	projectRouter.FinalizeFunc(labels.Prefix+"project-app-delete", project.EnsureAllAppsRemoved)
 
 	router.Type(&v1.DevSessionInstance{}).HandlerFunc(devsession.ExpireDevSession)
