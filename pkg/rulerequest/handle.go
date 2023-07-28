@@ -21,12 +21,12 @@ import (
 
 // handleNotAllowedError handles the case where an image is not allowed by IARs and prompts the user to create a basic one (image pattern only, no signatures, etc.)
 // @param opts can be either *client.AppRunOptions or *client.AppUpdateOptions and based on that we'll call either AppRun or AppUpdate in the end
-func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool, image string, err error, app *apiv1.App, opts any) (*apiv1.App, error) {
-	err.(*imageallowrules.ErrImageNotAllowed).Image = image
+func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool, image string, inErr error, app *apiv1.App, opts any) (*apiv1.App, error) {
+	inErr.(*imageallowrules.ErrImageNotAllowed).Image = image
 
 	// We're checking for images first, since we could run existing images by ID
 	var il []apiv1.Image
-	il, err = c.ImageList(ctx)
+	il, err := c.ImageList(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool,
 
 	// Prompt user to create an simple IAR for this image
 	if choice, promptErr := HandleNotAllowed(dangerous, image); promptErr != nil {
-		return nil, fmt.Errorf("%s: %w", promptErr.Error(), err)
+		return nil, fmt.Errorf("%s: %w", promptErr.Error(), inErr)
 	} else if choice != "NO" {
 		iarErr := CreateImageAllowRule(ctx, c, image, choice, existingImgName) // existingImgName to ensure that this exact image ID is allowed in addition to whatever pattern we're allowing
 		if iarErr != nil {
@@ -61,8 +61,8 @@ func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool,
 			return app, fmt.Errorf("unknown opts type: %T", opts)
 		}
 	}
-
-	return app, nil
+	// choice was "NO" -> still not allowed
+	return nil, inErr
 }
 
 func PromptRun(ctx context.Context, c client.Client, dangerous bool, image string, opts client.AppRunOptions) (*apiv1.App, error) {
@@ -184,7 +184,7 @@ application. If you are unsure say no.`, image)
 }
 
 func CreateImageAllowRule(ctx context.Context, c client.Client, image, choice string, extraExactMatches ...string) error {
-	iar, err := iarutil.GenerateSimpleAllowRule(c.GetProject(), run.NameGenerator.Generate(), image, choice)
+	iar, err := iarutil.GenerateSimpleAllowRule(c.GetNamespace(), run.NameGenerator.Generate(), image, choice)
 	if err != nil {
 		return fmt.Errorf("error generating ImageAllowRule: %w", err)
 	}

@@ -284,9 +284,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	image, deployArgs, err := imageSource.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
-		if naErr := client.TranslateNotAllowed(err); naErr != nil {
+		err = client.TranslateNotAllowed(err)
+		if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 			if _, isPattern := autoupgrade.AutoUpgradePattern(image); isPattern {
-				naErr.(*imageallowrules.ErrImageNotAllowed).Image = image
+				err.(*imageallowrules.ErrImageNotAllowed).Image = image
 				logrus.Debugf("Valid tags for pattern %s were not allowed to run: %v", image, naErr)
 				if choice, promptErr := rulerequest.HandleNotAllowed(s.Dangerous, image); promptErr != nil {
 					return promptErr
