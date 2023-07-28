@@ -52,7 +52,7 @@ func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter 
 	}
 }
 
-func (s *Validator) ValidateName(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
+func (s *Validator) ValidateName(_ context.Context, obj runtime.Object) (result field.ErrorList) {
 	name := obj.(kclient.Object).GetName()
 	if errs := validation.IsDNS1035Label(name); len(errs) > 0 {
 		result = append(result, field.Invalid(field.NewPath("metadata", "name"), name, strings.Join(errs, ",")))

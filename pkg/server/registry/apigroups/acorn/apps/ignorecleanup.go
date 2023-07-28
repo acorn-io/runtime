@@ -3,7 +3,6 @@ package apps
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
@@ -13,9 +12,6 @@ import (
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/labels"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/validation"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/utils/strings/slices"
@@ -26,21 +22,7 @@ func NewIgnoreCleanup(c client.WithWatch) rest.Storage {
 	return stores.NewBuilder(c.Scheme(), &apiv1.IgnoreCleanup{}).
 		WithCreate(&ignoreCleanupStrategy{
 			client: c,
-		}).
-		WithValidateName(ignoreCleanupValidator{}).
-		Build()
-}
-
-type ignoreCleanupValidator struct{}
-
-func (s ignoreCleanupValidator) ValidateName(ctx context.Context, _ runtime.Object) (result field.ErrorList) {
-	ri, _ := request.RequestInfoFrom(ctx)
-	for _, piece := range strings.Split(ri.Name, ".") {
-		if errs := validation.IsDNS1035Label(piece); len(errs) > 0 {
-			result = append(result, field.Invalid(field.NewPath("metadata", "name"), ri.Name, strings.Join(errs, ",")))
-		}
-	}
-	return
+		}).WithValidateName(nestedValidator{}).Build()
 }
 
 type ignoreCleanupStrategy struct {
@@ -58,7 +40,7 @@ func (s *ignoreCleanupStrategy) Create(ctx context.Context, obj types.Object) (t
 	// The app validation logic should not run there.
 	app := &v1.AppInstance{}
 	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
-	if err != nil && apierrors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		// See if this is a public name
 		appList := &v1.AppInstanceList{}
 		listErr := s.client.List(ctx, appList, client.MatchingLabels{labels.AcornPublicName: ri.Name}, client.InNamespace(ri.Namespace))
