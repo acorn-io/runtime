@@ -11,9 +11,12 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/runtime/pkg/volume"
 	"github.com/google/go-containerregistry/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -121,10 +124,49 @@ func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.O
 		return nil, err
 	}
 
-	result = append(result, registryDeployment(
-		system.ImagesNamespace,
-		system.DefaultImage(),
-		system.ResourceRequirementsFor(*cfg.RegistryMemory, *cfg.RegistryCPU))...)
+	volumeSource := corev1.VolumeSource{
+		EmptyDir: &corev1.EmptyDirVolumeSource{},
+	}
+
+	if sc, err := volume.FindDefaultStorageClass(ctx, c); err != nil {
+		return nil, err
+	} else if sc != "" {
+		volumeSource = corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: system.RegistryName,
+			},
+		}
+
+		result = append(result,
+			&corev1.PersistentVolumeClaim{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      system.RegistryName,
+					Namespace: system.ImagesNamespace,
+					Labels: map[string]string{
+						"app": system.RegistryName,
+					},
+				},
+				Spec: corev1.PersistentVolumeClaimSpec{
+					StorageClassName: &sc,
+					AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceStorage: resource.MustParse(system.RegistryPVCSize),
+						},
+					},
+				},
+			},
+		)
+	}
+
+	result = append(result,
+		registryDeployment(
+			system.ImagesNamespace,
+			system.DefaultImage(),
+			system.ResourceRequirementsFor(*cfg.RegistryMemory, *cfg.RegistryCPU),
+			volumeSource,
+		)...,
+	)
 
 	return result, nil
 }
