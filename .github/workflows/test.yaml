@@ -20,7 +20,17 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-go@v4
         with:
+          cache: false
           go-version: "1.20"
+      - name: Setup Golang caches
+        uses: buildjet/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
       - run: make validate-code
       - run: make build
   unit:
@@ -32,7 +42,17 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-go@v4
         with:
+          cache: false
           go-version: "1.20"
+      - name: Setup Golang caches
+        uses: buildjet/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
       - name: Run unit tests
         id: unit-test
         run: TEST_FLAGS="--junitfile unit-test-summary.xml" make unit
@@ -50,7 +70,17 @@ jobs:
           fetch-depth: 1
       - uses: actions/setup-go@v4
         with:
+          cache: false
           go-version: "1.20"
+      - name: Setup Golang caches
+        uses: buildjet/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
       - uses: debianmaster/actions-k3s@v1.0.5
         with:
           version: 'v1.27.2-k3s1'
