@@ -54,10 +54,21 @@ jobs:
       - uses: debianmaster/actions-k3s@v1.0.5
         with:
           version: 'v1.27.2-k3s1'
-      - run: make build
-      - run: docker buildx install
-      - run: make setup-ci-image
-      - run: ./bin/acorn install --image acorn:v-ci --skip-checks --acorn-dns=disabled --network-policies=true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          tags: acorn:v-ci
+          cache-from: type=registry,ref=acorn:v-ci
+          cache-to: type=inline
+      - name: Load image into k3s
+        run: docker save acorn:v-ci | docker exec -i $$(docker ps | grep k3s | awk '{print $$1}') ctr --address /run/k3s/containerd/containerd.sock images import -
+      - name: Build CI acorn binary
+        run: make build
+      - name: Install acorn with ci image
+        run: ./bin/acorn install --image acorn:v-ci --skip-checks --acorn-dns=disabled --network-policies=true
       - name: Run integration tests
         id: integration-tests
         run: TEST_ACORN_CONTROLLER=external TEST_FLAGS="--junitfile integration-test-summary.xml" make integration

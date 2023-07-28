@@ -13,10 +13,6 @@ mocks:
 image:
 	docker build .
 
-setup-ci-image:
-	docker build -t acorn:v-ci .
-	docker save acorn:v-ci | docker exec -i $$(docker ps | grep k3s | awk '{print $$1}') ctr --address /run/k3s/containerd/containerd.sock images import -
-
 GOLANGCI_LINT_VERSION ?= v1.51.1
 setup-env: 
 	if ! command -v golangci-lint &> /dev/null; then \
