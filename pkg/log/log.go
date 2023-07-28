@@ -61,6 +61,10 @@ func (w *watching) shouldWatch(kind, namespace, name string) bool {
 	return true
 }
 
+func objectDeleted(obj metav1.Object) bool {
+	return !obj.GetDeletionTimestamp().IsZero() && len(obj.GetFinalizers()) == 0
+}
+
 type Message struct {
 	Line          string
 	Pod           *corev1.Pod
@@ -224,7 +228,7 @@ func Container(ctx context.Context, pod *corev1.Pod, name string, output chan<- 
 			}
 		} else if err == nil {
 			pod, err := options.PodClient.Pods(pod.Namespace).Get(ctx, pod.Name, metav1.GetOptions{})
-			if err == nil && (!pod.DeletionTimestamp.IsZero() || pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed) {
+			if err == nil && (objectDeleted(pod) || pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed) {
 				return nil
 			}
 		}
@@ -264,7 +268,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 	}
 
 	if !options.Follow {
-		if !pod.DeletionTimestamp.IsZero() {
+		if objectDeleted(pod) {
 			return nil
 		}
 		for _, container := range pod.Spec.Containers {
@@ -295,7 +299,7 @@ func Pod(ctx context.Context, pod *corev1.Pod, output chan<- Message, options *O
 	eg.Go(func() error {
 		defer cancel()
 		_, err = podWatcher.ByName(ctx, pod.Namespace, pod.Name, func(pod *corev1.Pod) (bool, error) {
-			if !pod.DeletionTimestamp.IsZero() {
+			if objectDeleted(pod) {
 				return true, nil
 			}
 			for _, container := range pod.Spec.Containers {
@@ -537,7 +541,7 @@ func App(ctx context.Context, app *apiv1.App, output chan<- Message, options *Op
 	eg.Go(func() error {
 		defer cancel()
 		_, err := appWatcher.ByObject(ctx, app, func(app *apiv1.App) (bool, error) {
-			return !app.DeletionTimestamp.IsZero(), nil
+			return objectDeleted(app), nil
 		})
 		return err
 	})
