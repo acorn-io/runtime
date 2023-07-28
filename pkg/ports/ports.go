@@ -68,6 +68,11 @@ func ToServicePort(port v1.PortDef) corev1.ServicePort {
 	return servicePort
 }
 
+// RemoveNonHTTPPorts removes all ports from the slice that do not have AppProtocol set to HTTP.
+// This is useful for ExternalName Services, which cause problems for Istio if they have non-HTTP ports.
+// See https://github.com/istio/istio/issues/20703.
+// Kubernetes does not care about ports on ExternalName Services, so it is safe to remove them.
+// Traefik does care about ports on ExternalName Services, but only on HTTP ones.
 func RemoveNonHTTPPorts(ports []corev1.ServicePort) []corev1.ServicePort {
 	var result []corev1.ServicePort
 	for _, port := range ports {
