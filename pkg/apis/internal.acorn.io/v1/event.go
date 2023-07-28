@@ -40,6 +40,10 @@ type EventInstance struct {
 	// +optional
 	AppName string `json:"appName,omitempty"`
 
+	// ServiceName is the name of the service that the event is related to, if any.
+	// +optional
+	ServiceName string `json:"serviceName,omitempty"`
+
 	// Resource identifies the object the Event is regarding.
 	// +optional
 	Resource *EventResource `json:"resource,omitempty"`
