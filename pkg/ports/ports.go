@@ -67,3 +67,13 @@ func ToServicePort(port v1.PortDef) corev1.ServicePort {
 	}
 	return servicePort
 }
+
+func RemoveNonHTTPPorts(ports []corev1.ServicePort) []corev1.ServicePort {
+	var result []corev1.ServicePort
+	for _, port := range ports {
+		if port.Protocol == corev1.ProtocolTCP && port.AppProtocol != nil && strings.ToUpper(*port.AppProtocol) == "HTTP" {
+			result = append(result, port)
+		}
+	}
+	return result
+}

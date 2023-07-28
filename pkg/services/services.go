@@ -76,6 +76,7 @@ func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
 	if ipAddr == nil {
 		newService.Spec.Type = corev1.ServiceTypeExternalName
 		newService.Spec.ExternalName = service.Spec.Address
+		newService.Spec.Ports = ports.RemoveNonHTTPPorts(newService.Spec.Ports)
 	} else {
 		newService.Spec.Type = corev1.ServiceTypeClusterIP
 
@@ -136,7 +137,7 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 	if apierrors.IsNotFound(err) {
 		k8sService := &corev1.Service{}
 		if err := c.Get(ctx, router.Key(refNamespace, refName), k8sService); err == nil {
-			servicePorts = ports.CopyServicePorts(k8sService.Spec.Ports)
+			servicePorts = ports.RemoveNonHTTPPorts(ports.CopyServicePorts(k8sService.Spec.Ports))
 			targetService.Name = k8sService.Name
 			targetService.Namespace = k8sService.Namespace
 		} else {
@@ -146,7 +147,7 @@ func toRefService(ctx context.Context, c kclient.Client, cfg *apiv1.Config, serv
 	} else if err != nil {
 		return nil, nil, err
 	} else {
-		servicePorts = ports.ToServicePorts(targetService.Spec.Ports)
+		servicePorts = ports.RemoveNonHTTPPorts(ports.ToServicePorts(targetService.Spec.Ports))
 	}
 
 	serviceType := corev1.ServiceTypeExternalName
@@ -190,7 +191,7 @@ func toDefaultService(cfg *apiv1.Config, svc *v1.ServiceInstance, service *corev
 		Spec: corev1.ServiceSpec{
 			Type:         corev1.ServiceTypeExternalName,
 			ExternalName: fmt.Sprintf("%s.%s.%s", service.Name, service.Namespace, cfg.InternalClusterDomain),
-			Ports:        ports.CopyServicePorts(service.Spec.Ports),
+			Ports:        ports.RemoveNonHTTPPorts(ports.CopyServicePorts(service.Spec.Ports)),
 		},
 	}
 }
