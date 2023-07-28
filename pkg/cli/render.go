@@ -5,6 +5,7 @@ import (
 
 	"github.com/acorn-io/aml/pkg/cue"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/spf13/cobra"
 )
@@ -27,12 +28,21 @@ type Render struct {
 }
 
 func (s *Render) Run(cmd *cobra.Command, args []string) error {
-	c, err := s.client.CreateDefault()
+	var c client2.Client
+
+	imageAndArgs := imagesource.NewImageSource(s.File, args, s.Profile, nil, false)
+
+	_, file, err := imageAndArgs.ResolveImageAndFile()
 	if err != nil {
 		return err
 	}
-
-	imageAndArgs := imagesource.NewImageSource(s.File, args, s.Profile, nil, false)
+	if file == "" {
+		// Lazily create client so that local file render doesn't require an API connection
+		c, err = s.client.CreateDefault()
+		if err != nil {
+			return err
+		}
+	}
 
 	appDef, _, err := imageAndArgs.GetAppDefinition(cmd.Context(), c)
 	if err != nil {
