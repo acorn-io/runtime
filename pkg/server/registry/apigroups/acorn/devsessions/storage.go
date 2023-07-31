@@ -17,7 +17,7 @@ func NewStorage(c kclient.WithWatch, cf *client.Factory) rest.Storage {
 	remoteResource := translation.NewSimpleTranslationStrategy(&Translator{},
 		remote.NewRemote(&v1.DevSessionInstance{}, c))
 
-	appValidator := apps.NewValidator(c, cf, nil)
+	appValidator := apps.NewValidator(c, cf, nil, nil)
 	devSessionValidator := NewValidator(c, appValidator)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.DevSession{}).

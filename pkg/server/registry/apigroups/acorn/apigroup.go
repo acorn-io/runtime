@@ -64,7 +64,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		return nil, err
 	}
 
-	appsStorage := apps.NewStorage(c, clientFactory, event.NewRecorder(c))
+	appsStorage := apps.NewStorage(c, clientFactory, event.NewRecorder(c), transport)
 
 	logsStorage, err := apps.NewLogs(c, cfg)
 	if err != nil {

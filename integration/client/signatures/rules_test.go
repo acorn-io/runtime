@@ -11,7 +11,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/profiles"
-	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
 	cclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,11 +44,11 @@ func TestImageAllowRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	iarFeatureStateOriginal := cfg.Features[profiles.FeatureImageAllowRules]
+
 	cfg.Features = map[string]bool{
 		profiles.FeatureImageAllowRules: true,
 	}
-
-	cfg.InternalRegistryPrefix = z.Pointer("")
 
 	err = config.Set(ctx, kclient, cfg)
 	if err != nil {
@@ -88,8 +87,6 @@ func TestImageAllowRules(t *testing.T) {
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
 	assert.Empty(t, details.SignatureDigest, "signature digest should be empty before signing")
-
-	t.Logf("target digest: %s", targetDigest.String())
 
 	// create image allow rule
 	iar := &v1.ImageAllowRule{
@@ -173,9 +170,15 @@ func TestImageAllowRules(t *testing.T) {
 		}
 	}
 
-	t.Logf("Signed image %s with signature %s", targetDigest.String(), nsig.SignatureDigest)
-
 	assert.NotEmpty(t, nsig.SignatureDigest, "signature should not be empty")
+
+	ndetails, err := c.ImageDetails(ctx, tagName, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("Image %s has signature %s", tagName, ndetails.SignatureDigest)
+	assert.NotEmpty(t, ndetails.SignatureDigest, "signature digest should not be empty after signing")
 
 	// try to run - expect success
 	app, err = c.AppRun(ctx, tagName, nil)
@@ -211,4 +214,14 @@ func TestImageAllowRules(t *testing.T) {
 	// try to run - expect failure
 	_, err = c.AppRun(ctx, tagName, nil)
 	assert.Error(t, err, "should error since image is signed by the required key but does not match the required annotation")
+
+	// Reset feature state to original value (especially heplful when testing locally)
+	cfg.Features = map[string]bool{
+		profiles.FeatureImageAllowRules: iarFeatureStateOriginal,
+	}
+
+	err = config.Set(ctx, kclient, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
