@@ -46,9 +46,10 @@ func TestImageAllowRules(t *testing.T) {
 
 	iarFeatureStateOriginal := cfg.Features[profiles.FeatureImageAllowRules]
 
-	cfg.Features = map[string]bool{
-		profiles.FeatureImageAllowRules: true,
+	if c.Features == nil {
+		c.Features = map[string]bool{}
 	}
+	cfg.Features[profiles.FeatureImageAllowRules] = true
 
 	defer func() {
 		// Reset feature state to original value (especially heplful when testing locally)
