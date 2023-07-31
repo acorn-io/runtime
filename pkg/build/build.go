@@ -192,15 +192,12 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 
 	for _, entry := range typed.Sorted(acorns) {
 		key, acornImage := entry.Key, entry.Value
-		if acornImage.Image != "" {
-			if _, auto := autoupgrade.AutoUpgradePattern(acornImage.Image); auto || acornImage.AutoUpgrade {
-				// This is the one situation where ImageKey is not set
-				builds = append(builds, v1.BuildRecord{
-					AcornBuild: &acornImage,
-				})
-				continue
-			}
+		if _, auto := autoupgrade.AutoUpgradePattern(acornImage.Image); auto || acornImage.AutoUpgrade {
+			// skip auto upgrade
+			continue
+		}
 
+		if acornImage.Image != "" {
 			// first attempt to resolve the image locally
 			id, err := resolveLocalImage(ctx, acornImage.Image)
 			if err != nil {

@@ -1385,6 +1385,231 @@ secrets: {
 	}, appSpec.Secrets["opt"])
 }
 
+func TestImageDynamicallyChangedToUnavailable(t *testing.T) {
+	acornCue := `
+args: image: "foo"
+containers: c: image: args.image
+`
+	image := &v1.ImagesData{
+		Builds: []v1.BuildRecord{
+			{
+				ContainerBuild: &v1.ContainerImageBuilderSpec{
+					Image: "foo",
+				},
+				ImageKey: "c",
+			},
+		},
+		Containers: map[string]v1.ContainerData{
+			"c": {
+				Image: "foo-hash",
+			},
+		},
+	}
+
+	app, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = app.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = app.WithImageData(*image)
+
+	appSpec, err := app.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "foo-hash", appSpec.Containers["c"].Image)
+
+	app, _, err = app.WithArgs(map[string]any{
+		"image": "not-foo",
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = app.AppSpec()
+	assert.ErrorContains(t, err, "failed to find image for container [c] in Acornfile, you may need to define the image/build in the images section of the Acornfile")
+}
+
+func TestImageDynamicScale(t *testing.T) {
+	acornCue := `
+args: scale: 1
+for i in std.range(1,args.scale+1) {
+	containers: "a\(i)": build: "./foo"
+	acorns: "ac\(i)": build: "./afoo"
+	services: "sc\(i)": build: "./afoo"
+}
+`
+	image := &v1.ImagesData{
+		Builds: []v1.BuildRecord{
+			{
+				ContainerBuild: &v1.ContainerImageBuilderSpec{
+					Build: &v1.Build{
+						Context:    "./foo",
+						Dockerfile: "foo/Dockerfile",
+					},
+				},
+				ImageKey: "a1",
+			},
+			{
+				AcornBuild: &v1.AcornBuilderSpec{
+					Build: &v1.AcornBuild{
+						Context:   "./afoo",
+						Acornfile: "afoo/Acornfile",
+					},
+				},
+				ImageKey: "ac1",
+			},
+			{
+				AcornBuild: &v1.AcornBuilderSpec{
+					Build: &v1.AcornBuild{
+						Context:   "./afoo",
+						Acornfile: "afoo/Acornfile",
+					},
+				},
+				ImageKey: "sc1",
+			},
+		},
+		Containers: map[string]v1.ContainerData{
+			"a1": {
+				Image: "foo-hash",
+			},
+		},
+		Acorns: map[string]v1.ImageData{
+			"ac1": {
+				Image: "afoo-hash",
+			},
+		},
+	}
+
+	app, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = app.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = app.WithImageData(*image)
+	devApp, _, err := app.WithArgs(map[string]any{"scale": 2}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := devApp.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "foo-hash", appSpec.Containers["a1"].Image)
+	assert.Equal(t, "foo-hash", appSpec.Containers["a2"].Image)
+	assert.Equal(t, "afoo-hash", appSpec.Acorns["ac1"].Image)
+	assert.Equal(t, "afoo-hash", appSpec.Acorns["ac2"].Image)
+	assert.Equal(t, "afoo-hash", appSpec.Services["sc1"].Image)
+	assert.Equal(t, "afoo-hash", appSpec.Services["sc2"].Image)
+}
+
+func TestImageDynamicSwitch(t *testing.T) {
+	acornCue := `
+if args.dev {
+	acorns: a: image: "acorn-dev"
+	containers: c: image: "container-dev"
+}
+if !args.dev {
+	acorns: a: image: "acorn"
+	containers: c: image: "container"
+}
+
+images: aimage: image: "acorn-dev"
+images: cimage: image: "container-dev"
+`
+	image := &v1.ImagesData{
+		Builds: []v1.BuildRecord{
+			{
+				ContainerBuild: &v1.ContainerImageBuilderSpec{
+					Image: "container",
+				},
+				ImageKey: "c",
+			},
+			{
+				AcornBuild: &v1.AcornBuilderSpec{
+					Image: "acorn",
+				},
+				ImageKey: "a",
+			},
+			{
+				ImageBuild: &v1.ImageBuilderSpec{
+					Image: "acorn-dev",
+				},
+				ImageKey: "aimage",
+			},
+			{
+				ImageBuild: &v1.ImageBuilderSpec{
+					Image: "container-dev",
+				},
+				ImageKey: "cimage",
+			},
+		},
+		Containers: map[string]v1.ContainerData{
+			"c": {
+				Image: "container-hash",
+			},
+		},
+		Acorns: map[string]v1.ImageData{
+			"a": {
+				Image: "acorn-hash",
+			},
+		},
+		Images: map[string]v1.ImageData{
+			"aimage": {
+				Image: "acorn-dev-hash",
+			},
+			"cimage": {
+				Image: "container-dev-hash",
+			},
+		},
+	}
+
+	app, err := NewAppDefinition([]byte(acornCue))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = app.BuilderSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app = app.WithImageData(*image)
+	devApp, _, err := app.WithArgs(nil, []string{"devMode"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := devApp.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "container-dev-hash", appSpec.Containers["c"].Image)
+	assert.Equal(t, "acorn-dev-hash", appSpec.Acorns["a"].Image)
+
+	appSpec, err = app.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "container-hash", appSpec.Containers["c"].Image)
+	assert.Equal(t, "acorn-hash", appSpec.Acorns["a"].Image)
+}
+
 func TestImageDataOverride(t *testing.T) {
 	acornCue := `
 containers: db: image: "mariadb"

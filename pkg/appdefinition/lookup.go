@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/z"
 	"k8s.io/apimachinery/pkg/api/equality"
 )
 
@@ -40,8 +41,18 @@ func findImageInImageData(imageData v1.ImagesData, imageKey string) (string, boo
 	return "", false
 }
 
-func findContainerImage(imageData v1.ImagesData, containerBuild *v1.Build) (string, bool) {
+func findContainerImage(imageData v1.ImagesData, image string, containerBuild *v1.Build) (string, bool) {
 	if containerBuild == nil {
+		if image != "" {
+			for _, build := range imageData.Builds {
+				if build.ContainerBuild != nil && build.ContainerBuild.Image == image && build.ImageKey != "" {
+					return findImageInImageData(imageData, build.ImageKey)
+				}
+				if build.ImageBuild != nil && build.ImageBuild.Image == image && build.ImageKey != "" {
+					return findImageInImageData(imageData, build.ImageKey)
+				}
+			}
+		}
 		return "", false
 	}
 
@@ -68,18 +79,27 @@ func findContainerImage(imageData v1.ImagesData, containerBuild *v1.Build) (stri
 	return "", false
 }
 
-func findAcornImage(imageData v1.ImagesData, image string, acornBuild *v1.AcornBuild) (string, bool) {
+func isAutoUpgradePattern(image string) bool {
+	return strings.ContainsAny(image, "*#")
+}
+
+func findAcornImage(imageData v1.ImagesData, autoUpgrade *bool, image string, acornBuild *v1.AcornBuild) (string, bool) {
+	if isAutoUpgradePattern(image) || z.Dereference(autoUpgrade) {
+		return image, image != ""
+	}
+
 	if acornBuild == nil {
 		for _, build := range imageData.Builds {
-			if build.ImageKey == "" && build.AcornBuild != nil && build.AcornBuild.Image == image {
-				return image, true
+			if build.ImageKey != "" && build.AcornBuild != nil && build.AcornBuild.Image == image && !build.AcornBuild.AutoUpgrade {
+				return findImageInImageData(imageData, build.ImageKey)
 			}
-			if build.ImageKey != "" && build.AcornBuild != nil && build.AcornBuild.Image == image && build.AcornBuild.Build == nil && !build.AcornBuild.AutoUpgrade {
+			if build.ImageKey != "" && build.ImageBuild != nil && build.ImageBuild.Image == image {
 				return findImageInImageData(imageData, build.ImageKey)
 			}
 		}
 		return "", false
 	}
+
 	for _, build := range imageData.Builds {
 		var (
 			testBuild *v1.AcornBuild
@@ -106,12 +126,13 @@ func findAcornImage(imageData v1.ImagesData, image string, acornBuild *v1.AcornB
 	return "", false
 }
 
-func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageData v1.ImagesData) (string, bool) {
+func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageData v1.ImagesData) (result string, found bool) {
 	var (
 		parts         = strings.Split(svcName, ".")
 		containerName string
 		sidecarName   string
 	)
+
 	if len(parts) > 2 {
 		return "", false
 	} else if len(parts) == 2 {
@@ -120,24 +141,10 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 		containerName = svcName
 	}
 
-	// This logic is here to support where autoUpgrade is true but it wasn't true during the build.  So the build actually
-	// as an embedded image. But since autoUpgrade is on we want to fall back to the behavior of grabbing the external
-	// image.
-	if serviceDef, ok := appSpec.Services[svcName]; ok && serviceDef.AutoUpgrade != nil && *serviceDef.AutoUpgrade && serviceDef.Image != "" {
-		return serviceDef.Image, true
-	} else if acornDef, ok := appSpec.Acorns[svcName]; ok && acornDef.AutoUpgrade != nil && *acornDef.AutoUpgrade && acornDef.Image != "" {
-		return acornDef.Image, true
-	}
-
-	image, ok := findImageInImageData(imageData, svcName)
-	if ok {
-		return image, true
-	}
-
 	if serviceDef, ok := appSpec.Services[svcName]; ok {
-		return findAcornImage(imageData, serviceDef.Image, serviceDef.Build)
+		return findAcornImage(imageData, serviceDef.AutoUpgrade, serviceDef.Image, serviceDef.Build)
 	} else if acornDef, ok := appSpec.Acorns[svcName]; ok {
-		return findAcornImage(imageData, acornDef.Image, acornDef.Build)
+		return findAcornImage(imageData, acornDef.AutoUpgrade, acornDef.Image, acornDef.Build)
 	} else if containerDef, ok := appSpec.Containers[containerName]; ok {
 		if sidecarName != "" {
 			containerDef, ok = containerDef.Sidecars[sidecarName]
@@ -145,7 +152,13 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 				return "", false
 			}
 		}
-		return findContainerImage(imageData, containerDef.Build)
+		result, ok := findContainerImage(imageData, containerDef.Image, containerDef.Build)
+		// Only fall back to this check if there are no build records available, or this was a old build
+		// that didn't record build with a context dir properly
+		if !ok && oldBuggyBuild(containerDef, imageData) {
+			return findImageInImageData(imageData, svcName)
+		}
+		return result, ok
 	} else if jobDef, ok := appSpec.Jobs[containerName]; ok {
 		if sidecarName != "" {
 			jobDef, ok = jobDef.Sidecars[sidecarName]
@@ -153,14 +166,29 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 				return "", false
 			}
 		}
-		return findContainerImage(imageData, jobDef.Build)
+		result, ok := findContainerImage(imageData, jobDef.Image, jobDef.Build)
+		// Only fall back to this check if there are no build records available, or this was a old build
+		// that didn't record build with a context dir properly
+		if !ok && oldBuggyBuild(jobDef, imageData) {
+			return findImageInImageData(imageData, svcName)
+		}
+		return result, ok
 	} else if imageDef, ok := appSpec.Images[svcName]; ok {
 		if imageDef.Build != nil {
-			findContainerImage(imageData, imageDef.Build)
+			return findContainerImage(imageData, "", imageDef.Build)
 		} else if imageDef.AcornBuild != nil {
-			findContainerImage(imageData, imageDef.Build)
+			return findContainerImage(imageData, "", imageDef.Build)
+		} else {
+			return findImageInImageData(imageData, svcName)
 		}
 	}
 
 	return "", false
+}
+
+func oldBuggyBuild(con v1.Container, imageData v1.ImagesData) bool {
+	if len(imageData.Builds) == 0 {
+		return true
+	}
+	return con.Build != nil && len(con.Build.ContextDirs) > 0
 }
