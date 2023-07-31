@@ -7,7 +7,6 @@ import (
 	"github.com/acorn-io/runtime/integration/helper"
 	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/profiles"
@@ -27,18 +26,12 @@ func TestImageAllowRules(t *testing.T) {
 	helper.StartController(t)
 	registry, close := helper.StartRegistry(t)
 	defer close()
-	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
+	c, project := helper.ClientAndProject(t)
 	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
 
-	c, err := client.New(restConfig, "", project.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
 	// enable image allow rules in acorn config
-
 	cfg, err := config.Get(ctx, kclient)
 	if err != nil {
 		t.Fatal(err)
@@ -46,8 +39,8 @@ func TestImageAllowRules(t *testing.T) {
 
 	iarFeatureStateOriginal := cfg.Features[profiles.FeatureImageAllowRules]
 
-	if c.Features == nil {
-		c.Features = map[string]bool{}
+	if cfg.Features == nil {
+		cfg.Features = map[string]bool{}
 	}
 	cfg.Features[profiles.FeatureImageAllowRules] = true
 

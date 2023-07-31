@@ -8,7 +8,6 @@ import (
 	"github.com/acorn-io/runtime/integration/helper"
 	"github.com/acorn-io/runtime/pkg/client"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/sigstore/cosign/v2/pkg/signature"
 	"github.com/stretchr/testify/assert"
@@ -20,21 +19,14 @@ func TestImageSignature(t *testing.T) {
 	helper.StartController(t)
 	registry, close := helper.StartRegistry(t)
 	defer close()
-	restConfig := helper.StartAPI(t)
 
 	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
-
-	c, err := client.New(restConfig, "", project.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	c, project := helper.ClientAndProject(t)
 
 	id := client2.NewImage(t, project.Name)
 	remoteTagName := registry + "/test:ci"
 
-	err = c.ImageTag(ctx, id, remoteTagName)
+	err := c.ImageTag(ctx, id, remoteTagName)
 	if err != nil {
 		t.Fatal(err)
 	}
