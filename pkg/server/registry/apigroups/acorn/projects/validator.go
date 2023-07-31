@@ -26,46 +26,42 @@ func (v *Validator) Validate(_ context.Context, obj runtime.Object) field.ErrorL
 	var result field.ErrorList
 	project := obj.(*apiv1.Project)
 
-	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) {
+	if project.Spec.DefaultRegion != "" && !slices.Contains(project.Spec.SupportedRegions, project.Spec.DefaultRegion) && !slices.Contains(project.Spec.SupportedRegions, apiv1.AllRegions) {
 		return append(result, field.Invalid(field.NewPath("spec", "defaultRegion"), project.Spec.DefaultRegion, "default region is not in the supported regions list"))
 	}
 
 	return nil
 }
 
-func (v *Validator) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+func (v *Validator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object) field.ErrorList {
 	// Ensure that default region and supported regions are valid.
-	if err := v.Validate(ctx, obj); err != nil {
+	if err := v.Validate(ctx, newObj); err != nil {
 		return err
 	}
 
+	newProject := newObj.(*apiv1.Project)
+	// If there are no supported regions given by the user (and the above validate call passed) or the user explicitly
+	// allowed all regions, then the project supports all regions.
+	if len(newProject.Spec.SupportedRegions) == 0 || slices.Contains(newProject.Spec.SupportedRegions, apiv1.AllRegions) {
+		return nil
+	}
+
 	// If the user is removing a supported region, ensure that there are no apps in that region.
-	oldProject, newProject := old.(*apiv1.Project), obj.(*apiv1.Project)
-	var removedRegions []string
-	for _, region := range oldProject.Status.SupportedRegions {
-		if !slices.Contains(newProject.Status.SupportedRegions, region) {
-			removedRegions = append(removedRegions, region)
-		}
-	}
-
-	if len(removedRegions) > 0 {
-		return v.ensureNoObjectsExistInRegions(ctx, newProject.Name, newProject.Status.SupportedRegions, removedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
-	}
-
-	return nil
+	return v.ensureNoObjectsExistOutsideOfRegions(ctx, newProject.Name, newProject.Spec.SupportedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
 }
 
-func (v *Validator) ensureNoObjectsExistInRegions(ctx context.Context, namespace string, regions, removedRegions []string, objList ...kclient.ObjectList) field.ErrorList {
+func (v *Validator) ensureNoObjectsExistOutsideOfRegions(ctx context.Context, namespace string, regions []string, objList ...kclient.ObjectList) field.ErrorList {
 	var result field.ErrorList
 	for _, obj := range objList {
-		var inRemovedRegion []string
+		var removedRegions, inRemovedRegion []string
 		if err := v.Client.List(ctx, obj, kclient.InNamespace(namespace)); err != nil {
 			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
 		}
 
 		if err := meta.EachListItem(obj, func(object runtime.Object) error {
 			regionObject, ok := object.(regionNamer)
-			if ok && slices.Contains(removedRegions, regionObject.GetRegion()) {
+			if ok && !slices.Contains(regions, regionObject.GetRegion()) {
+				removedRegions = append(removedRegions, regionObject.GetRegion())
 				inRemovedRegion = append(inRemovedRegion, regionObject.GetName())
 			}
 			return nil

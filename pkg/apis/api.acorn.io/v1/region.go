@@ -9,6 +9,7 @@ const (
 	RegionConditionClusterReady = "ClusterReady"
 
 	LocalRegion = "local"
+	AllRegions  = "*"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -12,11 +12,20 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	klabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func SetProjectSupportedRegions(req router.Request, resp router.Response) error {
-	req.Object.(*v1.ProjectInstance).SetDefaultRegion(apiv1.LocalRegion)
+	project := req.Object.(*v1.ProjectInstance)
+	project.SetDefaultRegion(apiv1.LocalRegion)
+	if slices.Contains(project.Status.SupportedRegions, apiv1.AllRegions) {
+		// If the project supports all regions, then ensure the default region and the local region are supported regions.
+		project.Status.SupportedRegions = []string{project.Status.DefaultRegion}
+		if project.Status.DefaultRegion != apiv1.LocalRegion {
+			project.Status.SupportedRegions = append(project.Status.SupportedRegions, apiv1.LocalRegion)
+		}
+	}
 
 	resp.Objects(req.Object)
 	return nil
