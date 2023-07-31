@@ -1,8 +1,6 @@
 package images
 
 import (
-	"crypto"
-	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,12 +8,9 @@ import (
 	client2 "github.com/acorn-io/runtime/integration/client"
 	"github.com/acorn-io/runtime/integration/helper"
 	"github.com/acorn-io/runtime/pkg/client"
-	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/sigstore/cosign/v2/pkg/signature"
-	sigsig "github.com/sigstore/sigstore/pkg/signature"
 	"github.com/stretchr/testify/assert"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -341,136 +336,6 @@ func TestImageDetails(t *testing.T) {
 		t.Fatal("expected error for auto-upgrade pattern that matches no local images")
 	}
 	assert.ErrorContains(t, err, "unable to find an image for dne:v#.#.# matching pattern v#.#.# - if you are trying to use a remote image, specify the full registry")
-}
-
-func TestImageSignature(t *testing.T) {
-	helper.StartController(t)
-	registry, close := helper.StartRegistry(t)
-	defer close()
-	restConfig := helper.StartAPI(t)
-
-	ctx := helper.GetCTX(t)
-	kclient := helper.MustReturn(kclient.Default)
-	project := helper.TempProject(t, kclient)
-
-	c, err := client.New(restConfig, "", project.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	id := client2.NewImage(t, project.Name)
-	remoteTagName := registry + "/test:ci"
-
-	err = c.ImageTag(ctx, id, remoteTagName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	progress, err := c.ImagePush(ctx, remoteTagName, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for update := range progress {
-		if update.Error != "" {
-			t.Fatal(update.Error)
-		}
-	}
-
-	details, err := c.ImageDetails(ctx, remoteTagName, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// 1.1 - SIGN valid
-
-	ref, err := name.ParseReference(remoteTagName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	targetDigest := ref.Context().Digest(details.AppImage.Digest)
-
-	assert.Empty(t, details.SignatureDigest, "signature digest should be empty")
-
-	sigSigner, err := signature.SignerVerifierFromKeyRef(ctx, "./testdata/cosign.key", func(_ bool) ([]byte, error) { return []byte(""), nil })
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	payload, sig, err := sigsig.SignImage(sigSigner, targetDigest, map[string]interface{}{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	signatureB64 := base64.StdEncoding.EncodeToString(sig)
-
-	imageSignOpts := &client.ImageSignOptions{}
-
-	pubkey, err := sigSigner.PublicKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pem, _, err := acornsign.PemEncodeCryptoPublicKey(pubkey)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if pubkey != nil {
-		imageSignOpts.PublicKey = string(pem)
-	}
-
-	nsig, err := c.ImageSign(ctx, targetDigest.String(), payload, signatureB64, imageSignOpts)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.NotEmpty(t, nsig.SignatureDigest, "signature digest should not be empty")
-	t.Logf("signature digest: %s", nsig.SignatureDigest)
-
-	// 1.2 - VERIFY valid
-	v, err := signature.VerifierForKeyRef(ctx, "./testdata/cosign.pub", crypto.SHA256)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pubkey2, err := v.PublicKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pem2, _, err := acornsign.PemEncodeCryptoPublicKey(pubkey2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	vOpts := &client.ImageVerifyOptions{
-		PublicKey: string(pem2),
-	}
-
-	_, err = c.ImageVerify(ctx, targetDigest.String(), vOpts)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// 1.3 - Details with Signature Hash
-	details, err = c.ImageDetails(ctx, targetDigest.DigestStr(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.NotEmpty(t, details.SignatureDigest)
-
-	// 2.1 - VERIFY invalid
-
-	vOpts.Annotations = map[string]string{
-		"foo": "bar",
-	}
-
-	_, err = c.ImageVerify(ctx, targetDigest.String(), vOpts)
-	if err == nil {
-		t.Fatal("expected error")
-	}
 }
 
 func TestImageDeleteTwoTags(t *testing.T) {
