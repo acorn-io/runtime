@@ -50,6 +50,18 @@ func TestImageAllowRules(t *testing.T) {
 		profiles.FeatureImageAllowRules: true,
 	}
 
+	defer func() {
+		// Reset feature state to original value (especially heplful when testing locally)
+		cfg.Features = map[string]bool{
+			profiles.FeatureImageAllowRules: iarFeatureStateOriginal,
+		}
+
+		err = config.Set(ctx, kclient, cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
+
 	err = config.Set(ctx, kclient, cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -214,14 +226,4 @@ func TestImageAllowRules(t *testing.T) {
 	// try to run - expect failure
 	_, err = c.AppRun(ctx, tagName, nil)
 	assert.Error(t, err, "should error since image is signed by the required key but does not match the required annotation")
-
-	// Reset feature state to original value (especially heplful when testing locally)
-	cfg.Features = map[string]bool{
-		profiles.FeatureImageAllowRules: iarFeatureStateOriginal,
-	}
-
-	err = config.Set(ctx, kclient, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
