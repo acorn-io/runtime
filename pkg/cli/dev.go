@@ -3,9 +3,11 @@ package cli
 import (
 	"io"
 
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/dev"
 	"github.com/acorn-io/runtime/pkg/imagesource"
+	"github.com/acorn-io/z"
 	"github.com/spf13/cobra"
 )
 
@@ -62,6 +64,11 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 	opts, err := s.ToOpts()
 	if err != nil {
 		return err
+	}
+
+	// If auto-upgrade is not set, set it to the implied value.
+	if !z.Dereference(opts.AutoUpgrade) {
+		opts.AutoUpgrade = z.Pointer(autoupgrade.ImpliedAutoUpgrade(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
 	}
 
 	return dev.Dev(cmd.Context(), c, &dev.Options{
