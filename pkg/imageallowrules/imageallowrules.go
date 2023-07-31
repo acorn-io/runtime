@@ -13,7 +13,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rancher/wrangler/pkg/merr"
@@ -88,7 +87,6 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		Key:                "",
 		SignatureAlgorithm: "sha256", // FIXME: make signature algorithm configurable (?)
 		RemoteOpts:         opts,
-		CraneOpts:          []crane.Option{crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain)},
 	}
 
 	ref, err := name.ParseReference(image, name.WithDefaultRegistry(""), name.WithDefaultTag(""))

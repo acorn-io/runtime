@@ -37,7 +37,6 @@ type VerifyOpts struct {
 	Key                string
 	SignatureAlgorithm string
 	RemoteOpts         []remote.Option
-	CraneOpts          []crane.Option
 	NoCache            bool
 	Verifiers          []signature.Verifier
 }
@@ -52,14 +51,7 @@ func (o *VerifyOpts) WithRemoteOpts(ctx context.Context, c client.Reader, namesp
 	if err != nil {
 		return err
 	}
-
-	keychain, err := images.GetAuthenticationRemoteKeychainWithLocalAuth(ctx, nil, nil, c, namespace)
-	if err != nil {
-		return err
-	}
 	o.RemoteOpts = opts
-
-	o.CraneOpts = append(o.CraneOpts, crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain))
 
 	return nil
 }
@@ -83,7 +75,7 @@ func EnsureReferences(ctx context.Context, c client.Reader, img string, namespac
 		if imgDigest, ok := imgRef.(name.Digest); ok {
 			opts.ImageRef = imgDigest
 		} else {
-			imgDigest, err := crane.Digest(imgRef.Name(), opts.CraneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+			imgDigest, err := SimpleDigest(imgRef, opts.RemoteOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
 			if err != nil {
 				return fmt.Errorf("failed to resolve image digest: %w", err)
 			}
@@ -93,7 +85,7 @@ func EnsureReferences(ctx context.Context, c client.Reader, img string, namespac
 	}
 
 	if opts.SignatureRef == nil || opts.SignatureRef.Identifier() == "" {
-		signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.RemoteOpts, opts.CraneOpts)
+		signatureRef, err := ensureSignatureArtifact(ctx, c, opts.Namespace, opts.ImageRef, opts.NoCache, opts.RemoteOpts)
 		if err != nil {
 			return err
 		}
@@ -103,7 +95,7 @@ func EnsureReferences(ctx context.Context, c client.Reader, img string, namespac
 	return nil
 }
 
-func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace string, img name.Digest, noCache bool, remoteOpts []remote.Option, craneOpts []crane.Option) (name.Reference, error) {
+func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace string, img name.Digest, noCache bool, remoteOpts []remote.Option) (name.Reference, error) {
 	sigTag, sigHash, err := FindSignature(img, remoteOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find signature: %w", err)
@@ -131,17 +123,21 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 		}
 
 		localSignatureArtifact := fmt.Sprintf("%s:%s", internalRepo, sigTag.Identifier())
+		localSignatureRef, err := name.ParseReference(localSignatureArtifact, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse local signature reference: %w", err)
+		}
 
 		// --- check if we have the signature artifact locally, if not, copy it over from external registry
 		mustPull := false
-		localSigSHA, err := crane.Digest(localSignatureArtifact, craneOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
+		localSigSHA, err := SimpleDigest(localSignatureRef, remoteOpts...) // this uses HEAD to determine the digest, but falls back to GET if HEAD fails
 		if err != nil {
 			var terr *transport.Error
 			if ok := errors.As(err, &terr); ok && terr.StatusCode == http.StatusNotFound {
 				logrus.Debugf("signature artifact %s not found locally, will try to pull it", localSignatureArtifact)
 				mustPull = true
 			} else {
-				return nil, fmt.Errorf("failed to get local signature digest, cannot check if we have it cached locally: %w", err)
+				return nil, fmt.Errorf("failed to get digest of local signature artifact %s, cannot check if we have it cached locally: %w", localSignatureArtifact, err)
 			}
 		} else if localSigSHA != sigDigest {
 			logrus.Debugf("Local signature digest %s does not match remote signature digest %s, will try to pull it", localSigSHA, sigDigest)
@@ -150,7 +146,7 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 
 		if mustPull {
 			// --- pull signature artifact
-			err := crane.Copy(sigTag.String(), localSignatureArtifact, craneOpts...) // Pull (GET) counts against the rate limits, so this shouldn't be done too often
+			err := crane.Copy(sigTag.String(), localSignatureArtifact, func(o *crane.Options) { o.Remote = append(o.Remote, remoteOpts...) }) // Pull (GET) counts against the rate limits, so this shouldn't be done too often
 			if err != nil {
 				return nil, fmt.Errorf("failed to copy signature artifact: %w", err)
 			}

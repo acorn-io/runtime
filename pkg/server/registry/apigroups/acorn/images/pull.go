@@ -21,7 +21,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
-	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -119,7 +118,7 @@ func findSignatureImage(imageRef name.Reference, opts ...remote.Option) (name.Ta
 
 		return tag, img, err
 	} else {
-		digeststr, err := acornsign.SimpleDigest(imageRef, func(o *crane.Options) { o.Remote = append(o.Remote, opts...) })
+		digeststr, err := acornsign.SimpleDigest(imageRef, opts...)
 		if err != nil {
 			return name.Tag{}, nil, err
 		}
