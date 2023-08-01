@@ -199,7 +199,7 @@ func (m *WebsocketMessages) run(ctx context.Context) error {
 		if err := m.conn.ReadJSON(msg); err != nil {
 			return err
 		}
-		logrus.Tracef("Read build message %s", msg)
+		logrus.Tracef("Read build message %s", redact(msg))
 		if m.handler != nil {
 			if err := m.handler(msg); err != nil {
 				return err
@@ -229,8 +229,26 @@ func (m *WebsocketMessages) Recv() (<-chan *Message, func()) {
 }
 
 func (m *WebsocketMessages) Send(msg *Message) error {
-	logrus.Tracef("Send build message %s", msg)
+	logrus.Tracef("Send build message %s", redact(msg))
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	return m.conn.WriteJSON(msg)
+}
+
+// redact returns a Message with all sensitive information redacted.
+// Use this to prep a Message for logging.
+func redact(msg *Message) *Message {
+	if msg == nil {
+		return nil
+	}
+
+	redacted := *msg
+	if redacted.RegistryAuth != nil {
+		redacted.RegistryAuth = &apiv1.RegistryAuth{
+			Username: "REDACTED",
+			Password: "REDACTED",
+		}
+	}
+
+	return &redacted
 }
