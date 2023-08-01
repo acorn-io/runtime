@@ -72,19 +72,24 @@ func (current *Resources) Remove(incoming Resources, all bool) {
 // Fits will check if a group of resources will be able to contain
 // another group of resources. If the resources are not able to fit,
 // an aggregated error will be returned with all exceeded resources.
+// If the current resources defines unlimited, then it will always fit.
 func (current *Resources) Fits(incoming Resources) error {
+	if current.Unlimited {
+		return nil
+	}
+
 	exceededResources := []string{}
 
 	// Define function for checking int resources to keep code DRY
 	checkResource := func(resource string, currentVal, incomingVal int) {
-		if currentVal <= incomingVal {
+		if currentVal < incomingVal {
 			exceededResources = append(exceededResources, resource)
 		}
 	}
 
 	// Define function for checking quantity resources to keep code DRY
 	checkQuantityResource := func(resource string, currentVal, incomingVal resource.Quantity) {
-		if currentVal.Cmp(incomingVal) <= 0 {
+		if currentVal.Cmp(incomingVal) < 0 {
 			exceededResources = append(exceededResources, resource)
 		}
 	}
