@@ -68,7 +68,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 
 	// If auto-upgrade is not set, set it to the implied value.
 	if !z.Dereference(opts.AutoUpgrade) {
-		opts.AutoUpgrade = z.Pointer(autoupgrade.ImpliedAutoUpgrade(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
+		opts.AutoUpgrade = z.Pointer(autoupgrade.Implied(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
 	}
 
 	return dev.Dev(cmd.Context(), c, &dev.Options{

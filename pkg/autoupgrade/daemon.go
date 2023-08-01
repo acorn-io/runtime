@@ -319,11 +319,11 @@ func AutoUpgradePattern(image string) (string, bool) {
 	return tag, strings.ContainsAny(tag, "#*")
 }
 
-// ImpliedAutoUpgrade returns boolean indicating if auto-upgrade is implied either:
+// Implied returns a boolean indicating if auto-upgrade is implied by either:
 // 1. A pattern specified in the image
 // 2. A non-empty interval
 // 3. app.Spec.NotifyUpgrade set to true
-func ImpliedAutoUpgrade(image, interval string, notify bool) bool {
+func Implied(image, interval string, notify bool) bool {
 	if _, isPattern := AutoUpgradePattern(image); isPattern || interval != "" || notify {
 		return true
 	}

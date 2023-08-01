@@ -245,7 +245,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	// If auto-upgrade is not set, set it to the implied value.
 	if !z.Dereference(opts.AutoUpgrade) {
-		opts.AutoUpgrade = z.Pointer(autoupgrade.ImpliedAutoUpgrade(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
+		opts.AutoUpgrade = z.Pointer(autoupgrade.Implied(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
 	}
 
 	// Force install prompt if needed
