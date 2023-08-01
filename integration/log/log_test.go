@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/acorn-io/runtime/integration/helper"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -197,4 +198,51 @@ func TestSidecarContainerLog(t *testing.T) {
 	sort.Strings(lines)
 	assert.Equal(t, "line 1-3\nline 1-4", strings.Join(lines, "\n"))
 	assert.Len(t, strings.Split(replicas[1].Name, ":"), 2)
+}
+
+func TestLogDuringDeletion(t *testing.T) {
+	c, _ := helper.ClientAndProject(t)
+
+	image, err := c.AcornImageBuild(helper.GetCTX(t), "./testdata/Acornfile_hanging", &client.AcornImageBuildOptions{
+		Cwd: "./testdata",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(context.Background(), image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(app *apiv1.App) bool {
+		return app.Status.AppStatus.Containers["cont"].ReadyReplicaCount == 1
+	})
+
+	output, err := c.AppLog(ctx, app.Name, &client.LogOptions{
+		Follow: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = c.AppDelete(ctx, app.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	deletionTime := time.Now()
+
+	for msg := range output {
+		if msg.Error != "" {
+			t.Fatal(msg.Error)
+		}
+		assert.Equal(t, "log message", msg.Line)
+		if msg.Time.After(deletionTime) {
+			// we got a log message following the deletion call
+			cancel()
+		}
+	}
 }

@@ -1,0 +1,12 @@
+containers: cont: {
+    image: "ghcr.io/acorn-io/images-mirror/busybox:latest"
+    command: [
+        "sh", "-c", "while true ; do echo -e \"log message\" ; sleep 2 ; done"
+    ]
+}
+
+jobs: foo: {
+        image: "alpine"
+        command: "false"
+        events: ["delete"]
+}
