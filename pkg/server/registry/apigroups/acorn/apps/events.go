@@ -66,7 +66,7 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 		return created, err
 	}
 
-	details, err := v1.Mapify(AppSpecCreateEventDetails{
+	details, err := apiv1.Mapify(AppSpecCreateEventDetails{
 		ResourceVersion: created.GetResourceVersion(),
 	})
 	if err != nil {
@@ -79,12 +79,12 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 			Namespace: obj.GetNamespace(),
 		},
 		Type:        AppCreateEventType,
-		Severity:    v1.EventSeverityInfo,
+		Severity:    apiv1.EventSeverityInfo,
 		Details:     details,
 		Description: fmt.Sprintf("App %s/%s created", obj.GetNamespace(), obj.GetName()),
 		AppName:     obj.GetName(),
 		Resource:    event.Resource(obj),
-		Observed:    v1.NowMicro(),
+		Observed:    apiv1.NowMicro(),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
@@ -100,7 +100,7 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 		return deleted, err
 	}
 
-	details, err := v1.Mapify(AppSpecDeleteEventDetails{
+	details, err := apiv1.Mapify(AppSpecDeleteEventDetails{
 		ResourceVersion: deleted.GetResourceVersion(),
 	})
 	if err != nil {
@@ -113,12 +113,12 @@ func (s *eventRecordingStrategy) Delete(ctx context.Context, obj types.Object) (
 			Namespace: obj.GetNamespace(),
 		},
 		Type:        AppDeleteEventType,
-		Severity:    v1.EventSeverityInfo,
+		Severity:    apiv1.EventSeverityInfo,
 		Details:     details,
 		Description: fmt.Sprintf("App %s/%s deleted", obj.GetNamespace(), obj.GetName()),
 		AppName:     obj.GetName(),
 		Resource:    event.Resource(obj),
-		Observed:    v1.NowMicro(),
+		Observed:    apiv1.NowMicro(),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
@@ -153,7 +153,7 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 		return updated, nil
 	}
 
-	details, err := v1.Mapify(AppSpecUpdateEventDetails{
+	details, err := apiv1.Mapify(AppSpecUpdateEventDetails{
 		ResourceVersion: updated.GetResourceVersion(),
 		OldSpec:         oldSpec,
 		Patch:           patch,
@@ -168,12 +168,12 @@ func (s *eventRecordingStrategy) Update(ctx context.Context, obj types.Object) (
 			Namespace: obj.GetNamespace(),
 		},
 		Type:        AppSpecUpdateEventType,
-		Severity:    v1.EventSeverityInfo,
+		Severity:    apiv1.EventSeverityInfo,
 		Details:     details,
 		Description: fmt.Sprintf("Spec field updated for App %s/%s", obj.GetNamespace(), obj.GetName()),
 		AppName:     obj.GetName(),
 		Resource:    event.Resource(obj),
-		Observed:    v1.NowMicro(),
+		Observed:    apiv1.NowMicro(),
 	}); err != nil {
 		logrus.Warnf("Failed to record event: %s", err)
 	}

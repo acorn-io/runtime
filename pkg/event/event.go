@@ -65,8 +65,8 @@ func publicKind(obj runtime.Object) string {
 }
 
 // Resource returns a non-nil pointer to a v1.EventResource for the given object.
-func Resource(obj kclient.Object) *internalv1.EventResource {
-	return &internalv1.EventResource{
+func Resource(obj kclient.Object) *apiv1.EventResource {
+	return &apiv1.EventResource{
 		Kind: publicKind(obj),
 		Name: obj.GetName(),
 		UID:  obj.GetUID(),

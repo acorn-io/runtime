@@ -103,10 +103,10 @@ type query struct {
 	prefix prefix
 
 	// since excludes events observed before it when not nil.
-	since *internalv1.MicroTime
+	since *apiv1.MicroTime
 
 	// until excludes events observed after it when not nil.
-	until *internalv1.MicroTime
+	until *apiv1.MicroTime
 }
 
 // filterChannel applies the query to every event received from unfiltered and forwards the result to filtered, if any.
@@ -154,7 +154,7 @@ func (q query) filterEvent(e watch.Event) *watch.Event {
 	return &e
 }
 
-func (q query) afterWindow(observation internalv1.MicroTime) bool {
+func (q query) afterWindow(observation apiv1.MicroTime) bool {
 	if q.until == nil {
 		// Window includes all future events
 		return false
@@ -163,7 +163,7 @@ func (q query) afterWindow(observation internalv1.MicroTime) bool {
 	return observation.After(q.until.Time)
 }
 
-func (q query) beforeWindow(observation internalv1.MicroTime) bool {
+func (q query) beforeWindow(observation apiv1.MicroTime) bool {
 	if q.since == nil {
 		// Window includes all existing events
 		return false
@@ -255,12 +255,12 @@ func stripQuery(opts storage.ListOptions) (q query, stripped storage.ListOptions
 // 2. RFC3339; e.g. "2006-01-02T15:04:05Z07:00"
 // 3. RFC3339Micro; e.g. "2006-01-02T15:04:05.999999Z07:00"
 // 4. Unix timestamp; e.g. "1136239445"
-func parseTimeBound(raw string, now internalv1.MicroTime) (*internalv1.MicroTime, error) {
+func parseTimeBound(raw string, now apiv1.MicroTime) (*apiv1.MicroTime, error) {
 	// Try to parse raw as a duration string
 	var errs []error
 	duration, err := time.ParseDuration(raw)
 	if err == nil {
-		return z.Pointer(internalv1.NewMicroTime(now.Add(-1 * duration))), nil
+		return z.Pointer(apiv1.NewMicroTime(now.Add(-1 * duration))), nil
 	}
 	errs = append(errs, fmt.Errorf("%s is not a valid duration: %w", raw, err))
 
@@ -287,12 +287,12 @@ var supportedLayouts = []string{
 	"2006-01-02T15:04:05",
 }
 
-func parseTime(raw string) (*internalv1.MicroTime, error) {
+func parseTime(raw string) (*apiv1.MicroTime, error) {
 	var errs []error
 	for _, layout := range supportedLayouts {
 		t, err := time.Parse(layout, raw)
 		if err == nil {
-			return z.Pointer(internalv1.NewMicroTime(t)), nil
+			return z.Pointer(apiv1.NewMicroTime(t)), nil
 		}
 
 		errs = append(errs, err)
@@ -307,7 +307,7 @@ func parseUnix(raw string) (*internalv1.MicroTime, error) {
 		return nil, err
 	}
 
-	return z.Pointer(internalv1.NewMicroTime(time.Unix(sec, 0))), nil
+	return z.Pointer(apiv1.NewMicroTime(time.Unix(sec, 0))), nil
 }
 
 type prefix string
