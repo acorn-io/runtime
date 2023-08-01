@@ -7,6 +7,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+var ErrExceededResources = fmt.Errorf("quota would be exceeded for resources")
+
 // Resources is a struct separate from the QuotaRequestInstanceSpec to allow for
 // external controllers to programmatically set the resources easier. Calls to
 // its functions are mutating.
@@ -108,7 +110,7 @@ func (current *Resources) Fits(incoming Resources) error {
 
 	// Build an aggregated error message for the exceeded resources
 	if len(exceededResources) > 0 {
-		return fmt.Errorf("quota would be exceeded for resources: %s", strings.Join(exceededResources, ", "))
+		return fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
 	}
 
 	return nil
