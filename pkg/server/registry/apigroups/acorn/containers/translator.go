@@ -65,7 +65,7 @@ func (t *Translator) ListOpts(ctx context.Context, namespace string, opts storag
 
 func (t *Translator) ToPublic(ctx context.Context, objs ...runtime.Object) (result []mtypes.Object, _ error) {
 	for _, obj := range objs {
-		for _, con := range podToContainers(obj.(*corev1.Pod)) {
+		for _, con := range PodToContainerReplicas(obj.(*corev1.Pod)) {
 			con := con
 			result = append(result, &con)
 		}
@@ -91,7 +91,7 @@ func (t *Translator) NewPublic() mtypes.Object {
 	return &apiv1.ContainerReplica{}
 }
 
-func podToContainers(pod *corev1.Pod) (result []apiv1.ContainerReplica) {
+func PodToContainerReplicas(pod *corev1.Pod) (result []apiv1.ContainerReplica) {
 	containerSpecData := []byte(pod.Annotations[labels.AcornContainerSpec])
 	if len(containerSpecData) == 0 {
 		return nil
@@ -174,6 +174,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 	result.Namespace = namespace
 	result.OwnerReferences = nil
 	result.UID = uid
+	result.DeletionTimestamp = pod.DeletionTimestamp
 	result.Spec.AppName = pod.Labels[labels.AcornAppPublicName]
 	result.Spec.JobName = jobName
 	result.Spec.ContainerName = containerName
@@ -243,3 +244,5 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 
 	return result, nil
 }
+
+

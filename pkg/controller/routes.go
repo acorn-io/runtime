@@ -20,6 +20,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/jobs"
 	"github.com/acorn-io/runtime/pkg/controller/namespace"
 	"github.com/acorn-io/runtime/pkg/controller/networkpolicy"
+	"github.com/acorn-io/runtime/pkg/controller/pod"
 	"github.com/acorn-io/runtime/pkg/controller/pvc"
 	"github.com/acorn-io/runtime/pkg/controller/quota"
 	"github.com/acorn-io/runtime/pkg/controller/scheduling"
@@ -129,6 +130,9 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForIngress)
 	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(networkpolicy.ForBuilder)
 	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+
+	// Record container lifecycle events for managed pods
+	router.Type(&corev1.Pod{}).Selector(managedSelector).Handler(pod.NewEventHandler(recorder))
 
 	configRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName)
 	configRouter.Handler(config.NewDNSConfigHandler())
