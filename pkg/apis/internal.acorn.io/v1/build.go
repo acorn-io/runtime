@@ -17,7 +17,7 @@ type ContainerImageBuilderSpec struct {
 
 func (in *ContainerImageBuilderSpec) Normalize() *ContainerImageBuilderSpec {
 	out := *in
-	if out.Image != "" {
+	if out.Image != "" && out.Build != nil && len(out.Build.ContextDirs) == 0 {
 		out.Build = nil
 	}
 	if len(in.Sidecars) > 0 {
