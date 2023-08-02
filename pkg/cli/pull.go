@@ -60,7 +60,7 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 			Annotations: s.Annotations,
 		}
 		if err := v.Run(cmd, args); err != nil {
-			return fmt.Errorf("NOT pulling image: %w", err)
+			return fmt.Errorf("NOT pulling image due to verification issue: %w", err)
 		}
 	}
 
