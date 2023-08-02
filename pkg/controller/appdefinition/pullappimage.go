@@ -208,11 +208,11 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 	previous, target := newImageSummary(previousImage), newImageSummary(targetImage)
 	e := apiv1.Event{
 		Type:        AppImagePullSuccessEventType,
-		Severity:    v1.EventSeverityInfo,
+		Severity:    apiv1.EventSeverityInfo,
 		Description: fmt.Sprintf("Pulled %s", target.Name),
 		AppName:     obj.GetName(),
 		Resource:    event.Resource(obj),
-		Observed:    v1.MicroTime(observed),
+		Observed:    apiv1.MicroTime(observed),
 	}
 	e.SetNamespace(obj.GetNamespace())
 
@@ -231,7 +231,7 @@ func recordPullEvent(ctx context.Context, recorder event.Recorder, observed meta
 		details.Err = err.Error()
 	}
 
-	if e.Details, err = v1.Mapify(details); err != nil {
+	if e.Details, err = apiv1.Mapify(details); err != nil {
 		logrus.Warnf("Failed to mapify event details: %s", err.Error())
 	}
 
