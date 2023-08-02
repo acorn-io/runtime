@@ -13,8 +13,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/stretchr/testify/assert"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-
-	_ "embed"
 )
 
 func TestImageListGetDelete(t *testing.T) {
