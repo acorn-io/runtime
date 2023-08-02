@@ -10,14 +10,11 @@ func UpdateObservedFields(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	app.Status.ObservedImageDigest = app.Status.AppImage.Digest
 	app.Status.ObservedGeneration = app.Generation
-	app.Status.ObservedAutoUpgrade = impliedAutoUpgrade(app.Spec)
+	app.Status.ObservedAutoUpgrade = autoUpgradeEnabled(app.Spec)
 	return nil
 }
 
-func impliedAutoUpgrade(appSpec v1.AppInstanceSpec) bool {
-	au := appSpec.AutoUpgrade != nil && *appSpec.AutoUpgrade
-	if !au && autoupgrade.ImpliedAutoUpgrade(appSpec.AutoUpgradeInterval, appSpec.Image) {
-		au = true
-	}
-	return au
+func autoUpgradeEnabled(appSpec v1.AppInstanceSpec) bool {
+	_, enabled := autoupgrade.Mode(appSpec)
+	return enabled
 }

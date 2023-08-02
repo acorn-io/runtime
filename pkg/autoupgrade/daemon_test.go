@@ -164,10 +164,10 @@ func TestDetermineAppsToRefresh(t *testing.T) {
 			want:                   map[imageAndNamespaceKey][]kclient.ObjectKey{{"acorn/enabled:latest", "acorn"}: {router.Key("acorn", "enabled-app")}},
 		},
 		{
-			name:                   "Notify upgrade enabled with no tag pattern",
+			name:                   "Notify upgrade alone does not trigger an upgrade",
 			appKeysPrevCheckBefore: map[kclient.ObjectKey]time.Time{router.Key("acorn", "notify-app"): oneMinuteAgo},
-			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{router.Key("acorn", "notify-app"): oneMinuteAgo},
-			want:                   map[imageAndNamespaceKey][]kclient.ObjectKey{{"acorn/notify:latest", "acorn"}: {router.Key("acorn", "notify-app")}},
+			appKeysPrevCheckAfter:  map[kclient.ObjectKey]time.Time{},
+			want:                   make(map[imageAndNamespaceKey][]kclient.ObjectKey),
 		},
 	}
 	for _, tt := range tests {
@@ -195,6 +195,7 @@ func TestRefreshImages(t *testing.T) {
 		"acorn-1":              "docker.io/acorn/acorn-1:v1.1.1-*",
 		"enabled-app":          "docker.io/acorn/enabled:latest",
 		"notify-app":           "docker.io/acorn/notify:latest",
+		"notify-app-alone":     "docker.io/acorn/notify-alone:latest",
 		"no-tag-app":           "docker.io/acorn/no-tag",
 		"test-autoupgrade":     "index.docker.io/acorn/test-autoupgrade:v#.#.#",
 		"test-single-app":      "test-single:*",
@@ -213,6 +214,7 @@ func TestRefreshImages(t *testing.T) {
 			app.Spec.AutoUpgrade = ptrTrue
 		case "notify-app":
 			app.Spec.NotifyUpgrade = ptrTrue
+			app.Spec.AutoUpgrade = ptrTrue
 		}
 		apps[router.Key(app.Namespace, app.Name)] = app
 	}
@@ -453,12 +455,13 @@ func TestDaemonSync(t *testing.T) {
 	fiftySecondsAgo := time.Now().Add(-50 * time.Second)
 	ptrTrue := z.Pointer(true)
 	appImages := map[string]string{
-		"test-1":          "30s",
-		"acorn-1":         "1m",
-		"enabled-app":     "5m",
-		"notify-app":      "3m",
-		"bad-interval":    "help",
-		"no-auto-upgrade": "1s",
+		"test-1":           "30s",
+		"acorn-1":          "1m",
+		"enabled-app":      "5m",
+		"notify-app":       "3m",
+		"notify-app-alone": "3m",
+		"bad-interval":     "help",
+		"no-auto-upgrade":  "1s",
 	}
 	apps := make([]v1.AppInstance, 0, len(appImages))
 	for _, entry := range typed.Sorted(appImages) {
@@ -471,6 +474,10 @@ func TestDaemonSync(t *testing.T) {
 			app.Spec.AutoUpgrade = ptrTrue
 			app.Spec.Image = "acorn/acorn-enabled:latest"
 		case "notify-app":
+			app.Spec.AutoUpgrade = ptrTrue
+			app.Spec.NotifyUpgrade = ptrTrue
+			app.Spec.Image = "acorn/acorn-notify:latest"
+		case "notify-app-alone":
 			app.Spec.NotifyUpgrade = ptrTrue
 			app.Spec.Image = "acorn/acorn-notify:latest"
 		case "no-auto-upgrade":

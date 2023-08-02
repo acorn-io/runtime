@@ -18,6 +18,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
 	"github.com/acorn-io/runtime/pkg/wait"
+	"github.com/acorn-io/z"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -240,6 +241,11 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	opts, err := s.ToOpts()
 	if err != nil {
 		return err
+	}
+
+	// If auto-upgrade is not set, set it to the implied value.
+	if !z.Dereference(opts.AutoUpgrade) {
+		opts.AutoUpgrade = z.Pointer(autoupgrade.Implied(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
 	}
 
 	// Force install prompt if needed

@@ -319,10 +319,12 @@ func AutoUpgradePattern(image string) (string, bool) {
 	return tag, strings.ContainsAny(tag, "#*")
 }
 
-// ImpliedAutoUpgrade returns boolean indicating if auto-upgrade is implied either
-// by a pattern in the app.Spec.image or app.Spec.AutoUpgradeInterval being specified.
-func ImpliedAutoUpgrade(interval, image string) bool {
-	if _, isPattern := AutoUpgradePattern(image); isPattern || interval != "" {
+// Implied returns a boolean indicating if auto-upgrade is implied by either:
+// 1. A pattern specified in the image
+// 2. A non-empty interval
+// 3. app.Spec.NotifyUpgrade set to true
+func Implied(image, interval string, notify bool) bool {
+	if _, isPattern := AutoUpgradePattern(image); isPattern || interval != "" || notify {
 		return true
 	}
 	return false
@@ -330,7 +332,7 @@ func ImpliedAutoUpgrade(interval, image string) bool {
 
 func Mode(appSpec v1.AppInstanceSpec) (string, bool) {
 	_, isPat := AutoUpgradePattern(appSpec.Image)
-	on := appSpec.GetAutoUpgrade() || appSpec.GetNotifyUpgrade() || isPat
+	on := appSpec.GetAutoUpgrade() || isPat
 
 	if !on {
 		return "", false
