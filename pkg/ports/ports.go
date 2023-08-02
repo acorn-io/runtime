@@ -6,6 +6,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -81,4 +82,11 @@ func RemoveNonHTTPPorts(ports []corev1.ServicePort) []corev1.ServicePort {
 		}
 	}
 	return result
+}
+
+func SortPorts(ports []corev1.ServicePort) []corev1.ServicePort {
+	slices.SortFunc[corev1.ServicePort](ports, func(i, j corev1.ServicePort) bool {
+		return i.Port < j.Port
+	})
+	return ports
 }

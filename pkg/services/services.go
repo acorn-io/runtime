@@ -41,7 +41,29 @@ func toContainerLabelsService(service *v1.ServiceInstance) (result []kclient.Obj
 	return
 }
 
-func toContainerService(service *v1.ServiceInstance) (result []kclient.Object) {
+func toContainerService(ctx context.Context, c kclient.Client, service *v1.ServiceInstance) (result []kclient.Object, err error) {
+	svcPorts := ports.ToServicePorts(service.Spec.Ports)
+
+	// Check whether this is the main ServiceInstance for this container.
+	if service.Spec.Container != service.Name {
+		// Return an error if there are any non-HTTP ports defined. This could maybe cause problems with Istio.
+		for _, port := range service.Spec.Ports {
+			if port.Protocol != v1.ProtocolHTTP {
+				return nil, fmt.Errorf("container service %s has non-HTTP port %d\nservices defined for existing containers must contain only HTTP ports", service.Name, port.Port)
+			}
+		}
+
+		// Get the main ServiceInstance for this container.
+		mainService := &v1.ServiceInstance{}
+		if err = c.Get(ctx, kclient.ObjectKey{Name: service.Spec.Container, Namespace: service.Namespace}, mainService); err != nil {
+			return
+		}
+
+		// Take the HTTP ports from the main ServiceInstance and put them on this one too.
+		// If we don't do this, Istio might incorrectly route traffic.
+		svcPorts = ports.SortPorts(ports.DedupPorts(append(svcPorts, ports.RemoveNonHTTPPorts(ports.ToServicePorts(mainService.Spec.Ports))...)))
+	}
+
 	newService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        service.Name,
@@ -50,14 +72,14 @@ func toContainerService(service *v1.ServiceInstance) (result []kclient.Object) {
 			Annotations: service.Spec.Annotations,
 		},
 		Spec: corev1.ServiceSpec{
-			Ports: ports.ToServicePorts(service.Spec.Ports),
+			Ports: svcPorts,
 			Type:  corev1.ServiceTypeClusterIP,
 			Selector: labels.ManagedByApp(service.Spec.AppNamespace,
 				service.Spec.AppName, labels.AcornContainerName, service.Spec.Container),
 		},
 	}
 	result = append(result, newService)
-	return
+	return result, nil
 }
 
 func toAddressService(service *v1.ServiceInstance) (result []kclient.Object) {
@@ -241,7 +263,8 @@ func ToK8sService(req router.Request, service *v1.ServiceInstance) (result []kcl
 	} else if service.Spec.Address != "" {
 		return toAddressService(service), nil, nil
 	} else if service.Spec.Container != "" {
-		return toContainerService(service), nil, nil
+		portList, err := toContainerService(req.Ctx, req.Client, service)
+		return portList, nil, err
 	} else if len(service.Spec.ContainerLabels) > 0 {
 		return toContainerLabelsService(service), nil, nil
 	}

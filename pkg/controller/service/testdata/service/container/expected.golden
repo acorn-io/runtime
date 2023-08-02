@@ -1,0 +1,66 @@
+`apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: my-app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-extra-container-service
+  name: my-extra-container-service
+  namespace: app-created-namespace
+spec:
+  ports:
+  - appProtocol: HTTP
+    name: "80"
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - appProtocol: HTTP
+    name: "8080"
+    port: 8080
+    protocol: TCP
+    targetPort: 80
+  selector:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: my-app-namespace
+    acorn.io/container-name: my-container
+    acorn.io/managed: "true"
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: my-app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-extra-container-service
+  name: my-extra-container-service
+  namespace: app-created-namespace
+spec:
+  appName: my-app
+  appNamespace: my-app-namespace
+  container: my-container
+  default: false
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: my-app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-extra-container-service
+  ports:
+  - port: 8080
+    protocol: http
+    targetPort: 80
+status:
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  hasService: true
+`
