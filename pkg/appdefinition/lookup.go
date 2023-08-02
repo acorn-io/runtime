@@ -89,12 +89,14 @@ func findAcornImage(imageData v1.ImagesData, autoUpgrade *bool, image string, ac
 	}
 
 	if acornBuild == nil {
-		for _, build := range imageData.Builds {
-			if build.ImageKey != "" && build.AcornBuild != nil && build.AcornBuild.Image == image && !build.AcornBuild.AutoUpgrade {
-				return findImageInImageData(imageData, build.ImageKey)
-			}
-			if build.ImageKey != "" && build.ImageBuild != nil && build.ImageBuild.Image == image {
-				return findImageInImageData(imageData, build.ImageKey)
+		if image != "" {
+			for _, build := range imageData.Builds {
+				if build.ImageKey != "" && build.AcornBuild != nil && build.AcornBuild.Image == image && !build.AcornBuild.AutoUpgrade {
+					return findImageInImageData(imageData, build.ImageKey)
+				}
+				if build.ImageKey != "" && build.ImageBuild != nil && build.ImageBuild.Image == image {
+					return findImageInImageData(imageData, build.ImageKey)
+				}
 			}
 		}
 		return "", false
@@ -155,7 +157,7 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 		result, ok := findContainerImage(imageData, containerDef.Image, containerDef.Build)
 		// Only fall back to this check if there are no build records available, or this was a old build
 		// that didn't record build with a context dir properly
-		if !ok && oldBuggyBuild(containerDef, imageData) {
+		if !ok && notDirectReference(containerDef, imageData) {
 			return findImageInImageData(imageData, svcName)
 		}
 		return result, ok
@@ -169,7 +171,7 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 		result, ok := findContainerImage(imageData, jobDef.Image, jobDef.Build)
 		// Only fall back to this check if there are no build records available, or this was a old build
 		// that didn't record build with a context dir properly
-		if !ok && oldBuggyBuild(jobDef, imageData) {
+		if !ok && notDirectReference(jobDef, imageData) {
 			return findImageInImageData(imageData, svcName)
 		}
 		return result, ok
@@ -186,9 +188,10 @@ func GetImageReferenceForServiceName(svcName string, appSpec *v1.AppSpec, imageD
 	return "", false
 }
 
-func oldBuggyBuild(con v1.Container, imageData v1.ImagesData) bool {
-	if len(imageData.Builds) == 0 {
-		return true
+func notDirectReference(con v1.Container, imageData v1.ImagesData) bool {
+	// This is a direct image reference which should have been found earlier
+	if len(imageData.Builds) > 0 && con.Image != "" && con.Build == nil {
+		return false
 	}
-	return con.Build != nil && len(con.Build.ContextDirs) > 0
+	return true
 }
