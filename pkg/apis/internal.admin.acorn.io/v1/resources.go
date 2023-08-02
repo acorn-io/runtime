@@ -7,6 +7,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+var ErrExceededResources = fmt.Errorf("quota would be exceeded for resources")
+
 // Resources is a struct separate from the QuotaRequestInstanceSpec to allow for
 // external controllers to programmatically set the resources easier. Calls to
 // its functions are mutating.
@@ -72,19 +74,24 @@ func (current *Resources) Remove(incoming Resources, all bool) {
 // Fits will check if a group of resources will be able to contain
 // another group of resources. If the resources are not able to fit,
 // an aggregated error will be returned with all exceeded resources.
+// If the current resources defines unlimited, then it will always fit.
 func (current *Resources) Fits(incoming Resources) error {
+	if current.Unlimited {
+		return nil
+	}
+
 	exceededResources := []string{}
 
 	// Define function for checking int resources to keep code DRY
 	checkResource := func(resource string, currentVal, incomingVal int) {
-		if currentVal <= incomingVal {
+		if currentVal < incomingVal {
 			exceededResources = append(exceededResources, resource)
 		}
 	}
 
 	// Define function for checking quantity resources to keep code DRY
 	checkQuantityResource := func(resource string, currentVal, incomingVal resource.Quantity) {
-		if currentVal.Cmp(incomingVal) <= 0 {
+		if currentVal.Cmp(incomingVal) < 0 {
 			exceededResources = append(exceededResources, resource)
 		}
 	}
@@ -103,7 +110,7 @@ func (current *Resources) Fits(incoming Resources) error {
 
 	// Build an aggregated error message for the exceeded resources
 	if len(exceededResources) > 0 {
-		return fmt.Errorf("quota would be exceeded for resources: %s", strings.Join(exceededResources, ", "))
+		return fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
 	}
 
 	return nil
