@@ -55,13 +55,13 @@ func toContainerService(ctx context.Context, c kclient.Client, service *v1.Servi
 
 		// Get the main ServiceInstance for this container.
 		mainService := &v1.ServiceInstance{}
-		if err = c.Get(ctx, kclient.ObjectKey{Name: service.Spec.Container, Namespace: service.Namespace}, mainService); err != nil {
-			return
+		if err = c.Get(ctx, kclient.ObjectKey{Name: service.Spec.Container, Namespace: service.Namespace}, mainService); err == nil {
+			// Take the HTTP ports from the main ServiceInstance and put them on this one too.
+			// If we don't do this, Istio might incorrectly route traffic.
+			svcPorts = ports.SortPorts(ports.DedupPorts(append(svcPorts, ports.RemoveNonHTTPPorts(ports.ToServicePorts(mainService.Spec.Ports))...)))
+		} else if !apierrors.IsNotFound(err) {
+			return nil, err
 		}
-
-		// Take the HTTP ports from the main ServiceInstance and put them on this one too.
-		// If we don't do this, Istio might incorrectly route traffic.
-		svcPorts = ports.SortPorts(ports.DedupPorts(append(svcPorts, ports.RemoveNonHTTPPorts(ports.ToServicePorts(mainService.Spec.Ports))...)))
 	}
 
 	newService := &corev1.Service{
