@@ -148,7 +148,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			}
 		}
 
-		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.Profiles, app.Spec.DeployArgs, image, "")
+		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.GetProfiles(app.Status.GetDevMode()), app.Spec.DeployArgs, image, "")
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 			return
