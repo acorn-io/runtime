@@ -311,6 +311,20 @@ func (d *DeferredClient) ImageCopy(ctx context.Context, srcImage, dstImage strin
 	return d.Client.ImageCopy(ctx, srcImage, dstImage, opts)
 }
 
+func (d *DeferredClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.ImageSign(ctx, image, payload, signatureB64, opts)
+}
+
+func (d *DeferredClient) ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.ImageVerify(ctx, image, opts)
+}
+
 func (d *DeferredClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	if err := d.create(); err != nil {
 		return nil, err

@@ -12,7 +12,10 @@ acorn pull [flags] IMAGE
 ### Options
 
 ```
-  -h, --help   help for pull
+  -a, --annotation strings   Annotations to check for during verification
+  -h, --help                 help for pull
+  -k, --key string           Key to use for verifying (default "./cosign.pub")
+  -v, --verify               Verify the image signature BEFORE pulling and only pull on success
 ```
 
 ### Options inherited from parent commands

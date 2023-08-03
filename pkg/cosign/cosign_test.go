@@ -218,7 +218,7 @@ func TestVerifySignature(t *testing.T) {
 		opts.Key = tc.key
 		opts.AnnotationRules = tc.annotationrules
 
-		if err := EnsureReferences(context.Background(), nil, imgName, &opts); err != nil {
+		if err := EnsureReferences(context.Background(), nil, imgName, "acorn", &opts); err != nil {
 			t.Fatal(err)
 		}
 

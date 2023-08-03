@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -60,7 +61,7 @@ func (i *ImageCopy) Connect(ctx context.Context, _ string, _ runtime.Object, _ r
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		conn, err := k8schannel.Upgrader.Upgrade(rw, req, nil)
 		if err != nil {
-			logrus.Errorf("Error during handshake for image pull: %v", err)
+			logrus.Errorf("Error during handshake for image copy: %v", err)
 			return
 		}
 		defer conn.Close()
@@ -165,37 +166,34 @@ func (i *ImageCopy) ImageCopy(ctx context.Context, namespace, sourceImage, destI
 		}
 	}
 
-	progress := make(chan ggcrv1.Update)
-	// progress gets closed by remote.WriteIndex, so this second channel is so that
-	// we can control closing the result channel in case we need to write an error.
-	progress2 := make(chan ImageProgress)
-	destOpts = append(destOpts, remote.WithProgress(progress))
+	// Signature
+	sigTag, sig, err := findSignatureImage(sourceRef.(name.Digest), sourceOpts...) // sourceRef is name.Digest as per getImageReference()
+	if err != nil {
+		return nil, err
+	}
+	sigPushTag := destRef.Context().Tag(sigTag.TagStr())
+
+	// metachannel is used to send updates to another channel for each index to be copied
+	metachannel := make(chan simpleUpdate)
+
+	// progress is the channel returned by this function and used to write websocket messages to the client
+	progress := make(chan ImageProgress)
 
 	go func() {
-		defer close(progress2)
-		for update := range progress {
-			var errString string
-			if update.Error != nil {
-				errString = update.Error.Error()
-			}
-			progress2 <- ImageProgress{
-				Total:       update.Total,
-				Complete:    update.Complete,
-				Error:       errString,
-				CurrentTask: fmt.Sprintf("Copying %s to %s", sourceImage, destImage),
-			}
-		}
+		defer close(progress)
+		forwardUpdates(progress, metachannel)
 	}()
 
 	go func() {
-		// Don't write error to chan because it already gets sent to the progress chan by remote.WriteIndex().
-		// remote.WriteIndex will also close the currProgress channel on its own.
-		if err := remote.WriteIndex(destRef, sourceIndex, destOpts...); err != nil {
-			handleWriteIndexError(err, progress)
+		defer close(metachannel)
+		remoteWrite(ctx, metachannel, destRef, sourceIndex, fmt.Sprintf("Copying %s to %s", sourceImage, destImage), nil, destOpts...)
+
+		if sig != nil {
+			remoteWrite(ctx, metachannel, sigPushTag, sig, fmt.Sprintf("Copying %s to %s", sigTag.String(), sigPushTag.String()), nil, destOpts...)
 		}
 	}()
 
-	return typed.Every(500*time.Millisecond, progress2), nil
+	return typed.Every(500*time.Millisecond, progress), nil
 }
 
 func (i *ImageCopy) RepoCopy(ctx context.Context, namespace, source, dest string, sourceAuth, destAuth *apiv1.RegistryAuth, force bool) (<-chan ImageProgress, error) {
@@ -219,18 +217,40 @@ func (i *ImageCopy) RepoCopy(ctx context.Context, namespace, source, dest string
 		return nil, err
 	}
 
-	sourceTags, err := remote.List(sourceRepo, sourceOpts...)
+	sourceTags, err := remote.List(sourceRepo, sourceOpts...) // remote.List will already include signature tags
 	if err != nil {
 		return nil, err
 	}
 
-	sourceIndexes := make([]ggcrv1.ImageIndex, len(sourceTags))
-	for i, tag := range sourceTags {
-		sourceIndexes[i], err = remote.Index(sourceRepo.Tag(tag), sourceOpts...)
+	var sourceIndexes []ggcrv1.ImageIndex
+	var sourceImages []ggcrv1.Image
+	var sourceImagesTags []string
+	for _, tag := range sourceTags {
+		x, err := remote.Head(sourceRepo.Tag(tag), sourceOpts...)
 		if err != nil {
 			return nil, err
 		}
+
+		if x.MediaType.IsIndex() {
+			index, err := remote.Index(sourceRepo.Tag(tag), sourceOpts...)
+			if err != nil {
+				return nil, err
+			}
+			sourceIndexes = append(sourceIndexes, index)
+		} else if x.MediaType.IsImage() {
+			img, err := remote.Image(sourceRepo.Tag(tag), sourceOpts...)
+			if err != nil {
+				return nil, err
+			}
+			sourceImages = append(sourceImages, img)
+			sourceImagesTags = append(sourceImagesTags, tag)
+		} else {
+			return nil, fmt.Errorf("unknown media type for tag %s", tag)
+		}
 	}
+
+	// sourceTags should only be ImageIndex tags at this point
+	sourceTags = slices.Filter(nil, sourceTags, func(tag string) bool { return !slices.Contains(sourceImagesTags, tag) })
 
 	// Don't copy tags that already exist in the destination if force is not set
 	if !force {
@@ -243,48 +263,24 @@ func (i *ImageCopy) RepoCopy(ctx context.Context, namespace, source, dest string
 		sourceIndexes = newIndexSlice
 	}
 
-	type updates struct {
-		updateChan chan ggcrv1.Update
-		currentTag string
-	}
-
 	// metachannel is used to send another channel with updates for each tag to be copied
-	metachannel := make(chan updates)
+	metachannel := make(chan simpleUpdate)
 	// progress is the channel returned by this function and used to write websocket messages to the client
 	progress := make(chan ImageProgress)
 
 	go func() {
 		defer close(progress)
-		for c := range metachannel {
-			for update := range c.updateChan {
-				var errString string
-				if update.Error != nil {
-					errString = update.Error.Error()
-				}
-				progress <- ImageProgress{
-					Total:       update.Total,
-					Complete:    update.Complete,
-					Error:       errString,
-					CurrentTask: fmt.Sprintf("Copying %s:%s to %s:%s", source, c.currentTag, dest, c.currentTag),
-				}
-			}
-		}
+		forwardUpdates(progress, metachannel)
 	}()
 
 	go func() {
 		defer close(metachannel)
 		for i, imageIndex := range sourceIndexes {
-			currProgress := make(chan ggcrv1.Update)
-			metachannel <- updates{
-				updateChan: currProgress,
-				currentTag: sourceTags[i],
-			}
+			remoteWrite(ctx, metachannel, destRepo.Tag(sourceTags[i]), imageIndex, fmt.Sprintf("Copying index %s:%s to %s:%s", source, sourceTags[i], dest, sourceTags[i]), nil, destOpts...)
+		}
 
-			// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex().
-			// remote.WriteIndex will also close the currProgress channel on its own.
-			if err := remote.WriteIndex(destRepo.Tag(sourceTags[i]), imageIndex, append(destOpts, remote.WithProgress(currProgress))...); err != nil {
-				handleWriteIndexError(err, currProgress)
-			}
+		for i, img := range sourceImages {
+			remoteWrite(ctx, metachannel, destRepo.Tag(sourceImagesTags[i]), img, fmt.Sprintf("Copying image %s:%s to %s:%s", source, sourceImagesTags[i], dest, sourceImagesTags[i]), nil, destOpts...)
 		}
 	}()
 

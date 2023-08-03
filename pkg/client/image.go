@@ -59,10 +59,11 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 	}
 
 	return &ImageDetails{
-		AppImage:   detailsResult.AppImage,
-		AppSpec:    detailsResult.AppSpec,
-		Params:     detailsResult.Params,
-		ParseError: detailsResult.ParseError,
+		AppImage:        detailsResult.AppImage,
+		AppSpec:         detailsResult.AppSpec,
+		Params:          detailsResult.Params,
+		ParseError:      detailsResult.ParseError,
+		SignatureDigest: detailsResult.SignatureDigest,
 	}, nil
 }
 

@@ -705,6 +705,18 @@ func (m *MockClient) ImageDetails(ctx context.Context, imageName string, opts *c
 	}, nil
 }
 
+func (m *MockClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *client.ImageSignOptions) (*apiv1.ImageSignature, error) {
+	return &apiv1.ImageSignature{
+		TypeMeta:        metav1.TypeMeta{},
+		ObjectMeta:      metav1.ObjectMeta{Name: "found-image1234567"},
+		SignatureDigest: "1234abcd",
+	}, nil
+}
+
+func (m *MockClient) ImageVerify(ctx context.Context, image string, opts *client.ImageVerifyOptions) (*apiv1.ImageSignature, error) {
+	return nil, nil
+}
+
 func (m *MockClient) BuilderCreate(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }
 
 func (m *MockClient) BuilderGet(ctx context.Context) (*apiv1.Builder, error) { return nil, nil }

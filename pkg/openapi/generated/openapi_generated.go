@@ -62,6 +62,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageList":                                  schema_pkg_apis_apiacornio_v1_ImageList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImagePull":                                  schema_pkg_apis_apiacornio_v1_ImagePull(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImagePush":                                  schema_pkg_apis_apiacornio_v1_ImagePush(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageSignature":                             schema_pkg_apis_apiacornio_v1_ImageSignature(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageTag":                                   schema_pkg_apis_apiacornio_v1_ImageTag(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Info":                                       schema_pkg_apis_apiacornio_v1_Info(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.InfoList":                                   schema_pkg_apis_apiacornio_v1_InfoList(ref),
@@ -3664,6 +3665,12 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParamSpec"),
 						},
 					},
+					"signatureDigest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"parseError": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -3789,6 +3796,80 @@ func schema_pkg_apis_apiacornio_v1_ImagePush(ref common.ReferenceCallback) commo
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_ImageSignature(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"auth": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Input Params - Generic",
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth"),
+						},
+					},
+					"publicKeys": {
+						SchemaProps: spec.SchemaProps{
+							Description: "- Verification / Deduplication",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"annotations": {
+						SchemaProps: spec.SchemaProps{
+							Description: "either reference or PEM encoded key",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
+						},
+					},
+					"payload": {
+						SchemaProps: spec.SchemaProps{
+							Description: "- Signing",
+							Type:        []string{"string"},
+							Format:      "byte",
+						},
+					},
+					"signature": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"signatureDigest": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Output",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.RegistryAuth", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 

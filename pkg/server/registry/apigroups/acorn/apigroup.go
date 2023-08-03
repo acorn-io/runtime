@@ -50,7 +50,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 	}
 
 	buildsStorage := builds.NewStorage(c)
-	imagesStorage := images.NewStorage(c)
+	imagesStorage := images.NewStorage(c, transport)
 
 	containersStorage := containers.NewStorage(c)
 
@@ -64,7 +64,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		return nil, err
 	}
 
-	appsStorage := apps.NewStorage(c, clientFactory, event.NewRecorder(c))
+	appsStorage := apps.NewStorage(c, clientFactory, event.NewRecorder(c), transport)
 
 	logsStorage, err := apps.NewLogs(c, cfg)
 	if err != nil {
@@ -89,6 +89,8 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"images/pull":                   images.NewImagePull(c, clientFactory, transport),
 		"images/details":                images.NewImageDetails(c, transport),
 		"images/copy":                   images.NewImageCopy(c, transport),
+		"images/sign":                   images.NewImageSign(c, transport),
+		"images/verify":                 images.NewImageVerify(c, transport),
 		"projects":                      projects.NewStorage(c, true),
 		"volumes":                       volumesStorage,
 		"volumeclasses":                 class.NewClassStorage(c),

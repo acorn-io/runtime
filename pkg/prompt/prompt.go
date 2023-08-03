@@ -11,6 +11,14 @@ var (
 	NoPromptRemove bool
 )
 
+func Password(msg string) ([]byte, error) {
+	var res string
+	err := survey.AskOne(&survey.Password{
+		Message: msg,
+	}, &res)
+	return []byte(res), err
+}
+
 func Bool(msg string, def bool) (result bool, _ error) {
 	err := survey.AskOne(&survey.Confirm{
 		Message: msg,

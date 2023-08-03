@@ -1,6 +1,8 @@
 package apps
 
 import (
+	"net/http"
+
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
@@ -15,14 +17,14 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c kclient.WithWatch, clientFactory *client.Factory, recorder event.Recorder, middlewares ...middleware.CompleteStrategy) rest.Storage {
+func NewStorage(c kclient.WithWatch, clientFactory *client.Factory, recorder event.Recorder, transport http.RoundTripper, middlewares ...middleware.CompleteStrategy) rest.Storage {
 	remoteResource := remote.NewRemote(&v1.AppInstance{}, c)
 	strategy := translation.NewSimpleTranslationStrategy(&Translator{}, remoteResource)
 	strategy = publicname.NewStrategy(strategy)
 	strategy = newEventRecordingStrategy(strategy, recorder)
 	strategy = middleware.ForCompleteStrategy(strategy, middlewares...)
 
-	validator := NewValidator(c, clientFactory, strategy)
+	validator := NewValidator(c, clientFactory, strategy, transport)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.App{}).
 		WithCompleteCRUD(strategy).

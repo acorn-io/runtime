@@ -421,6 +421,22 @@ func (m *MultiClient) ImageCopy(ctx context.Context, srcImage, dstImage string, 
 	return c.ImageCopy(ctx, srcImage, dstImage, opts)
 }
 
+func (m *MultiClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error) {
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	if err != nil {
+		return nil, err
+	}
+	return c.ImageSign(ctx, image, payload, signatureB64, opts)
+}
+
+func (m *MultiClient) ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error) {
+	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
+	if err != nil {
+		return nil, err
+	}
+	return c.ImageVerify(ctx, image, opts)
+}
+
 func (m *MultiClient) AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {

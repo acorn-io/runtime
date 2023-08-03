@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"context"
 	"testing"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -56,6 +57,8 @@ func TempProject(t *testing.T, client client.WithWatch) *v1.ProjectInstance {
 		return obj.Status.DefaultRegion == obj.Spec.DefaultRegion
 	})
 
+	createAllowAllIAR(t, client, project.Name)
+
 	t.Cleanup(func() {
 		err = client.Delete(ctx, project)
 		if err != nil {
@@ -65,4 +68,23 @@ func TempProject(t *testing.T, client client.WithWatch) *v1.ProjectInstance {
 	})
 
 	return project
+}
+
+// createAllowAllIAR creates an ImageAllowRule that allows all images and has no extra rules
+// This is necessary, since while testing IARs, we enable the feature flag and it seems to leak
+// into other tests, blocking images there, even though the tests shouldn't run in parallel and the config
+// should be cleaned up
+func createAllowAllIAR(t *testing.T, kclient client.Client, namespace string) {
+	t.Helper()
+
+	err := kclient.Create(context.Background(), &apiv1.ImageAllowRule{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testing-allow-all",
+			Namespace: namespace,
+		},
+		Images: []string{"**"},
+	})
+	if err != nil {
+		t.Fatalf("failed to create allow all image allow rule: %v", err)
+	}
 }

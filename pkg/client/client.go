@@ -186,10 +186,11 @@ type ImageProgress struct {
 }
 
 type ImageDetails struct {
-	AppImage   v1.AppImage   `json:"appImage,omitempty"`
-	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params     *v1.ParamSpec `json:"params,omitempty"`
-	ParseError string        `json:"parseError,omitempty"`
+	AppImage        v1.AppImage   `json:"appImage,omitempty"`
+	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
+	Params          *v1.ParamSpec `json:"params,omitempty"`
+	SignatureDigest string        `json:"signatureDigest,omitempty"`
+	ParseError      string        `json:"parseError,omitempty"`
 }
 
 type PortForwardDialer func(ctx context.Context) (net.Conn, error)
@@ -241,6 +242,9 @@ type Client interface {
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
 	ImageCopy(ctx context.Context, srcImage, destImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error)
+
+	ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error)
+	ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error)
 
 	AcornImageBuildGet(ctx context.Context, name string) (*apiv1.AcornImageBuild, error)
 	AcornImageBuildList(ctx context.Context) ([]apiv1.AcornImageBuild, error)
@@ -344,6 +348,15 @@ type EventStreamOptions struct {
 	Since           string `json:"since,omitempty"`
 	Until           string `json:"until,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
+}
+
+type ImageSignOptions struct {
+	PublicKey string `json:"publicKeys,omitempty"`
+}
+
+type ImageVerifyOptions struct {
+	PublicKey   string            `json:"publicKeys,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {

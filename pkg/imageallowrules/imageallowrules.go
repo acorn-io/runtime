@@ -13,12 +13,10 @@ import (
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/authn"
-	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rancher/wrangler/pkg/merr"
 	ocosign "github.com/sigstore/cosign/v2/pkg/cosign"
-	ociremote "github.com/sigstore/cosign/v2/pkg/oci/remote"
 	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -88,8 +86,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		AnnotationRules:    v1.SignatureAnnotations{},
 		Key:                "",
 		SignatureAlgorithm: "sha256", // FIXME: make signature algorithm configurable (?)
-		OciRemoteOpts:      []ociremote.Option{ociremote.WithRemoteOptions(opts...)},
-		CraneOpts:          []crane.Option{crane.WithContext(ctx), crane.WithAuthFromKeychain(keychain)},
+		RemoteOpts:         opts,
 	}
 
 	ref, err := name.ParseReference(image, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
@@ -110,13 +107,14 @@ iarLoop:
 	for _, imageAllowRule := range imageAllowRules {
 		// Check if the image is in scope of the ImageAllowRule
 		if !imageCovered(ref, digest, imageAllowRule) {
+			logrus.Infof("Image %s (%s) is not covered by ImageAllowRule %s/%s: %#v", image, digest, imageAllowRule.Namespace, imageAllowRule.Name, imageAllowRule.Images)
 			continue
 		}
 
 		// > Signatures
 		// Any verification error or failed verification issue will skip on to the next IAR
 		for _, rule := range imageAllowRule.Signatures.Rules {
-			if err := cosign.EnsureReferences(ctx, c, image, &verifyOpts); err != nil {
+			if err := cosign.EnsureReferences(ctx, c, image, namespace, &verifyOpts); err != nil {
 				return err
 			}
 			verifyOpts.AnnotationRules = rule.Annotations
@@ -135,8 +133,8 @@ iarLoop:
 					}
 				}
 			}
-			var anyOfErrs []error
 			// anyOf: only one signature must pass verification
+			var anyOfErrs []error
 			if len(rule.SignedBy.AnyOf) != 0 {
 				anyOfOK := false
 				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
@@ -190,8 +188,12 @@ func imageCovered(image name.Reference, digest string, iar v1.ImageAllowRuleInst
 		parts := strings.Split(pattern, ":")
 		contextPattern := parts[0]
 		tagPattern := ""
-		if len(parts) > 1 && !strings.Contains(parts[len(parts)-1], "/") {
-			tagPattern = parts[len(parts)-1]
+		if len(parts) > 1 {
+			if !strings.Contains(parts[len(parts)-1], "/") {
+				tagPattern = parts[len(parts)-1] // last part is tag
+			} else {
+				contextPattern = pattern // : was part of the context pattern (port)
+			}
 		}
 
 		if err := matchContext(contextPattern, image.Context().String()); err != nil {

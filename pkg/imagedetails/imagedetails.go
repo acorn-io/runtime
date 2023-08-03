@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
+	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/tags"
 	imagename "github.com/google/go-containerregistry/pkg/name"
@@ -55,6 +56,15 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		return nil, err
 	}
 
+	imgRef, err := images.GetImageReference(ctx, c, namespace, imageName)
+	if err != nil {
+		return nil, err
+	}
+	_, sigHash, err := acornsign.FindSignature(imgRef.Context().Digest(appImage.Digest), opts...)
+	if err != nil {
+		return nil, err
+	}
+
 	details, err := ParseDetails(appImage.Acornfile, deployArgs, profiles)
 	if err != nil {
 		return &apiv1.ImageDetails{
@@ -71,10 +81,11 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 			Name:      imageName,
 			Namespace: namespace,
 		},
-		DeployArgs: details.DeployArgs,
-		Profiles:   profiles,
-		Params:     details.Params,
-		AppSpec:    details.AppSpec,
-		AppImage:   *appImage,
+		DeployArgs:      details.DeployArgs,
+		Profiles:        profiles,
+		Params:          details.Params,
+		AppSpec:         details.AppSpec,
+		AppImage:        *appImage,
+		SignatureDigest: strings.Trim(sigHash.String(), ":"), // trim to avoid having just ':' as the digest
 	}, nil
 }

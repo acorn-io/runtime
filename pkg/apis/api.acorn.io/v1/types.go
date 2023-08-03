@@ -223,10 +223,11 @@ type ImageDetails struct {
 	NoDefaultRegistry bool `json:"noDefaultRegistry,omitempty"`
 
 	// Output Params
-	AppImage   v1.AppImage   `json:"appImage,omitempty"`
-	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params     *v1.ParamSpec `json:"params,omitempty"`
-	ParseError string        `json:"parseError,omitempty"`
+	AppImage        v1.AppImage   `json:"appImage,omitempty"`
+	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
+	Params          *v1.ParamSpec `json:"params,omitempty"`
+	SignatureDigest string        `json:"signatureDigest,omitempty"`
+	ParseError      string        `json:"parseError,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -245,6 +246,28 @@ type ImageList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []Image `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type ImageSignature struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	// Input Params
+	// - Generic
+	Auth *RegistryAuth `json:"auth,omitempty"`
+
+	// - Verification / Deduplication
+	PublicKey   string                  `json:"publicKeys,omitempty"` // either reference or PEM encoded key
+	Annotations v1.SignatureAnnotations `json:"annotations,omitempty"`
+
+	// - Signing
+	Payload      []byte `json:"payload,omitempty"`
+	SignatureB64 string `json:"signature,omitempty"`
+
+	// Output
+	SignatureDigest string `json:"signatureDigest,omitempty"`
 }
 
 type VolumeCreateOptions struct {
