@@ -50,7 +50,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 	}
 
 	buildsStorage := builds.NewStorage(c)
-	imagesStorage := images.NewStorage(c)
+	imagesStorage := images.NewStorage(c, transport)
 
 	containersStorage := containers.NewStorage(c)
 

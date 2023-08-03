@@ -1,6 +1,8 @@
 package images
 
 import (
+	"net/http"
+
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/strategy/remote"
 	"github.com/acorn-io/mink/pkg/strategy/translation"
@@ -11,11 +13,11 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewStorage(c kclient.WithWatch) rest.Storage {
+func NewStorage(c kclient.WithWatch, transport http.RoundTripper) rest.Storage {
 	remoteResource := translation.NewSimpleTranslationStrategy(&Translator{},
 		remote.NewRemote(&v1.ImageInstance{}, c))
 
-	strategy := NewStrategy(remoteResource, c)
+	strategy := NewStrategy(remoteResource, c, transport)
 	return stores.NewBuilder(c.Scheme(), &apiv1.Image{}).
 		WithGet(strategy).
 		WithUpdate(remoteResource).

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/acorn-io/mink/pkg/strategy"
@@ -27,14 +28,16 @@ import (
 )
 
 type Strategy struct {
-	client kclient.Client
-	getter strategy.Getter
+	client    kclient.Client
+	getter    strategy.Getter
+	transport http.RoundTripper
 }
 
-func NewStrategy(getter strategy.Getter, c kclient.WithWatch) *Strategy {
+func NewStrategy(getter strategy.Getter, c kclient.WithWatch, transport http.RoundTripper) *Strategy {
 	return &Strategy{
-		client: c,
-		getter: getter,
+		client:    c,
+		getter:    getter,
+		transport: transport,
 	}
 }
 
@@ -178,14 +181,16 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 		return nil, err
 	}
 
-	sigTag, sigDigest, err := acornsign.FindSignature(ref.Context().Digest(image.Digest))
+	remoteOpts := []remote.Option{remote.WithTransport(s.transport)}
+
+	sigTag, sigDigest, err := acornsign.FindSignature(ref.Context().Digest(image.Digest), remoteOpts...)
 	if err != nil {
 		return nil, err
 	}
 
 	if sigDigest.Hex != "" {
 		logrus.Debugf("Deleting signature artifact %s (digest %s) from registry", sigTag.Name(), sigDigest.String())
-		if err := remote.Delete(sigTag.Context().Digest(sigDigest.String())); err != nil {
+		if err := remote.Delete(sigTag.Context().Digest(sigDigest.String()), remoteOpts...); err != nil {
 			return nil, err
 		}
 	}
