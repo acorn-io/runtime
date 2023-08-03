@@ -1,10 +1,6 @@
 package v1
 
 import (
-<<<<<<< HEAD
-	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-=======
->>>>>>> ec80b186 (add: tests for signing and verification)
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	corev1 "k8s.io/api/core/v1"
