@@ -175,69 +175,28 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		}
 	}
 
-	type updates struct {
-		updateChan chan ggcrv1.Update
-		sourceName string
-		destTag    name.Tag
-	}
-
 	// metachannel is used to send updates to another channel for each index to be copied
-	metachannel := make(chan updates)
+	metachannel := make(chan simpleUpdate)
 
 	// progress is the channel returned by this function and used to write websocket messages to the client
 	progress := make(chan ImageProgress)
 
 	go func() {
 		defer close(progress)
-		for c := range metachannel {
-			for update := range c.updateChan {
-				var errString string
-				if update.Error != nil {
-					errString = update.Error.Error()
-				}
-				progress <- ImageProgress{
-					Total:       update.Total,
-					Complete:    update.Complete,
-					Error:       errString,
-					CurrentTask: fmt.Sprintf("Pulling %s %s ", c.sourceName, c.destTag.String()),
-				}
-			}
-		}
+		forwardUpdates(progress, metachannel)
 	}()
 
 	// Copy the image and signature
 	go func() {
 		defer close(metachannel)
-		imageProgress := make(chan ggcrv1.Update)
-		metachannel <- updates{
-			updateChan: imageProgress,
-			sourceName: "image",
-			destTag:    pullTag.Context().Tag(pullTag.Identifier()),
-		}
 
-		// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex().
-		// remote.WriteIndex will also close the currProgress channel on its own.
-		if err := remote.WriteIndex(repo.Digest(hash.Hex), index, append(opts, remote.WithProgress(imageProgress))...); err == nil {
-			if err := i.recordImage(ctx, hash, namespace, imageName, recordRepo); err != nil {
-				imageProgress <- ggcrv1.Update{
-					Error: err,
-				}
-			}
-		} else {
-			handleWriteIndexError(err, imageProgress)
+		record := func() error {
+			return i.recordImage(ctx, hash, namespace, imageName, recordRepo)
 		}
+		remoteWrite(ctx, metachannel, repo.Digest(hash.Hex), index, fmt.Sprintf("Pulling image %s ", pullTag.Context().Tag(pullTag.Identifier())), record, opts...)
 
 		if sig != nil {
-			signatureProgress := make(chan ggcrv1.Update)
-			logrus.Infof("Pulling signature %s", sigTag.String())
-			metachannel <- updates{
-				updateChan: signatureProgress,
-				sourceName: "signature",
-				destTag:    sigTag,
-			}
-			if err := remote.Write(repo.Tag(sigTag.TagStr()), sig, append(opts, remote.WithProgress(signatureProgress))...); err != nil {
-				handleWriteIndexError(err, signatureProgress)
-			}
+			remoteWrite(ctx, metachannel, repo.Tag(sigTag.TagStr()), sig, fmt.Sprintf("Pulling signature %s ", sigTag.TagStr()), nil, opts...)
 		}
 	}()
 

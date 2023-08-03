@@ -17,7 +17,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
 	"github.com/google/go-containerregistry/pkg/name"
-	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -110,13 +109,6 @@ func (i *ImagePush) ConnectMethods() []string {
 	return []string{"GET"}
 }
 
-type ImageProgress struct {
-	Total       int64  `json:"total,omitempty"`
-	Complete    int64  `json:"complete,omitempty"`
-	Error       string `json:"error,omitempty"`
-	CurrentTask string `json:"currentTask,omitempty"`
-}
-
 func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ImageProgress, error) {
 	pushTag, err := name.NewTag(tagName, name.WithDefaultRegistry(DefaultRegistry))
 	if err != nil {
@@ -163,86 +155,26 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 	}
 	sigPushTag := pushTag.Context().Tag(sigTag.TagStr())
 
-	type updates struct {
-		updateChan chan ggcrv1.Update
-		sourceName string
-		destTag    name.Tag
-	}
-
 	// metachannel is used to send updates to another channel for each index to be copied
-	metachannel := make(chan updates)
+	metachannel := make(chan simpleUpdate)
 
 	// progress is the channel returned by this function and used to write websocket messages to the client
 	progress := make(chan ImageProgress)
 
 	go func() {
 		defer close(progress)
-		for c := range metachannel {
-			for update := range c.updateChan {
-				var errString string
-				if update.Error != nil {
-					errString = update.Error.Error()
-				}
-				progress <- ImageProgress{
-					Total:       update.Total,
-					Complete:    update.Complete,
-					Error:       errString,
-					CurrentTask: fmt.Sprintf("Pushing %s %s ", c.sourceName, c.destTag.String()),
-				}
-			}
-		}
+		forwardUpdates(progress, metachannel)
 	}()
 
 	// Copy the image and signature
 	go func() {
 		defer close(metachannel)
-		imageProgress := make(chan ggcrv1.Update)
-		metachannel <- updates{
-			updateChan: imageProgress,
-			sourceName: "image",
-			destTag:    pushTag,
-		}
-
-		// Don't write error to chan because it already gets sent to the currProgress chan by remote.WriteIndex().
-		// remote.WriteIndex will also close the currProgress channel on its own.
-		if err := remote.WriteIndex(pushTag, remoteImage, append(opts, remote.WithProgress(imageProgress))...); err != nil {
-			handleWriteIndexError(err, imageProgress)
-		}
+		remoteWrite(ctx, metachannel, pushTag, remoteImage, fmt.Sprintf("Pushing image %s ", pushTag), nil, opts...)
 
 		if sig != nil {
-			signatureProgress := make(chan ggcrv1.Update)
-			logrus.Infof("Pushing signature %s", sigPushTag.String())
-			metachannel <- updates{
-				updateChan: signatureProgress,
-				sourceName: "signature",
-				destTag:    sigPushTag,
-			}
-			if err := remote.Write(sigPushTag, sig, append(opts, remote.WithProgress(signatureProgress))...); err != nil {
-				handleWriteIndexError(err, signatureProgress)
-			}
+			remoteWrite(ctx, metachannel, sigPushTag, sig, fmt.Sprintf("Pushing signature %s ", sigPushTag), nil, opts...)
 		}
 	}()
 
 	return image, typed.Every(500*time.Millisecond, progress), nil
-}
-
-func handleWriteIndexError(err error, progress chan ggcrv1.Update) {
-	if err == nil {
-		return
-	}
-	select {
-	case i, ok := <-progress:
-		if ok {
-			progress <- i
-			progress <- ggcrv1.Update{
-				Error: err,
-			}
-			close(progress)
-		}
-	default:
-		progress <- ggcrv1.Update{
-			Error: err,
-		}
-		close(progress)
-	}
 }
