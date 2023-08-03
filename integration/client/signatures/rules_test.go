@@ -44,7 +44,7 @@ func TestImageAllowRules(t *testing.T) {
 	}
 	cfg.Features[profiles.FeatureImageAllowRules] = true
 
-	defer func() {
+	t.Cleanup(func() {
 		// Reset feature state to original value (especially heplful when testing locally)
 		cfg.Features = map[string]bool{
 			profiles.FeatureImageAllowRules: iarFeatureStateOriginal,
@@ -54,7 +54,7 @@ func TestImageAllowRules(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-	}()
+	})
 
 	err = config.Set(ctx, kclient, cfg)
 	if err != nil {
