@@ -1,0 +1,23 @@
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  name: my-extra-container-service
+  namespace: app-created-namespace
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: my-app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-extra-container-service
+spec:
+  appName: my-app
+  appNamespace: my-app-namespace
+  container: my-container
+  labels:
+    acorn.io/app-name: my-app
+    acorn.io/app-namespace: my-app-namespace
+    acorn.io/managed: "true"
+    acorn.io/service-name: my-extra-container-service
+  ports:
+    - port: 8080
+      protocol: http
+      targetPort: 80
