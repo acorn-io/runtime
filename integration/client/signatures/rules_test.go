@@ -61,6 +61,13 @@ func TestImageAllowRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Delete any existing IARs from this project namespace
+	err = kclient.DeleteAllOf(ctx, &internalv1.ImageAllowRuleInstance{}, cclient.InNamespace(c.GetNamespace()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Build and push an image
 	id := client2.NewImage(t, project.Name)
 	tagName := registry + "/test:ci"
 
