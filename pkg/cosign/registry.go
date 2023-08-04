@@ -68,7 +68,7 @@ func FindSignature(imageDigest name.Digest, opts ...remote.Option) (name.Tag, gg
 	}
 	desc, err := remote.Head(tag, opts...) // HEAD request first to check if it exists (avoid rate limits)
 	if err != nil {
-		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == http.StatusNotFound {
+		if terr, ok := err.(*transport.Error); ok && (terr.StatusCode == http.StatusNotFound || terr.StatusCode == http.StatusUnauthorized) {
 			logrus.Debugf("no signature found for image %s", imageDigest.String())
 			return tag, hash, nil
 		}
