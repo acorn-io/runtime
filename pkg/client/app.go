@@ -230,6 +230,7 @@ func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpd
 				SessionStartTime:      metav1.Now(),
 				SessionRenewTime:      metav1.Now(),
 				SpecOverride:          &app.Spec,
+				Region:                app.GetRegion(),
 			},
 		}))
 	}

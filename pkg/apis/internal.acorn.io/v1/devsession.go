@@ -20,7 +20,12 @@ type DevSessionInstance struct {
 	Status DevSessionInstanceStatus `json:"status,omitempty"`
 }
 
+func (in *DevSessionInstance) HasRegion(region string) bool {
+	return in.Spec.Region == region
+}
+
 type DevSessionInstanceSpec struct {
+	Region                string                   `json:"region,omitempty"`
 	Client                DevSessionInstanceClient `json:"client,omitempty"`
 	SessionTimeoutSeconds int32                    `json:"sessionTimeoutSeconds,omitempty"`
 	SessionStartTime      metav1.Time              `json:"sessionStartTime,omitempty"`
