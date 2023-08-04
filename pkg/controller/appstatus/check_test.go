@@ -29,7 +29,7 @@ func TestCheckStatus(t *testing.T) {
 
 	condition.Setter(appInstance, resp, v1.AppInstanceConditionDefaults).Success()
 	condition.Setter(appInstance, resp, v1.AppInstanceConditionScheduling).Success()
-	condition.Setter(appInstance, resp, v1.AppInstanceConditionQuotaAllocated).Success()
+	condition.Setter(appInstance, resp, v1.AppInstanceConditionQuota).Success()
 
 	if err := CheckStatus(handler).Handle(req, resp); err != nil {
 		t.Fatal(err)
