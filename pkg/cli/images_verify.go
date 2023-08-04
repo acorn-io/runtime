@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -53,19 +51,13 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var auth *apiv1.RegistryAuth
-	ref, err := name.ParseReference(imageName)
-	if err == nil { // not failing here, since it could be a local image
-		creds, err := imagesource.GetCreds(c)
-		if err != nil {
-			return err
-		}
-
-		auth, _, err = creds(cmd.Context(), ref.Context().RegistryStr())
-		if err != nil {
-			return err
-		}
+	auth, err := getAuthForImage(cmd.Context(), a.client, imageName)
+	if err != nil {
+		return err
 	}
+
+	// not failing here, since it could be a local image
+	ref, _ := name.ParseReference(imageName)
 
 	details, err := c.ImageDetails(cmd.Context(), args[0], &client.ImageDetailsOptions{
 		Auth: auth,

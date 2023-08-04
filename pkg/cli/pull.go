@@ -5,9 +5,7 @@ import (
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/progressbar"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/spf13/cobra"
 )
 
@@ -33,22 +31,7 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ref, err := name.ParseReference(args[0])
-	if err != nil {
-		return err
-	}
-
-	cfg, err := s.client.Options().CLIConfig()
-	if err != nil {
-		return err
-	}
-
-	creds, err := credentials.NewStore(cfg, c)
-	if err != nil {
-		return err
-	}
-
-	auth, _, err := creds.Get(cmd.Context(), ref.Context().RegistryStr())
+	auth, err := getAuthForImage(cmd.Context(), s.client, args[0])
 	if err != nil {
 		return err
 	}
