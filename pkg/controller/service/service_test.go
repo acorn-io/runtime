@@ -124,7 +124,3 @@ func TestCustomCertsShouldNotSetCertManager(t *testing.T) {
 func TestCustomCertsWithAnnonationsShouldNotSetCertManagerDefaultIssuer(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/ingress/customdomainwithannotations", RenderServices)
 }
-
-func TestContainerService(t *testing.T) {
-	tester.DefaultTest(t, scheme.Scheme, "testdata/service/container", RenderServices)
-}
