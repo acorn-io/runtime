@@ -29,6 +29,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AcornImageBuildList":                        schema_pkg_apis_apiacornio_v1_AcornImageBuildList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Acornfile":                                  schema_pkg_apis_apiacornio_v1_Acornfile(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.App":                                        schema_pkg_apis_apiacornio_v1_App(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AppInfo":                                    schema_pkg_apis_apiacornio_v1_AppInfo(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AppList":                                    schema_pkg_apis_apiacornio_v1_AppList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.AppPullImage":                               schema_pkg_apis_apiacornio_v1_AppPullImage(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Builder":                                    schema_pkg_apis_apiacornio_v1_Builder(ref),
@@ -53,6 +54,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EncryptionKey":                              schema_pkg_apis_apiacornio_v1_EncryptionKey(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Event":                                      schema_pkg_apis_apiacornio_v1_Event(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.EventList":                                  schema_pkg_apis_apiacornio_v1_EventList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.IconOptions":                                schema_pkg_apis_apiacornio_v1_IconOptions(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.IgnoreCleanup":                              schema_pkg_apis_apiacornio_v1_IgnoreCleanup(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.Image":                                      schema_pkg_apis_apiacornio_v1_Image(ref),
 		"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ImageAllowRule":                             schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref),
@@ -1207,6 +1209,36 @@ func schema_pkg_apis_apiacornio_v1_Acornfile(ref common.ReferenceCallback) commo
 							},
 						},
 					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"readme": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"info": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"icon": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -1370,6 +1402,52 @@ func schema_pkg_apis_apiacornio_v1_App(ref common.ReferenceCallback) common.Open
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_apiacornio_v1_AppInfo(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"info": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"interpolationError": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -2317,6 +2395,12 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaSpec(ref common.ReferenceCall
 							},
 						},
 					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"dirs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -2905,6 +2989,12 @@ func schema_pkg_apis_apiacornio_v1_EmbeddedContainer(ref common.ReferenceCallbac
 							},
 						},
 					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"dirs": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -3310,6 +3400,32 @@ func schema_pkg_apis_apiacornio_v1_EventList(ref common.ReferenceCallback) commo
 	}
 }
 
+func schema_pkg_apis_apiacornio_v1_IconOptions(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_apiacornio_v1_IgnoreCleanup(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -3666,6 +3782,12 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 						},
 					},
 					"signatureDigest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"readme": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -5148,6 +5270,12 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 							},
 						},
 					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"image": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -6324,6 +6452,36 @@ func schema_pkg_apis_internalacornio_v1_AppSpec(ref common.ReferenceCallback) co
 							},
 						},
 					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"readme": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"info": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"icon": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -6858,6 +7016,18 @@ func schema_pkg_apis_internalacornio_v1_BuilderSpec(ref common.ReferenceCallback
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"icon": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"readme": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"services": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -7103,6 +7273,12 @@ func schema_pkg_apis_internalacornio_v1_Container(ref common.ReferenceCallback) 
 									},
 								},
 							},
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"dirs": {
@@ -9678,6 +9854,12 @@ func schema_pkg_apis_internalacornio_v1_Router(ref common.ReferenceCallback) com
 							},
 						},
 					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"routes": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
@@ -9889,6 +10071,12 @@ func schema_pkg_apis_internalacornio_v1_Secret(ref common.ReferenceCallback) com
 									},
 								},
 							},
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"type": {
@@ -10140,6 +10328,12 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 									},
 								},
 							},
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"default": {
@@ -11158,6 +11352,12 @@ func schema_pkg_apis_internalacornio_v1_VolumeRequest(ref common.ReferenceCallba
 									},
 								},
 							},
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"class": {

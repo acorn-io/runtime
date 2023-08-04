@@ -15,6 +15,96 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestReadMeInfoIcon(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+name: "a name"
+readme: "./afile"
+info: """
+info crap
+"""
+icon: "./icon"
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "a name", appSpec.Name)
+	assert.Equal(t, "./afile", appSpec.Readme)
+	assert.Equal(t, "info crap", appSpec.Info)
+	assert.Equal(t, "./icon", appSpec.Icon)
+}
+
+func TestProfilesImplicitArgs(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`profiles: a: {}, profiles: d: {}
+	if std.contains(args.profiles, "d") {
+		containers: foo: {}
+	}
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	appDef, args, err := appImage.WithArgs(nil, []string{"a", "b?", "c?", "d?"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appDef.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []any{"a", "d"}, args["profiles"])
+	assert.Equal(t, []string{"a", "b?", "c?", "d?"}, appDef.profiles)
+	assert.Contains(t, appSpec.Containers, "foo")
+}
+
+func TestDefaultProfiles(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`{}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	args, err := appImage.Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, args.Profiles, 0)
+	assert.Len(t, args.Params, 0)
+}
+
+func TestDescription(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+description: "an acornfile"
+containers: c: description: "a container"
+jobs: j: description: "a job"
+services: s: description: "a service"
+volumes: v: description: "a volume"
+secrets: s2: description: "a secret"
+acorns: a: description: "an acorn"
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "an acornfile", appSpec.Description)
+	assert.Equal(t, "a container", appSpec.Containers["c"].Description)
+	assert.Equal(t, "a job", appSpec.Jobs["j"].Description)
+	assert.Equal(t, "a service", appSpec.Services["s"].Description)
+	assert.Equal(t, "a volume", appSpec.Volumes["v"].Description)
+	assert.Equal(t, "a secret", appSpec.Secrets["s2"].Description)
+	assert.Equal(t, "an acorn", appSpec.Acorns["a"].Description)
+}
+
 func TestParseRouters(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
 routers: {
@@ -2608,15 +2698,15 @@ profiles: "foo - bar": {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, map[string]any{"a": "b"}, args)
-	assert.Equal(t, map[string]any{"a": "b", "dev": false, "autoUpgrade": false}, getVals(t, defaultAppDef))
+	assert.Equal(t, map[string]any{"a": "b", "profiles": []any{"foo - bar"}}, args)
+	assert.Equal(t, map[string]any{"a": "b", "dev": false, "autoUpgrade": false, "profiles": []any{"foo - bar"}}, getVals(t, defaultAppDef))
 
 	appDef, args, err = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"foo - bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, map[string]any{"a": "c", "c": "d"}, args)
-	assert.Equal(t, map[string]any{"a": "c", "c": "d", "dev": false, "autoUpgrade": false}, getVals(t, appDef))
+	assert.Equal(t, map[string]any{"a": "c", "c": "d", "profiles": []any{"foo - bar"}}, args)
+	assert.Equal(t, map[string]any{"a": "c", "c": "d", "dev": false, "autoUpgrade": false, "profiles": []any{"foo - bar"}}, getVals(t, appDef))
 }
 
 func TestArgsDefaulting(t *testing.T) {
@@ -2649,6 +2739,7 @@ containers: default: files: "a": std.toJSON(args)
 		"e":           "x",
 		"a":           []any{"val"},
 		"o":           map[string]any{},
+		"profiles":    []any{},
 	}, getVals(t, appDef))
 
 	newValues := map[string]any{
@@ -2671,6 +2762,7 @@ containers: default: files: "a": std.toJSON(args)
 	}
 
 	newValues["e"] = "x"
+	newValues["profiles"] = []any{}
 	assert.Equal(t, newValues, getVals(t, appDef))
 }
 

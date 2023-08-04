@@ -1,7 +1,6 @@
 package cli
 
 import (
-	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
 	"github.com/acorn-io/runtime/pkg/client"
@@ -67,16 +66,8 @@ func (a *ImageDetails) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	type ImageDetailsOutput struct {
-		internalv1.AppImage
-		SignatureDigest string `json:"signature,omitempty" yaml:"signature,omitempty"`
-	}
-
 	w := table.NewWriter(nil, false, a.Output)
-	w.WriteFormatted(ImageDetailsOutput{
-		AppImage:        image.AppImage,
-		SignatureDigest: image.SignatureDigest,
-	}, nil)
+	w.WriteFormatted(image, nil)
 
 	return w.Close()
 }

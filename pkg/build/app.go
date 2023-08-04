@@ -38,8 +38,8 @@ func (a *AppImageOptions) GetRemoteOptions() []remote.Option {
 	return a.RemoteOptions
 }
 
-func fromAppImage(ctx *buildContext, appImage *v1.AppImage) (string, error) {
-	tempContext, err := getContextFromAppImage(appImage)
+func fromAppImage(ctx *buildContext, dataFiles appdefinition.DataFiles, appImage *v1.AppImage) (string, error) {
+	tempContext, err := getContextFromAppImage(dataFiles, appImage)
 	if err != nil {
 		return "", err
 	}
@@ -56,7 +56,7 @@ func fromAppImage(ctx *buildContext, appImage *v1.AppImage) (string, error) {
 	return createAppManifest(tag, appImage.ImageData, ctx.remoteOpts)
 }
 
-func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
+func getContextFromAppImage(dataFiles appdefinition.DataFiles, appImage *v1.AppImage) (_ string, err error) {
 	tempDir, err := os.MkdirTemp("", "acorn-app-image-context")
 	if err != nil {
 		return "", err
@@ -70,6 +70,18 @@ func getContextFromAppImage(appImage *v1.AppImage) (_ string, err error) {
 	imageData, err := digestOnly(appImage.ImageData)
 	if err != nil {
 		return "", err
+	}
+
+	if len(dataFiles.Icon) > 0 {
+		if err := addFile(tempDir, appdefinition.IconFile, dataFiles.Icon); err != nil {
+			return "", err
+		}
+	}
+
+	if len(dataFiles.Readme) > 0 {
+		if err := addFile(tempDir, appdefinition.ReadmeFile, dataFiles.Readme); err != nil {
+			return "", err
+		}
 	}
 
 	if err := addFile(tempDir, appdefinition.AcornCueFile, appImage.Acornfile); err != nil {

@@ -55,7 +55,21 @@ func ImageDigest(ctx context.Context, c client.Reader, namespace, image string, 
 	return descriptor.Digest.String(), nil
 }
 
+type AppImageWithData struct {
+	AppImage *v1.AppImage
+	Readme   []byte
+	Icon     []byte
+}
+
 func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error) {
+	data, err := PullAppImageWithDataFiles(ctx, c, namespace, image, nestedDigest, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return data.AppImage, nil
+}
+
+func PullAppImageWithDataFiles(ctx context.Context, c client.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*AppImageWithData, error) {
 	tag, err := GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return nil, err
@@ -78,13 +92,13 @@ func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nested
 		return nil, err
 	}
 
-	appImage, err := pullIndex(tag, opts)
+	appImageWithData, err := pullIndex(tag, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	appImage.ID = image
-	return appImage, nil
+	appImageWithData.AppImage.ID = image
+	return appImageWithData, nil
 }
 
 const NoDefaultRegistry = "xxx-no-reg"
@@ -144,7 +158,7 @@ func IsImageRemote(ctx context.Context, c client.Reader, namespace, image string
 	return err == nil
 }
 
-func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, error) {
+func pullIndex(tag imagename.Reference, opts []remote.Option) (*AppImageWithData, error) {
 	img, err := remote.Index(tag, opts...)
 	if err != nil {
 		return nil, err
@@ -178,7 +192,7 @@ func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, err
 		return nil, err
 	}
 
-	app, err := appdefinition.AppImageFromTar(reader)
+	app, dataFiles, err := appdefinition.AppImageFromTar(reader)
 	if err != nil {
 		return nil, fmt.Errorf("invalid image %s: %v", tag, err)
 	}
@@ -188,7 +202,11 @@ func pullIndex(tag imagename.Reference, opts []remote.Option) (*v1.AppImage, err
 		return nil, err
 	}
 	app.Digest = digest.String()
-	return app, nil
+	return &AppImageWithData{
+		AppImage: app,
+		Readme:   dataFiles.Readme,
+		Icon:     dataFiles.Icon,
+	}, nil
 }
 
 // GetRuntimePullableImageReference is similar to GetImageReference but will return 127.0.0.1:NODEPORT instead of

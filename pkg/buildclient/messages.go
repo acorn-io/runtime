@@ -30,6 +30,7 @@ type Message struct {
 	//         AppImage - Build done, result
 	//         Error - Build failed, error
 	//         Acornfile - Request/Response for Acornfile lookup
+	//         ReadFile - Request/Response for file lookup
 	//         RegistryServerAddress - Server requesting a registry credential, or Client responding
 
 	FileSessionID         string       `json:"fileSessionID,omitempty"`
@@ -37,6 +38,7 @@ type Message struct {
 	AppImage              *v1.AppImage `json:"appImage,omitempty"`
 	Error                 string       `json:"error,omitempty"`
 	Acornfile             string       `json:"acornfile,omitempty"`
+	ReadFile              string       `json:"readFile,omitempty"`
 	RegistryServerAddress string       `json:"registryServerAddress,omitempty"`
 
 	// The below fields are additional metadata for each one of the above messages types

@@ -18,6 +18,28 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func GetImageIcon(ctx context.Context, c kclient.Client, namespace, imageName string, opts ...remote.Option) ([]byte, error) {
+	imageName = strings.ReplaceAll(imageName, "+", "/")
+	name := strings.ReplaceAll(imageName, "/", "+")
+
+	image := &apiv1.Image{}
+	err := c.Get(ctx, router.Key(namespace, name), image)
+	if err != nil && !apierror.IsNotFound(err) {
+		return nil, err
+	} else if err != nil && apierror.IsNotFound(err) && (tags.IsLocalReference(name) || tags.HasNoSpecifiedRegistry(imageName)) {
+		return nil, err
+	} else if err == nil {
+		namespace = image.Namespace
+		imageName = image.Name
+	}
+
+	data, err := images.PullAppImageWithDataFiles(ctx, c, namespace, imageName, "", opts...)
+	if err != nil {
+		return nil, err
+	}
+	return data.Icon, nil
+}
+
 func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, noDefaultReg bool, opts ...remote.Option) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
@@ -51,7 +73,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		imageName = image.Name
 	}
 
-	appImage, err := images.PullAppImage(ctx, c, namespace, imageName, nested, opts...)
+	appImageWithData, err := images.PullAppImageWithDataFiles(ctx, c, namespace, imageName, nested, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -60,12 +82,12 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 	if err != nil {
 		return nil, err
 	}
-	_, sigHash, err := acornsign.FindSignature(imgRef.Context().Digest(appImage.Digest), opts...)
+	_, sigHash, err := acornsign.FindSignature(imgRef.Context().Digest(appImageWithData.AppImage.Digest), opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	details, err := ParseDetails(appImage.Acornfile, deployArgs, profiles)
+	details, err := ParseDetails(appImageWithData.AppImage.Acornfile, deployArgs, profiles)
 	if err != nil {
 		return &apiv1.ImageDetails{
 			ObjectMeta: metav1.ObjectMeta{
@@ -85,7 +107,8 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		Profiles:        profiles,
 		Params:          details.Params,
 		AppSpec:         details.AppSpec,
-		AppImage:        *appImage,
+		AppImage:        *appImageWithData.AppImage,
 		SignatureDigest: strings.Trim(sigHash.String(), ":"), // trim to avoid having just ':' as the digest
+		Readme:          string(appImageWithData.Readme),
 	}, nil
 }

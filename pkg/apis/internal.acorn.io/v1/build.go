@@ -59,6 +59,8 @@ func (in *AcornBuilderSpec) Normalize() *AcornBuilderSpec {
 }
 
 type BuilderSpec struct {
+	Icon       string                               `json:"icon,omitempty"`
+	Readme     string                               `json:"readme,omitempty"`
 	Services   map[string]AcornBuilderSpec          `json:"services,omitempty"`
 	Containers map[string]ContainerImageBuilderSpec `json:"containers,omitempty"`
 	Jobs       map[string]ContainerImageBuilderSpec `json:"jobs,omitempty"`
