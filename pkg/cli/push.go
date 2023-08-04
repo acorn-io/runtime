@@ -3,9 +3,7 @@ package cli
 import (
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/progressbar"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 )
@@ -33,22 +31,7 @@ func (s *Push) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfg, err := s.client.Options().CLIConfig()
-	if err != nil {
-		return err
-	}
-
-	creds, err := credentials.NewStore(cfg, c)
-	if err != nil {
-		return err
-	}
-
-	tag, err := name.NewTag(args[0])
-	if err != nil {
-		return err
-	}
-
-	auth, _, err := creds.Get(cmd.Context(), tag.RegistryStr())
+	auth, err := getAuthForImage(cmd.Context(), s.client, args[0])
 	if err != nil {
 		return err
 	}
