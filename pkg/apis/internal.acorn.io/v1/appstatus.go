@@ -2,6 +2,8 @@ package v1
 
 import (
 	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type AppStatus struct {
@@ -145,6 +147,14 @@ func (in ContainerStatus) GetCommonStatus() CommonStatus {
 
 type JobStatus struct {
 	CommonStatus         `json:",inline"`
+	Schedule             string                      `json:"schedule,omitempty"`
+	JobName              string                      `json:"name,omitempty"`
+	JobNamespace         string                      `json:"namespace,omitempty"`
+	CreationTime         *metav1.Time                `json:"creationTime,omitempty"`
+	StartTime            *metav1.Time                `json:"startTime,omitempty"`
+	CompletionTime       *metav1.Time                `json:"completionTime,omitempty"`
+	LastRun              *metav1.Time                `json:"lastRun,omitempty"`
+	NextRun              *metav1.Time                `json:"nextRun,omitempty"`
 	RunningCount         int                         `json:"runningCount,omitempty"`
 	ErrorCount           int                         `json:"errorCount,omitempty"`
 	CreateEventSucceeded bool                        `json:"createEventSucceeded,omitempty"`

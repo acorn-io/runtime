@@ -2001,6 +2001,26 @@ func (in *ImagesData) DeepCopy() *ImagesData {
 func (in *JobStatus) DeepCopyInto(out *JobStatus) {
 	*out = *in
 	in.CommonStatus.DeepCopyInto(&out.CommonStatus)
+	if in.CreationTime != nil {
+		in, out := &in.CreationTime, &out.CreationTime
+		*out = (*in).DeepCopy()
+	}
+	if in.StartTime != nil {
+		in, out := &in.StartTime, &out.StartTime
+		*out = (*in).DeepCopy()
+	}
+	if in.CompletionTime != nil {
+		in, out := &in.CompletionTime, &out.CompletionTime
+		*out = (*in).DeepCopy()
+	}
+	if in.LastRun != nil {
+		in, out := &in.LastRun, &out.LastRun
+		*out = (*in).DeepCopy()
+	}
+	if in.NextRun != nil {
+		in, out := &in.NextRun, &out.NextRun
+		*out = (*in).DeepCopy()
+	}
 	if in.Dependencies != nil {
 		in, out := &in.Dependencies, &out.Dependencies
 		*out = make(map[string]DependencyStatus, len(*in))

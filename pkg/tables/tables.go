@@ -81,6 +81,15 @@ var (
 	}
 	ContainerConverter = MustConverter(Container)
 
+	Job = [][]string{
+		{"Name", "{{ . | name }}"},
+		{"State", "Status.State"},
+		{"Last Run", "{{lastRun .Status.LastRun }}"},
+		{"Next Run", "{{nextRun .Status.NextRun }}"},
+		{"Created", "{{ago .CreationTimestamp}}"},
+	}
+	JobConverter = MustConverter(Job)
+
 	CredentialClient = [][]string{
 		{"Server", "ServerAddress"},
 		{"Username", "Username"},

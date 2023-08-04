@@ -1,0 +1,9 @@
+jobs: {
+	job: {
+		image:"ghcr.io/acorn-io/images-mirror/alpine:latest"
+	}
+	cronjob: {
+		image:"ghcr.io/acorn-io/images-mirror/alpine:latest"
+        schedule: "0 0 31 2 *" // February 31st, never runs
+	}
+}

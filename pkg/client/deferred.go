@@ -234,6 +234,27 @@ func (d *DeferredClient) ContainerReplicaPortForward(ctx context.Context, contai
 	return d.Client.ContainerReplicaPortForward(ctx, containerName, port)
 }
 
+func (d *DeferredClient) JobList(ctx context.Context, opts *JobListOptions) ([]apiv1.Job, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.JobList(ctx, opts)
+}
+
+func (d *DeferredClient) JobGet(ctx context.Context, name string) (*apiv1.Job, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.JobGet(ctx, name)
+}
+
+func (d *DeferredClient) JobRestart(ctx context.Context, name string) error {
+	if err := d.create(); err != nil {
+		return err
+	}
+	return d.Client.JobRestart(ctx, name)
+}
+
 func (d *DeferredClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	if err := d.create(); err != nil {
 		return nil, err
