@@ -61,7 +61,7 @@ func (i *Icon) Connect(ctx context.Context, id string, options runtime.Object, r
 		return nil, err
 	}
 
-	logrus.Infof("Downloading icon from %s (%#v)", pullTag.String(), pullTag)
+	logrus.Debugf("Downloading icon from %s (%#v)", pullTag.String(), pullTag)
 	icon, err := imagedetails.GetImageIcon(ctx, i.client, app.Namespace, app.Status.AppImage.ID, opts...)
 	if err != nil {
 		return nil, err
