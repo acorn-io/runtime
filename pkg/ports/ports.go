@@ -1,7 +1,6 @@
 package ports
 
 import (
-	"sort"
 	"strconv"
 	"strings"
 
@@ -82,11 +81,4 @@ func RemoveNonHTTPPorts(ports []corev1.ServicePort) []corev1.ServicePort {
 		}
 	}
 	return result
-}
-
-func SortPorts(ports []corev1.ServicePort) []corev1.ServicePort {
-	sort.Slice(ports, func(i, j int) bool {
-		return ports[i].Port < ports[j].Port
-	})
-	return ports
 }
