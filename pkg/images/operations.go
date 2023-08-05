@@ -56,9 +56,10 @@ func ImageDigest(ctx context.Context, c client.Reader, namespace, image string, 
 }
 
 type AppImageWithData struct {
-	AppImage *v1.AppImage
-	Readme   []byte
-	Icon     []byte
+	AppImage   *v1.AppImage
+	Readme     []byte
+	Icon       []byte
+	IconSuffix string
 }
 
 func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error) {
@@ -203,9 +204,10 @@ func pullIndex(tag imagename.Reference, opts []remote.Option) (*AppImageWithData
 	}
 	app.Digest = digest.String()
 	return &AppImageWithData{
-		AppImage: app,
-		Readme:   dataFiles.Readme,
-		Icon:     dataFiles.Icon,
+		AppImage:   app,
+		Readme:     dataFiles.Readme,
+		Icon:       dataFiles.Icon,
+		IconSuffix: dataFiles.IconSuffix,
 	}, nil
 }
 

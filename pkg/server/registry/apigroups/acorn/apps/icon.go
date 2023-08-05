@@ -3,6 +3,7 @@ package apps
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/acorn-io/mink/pkg/strategy"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -62,9 +63,27 @@ func (i *Icon) Connect(ctx context.Context, id string, options runtime.Object, r
 	}
 
 	logrus.Debugf("Downloading icon from %s (%#v)", pullTag.String(), pullTag)
-	icon, err := imagedetails.GetImageIcon(ctx, i.client, app.Namespace, app.Status.AppImage.ID, opts...)
+	icon, suffix, err := imagedetails.GetImageIcon(ctx, i.client, app.Namespace, app.Status.AppImage.ID, opts...)
 	if err != nil {
 		return nil, err
+	}
+
+	contentType := ""
+	switch strings.ToLower(suffix) {
+	case ".png":
+		contentType = "image/png"
+	case ".svg":
+		contentType = "image/svg+xml"
+	case ".jpg":
+		contentType = "image/jpeg"
+	case ".jpeg":
+		contentType = "image/jpeg"
+	case ".gif":
+		contentType = "image/gif"
+	default:
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.WriteHeader(http.StatusNotFound)
+		}), nil
 	}
 
 	if len(icon) == 0 {
@@ -74,7 +93,7 @@ func (i *Icon) Connect(ctx context.Context, id string, options runtime.Object, r
 	}
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Header().Set("Content-Type", "application/octet-stream")
+		rw.Header().Set("Content-Type", contentType)
 		_, _ = rw.Write(icon)
 	}), nil
 }

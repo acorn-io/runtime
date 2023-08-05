@@ -73,7 +73,7 @@ func getContextFromAppImage(dataFiles appdefinition.DataFiles, appImage *v1.AppI
 	}
 
 	if len(dataFiles.Icon) > 0 {
-		if err := addFile(tempDir, appdefinition.IconFile, dataFiles.Icon); err != nil {
+		if err := addFile(tempDir, appdefinition.IconFile+dataFiles.IconSuffix, dataFiles.Icon); err != nil {
 			return "", err
 		}
 	}

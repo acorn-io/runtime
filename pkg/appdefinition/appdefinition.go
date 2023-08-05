@@ -9,6 +9,7 @@ import (
 	"io"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/pkg/cue"
@@ -32,8 +33,9 @@ var (
 )
 
 type DataFiles struct {
-	Icon   []byte
-	Readme []byte
+	IconSuffix string
+	Icon       []byte
+	Readme     []byte
 }
 
 type AppDefinition struct {
@@ -368,10 +370,13 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, *DataFiles, error) {
 			if err != nil {
 				return nil, nil, err
 			}
-		case IconFile:
-			dataFiles.Icon, err = io.ReadAll(tar)
-			if err != nil {
-				return nil, nil, err
+		default:
+			if strings.HasPrefix(header.Name, IconFile) {
+				dataFiles.Icon, err = io.ReadAll(tar)
+				if err != nil {
+					return nil, nil, err
+				}
+				dataFiles.IconSuffix = strings.TrimPrefix(header.Name, IconFile)
 			}
 		}
 	}
