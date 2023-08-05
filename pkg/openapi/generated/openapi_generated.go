@@ -7982,6 +7982,12 @@ func schema_pkg_apis_internalacornio_v1_DevSessionInstanceSpec(ref common.Refere
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"client": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
