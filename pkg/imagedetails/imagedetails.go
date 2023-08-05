@@ -18,16 +18,16 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetImageIcon(ctx context.Context, c kclient.Client, namespace, imageName string, opts ...remote.Option) ([]byte, error) {
+func GetImageIcon(ctx context.Context, c kclient.Client, namespace, imageName string, opts ...remote.Option) ([]byte, string, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
 
 	image := &apiv1.Image{}
 	err := c.Get(ctx, router.Key(namespace, name), image)
 	if err != nil && !apierror.IsNotFound(err) {
-		return nil, err
+		return nil, "", err
 	} else if err != nil && apierror.IsNotFound(err) && (tags.IsLocalReference(name) || tags.HasNoSpecifiedRegistry(imageName)) {
-		return nil, err
+		return nil, "", err
 	} else if err == nil {
 		namespace = image.Namespace
 		imageName = image.Name
@@ -35,9 +35,9 @@ func GetImageIcon(ctx context.Context, c kclient.Client, namespace, imageName st
 
 	data, err := images.PullAppImageWithDataFiles(ctx, c, namespace, imageName, "", opts...)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return data.Icon, nil
+	return data.Icon, data.IconSuffix, nil
 }
 
 func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, profiles []string, deployArgs map[string]any, nested string, noDefaultReg bool, opts ...remote.Option) (*apiv1.ImageDetails, error) {

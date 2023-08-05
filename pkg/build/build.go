@@ -102,6 +102,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		if err != nil {
 			return nil, err
 		}
+		dataFiles.IconSuffix = filepath.Ext(buildSpec.Icon)
 	}
 
 	if buildSpec.Readme != "" {
