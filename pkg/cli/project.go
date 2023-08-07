@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/project"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/sirupsen/logrus"
@@ -68,6 +69,9 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 			}
 		}
 		for _, env := range typed.SortedKeys(warnings) {
+			if env == config.LocalServerEnv && a.client.Options().Kubeconfig == "" {
+				continue
+			}
 			logrus.Warnf("Could not list projects from [%s]: %v", env, warnings[env])
 		}
 	}
