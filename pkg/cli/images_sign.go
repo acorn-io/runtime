@@ -112,7 +112,9 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	signatureB64 := base64.StdEncoding.EncodeToString(signature)
 
-	imageSignOpts := &client.ImageSignOptions{}
+	imageSignOpts := &client.ImageSignOptions{
+		Auth: auth,
+	}
 
 	pubkey, err := sigSigner.PublicKey()
 	if err != nil {

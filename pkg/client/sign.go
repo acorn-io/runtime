@@ -12,9 +12,10 @@ func (c *DefaultClient) ImageSign(ctx context.Context, image string, payload []b
 		Payload:      payload,
 		SignatureB64: signatureB64,
 		PublicKey:    opts.PublicKey,
+		Auth:         opts.Auth,
 	}
 
-	imageDetails, err := c.ImageDetails(ctx, image, &ImageDetailsOptions{})
+	imageDetails, err := c.ImageDetails(ctx, image, &ImageDetailsOptions{Auth: opts.Auth})
 	if err != nil {
 		return nil, err
 	}

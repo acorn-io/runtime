@@ -82,6 +82,12 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 	if err != nil {
 		return nil, err
 	}
+
+	opts, err = images.GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
+	if err != nil {
+		return nil, err
+	}
+
 	_, sigHash, err := acornsign.FindSignature(imgRef.Context().Digest(appImageWithData.AppImage.Digest), opts...)
 	if err != nil {
 		return nil, err
