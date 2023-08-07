@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	LocalServer = "kubeconfig"
+	LocalServer    = "kubeconfig"
+	LocalServerEnv = "local " + LocalServer
 )
 
 type AuthConfig types.AuthConfig
