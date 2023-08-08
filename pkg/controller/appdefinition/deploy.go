@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"path"
 	"strconv"
@@ -486,6 +487,7 @@ func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[str
 		labels.AcornContainerSpec: containerAnnotation(container),
 	}
 	addPrometheusAnnotations(annotations, container)
+	addCiliumAnnotations(annotations, container)
 
 	images := map[string]string{}
 	addImageAnnotations(images, appInstance, container)
@@ -519,6 +521,18 @@ func addPrometheusAnnotations(annotations map[string]string, container v1.Contai
 		annotations[labels.PrometheusScrape] = "true"
 		annotations[labels.PrometheusPath] = container.Metrics.Path
 		annotations[labels.PrometheusPort] = strconv.Itoa(int(container.Metrics.Port))
+	}
+}
+
+func addCiliumAnnotations(annotations map[string]string, container v1.Container) {
+	var visibilityConfigs []string
+	for _, port := range container.Ports {
+		if port.Protocol == v1.ProtocolHTTP {
+			visibilityConfigs = append(visibilityConfigs, fmt.Sprintf("<Ingress/%d/TCP/HTTP>", port.TargetPort))
+		}
+	}
+	if len(visibilityConfigs) > 0 {
+		annotations[labels.CiliumProxyVisibility] = strings.Join(visibilityConfigs, ",")
 	}
 }
 
