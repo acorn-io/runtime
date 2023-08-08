@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/acorn-io/baaah/pkg/router"
-	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/condition"
@@ -15,29 +14,19 @@ import (
 	"github.com/acorn-io/runtime/pkg/tags"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.HandlerFunc {
 	return pullAppImage(transport, pullClient{
-		recorder: recorder,
-		resolve:  tags.ResolveLocal,
-		pull:     images.PullAppImage,
-		now:      metav1.NowMicro,
+		pull: images.PullAppImage,
 	})
 }
-
-type resolveImageFunc func(ctx context.Context, c kclient.Client, namespace, image string) (resolved string, isLocal bool, error error)
 
 type pullImageFunc func(ctx context.Context, c kclient.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error)
 
 type pullClient struct {
-	recorder event.Recorder
-	resolve  resolveImageFunc
-	pull     pullImageFunc
-	now      func() metav1.MicroTime
+	pull pullImageFunc
 }
 
 func pullAppImage(transport http.RoundTripper, client pullClient) router.HandlerFunc {
@@ -58,16 +47,19 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 		var (
 			_, autoUpgradeOn = autoupgrade.Mode(appInstance.Spec)
 			resolved         string
-			err              error
-			isLocal          bool
 		)
 		// Only attempt to resolve locally if auto-upgrade is not on, or if auto-upgrade is on but we know the image is not remote.
 		if !autoUpgradeOn || !images.IsImageRemote(req.Ctx, req.Client, appInstance.Namespace, target, true, remote.WithTransport(transport)) {
-			resolved, isLocal, err = client.resolve(req.Ctx, req.Client, appInstance.Namespace, target)
+			var (
+				isLocal bool
+				err     error
+			)
+			resolved, isLocal, err = tags.ResolveLocal(req.Ctx, req.Client, appInstance.Namespace, target)
 			if err != nil {
 				cond.Error(err)
 				return nil
 			}
+
 			if !isLocal {
 				if autoUpgradeOn && !tags.IsLocalReference(target) {
 					ref, err := imagename.ParseReference(target, imagename.WithDefaultRegistry(images.NoDefaultRegistry))
@@ -87,21 +79,7 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 			resolved = target
 		}
 
-		var (
-			previousImage = appInstance.Status.AppImage
-			targetImage   *v1.AppImage
-		)
-		defer func() {
-			// Record the results as an event
-			if err != nil {
-				targetImage = &v1.AppImage{
-					Name: resolved,
-				}
-			}
-			recordPullEvent(req.Ctx, client.recorder, client.now(), req.Object, autoUpgradeOn, err, previousImage, *targetImage)
-		}()
-
-		targetImage, err = client.pull(req.Ctx, req.Client, appInstance.Namespace, resolved, "", remote.WithTransport(transport))
+		targetImage, err := client.pull(req.Ctx, req.Client, appInstance.Namespace, resolved, "", remote.WithTransport(transport))
 		if err != nil {
 			cond.Error(err)
 			return nil
@@ -161,81 +139,5 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 		} else {
 			return "", ""
 		}
-	}
-}
-
-const (
-	AppImagePullFailureEventType = "AppImagePullFailure"
-	AppImagePullSuccessEventType = "AppImagePullSuccess"
-)
-
-// AppImagePullEventDetails captures additional info about an App image pull.
-type AppImagePullEventDetails struct {
-	// ResourceVersion is the resourceVersion of the App the image is being pulled for.
-	ResourceVersion string `json:"resourceVersion"`
-
-	// AutoUpgrade is true if the pull was triggered by an auto-upgrade, false otherwise.
-	AutoUpgrade bool `json:"autoUpgrade"`
-
-	// Previous is the App image before pulling, if any.
-	// +optional
-	Previous ImageSummary `json:"previous,omitempty"`
-
-	// Target is the image being pulled.
-	Target ImageSummary `json:"target"`
-
-	// Err is an error that occurred during the pull, if any.
-	// +optional
-	Err string `json:"err,omitempty"`
-}
-
-type ImageSummary struct {
-	Name   string `json:"name,omitempty"`
-	Digest string `json:"digest,omitempty"`
-	VCS    v1.VCS `json:"vcs,omitempty"`
-}
-
-func newImageSummary(appImage v1.AppImage) ImageSummary {
-	return ImageSummary{
-		Name:   appImage.Name,
-		Digest: appImage.Digest,
-		VCS:    appImage.VCS,
-	}
-}
-
-func recordPullEvent(ctx context.Context, recorder event.Recorder, observed metav1.MicroTime, obj kclient.Object, autoUpgradeOn bool, err error, previousImage, targetImage v1.AppImage) {
-	// Initialize with values for a success event
-	previous, target := newImageSummary(previousImage), newImageSummary(targetImage)
-	e := apiv1.Event{
-		Type:        AppImagePullSuccessEventType,
-		Severity:    apiv1.EventSeverityInfo,
-		Description: fmt.Sprintf("Pulled %s", target.Name),
-		AppName:     obj.GetName(),
-		Resource:    event.Resource(obj),
-		Observed:    apiv1.MicroTime(observed),
-	}
-	e.SetNamespace(obj.GetNamespace())
-
-	details := AppImagePullEventDetails{
-		ResourceVersion: obj.GetResourceVersion(),
-		AutoUpgrade:     autoUpgradeOn,
-		Previous:        previous,
-		Target:          target,
-	}
-
-	if err != nil {
-		// It's a failure, overwrite with failure event values
-		e.Type = AppImagePullFailureEventType
-		e.Severity = v1.EventSeverityError
-		e.Description = fmt.Sprintf("Failed to pull %s", target.Name)
-		details.Err = err.Error()
-	}
-
-	if e.Details, err = apiv1.Mapify(details); err != nil {
-		logrus.Warnf("Failed to mapify event details: %s", err.Error())
-	}
-
-	if err := recorder.Record(ctx, &e); err != nil {
-		logrus.Warnf("Failed to record event: %s", err.Error())
 	}
 }
