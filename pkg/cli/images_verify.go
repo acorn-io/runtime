@@ -73,6 +73,7 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 	vOpts := &client.ImageVerifyOptions{
 		Annotations: a.Annotations,
 		PublicKey:   a.Key,
+		Auth:        auth,
 	}
 
 	// load public key from file (if it is a file, not a remote reference)

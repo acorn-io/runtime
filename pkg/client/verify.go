@@ -12,6 +12,7 @@ import (
 func (c *DefaultClient) ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error) {
 	sigInput := &apiv1.ImageSignature{
 		PublicKey: opts.PublicKey,
+		Auth:      opts.Auth,
 	}
 
 	if opts.PublicKey == "" {
@@ -22,7 +23,7 @@ func (c *DefaultClient) ImageVerify(ctx context.Context, image string, opts *Ima
 		Match: opts.Annotations,
 	}
 
-	imageDetails, err := c.ImageDetails(ctx, image, &ImageDetailsOptions{})
+	imageDetails, err := c.ImageDetails(ctx, image, &ImageDetailsOptions{Auth: opts.Auth})
 	if err != nil {
 		return nil, err
 	}
