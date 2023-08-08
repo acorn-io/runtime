@@ -390,10 +390,10 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 			return nil, fmt.Errorf("failed to load public key from SSH - %s: %w", keyRef, err)
 		}
 		verifiers = append(verifiers, v)
-	} else if strings.HasPrefix(keyRef, "ac://") {
+	} else if strings.HasPrefix(keyRef, "acorn://") {
 		// Acorn Manager
 		logrus.Debugf("Loading public key from Acorn Manager: %s", keyRef)
-		acKeys, err := getAcornPublicKeys(strings.TrimPrefix(keyRef, "ac://"))
+		acKeys, err := getAcornPublicKeys(strings.TrimPrefix(keyRef, "acorn://"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from Acorn Manager - %s: %w", keyRef, err)
 		}

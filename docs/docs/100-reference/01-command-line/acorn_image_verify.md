@@ -19,7 +19,7 @@ acorn image verify my-image --key ./my-key.pub
 acorn image verify my-image --key gh://ibuildthecloud
 
 # Verify using a public key belonging to an Acorn Manager Identity
-acorn image verify my-image --key ac://ibuildthecloud
+acorn image verify my-image --key acorn://ibuildthecloud
 
 ```
 
