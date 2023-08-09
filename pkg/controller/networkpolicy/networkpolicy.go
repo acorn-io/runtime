@@ -2,6 +2,7 @@ package networkpolicy
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -53,8 +55,8 @@ func ForApp(req router.Request, resp router.Response) error {
 		})
 	}
 
-	// create the NetworkPolicy for the whole app
-	// this allows traffic only from within the project
+	// Create the NetworkPolicy for the whole app.
+	// This allows traffic only from within the project.
 	resp.Objects(&networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      app.Name,
@@ -73,6 +75,54 @@ func ForApp(req router.Request, resp router.Response) error {
 			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},
 	})
+
+	// If the app has an HTTP probe defined, add an allow policy for it.
+	for containerName, container := range app.Status.AppSpec.Containers {
+		for _, probe := range container.Probes {
+			if probe.HTTP != nil {
+				probeURL, err := url.Parse(probe.HTTP.URL)
+				if err != nil {
+					return fmt.Errorf("failed to parse HTTP probe URL '%s': %w", probe.HTTP.URL, err)
+				}
+
+				var port int
+				if probeURL.Port() == "" {
+					port = 80
+				} else {
+					port, err = strconv.Atoi(probeURL.Port())
+					if err != nil {
+						return fmt.Errorf("failed to parse HTTP probe URL '%s': %w", probe.HTTP.URL, err)
+					}
+				}
+
+				containerLabels := labels.Managed(app)
+				containerLabels[labels.AcornContainerName] = containerName
+
+				resp.Objects(&networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      name.SafeConcatName(app.Name, containerName, "http-probe"),
+						Namespace: podNamespace,
+						Labels: map[string]string{
+							labels.AcornManaged: "true",
+						},
+					},
+					Spec: networkingv1.NetworkPolicySpec{
+						PodSelector: metav1.LabelSelector{
+							MatchLabels: containerLabels,
+						},
+						Ingress: []networkingv1.NetworkPolicyIngressRule{{
+							Ports: []networkingv1.NetworkPolicyPort{{
+								Protocol: z.Pointer(corev1.ProtocolTCP),
+								Port:     z.Pointer(intstr.FromInt(port)),
+							}},
+						}},
+						PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
+					},
+				})
+			}
+		}
+	}
+
 	return nil
 }
 
