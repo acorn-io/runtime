@@ -194,7 +194,6 @@ spec:
         admit.io: test-admit-app-spec-ann
         allowed-global.io: test-global
         allowed.io: test-allowed-app-spec-ann
-        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

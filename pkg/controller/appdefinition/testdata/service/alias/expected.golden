@@ -48,7 +48,6 @@ spec:
         acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         both: con1val
         con1: value
-        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>,<Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -162,7 +161,6 @@ spec:
         acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         both: con2val
         con2: value
-        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
