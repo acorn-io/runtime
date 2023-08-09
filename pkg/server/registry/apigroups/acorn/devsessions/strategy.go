@@ -2,6 +2,7 @@ package devsessions
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -32,8 +33,8 @@ func (v *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 	}
 
 	if devSession.Spec.Region != app.GetRegion() {
-		result = append(result, field.Invalid(field.NewPath("spec", "region"), devSession.Name,
-			"Region on devSession and app must match"))
+		result = append(result, field.Invalid(field.NewPath("spec", "region"), devSession.Spec.Region,
+			fmt.Sprintf("Region on devSession [%s] and app [%s] must match", devSession.Spec.Region, app.GetRegion())))
 		return
 	}
 
