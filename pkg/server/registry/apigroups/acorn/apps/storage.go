@@ -27,6 +27,7 @@ func NewStorage(c kclient.WithWatch, clientFactory *client.Factory, recorder eve
 	validator := NewValidator(c, clientFactory, strategy, transport)
 
 	return stores.NewBuilder(c.Scheme(), &apiv1.App{}).
+		WithPrepareCreate(validator).
 		WithCompleteCRUD(strategy).
 		WithValidateUpdate(validator).
 		WithValidateCreate(validator).

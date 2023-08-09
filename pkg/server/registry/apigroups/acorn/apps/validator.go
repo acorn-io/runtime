@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/acorn-io/baaah/pkg/merr"
 	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/acorn-io/mink/pkg/strategy"
 	"github.com/acorn-io/mink/pkg/types"
+	"github.com/acorn-io/namegenerator"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
@@ -38,6 +40,10 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var (
+	nameGenerator = namegenerator.NewNameGenerator(time.Now().UnixNano())
+)
+
 type Validator struct {
 	client            kclient.Client
 	clientFactory     *client.Factory
@@ -52,6 +58,13 @@ func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter 
 		clientFactory: clientFactory,
 		deleter:       deleter,
 		transport:     transport,
+	}
+}
+
+func (s *Validator) PrepareForCreate(ctx context.Context, obj runtime.Object) {
+	r := obj.(types.Object)
+	if r.GetName() == "" && r.GetGenerateName() == "" {
+		r.SetName(nameGenerator.Generate())
 	}
 }
 
