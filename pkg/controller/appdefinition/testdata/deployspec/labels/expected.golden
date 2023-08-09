@@ -189,7 +189,6 @@ spec:
         appSpecAnn: test-app-spec-ann
         global-scoped-ann: test-global
         jobAnn: test-job-ann
-        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

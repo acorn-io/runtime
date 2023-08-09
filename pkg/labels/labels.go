@@ -71,8 +71,6 @@ const (
 	PrometheusScrape = "prometheus.io/scrape"
 	PrometheusPath   = "prometheus.io/path"
 	PrometheusPort   = "prometheus.io/port"
-
-	CiliumProxyVisibility = "policy.cilium.io/proxy-visibility"
 )
 
 func Merge(base, overlay map[string]string) map[string]string {

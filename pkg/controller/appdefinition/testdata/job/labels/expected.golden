@@ -61,7 +61,6 @@ spec:
         globala: value
         job1a: value
         job3a: value
-        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
