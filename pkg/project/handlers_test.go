@@ -118,6 +118,57 @@ func TestEnsureAllParentAppsRemoved(t *testing.T) {
 	assert.Equal(t, resp.Delay, 5*time.Second)
 }
 
+func TestEnsureChildOfChildNotRemoved(t *testing.T) {
+	input := &v1.ProjectInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "my-project",
+		},
+	}
+	existing := []kclient.Object{
+		&v1.AppInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-app",
+				Namespace: "my-project",
+				Labels: map[string]string{
+					"acorn.io/parent-acorn-name": "already-deleted-app",
+				},
+			},
+		},
+		&v1.AppInstance{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{
+					"acorn.io/parent-acorn-name": "my-app",
+				},
+				Name:      "my-other-app",
+				Namespace: "my-project",
+			},
+		},
+	}
+
+	c := &deleteClient{
+		Client: &tester.Client{
+			Objects:   append(existing, input.DeepCopyObject().(kclient.Object)),
+			SchemeObj: scheme.Scheme,
+		},
+	}
+	req := router.Request{
+		Client:      c,
+		Object:      input,
+		Ctx:         context.Background(),
+		GVK:         v1.SchemeGroupVersion.WithKind("ProjectInstance"),
+		Namespace:   input.GetNamespace(),
+		Name:        input.GetName(),
+		Key:         input.GetName(),
+		FromTrigger: false,
+	}
+
+	resp := new(tester.Response)
+	assert.NoError(t, EnsureAllAppsRemoved(req, resp))
+	assert.Len(t, c.deleted, 1)
+	assert.Equal(t, "my-app", c.deleted[0].GetName())
+	assert.Equal(t, 5*time.Second, resp.Delay)
+}
+
 func TestEnsureAllAppsRemoved(t *testing.T) {
 	input := &v1.ProjectInstance{
 		ObjectMeta: metav1.ObjectMeta{

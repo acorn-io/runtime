@@ -10,8 +10,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	klabels "k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/utils/strings/slices"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -57,34 +55,30 @@ func CreateNamespace(req router.Request, resp router.Response) error {
 
 // EnsureAllAppsRemoved ensures that all apps are removed from the project before the namespace is deleted.
 func EnsureAllAppsRemoved(req router.Request, resp router.Response) error {
-	// A "child" app is one that has a parent label. Therefore, all "parent" apps won't have a parent label.
-	parentAppRequirement, err := klabels.NewRequirement(labels.AcornParentAcornName, selection.DoesNotExist, nil)
-	if err != nil {
+	apps := new(v1.AppInstanceList)
+	if err := req.List(apps, &kclient.ListOptions{
+		Namespace: req.Object.GetName(),
+	}); err != nil {
 		return err
 	}
 
-	// First delete all "parent" apps. If no "parent" apps exist, then ensure that all apps are deleted.
-	for _, ls := range []klabels.Selector{klabels.NewSelector().Add(*parentAppRequirement), klabels.Everything()} {
-		apps := new(v1.AppInstanceList)
-		if err = req.List(apps, &kclient.ListOptions{
-			Namespace:     req.Object.GetName(),
-			LabelSelector: ls,
-		}); err != nil {
-			return err
-		}
+	existingApps := make(map[string]struct{}, len(apps.Items))
+	for _, app := range apps.Items {
+		existingApps[app.Name] = struct{}{}
+	}
 
-		for _, app := range apps.Items {
-			if app.DeletionTimestamp.IsZero() {
-				if err = req.Client.Delete(req.Ctx, &app); err != nil && !apierrors.IsNotFound(err) {
-					return err
-				}
+	// Note: using index here to avoid the loop variable issue.
+	for i := range apps.Items {
+		// If the app's parent is gone, then ensure this app is deleted.
+		if _, ok := existingApps[apps.Items[i].Labels[labels.AcornParentAcornName]]; !ok && apps.Items[i].DeletionTimestamp.IsZero() {
+			if err := req.Client.Delete(req.Ctx, &apps.Items[i]); err != nil && !apierrors.IsNotFound(err) {
+				return err
 			}
 		}
+	}
 
-		if len(apps.Items) > 0 {
-			resp.RetryAfter(5 * time.Second)
-			return nil
-		}
+	if len(apps.Items) > 0 {
+		resp.RetryAfter(5 * time.Second)
 	}
 
 	return nil
