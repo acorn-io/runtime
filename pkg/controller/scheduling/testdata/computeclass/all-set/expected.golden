@@ -77,4 +77,8 @@ status:
       tolerations:
       - key: taints.acorn.io/workload
         operator: Exists
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

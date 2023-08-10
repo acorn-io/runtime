@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/merr"
@@ -15,7 +16,6 @@ import (
 	"github.com/acorn-io/namegenerator"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/appdefinition"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
@@ -27,12 +27,15 @@ import (
 	"github.com/acorn-io/runtime/pkg/pullsecret"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/acorn-io/runtime/pkg/volume"
+	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 	authv1 "k8s.io/api/authorization/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -161,7 +164,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			}
 		}
 
-		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.GetProfiles(app.Status.GetDevMode()), app.Spec.DeployArgs, image, "")
+		imageDetails, err := s.getImageDetails(ctx, app.Namespace, app.Spec.GetProfiles(app.Status.GetDevMode()), app.Spec.DeployArgs, image)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 			return
@@ -203,14 +206,14 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
-		var imageRequestedPerms []v1.Permissions
-		imageRequestedPerms, imageGrantedPerms, err = s.getPermissions(ctx, "", app.Namespace, image, imageDetails)
+		var imageRejectedPerms []v1.Permissions
+		imageGrantedPerms, imageRejectedPerms, err = s.imageGrants(ctx, imageDetails)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 			return
 		}
 
-		if err := s.checkRequestedPermsSatisfyImagePerms(app.Namespace, imageRequestedPerms, app.Spec.Permissions, imageGrantedPerms); err != nil {
+		if err := s.checkRequestedPermsSatisfyImagePerms(app.Namespace, imageRejectedPerms, app.Spec.Permissions); err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 			return
 		}
@@ -218,8 +221,12 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		app.Spec.ImageGrantedPermissions = imageGrantedPerms
 	}
 
-	if err := s.checkPermissionsForPrivilegeEscalation(ctx, app.Spec.Permissions); err != nil {
+	if _, rejected, err := s.checkPermissionsForPrivilegeEscalation(ctx, app.Spec.Permissions); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
+	} else if len(rejected) > 0 {
+		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, z.Pointer(client.ErrNotAuthorized{
+			Permissions: rejected,
+		}).Error()))
 	}
 
 	return result
@@ -292,38 +299,69 @@ func (s *Validator) checkRemoteAccess(ctx context.Context, namespace, image stri
 	return nil
 }
 
-func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) error {
+func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) (granted, rejected []v1.Permissions, _ error) {
+	var (
+		lock        sync.Mutex
+		grantedMap  = map[string][]v1.PolicyRule{}
+		rejectedMap = map[string][]v1.PolicyRule{}
+	)
+
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.SetLimit(5)
 	for _, sar := range sars {
 		sar := sar
 		eg.Go(func() error {
-			return s.check(ctx, &sar.SAR, sar.Rule)
+			ok, err := s.check(ctx, &sar.SAR)
+			if err != nil {
+				return err
+			}
+			lock.Lock()
+			defer lock.Unlock()
+			if ok {
+				grantedMap[sar.ServiceName] = append(grantedMap[sar.ServiceName], sar.Rule)
+			} else {
+				rejectedMap[sar.ServiceName] = append(rejectedMap[sar.ServiceName], sar.Rule)
+			}
+			return nil
 		})
 	}
 
-	return eg.Wait()
+	if err := eg.Wait(); err != nil {
+		return nil, nil, err
+	}
+
+	for _, key := range typed.SortedKeys(grantedMap) {
+		granted = append(granted, v1.Permissions{
+			ServiceName: key,
+			Rules:       grantedMap[key],
+		})
+	}
+
+	for _, key := range typed.SortedKeys(rejectedMap) {
+		rejected = append(rejected, v1.Permissions{
+			ServiceName: key,
+			Rules:       rejectedMap[key],
+		})
+	}
+
+	return granted, rejected, nil
 }
 
-func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview, rule v1.PolicyRule) error {
+func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview) (bool, error) {
 	err := s.client.Create(ctx, sar)
 	if err != nil {
-		return err
+		return false, err
 	}
-	if !sar.Status.Allowed {
-		return &client.ErrNotAuthorized{
-			Rule: rule,
-		}
-	}
-	return nil
+	return sar.Status.Allowed, nil
 }
 
 type sarRequest struct {
-	SAR  authv1.SubjectAccessReview
-	Rule v1.PolicyRule
+	SAR         authv1.SubjectAccessReview
+	ServiceName string
+	Rule        v1.PolicyRule
 }
 
-func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, rule v1.PolicyRule) (result []sarRequest, _ error) {
+func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule) (result []sarRequest, _ error) {
 	if len(rule.Verbs) == 0 {
 		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
@@ -340,8 +378,15 @@ func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, rule 
 				Verb: verb,
 			}
 			result = append(result, sarRequest{
-				SAR:  *sar,
-				Rule: rule,
+				ServiceName: serviceName,
+				SAR:         *sar,
+				Rule: v1.PolicyRule{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:           []string{verb},
+						NonResourceURLs: []string{url},
+					},
+					Scopes: []string{"cluster"},
+				},
 			})
 		}
 	}
@@ -349,7 +394,17 @@ func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, rule 
 	return result, nil
 }
 
-func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, rule v1.PolicyRule, namespace string) (result []sarRequest, _ error) {
+func toScope(namespace, currentNamespace string) []string {
+	if namespace == currentNamespace {
+		return []string{"project"}
+	}
+	if namespace == "" {
+		return []string{"account"}
+	}
+	return []string{"project:" + namespace}
+}
+
+func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule, namespace, currentNamespace string) (result []sarRequest, _ error) {
 	if len(rule.APIGroups) == 0 {
 		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
 	}
@@ -361,8 +416,8 @@ func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, rule v1.
 	}
 	for _, verb := range rule.Verbs {
 		for _, apiGroup := range rule.APIGroups {
-			for _, resource := range rule.Resources {
-				resource, subResource, _ := strings.Cut(resource, "/")
+			for _, resourceWithSubResource := range rule.Resources {
+				resource, subResource, _ := strings.Cut(resourceWithSubResource, "/")
 				if len(rule.ResourceNames) == 0 {
 					sar := sar.DeepCopy()
 					sar.Spec.ResourceAttributes = &authv1.ResourceAttributes{
@@ -374,8 +429,16 @@ func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, rule v1.
 						Subresource: subResource,
 					}
 					result = append(result, sarRequest{
-						SAR:  *sar,
-						Rule: rule,
+						ServiceName: serviceName,
+						SAR:         *sar,
+						Rule: v1.PolicyRule{
+							PolicyRule: rbacv1.PolicyRule{
+								Verbs:     []string{verb},
+								APIGroups: []string{apiGroup},
+								Resources: []string{resourceWithSubResource},
+							},
+							Scopes: toScope(namespace, currentNamespace),
+						},
 					})
 				} else {
 					for _, resourceName := range rule.ResourceNames {
@@ -390,8 +453,17 @@ func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, rule v1.
 							Name:        resourceName,
 						}
 						result = append(result, sarRequest{
-							SAR:  *sar,
-							Rule: rule,
+							ServiceName: serviceName,
+							SAR:         *sar,
+							Rule: v1.PolicyRule{
+								PolicyRule: rbacv1.PolicyRule{
+									Verbs:         []string{verb},
+									APIGroups:     []string{apiGroup},
+									Resources:     []string{resourceWithSubResource},
+									ResourceNames: []string{resourceName},
+								},
+								Scopes: toScope(namespace, currentNamespace),
+							},
 						})
 					}
 				}
@@ -402,11 +474,11 @@ func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, rule v1.
 	return result, nil
 }
 
-func (s *Validator) getSARs(sar *authv1.SubjectAccessReview, rules []v1.PolicyRule, currentNamespace string) (result []sarRequest, _ error) {
+func (s *Validator) getSARs(sar *authv1.SubjectAccessReview, perm v1.Permissions, currentNamespace string) (result []sarRequest, _ error) {
 	var errs []error
-	for _, rule := range rules {
+	for _, rule := range perm.GetRules() {
 		if len(rule.NonResourceURLs) > 0 {
-			requests, err := s.getSARNonResourceRole(sar, rule)
+			requests, err := s.getSARNonResourceRole(sar, perm.ServiceName, rule)
 			if err == nil {
 				result = append(result, requests...)
 			} else {
@@ -414,7 +486,7 @@ func (s *Validator) getSARs(sar *authv1.SubjectAccessReview, rules []v1.PolicyRu
 			}
 		} else {
 			for _, namespace := range rule.ResolveNamespaces(currentNamespace) {
-				requests, err := s.getSARResourceRole(sar, rule, namespace)
+				requests, err := s.getSARResourceRole(sar, perm.ServiceName, rule, namespace, currentNamespace)
 				if err == nil {
 					result = append(result, requests...)
 				} else {
@@ -428,26 +500,23 @@ func (s *Validator) getSARs(sar *authv1.SubjectAccessReview, rules []v1.PolicyRu
 
 // checkRequestedPermsSatisfyImagePerms checks that the user requested permissions are enough to satisfy the permissions
 // specified by the image's Acornfile
-func (s *Validator) checkRequestedPermsSatisfyImagePerms(currentNamespace string, requestedPerms []v1.Permissions, grantedUserPerms, grantedImagePerms []v1.Permissions) error {
-	grantedPermsByService := v1.GroupByServiceName(append(grantedUserPerms, grantedImagePerms...))
-
-	for serviceName, requestedPerm := range v1.GroupByServiceName(requestedPerms) {
-		if _, granted := v1.Grants(grantedPermsByService[serviceName], currentNamespace, requestedPerm); !granted {
-			return &client.ErrRulesNeeded{
-				Permissions: requestedPerms,
-			}
+func (s *Validator) checkRequestedPermsSatisfyImagePerms(currentNamespace string, requestedPerms, grantedUserPerms []v1.Permissions) error {
+	missing, ok := v1.GrantsAll(currentNamespace, requestedPerms, grantedUserPerms)
+	if !ok {
+		return &client.ErrRulesNeeded{
+			Missing:     missing,
+			Permissions: requestedPerms,
 		}
 	}
-
 	return nil
 }
 
 // checkPermissionsForPrivilegeEscalation is an actual RBAC check to prevent privilege escalation. The user making the request must have the
 // permissions that they are requesting the app gets
-func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) error {
+func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) (granted, rejected []v1.Permissions, _ error) {
 	user, ok := request.UserFrom(ctx)
 	if !ok {
-		return fmt.Errorf("failed to find active user to check current privileges")
+		return nil, nil, fmt.Errorf("failed to find active user to check current privileges")
 	}
 
 	var (
@@ -468,9 +537,9 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 		}
 
 		ns, _ := request.NamespaceFrom(ctx)
-		requests, err := s.getSARs(sar, perm.GetRules(), ns)
+		requests, err := s.getSARs(sar, perm, ns)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		sars = append(sars, requests...)
 	}
@@ -651,166 +720,55 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 	return nil
 }
 
-func (s *Validator) imageGrants(ctx context.Context, details client.ImageDetails, perms []v1.Permissions) (bool, error) {
+func (s *Validator) imageSAR(ns, imageName, imageDigest string, perms []v1.Permissions) (result []sarRequest, _ error) {
 	sar := &authv1.SubjectAccessReview{
 		Spec: authv1.SubjectAccessReviewSpec{
-			User: "image://" + details.AppImage.Name,
+			User: "image://" + imageName,
 			Extra: map[string]authv1.ExtraValue{
 				"digest": {
-					details.AppImage.Digest,
+					imageDigest,
 				},
 			},
 		},
 	}
 
+	for _, perm := range perms {
+		newSARs, err := s.getSARs(sar, perm, ns)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, newSARs...)
+	}
+	return
+}
+
+func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails) (granted, rejected []v1.Permissions, _ error) {
+	defer func() {
+		granted = v1.SimplifySet(granted)
+		rejected = v1.SimplifySet(rejected)
+	}()
+
 	ns, _ := request.NamespaceFrom(ctx)
 	var sars []sarRequest
-	for _, perm := range perms {
-		newSARs, err := s.getSARs(sar, perm.GetRules(), ns)
+
+	newSars, err := s.imageSAR(ns, details.AppImage.Name, details.AppImage.Digest, details.Permissions)
+	if err != nil {
+		return nil, nil, err
+	}
+	sars = append(sars, newSars...)
+
+	for _, nested := range details.NestedImages {
+		newSars, err := s.imageSAR(ns, nested.Name, nested.Digest, nested.Permissions)
 		if err != nil {
-			return false, err
+			return nil, nil, err
 		}
-		sars = append(sars, newSARs...)
+		sars = append(sars, newSars...)
 	}
 
-	err := s.checkSARs(ctx, sars)
-	if ruleErr := (*client.ErrRulesNeeded)(nil); errors.As(err, &ruleErr) {
-		return false, nil
-	}
-	if ruleErr := (*client.ErrNotAuthorized)(nil); errors.As(err, &ruleErr) {
-		return false, nil
-	}
-
-	return false, err
+	return s.checkSARs(ctx, sars)
 }
 
-func (s *Validator) getPermissions(ctx context.Context, servicePrefix, namespace, image string, details *client.ImageDetails) (result, granted []v1.Permissions, _ error) {
-	var imagePermissions []v1.Permissions
-	imagePermissions = append(imagePermissions, buildPermissionsFrom(servicePrefix, details.AppSpec.Containers)...)
-	imagePermissions = append(imagePermissions, buildPermissionsFrom(servicePrefix, details.AppSpec.Jobs)...)
-
-	if isGranted, err := s.imageGrants(ctx, *details, imagePermissions); err != nil {
-		return nil, nil, err
-	} else if isGranted {
-		granted = append(granted, imagePermissions...)
-	} else {
-		result = append(result, imagePermissions...)
-	}
-
-	subResults, subGranted, err := s.buildNestedImagePermissions(ctx, servicePrefix, details.AppSpec, namespace, image, details.AppImage.ImageData)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	result = append(result, subResults...)
-	granted = append(granted, subGranted...)
-
-	return result, granted, nil
-}
-
-func (s *Validator) getImageRequestedPermissions(ctx context.Context, servicePrefix string, profiles []string, args map[string]any, namespace, image, nestedName, nestedDigest string) (imageRequested, imageGranted []v1.Permissions, _ error) {
-	details, err := s.getImageDetails(ctx, namespace, profiles, args, image, nestedDigest)
-	if err != nil {
-		return nil, nil, err
-	}
-	if nestedName == "" {
-		details.AppImage.Name = image
-	} else {
-		details.AppImage.Name = nestedName
-	}
-	return s.getPermissions(ctx, servicePrefix, namespace, image, details)
-}
-
-func (s *Validator) mergeInRules(servicePrefix string, existing []v1.Permissions, newRules map[string]v1.Permissions) (result []v1.Permissions) {
-	result = append(result, existing...)
-outerLoop:
-	for _, entry := range typed.Sorted(newRules) {
-		serviceName, permissions := entry.Key, entry.Value
-		if !permissions.HasRules() {
-			continue
-		}
-
-		newServiceName := servicePrefix + serviceName
-		for i, existingRule := range result {
-			if existingRule.ServiceName == newServiceName {
-				existingRule.Rules = append(existingRule.Rules, permissions.GetRules()...)
-				result[i] = existingRule
-				continue outerLoop
-			}
-		}
-
-		result = append(result, v1.Permissions{
-			ServiceName: newServiceName,
-			Rules:       permissions.GetRules(),
-		})
-	}
-	return
-}
-
-func (s *Validator) buildNestedImagePermissions(ctx context.Context, servicePrefix string, app *v1.AppSpec, namespace, image string, imageData v1.ImagesData) (imageRequested, imageGranted []v1.Permissions, err error) {
-	for _, entry := range typed.Sorted(app.Acorns) {
-		var (
-			acornName, acorn                   = entry.Key, entry.Value
-			subImageRequested, subImageGranted []v1.Permissions
-		)
-
-		acornImage, ok := appdefinition.GetImageReferenceForServiceName(acornName, app, imageData)
-		if !ok {
-			return nil, nil, fmt.Errorf("failed to find image information for nested acorn [%s]", acornName)
-		}
-
-		if tags.IsImageDigest(acornImage) {
-			subImageRequested, subImageGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, image, acorn.GetOriginalImage(), acornImage)
-			if err != nil {
-				return nil, nil, err
-			}
-		} else {
-			subImageRequested, subImageGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", acorn.Profiles, acorn.DeployArgs, namespace, acornImage, "", "")
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-
-		imageGranted = append(imageGranted, subImageGranted...)
-
-		imageRequested = append(imageRequested, subImageRequested...)
-		imageRequested = s.mergeInRules(servicePrefix+acornName+".", imageRequested, acorn.Permissions)
-	}
-
-	for _, entry := range typed.Sorted(app.Services) {
-		var (
-			serviceName, service  = entry.Key, entry.Value
-			subResult, subGranted []v1.Permissions
-		)
-
-		acornImage, ok := appdefinition.GetImageReferenceForServiceName(serviceName, app, imageData)
-		if !ok {
-			// not a service acorn
-			continue
-		}
-
-		if tags.IsImageDigest(acornImage) {
-			subResult, subGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, image, service.GetOriginalImage(), acornImage)
-			if err != nil {
-				return nil, nil, err
-			}
-		} else {
-			subResult, subGranted, err = s.getImageRequestedPermissions(ctx, servicePrefix+entry.Key+".", nil, service.ServiceArgs, namespace, acornImage, "", "")
-			if err != nil {
-				return nil, nil, err
-			}
-		}
-
-		imageGranted = append(imageGranted, subGranted...)
-
-		imageRequested = append(imageRequested, subResult...)
-		imageRequested = s.mergeInRules(servicePrefix+serviceName+".", imageRequested, service.Permissions)
-	}
-
-	return
-}
-
-func (s *Validator) getWorkloads(details *client.ImageDetails) (map[string]v1.Container, error) {
+func (s *Validator) getWorkloads(details *apiv1.ImageDetails) (map[string]v1.Container, error) {
 	result := make(map[string]v1.Container, len(details.AppSpec.Containers)+len(details.AppSpec.Jobs))
 	for workload, container := range details.AppSpec.Containers {
 		result[workload] = container
@@ -823,26 +781,6 @@ func (s *Validator) getWorkloads(details *client.ImageDetails) (map[string]v1.Co
 	}
 
 	return result, nil
-}
-
-func buildPermissionsFrom(servicePrefix string, containers map[string]v1.Container) []v1.Permissions {
-	var permissions []v1.Permissions
-	for _, entry := range typed.Sorted(containers) {
-		entryPermissions := v1.Permissions{
-			ServiceName: servicePrefix + entry.Key,
-			Rules:       entry.Value.Permissions.Get().GetRules(),
-		}
-
-		for _, sidecar := range typed.Sorted(entry.Value.Sidecars) {
-			entryPermissions.Rules = append(entryPermissions.Rules, sidecar.Value.Permissions.Get().GetRules()...)
-		}
-
-		if len(entryPermissions.GetRules()) > 0 {
-			permissions = append(permissions, entryPermissions)
-		}
-	}
-
-	return permissions
 }
 
 func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image string) (string, bool, error) {
@@ -859,12 +797,18 @@ func (s *Validator) resolveLocalImage(ctx context.Context, namespace, image stri
 	return image, false, nil
 }
 
-func (s *Validator) getImageDetails(ctx context.Context, namespace string, profiles []string, args map[string]any, image, nested string) (*client.ImageDetails, error) {
-	details, err := s.clientFactory.Namespace("", namespace).ImageDetails(ctx, image,
-		&client.ImageDetailsOptions{
-			NestedDigest: nested,
-			Profiles:     profiles,
-			DeployArgs:   args})
+func (s *Validator) getImageDetails(ctx context.Context, namespace string, profiles []string, args map[string]any, image string) (*apiv1.ImageDetails, error) {
+	details := &apiv1.ImageDetails{
+		DeployArgs:    args,
+		Profiles:      profiles,
+		IncludeNested: true,
+	}
+	err := s.client.SubResource("details").Create(ctx, &apiv1.Image{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      strings.ReplaceAll(image, "/", "+"),
+			Namespace: namespace,
+		},
+	}, details)
 	if err != nil {
 		return nil, err
 	}

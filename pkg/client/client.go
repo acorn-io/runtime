@@ -186,13 +186,15 @@ type ImageProgress struct {
 }
 
 type ImageDetails struct {
-	AppImage        v1.AppImage   `json:"appImage,omitempty"`
-	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params          *v1.ParamSpec `json:"params,omitempty"`
-	ImageName       string        `json:"imageName,omitempty"`
-	SignatureDigest string        `json:"signatureDigest,omitempty"`
-	Readme          string        `json:"readme,omitempty"`
-	ParseError      string        `json:"parseError,omitempty"`
+	AppImage        v1.AppImage         `json:"appImage,omitempty"`
+	AppSpec         *v1.AppSpec         `json:"appSpec,omitempty"`
+	Params          *v1.ParamSpec       `json:"params,omitempty"`
+	ImageName       string              `json:"imageName,omitempty"`
+	SignatureDigest string              `json:"signatureDigest,omitempty"`
+	Readme          string              `json:"readme,omitempty"`
+	ParseError      string              `json:"parseError,omitempty"`
+	Permissions     []v1.Permissions    `json:"permissions,omitempty"`
+	NestedImages    []apiv1.NestedImage `json:"nestedImages,omitempty"`
 }
 
 type PortForwardDialer func(ctx context.Context) (net.Conn, error)
@@ -316,10 +318,11 @@ type ImagePushOptions struct {
 }
 
 type ImageDetailsOptions struct {
-	NestedDigest string
-	Profiles     []string
-	DeployArgs   map[string]any
-	Auth         *apiv1.RegistryAuth
+	NestedDigest  string
+	Profiles      []string
+	DeployArgs    map[string]any
+	Auth          *apiv1.RegistryAuth
+	IncludeNested bool
 	// NoDefaultRegistry - if true, indicates that no default container registry should be assumed when getting image details
 	NoDefaultRegistry bool
 }

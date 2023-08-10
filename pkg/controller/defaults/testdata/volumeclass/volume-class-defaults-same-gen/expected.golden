@@ -37,4 +37,8 @@ status:
   defaults: {}
   namespace: app-created-namespace
   observedGeneration: 1
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

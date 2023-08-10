@@ -229,4 +229,8 @@ status:
           memory: 2Mi
         requests:
           memory: 2Mi
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

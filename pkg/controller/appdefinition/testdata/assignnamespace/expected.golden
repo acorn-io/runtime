@@ -20,6 +20,10 @@ status:
     type: namespace
   defaults: {}
   namespace: default-1234567890ab
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 
 ---
 apiVersion: internal.acorn.io/v1
@@ -44,4 +48,8 @@ status:
     type: namespace
   defaults: {}
   namespace: default-1234567890ab
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

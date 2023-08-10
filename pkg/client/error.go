@@ -8,27 +8,37 @@ import (
 )
 
 var (
-	PrefixErrRulesNeeded = "rules needed: "
+	PrefixErrRulesNeeded  = "rules needed: "
+	PrefixErrRulesMissing = "rules missing: "
 )
 
 type ErrRulesNeeded struct {
+	Missing     []v1.Permissions
 	Permissions []v1.Permissions
 }
 
 func (e *ErrRulesNeeded) Error() string {
+	prefix := PrefixErrRulesNeeded
+	if len(e.Missing) > 0 {
+		perms, err := json.Marshal(e.Permissions)
+		if err != nil {
+			panic(err)
+		}
+		prefix = PrefixErrRulesMissing + string(perms) + ", " + PrefixErrRulesNeeded
+	}
 	perms, err := json.Marshal(e.Permissions)
 	if err != nil {
 		panic(err)
 	}
-	return fmt.Sprintf("%s%s", PrefixErrRulesNeeded, perms)
+	return fmt.Sprintf("%s%s", prefix, perms)
 }
 
 type ErrNotAuthorized struct {
-	Rule v1.PolicyRule
+	Permissions []v1.Permissions
 }
 
 func (e *ErrNotAuthorized) Error() string {
-	perms, err := json.Marshal(e.Rule)
+	perms, err := json.Marshal(e.Permissions)
 	if err != nil {
 		panic(err)
 	}

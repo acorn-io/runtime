@@ -232,21 +232,39 @@ type ImageDetails struct {
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Input Params
-	ImageName    string        `json:"imageName,omitempty"`
-	NestedDigest string        `json:"nestedDigest,omitempty"`
-	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
-	Profiles     []string      `json:"profiles,omitempty"`
-	Auth         *RegistryAuth `json:"auth,omitempty"`
+	ImageName     string        `json:"imageName,omitempty"`
+	NestedDigest  string        `json:"nestedDigest,omitempty"`
+	DeployArgs    v1.GenericMap `json:"deployArgs,omitempty"`
+	Profiles      []string      `json:"profiles,omitempty"`
+	Auth          *RegistryAuth `json:"auth,omitempty"`
+	IncludeNested bool          `json:"includeNested,omitempty"`
 	// NoDefaultRegistry - if true, do not assume a default registry on the image if none is specified
 	NoDefaultRegistry bool `json:"noDefaultRegistry,omitempty"`
 
 	// Output Params
-	AppImage        v1.AppImage   `json:"appImage,omitempty"`
-	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params          *v1.ParamSpec `json:"params,omitempty"`
-	SignatureDigest string        `json:"signatureDigest,omitempty"`
-	Readme          string        `json:"readme,omitempty"`
-	ParseError      string        `json:"parseError,omitempty"`
+	AppImage        v1.AppImage      `json:"appImage,omitempty"`
+	AppSpec         *v1.AppSpec      `json:"appSpec,omitempty"`
+	Params          *v1.ParamSpec    `json:"params,omitempty"`
+	Permissions     []v1.Permissions `json:"permissions,omitempty"`
+	SignatureDigest string           `json:"signatureDigest,omitempty"`
+	Readme          string           `json:"readme,omitempty"`
+	NestedImages    []NestedImage    `json:"nestedImages,omitempty"`
+	ParseError      string           `json:"parseError,omitempty"`
+}
+
+func (i *ImageDetails) GetPermissions() (result []v1.Permissions) {
+	result = append(result, i.Permissions...)
+	for _, nested := range i.NestedImages {
+		result = append(result, nested.Permissions...)
+	}
+	return
+}
+
+type NestedImage struct {
+	Name            string           `json:"name,omitempty"`
+	Digest          string           `json:"digest,omitempty"`
+	Permissions     []v1.Permissions `json:"permissions,omitempty"`
+	SignatureDigest string           `json:"signatureDigest,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

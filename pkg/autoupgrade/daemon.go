@@ -160,7 +160,7 @@ func (d *daemon) determineAppsToRefresh(apps map[kclient.ObjectKey]v1.AppInstanc
 
 		// If next check time is before now, app is due for a check
 		if nextCheck.Before(updateTime) {
-			img := app.Status.AppImage.Name
+			img := app.Status.Staged.AppImage.Name
 			if img == "" {
 				img = removeTagPattern(app.Spec.Image)
 			}
@@ -228,7 +228,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 				}
 			}
 
-			if updated || strings.TrimPrefix(app.Status.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
+			if updated || strings.TrimPrefix(app.Status.Staged.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
 				if !updated && digest != "" {
 					if err := d.client.checkImageAllowed(ctx, app.Namespace, nextAppImage); err != nil {
 						if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {

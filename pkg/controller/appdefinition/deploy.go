@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"path"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/pdb"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
+	"github.com/acorn-io/runtime/pkg/ref"
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/runtime/pkg/volume"
@@ -154,23 +156,30 @@ func toEnv(envs []v1.EnvVar, appEnvs []v1.NameValue, interpolator *secrets.Inter
 				result = append(result, interpolated)
 			}
 		} else {
-			if env.Secret.Key == "" {
+			if env.Secret.Key == "" || env.Name == "" {
 				continue
 			}
 			if appEnvNames.Has(env.Name) {
 				continue
 			}
-			result = append(result, corev1.EnvVar{
-				Name: env.Name,
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: env.Secret.Name,
+			if strings.Contains(env.Secret.Name, ".") {
+				interpolated, ok := interpolator.ToEnv(env.Name, fmt.Sprintf("@{secrets.%s.%s}", env.Secret.Name, env.Secret.Key))
+				if ok {
+					result = append(result, interpolated)
+				}
+			} else {
+				result = append(result, corev1.EnvVar{
+					Name: env.Name,
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: env.Secret.Name,
+							},
+							Key: env.Secret.Key,
 						},
-						Key: env.Secret.Key,
 					},
-				},
-			})
+				})
+			}
 		}
 	}
 	for _, appEnv := range appEnvs {
@@ -251,8 +260,8 @@ func toMounts(app *v1.AppInstance, container v1.Container, interpolation *secret
 		if volume.NormalizeMode(entry.Value.Mode) != "" {
 			suffix = "-" + entry.Value.Mode
 		}
-		if entry.Value.Secret.Key == "" || entry.Value.Secret.Name == "" {
-			// inline file
+		if entry.Value.Secret.Key == "" || (entry.Value.Secret.Name == "" || strings.Contains(entry.Value.Secret.Name, ".")) {
+			// inline file or secret reference in another namespace
 			result = append(result, interpolation.ToVolumeMount(entry.Key, entry.Value))
 		} else {
 			// file pointing to secret
@@ -543,7 +552,7 @@ func isStateful(appInstance *v1.AppInstance, container v1.Container) bool {
 
 func getRevision(req router.Request, namespace, secretName string) (string, error) {
 	secret := &corev1.Secret{}
-	if err := req.Get(secret, namespace, secretName); err != nil {
+	if err := ref.Lookup(req.Ctx, req.Client, secret, namespace, strings.Split(secretName, ".")...); err != nil {
 		return "0", err
 	}
 	hash := sha256.New()
@@ -678,11 +687,16 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 }
 
 func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator) (result []kclient.Object, _ error) {
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Containers) {
-		if ports.IsLinked(appInstance, entry.Key) {
+	for _, containerName := range typed.SortedKeys(appInstance.Status.AppSpec.Containers) {
+		containerDef := appInstance.Status.AppSpec.Containers[containerName]
+		if ports.IsLinked(appInstance, containerName) {
 			continue
 		}
-		dep, err := toDeployment(req, appInstance, tag, entry.Key, entry.Value, pullSecrets, secrets)
+		containerDef, err := augmentContainerWithConsumerInfo(req.Ctx, req.Client, appInstance.Status.Namespace, containerDef)
+		if err != nil {
+			return nil, err
+		}
+		dep, err := toDeployment(req, appInstance, tag, containerName, containerDef, pullSecrets, secrets)
 		if err != nil {
 			return nil, err
 		}
@@ -690,7 +704,11 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		if perms := v1.FindPermission(dep.GetName(), appInstance.Spec.GetPermissions()); perms.HasRules() {
+		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, containerName, containerDef)
+		if err != nil {
+			return nil, err
+		}
+		if perms.HasRules() {
 			perms, err := toPermissions(req.Ctx, req.Client, perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)
 			if err != nil {
 				return nil, err

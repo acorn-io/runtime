@@ -347,4 +347,8 @@ status:
           memory: 1Mi
     twoimage:
       requirements: {}
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

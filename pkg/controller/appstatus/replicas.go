@@ -73,6 +73,11 @@ func containerMessages(pod *corev1.Pod, status []corev1.ContainerStatus) (transi
 			if container.State.Waiting.Message == "" {
 				transitionMessages = append(transitionMessages, podName(pod)+" "+
 					container.State.Waiting.Reason)
+			} else if container.State.Waiting.Reason == "CrashLoopBackOff" &&
+				container.LastTerminationState.Terminated != nil &&
+				container.LastTerminationState.Terminated.Message != "" {
+				errorMessages = append(errorMessages, podName(pod)+" CrashLoopBackOff: "+
+					container.LastTerminationState.Terminated.Reason+": "+container.LastTerminationState.Terminated.Message)
 			} else {
 				transitionMessages = append(transitionMessages, podName(pod)+" "+
 					container.State.Waiting.Reason+": "+container.State.Waiting.Message)

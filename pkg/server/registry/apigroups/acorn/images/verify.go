@@ -72,7 +72,9 @@ func (t *ImageVerifyStrategy) ImageVerify(ctx context.Context, namespace string,
 	}
 
 	// imageDetails to get image and signature digests
-	imageDetails, err := imagedetails.GetImageDetails(ctx, t.client, namespace, signature.Name, nil, nil, "", false, remoteOpts...)
+	imageDetails, err := imagedetails.GetImageDetails(ctx, t.client, namespace, signature.Name, imagedetails.GetImageDetailsOptions{
+		RemoteOpts: remoteOpts,
+	})
 	if err != nil {
 		return err
 	}

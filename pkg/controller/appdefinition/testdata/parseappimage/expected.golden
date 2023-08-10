@@ -48,4 +48,8 @@ status:
     success: true
     type: parsed
   defaults: {}
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

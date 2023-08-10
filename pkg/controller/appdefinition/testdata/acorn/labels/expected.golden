@@ -134,6 +134,10 @@ status:
   appStatus: {}
   columns: {}
   defaults: {}
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 
 ---
 apiVersion: v1
@@ -246,4 +250,8 @@ status:
     type: defined
   defaults: {}
   namespace: app-created-namespace
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

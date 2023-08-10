@@ -251,4 +251,8 @@ status:
         requests:
           cpu: 2m
           memory: 2Mi
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

@@ -47,8 +47,9 @@ func (a *ImageDetails) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	image, err := c.ImageDetails(cmd.Context(), args[0], &client.ImageDetailsOptions{
-		NestedDigest: nested,
-		Auth:         auth,
+		NestedDigest:  nested,
+		Auth:          auth,
+		IncludeNested: nested == "",
 	})
 	if err != nil {
 		return err

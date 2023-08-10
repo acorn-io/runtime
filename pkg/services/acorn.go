@@ -88,6 +88,7 @@ func forDefined(ctx context.Context, c kclient.Client, interpolator *secrets.Int
 				Secrets:   asSlice(service.Secrets),
 				Data:      service.Data,
 				Job:       service.GetJob(),
+				Consumer:  service.Consumer,
 			},
 		})
 	}
@@ -368,13 +369,69 @@ func ToAcornServices(ctx context.Context, c kclient.Client, interpolator *secret
 		return nil, err
 	}
 
-	for _, service := range result {
+	for _, obj := range result {
+		service := obj.(*v1.ServiceInstance)
 		if service.GetName() == defaultName {
-			service.(*v1.ServiceInstance).Spec.Default = true
+			service.Spec.Default = true
 		} else {
-			service.(*v1.ServiceInstance).Spec.Default = false
+			service.Spec.Default = false
 		}
 	}
 
+	result = filterForPermissionsAndAssignStatus(appInstance, result)
 	return
+}
+
+func filterForPermissionsAndAssignStatus(appInstance *v1.AppInstance, services []kclient.Object) (result []kclient.Object) {
+	result = make([]kclient.Object, 0, len(services))
+	for _, obj := range services {
+		svc, ok := obj.(*v1.ServiceInstance)
+		if !ok {
+			continue
+		}
+
+		ungranted := isGranted(appInstance, svc)
+		if len(ungranted) > 0 {
+			serviceStatus := appInstance.Status.AppStatus.Services[svc.Name]
+			serviceStatus.MissingConsumerPermissions = append(serviceStatus.MissingConsumerPermissions, v1.Permissions{
+				ServiceName: svc.Name,
+				Rules:       ungranted,
+			})
+
+			if appInstance.Status.AppStatus.Services == nil {
+				appInstance.Status.AppStatus.Services = map[string]v1.ServiceStatus{}
+			}
+			appInstance.Status.AppStatus.Services[svc.Name] = serviceStatus
+		} else {
+			result = append(result, svc)
+		}
+	}
+	return result
+}
+
+func isGranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1.PolicyRule {
+	if service.Spec.Consumer == nil || service.Spec.Consumer.Permissions == nil ||
+		len(service.Spec.Consumer.Permissions.GetRules()) == 0 {
+		return nil
+	}
+
+	var (
+		ungranted []v1.PolicyRule
+		granted   = appInstance.Spec.GetPermissions()
+	)
+
+	for _, requested := range service.Spec.Consumer.Permissions.GetRules() {
+		var isGranted bool
+		for _, granted := range granted {
+			if granted.Grants(appInstance.Namespace, service.Name, requested) {
+				isGranted = true
+				break
+			}
+		}
+		if !isGranted {
+			ungranted = append(ungranted, requested)
+		}
+	}
+
+	return ungranted
 }

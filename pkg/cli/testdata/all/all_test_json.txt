@@ -17,6 +17,12 @@ ACORNS:
             },
             "status": {
                 "columns": {},
+                "staged": {
+                    "appImage": {
+                        "imageData": {},
+                        "vcs": {}
+                    }
+                },
                 "appImage": {
                     "imageData": {},
                     "vcs": {}

@@ -250,4 +250,8 @@ status:
         requests:
           cpu: 1m
           memory: 1Mi
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

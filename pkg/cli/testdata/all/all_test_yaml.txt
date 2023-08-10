@@ -17,6 +17,10 @@ items:
     appStatus: {}
     columns: {}
     defaults: {}
+    staged:
+      appImage:
+        imageData: {}
+        vcs: {}
 
 
 CONTAINERS:

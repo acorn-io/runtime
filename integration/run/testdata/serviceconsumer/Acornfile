@@ -1,0 +1,27 @@
+services: producer: build: acornfile: "service.acorn"
+
+jobs: test: {
+	consumes: "producer"
+	image:    "ghcr.io/acorn-io/images-mirror/busybox:latest"
+	command:  "/test.sh"
+	files: "/test.sh": """
+		#!/bin/sh
+		set -e -x
+		[ "$foo" == "envvalue" ]
+		[ "$(cat /secret-file)" == "filevalue" ]
+		"""
+}
+
+jobs: kubetest: {
+	consumes: "producer"
+	image:    "cgr.dev/chainguard/kubectl:latest-dev"
+	env: NAMESPACE: "@{acorn.project}"
+	entrypoint: "/run.sh"
+	files: "/run.sh": """
+		#!/bin/sh
+		set -e -x
+		[ "${NAMESPACE}" == "@{acorn.project}" ]
+		kubectl -n ${NAMESPACE} get secret foo 2>&1 | grep "NotFound"
+		kubectl -n ${NAMESPACE} get secret bar 2>&1 | grep "Forbidden"
+		"""
+}

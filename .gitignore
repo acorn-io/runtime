@@ -1,3 +1,5 @@
+/.dev-image
+/.dev-kubeconfig
 /.dapper
 /.cache
 /bin

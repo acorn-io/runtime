@@ -58,4 +58,8 @@ status:
           memory: 10Mi
         requests:
           memory: 10Mi
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

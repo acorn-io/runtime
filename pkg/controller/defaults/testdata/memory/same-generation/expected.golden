@@ -49,4 +49,8 @@ status:
       left: 0
       oneimage: 0
   namespace: app-created-namespace
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

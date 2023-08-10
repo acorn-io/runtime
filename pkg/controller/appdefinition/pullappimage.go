@@ -30,9 +30,16 @@ type pullClient struct {
 }
 
 func pullAppImage(transport http.RoundTripper, client pullClient) router.HandlerFunc {
+	// NOTE: It is important that this logic does not interact with status.AppImage but instead
+	// status.Staged.AppImage
 	return func(req router.Request, resp router.Response) error {
 		appInstance := req.Object.(*v1.AppInstance)
 		cond := condition.Setter(appInstance, resp, v1.AppInstanceConditionPulled)
+
+		// For migration/upgrade purposes, if status.StagedAppImage is nil, just assign it status.AppImage
+		if appInstance.Status.Staged.AppImage.ID == "" {
+			appInstance.Status.Staged.AppImage = appInstance.Status.AppImage
+		}
 
 		target, unknownReason := determineTargetImage(appInstance)
 		if target == "" {
@@ -87,7 +94,10 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 		targetImage.Name = target
 		appInstance.Status.AvailableAppImage = ""
 		appInstance.Status.ConfirmUpgradeAppImage = ""
-		appInstance.Status.AppImage = *targetImage
+		// Reset the whole object, reset all staged state
+		appInstance.Status.Staged = v1.AppStatusStaged{
+			AppImage: *targetImage,
+		}
 
 		cond.Success()
 		return nil
@@ -107,7 +117,7 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 				// ConfirmUpgradeAppImage is not blank. Normally, we shouldn't get the desiredImage from it. That should
 				// be done explicitly by the user via the apps/confirmupgrade subresource (which would set it to the
 				// AvailableAppImage field). But if AppImage.ID is blank, this app has never had an image pulled. So, do the initial pull.
-				if appInstance.Status.AppImage.Name == "" {
+				if appInstance.Status.Staged.AppImage.Name == "" {
 					return appInstance.Status.ConfirmUpgradeAppImage, ""
 				} else {
 					return "", fmt.Sprintf("confirm upgrade to %v", appInstance.Status.ConfirmUpgradeAppImage)
@@ -116,7 +126,7 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 		} else {
 			// Neither AvailableAppImage nor ConfirmUpgradeAppImage is set.
 			if isPattern {
-				if appInstance.Status.AppImage.Name == "" {
+				if appInstance.Status.Staged.AppImage.Name == "" {
 					// Need to trigger a sync since this app has never had a concrete image set
 					autoupgrade.Sync()
 					return "", fmt.Sprintf("waiting for image to satisfy auto-upgrade tag %v", pattern)
@@ -124,7 +134,7 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 					return "", ""
 				}
 			} else {
-				if appInstance.Spec.Image == appInstance.Status.AppImage.Name {
+				if appInstance.Spec.Image == appInstance.Status.Staged.AppImage.Name {
 					return "", ""
 				} else {
 					return appInstance.Spec.Image, ""
@@ -133,7 +143,7 @@ func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 		}
 	} else {
 		// Auto-upgrade is off. Only need to pull if spec and status are not equal or we're trying to trigger a repull
-		if appInstance.Spec.Image != appInstance.Status.AppImage.Name ||
+		if appInstance.Spec.Image != appInstance.Status.Staged.AppImage.Name ||
 			appInstance.Status.AvailableAppImage == appInstance.Spec.Image {
 			return appInstance.Spec.Image, ""
 		} else {

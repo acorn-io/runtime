@@ -35,6 +35,7 @@ func (a *appStatusRenderer) readRouter() error {
 			return err
 		}
 
+		s.UpToDate = s.Defined
 		s.Ready = s.Defined && s.Ready
 		a.app.Status.AppStatus.Routers[routerName] = s
 	}
