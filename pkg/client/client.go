@@ -189,6 +189,7 @@ type ImageDetails struct {
 	AppImage        v1.AppImage   `json:"appImage,omitempty"`
 	AppSpec         *v1.AppSpec   `json:"appSpec,omitempty"`
 	Params          *v1.ParamSpec `json:"params,omitempty"`
+	ImageName       string        `json:"imageName,omitempty"`
 	SignatureDigest string        `json:"signatureDigest,omitempty"`
 	Readme          string        `json:"readme,omitempty"`
 	ParseError      string        `json:"parseError,omitempty"`

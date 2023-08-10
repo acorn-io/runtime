@@ -35,9 +35,9 @@ func (c *DefaultClient) ImageTag(ctx context.Context, imageName, tag string) err
 }
 
 func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error) {
-	imageName = strings.ReplaceAll(imageName, "/", "+")
-
-	detailsResult := &apiv1.ImageDetails{}
+	detailsResult := &apiv1.ImageDetails{
+		ImageName: imageName,
+	}
 
 	if opts != nil {
 		detailsResult.DeployArgs = opts.DeployArgs
@@ -50,7 +50,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 	err := c.RESTClient.Post().
 		Namespace(c.Namespace).
 		Resource("images").
-		Name(imageName).
+		Name("_").
 		SubResource("details").
 		Body(detailsResult).
 		Do(ctx).Into(detailsResult)
@@ -59,6 +59,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 	}
 
 	return &ImageDetails{
+		ImageName:       detailsResult.ImageName,
 		AppImage:        detailsResult.AppImage,
 		AppSpec:         detailsResult.AppSpec,
 		Readme:          detailsResult.Readme,

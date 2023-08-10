@@ -3717,11 +3717,17 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"nestedDigest": {
+					"imageName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Input Params",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"nestedDigest": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"deployArgs": {

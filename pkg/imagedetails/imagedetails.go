@@ -109,6 +109,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 			Name:      imageName,
 			Namespace: namespace,
 		},
+		ImageName:       imageName,
 		DeployArgs:      details.DeployArgs,
 		Profiles:        profiles,
 		Params:          details.Params,
