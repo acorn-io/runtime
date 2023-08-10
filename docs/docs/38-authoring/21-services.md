@@ -11,8 +11,6 @@ When you are authoring the Acornfile for your application you can define cloud s
 Service attritibutes are accessed through the `@{}` syntax in the Acornfile. Here is a simple example of accessing the `address` attribute of a service named `db`. For complete service syntax see the [services](/100-reference/03-acornfile.md#services-consuming) section in the Acornfile reference.
 
 ```acorn
-
-```acorn
 // This service exposes an address and a secret
 services: db: {
     image: "ghcr.io/acorn-io/aws/rds-aurora-cluster:latest"
