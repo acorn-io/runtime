@@ -230,6 +230,7 @@ type ImageDetails struct {
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Input Params
+	ImageName    string        `json:"imageName,omitempty"`
 	NestedDigest string        `json:"nestedDigest,omitempty"`
 	DeployArgs   v1.GenericMap `json:"deployArgs,omitempty"`
 	Profiles     []string      `json:"profiles,omitempty"`

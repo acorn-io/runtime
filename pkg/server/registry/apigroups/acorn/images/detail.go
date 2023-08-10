@@ -41,22 +41,25 @@ func (s *ImageDetailStrategy) Get(ctx context.Context, namespace, name string) (
 
 func (s *ImageDetailStrategy) Create(ctx context.Context, obj types.Object) (types.Object, error) {
 	details := obj.(*apiv1.ImageDetails)
-	if details.Name == "" {
+	if details.ImageName == "" {
+		details.ImageName = details.Name
+	}
+	if details.ImageName == "" {
 		ri, ok := request.RequestInfoFrom(ctx)
 		if ok {
-			details.Name = ri.Name
+			details.ImageName = ri.Name
 		}
 	}
 	ns, _ := request.NamespaceFrom(ctx)
 	opts := []remote.Option{s.remoteOpt}
 	if details.Auth != nil {
-		imageName := strings.ReplaceAll(details.Name, "+", "/")
+		imageName := strings.ReplaceAll(details.ImageName, "+", "/")
 		ref, err := name.ParseReference(imageName)
 		if err == nil {
 			opts = append(opts, remote.WithAuthFromKeychain(images.NewSimpleKeychain(ref.Context(), *details.Auth, nil)))
 		}
 	}
-	return imagedetails.GetImageDetails(ctx, s.client, ns, details.Name, details.Profiles, details.DeployArgs, details.NestedDigest, details.NoDefaultRegistry, opts...)
+	return imagedetails.GetImageDetails(ctx, s.client, ns, details.ImageName, details.Profiles, details.DeployArgs, details.NestedDigest, details.NoDefaultRegistry, opts...)
 }
 
 func (s *ImageDetailStrategy) New() types.Object {
