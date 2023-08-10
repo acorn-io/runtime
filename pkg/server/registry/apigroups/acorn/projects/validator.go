@@ -47,14 +47,14 @@ func (v *Validator) ValidateUpdate(ctx context.Context, newObj, _ runtime.Object
 	}
 
 	// If the user is removing a supported region, ensure that there are no apps in that region.
-	return v.ensureNoObjectsExistOutsideOfRegions(ctx, newProject.Name, newProject.Spec.SupportedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
+	return EnsureNoObjectsExistOutsideOfRegions(ctx, v.Client, newProject.Name, newProject.Spec.SupportedRegions, &apiv1.AppList{}, &apiv1.VolumeList{})
 }
 
-func (v *Validator) ensureNoObjectsExistOutsideOfRegions(ctx context.Context, namespace string, regions []string, objList ...kclient.ObjectList) field.ErrorList {
+func EnsureNoObjectsExistOutsideOfRegions(ctx context.Context, client kclient.Client, namespace string, regions []string, objList ...kclient.ObjectList) field.ErrorList {
 	var result field.ErrorList
 	for _, obj := range objList {
 		var removedRegions, inRemovedRegion []string
-		if err := v.Client.List(ctx, obj, kclient.InNamespace(namespace)); err != nil {
+		if err := client.List(ctx, obj, kclient.InNamespace(namespace)); err != nil {
 			return field.ErrorList{field.InternalError(field.NewPath("spec", "supportedRegions"), err)}
 		}
 
@@ -76,7 +76,7 @@ func (v *Validator) ensureNoObjectsExistOutsideOfRegions(ctx context.Context, na
 				fmt.Sprintf(
 					"cannot remove regions %v while in use by the following %ss: %v",
 					removedRegions,
-					v.resource(obj),
+					resource(client, obj),
 					inRemovedRegion,
 				),
 			))
@@ -86,10 +86,10 @@ func (v *Validator) ensureNoObjectsExistOutsideOfRegions(ctx context.Context, na
 	return result
 }
 
-func (v *Validator) resource(obj runtime.Object) string {
+func resource(client kclient.Client, obj runtime.Object) string {
 	kind := obj.GetObjectKind().GroupVersionKind().Kind
 	if kind == "" {
-		gvks, _, _ := v.Client.Scheme().ObjectKinds(obj)
+		gvks, _, _ := client.Scheme().ObjectKinds(obj)
 		if len(gvks) < 1 {
 			// Kind unknown
 			return "resource"

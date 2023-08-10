@@ -36,7 +36,7 @@ func TestUpdatePull(t *testing.T) {
 	}
 
 	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.AppImage.ID == imageID
+		return obj.Status.AppImage.ID == imageID && obj.Status.Ready
 	})
 	assert.NotEmpty(t, app.Status.Namespace)
 	assert.Equal(t, app.Status.AppImage.ID, imageID)
