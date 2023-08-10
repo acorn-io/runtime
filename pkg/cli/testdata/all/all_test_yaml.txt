@@ -31,6 +31,17 @@ items:
     probes: null
   status:
     columns: {}
+    containerSpec:
+      name: ""
+      resources: {}
+    containerStatus:
+      image: ""
+      imageID: ""
+      lastState: {}
+      name: ""
+      ready: false
+      restartCount: 0
+      state: {}
     image: ""
     imageID: ""
     lastState: {}

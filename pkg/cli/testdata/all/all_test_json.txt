@@ -44,6 +44,19 @@ CONTAINERS:
                 "appName": "found"
             },
             "status": {
+                "containerSpec": {
+                    "name": "",
+                    "resources": {}
+                },
+                "containerStatus": {
+                    "name": "",
+                    "state": {},
+                    "lastState": {},
+                    "ready": false,
+                    "restartCount": 0,
+                    "image": "",
+                    "imageID": ""
+                },
                 "columns": {},
                 "state": {},
                 "lastState": {},

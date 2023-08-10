@@ -11,6 +11,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	intstr "k8s.io/apimachinery/pkg/util/intstr"
 	common "k8s.io/kube-openapi/pkg/common"
 	spec "k8s.io/kube-openapi/pkg/validation/spec"
 )
@@ -497,6 +498,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/runtime.RawExtension":                   schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
 		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                       schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
 		"k8s.io/apimachinery/pkg/runtime.Unknown":                        schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
+		"k8s.io/apimachinery/pkg/util/intstr.IntOrString":                schema_apimachinery_pkg_util_intstr_IntOrString(ref),
 		"k8s.io/apimachinery/pkg/version.Info":                           schema_k8sio_apimachinery_pkg_version_Info(ref),
 	}
 }
@@ -2685,6 +2687,18 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
+					"containerSpec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/api/core/v1.Container"),
+						},
+					},
+					"containerStatus": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/api/core/v1.ContainerStatus"),
+						},
+					},
 					"columns": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
@@ -2742,7 +2756,7 @@ func schema_pkg_apis_apiacornio_v1_ContainerReplicaStatus(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns", "k8s.io/api/core/v1.ContainerState"},
+			"github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1.ContainerReplicaColumns", "k8s.io/api/core/v1.Container", "k8s.io/api/core/v1.ContainerState", "k8s.io/api/core/v1.ContainerStatus"},
 	}
 }
 
@@ -27886,6 +27900,26 @@ func schema_k8sio_apimachinery_pkg_runtime_Unknown(ref common.ReferenceCallback)
 			},
 		},
 	}
+}
+
+func schema_apimachinery_pkg_util_intstr_IntOrString(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.EmbedOpenAPIDefinitionIntoV2Extension(common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "IntOrString is a type that can hold an int32 or a string.  When used in JSON or YAML marshalling and unmarshalling, it produces or consumes the inner type.  This allows you to have, for example, a JSON field that can accept a name or number.",
+				OneOf:       common.GenerateOpenAPIV3OneOfSchema(intstr.IntOrString{}.OpenAPIV3OneOfTypes()),
+				Format:      intstr.IntOrString{}.OpenAPISchemaFormat(),
+			},
+		},
+	}, common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "IntOrString is a type that can hold an int32 or a string.  When used in JSON or YAML marshalling and unmarshalling, it produces or consumes the inner type.  This allows you to have, for example, a JSON field that can accept a name or number.",
+				Type:        intstr.IntOrString{}.OpenAPISchemaType(),
+				Format:      intstr.IntOrString{}.OpenAPISchemaFormat(),
+			},
+		},
+	})
 }
 
 func schema_k8sio_apimachinery_pkg_version_Info(ref common.ReferenceCallback) common.OpenAPIDefinition {

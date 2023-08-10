@@ -183,8 +183,10 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 
 	delete(result.Annotations, labels.AcornContainerSpec)
 
+	containerSpecs := pod.Spec.Containers
 	containerStatus := pod.Status.ContainerStatuses
 	if result.Spec.Init {
+		containerSpecs = pod.Spec.InitContainers
 		containerStatus = pod.Status.InitContainerStatuses
 	}
 
@@ -201,6 +203,7 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 			Image:                status.Image,
 			ImageID:              status.ImageID,
 			Started:              status.Started,
+			ContainerStatus:      status,
 		}
 
 		if status.State.Running != nil {
@@ -233,6 +236,13 @@ func containerSpecToContainerReplica(pod *corev1.Pod, imageMapping map[string]st
 
 		result.Status.Columns.App = result.Spec.AppName
 		break
+	}
+
+	for _, spec := range containerSpecs {
+		if spec.Name == containerStatusName {
+			result.Status.ContainerSpec = spec
+			break
+		}
 	}
 
 	result.Status.PodName = pod.Name

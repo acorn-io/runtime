@@ -84,6 +84,8 @@ type ContainerReplicaStatus struct {
 	PodMessage   string          `json:"message,omitempty"`
 	PodReason    string          `json:"reason,omitempty"`
 
+	ContainerSpec        corev1.Container        `json:"containerSpec,omitempty"`
+	ContainerStatus      corev1.ContainerStatus  `json:"containerStatus,omitempty"`
 	Columns              ContainerReplicaColumns `json:"columns,omitempty"`
 	State                corev1.ContainerState   `json:"state,omitempty"`
 	LastTerminationState corev1.ContainerState   `json:"lastState,omitempty"`
