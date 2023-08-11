@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -282,7 +283,9 @@ type Client interface {
 	GetProject() string
 	GetNamespace() string
 	GetClient() (kclient.WithWatch, error)
+
 	KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error)
+	KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error)
 }
 
 type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
@@ -408,6 +411,31 @@ type DefaultClient struct {
 	Dialer     *k8schannel.Dialer
 }
 
+func generateKubeConfig(restConfig *rest.Config) ([]byte, error) {
+	config := &clientcmdapi.Config{
+		Clusters: map[string]*clientcmdapi.Cluster{
+			"acorn": {
+				Server:                   restConfig.Host,
+				CertificateAuthorityData: restConfig.TLSClientConfig.CAData,
+			},
+		},
+		AuthInfos: map[string]*clientcmdapi.AuthInfo{
+			"auth": {
+				Token: restConfig.BearerToken,
+			},
+		},
+		Contexts: map[string]*clientcmdapi.Context{
+			"default": {
+				Cluster:  "acorn",
+				AuthInfo: "auth",
+			},
+		},
+		CurrentContext: "default",
+	}
+
+	return clientcmd.Write(*config)
+}
+
 func (c *DefaultClient) getRESTConfig(ctx context.Context, opts *KubeProxyAddressOptions) (*rest.Config, error) {
 	if opts == nil || opts.Region == "" {
 		return c.RESTConfig, nil
@@ -451,6 +479,14 @@ func (c *DefaultClient) getRESTConfig(ctx context.Context, opts *KubeProxyAddres
 	}
 
 	return clientcmd.RESTConfigFromKubeConfig(parsed.Config)
+}
+
+func (c *DefaultClient) KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error) {
+	restConfig, err := c.getRESTConfig(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return generateKubeConfig(restConfig)
 }
 
 func (c *DefaultClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {

@@ -14,7 +14,6 @@ import (
 func NewKubectl(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Kube{client: c.ClientFactory}, cobra.Command{
 		Use:          "kube [flags]",
-		Args:         cobra.MinimumNArgs(1),
 		Hidden:       true,
 		SilenceUsage: true,
 		Short:        "Run command with KUBECONFIG env set to a generated kubeconfig of the current project",
@@ -26,14 +25,25 @@ acorn -j acorn kube k9s
 }
 
 type Kube struct {
-	client ClientFactory
-	Region string `usage:"Get access to the cluster supporting that specific region"`
+	client    ClientFactory
+	Region    string `usage:"Get access to the cluster supporting that specific region"`
+	WriteFile string `usage:"Write kubeconfig to file" short:"w"`
 }
 
 func (s *Kube) Run(cmd *cobra.Command, args []string) error {
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
+	}
+
+	if s.WriteFile != "" {
+		data, err := c.KubeConfig(cmd.Context(), &client.KubeProxyAddressOptions{
+			Region: s.Region,
+		})
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(s.WriteFile, data, 0644)
 	}
 
 	ctx, cancel := context.WithCancel(cmd.Context())
@@ -76,6 +86,10 @@ users:
 	}
 	if err := f.Close(); err != nil {
 		return err
+	}
+
+	if len(args) == 0 {
+		args = []string{os.Getenv("SHELL")}
 	}
 
 	k := exec.Command(args[0], args[1:]...)
