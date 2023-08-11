@@ -44,5 +44,5 @@ This will cause the project and all related resources to be deleted.
 ### Temporarily specifying a different project
 All acorn commands now support the `--project` (or `-j`) flag for specifying the project just for that command. So, for example, the following command would create an application in the `development` project, regardless of which project you were currently using:
 ```bash
-acorn -j development run ghcr.io/acorn-io/library/hello-world
+acorn -j development run ghcr.io/acorn-io/hello-world
 ```

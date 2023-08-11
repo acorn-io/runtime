@@ -83,12 +83,12 @@ $ acorn install --features image-allow-rules=true
 ...
 
 # 2. Pull some Acorn image and push it to another registry that you have push access to (Alternatively, build it from an Acornfile)
-$ acorn pull ghcr.io/acorn-io/library/hello-world:latest
-$ acorn tag ghcr.io/acorn-io/library/hello-world:latest my.registry.local/acorn/hello-world:latest
+$ acorn pull ghcr.io/acorn-io/hello-world:latest
+$ acorn tag ghcr.io/acorn-io/hello-world:latest my.registry.local/acorn/hello-world:latest
 $ acorn push my.registry.local/acorn/hello-world:latest
 
 # 2.1 Faster using crane: 
-$ crane copy ghcr.io/acorn-io/library/hello-world:latest my.registry.local/acorn/hello-world:latest
+$ crane copy ghcr.io/acorn-io/hello-world:latest my.registry.local/acorn/hello-world:latest
 ...
 
 # 3. Get the digest

@@ -13,7 +13,7 @@ kubectl label namespaces <pre-created-namespace> acorn.io/app-namespace=acorn
 ```
 #### To verify :
 ```shell
-acorn run --target-namespace <pre-created-namespace> -n <test-app> -P ghcr.io/acorn-io/library/hello-world
+acorn run --target-namespace <pre-created-namespace> -n <test-app> -P ghcr.io/acorn-io/hello-world
 acorn % kubectl get pods -n ns-test-app
 NAME                      READY   STATUS    RESTARTS   AGE
 webapp-556947c87d-gt97r   1/1     Running   0          3m54s

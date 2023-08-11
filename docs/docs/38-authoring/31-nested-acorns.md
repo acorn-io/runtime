@@ -12,7 +12,7 @@ Acorns are defined under the `acorns` toplevel key in the Acornfile.
 //...
 acorns: {
     "my-acorn": {
-        image: "ghcr.io/acorn-io/library/hello-world:latest"
+        image: "ghcr.io/acorn-io/hello-world:latest"
     }
 }
 //...

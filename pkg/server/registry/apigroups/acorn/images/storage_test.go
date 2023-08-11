@@ -59,9 +59,9 @@ func TestFindMatchingImage(t *testing.T) {
 	assert.Equal(t, "foo/bar", ref)
 
 	// err: not found by full digest reference
-	_, _, err = findImageMatch(il, "ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
+	_, _, err = findImageMatch(il, "ghcr.io/acorn-io/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb")
 	assert.Error(t, err)
-	assert.Equal(t, "images.api.acorn.io \"ghcr.io/acorn-io/library/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb\" not found", err.Error())
+	assert.Equal(t, "images.api.acorn.io \"ghcr.io/acorn-io/hello-world@sha256:1a6c64d2ccd0bb035f9c8196d3bfe72a7fdbddc4530dfcb3ab2a0ab8afb57eeb\" not found", err.Error())
 
 	// err: ambiguous reg/repo reference
 	_, _, err = findImageMatch(il, "foo/bar")

@@ -9,11 +9,11 @@ When you install acorn, it will launch several workloads in your cluster, includ
 
 When you launch an acorn and it has published ports, acorn will generate a unique URL for accessing it, like so:
 ```bash
-$ acorn run -P ghcr.io/acorn-io/library/hello-world
+$ acorn run -P ghcr.io/acorn-io/hello-world
 
 $ acorn ps
-NAME       IMAGE          HEALTHY   UP-TO-DATE   CREATED   ENDPOINTS                                                                     MESSAGE
-black-sea   ghcr.io/acorn-io/library/hello-world   1         1            6s ago    http://webapp-black-sea-4232beae.qnrzq5.oss-acorn.io => webapp:80      OK
+NAME               IMAGE                          COMMIT         HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS                                                                      MESSAGE
+little-snowflake   ghcr.io/acorn-io/hello-world   eab5f8c77bd6   1         1            6m2s ago   https://webapp-little-snowflake-2b3b4c8d.3gjv35.dev-on-acorn.io => webapp:80   OK
 ```
 By default, endpoints are `http`. To have acorn automatically generate a [Let's Encrypt](https://letsencrypt.org/) certificate and secure your endpoints, you can enable acorn's Let's Encrypt integration like this:
 ```bash
