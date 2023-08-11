@@ -17,7 +17,7 @@ acorn run [flags] IMAGE|DIRECTORY [acorn args]
    acorn run .
 
  # Run from an image
-   acorn run ghcr.io/acorn-io/library/hello-world
+   acorn run ghcr.io/acorn-io/hello-world
 
  # Automatic upgrades
    # Automatic upgrade for an app will be enabled if '#', '*', or '**' appears in the image's tag. Tags will be sorted according to the rules for these special characters described below. The newest tag will be selected for upgrade.
