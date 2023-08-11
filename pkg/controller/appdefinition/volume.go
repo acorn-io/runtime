@@ -339,7 +339,7 @@ func addVolumeReferencesForContainer(app *v1.AppInstance, volumeReferences map[v
 
 	for _, entry := range typed.Sorted(container.Files) {
 		file := entry.Value
-		if file.Secret.Name != "" {
+		if file.Secret.Name != "" && !strings.Contains(file.Secret.Name, ".") {
 			volumeReferences[volumeReference{secretName: file.Secret.Name, mode: file.Mode}] = true
 		}
 	}
@@ -378,11 +378,15 @@ func addFilesFileModesForContainer(fileModes map[string]bool, container v1.Conta
 	for _, file := range container.Files {
 		if file.Content != "" && file.Secret.Name == "" {
 			fileModes[volume.NormalizeMode(file.Mode)] = true
+		} else if file.Content == "" && strings.Contains(file.Secret.Name, ".") {
+			fileModes[volume.NormalizeMode(file.Mode)] = true
 		}
 	}
 	for _, sidecar := range container.Sidecars {
 		for _, file := range sidecar.Files {
 			if file.Content != "" && file.Secret.Name == "" {
+				fileModes[volume.NormalizeMode(file.Mode)] = true
+			} else if file.Content == "" && strings.Contains(file.Secret.Name, ".") {
 				fileModes[volume.NormalizeMode(file.Mode)] = true
 			}
 		}

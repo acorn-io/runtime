@@ -1,6 +1,8 @@
 package v1
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type AppStatus struct {
 	Containers map[string]ContainerStatus `json:"containers,omitempty"`
@@ -71,16 +73,17 @@ func (in RouterStatus) GetCommonStatus() CommonStatus {
 }
 
 type ServiceStatus struct {
-	CommonStatus      `json:",inline"`
-	Default           bool              `json:"default,omitempty"`
-	Ports             Ports             `json:"ports,omitempty"`
-	Data              GenericMap        `json:"data,omitempty"`
-	Secrets           []string          `json:"secrets,omitempty"`
-	Address           string            `json:"address,omitempty"`
-	Endpoint          string            `json:"endpoint,omitempty"`
-	ServiceAcornName  string            `json:"serviceAcornName,omitempty"`
-	ServiceAcornReady bool              `json:"serviceAcornReady,omitempty"`
-	ExpressionErrors  []ExpressionError `json:"expressionErrors,omitempty"`
+	CommonStatus               `json:",inline"`
+	Default                    bool              `json:"default,omitempty"`
+	Ports                      Ports             `json:"ports,omitempty"`
+	Data                       GenericMap        `json:"data,omitempty"`
+	Secrets                    []string          `json:"secrets,omitempty"`
+	Address                    string            `json:"address,omitempty"`
+	Endpoint                   string            `json:"endpoint,omitempty"`
+	ServiceAcornName           string            `json:"serviceAcornName,omitempty"`
+	ServiceAcornReady          bool              `json:"serviceAcornReady,omitempty"`
+	MissingConsumerPermissions []Permissions     `json:"missingConsumerPermissions,omitempty"`
+	ExpressionErrors           []ExpressionError `json:"expressionErrors,omitempty"`
 }
 
 func (in ServiceStatus) GetCommonStatus() CommonStatus {

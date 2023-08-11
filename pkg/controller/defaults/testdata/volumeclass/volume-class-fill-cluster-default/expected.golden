@@ -44,4 +44,8 @@ status:
         size: 3Gi
   namespace: app-created-namespace
   observedGeneration: 1
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

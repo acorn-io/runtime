@@ -45,6 +45,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 		detailsResult.NestedDigest = opts.NestedDigest
 		detailsResult.Auth = opts.Auth
 		detailsResult.NoDefaultRegistry = opts.NoDefaultRegistry
+		detailsResult.IncludeNested = opts.IncludeNested
 	}
 
 	err := c.RESTClient.Post().
@@ -66,6 +67,8 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 		Params:          detailsResult.Params,
 		ParseError:      detailsResult.ParseError,
 		SignatureDigest: detailsResult.SignatureDigest,
+		NestedImages:    detailsResult.NestedImages,
+		Permissions:     detailsResult.Permissions,
 	}, nil
 }
 

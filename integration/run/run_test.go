@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -115,6 +116,55 @@ func TestVolumeBadClass(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected app with bad volume class to error on run")
 	}
+}
+
+func TestServiceConsumer(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndProject(t)
+	kclient := helper.MustReturn(kclient.Default)
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/serviceconsumer/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/serviceconsumer/",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Integration tests don't have proper privileges so we will by pass the permission validation
+	appInstance := &v1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-",
+			Namespace:    c.GetProject(),
+		},
+		Spec: v1.AppInstanceSpec{
+			Image: image.ID,
+			Permissions: []v1.Permissions{{
+				ServiceName: "producer.default",
+				Rules: []v1.PolicyRule{{
+					PolicyRule: rbacv1.PolicyRule{
+						APIGroups: []string{""},
+						Verbs:     []string{"get"},
+						Resources: []string{"secrets"},
+					},
+				}},
+			}},
+		},
+		Status: v1.AppInstanceStatus{},
+	}
+	if err := kclient.Create(ctx, appInstance); err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppGet(ctx, appInstance.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Ready
+	})
 }
 
 func TestVolumeBadClassInImageBoundToGoodClass(t *testing.T) {

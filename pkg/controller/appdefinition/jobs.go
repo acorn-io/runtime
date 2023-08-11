@@ -43,8 +43,13 @@ func stripPruneAndUpdate(annotations map[string]string) map[string]string {
 }
 
 func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, interpolator *secrets.Interpolator) (result []kclient.Object, _ error) {
-	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Jobs) {
-		job, err := toJob(req, appInstance, pullSecrets, tag, entry.Key, entry.Value, interpolator)
+	for _, jobName := range typed.SortedKeys(appInstance.Status.AppSpec.Jobs) {
+		jobDef := appInstance.Status.AppSpec.Jobs[jobName]
+		jobDef, err := augmentContainerWithConsumerInfo(req.Ctx, req.Client, appInstance.Status.Namespace, jobDef)
+		if err != nil {
+			return nil, err
+		}
+		job, err := toJob(req, appInstance, pullSecrets, tag, jobName, jobDef, interpolator)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +60,11 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if err != nil {
 			return nil, err
 		}
-		if perms := v1.FindPermission(job.GetName(), appInstance.Spec.GetPermissions()); perms.HasRules() {
+		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, jobName, jobDef)
+		if err != nil {
+			return nil, err
+		}
+		if perms.HasRules() {
 			perms, err := toPermissions(req.Ctx, req.Client, perms, job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance)
 			if err != nil {
 				return nil, err

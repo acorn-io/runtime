@@ -20,6 +20,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/controller/jobs"
 	"github.com/acorn-io/runtime/pkg/controller/namespace"
 	"github.com/acorn-io/runtime/pkg/controller/networkpolicy"
+	"github.com/acorn-io/runtime/pkg/controller/permissions"
 	"github.com/acorn-io/runtime/pkg/controller/pvc"
 	"github.com/acorn-io/runtime/pkg/controller/quota"
 	"github.com/acorn-io/runtime/pkg/controller/scheduling"
@@ -62,6 +63,8 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
 	appRouter.HandlerFunc(appdefinition.CheckImageAllowedHandler(registryTransport))
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
+	appRouter.HandlerFunc(permissions.CheckImagePermissions)
+	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)
 	appRouter.HandlerFunc(images.CreateImages)
 	appRouter.HandlerFunc(appdefinition.ParseAppImage)
 	appRouter.Middleware(appdefinition.FilterLabelsAndAnnotationsConfig).HandlerFunc(namespace.AddNamespace)

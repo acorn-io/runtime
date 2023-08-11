@@ -10,9 +10,7 @@ spec:
   image: myimage:latest
 status:
   appImage:
-    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     imageData: {}
-    name: myimage:latest
     vcs: {}
   appSpec: {}
   appStatus: {}
@@ -24,4 +22,10 @@ status:
     type: image-pull
   defaults: {}
   namespace: app-created-namespace
+  staged:
+    appImage:
+      digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      imageData: {}
+      name: myimage:latest
+      vcs: {}
 `

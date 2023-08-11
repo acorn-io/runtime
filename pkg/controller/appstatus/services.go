@@ -9,11 +9,13 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
+	"github.com/acorn-io/z"
 	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +34,8 @@ func (a *appStatusRenderer) readServices() error {
 			CommonStatus: v1.CommonStatus{
 				LinkOverride: ports.LinkService(a.app, serviceName),
 			},
-			ExpressionErrors: existingStatus[serviceName].ExpressionErrors,
+			ExpressionErrors:           existingStatus[serviceName].ExpressionErrors,
+			MissingConsumerPermissions: existingStatus[serviceName].MissingConsumerPermissions,
 		}
 
 		var err error
@@ -52,6 +55,15 @@ func (a *appStatusRenderer) readServices() error {
 				return err
 			}
 		}
+
+		if len(s.MissingConsumerPermissions) > 0 {
+			s.ErrorMessages = append(s.ErrorMessages, "invalid service is trying to grant permissions to consumer not granted"+
+				" to this service. The acorn containing this service must be updated to request the following permissions, "+z.Pointer(client2.ErrRulesNeeded{
+				Permissions: s.MissingConsumerPermissions,
+			}).Error())
+		}
+
+		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
 
 		service := &v1.ServiceInstance{}
 		if err := ref.Lookup(a.ctx, a.c, service, a.app.Status.Namespace, serviceName); apierrors.IsNotFound(err) {
@@ -119,8 +131,6 @@ func (a *appStatusRenderer) readServices() error {
 		} else if !apierrors.IsNotFound(err) {
 			return err
 		}
-
-		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
 
 		a.app.Status.AppStatus.Services[serviceName] = s
 	}

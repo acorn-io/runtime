@@ -155,4 +155,8 @@ status:
     type: defined
   defaults: {}
   namespace: app-created-namespace
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

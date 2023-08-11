@@ -144,10 +144,19 @@ func (i *Interpolator) SecretName() string {
 }
 
 func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.VolumeMount {
-	data, err := base64.StdEncoding.DecodeString(file.Content)
-	if err != nil {
-		i.saveError(err)
-		return corev1.VolumeMount{}
+	var (
+		data []byte
+		err  error
+	)
+
+	if file.Secret.Name == "" || file.Secret.Key == "" {
+		data, err = base64.StdEncoding.DecodeString(file.Content)
+		if err != nil {
+			i.saveError(err)
+			return corev1.VolumeMount{}
+		}
+	} else {
+		data = []byte((fmt.Sprintf("@{secrets.%s.%s}", file.Secret.Name, file.Secret.Key)))
 	}
 
 	newValue, err := i.Replace(string(data))

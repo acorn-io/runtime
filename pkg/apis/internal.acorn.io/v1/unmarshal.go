@@ -588,6 +588,7 @@ type containerAliases struct {
 	Directories         map[string]VolumeMount `json:"directories,omitempty"`
 	DependsOn           Dependencies           `json:"dependsOn,omitempty"`
 	DependsOnUnderscore Dependencies           `json:"depends_on,omitempty"`
+	Consumes            Dependencies           `json:"consumes,omitempty"`
 	Memory              *int64                 `json:"mem,omitempty"`
 }
 
@@ -618,6 +619,9 @@ func (c containerAliases) SetContainer(dst Container) Container {
 	}
 	if len(c.DependsOnUnderscore) > 0 {
 		dst.Dependencies = c.DependsOnUnderscore
+	}
+	if len(c.Consumes) > 0 {
+		dst.Dependencies = c.Consumes
 	}
 	if c.Memory != nil {
 		dst.Memory = c.Memory
@@ -687,6 +691,35 @@ func (in *Container) UnmarshalJSON(data []byte) error {
 	}
 
 	*in = c
+	return nil
+}
+
+type serviceConsumerAliases struct {
+	Env EnvVars `json:"env,omitempty"`
+}
+
+func (c serviceConsumerAliases) SetServiceConsumer(dst ServiceConsumer) ServiceConsumer {
+	if len(c.Env) > 0 {
+		dst.Environment = append(dst.Environment, c.Env...)
+	}
+	return dst
+}
+
+func (in *ServiceConsumer) UnmarshalJSON(data []byte) error {
+	var s ServiceConsumer
+	type serviceConsumer ServiceConsumer
+	if err := json.Unmarshal(data, (*serviceConsumer)(&s)); err != nil {
+		return err
+	}
+
+	var alias serviceConsumerAliases
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+
+	s = alias.SetServiceConsumer(s)
+
+	*in = s
 	return nil
 }
 

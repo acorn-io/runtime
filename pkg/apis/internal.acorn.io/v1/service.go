@@ -39,6 +39,12 @@ func (in *ServiceInstance) ShortID() string {
 	return string(in.UID)
 }
 
+type ServiceConsumer struct {
+	Permissions *Permissions `json:"permissions,omitempty"`
+	Files       Files        `json:"files,omitempty"`
+	Environment EnvVars      `json:"environment,omitempty"`
+}
+
 type ServiceInstanceSpec struct {
 	Labels          map[string]string `json:"labels,omitempty"`
 	Annotations     map[string]string `json:"annotations,omitempty"`
@@ -52,6 +58,7 @@ type ServiceInstanceSpec struct {
 	ContainerLabels map[string]string `json:"containerLabels,omitempty"`
 	Secrets         []string          `json:"secrets,omitempty"`
 	Data            GenericMap        `json:"data,omitempty"`
+	Consumer        *ServiceConsumer  `json:"consumer,omitempty"`
 
 	// Fields from app
 	AppName      string        `json:"appName,omitempty"`

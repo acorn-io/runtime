@@ -42,4 +42,8 @@ status:
       imageSource: {}
     sessionRenewTime: null
     sessionStartTime: null
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `

@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/slices"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
@@ -234,6 +235,42 @@ type PolicyRule struct {
 	Scopes            []string `json:"scopes,omitempty"`
 }
 
+func slicePermutation(in []string) (result [][]string) {
+	if len(in) == 0 {
+		return [][]string{nil}
+	}
+	for _, v := range in {
+		result = append(result, []string{v})
+	}
+	return
+}
+
+func (p PolicyRule) Exploded() (result []PolicyRule) {
+	for _, scope := range slicePermutation(p.Scopes) {
+		for _, verb := range slicePermutation(p.Verbs) {
+			for _, apiGroup := range slicePermutation(p.APIGroups) {
+				for _, resource := range slicePermutation(p.Resources) {
+					for _, resourceName := range slicePermutation(p.ResourceNames) {
+						for _, nonResourceURL := range slicePermutation(p.NonResourceURLs) {
+							result = append(result, PolicyRule{
+								PolicyRule: rbacv1.PolicyRule{
+									Verbs:           verb,
+									APIGroups:       apiGroup,
+									Resources:       resource,
+									ResourceNames:   resourceName,
+									NonResourceURLs: nonResourceURL,
+								},
+								Scopes: scope,
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+	return result
+}
+
 func matches(allowed, requested []string, emptyAllowedIsAll bool) bool {
 	for _, requested := range requested {
 		if !matchesSingle(allowed, requested, emptyAllowedIsAll) {
@@ -266,6 +303,9 @@ func (p PolicyRule) Grants(currentNamespace string, requested PolicyRule) bool {
 	if len(p.NonResourceURLs) > 0 && len(p.Resources) == 0 {
 		return len(p.Scopes) == 0 &&
 			len(requested.Scopes) == 0 &&
+			len(requested.APIGroups) == 0 &&
+			len(requested.Resources) == 0 &&
+			len(requested.ResourceNames) == 0 &&
 			matches(p.NonResourceURLs, requested.NonResourceURLs, false)
 	}
 
@@ -340,6 +380,9 @@ func (p PolicyRule) Namespaces() (result []string) {
 		if strings.HasPrefix(scope, "namespace:") {
 			result = append(result, strings.TrimPrefix(scope, "namespace:"))
 		}
+		if strings.HasPrefix(scope, "project:") {
+			result = append(result, strings.TrimPrefix(scope, "project:"))
+		}
 	}
 	return
 }
@@ -368,12 +411,18 @@ func (in Permissions) Grants(currentNamespace string, forService string, request
 	if in.ServiceName != forService {
 		return false
 	}
-	for _, granted := range in.GetRules() {
-		if granted.Grants(currentNamespace, requested) {
-			return true
+
+individualRuleLoop:
+	for _, individualRule := range requested.Exploded() {
+		for _, granted := range in.GetRules() {
+			if granted.Grants(currentNamespace, individualRule) {
+				continue individualRuleLoop
+			}
 		}
+		return false
 	}
-	return false
+
+	return true
 }
 
 func (in Permissions) GetRules() []PolicyRule {
@@ -401,7 +450,137 @@ func (in *Permissions) Get() Permissions {
 	return *in
 }
 
-func Grants(grantedPermissions Permissions, currentNamespace string, requestedPermissions Permissions) (missing Permissions, granted bool) {
+func SimplifySet(perms []Permissions) (result []Permissions) {
+	for _, servicePermissions := range GroupByServiceName(perms) {
+		result = append(result, Simplify(servicePermissions))
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ServiceName < result[j].ServiceName
+	})
+	return
+}
+
+func Simplify(perms Permissions) (result Permissions) {
+	var (
+		// we sort stuff so don't want to modify the input, thats the reason
+		// for the DeepCopy
+		rules = perms.DeepCopy().GetRules()
+	)
+
+	if len(rules) == 0 {
+		return perms
+	}
+
+	// This is essentially O(n^2) or maybe worse. So I'm sure there's a better way to do this.
+	// This looks for rules where all attributes match except one and then combine the one non-matching
+	// attribute
+	for {
+		var changed bool
+		for i := 0; i < len(rules); i++ {
+			rule := rules[i]
+			tail := rules[i+1:]
+			var newTail []PolicyRule
+			for _, tailRule := range tail {
+				if combined, ok := canCombine(rule, tailRule); ok {
+					rule = combined
+					changed = true
+				} else {
+					newTail = append(newTail, tailRule)
+				}
+			}
+			rules = append(rules[0:i], rule)
+			rules = append(rules, newTail...)
+		}
+
+		if !changed {
+			break
+		}
+	}
+
+	return Permissions{
+		ServiceName: perms.ServiceName,
+		Rules:       rules,
+	}
+}
+
+func sortEquals(left, right []string) bool {
+	sort.Strings(left)
+	sort.Strings(right)
+	return slices.Equal(left, right)
+}
+
+func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
+	var (
+		singleDiff bool
+	)
+	combined = left
+
+	if !sortEquals(combined.Verbs, right.Verbs) {
+		if singleDiff {
+			return combined, false
+		}
+		combined.Verbs = append(combined.Verbs, right.Verbs...)
+		singleDiff = true
+	}
+
+	if !sortEquals(combined.APIGroups, right.APIGroups) {
+		if singleDiff {
+			return combined, false
+		}
+		combined.APIGroups = append(combined.APIGroups, right.APIGroups...)
+		singleDiff = true
+	}
+
+	if !sortEquals(combined.Resources, right.Resources) {
+		if singleDiff {
+			return combined, false
+		}
+		combined.Resources = append(combined.Resources, right.Resources...)
+		singleDiff = true
+	}
+
+	if !sortEquals(combined.ResourceNames, right.ResourceNames) {
+		if singleDiff {
+			return combined, false
+		}
+		combined.ResourceNames = append(combined.ResourceNames, right.ResourceNames...)
+		singleDiff = true
+	}
+
+	if !sortEquals(combined.NonResourceURLs, right.NonResourceURLs) {
+		if singleDiff {
+			return combined, false
+		}
+		combined.NonResourceURLs = append(combined.NonResourceURLs, right.NonResourceURLs...)
+		singleDiff = true
+	}
+
+	if !sortEquals(combined.Scopes, right.Scopes) {
+		if singleDiff {
+			return combined, false
+		}
+		combined.Scopes = append(combined.Scopes, right.Scopes...)
+		singleDiff = true
+	}
+
+	return combined, singleDiff
+}
+
+func GrantsAll(currentNamespace string, requestedPerms, grantedUserPerms []Permissions) (missing []Permissions, granted bool) {
+	var (
+		grantedByServiceName = GroupByServiceName(grantedUserPerms)
+	)
+
+	for serviceName, requestedPerm := range GroupByServiceName(requestedPerms) {
+		if subMissing, subGranted := Grants(currentNamespace, requestedPerm, grantedByServiceName[serviceName]); !subGranted {
+			missing = append(missing, Simplify(subMissing))
+		}
+	}
+
+	return missing, len(missing) == 0
+}
+
+func Grants(currentNamespace string, requestedPermissions, grantedPermissions Permissions) (missing Permissions, granted bool) {
 	missing.ServiceName = requestedPermissions.ServiceName
 
 	for _, requested := range requestedPermissions.Rules {
@@ -411,7 +590,7 @@ func Grants(grantedPermissions Permissions, currentNamespace string, requestedPe
 		missing.Rules = append(missing.Rules, requested)
 	}
 
-	return missing, len(missing.Rules) == 0
+	return Simplify(missing), len(missing.Rules) == 0
 }
 
 func FindPermission(serviceName string, perms []Permissions) (result Permissions) {
@@ -609,6 +788,7 @@ type Service struct {
 	AutoUpgradeInterval string                 `json:"autoUpgradeInterval,omitempty"`
 	Memory              MemoryMap              `json:"memory,omitempty"`
 	Permissions         map[string]Permissions `json:"permissions,omitempty"`
+	Consumer            *ServiceConsumer       `json:"consumer,omitempty"`
 }
 
 func (in Service) GetOriginalImage() string {

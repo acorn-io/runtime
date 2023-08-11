@@ -24,6 +24,7 @@ var (
 	AppInstanceConditionContainers     = "containers"
 	AppInstanceConditionJobs           = "jobs"
 	AppInstanceConditionAcorns         = "acorns"
+	AppInstanceConditionPermissions    = "permissions"
 	AppInstanceConditionReady          = "Ready"
 	AppInstanceConditionVolumes        = "volumes"
 	AppInstanceConditionImageAllowed   = "image-allowed"
@@ -200,6 +201,7 @@ type AppInstanceStatus struct {
 	Columns                AppColumns              `json:"columns,omitempty"`
 	Ready                  bool                    `json:"ready,omitempty"`
 	Namespace              string                  `json:"namespace,omitempty"`
+	Staged                 AppStatusStaged         `json:"staged,omitempty"`
 	AppImage               AppImage                `json:"appImage,omitempty"`
 	AvailableAppImage      string                  `json:"availableAppImage,omitempty"`
 	ConfirmUpgradeAppImage string                  `json:"confirmUpgradeAppImage,omitempty"`
@@ -208,6 +210,13 @@ type AppInstanceStatus struct {
 	Scheduling             map[string]Scheduling   `json:"scheduling,omitempty"`
 	Conditions             []Condition             `json:"conditions,omitempty"`
 	Defaults               Defaults                `json:"defaults,omitempty"`
+}
+
+type AppStatusStaged struct {
+	AppImage                      AppImage      `json:"appImage,omitempty"`
+	PermissionsChecked            bool          `json:"permissionsChecked,omitempty"`
+	PermissionsMissing            []Permissions `json:"permissionsMissing,omitempty"`
+	PermissionsObservedGeneration int64         `json:"permissionsObservedGeneration,omitempty"`
 }
 
 type Defaults struct {

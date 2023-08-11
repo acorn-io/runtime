@@ -4,7 +4,6 @@ go 1.20
 
 replace (
 	cuelang.org/go => cuelang.org/go v0.4.3
-
 	github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible
 	github.com/rancher/apiserver => github.com/acorn-io/apiserver-1 v0.0.0-20220608053213-0ffc3be57697
 	github.com/rancher/wrangler => github.com/acorn-io/wrangler v0.0.0-20230619194218-746dc7cf6a0c
@@ -14,8 +13,8 @@ replace (
 require (
 	cuelang.org/go v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20230803054315-fd595f411441
-	github.com/acorn-io/baaah v0.0.0-20230801200744-5fdf278d0c4c
+	github.com/acorn-io/aml v0.0.0-20230810193619-44518c9bc775
+	github.com/acorn-io/baaah v0.0.0-20230809195515-5b03d4cd75f0
 	github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
@@ -36,6 +35,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
+	github.com/hexops/autogold/v2 v2.1.0
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
 	github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98
 	github.com/moby/buildkit v0.11.6
@@ -166,7 +166,6 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hexops/autogold/v2 v2.1.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/hexops/valast v1.4.3 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect

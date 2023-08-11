@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/condition"
 	"github.com/acorn-io/runtime/pkg/jobs"
 	"github.com/pkg/errors"
@@ -45,6 +46,7 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 
 	for name, status := range app.Status.AppStatus.Services {
 		status.ExpressionErrors = nil
+		status.MissingConsumerPermissions = nil
 		app.Status.AppStatus.Services[name] = status
 	}
 
@@ -91,8 +93,21 @@ func SetStatus(req router.Request, _ router.Response) error {
 	setCondition(app, v1.AppInstanceConditionSecrets, status.Secrets)
 	setCondition(app, v1.AppInstanceConditionAcorns, status.Acorns)
 
+	setPermissionCondition(app)
+
 	app.Status.AppStatus = status
 	return nil
+}
+
+func setPermissionCondition(app *v1.AppInstance) {
+	cond := condition.ForName(app, v1.AppInstanceConditionPermissions)
+	if len(app.Status.Staged.PermissionsMissing) > 0 {
+		cond.Error(fmt.Errorf("can not run new image due to missing permissions: %w", &client2.ErrRulesNeeded{
+			Permissions: app.Status.Staged.PermissionsMissing,
+		}))
+	} else {
+		cond.Success()
+	}
 }
 
 func formatMessage(name string, parts []string) string {

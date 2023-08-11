@@ -53,4 +53,8 @@ status:
   scheduling:
     left:
       requirements: {}
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
 `
