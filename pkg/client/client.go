@@ -1,7 +1,11 @@
 package client
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -20,6 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -277,7 +282,7 @@ type Client interface {
 	GetProject() string
 	GetNamespace() string
 	GetClient() (kclient.WithWatch, error)
-	KubeProxyAddress(ctx context.Context) (string, error)
+	KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error)
 }
 
 type CredentialLookup func(ctx context.Context, serverAddress string) (*apiv1.RegistryAuth, bool, error)
@@ -346,6 +351,10 @@ type ContainerReplicaListOptions struct {
 	App string `json:"app,omitempty"`
 }
 
+type KubeProxyAddressOptions struct {
+	Region string `json:"region,omitempty"`
+}
+
 type EventStreamOptions struct {
 	Tail            int    `json:"tail,omitempty"`
 	Follow          bool   `json:"follow,omitempty"`
@@ -399,8 +408,58 @@ type DefaultClient struct {
 	Dialer     *k8schannel.Dialer
 }
 
-func (c *DefaultClient) KubeProxyAddress(ctx context.Context) (string, error) {
-	handler, err := proxy.Handler(c.RESTConfig)
+func (c *DefaultClient) getRESTConfig(ctx context.Context, opts *KubeProxyAddressOptions) (*rest.Config, error) {
+	if opts == nil || opts.Region == "" {
+		return c.RESTConfig, nil
+	}
+
+	client, err := rest.HTTPClientFor(c.RESTConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := json.Marshal(map[string]any{
+		"kind":       "AccessConfig",
+		"apiVersion": "account.manager.acorn.io/v1",
+		"regionName": opts.Region,
+	})
+	if err != nil {
+		return nil, err
+	}
+	// Could this be prettier
+	resp, err := client.Post(c.RESTConfig.Host+"/apis/account.manager.acorn.io/v1/accessconfigs",
+		"application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	_ = resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("invalid response looking up kubeconfig %d: %s", resp.StatusCode, body)
+	}
+
+	parsed := struct {
+		Config []byte
+	}{}
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return nil, err
+	}
+
+	return clientcmd.RESTConfigFromKubeConfig(parsed.Config)
+}
+
+func (c *DefaultClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {
+	restConfig, err := c.getRESTConfig(ctx, opts)
+	if err != nil {
+		return "", err
+	}
+
+	handler, err := proxy.Handler(restConfig)
 	if err != nil {
 		return "", err
 	}

@@ -119,7 +119,7 @@ type MockClient struct {
 	EventItem        *apiv1.Event
 }
 
-func (m *MockClient) KubeProxyAddress(ctx context.Context) (string, error) {
+func (m *MockClient) KubeProxyAddress(ctx context.Context, opts *client.KubeProxyAddressOptions) (string, error) {
 	//TODO implement me
 	panic("implement me")
 }
