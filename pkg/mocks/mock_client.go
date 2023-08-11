@@ -690,6 +690,21 @@ func (mr *MockClientMockRecorder) Info(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockClient)(nil).Info), arg0)
 }
 
+// KubeConfig mocks base method.
+func (m *MockClient) KubeConfig(arg0 context.Context, arg1 *client.KubeProxyAddressOptions) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "KubeConfig", arg0, arg1)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// KubeConfig indicates an expected call of KubeConfig.
+func (mr *MockClientMockRecorder) KubeConfig(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KubeConfig", reflect.TypeOf((*MockClient)(nil).KubeConfig), arg0, arg1)
+}
+
 // KubeProxyAddress mocks base method.
 func (m *MockClient) KubeProxyAddress(arg0 context.Context, arg1 *client.KubeProxyAddressOptions) (string, error) {
 	m.ctrl.T.Helper()

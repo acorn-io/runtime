@@ -459,6 +459,13 @@ func (d *DeferredClient) GetClient() (client.WithWatch, error) {
 	return d.Client.GetClient()
 }
 
+func (d *DeferredClient) KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error) {
+	if err := d.create(); err != nil {
+		return nil, err
+	}
+	return d.Client.KubeConfig(ctx, opts)
+}
+
 func (d *DeferredClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {
 	if err := d.create(); err != nil {
 		return "", err

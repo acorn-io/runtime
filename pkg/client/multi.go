@@ -656,6 +656,14 @@ func (m *MultiClient) GetClient() (kclient.WithWatch, error) {
 	return c.GetClient()
 }
 
+func (m *MultiClient) KubeConfig(ctx context.Context, opts *KubeProxyAddressOptions) ([]byte, error) {
+	c, err := m.Factory.ForProject(context.Background(), m.Factory.DefaultProject())
+	if err != nil {
+		panic(err)
+	}
+	return c.KubeConfig(ctx, opts)
+}
+
 func (m *MultiClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {
 	c, err := m.Factory.ForProject(context.Background(), m.Factory.DefaultProject())
 	if err != nil {
