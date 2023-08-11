@@ -5,7 +5,7 @@ tidy:
 	go mod tidy
 
 dev-install:
-	[ -e .dev-image ] && [ -e .dev-kubeconfig ] && go mod vendor ; KUBECONFIG=.dev-kubeconfig go run main.go install --dev "$$(cat .dev-image)"; rm -rf vendor
+	[ -e .dev-image ] && go mod vendor ; go run main.go install --dev "$$(cat .dev-image)"; rm -rf vendor
 
 generate:
 	go generate
