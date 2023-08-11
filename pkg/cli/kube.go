@@ -7,6 +7,7 @@ import (
 	"os/exec"
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +27,7 @@ acorn -j acorn kube k9s
 
 type Kube struct {
 	client ClientFactory
+	Region string `usage:"Get access to the cluster supporting that specific region"`
 }
 
 func (s *Kube) Run(cmd *cobra.Command, args []string) error {
@@ -37,7 +39,9 @@ func (s *Kube) Run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
-	server, err := c.KubeProxyAddress(ctx)
+	server, err := c.KubeProxyAddress(ctx, &client.KubeProxyAddressOptions{
+		Region: s.Region,
+	})
 	if err != nil {
 		return err
 	}

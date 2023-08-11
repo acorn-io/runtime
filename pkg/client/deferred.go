@@ -459,9 +459,9 @@ func (d *DeferredClient) GetClient() (client.WithWatch, error) {
 	return d.Client.GetClient()
 }
 
-func (d *DeferredClient) KubeProxyAddress(ctx context.Context) (string, error) {
+func (d *DeferredClient) KubeProxyAddress(ctx context.Context, opts *KubeProxyAddressOptions) (string, error) {
 	if err := d.create(); err != nil {
 		return "", err
 	}
-	return d.Client.KubeProxyAddress(ctx)
+	return d.Client.KubeProxyAddress(ctx, opts)
 }
