@@ -91,7 +91,7 @@ brews:
       bin.install "acorn"
     homepage: "https://acorn.io"
     license: "Apache 2.0"
-    skip_upload: auto
+    skip_upload: false
     tap:
       owner: acorn-io
       name: homebrew-cli
