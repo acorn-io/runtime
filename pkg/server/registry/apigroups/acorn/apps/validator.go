@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -299,17 +300,29 @@ func (s *Validator) checkRemoteAccess(ctx context.Context, namespace, image stri
 	return nil
 }
 
+func sarToPolicyRules(sars []sarRequest) []v1.PolicyRule {
+	result := make([]v1.PolicyRule, 0, len(sars))
+	sort.Slice(sars, func(i, j int) bool {
+		return sars[i].Order < sars[j].Order
+	})
+	for _, sar := range sars {
+		result = append(result, sar.Rule)
+	}
+	return result
+}
+
 func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) (granted, rejected []v1.Permissions, _ error) {
 	var (
 		lock        sync.Mutex
-		grantedMap  = map[string][]v1.PolicyRule{}
-		rejectedMap = map[string][]v1.PolicyRule{}
+		grantedMap  = map[string][]sarRequest{}
+		rejectedMap = map[string][]sarRequest{}
 	)
 
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.SetLimit(5)
-	for _, sar := range sars {
+	for i, sar := range sars {
 		sar := sar
+		sar.Order = i
 		eg.Go(func() error {
 			ok, err := s.check(ctx, &sar.SAR)
 			if err != nil {
@@ -318,9 +331,9 @@ func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) (granted, 
 			lock.Lock()
 			defer lock.Unlock()
 			if ok {
-				grantedMap[sar.ServiceName] = append(grantedMap[sar.ServiceName], sar.Rule)
+				grantedMap[sar.ServiceName] = append(grantedMap[sar.ServiceName], sar)
 			} else {
-				rejectedMap[sar.ServiceName] = append(rejectedMap[sar.ServiceName], sar.Rule)
+				rejectedMap[sar.ServiceName] = append(rejectedMap[sar.ServiceName], sar)
 			}
 			return nil
 		})
@@ -333,14 +346,14 @@ func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) (granted, 
 	for _, key := range typed.SortedKeys(grantedMap) {
 		granted = append(granted, v1.Permissions{
 			ServiceName: key,
-			Rules:       grantedMap[key],
+			Rules:       sarToPolicyRules(grantedMap[key]),
 		})
 	}
 
 	for _, key := range typed.SortedKeys(rejectedMap) {
 		rejected = append(rejected, v1.Permissions{
 			ServiceName: key,
-			Rules:       rejectedMap[key],
+			Rules:       sarToPolicyRules(rejectedMap[key]),
 		})
 	}
 
@@ -359,6 +372,7 @@ type sarRequest struct {
 	SAR         authv1.SubjectAccessReview
 	ServiceName string
 	Rule        v1.PolicyRule
+	Order       int
 }
 
 func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule) (result []sarRequest, _ error) {

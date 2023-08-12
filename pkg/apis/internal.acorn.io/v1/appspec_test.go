@@ -59,6 +59,35 @@ func TestSimplify(t *testing.T) {
 
 	autogold.Expect(Permissions{Rules: []PolicyRule{
 		{PolicyRule: rbacv1.PolicyRule{
+			Verbs:     []string{"a", "b"},
+			Resources: []string{"x", "y", "z"},
+		}},
+	}}).Equal(t, Simplify(Permissions{
+		Rules: []PolicyRule{
+			{
+				PolicyRule: rbacv1.PolicyRule{
+					Verbs:     []string{"a"},
+					Resources: []string{"x", "y"},
+				},
+			},
+			{
+				PolicyRule: rbacv1.PolicyRule{
+					Verbs:     []string{"b"},
+					Resources: []string{"x", "y"},
+				},
+			},
+
+			{
+				PolicyRule: rbacv1.PolicyRule{
+					Verbs:     []string{"a", "b"},
+					Resources: []string{"x", "y", "z"},
+				},
+			},
+		},
+	}))
+
+	autogold.Expect(Permissions{Rules: []PolicyRule{
+		{PolicyRule: rbacv1.PolicyRule{
 			Verbs: []string{"a", "b"},
 		}},
 		{PolicyRule: rbacv1.PolicyRule{

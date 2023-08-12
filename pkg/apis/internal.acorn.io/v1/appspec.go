@@ -509,6 +509,16 @@ func sortEquals(left, right []string) bool {
 	return slices.Equal(left, right)
 }
 
+func combineSlice(left, right []string) (result []string) {
+	result = append(result, left...)
+	for _, x := range right {
+		if !slices.Contains(left, x) {
+			result = append(result, x)
+		}
+	}
+	return
+}
+
 func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 	var (
 		singleDiff bool
@@ -519,7 +529,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 		if singleDiff {
 			return combined, false
 		}
-		combined.Verbs = append(combined.Verbs, right.Verbs...)
+		combined.Verbs = combineSlice(combined.Verbs, right.Verbs)
 		singleDiff = true
 	}
 
@@ -527,7 +537,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 		if singleDiff {
 			return combined, false
 		}
-		combined.APIGroups = append(combined.APIGroups, right.APIGroups...)
+		combined.APIGroups = combineSlice(combined.APIGroups, right.APIGroups)
 		singleDiff = true
 	}
 
@@ -535,7 +545,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 		if singleDiff {
 			return combined, false
 		}
-		combined.Resources = append(combined.Resources, right.Resources...)
+		combined.Resources = combineSlice(combined.Resources, right.Resources)
 		singleDiff = true
 	}
 
@@ -543,7 +553,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 		if singleDiff {
 			return combined, false
 		}
-		combined.ResourceNames = append(combined.ResourceNames, right.ResourceNames...)
+		combined.ResourceNames = combineSlice(combined.ResourceNames, right.ResourceNames)
 		singleDiff = true
 	}
 
@@ -551,7 +561,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 		if singleDiff {
 			return combined, false
 		}
-		combined.NonResourceURLs = append(combined.NonResourceURLs, right.NonResourceURLs...)
+		combined.NonResourceURLs = combineSlice(combined.NonResourceURLs, right.NonResourceURLs)
 		singleDiff = true
 	}
 
@@ -559,7 +569,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 		if singleDiff {
 			return combined, false
 		}
-		combined.Scopes = append(combined.Scopes, right.Scopes...)
+		combined.Scopes = combineSlice(combined.Scopes, right.Scopes)
 		singleDiff = true
 	}
 
