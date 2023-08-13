@@ -24,6 +24,7 @@ var (
 	AppInstanceConditionContainers     = "containers"
 	AppInstanceConditionJobs           = "jobs"
 	AppInstanceConditionAcorns         = "acorns"
+	AppInstanceConditionRouters        = "routers"
 	AppInstanceConditionPermissions    = "permissions"
 	AppInstanceConditionReady          = "Ready"
 	AppInstanceConditionVolumes        = "volumes"
@@ -210,6 +211,7 @@ type AppInstanceStatus struct {
 	Scheduling             map[string]Scheduling   `json:"scheduling,omitempty"`
 	Conditions             []Condition             `json:"conditions,omitempty"`
 	Defaults               Defaults                `json:"defaults,omitempty"`
+	Summary                CommonSummary           `json:"summary,omitempty"`
 }
 
 type AppStatusStaged struct {

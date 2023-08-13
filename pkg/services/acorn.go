@@ -140,9 +140,18 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object, err error
 			continue
 		}
 
+		annotations := map[string]string{}
+
 		for _, router := range router.Routes {
 			if router.TargetServiceName != "" && !serviceNames.Has(router.TargetServiceName) {
-				return nil, fmt.Errorf("router [%s] references unknown service [%s]", routerName, router.TargetServiceName)
+				if appInstance.Status.AppStatus.Routers == nil {
+					appInstance.Status.AppStatus.Routers = map[string]v1.RouterStatus{}
+				}
+				status := appInstance.Status.AppStatus.Routers[routerName]
+				status.MissingTargets = append(status.MissingTargets, router.TargetServiceName)
+				appInstance.Status.AppStatus.Routers[routerName] = status
+				annotations[apply.AnnotationCreate] = "false"
+				annotations[apply.AnnotationUpdate] = "false"
 			}
 		}
 
@@ -153,9 +162,9 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object, err error
 				Labels: labels.Managed(appInstance,
 					labels.AcornPublicName, publicname.ForChild(appInstance, routerName),
 					labels.AcornRouterName, routerName),
-				Annotations: map[string]string{
+				Annotations: labels.Merge(annotations, map[string]string{
 					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
-				},
+				}),
 			},
 			Spec: v1.ServiceInstanceSpec{
 				AppName:      appInstance.Name,

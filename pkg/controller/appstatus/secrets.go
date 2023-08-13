@@ -78,6 +78,33 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 		s.Ready = s.Ready && s.JobReady
 		s.DataKeys = typed.SortedKeys(sourceSecret.Data)
 
+		// Not ready if we have any error messages
+		if len(s.ErrorMessages) > 0 {
+			s.Ready = false
+		}
+
+		if s.Ready {
+			s.State = "created"
+		} else if s.UpToDate {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "failing"
+			} else {
+				s.State = "updating"
+			}
+		} else if s.Defined {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "updating"
+			}
+		} else {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "pending"
+			}
+		}
+
 		a.app.Status.AppStatus.Secrets[secretName] = s
 	}
 

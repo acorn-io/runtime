@@ -210,7 +210,7 @@ func TestToEndpoint(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEndpoint, err := toHTTPEndpointHostname(tt.args.pattern, tt.args.domain, tt.args.serviceName, tt.args.appInstance.GetName(), tt.args.appInstance.GetNamespace())
+			gotEndpoint, err := toHTTPEndpointHostname(tt.args.pattern, tt.args.domain, tt.args.serviceName, tt.args.appInstance.GetName(), tt.args.appInstance.GetNamespace(), nil)
 			if !errors.Is(err, tt.wantErr) {
 				t.Fatalf("toHTTPEndpointHostname() error = %v, want %v", err, tt.wantErr)
 			}

@@ -29,7 +29,8 @@ ACORNS:
                 },
                 "appSpec": {},
                 "appStatus": {},
-                "defaults": {}
+                "defaults": {},
+                "summary": {}
             }
         }
     ]

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -20,9 +21,10 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/profiles"
+	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/z"
-	"github.com/rancher/wrangler/pkg/name"
 	networkingv1 "k8s.io/api/networking/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -42,7 +44,7 @@ const dnsValidationPattern = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-
 
 func ValidateEndpointPattern(pattern string) error {
 	// Validate the Go Template
-	endpoint, err := toHTTPEndpointHostname(pattern, "clusterdomain", "container", "app", "namespace")
+	endpoint, err := toHTTPEndpointHostname(pattern, "clusterdomain", "container", "app", "namespace", nil)
 	if err != nil {
 		return err
 	}
@@ -68,9 +70,9 @@ func truncate(s ...string) string {
 	return name.SafeConcatName(s...)
 }
 
-func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace string) (string, error) {
+func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace string, appInstance *v1.AppInstance) (string, error) {
 	// This should not happen since the pattern in the config (passed to this through pattern) should
-	// always be set to the default if the pattern is "". However,if it is not somehow, set it here.
+	// always be set to the default if the pattern is "". However, if it is not somehow, set it here.
 	if pattern == "" {
 		pattern = profiles.HttpEndpointPatternDefault
 	}
@@ -81,18 +83,21 @@ func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace st
 		Namespace     string
 		Hash          string
 		ClusterDomain string
+		AppInstance   *v1.AppInstance
 	}{
 		App:           appName,
 		Container:     container,
 		Namespace:     appNamespace,
 		Hash:          hash(8, strings.Join([]string{container, appName, appNamespace}, ":")),
 		ClusterDomain: strings.TrimPrefix(domain, "."),
+		AppInstance:   appInstance,
 	}
 
 	var templateBuffer bytes.Buffer
 	t := template.Must(template.New("").Funcs(map[string]any{
-		"truncate":   truncate,
-		"hashConcat": hashConcat,
+		"truncate":          truncate,
+		"hashConcat":        hashConcat,
+		"acornNameOnlyHash": acornNameOnlyHash,
 	}).Parse(pattern))
 	if err := t.Execute(&templateBuffer, endpointOpts); err != nil {
 		return "", fmt.Errorf("%w %v: %v", ErrInvalidPattern, pattern, err)
@@ -112,18 +117,33 @@ func toHTTPEndpointHostname(pattern, domain, container, appName, appNamespace st
 	return templateBuffer.String(), nil
 }
 
-/*
-hashConcat takes args, concatenate all the items except the last one, with a hash of
-a concatenation of all items with ":".
-*/
+func acornNameOnlyHash(limit int, container, app, namespace string, appInstance *v1.AppInstance) string {
+	if appInstance == nil || publicname.Get(appInstance) == "" {
+		return hashConcat(limit, container, app, namespace)
+	}
+
+	d := sha256.New()
+	d.Write([]byte(container))
+	d.Write([]byte{'\x00'})
+	d.Write([]byte(app))
+	d.Write([]byte{'\x00'})
+	d.Write([]byte(namespace))
+	d.Write([]byte{'\x00'})
+	hash := d.Sum(nil)
+
+	parts := strings.Split(publicname.Get(appInstance), ".")
+	return parts[len(parts)-1] + "-" + hex.EncodeToString(hash[:])[:limit]
+}
+
+// hashConcat takes args, concatenate all the items except the last one, with a hash of a concatenation of all items
+// with ":".
 func hashConcat(limit int, args ...string) string {
 	if len(args) < 2 {
-		//Todo: this is to prevent runaway behavior in case it takes less than two parameters.
-		//we don't have desired output for this but would rather return empty to prevent unexpected crash
+		// TODO: this is to prevent runaway behavior in case it takes less than two parameters.
+		// we don't have desired output for this but would rather return empty to prevent unexpected crash
 		return ""
 	}
 	result := strings.Join(args, ":")
-
 	return strings.Join(append(args[:len(args)-1], hash(limit, result)), "-")
 }
 
@@ -140,6 +160,11 @@ type Target struct {
 func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Object, _ error) {
 	if svc.Spec.PublishMode == v1.PublishModeNone {
 		return nil, nil
+	}
+
+	appInstance := &v1.AppInstance{}
+	if err := req.Client.Get(req.Ctx, router.Key(svc.Spec.AppNamespace, svc.Spec.AppName), appInstance); err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
 	}
 
 	bindings := ports.ApplyBindings(svc.Spec.PublishMode, svc.Spec.Publish, ports.ByProtocol(svc.Spec.Ports, v1.ProtocolHTTP))
@@ -184,7 +209,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 				}
 
 				for _, domain := range cfg.ClusterDomains {
-					hostname, err := toHTTPEndpointHostname(*cfg.HttpEndpointPattern, domain, targetName, svc.Spec.AppName, svc.Spec.AppNamespace)
+					hostname, err := toHTTPEndpointHostname(*cfg.HttpEndpointPattern, domain, targetName, svc.Spec.AppName, svc.Spec.AppNamespace, appInstance)
 					if err != nil {
 						return nil, err
 					}

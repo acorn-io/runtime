@@ -62,6 +62,9 @@ func Trunc(s string) string {
 	if tags.SHAPattern.MatchString(s) && len(s) > 12 {
 		return s[:12]
 	}
+	if tags.DigestPattern.MatchString(s) && len(s) > 12 {
+		return s[7:19]
+	}
 	if tags.CommitPattern.MatchString(s) && len(s) > 12 {
 		return s[:12]
 	}

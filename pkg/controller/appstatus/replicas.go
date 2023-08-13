@@ -1,6 +1,7 @@
 package appstatus
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -46,7 +47,7 @@ func (a *appStatusRenderer) getReplicasSummary(nameLabel string) (map[string]v1.
 		for _, cond := range pod.Status.Conditions {
 			if cond.Type == corev1.PodScheduled {
 				if cond.Status != corev1.ConditionTrue {
-					summary.TransitioningMessages = append(summary.TransitioningMessages, podName(&pod)+" is not scheduled to a node")
+					summary.TransitioningMessages = append(summary.TransitioningMessages, "not scheduled to a node")
 				}
 			}
 		}
@@ -69,32 +70,31 @@ func (a *appStatusRenderer) getReplicasSummary(nameLabel string) (map[string]v1.
 
 func containerMessages(pod *corev1.Pod, status []corev1.ContainerStatus) (transitionMessages, errorMessages []string) {
 	for _, container := range status {
-		if container.State.Waiting != nil && container.State.Waiting.Reason != "" {
-			if container.State.Waiting.Message == "" {
-				transitionMessages = append(transitionMessages, podName(pod)+" "+
-					container.State.Waiting.Reason)
-			} else if container.State.Waiting.Reason == "CrashLoopBackOff" &&
-				container.LastTerminationState.Terminated != nil &&
-				container.LastTerminationState.Terminated.Message != "" {
-				errorMessages = append(errorMessages, podName(pod)+" CrashLoopBackOff: "+
-					container.LastTerminationState.Terminated.Reason+": "+container.LastTerminationState.Terminated.Message)
+		if container.State.Waiting != nil {
+			if container.LastTerminationState.Terminated != nil {
+				msg := fmt.Sprintf("%s: %s", container.State.Waiting.Reason,
+					terminatedMessage(container.LastTerminationState))
+				errorMessages = append(errorMessages, msg)
 			} else {
-				transitionMessages = append(transitionMessages, podName(pod)+" "+
-					container.State.Waiting.Reason+": "+container.State.Waiting.Message)
+				suffix := ""
+				if container.State.Waiting.Message != "" {
+					suffix = ": " + container.State.Waiting.Message
+				}
+				transitionMessages = append(transitionMessages, container.State.Waiting.Reason+suffix)
 			}
 		}
 		if container.State.Terminated != nil && container.State.Terminated.ExitCode > 0 {
-			errorMessages = append(errorMessages, podName(pod)+" "+container.State.Terminated.Reason+": Exit Code "+
-				strconv.Itoa(int(container.State.Terminated.ExitCode)))
+			errorMessages = append(errorMessages, terminatedMessage(container.State))
 		}
 	}
 	return
 }
 
-func podName(pod *corev1.Pod) string {
-	jobName := pod.Labels[labels.AcornJobName]
-	if jobName != "" {
-		return jobName
+func terminatedMessage(containerState corev1.ContainerState) string {
+	msg := containerState.Terminated.Reason + ": Exit Code " +
+		strconv.Itoa(int(containerState.Terminated.ExitCode))
+	if containerState.Terminated.Message != "" {
+		msg += ": " + containerState.Terminated.Message
 	}
-	return pod.Labels[labels.AcornContainerName]
+	return msg
 }

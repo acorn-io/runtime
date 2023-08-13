@@ -48,7 +48,8 @@ func TestApp(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME      IMAGE     COMMIT    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE\nfound                                                292y ago               \n",
+			wantOut: "NAME      IMAGE     COMMIT    CREATED    ENDPOINTS   MESSAGE\n" +
+				"found                         292y ago               \n",
 		},
 		{
 			name: "acorn app found", fields: fields{
@@ -67,7 +68,8 @@ func TestApp(t *testing.T) {
 				client: &testdata.MockClient{},
 			},
 			wantErr: false,
-			wantOut: "NAME      IMAGE     COMMIT    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE\nfound                                                292y ago               \n",
+			wantOut: "NAME      IMAGE     COMMIT    CREATED    ENDPOINTS   MESSAGE\n" +
+				"found                         292y ago               \n",
 		},
 		{
 			name: "acorn app dne", fields: fields{

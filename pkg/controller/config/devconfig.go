@@ -14,7 +14,7 @@ import (
 
 func PurgeDevConfig(req router.Request, resp router.Response) error {
 	cm := req.Object.(*corev1.ConfigMap)
-	ttlString := cm.Annotations[labels.DevTTL]
+	ttlString := cm.Annotations[labels.DevDeleteAfter]
 
 	if ttlString != "" {
 		expiration, err := time.Parse(time.RFC3339, ttlString)
@@ -26,7 +26,7 @@ func PurgeDevConfig(req router.Request, resp router.Response) error {
 			}
 			logrus.Infof("Time on dev config has expired [%s]", ttlString)
 		} else {
-			logrus.Errorf("failed to parse %s label value [%s], will delete config: %v", labels.DevTTL, ttlString, err)
+			logrus.Errorf("failed to parse %s label value [%s], will delete config: %v", labels.DevDeleteAfter, ttlString, err)
 		}
 	}
 
