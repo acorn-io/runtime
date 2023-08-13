@@ -65,7 +65,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 		AppSpec:         detailsResult.AppSpec,
 		Readme:          detailsResult.Readme,
 		Params:          detailsResult.Params,
-		ParseError:      detailsResult.ParseError,
+		ParseError:      detailsResult.GetParseError(),
 		SignatureDigest: detailsResult.SignatureDigest,
 		NestedImages:    detailsResult.NestedImages,
 		Permissions:     detailsResult.Permissions,

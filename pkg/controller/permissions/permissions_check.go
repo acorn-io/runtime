@@ -1,6 +1,7 @@
 package permissions
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -57,6 +58,8 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 	}), details)
 	if err != nil {
 		return err
+	} else if details.GetParseError() != "" {
+		return errors.New(details.GetParseError())
 	}
 
 	if details.AppImage.Digest != appImage.Digest {

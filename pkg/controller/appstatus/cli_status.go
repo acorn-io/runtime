@@ -63,7 +63,16 @@ func message(app *v1.AppInstance) string {
 			if buf.Len() > 0 {
 				buf.WriteString("; ")
 			}
-			buf.WriteString(cond.Message)
+			if cond.Type == v1.AppInstanceConditionController && strings.HasPrefix(cond.Message, "[routes.go") {
+				i := strings.Index(cond.Message, "] ")
+				if i == -1 {
+					buf.WriteString(cond.Message)
+				} else {
+					buf.WriteString(cond.Message[i+2:])
+				}
+			} else {
+				buf.WriteString(cond.Message)
+			}
 		}
 	}
 

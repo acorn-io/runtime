@@ -184,13 +184,16 @@ func toNestedImage(serviceName string, details *apiv1.ImageDetails) (result []ap
 		Digest:          details.AppImage.Digest,
 		SignatureDigest: details.SignatureDigest,
 		Permissions:     prependServiceName(serviceName, details.Permissions),
+		ParseError:      details.ParseError,
 	})
 
 	for _, nested := range details.NestedImages {
 		result = append(result, apiv1.NestedImage{
-			Name:        nested.Name,
-			Digest:      nested.Digest,
-			Permissions: prependServiceName(serviceName, nested.Permissions),
+			Name:            nested.Name,
+			Digest:          nested.Digest,
+			SignatureDigest: nested.SignatureDigest,
+			Permissions:     prependServiceName(serviceName, nested.Permissions),
+			ParseError:      nested.ParseError,
 		})
 	}
 	return

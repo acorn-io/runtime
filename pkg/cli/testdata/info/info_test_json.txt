@@ -5,7 +5,7 @@
         },
         "cli": {
             "acornServers": [
-                "acorn.io"
+                "beta.acorn.io"
             ],
             "acornConfig": "/fake-file"
         }

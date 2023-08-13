@@ -4427,6 +4427,12 @@ func schema_pkg_apis_apiacornio_v1_NestedImage(ref common.ReferenceCallback) com
 							Format: "",
 						},
 					},
+					"parseError": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
