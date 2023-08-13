@@ -1,42 +1,71 @@
 package appstatus
 
 import (
-	"github.com/acorn-io/baaah/pkg/router"
+	"fmt"
+	"strings"
+
+	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/ports"
-	networkingv1 "k8s.io/api/networking/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func (a *appStatusRenderer) readRouter() error {
+func (a *appStatusRenderer) readRouters() error {
+	oldState := a.app.Status.AppStatus.Routers
 	// reset state
 	a.app.Status.AppStatus.Routers = map[string]v1.RouterStatus{}
 
-	for routerName := range a.app.Status.AppSpec.Routers {
+	for _, routerName := range typed.SortedKeys(a.app.Status.AppSpec.Routers) {
 		s := v1.RouterStatus{
 			CommonStatus: v1.CommonStatus{
 				Defined:      ports.IsLinked(a.app, routerName),
 				LinkOverride: ports.LinkService(a.app, routerName),
 			},
+			MissingTargets: oldState[routerName].MissingTargets,
 		}
 
-		ingress := &networkingv1.Ingress{}
-		err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, routerName), ingress)
-		if apierrors.IsNotFound(err) {
-			//ignore
-		} else if err != nil {
-			return err
-		} else {
-			s.Defined = true
-		}
-
-		s.Ready, _, err = a.isServiceReady(routerName)
+		var err error
+		s.Ready, s.Defined, err = a.isServiceReady(routerName)
 		if err != nil {
 			return err
 		}
 
 		s.UpToDate = s.Defined
-		s.Ready = s.Defined && s.Ready
+
+		if len(s.MissingTargets) > 0 {
+			s.ErrorMessages = append(s.ErrorMessages, fmt.Sprintf("missing route target [%s]", strings.Join(s.MissingTargets, ",")))
+		}
+
+		if s.UpToDate && a.app.GetStopped() {
+			s.Ready = true
+		}
+
+		// Not ready if we have any error messages
+		if len(s.ErrorMessages) > 0 {
+			s.Ready = false
+		}
+
+		if s.Ready {
+			s.State = "ready"
+		} else if s.UpToDate {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "failing"
+			} else {
+				s.State = "not ready"
+			}
+		} else if s.Defined {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "updating"
+			}
+		} else {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "pending"
+			}
+		}
+
 		a.app.Status.AppStatus.Routers[routerName] = s
 	}
 

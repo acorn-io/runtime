@@ -159,4 +159,5 @@ status:
     appImage:
       imageData: {}
       vcs: {}
+  summary: {}
 `

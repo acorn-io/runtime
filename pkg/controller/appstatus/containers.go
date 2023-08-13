@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
@@ -49,15 +48,15 @@ func (a *appStatusRenderer) readContainers() error {
 		} else if err != nil {
 			return err
 		} else {
+			cs.Defined = true
 			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
 			cs.ReadyReplicaCount = dep.Status.ReadyReplicas
 			cs.RunningReplicaCount = dep.Status.Replicas
 			cs.DesiredReplicaCount = replicas(dep.Spec.Replicas)
 			cs.UpToDateReplicaCount = dep.Status.UpdatedReplicas
-			cs.Defined = true
 
-			if cs.UpToDate && cs.ReadyReplicaCount == cs.DesiredReplicaCount && len(cs.ExpressionErrors) == 0 {
-				cs.Ready, err = a.isDepReady(&dep)
+			if cs.UpToDate && cs.ReadyReplicaCount == cs.DesiredReplicaCount && cs.UpToDateReplicaCount >= cs.DesiredReplicaCount {
+				cs.Ready, err = a.isDeploymentReady(&dep)
 				if err != nil {
 					return err
 				}
@@ -77,19 +76,56 @@ func (a *appStatusRenderer) readContainers() error {
 			isTransitioning = true
 		}
 
-		for _, entry := range typed.Sorted(cs.Dependencies) {
-			depName, dep := entry.Key, entry.Value
-			if !dep.Ready {
-				cs.Ready = false
-				msg := fmt.Sprintf("%s %s dependency is not ready", dep.DependencyType, depName)
-				if dep.Missing {
-					msg = fmt.Sprintf("%s %s dependency is missing", dep.DependencyType, depName)
-				}
-				cs.TransitioningMessages = append(cs.TransitioningMessages, msg)
+		addExpressionErrors(&cs.CommonStatus, cs.ExpressionErrors)
+
+		// Not ready if we have any error messages
+		if len(cs.ErrorMessages) > 0 {
+			cs.Ready = false
+		}
+
+		if cs.Ready {
+			if a.app.GetStopped() {
+				cs.State = "stopped"
+			} else {
+				cs.State = "running"
+			}
+		} else if cs.UpToDate {
+			if len(cs.ErrorMessages) > 0 {
+				cs.State = "failing"
+			} else {
+				cs.State = "not ready"
+			}
+		} else if cs.Defined {
+			if len(cs.ErrorMessages) > 0 {
+				cs.State = "error"
+			} else {
+				cs.State = "updating"
+			}
+		} else {
+			if len(cs.ErrorMessages) > 0 {
+				cs.State = "error"
+			} else {
+				cs.State = "pending"
 			}
 		}
 
-		addExpressionErrors(&cs.CommonStatus, cs.ExpressionErrors)
+		if !cs.Ready {
+			msg, blocked := isBlocked(cs.Dependencies, cs.ExpressionErrors)
+			if blocked {
+				cs.State = "waiting"
+			}
+			cs.TransitioningMessages = append(cs.TransitioningMessages, msg...)
+		}
+
+		// Add informative messages if all else is healthy
+		if len(cs.TransitioningMessages) == 0 && len(cs.ErrorMessages) == 0 {
+			if cs.RunningReplicaCount > 1 {
+				cs.Messages = append(cs.Messages, fmt.Sprintf("%d running replicas", cs.RunningReplicaCount))
+			}
+			if cs.MaxReplicaRestartCount > 0 {
+				cs.Messages = append(cs.Messages, fmt.Sprintf("%d container restarts", cs.MaxReplicaRestartCount))
+			}
+		}
 
 		a.app.Status.AppStatus.Containers[containerName] = cs
 	}
@@ -111,7 +147,7 @@ func (a *appStatusRenderer) readContainers() error {
 	return nil
 }
 
-func (a *appStatusRenderer) isDepReady(dep *appsv1.Deployment) (bool, error) {
+func (a *appStatusRenderer) isDeploymentReady(dep *appsv1.Deployment) (bool, error) {
 	available := false
 	for _, cond := range dep.Status.Conditions {
 		if cond.Type == "Available" && cond.Status == corev1.ConditionTrue {

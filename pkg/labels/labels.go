@@ -64,7 +64,7 @@ const (
 	AcornIdentityAccountServerURL = IdentityPrefix + "account-server-url"
 
 	DevPrefix         = "dev." + Prefix
-	DevTTL            = DevPrefix + "ttl-seconds"
+	DevDeleteAfter    = DevPrefix + "delete-after"
 	DevCredentialName = DevPrefix + "credential-name"
 	DevImageName      = DevPrefix + "image-name"
 

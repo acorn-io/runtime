@@ -92,6 +92,40 @@ func (a *appStatusRenderer) readVolumes() error {
 					v.StorageClassFound = true
 				}
 				v.TransitioningMessages = append(v.TransitioningMessages, fmt.Sprintf("waiting for volume %s to provision and bind", pvc.Labels[labels.AcornVolumeName]))
+			} else {
+				v.Unused = true
+				v.Ready = true
+			}
+		}
+
+		// Not ready if we have any error messages
+		if len(v.ErrorMessages) > 0 {
+			v.Ready = false
+		}
+
+		if v.Ready {
+			if v.Unused {
+				v.State = "defined"
+			} else {
+				v.State = "provisioned"
+			}
+		} else if v.UpToDate {
+			if len(v.ErrorMessages) > 0 {
+				v.State = "failing"
+			} else {
+				v.State = "provisioning"
+			}
+		} else if v.Defined {
+			if len(v.ErrorMessages) > 0 {
+				v.State = "error"
+			} else {
+				v.State = "updating"
+			}
+		} else {
+			if len(v.ErrorMessages) > 0 {
+				v.State = "error"
+			} else {
+				v.State = "pending"
 			}
 		}
 

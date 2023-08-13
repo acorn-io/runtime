@@ -21,6 +21,7 @@ items:
       appImage:
         imageData: {}
         vcs: {}
+    summary: {}
 
 
 CONTAINERS:

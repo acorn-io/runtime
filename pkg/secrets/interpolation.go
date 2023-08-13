@@ -260,7 +260,7 @@ func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (stri
 		return "", false, &ErrInterpolation{
 			ExpressionError: v1.ExpressionError{
 				DependencyNotFound: &v1.DependencyNotFound{
-					DependencyType: v1.DependencyService,
+					DependencyType: v1.DependencySecret,
 					Name:           strings.Join(secretName, "."),
 				},
 			},
@@ -268,7 +268,19 @@ func (i *Interpolator) resolveSecrets(secretName []string, keyName string) (stri
 	} else if err != nil {
 		return "", false, err
 	}
-	return string(secret.Data[keyName]), true, nil
+	value, ok := secret.Data[keyName]
+	if !ok {
+		return "", false, &ErrInterpolation{
+			ExpressionError: v1.ExpressionError{
+				DependencyNotFound: &v1.DependencyNotFound{
+					DependencyType: v1.DependencySecret,
+					Name:           strings.Join(secretName, "."),
+					SubKey:         keyName,
+				},
+			},
+		}
+	}
+	return string(value), true, nil
 }
 
 func splitServiceProperty(parts []string) (head []string, tail []string, err error) {
@@ -398,6 +410,13 @@ func (i *Interpolator) resolve(token string) (_ string, _ bool, err error) {
 		if target := (*ErrInterpolation)(nil); errors.As(err, &target) {
 			target.Expression = token
 			err = target
+		} else if err != nil {
+			err = &ErrInterpolation{
+				ExpressionError: v1.ExpressionError{
+					Error:      err.Error(),
+					Expression: token,
+				},
+			}
 		}
 	}()
 
@@ -465,9 +484,6 @@ func (i *Interpolator) saveError(err error) {
 	}
 	if ee := (*ErrInterpolation)(nil); errors.As(err, &ee) {
 		exprError = ee.ExpressionError
-		if exprError.Error == "" {
-			exprError.Error = exprError.String()
-		}
 	}
 	if i.containerName != "" {
 		i.incomplete[i.containerName] = true

@@ -1,7 +1,7 @@
 
 ACORNS:
-NAME      IMAGE     COMMIT    HEALTHY   UP-TO-DATE   CREATED    ENDPOINTS   MESSAGE
-found                                                292y ago               
+NAME      IMAGE     COMMIT    CREATED    ENDPOINTS   MESSAGE
+found                         292y ago               
 
 CONTAINERS:
 NAME              ACORN     IMAGE     STATE     RESTARTCOUNT   CREATED    MESSAGE

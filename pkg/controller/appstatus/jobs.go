@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/acorn-io/baaah/pkg/router"
-	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
@@ -42,6 +41,7 @@ func (a *appStatusRenderer) readJobs() error {
 		c.RunningCount = summary.RunningCount
 
 		if c.Skipped {
+			c.State = "completed"
 			c.Ready = true
 			c.UpToDate = true
 			c.Defined = true
@@ -86,7 +86,15 @@ func (a *appStatusRenderer) readJobs() error {
 		}
 
 		if c.RunningCount > 0 {
-			c.TransitioningMessages = append(c.TransitioningMessages, "running")
+			c.TransitioningMessages = append(c.TransitioningMessages, "running, waiting for job to complete")
+			// Move error to transitioning to make it look better
+			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
+			c.ErrorMessages = nil
+		} else if c.ErrorCount > 0 && c.ErrorCount < 3 {
+			c.TransitioningMessages = append(c.TransitioningMessages, fmt.Sprintf("restarting job, previous %d attempts failed to complete", c.ErrorCount))
+			// Move error to transitioning to make it look better
+			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
+			c.ErrorMessages = nil
 		} else if c.ErrorCount > 0 {
 			c.ErrorMessages = append(c.ErrorMessages, fmt.Sprintf("%d failed attempts", c.ErrorCount))
 		}
@@ -103,19 +111,42 @@ func (a *appStatusRenderer) readJobs() error {
 			}
 		}
 
-		for _, entry := range typed.Sorted(c.Dependencies) {
-			depName, dep := entry.Key, entry.Value
-			if !dep.Ready {
-				c.Ready = false
-				msg := fmt.Sprintf("%s %s dependency is not ready", dep.DependencyType, depName)
-				if dep.Missing {
-					msg = fmt.Sprintf("%s %s dependency is missing", dep.DependencyType, depName)
-				}
-				c.TransitioningMessages = append(c.TransitioningMessages, msg)
+		addExpressionErrors(&c.CommonStatus, c.ExpressionErrors)
+
+		// Not ready if we have any error messages
+		if len(c.ErrorMessages) > 0 {
+			c.Ready = false
+		}
+
+		if c.Ready {
+			c.State = "completed"
+		} else if c.UpToDate {
+			if len(c.ErrorMessages) > 0 {
+				c.State = "failing"
+			} else if c.RunningCount > 0 {
+				c.State = "running"
+			}
+		} else if c.Defined {
+			if len(c.ErrorMessages) > 0 {
+				c.State = "error"
+			} else {
+				c.State = "updating"
+			}
+		} else {
+			if len(c.ErrorMessages) > 0 {
+				c.State = "error"
+			} else {
+				c.State = "pending"
 			}
 		}
 
-		addExpressionErrors(&c.CommonStatus, c.ExpressionErrors)
+		if !c.Ready {
+			msg, blocked := isBlocked(c.Dependencies, c.ExpressionErrors)
+			if blocked {
+				c.State = "waiting"
+			}
+			c.TransitioningMessages = append(c.TransitioningMessages, msg...)
+		}
 
 		a.app.Status.AppStatus.Jobs[jobName] = c
 	}
@@ -124,22 +155,10 @@ func (a *appStatusRenderer) readJobs() error {
 }
 
 func addExpressionErrors(status *v1.CommonStatus, expressionErrors []v1.ExpressionError) {
-	missing := map[string]v1.DependencyType{}
 	for _, ee := range expressionErrors {
-		status.Ready = false
-		if ee.DependencyNotFound != nil {
-			missing[ee.DependencyNotFound.Name] = ee.DependencyNotFound.DependencyType
-		} else if ee.Error != "" {
-			if ee.Expression == "" {
-				status.ErrorMessages = append(status.ErrorMessages, ee.Error)
-			} else {
-				status.ErrorMessages = append(status.ErrorMessages, fmt.Sprintf("[%s]: %s", ee.Expression, ee.Error))
-			}
+		if !ee.IsMissingDependencyError() {
+			status.ErrorMessages = append(status.ErrorMessages, ee.String())
 		}
-	}
-
-	for _, entry := range typed.Sorted(missing) {
-		status.TransitioningMessages = append(status.TransitioningMessages, fmt.Sprintf("%s [%s] missing", entry.Value, entry.Key))
 	}
 }
 

@@ -116,6 +116,7 @@ status:
     appImage:
       imageData: {}
       vcs: {}
+  summary: {}
 
 ---
 apiVersion: v1
@@ -210,4 +211,5 @@ status:
     appImage:
       imageData: {}
       vcs: {}
+  summary: {}
 `

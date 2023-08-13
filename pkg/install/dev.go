@@ -2,6 +2,7 @@ package install
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -93,6 +94,8 @@ func Dev(ctx context.Context, imageName string, cred *apiv1.RegistryAuth, opts *
 		return err
 	}
 
+	repoPrefix := filepath.Dir(imageName) + "/"
+
 	digest, err := devImage(imageName)
 	if err != nil {
 		return err
@@ -105,12 +108,8 @@ func Dev(ctx context.Context, imageName string, cred *apiv1.RegistryAuth, opts *
 		return err
 	}
 
-	parsed, err := name.ParseReference(imageName)
-	if err != nil {
-		return err
-	}
-
-	opts.Config.InternalRegistryPrefix = z.Pointer(filepath.Dir(parsed.Context().RepositoryStr()) + "/")
+	fmt.Printf("Using %s for internal-registry-prefix\n", repoPrefix)
+	opts.Config.InternalRegistryPrefix = z.Pointer(repoPrefix)
 
 	cm, err := config.AsConfigMap(&opts.Config)
 	if err != nil {
@@ -124,7 +123,7 @@ func Dev(ctx context.Context, imageName string, cred *apiv1.RegistryAuth, opts *
 
 	cm.Annotations[labels.DevImageName] = imageName
 	cm.Annotations[labels.DevCredentialName] = devSecret.Name
-	cm.Annotations[labels.DevTTL] = time.Now().Add(8 * time.Hour).Format(time.RFC3339)
+	cm.Annotations[labels.DevDeleteAfter] = time.Now().Add(72 * time.Hour).Format(time.RFC3339)
 
 	if err := apply.New(c).Ensure(ctx, devSecret, cm); err != nil {
 		return err

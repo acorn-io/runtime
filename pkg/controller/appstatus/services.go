@@ -63,73 +63,104 @@ func (a *appStatusRenderer) readServices() error {
 			}).Error())
 		}
 
-		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
-
 		service := &v1.ServiceInstance{}
 		if err := ref.Lookup(a.ctx, a.c, service, a.app.Status.Namespace, serviceName); apierrors.IsNotFound(err) {
 			s.Ready = false
 			s.UpToDate = s.ServiceAcornName != ""
 			s.Defined = s.ServiceAcornName != ""
 			a.app.Status.AppStatus.Services[serviceName] = s
-			continue
 		} else if err != nil {
 			return err
-		}
+		} else {
+			s.Defined = s.Defined || !service.Status.HasService
+			s.UpToDate = service.Namespace != a.app.Status.Namespace ||
+				service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+			s.UpToDate = s.Defined && s.UpToDate
+			s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
+			if s.ServiceAcornName != "" {
+				s.Ready = s.Ready && s.ServiceAcornReady
+			}
 
-		s.Defined = s.Defined || !service.Status.HasService
-		s.UpToDate = service.Namespace != a.app.Status.Namespace ||
-			service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-		s.UpToDate = s.Defined && s.UpToDate
-		s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
-		if s.ServiceAcornName != "" {
-			s.Ready = s.Ready && s.ServiceAcornReady
-		}
+			s.Default = service.Spec.Default
+			s.Ports = service.Spec.Ports
+			s.Data = service.Spec.Data
+			s.Consumer = service.Spec.Consumer
+			s.Secrets = service.Spec.Secrets
+			s.Address = service.Spec.Address
+			if len(service.Status.Endpoints) > 0 {
+				s.Endpoint = service.Status.Endpoints[0].Address
+			}
 
-		s.Default = service.Spec.Default
-		s.Ports = service.Spec.Ports
-		s.Data = service.Spec.Data
-		s.Secrets = service.Spec.Secrets
-		s.Address = service.Spec.Address
-		if len(service.Status.Endpoints) > 0 {
-			s.Endpoint = service.Status.Endpoints[0].Address
-		}
+			var (
+				failed         bool
+				failedName     string
+				failedMessage  string
+				waiting        bool
+				waitingName    string
+				waitingMessage string
+			)
 
-		var (
-			failed         bool
-			failedName     string
-			failedMessage  string
-			waiting        bool
-			waitingName    string
-			waitingMessage string
-		)
+			for _, condition := range service.Status.Conditions {
+				if condition.Error {
+					failed = true
+					failedName = service.Name
+					failedMessage = condition.Message
+				} else if condition.Transitioning || !condition.Success {
+					waiting = true
+					waitingName = service.Name
+					waitingMessage = condition.Message
+				}
+			}
 
-		for _, condition := range service.Status.Conditions {
-			if condition.Error {
-				failed = true
-				failedName = service.Name
-				failedMessage = condition.Message
-			} else if condition.Transitioning || !condition.Success {
-				waiting = true
-				waitingName = service.Name
-				waitingMessage = condition.Message
+			switch {
+			case failed:
+				s.ErrorMessages = append(s.ErrorMessages, fmt.Sprintf("%s: failed [%s]", failedName, failedMessage))
+			case waiting:
+				s.TransitioningMessages = append(s.TransitioningMessages, fmt.Sprintf("%s: waiting [%s]", waitingName, waitingMessage))
+			default:
 			}
 		}
 
-		switch {
-		case failed:
-			s.ErrorMessages = append(s.ErrorMessages, fmt.Sprintf("%s: failed [%s]", failedName, failedMessage))
-		case waiting:
-			s.TransitioningMessages = append(s.TransitioningMessages, fmt.Sprintf("%s: waiting [%s]", waitingName, waitingMessage))
-		default:
-		}
-
-		// The ref.Lookup call above will find what the service resolves to, but not the actually local service object.
+		// The ref.Lookup call above will find what the service resolves to, but not the actual local service object.
+		// This is because the ref.Lookup will traverse spec.external references until it finds the destination.
 		// Here we lookup the local object so we can determine if it's the default or not
 		localService := &v1.ServiceInstance{}
 		if err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, serviceName), localService); err == nil {
 			s.Default = localService.Spec.Default
 		} else if !apierrors.IsNotFound(err) {
 			return err
+		}
+
+		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
+
+		// Not ready if we have any error messages
+		if len(s.ErrorMessages) > 0 {
+			s.Ready = false
+		}
+
+		if s.Ready {
+			s.State = "ready"
+		} else if s.UpToDate {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "failing"
+			} else if s.ServiceAcornName != "" && !s.ServiceAcornReady {
+				s.State = "not ready"
+				s.TransitioningMessages = append(s.TransitioningMessages, fmt.Sprintf("acorn [%s] is not ready", s.ServiceAcornName))
+			} else {
+				s.State = "not ready"
+			}
+		} else if s.Defined {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "updating"
+			}
+		} else {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "pending"
+			}
 		}
 
 		a.app.Status.AppStatus.Services[serviceName] = s

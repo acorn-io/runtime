@@ -11,8 +11,6 @@ var (
 		{"Name", "{{ . | name }}"},
 		{"Image", "{{ . | imageName | trunc }}"},
 		{"Commit", "{{ . | imageCommit | trunc }}"},
-		{"Healthy", "Status.Columns.Healthy"},
-		{"Up-To-Date", "Status.Columns.UpToDate"},
 		{"Created", "{{ago .CreationTimestamp}}"},
 		{"Endpoints", "Status.Columns.Endpoints"},
 		{"Message", "{{ appGeneration . .Status.Columns.Message }}"},

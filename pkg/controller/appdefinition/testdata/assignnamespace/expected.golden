@@ -24,6 +24,7 @@ status:
     appImage:
       imageData: {}
       vcs: {}
+  summary: {}
 
 ---
 apiVersion: internal.acorn.io/v1
@@ -52,4 +53,5 @@ status:
     appImage:
       imageData: {}
       vcs: {}
+  summary: {}
 `

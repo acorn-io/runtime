@@ -21,6 +21,7 @@ type AppStatus struct {
 type DependencyNotFound struct {
 	DependencyType DependencyType `json:"dependencyType,omitempty"`
 	Name           string         `json:"name,omitempty"`
+	SubKey         string         `json:"subKey,omitempty"`
 }
 
 type ExpressionError struct {
@@ -29,14 +30,26 @@ type ExpressionError struct {
 	Error              string              `json:"error,omitempty"`
 }
 
+// IsMissingDependencyError indicates this error is because of a missing resource and can typically
+// be treated as a transient error
+func (e *ExpressionError) IsMissingDependencyError() bool {
+	return e.DependencyNotFound != nil && e.DependencyNotFound.SubKey == ""
+}
+
 func (e *ExpressionError) String() string {
 	if e.DependencyNotFound == nil {
 		return "error [" + e.Error + "] expression [" + e.Expression + "]"
 	}
-	if e.Expression != "" {
-		return fmt.Sprintf("missing %s [%s] from expression [%s]", e.DependencyNotFound.DependencyType, e.DependencyNotFound.Name, e.Expression)
+	prefix := ""
+	suffix := ""
+	if e.DependencyNotFound.SubKey != "" {
+		prefix = fmt.Sprintf("key [%s] in ", e.DependencyNotFound.SubKey)
 	}
-	return fmt.Sprintf("missing %s [%s]", e.DependencyNotFound.DependencyType, e.DependencyNotFound.Name)
+	if e.Expression != "" {
+		suffix = fmt.Sprintf(" from expression [%s]", e.Expression)
+	}
+
+	return fmt.Sprintf("missing %s%s [%s]%s", prefix, e.DependencyNotFound.DependencyType, e.DependencyNotFound.Name, suffix)
 }
 
 type ReplicasSummary struct {
@@ -46,11 +59,20 @@ type ReplicasSummary struct {
 	ErrorMessages          []string
 }
 
+type CommonSummary struct {
+	State                 string   `json:"state,omitempty"`
+	Messages              []string `json:"messages,omitempty"`
+	TransitioningMessages []string `json:"transitioningMessages,omitempty"`
+	ErrorMessages         []string `json:"errorMessages,omitempty"`
+}
+
 type CommonStatus struct {
+	State                 string   `json:"state,omitempty"`
 	Ready                 bool     `json:"ready,omitempty"`
 	UpToDate              bool     `json:"upToDate,omitempty"`
 	Defined               bool     `json:"defined,omitempty"`
 	LinkOverride          string   `json:"linkOverride,omitempty"`
+	Messages              []string `json:"messages,omitempty"`
 	TransitioningMessages []string `json:"transitioningMessages,omitempty"`
 	ErrorMessages         []string `json:"errorMessages,omitempty"`
 }
@@ -65,7 +87,8 @@ func (in AcornStatus) GetCommonStatus() CommonStatus {
 }
 
 type RouterStatus struct {
-	CommonStatus `json:",inline"`
+	CommonStatus   `json:",inline"`
+	MissingTargets []string `json:"missingTargets,omitempty"`
 }
 
 func (in RouterStatus) GetCommonStatus() CommonStatus {
@@ -77,6 +100,7 @@ type ServiceStatus struct {
 	Default                    bool              `json:"default,omitempty"`
 	Ports                      Ports             `json:"ports,omitempty"`
 	Data                       GenericMap        `json:"data,omitempty"`
+	Consumer                   *ServiceConsumer  `json:"consumer,omitempty"`
 	Secrets                    []string          `json:"secrets,omitempty"`
 	Address                    string            `json:"address,omitempty"`
 	Endpoint                   string            `json:"endpoint,omitempty"`
@@ -153,6 +177,7 @@ type VolumeStatus struct {
 	VolumeName        string `json:"volumeName,omitempty"`
 	StorageClassFound bool   `json:"storageClassFound,omitempty"`
 	Bound             bool   `json:"bound,omitempty"`
+	Unused            bool   `json:"unused,omitempty"`
 }
 
 func (in VolumeStatus) GetCommonStatus() CommonStatus {

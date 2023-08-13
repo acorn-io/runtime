@@ -48,9 +48,11 @@ func CLIStatus(req router.Request, resp router.Response) (err error) {
 func message(app *v1.AppInstance) string {
 	buf := &bytes.Buffer{}
 	if !app.DeletionTimestamp.IsZero() {
-		buf.WriteString("[removing]")
+		buf.WriteString("removing")
 	} else if app.GetStopped() && !app.Status.AppStatus.Stopped {
-		buf.WriteString("[stopping]")
+		buf.WriteString("stopping")
+	} else if app.Status.ConfirmUpgradeAppImage != "" {
+		buf.WriteString("Upgrade available: " + app.Status.ConfirmUpgradeAppImage)
 	}
 
 	for _, cond := range app.Status.Conditions {
@@ -59,26 +61,20 @@ func message(app *v1.AppInstance) string {
 		}
 		if !cond.Success && (cond.Error || cond.Transitioning) && cond.Message != "" {
 			if buf.Len() > 0 {
-				buf.WriteString(" ")
+				buf.WriteString("; ")
 			}
-			buf.WriteString("[")
-			buf.WriteString(cond.Type)
-			buf.WriteString(": ")
 			buf.WriteString(cond.Message)
-			buf.WriteString("]")
 		}
 	}
 
 	if buf.Len() != 0 {
 		return buf.String()
 	}
-	if app.Status.ConfirmUpgradeAppImage != "" {
-		return "Upgrade available: " + app.Status.ConfirmUpgradeAppImage
-	}
 
 	if app.Status.Ready {
 		return "OK"
 	}
+
 	return "pending"
 }
 
@@ -136,10 +132,9 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 
 	var endpointStrings []string
 
-	for _, entry := range typed.Sorted(endpointTarget) {
+	for _, endpoints := range typed.SortedValues(endpointTarget) {
 		var (
-			target, endpoints = entry.Key, entry.Value
-			publicStrings     []string
+			publicStrings []string
 		)
 
 		for _, endpoint := range endpoints {
@@ -177,8 +172,7 @@ func endpoints(req router.Request, app *v1.AppInstance) (string, error) {
 			publicStrings = append(publicStrings, buf.String())
 		}
 
-		endpointStrings = append(endpointStrings,
-			fmt.Sprintf("%s => %s", strings.Join(publicStrings, " | "), target))
+		endpointStrings = append(endpointStrings, publicStrings...)
 	}
 
 	return strings.Join(endpointStrings, ", "), nil

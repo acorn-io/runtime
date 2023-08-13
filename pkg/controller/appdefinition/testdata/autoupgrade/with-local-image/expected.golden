@@ -28,4 +28,5 @@ status:
       imageData: {}
       name: myimage:latest
       vcs: {}
+  summary: {}
 `

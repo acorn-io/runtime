@@ -93,7 +93,7 @@ users:
 	}
 
 	k := exec.Command(args[0], args[1:]...)
-	k.Env = append(os.Environ(), fmt.Sprintf("KUBECONFIG=%s", f.Name()))
+	k.Env = append(os.Environ(), fmt.Sprintf("KUBECONFIG=%s", f.Name()), fmt.Sprintf("ACORN_KUBECONFIG=%s", f.Name()))
 	k.Stdin = os.Stdin
 	k.Stdout = os.Stdout
 	k.Stderr = os.Stderr

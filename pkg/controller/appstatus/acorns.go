@@ -60,6 +60,28 @@ func (a *appStatusRenderer) readAcorns() error {
 			}
 		}
 
+		if s.Ready {
+			s.State = "ready"
+		} else if s.UpToDate {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "not ready"
+			}
+		} else if s.Defined {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "updating"
+			}
+		} else {
+			if len(s.ErrorMessages) > 0 {
+				s.State = "error"
+			} else {
+				s.State = "pending"
+			}
+		}
+
 		a.app.Status.AppStatus.Acorns[acornName] = s
 	}
 

@@ -21,9 +21,12 @@ type appStatusRenderer struct {
 	app *v1.AppInstance
 }
 
-func PrepareStatus(req router.Request, _ router.Response) error {
-	app := req.Object.(*v1.AppInstance)
-
+// resetHandlerControlledFields will set fields to empty values because it is expected that handlers will append values
+// to them.  If the field is not reset it will grow indefinitely in a tight loop. This behavior does not
+// apply to most status field built in AppStatus as they are fully calculated and reset on each run. But these
+// fields are specifically fields with aggregated values.
+// Additionally, some corner cases are handled in this code where fields need to be initialized in a special way
+func resetHandlerControlledFields(app *v1.AppInstance) {
 	for name, status := range app.Status.AppStatus.Containers {
 		// If the app is being updated, then set the containers to not ready so that the controller will run them again and the
 		// dependency status will be set correctly.
@@ -56,6 +59,15 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 		app.Status.AppStatus.Secrets[name] = status
 	}
 
+	for name, status := range app.Status.AppStatus.Routers {
+		status.MissingTargets = nil
+		app.Status.AppStatus.Routers[name] = status
+	}
+}
+
+func PrepareStatus(req router.Request, _ router.Response) error {
+	app := req.Object.(*v1.AppInstance)
+
 	if app.Status.AppStatus.Containers == nil {
 		app.Status.AppStatus.Containers = map[string]v1.ContainerStatus{}
 	}
@@ -76,6 +88,12 @@ func PrepareStatus(req router.Request, _ router.Response) error {
 		app.Status.AppStatus.Secrets = map[string]v1.SecretStatus{}
 	}
 
+	if app.Status.AppStatus.Routers == nil {
+		app.Status.AppStatus.Routers = map[string]v1.RouterStatus{}
+	}
+
+	resetHandlerControlledFields(app)
+
 	return nil
 }
 
@@ -92,6 +110,7 @@ func SetStatus(req router.Request, _ router.Response) error {
 	setCondition(app, v1.AppInstanceConditionServices, status.Services)
 	setCondition(app, v1.AppInstanceConditionSecrets, status.Secrets)
 	setCondition(app, v1.AppInstanceConditionAcorns, status.Acorns)
+	setCondition(app, v1.AppInstanceConditionRouters, status.Routers)
 
 	setPermissionCondition(app)
 
@@ -110,14 +129,14 @@ func setPermissionCondition(app *v1.AppInstance) {
 	}
 }
 
-func formatMessage(name string, parts []string) string {
+func formatMessage(name string, parts []string, sep string) string {
 	if name == "" {
 		if len(parts) == 1 {
 			return parts[0]
 		}
-		return fmt.Sprintf("[%s]", strings.Join(parts, ", "))
+		return strings.Join(parts, sep)
 	}
-	return fmt.Sprintf("%s: [%s]", name, strings.Join(parts, ", "))
+	return fmt.Sprintf("%s: %s", name, strings.Join(parts, sep))
 }
 
 type commonStatusGetter interface {
@@ -129,26 +148,21 @@ func setCondition[T commonStatusGetter](obj kclient.Object, conditionName string
 		errorMessages         []string
 		transitioningMessages []string
 	)
+
 	for _, entry := range typed.Sorted(status) {
 		name, status := entry.Key, entry.Value.GetCommonStatus()
 		if len(status.ErrorMessages) > 0 {
-			errorMessages = append(errorMessages, formatMessage(name, status.ErrorMessages))
+			errorMessages = append(errorMessages, formatMessage(name, status.ErrorMessages, ", "))
 		} else if len(status.TransitioningMessages) > 0 {
-			transitioningMessages = append(transitioningMessages, formatMessage(name, status.TransitioningMessages))
-		} else if !status.Defined && obj.GetDeletionTimestamp().IsZero() {
-			transitioningMessages = append(transitioningMessages, fmt.Sprintf("%s: [pending create]", name))
-		} else if !status.UpToDate && obj.GetDeletionTimestamp().IsZero() {
-			transitioningMessages = append(transitioningMessages, fmt.Sprintf("%s: [pending update]", name))
-		} else if !status.Ready && obj.GetDeletionTimestamp().IsZero() {
-			transitioningMessages = append(transitioningMessages, fmt.Sprintf("%s: [is not ready]", name))
+			transitioningMessages = append(transitioningMessages, formatMessage(name, status.TransitioningMessages, ", "))
 		}
 	}
 
 	cond := condition.ForName(obj, conditionName)
 	if len(errorMessages) > 0 {
-		cond.Error(errors.New(formatMessage("", append(errorMessages, transitioningMessages...))))
+		cond.Error(errors.New(formatMessage("", append(errorMessages, transitioningMessages...), "; ")))
 	} else if len(transitioningMessages) > 0 {
-		cond.Unknown(formatMessage("", append(errorMessages, transitioningMessages...)))
+		cond.Unknown(formatMessage("", append(errorMessages, transitioningMessages...), "; "))
 	} else {
 		cond.Success()
 	}
@@ -185,7 +199,7 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 		return v1.AppStatus{}, err
 	}
 
-	if err := render.readRouter(); err != nil {
+	if err := render.readRouters(); err != nil {
 		return v1.AppStatus{}, err
 	}
 

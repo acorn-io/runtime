@@ -179,13 +179,18 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 			appName, err = runOrUpdate(ctx, client, hash, image, deployArgs, opts)
 			if apierror.IsConflict(err) {
 				logrus.Errorf("Failed to run/update app: %v", err)
-				time.Sleep(time.Second)
-				continue
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-time.After(time.Second):
+					continue
+				}
 			} else if err != nil {
 				logrus.Errorf("Failed to run/update app: %v", err)
-				time.Sleep(5 * time.Second)
-				continue
-			} else {
+				failed.Store(true)
+			}
+			// appName will be empty if the runOrUpdate call fails so wait until first success to start devsession
+			if appName != "" {
 				lockOnce.Do(func() {
 					go func() {
 						renewDevSession(ctx, client, appName, hash.Client)
@@ -351,19 +356,25 @@ func appDeleteStop(ctx context.Context, c client.Client, appName string, cancel 
 }
 
 func renewDevSession(ctx context.Context, c client.Client, appName string, client v1.DevSessionInstanceClient) {
+	timeout := 20 * time.Second
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(20 * time.Second):
+		case <-time.After(timeout):
 		}
 
 		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			return c.DevSessionRenew(ctx, appName, client)
 		})
-		if err != nil {
-			logrus.Errorf("Failed to lock app [%s]: %v", appName, err)
+		if apierror.IsNotFound(err) {
+			logrus.Errorf("Dev session lost [%s]: %v", appName, err)
 			return
+		} else if err == nil {
+			timeout = 20 * time.Second
+		} else {
+			timeout = 5 * time.Second
+			logrus.Errorf("Failed to lock acorn [%s]: %v", appName, err)
 		}
 	}
 }
