@@ -25,7 +25,6 @@ func NewCredentialLogin(root bool, c CommandContext) *cobra.Command {
 acorn login ghcr.io`,
 		SilenceUsage: true,
 		Short:        "Add registry credentials",
-		Args:         cobra.MaximumNArgs(1),
 	})
 	if root {
 		cmd.Aliases = nil
@@ -54,7 +53,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	var serverAddress string
-	if len(args) == 0 && a.Password != "" {
+	if len(args) == 0 {
 		// ManagerServer slice length is guaranteed to be >=1 by the ReadCLIConfig method
 		serverAddress = cfg.AcornServers[0]
 	} else if len(args) > 0 {

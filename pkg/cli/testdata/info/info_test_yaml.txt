@@ -3,7 +3,7 @@ client:
   cli:
     acornConfig: /fake-file
     acornServers:
-    - acorn.io
+    - beta.acorn.io
   version:
     tag: v0.0.0-dev
 projects:
