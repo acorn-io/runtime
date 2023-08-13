@@ -827,8 +827,8 @@ func (s *Validator) getImageDetails(ctx context.Context, namespace string, profi
 		return nil, err
 	}
 
-	if details.ParseError != "" {
-		return nil, fmt.Errorf(details.ParseError)
+	if details.GetParseError() != "" {
+		return nil, errors.New(details.GetParseError())
 	}
 
 	return details, nil

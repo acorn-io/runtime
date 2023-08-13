@@ -252,6 +252,18 @@ type ImageDetails struct {
 	ParseError      string           `json:"parseError,omitempty"`
 }
 
+func (i ImageDetails) GetParseError() string {
+	if i.ParseError != "" {
+		return i.ParseError
+	}
+	for _, nested := range i.NestedImages {
+		if nested.ParseError != "" {
+			return nested.ParseError
+		}
+	}
+	return ""
+}
+
 func (i *ImageDetails) GetPermissions() (result []v1.Permissions) {
 	result = append(result, i.Permissions...)
 	for _, nested := range i.NestedImages {
@@ -265,6 +277,7 @@ type NestedImage struct {
 	Digest          string           `json:"digest,omitempty"`
 	Permissions     []v1.Permissions `json:"permissions,omitempty"`
 	SignatureDigest string           `json:"signatureDigest,omitempty"`
+	ParseError      string           `json:"parseError,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
