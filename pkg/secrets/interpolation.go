@@ -178,12 +178,12 @@ func (i *Interpolator) ToVolumeMount(filename string, file v1.File) corev1.Volum
 }
 
 func (i *Interpolator) getExternalID() (string, error) {
-	accountID, err := i.getAccountID()
+	accountID, err := i.GetAccountID()
 	if err != nil {
 		return "", err
 	}
 
-	projectName, err := i.getProjectName()
+	projectName, err := i.GetProjectName()
 	if err != nil {
 		return "", err
 	}
@@ -192,25 +192,31 @@ func (i *Interpolator) getExternalID() (string, error) {
 	return externalid.ExternalID(accountID, projectName, appName), nil
 }
 
-func (i *Interpolator) getAccountID() (string, error) {
+func (i *Interpolator) GetAccountID() (string, error) {
 	ns := &corev1.Namespace{}
-	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
+	// Not found check is to make unit tests easier
+	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil && !apierrors.IsNotFound(err) {
 		return "", err
 	}
 	name := ns.Labels[labels.AcornAccountID]
 	if name == "" {
 		ns := &corev1.Namespace{}
-		if err := i.client.Get(i.ctx, router.Key("", "kube-system"), ns); err != nil {
+		// Not found check is to make unit tests easier
+		if err := i.client.Get(i.ctx, router.Key("", "kube-system"), ns); err != nil && !apierrors.IsNotFound(err) {
 			return "", err
 		}
-		return "runtime-" + string(ns.UID[:8]), nil
+		if ns.UID != "" {
+			return "runtime-" + string(ns.UID[:8]), nil
+		}
+		return "", nil
 	}
 	return name, nil
 }
 
-func (i *Interpolator) getProjectName() (string, error) {
+func (i *Interpolator) GetProjectName() (string, error) {
 	ns := &corev1.Namespace{}
-	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil {
+	// Not found check is to make unit tests easier
+	if err := i.client.Get(i.ctx, router.Key("", i.app.Namespace), ns); err != nil && !apierrors.IsNotFound(err) {
 		return "", err
 	}
 	name := ns.Labels[labels.AcornProjectName]
@@ -225,10 +231,10 @@ func (i *Interpolator) resolveApp(keyName string) (string, bool, error) {
 	case "name":
 		return publicname.Get(i.app), true, nil
 	case "account":
-		accountID, err := i.getAccountID()
+		accountID, err := i.GetAccountID()
 		return accountID, true, err
 	case "project":
-		projectName, err := i.getProjectName()
+		projectName, err := i.GetProjectName()
 		return projectName, true, err
 	case "namespace":
 		return i.app.Status.Namespace, true, nil

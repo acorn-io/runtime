@@ -8,6 +8,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: buildimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: buildimage
   namespace: app-created-namespace
 
@@ -22,6 +23,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: buildimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: buildimage
   namespace: app-created-namespace
 spec:
@@ -43,6 +45,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: buildimage
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - image: index.docker.io/library/test@sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300
@@ -67,6 +70,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: buildimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: buildimage
   namespace: app-created-namespace
 spec:
@@ -94,6 +98,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 
@@ -108,6 +113,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 spec:
@@ -129,6 +135,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: oneimage
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - image: index.docker.io/library/test@sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300
@@ -156,6 +163,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 spec:

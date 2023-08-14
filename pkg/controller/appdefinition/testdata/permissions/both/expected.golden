@@ -8,6 +8,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage-app-name-app-namespace-1234567890ab
 rules:
 - apiGroups:
@@ -28,6 +29,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage-app-name-app-namespace-1234567890ab
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -49,6 +51,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage-app-name-app-namespace-1234567890ab-app-namespace
   namespace: app-namespace
 rules:
@@ -70,6 +73,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage-app-name-app-namespace-1234567890ab-app-namespace
   namespace: app-namespace
 roleRef:
@@ -94,6 +98,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage
   namespace: app-created-namespace
 
@@ -108,6 +113,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage
   namespace: app-created-namespace
 spec:
@@ -129,6 +135,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: twoimage
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - image: image-name
@@ -168,6 +175,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: twoimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: twoimage
   namespace: app-created-namespace
 spec:
@@ -197,6 +205,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage-app-name-app-namespace-1234567890ab
 rules:
 - apiGroups:
@@ -219,6 +228,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage-app-name-app-namespace-1234567890ab
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -242,6 +252,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage-app-name-app-namespace-1234567890ab-app-namespace
   namespace: app-namespace
 rules:
@@ -265,6 +276,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage-app-name-app-namespace-1234567890ab-app-namespace
   namespace: app-namespace
 roleRef:
@@ -290,6 +302,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 
@@ -308,6 +321,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 spec:
@@ -323,6 +337,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/job-name: oneimage
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - env:

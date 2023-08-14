@@ -137,14 +137,19 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		baseAnnotations[labels.AcornAppGeneration] = strconv.FormatInt(appInstance.Generation, 10)
 	}
 
+	podLabels, err := jobLabels(appInstance, container, name, interpolator,
+		labels.AcornManaged, "true",
+		labels.AcornAppPublicName, publicname.Get(appInstance),
+		labels.AcornJobName, name,
+		labels.AcornContainerName, "")
+	if err != nil {
+		return nil, err
+	}
+
 	jobSpec := batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: jobLabels(appInstance, container, name,
-					labels.AcornManaged, "true",
-					labels.AcornAppPublicName, publicname.Get(appInstance),
-					labels.AcornJobName, name,
-					labels.AcornContainerName, ""),
+				Labels:      podLabels,
 				Annotations: labels.Merge(podAnnotations(appInstance, container), baseAnnotations),
 			},
 			Spec: corev1.PodSpec{

@@ -15,6 +15,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: job1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     alljobs: value
     global: value
     global2: value
@@ -43,6 +44,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: job1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     alljobs: value
     global: value
     global2: value
@@ -68,6 +70,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/job-name: job1
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
         alljobs: value
         global: value
         global2: value

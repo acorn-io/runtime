@@ -450,14 +450,36 @@ func routerAnnotations(appInstance *v1.AppInstance, router v1.Router, name strin
 	return labels.GatherScoped(name, v1.LabelTypeRouter, appInstance.Status.AppSpec.Annotations, router.Annotations, appInstance.Spec.Annotations)
 }
 
-func jobLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
+func jobLabels(appInstance *v1.AppInstance, container v1.Container, name string, interpolator *secrets.Interpolator, kv ...string) (map[string]string, error) {
 	labelMap := labels.GatherScoped(name, v1.LabelTypeJob, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
-	return mergeConLabels(labelMap, appInstance, name, kv...)
+	return addInterpolationLabels(mergeConLabels(labelMap, appInstance, name, kv...), interpolator)
 }
 
-func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, kv ...string) map[string]string {
+func addInterpolationLabels(result map[string]string, interpolator *secrets.Interpolator) (map[string]string, error) {
+	if interpolator != nil {
+		accountID, err := interpolator.GetAccountID()
+		if err != nil {
+			return nil, err
+		}
+		if accountID != "" {
+			result[labels.AcornAccountID] = accountID
+		}
+
+		projectName, err := interpolator.GetProjectName()
+		if err != nil {
+			return nil, err
+		}
+		if projectName != "" {
+			result[labels.AcornProjectName] = projectName
+		}
+	}
+	return result, nil
+}
+
+func containerLabels(appInstance *v1.AppInstance, container v1.Container, name string, interpolator *secrets.Interpolator, kv ...string) (map[string]string, error) {
 	labelMap := labels.GatherScoped(name, v1.LabelTypeContainer, appInstance.Status.AppSpec.Labels, container.Labels, appInstance.Spec.Labels)
-	return mergeConLabels(labelMap, appInstance, name, append([]string{labels.AcornAppPublicName, publicname.Get(appInstance)}, kv...)...)
+	result := mergeConLabels(labelMap, appInstance, name, append([]string{labels.AcornAppPublicName, publicname.Get(appInstance)}, kv...)...)
+	return addInterpolationLabels(result, interpolator)
 }
 
 func routerLabels(appInstance *v1.AppInstance, router v1.Router, name string, kv ...string) map[string]string {
@@ -630,8 +652,14 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		return nil, err
 	}
 
-	podLabels := containerLabels(appInstance, container, name)
-	deploymentLabels := containerLabels(appInstance, container, name)
+	podLabels, err := containerLabels(appInstance, container, name, interpolator)
+	if err != nil {
+		return nil, err
+	}
+	deploymentLabels, err := containerLabels(appInstance, container, name, interpolator)
+	if err != nil {
+		return nil, err
+	}
 	matchLabels := selectorMatchLabels(appInstance, name)
 
 	deploymentAnnotations := containerAnnotations(appInstance, container, name)

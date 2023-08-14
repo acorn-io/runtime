@@ -11,6 +11,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     both: con1val
     con1key: value
   name: con1
@@ -30,6 +31,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     both: con1val
     con1key: value
   name: con1
@@ -55,6 +57,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: con1
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
         both: con1val
         con1key: value
     spec:
@@ -92,6 +95,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     both: con1val
     con1key: value
   name: con1
@@ -124,6 +128,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con2
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     both: con2val
     con2key: value
   name: con2
@@ -143,6 +148,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con2
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     both: con2val
     con2key: value
   name: con2
@@ -168,6 +174,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: con2
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
         both: con2val
         con2key: value
     spec:
@@ -205,6 +212,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con2
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     both: con2val
     con2key: value
   name: con2
@@ -234,6 +242,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con3
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: con3
   namespace: app-created-namespace
 
@@ -248,6 +257,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con3
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: con3
   namespace: app-created-namespace
 spec:
@@ -269,6 +279,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: con3
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - image: foo
@@ -296,6 +307,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con3
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: con3
   namespace: app-created-namespace
 spec:

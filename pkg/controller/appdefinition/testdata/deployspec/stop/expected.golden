@@ -8,6 +8,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: buildimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: buildimage
   namespace: app-created-namespace
 
@@ -22,6 +23,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: buildimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: buildimage
   namespace: app-created-namespace
 spec:
@@ -44,6 +46,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: buildimage
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - image: sha256:build-image
@@ -68,6 +71,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: buildimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: buildimage
   namespace: app-created-namespace
 spec:
@@ -95,6 +99,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 
@@ -109,6 +114,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 spec:
@@ -131,6 +137,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: oneimage
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - image: image-name
@@ -155,6 +162,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: oneimage
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: oneimage
   namespace: app-created-namespace
 spec:
