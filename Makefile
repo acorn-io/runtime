@@ -7,6 +7,10 @@ tidy:
 dev-install:
 	[ -e .dev-image ] && go mod vendor ; go run main.go install --dev "$$(cat .dev-image)"; rm -rf vendor
 
+dev-uninstall:
+	kubectl delete -n acorn-system configmap acorn-config-dev
+	@echo It might take 15 minutes for the cluster to revert to a valid install
+
 generate:
 	go generate
 
