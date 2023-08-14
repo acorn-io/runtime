@@ -119,9 +119,10 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
+			projectName := project.RenderProjectName(projectItem.FullName, cfg.DefaultContext)
 			out.WriteFormatted(projectEntry{
-				Name:    project.RenderProjectName(projectItem.FullName, cfg.DefaultContext),
-				Default: defaultProject == projectItem.FullName,
+				Name:    projectName,
+				Default: defaultProject == projectName,
 				Regions: supportedRegions,
 			}, projectItem.Project)
 		}
