@@ -420,6 +420,10 @@ func (i *Interpolator) resolve(token string) (_ string, _ bool, err error) {
 		}
 	}()
 
+	if strings.HasPrefix(token, "@{") {
+		return token, true, nil
+	}
+
 	scheme, tail, ok := strings.Cut(token, "://")
 	if ok {
 		switch scheme {

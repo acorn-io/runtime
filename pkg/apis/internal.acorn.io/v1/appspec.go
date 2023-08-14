@@ -632,6 +632,7 @@ type ScopedLabels []ScopedLabel
 type Container struct {
 	Labels       map[string]string      `json:"labels,omitempty"`
 	Annotations  map[string]string      `json:"annotations,omitempty"`
+	Name         string                 `json:"name,omitempty"`
 	Description  string                 `json:"description,omitempty"`
 	Dirs         map[string]VolumeMount `json:"dirs,omitempty"`
 	Files        Files                  `json:"files,omitempty"`
@@ -704,6 +705,7 @@ type Routes []Route
 type Router struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
+	Name        string            `json:"name,omitempty"`
 	Description string            `json:"description,omitempty"`
 	Routes      Routes            `json:"routes,omitempty"`
 }
@@ -719,6 +721,7 @@ func (in Acorn) GetOriginalImage() string {
 type Acorn struct {
 	Labels              ScopedLabels           `json:"labels,omitempty"`
 	Annotations         ScopedLabels           `json:"annotations,omitempty"`
+	Name                string                 `json:"name,omitempty"`
 	Description         string                 `json:"description,omitempty"`
 	Image               string                 `json:"image,omitempty"`
 	Build               *AcornBuild            `json:"build,omitempty"`
@@ -743,6 +746,7 @@ type Secret struct {
 	Alias       string            `json:"alias,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
+	Name        string            `json:"name,omitempty"`
 	Description string            `json:"description,omitempty"`
 	Type        string            `json:"type,omitempty"`
 	Params      GenericMap        `json:"params,omitempty"`
@@ -754,6 +758,7 @@ type AccessModes []AccessMode
 type VolumeRequest struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
+	Name        string            `json:"name,omitempty"`
 	Description string            `json:"description,omitempty"`
 	Class       string            `json:"class,omitempty"`
 	Size        Quantity          `json:"size,omitempty"`
@@ -778,6 +783,7 @@ type GeneratedService struct {
 type Service struct {
 	Labels              ScopedLabels           `json:"labels,omitempty"`
 	Annotations         ScopedLabels           `json:"annotations,omitempty"`
+	Name                string                 `json:"name,omitempty"`
 	Description         string                 `json:"description,omitempty"`
 	Default             bool                   `json:"default,omitempty"`
 	External            string                 `json:"external,omitempty"`
