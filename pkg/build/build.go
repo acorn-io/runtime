@@ -98,7 +98,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 
 	var dataFiles appdefinition.DataFiles
 	if buildSpec.Icon != "" {
-		dataFiles.Icon, err = getFile(ctx, buildSpec.Icon)
+		dataFiles.Icon, err = getFile(ctx, filepath.Join(ctx.cwd, buildSpec.Icon))
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 	}
 
 	if buildSpec.Readme != "" {
-		dataFiles.Readme, err = getFile(ctx, buildSpec.Readme)
+		dataFiles.Readme, err = getFile(ctx, filepath.Join(ctx.cwd, buildSpec.Readme))
 		if err != nil {
 			return nil, err
 		}

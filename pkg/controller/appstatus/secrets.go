@@ -58,6 +58,7 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 
 		sourceSecret := &corev1.Secret{}
 		if err := a.c.Get(a.ctx, router.Key(a.app.Namespace, secret.Labels[labels.AcornSecretSourceName]), sourceSecret); apierrors.IsNotFound(err) {
+			s.State = "waiting"
 			a.app.Status.AppStatus.Secrets[secretName] = s
 			continue
 		} else if err != nil {
