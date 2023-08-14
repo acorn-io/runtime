@@ -14,6 +14,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allconsl1: value
     conl1: value
     conl3: value
@@ -39,6 +40,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allconsl1: value
     conl1: value
     conl3: value
@@ -70,6 +72,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: con1
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
         allconsl1: value
         conl1: value
         conl3: value
@@ -111,6 +114,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: con1
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allconsl1: value
     conl1: value
     conl3: value

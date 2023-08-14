@@ -14,6 +14,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: container-name
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allowed-global.io: test-global
     allowed.io: test-allowed-app-spec-label
     permit-container.io: test-permit-container-label
@@ -39,6 +40,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: container-name
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allowed-global.io: test-global
     allowed.io: test-allowed-app-spec-label
     permit-container.io: test-permit-container-label
@@ -72,6 +74,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/container-name: container-name
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
         allowed-global.io: test-global
         allowed.io: test-allowed-app-spec-label
         permit-container.io: test-permit-container-label
@@ -114,6 +117,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/container-name: container-name
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allowed-global.io: test-global
     allowed.io: test-allowed-app-spec-label
     permit-container.io: test-permit-container-label
@@ -152,6 +156,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: job-name
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allowed-global.io: test-global
     allowed-job.io: test-allowed-job-label
     allowed.io: test-allowed-app-spec-label
@@ -178,6 +183,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: job-name
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
     allowed-global.io: test-global
     allowed-job.io: test-allowed-job-label
     allowed.io: test-allowed-app-spec-label
@@ -201,6 +207,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/job-name: job-name
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
         allowed-global.io: test-global
         allowed-job.io: test-allowed-job-label
         allowed.io: test-allowed-app-spec-label

@@ -10,6 +10,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: create-only
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: create-only
   namespace: app-created-namespace
 
@@ -28,6 +29,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: create-only
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: create-only
   namespace: app-created-namespace
 spec:
@@ -44,6 +46,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/job-name: create-only
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - env:
@@ -93,6 +96,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: update-only
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: update-only
   namespace: app-created-namespace
 
@@ -111,6 +115,7 @@ metadata:
     acorn.io/app-public-name: app-name
     acorn.io/job-name: update-only
     acorn.io/managed: "true"
+    acorn.io/project-name: app-namespace
   name: update-only
   namespace: app-created-namespace
 spec:
@@ -127,6 +132,7 @@ spec:
         acorn.io/app-public-name: app-name
         acorn.io/job-name: update-only
         acorn.io/managed: "true"
+        acorn.io/project-name: app-namespace
     spec:
       containers:
       - env:
