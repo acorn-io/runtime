@@ -135,7 +135,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pterm.Success.Printf("Done: Pushed signature %s\n", sig.SignatureDigest)
+	pterm.Success.Printf("Created signature %s\n", sig.SignatureDigest)
 
 	return nil
 }
