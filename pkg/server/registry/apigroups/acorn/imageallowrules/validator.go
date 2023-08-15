@@ -13,8 +13,8 @@ type Validator struct{}
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	aiar := obj.(*apiv1.ImageAllowRule)
-	if len(aiar.Images) == 0 && len(aiar.Signatures.Rules) == 0 {
-		return append(result, field.Invalid(field.NewPath(""), aiar, "at least one of scope or signatures must be specified"))
+	if len(aiar.Images) == 0 {
+		return append(result, field.Required(field.NewPath("images"), "the images scope must be set to define which images this rule applies to"))
 	}
 	result = append(result, validateSignatureRules(ctx, aiar.Signatures)...)
 	return
