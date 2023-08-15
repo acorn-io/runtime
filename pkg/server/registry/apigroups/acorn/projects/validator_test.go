@@ -544,6 +544,46 @@ func TestProjectUpdateValidation(t *testing.T) {
 				},
 			).Build(),
 		},
+		{
+			name:      "Update project to remove supported region that was defaulted, but app exists in removed region",
+			wantError: true,
+			oldProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+			},
+			newProject: apiv1.Project{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-project",
+				},
+				Spec: v1.ProjectInstanceSpec{
+					SupportedRegions: []string{"my-region"},
+				},
+				Status: v1.ProjectInstanceStatus{
+					DefaultRegion:    "my-region",
+					SupportedRegions: []string{"my-region", "my-other-region"},
+				},
+			},
+			client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithLists(
+				&apiv1.AppList{
+					Items: []apiv1.App{
+						{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "my-app",
+								Namespace: "my-project",
+							},
+							Spec: v1.AppInstanceSpec{
+								Region: "my-other-region",
+							},
+						},
+					},
+				},
+			).Build(),
+		},
 	}
 
 	for _, tt := range tests {
