@@ -79,7 +79,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 		if len(credHits) < 1 || streams.Out == nil {
 			return
 		}
-		if _, err := fmt.Fprintln(streams.Out, "Used local build credentials for:", strings.Join(sets.List(credHits), ", ")); err != nil {
+		if _, err := fmt.Fprintln(streams.Out, "Used local credentials for:", strings.Join(sets.List(credHits), ", ")); err != nil {
 			logrus.WithError(err).Error("failed to print credential hits")
 		}
 	}()
