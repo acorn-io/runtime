@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/tonistiigi/fsutil/types"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 func wsURL(url string) string {
@@ -66,8 +67,22 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 	msgs, cancel := messages.Recv()
 	defer cancel()
 
-	progress := newClientProgress(ctx, streams)
-	defer progress.Close()
+	var (
+		progress = newClientProgress(ctx, streams)
+		credHits = sets.New[string]()
+	)
+	defer func() {
+		// Close the progress bar first to ensure it doesn't clobber credential hits in stdout.
+		progress.Close()
+
+		// If we sent the build server any local credentials, print a message.
+		if len(credHits) < 1 || streams.Out == nil {
+			return
+		}
+		if _, err := fmt.Fprintln(streams.Out, "Used local build credentials for:", strings.Join(sets.List(credHits), ", ")); err != nil {
+			logrus.WithError(err).Error("failed to print credential hits")
+		}
+	}()
 
 	// Handle messages synchronous since new subscribers are started,
 	// and we don't want to miss a message.
@@ -94,8 +109,12 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 		} else if msg.AppImage != nil {
 			return msg.AppImage, nil
 		} else if msg.RegistryServerAddress != "" {
-			err := messages.Send(lookupCred(ctx, creds, msg.RegistryServerAddress))
-			if err != nil {
+			cm := lookupCred(ctx, creds, msg.RegistryServerAddress)
+			if cm != nil && cm.RegistryAuth != nil {
+				// Mark the credential as used
+				credHits.Insert(msg.RegistryServerAddress)
+			}
+			if err := messages.Send(cm); err != nil {
 				return nil, err
 			}
 		} else if msg.Acornfile != "" {
