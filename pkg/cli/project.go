@@ -81,11 +81,11 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	defaultProject := cfg.CurrentProject
+	defaultProject := project.RenderProjectName(cfg.CurrentProject, cfg.DefaultContext)
 
 	c, err := project.Client(cmd.Context(), a.client.Options())
 	if err == nil {
-		defaultProject = c.GetProject()
+		defaultProject = project.RenderProjectName(c.GetProject(), cfg.DefaultContext)
 	}
 
 	out := table.NewWriter(tables.ProjectClient, a.Quiet, a.Output)
@@ -102,12 +102,14 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 			logrus.Warnf("Could not list details of project [%s]: %v", projectItem.FullName, projectItem.Err)
 			continue
 		}
+
+		projectName := project.RenderProjectName(projectItem.FullName, cfg.DefaultContext)
 		if projectItem.Project != nil {
 			if projectItem.Project.Annotations == nil {
 				projectItem.Project.Annotations = map[string]string{}
 			}
-			projectItem.Project.Annotations["project-name"] = project.RenderProjectName(projectItem.FullName, cfg.DefaultContext)
-			projectItem.Project.Annotations["default-project"] = fmt.Sprint(defaultProject == projectItem.FullName)
+			projectItem.Project.Annotations["project-name"] = projectName
+			projectItem.Project.Annotations["default-project"] = fmt.Sprint(defaultProject == projectName)
 
 			supportedRegions := projectItem.Project.Status.SupportedRegions
 			defaultRegion := projectItem.Project.Status.DefaultRegion
@@ -119,7 +121,6 @@ func (a *Project) Run(cmd *cobra.Command, args []string) error {
 				}
 			}
 
-			projectName := project.RenderProjectName(projectItem.FullName, cfg.DefaultContext)
 			out.WriteFormatted(projectEntry{
 				Name:    projectName,
 				Default: defaultProject == projectName,
