@@ -1656,10 +1656,10 @@ func TestEnforcedQuota(t *testing.T) {
 		}
 	})
 
-	// Wait for the app to set the AppInstanceQuotaAllocated condition to be transitioning and for the namespace
+	// Wait for the app to set the AppInstanceQuota condition to be transitioning and for the namespace
 	// to be ready.
 	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionQuotaAllocated).Transitioning
+		return obj.Status.Condition(v1.AppInstanceConditionQuota).Transitioning
 	})
 
 	// Grab the app's QuotaRequest and check that it has the appropriate values set.
@@ -1686,9 +1686,9 @@ func TestEnforcedQuota(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Wait for the app to set the AppInstanceQuotaAllocated condition to success.
+	// Wait for the app to set the AppInstanceQuota condition to success.
 	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.Condition(v1.AppInstanceConditionQuotaAllocated).Success
+		return obj.Status.Condition(v1.AppInstanceConditionQuota).Success
 	})
 }
 

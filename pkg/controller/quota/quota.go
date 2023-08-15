@@ -21,9 +21,9 @@ import (
 func WaitForAllocation(req router.Request, resp router.Response) error {
 	appInstance := req.Object.(*apiv1.AppInstance)
 
-	// Create a condition setter for AppInstanceConditionQuotaAllocated, which blocks the appInstance from being deployed
+	// Create a condition setter for AppInstanceConditionQuota, which blocks the appInstance from being deployed
 	// until quota has been allocated.
-	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuotaAllocated)
+	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuota)
 
 	// Don't do anything if quota isn't enabled for this project.
 	enforced, err := isEnforced(req, appInstance.Namespace)
@@ -88,7 +88,7 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 		},
 	}
 
-	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuotaAllocated)
+	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuota)
 
 	// Add the more complex values to the quota request
 	addCompute(app.Containers, appInstance, quotaRequest)
