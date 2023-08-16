@@ -13,7 +13,7 @@ on:
 
 jobs:
   validate-docs:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v3
         with:
