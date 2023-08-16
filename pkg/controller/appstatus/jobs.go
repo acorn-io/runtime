@@ -114,7 +114,7 @@ func (a *appStatusRenderer) readJobs() error {
 		}
 
 		if c.RunningCount > 0 {
-			c.TransitioningMessages = append(c.TransitioningMessages, "running, waiting for job to complete")
+			c.TransitioningMessages = append(c.TransitioningMessages, "job running")
 			// Move error to transitioning to make it look better
 			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
 			c.ErrorMessages = nil

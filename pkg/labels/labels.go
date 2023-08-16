@@ -27,6 +27,7 @@ const (
 	AcornVolumeName                        = Prefix + "volume-name"
 	AcornVolumeClass                       = Prefix + "volume-class"
 	AcornSecretName                        = Prefix + "secret-name"
+	AcornSecretSourceNamespace             = Prefix + "secret-source-namespace"
 	AcornSecretSourceName                  = Prefix + "secret-source-name"
 	AcornSecretGenerated                   = Prefix + "secret-generated"
 	AcornContainerName                     = Prefix + "container-name"
