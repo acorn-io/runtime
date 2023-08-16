@@ -117,7 +117,11 @@ func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, sig
 		return "", err
 	}
 
-	logrus.Debugf("Wrote signature %s to %s", sigOCIDigest, targetRepo.Name())
+	logrus.Infof("Wrote signature %s to %s", sigOCIDigest, targetRepo.Name())
+	dig, err := signatureOCI.Digest()
+	if err == nil {
+		logrus.Infof("Signature OCI digest: %s", dig.String())
+	}
 
 	return sigOCIDigest.String(), nil
 }
