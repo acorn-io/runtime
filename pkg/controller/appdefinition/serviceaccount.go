@@ -13,7 +13,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toServiceAccount(req router.Request, saName string, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result kclient.Object, _ error) {
+func toServiceAccount(req router.Request, saName string, labelMap, annotations map[string]string, appInstance *v1.AppInstance, perms v1.Permissions) (result kclient.Object, _ error) {
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        saName,
@@ -22,19 +22,10 @@ func toServiceAccount(req router.Request, saName string, labelMap, annotations m
 			Annotations: annotations,
 		},
 	}
-	return sa, addAWS(req, appInstance, sa)
+	return sa, addAWS(req, appInstance, sa, perms)
 }
 
-func addAWS(req router.Request, appInstance *v1.AppInstance, sa *corev1.ServiceAccount) error {
-	perms := v1.Permissions{
-		ServiceName: sa.Name,
-	}
-	for _, perm := range appInstance.Spec.GetPermissions() {
-		if perm.ServiceName == sa.Name {
-			perms.Rules = append(perms.Rules, perm.Rules...)
-		}
-	}
-
+func addAWS(req router.Request, appInstance *v1.AppInstance, sa *corev1.ServiceAccount, perms v1.Permissions) error {
 	annotations, err := awspermissions.AWSAnnotations(req.Ctx, req.Client, appInstance, perms, sa.Name)
 	if err != nil {
 		return err

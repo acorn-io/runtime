@@ -728,11 +728,11 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance)
+		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, containerName, containerDef)
 		if err != nil {
 			return nil, err
 		}
-		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, containerName, containerDef)
+		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms)
 		if err != nil {
 			return nil, err
 		}

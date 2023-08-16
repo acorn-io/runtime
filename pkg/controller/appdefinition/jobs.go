@@ -56,11 +56,11 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if job == nil {
 			continue
 		}
-		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance)
+		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, jobName, jobDef)
 		if err != nil {
 			return nil, err
 		}
-		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, jobName, jobDef)
+		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance, perms)
 		if err != nil {
 			return nil, err
 		}
