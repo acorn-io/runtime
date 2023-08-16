@@ -6,15 +6,15 @@ import (
 )
 
 type Details struct {
-	DeployArgs v1.GenericMap `json:"deployArgs,omitempty"`
-	Profiles   []string      `json:"profiles,omitempty"`
-	AppSpec    *v1.AppSpec   `json:"appSpec,omitempty"`
-	Params     *v1.ParamSpec `json:"params,omitempty"`
+	DeployArgs *v1.GenericMap `json:"deployArgs,omitempty"`
+	Profiles   []string       `json:"profiles,omitempty"`
+	AppSpec    *v1.AppSpec    `json:"appSpec,omitempty"`
+	Params     *v1.ParamSpec  `json:"params,omitempty"`
 }
 
 func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string) (*Details, error) {
 	result := &Details{
-		DeployArgs: deployArgs,
+		DeployArgs: v1.NewGenericMap(deployArgs),
 		Profiles:   profiles,
 	}
 
@@ -28,7 +28,7 @@ func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string
 		if err != nil {
 			return nil, err
 		}
-		result.DeployArgs = deployArgs
+		result.DeployArgs = v1.NewGenericMap(deployArgs)
 	}
 
 	appSpec, err := appDef.AppSpec()

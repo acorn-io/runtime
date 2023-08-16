@@ -65,9 +65,10 @@ func (s *ImageDetailStrategy) Create(ctx context.Context, obj types.Object) (typ
 			opts = append(opts, remote.WithAuthFromKeychain(images.NewSimpleKeychain(ref.Context(), *details.Auth, nil)))
 		}
 	}
+
 	id, err := imagedetails.GetImageDetails(ctx, s.client, ns, details.ImageName, imagedetails.GetImageDetailsOptions{
 		Profiles:      details.Profiles,
-		DeployArgs:    details.DeployArgs,
+		DeployArgs:    details.DeployArgs.GetData(),
 		Nested:        details.NestedDigest,
 		NoDefaultReg:  details.NoDefaultRegistry,
 		IncludeNested: details.IncludeNested,

@@ -3,25 +3,94 @@ package v1
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
+	"github.com/acorn-io/baaah/pkg/typed"
 	"github.com/sirupsen/logrus"
+	"k8s.io/kube-openapi/pkg/common"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 )
 
-type GenericMap map[string]interface{}
-
-func (in GenericMap) MarshalJSON() ([]byte, error) {
-	return json.Marshal((map[string]interface{})(in))
+type GenericMap struct {
+	// +optional
+	Data map[string]any `json:"-"`
 }
 
-func translateObject(data interface{}) (ret interface{}, err error) {
+func (GenericMap) OpenAPIDefinition() common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			VendorExtensible: spec.VendorExtensible{
+				Extensions: spec.Extensions{
+					"x-kubernetes-preserve-unknown-fields": "true",
+				},
+			},
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+			},
+		},
+	}
+}
+
+func (g *GenericMap) UnmarshalJSON(data []byte) error {
+	if g == nil {
+		return fmt.Errorf("%T: UnmarshalJSON on nil pointer", g)
+	}
+
+	dec := json.NewDecoder(bytes.NewBuffer(data))
+	dec.UseNumber()
+
+	d := map[string]any{}
+	if err := dec.Decode(&d); err != nil {
+		return fmt.Errorf("%T: Failed to decode data: %w", g, err)
+	}
+
+	if _, err := translateObject(d); err != nil {
+		return fmt.Errorf("%T: Failed to translate object: %w", g, err)
+	}
+
+	if len(d) > 0 {
+		// Consumers expect empty generic maps to have a nil Data field
+		g.Data = d
+	}
+
+	return nil
+}
+
+// GetData returns the underlying map[string]any and nil if the GenericMap is nil.
+func (g *GenericMap) GetData() map[string]any {
+	if g == nil {
+		return nil
+	}
+
+	return g.Data
+}
+
+// Merge merges the given map into this map, returning a new map, leaving the original unchanged.
+func (g *GenericMap) Merge(from *GenericMap) *GenericMap {
+	merged := typed.Concat(g.GetData(), from.GetData())
+	if merged == nil {
+		return nil
+	}
+
+	return &GenericMap{
+		Data: merged,
+	}
+}
+
+// MarshalJSON may get called on pointers or values, so implement MarshalJSON on value.
+func (g GenericMap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(g.GetData())
+}
+
+func translateObject(data any) (ret any, err error) {
 	switch t := data.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		for k, v := range t {
 			if t[k], err = translateObject(v); err != nil {
 				return nil, err
 			}
 		}
-	case []interface{}:
+	case []any:
 		for i, v := range t {
 			if t[i], err = translateObject(v); err != nil {
 				return nil, err
@@ -37,35 +106,33 @@ func translateObject(data interface{}) (ret interface{}, err error) {
 	return data, nil
 }
 
-func (in *GenericMap) UnmarshalJSON(data []byte) error {
-	dec := json.NewDecoder(bytes.NewBuffer(data))
-	dec.UseNumber()
-	if err := dec.Decode((*map[string]interface{})(in)); err != nil {
-		return err
-	}
-	_, err := translateObject(*((*map[string]interface{})(in)))
-	return err
-}
-
 func (in *GenericMap) DeepCopyInto(out *GenericMap) {
-	*out = map[string]interface{}{}
-	data, err := in.MarshalJSON()
-	if err != nil {
-		logrus.Errorf("failed to marshal [%T] during deep copy: [%s]", out, err)
-		return
-	}
-
-	if err := out.UnmarshalJSON(data); err != nil {
-		logrus.Errorf("failed to unmarshal [%T] during deep copy: [%s]", out, err)
+	var err error
+	if *out, err = Mapify(in.GetData()); err != nil {
+		logrus.WithError(err).Errorf("failed to deep copy into [%T]", out)
 	}
 }
 
-func Mapify(obj any) (GenericMap, error) {
-	data, err := json.Marshal(obj)
-	if err != nil {
-		return nil, err
+func NewGenericMap(data map[string]any) *GenericMap {
+	if data == nil {
+		return nil
 	}
 
-	gm := make(GenericMap)
-	return gm, gm.UnmarshalJSON(data)
+	return &GenericMap{
+		Data: data,
+	}
+}
+
+func Mapify(data any) (GenericMap, error) {
+	marshaled, err := json.Marshal(data)
+	if err != nil {
+		return GenericMap{}, err
+	}
+
+	gm := &GenericMap{}
+	if err := gm.UnmarshalJSON(marshaled); err != nil {
+		return GenericMap{}, err
+	}
+
+	return *gm, nil
 }

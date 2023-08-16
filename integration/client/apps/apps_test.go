@@ -302,11 +302,11 @@ func TestAppUpdate(t *testing.T) {
 		},
 	}, thirdApp.Spec.Links)
 
-	assert.Equal(t, v1.GenericMap{
+	assert.Equal(t, v1.NewGenericMap(map[string]any{
 		"param1": "val1",
 		"param2": "val3",
 		"param3": "val3",
-	}, thirdApp.Spec.DeployArgs)
+	}), thirdApp.Spec.DeployArgs)
 
 	assert.Equal(t, imageID2, thirdApp.Spec.Image)
 }
@@ -461,7 +461,7 @@ func TestAppRun(t *testing.T) {
 	assert.Equal(t, v1.PublishModeAll, app.Spec.PublishMode)
 	assert.Equal(t, "volume", app.Spec.Volumes[0].Volume)
 	assert.Equal(t, "secret", app.Spec.Secrets[0].Secret)
-	assert.Equal(t, "value", app.Spec.DeployArgs["key"])
+	assert.Equal(t, "value", app.Spec.DeployArgs.Data["key"])
 }
 
 func TestAppRunImageVariations(t *testing.T) {

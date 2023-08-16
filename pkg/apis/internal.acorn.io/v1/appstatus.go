@@ -101,7 +101,7 @@ type ServiceStatus struct {
 	CommonStatus               `json:",inline"`
 	Default                    bool              `json:"default,omitempty"`
 	Ports                      Ports             `json:"ports,omitempty"`
-	Data                       GenericMap        `json:"data,omitempty"`
+	Data                       *GenericMap       `json:"data,omitempty"`
 	Consumer                   *ServiceConsumer  `json:"consumer,omitempty"`
 	Secrets                    []string          `json:"secrets,omitempty"`
 	Address                    string            `json:"address,omitempty"`

@@ -7,7 +7,7 @@ import (
 	adminapi "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io"
 	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
-	"github.com/acorn-io/runtime/pkg/openapi"
+	openapi "github.com/acorn-io/runtime/pkg/openapi/generated"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/acorn-io/runtime/pkg/server/registry"
 	apiserver "k8s.io/apiserver/pkg/server"

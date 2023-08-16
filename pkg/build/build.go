@@ -86,7 +86,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		return nil, err
 	}
 
-	appDefinition, buildArgs, err := appDefinition.WithArgs(ctx.opts.Args, append([]string{"build?"}, ctx.opts.Profiles...))
+	appDefinition, buildArgs, err := appDefinition.WithArgs(ctx.opts.Args.GetData(), append([]string{"build?"}, ctx.opts.Profiles...))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 	appImage := &v1.AppImage{
 		Acornfile: string(acornfileData),
 		ImageData: imageData,
-		BuildArgs: buildArgs,
+		BuildArgs: v1.NewGenericMap(buildArgs),
 		VCS:       ctx.opts.VCS,
 	}
 	if err != nil {

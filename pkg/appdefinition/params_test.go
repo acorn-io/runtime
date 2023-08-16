@@ -110,7 +110,7 @@ containers: {
 		t.Fatal(err)
 	}
 
-	appDef, args, err := appDef.WithArgs(params, []string{"prod"})
+	appDef, args, err := appDef.WithArgs(params.GetData(), []string{"prod"})
 	if err != nil {
 		t.Fatal(err)
 	}

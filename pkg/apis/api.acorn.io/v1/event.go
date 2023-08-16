@@ -42,6 +42,6 @@ const (
 	EventSeverityError = internalv1.EventSeverityError
 )
 
-func Mapify(v any) (internalv1.GenericMap, error) {
-	return internalv1.Mapify(v)
+func Mapify(data any) (internalv1.GenericMap, error) {
+	return internalv1.Mapify(data)
 }

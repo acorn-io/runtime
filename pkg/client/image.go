@@ -8,6 +8,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	"github.com/acorn-io/runtime/pkg/images"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
@@ -40,7 +41,7 @@ func (c *DefaultClient) ImageDetails(ctx context.Context, imageName string, opts
 	}
 
 	if opts != nil {
-		detailsResult.DeployArgs = opts.DeployArgs
+		detailsResult.DeployArgs = v1.NewGenericMap(opts.DeployArgs)
 		detailsResult.Profiles = opts.Profiles
 		detailsResult.NestedDigest = opts.NestedDigest
 		detailsResult.Auth = opts.Auth

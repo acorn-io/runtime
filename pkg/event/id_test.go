@@ -26,14 +26,14 @@ func TestContentID(t *testing.T) {
 			name:  "Equal/Diff/Context",
 			equal: true,
 			a: apiv1.Event{
-				Details: v1.GenericMap{
+				Details: v1.NewGenericMap(map[string]any{
 					"info": "1",
-				},
+				}),
 			},
 			b: apiv1.Event{
-				Details: v1.GenericMap{
-					"info": 1,
-				},
+				Details: v1.NewGenericMap(map[string]any{
+					"info": "1",
+				}),
 			},
 		},
 		{

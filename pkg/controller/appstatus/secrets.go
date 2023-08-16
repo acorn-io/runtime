@@ -66,8 +66,8 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 		}
 
 		s.SecretName = publicname.Get(sourceSecret)
-		if secretDef.Type == string(v1.SecretTypeGenerated) && secretDef.Params["job"] != "" {
-			s.JobName = fmt.Sprint(secretDef.Params["job"])
+		if secretDef.Type == string(v1.SecretTypeGenerated) && secretDef.Params.GetData()["job"] != "" {
+			s.JobName = fmt.Sprint(secretDef.Params.GetData()["job"])
 			s.JobReady, err = a.isJobReady(s.JobName)
 			if err != nil {
 				return err
