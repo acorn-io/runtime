@@ -32,7 +32,7 @@ func (s *Strategy) New() types.Object {
 }
 
 func (s *Strategy) List(ctx context.Context, namespace string, options storage.ListOptions) (types.ObjectList, error) {
-	apps := &apiv1.AppList{}
+	apps := &internalapiv1.AppInstanceList{}
 	if err := s.client.List(ctx, apps, strategy.ToListOpts(namespace, options)); err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *Strategy) Get(ctx context.Context, namespace, name string) (types.Objec
 	}, name)
 }
 
-func jobStatusToJob(namespace string, app apiv1.App, jobStatus internalapiv1.JobStatus) apiv1.Job {
+func jobStatusToJob(namespace string, app internalapiv1.AppInstance, jobStatus internalapiv1.JobStatus) apiv1.Job {
 	creationTime := jobStatus.CreationTime
 	if creationTime == nil {
 		creationTime = &metav1.Time{}
