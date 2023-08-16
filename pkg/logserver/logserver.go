@@ -24,9 +24,14 @@ type Server struct {
 	Debug          bool
 }
 
-// StartServerWithDefaults starts the server with default values
+// StartServerWithDefaults starts the server with default values. If the ACORN_LOG_LEVEL environment variable is set,
+// it will be parsed and used to set the log level.
 func StartServerWithDefaults() {
-	logrus.SetLevel(logrus.InfoLevel)
+	if level, err := logrus.ParseLevel(os.Getenv("ACORN_LOG_LEVEL")); err == nil {
+		logrus.SetLevel(level)
+	} else {
+		logrus.SetLevel(logrus.InfoLevel)
+	}
 	s := Server{
 		SocketLocation: DefaultSocketLocation,
 	}
