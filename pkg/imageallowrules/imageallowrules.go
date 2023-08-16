@@ -115,7 +115,8 @@ iarLoop:
 		// Any verification error or failed verification issue will skip on to the next IAR
 		for _, rule := range imageAllowRule.Signatures.Rules {
 			if err := cosign.EnsureReferences(ctx, c, image, namespace, &verifyOpts); err != nil {
-				return err
+				logrus.Infof("failed checking image %s against %s/%s.signatures: %v", image, imageAllowRule.Namespace, imageAllowRule.Name, err)
+				continue iarLoop
 			}
 			verifyOpts.AnnotationRules = rule.Annotations
 
