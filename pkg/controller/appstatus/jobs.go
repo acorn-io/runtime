@@ -8,8 +8,11 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
+	"github.com/acorn-io/z"
+	cronv3 "github.com/robfig/cron/v3"
 	batchv1 "k8s.io/api/batch/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (a *appStatusRenderer) readJobs() error {
@@ -39,8 +42,11 @@ func (a *appStatusRenderer) readJobs() error {
 		c.TransitioningMessages = append(c.TransitioningMessages, summary.TransitioningMessages...)
 		c.ErrorMessages = append(c.ErrorMessages, summary.ErrorMessages...)
 		c.RunningCount = summary.RunningCount
+		c.JobName = jobName
+		c.JobNamespace = a.app.Status.Namespace
 
 		if c.Skipped {
+			c.CreationTime = &a.app.CreationTimestamp
 			c.State = "completed"
 			c.Ready = true
 			c.UpToDate = true
@@ -62,17 +68,39 @@ func (a *appStatusRenderer) readJobs() error {
 			} else if err != nil {
 				return err
 			} else {
+				c.CreationTime = &cronJob.CreationTimestamp
+				c.LastRun = cronJob.Status.LastScheduleTime
+				c.CompletionTime = cronJob.Status.LastSuccessfulTime
+				c.Schedule = cronJob.Spec.Schedule
 				c.Defined = true
 				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-				c.RunningCount = len(cronJob.Status.Active)
+				for _, nj := range cronJob.Status.Active {
+					nestedJob := &batchv1.Job{}
+					err := a.c.Get(a.ctx, router.Key(nj.Namespace, nj.Name), nestedJob)
+					if err != nil {
+						return err
+					}
+					c.RunningCount += int(nestedJob.Status.Active)
+					c.ErrorCount += int(nestedJob.Status.Failed)
+				}
+
 				if cronJob.Status.LastSuccessfulTime != nil {
 					c.CreateEventSucceeded = true
 					c.Ready = c.UpToDate
 				}
+
+				nextRun, err := nextRun(c.Schedule, cronJob.CreationTimestamp, cronJob.Status.LastScheduleTime)
+				if err != nil {
+					return err
+				}
+				c.NextRun = nextRun
 			}
 		} else if err != nil {
 			return err
 		} else {
+			c.CreationTime = &job.CreationTimestamp
+			c.CompletionTime = job.Status.CompletionTime
+			c.LastRun = job.Status.StartTime
 			c.Defined = true
 			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
 			if job.Status.Succeeded > 0 {
@@ -125,6 +153,8 @@ func (a *appStatusRenderer) readJobs() error {
 				c.State = "failing"
 			} else if c.RunningCount > 0 {
 				c.State = "running"
+			} else {
+				c.State = "pending"
 			}
 		} else if c.Defined {
 			if len(c.ErrorMessages) > 0 {
@@ -179,4 +209,20 @@ func (a *appStatusRenderer) isJobReady(jobName string) (ready bool, err error) {
 	}
 
 	return true, nil
+}
+
+// nextRun uses the cron expression library used by k8s to determine the next run time of a cronjob.
+func nextRun(expression string, creation metav1.Time, last *metav1.Time) (*metav1.Time, error) {
+	schedule, err := cronv3.ParseStandard(expression)
+	if err != nil {
+		return nil, err
+	}
+
+	if last == nil {
+		last = &creation
+	}
+
+	return z.Pointer(
+		metav1.NewTime(schedule.Next(last.Time)),
+	), nil
 }

@@ -96,6 +96,43 @@ type ContainerReplicaStatus struct {
 	Started              *bool                   `json:"started,omitempty"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type Job struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+
+	Spec   JobSpec      `json:"spec,omitempty"`
+	Status v1.JobStatus `json:"status,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type JobList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Job `json:"items"`
+}
+
+type JobSpec struct {
+	AppName  string `json:"appName,omitempty"`
+	JobName  string `json:"jobName,omitempty"`
+	Schedule string `json:"schedule,omitempty"`
+}
+
+type JobColumns struct {
+	State   string       `json:"state,omitempty"`
+	App     string       `json:"app,omitempty"`
+	NextRun *metav1.Time `json:"nextRun,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type JobRestart struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+}
+
 // EnsureRegion checks or sets the region of a ContainerReplica.
 // If a ContainerReplica's region is unset, EnsureRegion sets it to the given region and returns true.
 // Otherwise, it returns true if and only if the ContainerReplica belongs to the given region.

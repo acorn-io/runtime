@@ -690,6 +690,50 @@ func (mr *MockClientMockRecorder) Info(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockClient)(nil).Info), arg0)
 }
 
+// JobGet mocks base method.
+func (m *MockClient) JobGet(arg0 context.Context, arg1 string) (*v1.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JobGet", arg0, arg1)
+	ret0, _ := ret[0].(*v1.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// JobGet indicates an expected call of JobGet.
+func (mr *MockClientMockRecorder) JobGet(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JobGet", reflect.TypeOf((*MockClient)(nil).JobGet), arg0, arg1)
+}
+
+// JobList mocks base method.
+func (m *MockClient) JobList(arg0 context.Context, arg1 *client.JobListOptions) ([]v1.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JobList", arg0, arg1)
+	ret0, _ := ret[0].([]v1.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// JobList indicates an expected call of JobList.
+func (mr *MockClientMockRecorder) JobList(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JobList", reflect.TypeOf((*MockClient)(nil).JobList), arg0, arg1)
+}
+
+// JobRestart mocks base method.
+func (m *MockClient) JobRestart(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JobRestart", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// JobRestart indicates an expected call of JobRestart.
+func (mr *MockClientMockRecorder) JobRestart(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JobRestart", reflect.TypeOf((*MockClient)(nil).JobRestart), arg0, arg1)
+}
+
 // KubeConfig mocks base method.
 func (m *MockClient) KubeConfig(arg0 context.Context, arg1 *client.KubeProxyAddressOptions) ([]byte, error) {
 	m.ctrl.T.Helper()

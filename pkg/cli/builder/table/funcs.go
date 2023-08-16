@@ -21,6 +21,9 @@ import (
 var (
 	FuncMap = map[string]any{
 		"ago":           FormatCreated,
+		"until":         FormatUntil,
+		"lastRun":       FormatLastRun,
+		"nextRun":       FormatNextRun,
 		"json":          FormatJSON,
 		"jsoncompact":   FormatJSONCompact,
 		"yaml":          FormatYAML,
@@ -112,6 +115,24 @@ func FormatID(obj kclient.Object) (string, error) {
 
 func FormatCreated(data metav1.Time) string {
 	return duration.HumanDuration(time.Now().UTC().Sub(data.Time)) + " ago"
+}
+
+func FormatUntil(data metav1.Time) string {
+	return duration.HumanDuration(time.Until(data.Time.UTC())) + " from now"
+}
+
+func FormatNextRun(data *metav1.Time) string {
+	if data == nil {
+		return "N/A"
+	}
+	return FormatUntil(*data)
+}
+
+func FormatLastRun(data *metav1.Time) string {
+	if data == nil {
+		return "N/A"
+	}
+	return FormatCreated(*data)
 }
 
 func FormatJSON(data any) (string, error) {

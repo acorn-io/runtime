@@ -127,6 +127,22 @@ func containersCompletion(ctx context.Context, c client.Client, toComplete strin
 	return result, nil
 }
 
+func jobsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+	var result []string
+	jobs, err := c.JobList(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, job := range jobs {
+		if strings.HasPrefix(job.Name, toComplete) {
+			result = append(result, job.Name)
+		}
+	}
+
+	return result, nil
+}
+
 // acornContainerCompletion will complete the `-c` flag for various commands like exec. It must look at all apps and
 // then for all containers on status.appSpec.Containers to produce a list of possibilities.
 func acornContainerCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {

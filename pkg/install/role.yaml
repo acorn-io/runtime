@@ -52,6 +52,7 @@ rules:
     resources:
       - jobs
       - cronjobs
+      - cronjobs/status
   - verbs: ["*"]
     apiGroups: ["apps"]
     resources:

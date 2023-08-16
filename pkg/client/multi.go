@@ -339,6 +339,31 @@ func (m *MultiClient) ContainerReplicaPortForward(ctx context.Context, name stri
 	return dialer, err
 }
 
+func (m *MultiClient) JobList(ctx context.Context, opts *JobListOptions) ([]apiv1.Job, error) {
+	if opts != nil && opts.App != "" {
+		return onOneList(ctx, m.Factory, opts.App, func(name string, c Client) ([]apiv1.Job, error) {
+			opts.App = name
+			return c.JobList(ctx, opts)
+		})
+	}
+	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Job, error) {
+		return c.JobList(ctx, opts)
+	})
+}
+
+func (m *MultiClient) JobGet(ctx context.Context, name string) (*apiv1.Job, error) {
+	return onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.Job, error) {
+		return c.JobGet(ctx, name)
+	})
+}
+
+func (m *MultiClient) JobRestart(ctx context.Context, name string) error {
+	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
+		return &apiv1.App{}, c.JobRestart(ctx, name)
+	})
+	return err
+}
+
 func (m *MultiClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
 	return aggregate(ctx, m.Factory, func(c Client) ([]apiv1.Volume, error) {
 		return c.VolumeList(ctx)

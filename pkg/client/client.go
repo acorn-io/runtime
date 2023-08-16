@@ -240,6 +240,10 @@ type Client interface {
 	ContainerReplicaExec(ctx context.Context, name string, args []string, tty bool, opts *ContainerReplicaExecOptions) (*term.ExecIO, error)
 	ContainerReplicaPortForward(ctx context.Context, name string, port int) (PortForwardDialer, error)
 
+	JobList(ctx context.Context, opts *JobListOptions) ([]apiv1.Job, error)
+	JobGet(ctx context.Context, name string) (*apiv1.Job, error)
+	JobRestart(ctx context.Context, name string) error
+
 	VolumeList(ctx context.Context) ([]apiv1.Volume, error)
 	VolumeGet(ctx context.Context, name string) (*apiv1.Volume, error)
 	VolumeDelete(ctx context.Context, name string) (*apiv1.Volume, error)
@@ -356,6 +360,10 @@ type ContainerReplicaListOptions struct {
 
 type KubeProxyAddressOptions struct {
 	Region string `json:"region,omitempty"`
+}
+
+type JobListOptions struct {
+	App string `json:"app,omitempty"`
 }
 
 type EventStreamOptions struct {

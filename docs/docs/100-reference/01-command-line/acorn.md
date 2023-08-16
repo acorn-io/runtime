@@ -38,6 +38,7 @@ acorn [flags]
 * [acorn image](acorn_image.md)	 - Manage images
 * [acorn info](acorn_info.md)	 - Info about acorn installation
 * [acorn install](acorn_install.md)	 - Install and configure acorn in the cluster
+* [acorn job](acorn_job.md)	 - Manage jobs
 * [acorn login](acorn_login.md)	 - Add registry credentials
 * [acorn logout](acorn_logout.md)	 - Remove registry credentials
 * [acorn logs](acorn_logs.md)	 - Log all workloads from an app

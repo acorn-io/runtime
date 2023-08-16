@@ -39,6 +39,8 @@ type MockClientFactory struct {
 	AppItem          *apiv1.App
 	ContainerList    []apiv1.ContainerReplica
 	ContainerItem    *apiv1.ContainerReplica
+	JobList          []apiv1.Job
+	JobItem          *apiv1.Job
 	CredentialList   []apiv1.Credential
 	CredentialItem   *apiv1.Credential
 	VolumeList       []apiv1.Volume
@@ -67,6 +69,7 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 	return &MockClient{
 		Apps:             dc.AppList,
 		Containers:       dc.ContainerList,
+		Jobs:             dc.JobList,
 		Credentials:      dc.CredentialList,
 		Volumes:          dc.VolumeList,
 		Secrets:          dc.SecretList,
@@ -75,6 +78,7 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 		VolumeClasses:    dc.VolumeClassList,
 		AppItem:          dc.AppItem,
 		ContainerItem:    dc.ContainerItem,
+		JobItem:          dc.JobItem,
 		CredentialItem:   dc.CredentialItem,
 		VolumeItem:       dc.VolumeItem,
 		SecretItem:       dc.SecretItem,
@@ -99,6 +103,8 @@ type MockClient struct {
 	AppItem          *apiv1.App
 	Containers       []apiv1.ContainerReplica
 	ContainerItem    *apiv1.ContainerReplica
+	Jobs             []apiv1.Job
+	JobItem          *apiv1.Job
 	Credentials      []apiv1.Credential
 	CredentialItem   *apiv1.Credential
 	Volumes          []apiv1.Volume
@@ -508,6 +514,50 @@ func (m *MockClient) ContainerReplicaExec(ctx context.Context, name string, args
 
 func (m *MockClient) ContainerReplicaPortForward(ctx context.Context, name string, port int) (client.PortForwardDialer, error) {
 	return nil, nil
+}
+
+func (m *MockClient) JobList(ctx context.Context, opts *client.JobListOptions) ([]apiv1.Job, error) {
+	if m.Jobs != nil {
+		if opts == nil {
+			return m.Jobs, nil
+		}
+		// Do the filtering to make testing simpler
+		result := make([]apiv1.Job, 0, len(m.Jobs))
+		for _, c := range m.Jobs {
+			if c.Spec.AppName == opts.App {
+				result = append(result, c)
+			}
+		}
+		return result, nil
+	}
+	return []apiv1.Job{{
+		TypeMeta:   metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{Name: "found.job"},
+		Spec:       apiv1.JobSpec{AppName: "found"},
+		Status:     v1.JobStatus{},
+	}}, nil
+}
+
+func (m *MockClient) JobGet(ctx context.Context, name string) (*apiv1.Job, error) {
+	if m.JobItem != nil {
+		return m.JobItem, nil
+	}
+	switch name {
+	case "dne":
+		return nil, fmt.Errorf("error: job %s does not exist", name)
+	case "found", "found.job":
+		return &apiv1.Job{
+			TypeMeta:   metav1.TypeMeta{},
+			ObjectMeta: metav1.ObjectMeta{Name: "found.job"},
+			Spec:       apiv1.JobSpec{AppName: "found"},
+			Status:     v1.JobStatus{},
+		}, nil
+	}
+	return nil, nil
+}
+
+func (m *MockClient) JobRestart(ctx context.Context, name string) error {
+	return nil
 }
 
 func (m *MockClient) VolumeList(ctx context.Context) ([]apiv1.Volume, error) {
