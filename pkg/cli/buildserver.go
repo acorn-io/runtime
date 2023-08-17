@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/acorn-io/runtime/pkg/buildserver"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
@@ -33,7 +34,7 @@ type BuildServer struct {
 	ForwardService string `usage:"Forwarding Address" env:"ACORN_BUILD_SERVER_FORWARD_SERVICE"`
 }
 
-func (s *BuildServer) Run(cmd *cobra.Command, args []string) error {
+func (s *BuildServer) Run(cmd *cobra.Command, _ []string) error {
 	c, err := k8sclient.Default()
 	if err != nil {
 		return err
@@ -47,14 +48,26 @@ func (s *BuildServer) Run(cmd *cobra.Command, args []string) error {
 	server := buildserver.NewServer(s.UUID, s.Namespace, pubKey, privKey, c)
 	address := fmt.Sprintf("0.0.0.0:%d", s.ListenPort)
 
+	var p *tcpproxy.Proxy
 	if s.ForwardService != "" {
-		var p tcpproxy.Proxy
+		p = new(tcpproxy.Proxy)
 		p.AddRoute(fmt.Sprintf(":%d", s.ForwardPort), tcpproxy.To(s.ForwardService))
 		go func() {
 			logrus.Infof("Forwarding :%d to %s", s.ForwardPort, s.ForwardService)
 			logrus.Fatal(p.Run())
 		}()
 	}
+
+	go func() {
+		// Nothing here is using the context. Therefore, when the context is canceled, we should just exit.
+		<-cmd.Context().Done()
+		if p != nil {
+			if err = p.Close(); err != nil {
+				logrus.Errorf("Error closing proxy: %v", err)
+			}
+		}
+		os.Exit(0)
+	}()
 
 	logrus.Infof("Listening on %s", address)
 	return http.ListenAndServe(address, server)

@@ -45,6 +45,7 @@ COPY /scripts/acorn-job-helper-init /usr/local/bin
 COPY /scripts/acorn-job-helper-shutdown /usr/local/bin
 COPY /scripts/acorn-job-get-output /usr/local/bin
 CMD []
+STOPSIGNAL SIGTERM
 ENTRYPOINT ["/usr/local/bin/acorn"]
 
 FROM base AS goreleaser
