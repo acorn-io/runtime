@@ -1,6 +1,8 @@
 package appdefinition
 
 import (
+	"strings"
+
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/condition"
@@ -11,6 +13,10 @@ import (
 func OnError(req router.Request, resp router.Response, err error) error {
 	if apierrors.IsConflict(err) {
 		return err
+	}
+	// ignore and also don't record these errors
+	if err != nil && strings.Contains(err.Error(), "object is being deleted") {
+		return nil
 	}
 	setCondition := false
 	if _, ok := req.Object.(*v1.AppInstance); ok {

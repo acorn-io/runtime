@@ -13,11 +13,13 @@ func isBlocked(dependencies map[string]v1.DependencyStatus, expressionErrors []v
 	groupedByTypeName := map[string][]string{}
 
 	for depName, dep := range dependencies {
-		key := string(dep.DependencyType)
+		var key string
 		if dep.Missing {
 			key = string(dep.DependencyType) + " to be created"
 		} else if !dep.Ready {
 			key = string(dep.DependencyType) + " to be ready"
+		} else {
+			continue
 		}
 		groupedByTypeName[key] = append(groupedByTypeName[key], depName)
 	}

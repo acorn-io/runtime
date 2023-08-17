@@ -86,11 +86,12 @@ func CreateSecrets(req router.Request, resp router.Response) (err error) {
 		}
 
 		labelMap := map[string]string{
-			labels.AcornAppName:          appInstance.Name,
-			labels.AcornAppNamespace:     appInstance.Namespace,
-			labels.AcornManaged:          "true",
-			labels.AcornSecretName:       secretName,
-			labels.AcornSecretSourceName: secret.Name,
+			labels.AcornAppName:               appInstance.Name,
+			labels.AcornAppNamespace:          appInstance.Namespace,
+			labels.AcornManaged:               "true",
+			labels.AcornSecretName:            secretName,
+			labels.AcornSecretSourceName:      secret.Name,
+			labels.AcornSecretSourceNamespace: secret.Namespace,
 		}
 		labelMap = labels.Merge(labelMap, labels.GatherScoped(secretName, v1.LabelTypeSecret,
 			appInstance.Status.AppSpec.Labels, entry.secret.Labels, appInstance.Spec.Labels))
