@@ -19,11 +19,14 @@ import (
 )
 
 type MockClientFactoryManual struct {
-	Client client.Client
+	AcornConfig string
+	Client      client.Client
 }
 
 func (dc *MockClientFactoryManual) Options() project.Options {
-	return project.Options{}
+	return project.Options{
+		AcornConfig: dc.AcornConfig,
+	}
 }
 
 func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
@@ -35,6 +38,7 @@ func (dc *MockClientFactoryManual) CreateWithAllProjects() (client.Client, error
 }
 
 type MockClientFactory struct {
+	AcornConfig      string
 	AppList          []apiv1.App
 	AppItem          *apiv1.App
 	ContainerList    []apiv1.ContainerReplica
@@ -62,7 +66,9 @@ type MockClientFactory struct {
 }
 
 func (dc *MockClientFactory) Options() project.Options {
-	return project.Options{}
+	return project.Options{
+		AcornConfig: dc.AcornConfig,
+	}
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {

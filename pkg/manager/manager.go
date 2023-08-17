@@ -142,7 +142,7 @@ func Login(ctx context.Context, cfg *config.CLIConfig, password, address string)
 	}
 
 	// reload config, could have changed
-	if newCfg, err := config.ReadCLIConfig(false); err != nil {
+	if newCfg, err := config.ReadCLIConfig(cfg.AcornConfig, false); err != nil {
 		return user, pass, err
 	} else {
 		*cfg = *newCfg

@@ -1766,7 +1766,7 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 	}
 
 	// Deploy the app
-	imageSource := imagesource.NewImageSource("", []string{"mylocalimage"}, []string{}, nil, true)
+	imageSource := imagesource.NewImageSource("", "", []string{"mylocalimage"}, []string{}, nil, true)
 	appImage, _, err := imageSource.GetImageAndDeployArgs(ctx, c)
 	if err != nil {
 		t.Fatal(err)

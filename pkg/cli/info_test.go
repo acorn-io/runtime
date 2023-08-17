@@ -11,6 +11,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,10 +31,10 @@ func TestInfo(t *testing.T) {
 	}{
 		{
 			name: "acorn info", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
+			All:    false,
+			Quiet:  false,
+			Output: "",
+		},
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					[]apiv1.Info{
@@ -56,10 +57,10 @@ func TestInfo(t *testing.T) {
 		},
 		{
 			name: "acorn info empty response", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
+			All:    false,
+			Quiet:  false,
+			Output: "",
+		},
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					nil, nil)
@@ -70,10 +71,10 @@ func TestInfo(t *testing.T) {
 		},
 		{
 			name: "acorn info -A", fields: fields{
-				All:    true,
-				Quiet:  false,
-				Output: "",
-			},
+			All:    true,
+			Quiet:  false,
+			Output: "",
+		},
 			// Want to return two entries
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
@@ -108,10 +109,10 @@ func TestInfo(t *testing.T) {
 		},
 		{
 			name: "acorn info -o yaml", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
+			All:    false,
+			Quiet:  false,
+			Output: "",
+		},
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return([]apiv1.Info{
 					{
@@ -133,10 +134,10 @@ func TestInfo(t *testing.T) {
 		},
 		{
 			name: "acorn info -o json", fields: fields{
-				All:    false,
-				Quiet:  false,
-				Output: "",
-			},
+			All:    false,
+			Quiet:  false,
+			Output: "",
+		},
 			prepare: func(f *mocks.MockClient) {
 				f.EXPECT().Info(gomock.Any()).Return(
 					[]apiv1.Info{
@@ -169,12 +170,12 @@ func TestInfo(t *testing.T) {
 
 			r, w, _ := os.Pipe()
 			os.Stdout = w
-			os.Setenv("ACORN_CONFIG_FILE", "/fake-file")
 
 			// Mock client factory just returns the gomock client.
 			cmd := NewInfo(CommandContext{
 				ClientFactory: &testdata.MockClientFactoryManual{
-					Client: mClient,
+					AcornConfig: "/fake-file",
+					Client:      mClient,
 				},
 				StdOut: w,
 				StdErr: w,
@@ -188,7 +189,7 @@ func TestInfo(t *testing.T) {
 			} else if err != nil && tt.wantErr {
 				assert.Equal(t, tt.wantOut, err.Error())
 			} else {
-				w.Close()
+				require.NoError(t, w.Close())
 				out, _ := io.ReadAll(r)
 				testOut, _ := os.ReadFile(tt.wantOut)
 				assert.Equal(t, string(testOut), string(out))

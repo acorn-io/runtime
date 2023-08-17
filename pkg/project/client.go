@@ -22,6 +22,7 @@ var (
 )
 
 type Options struct {
+	AcornConfig string
 	Project     string
 	Kubeconfig  string
 	ContextEnv  string
@@ -29,7 +30,7 @@ type Options struct {
 }
 
 func (o Options) CLIConfig() (*config.CLIConfig, error) {
-	return config.ReadCLIConfig(o.Kubeconfig != "")
+	return config.ReadCLIConfig(o.AcornConfig, o.Kubeconfig != "")
 }
 
 func Client(ctx context.Context, opts Options) (client.Client, error) {

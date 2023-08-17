@@ -84,10 +84,11 @@ func New() *cobra.Command {
 }
 
 type Acorn struct {
-	Kubeconfig string `usage:"Explicitly use kubeconfig file, overriding the default context" env:"ACORN_KUBECONFIG"`
-	Project    string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
-	Debug      bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
-	DebugLevel int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
+	AcornConfig string `usage:"Path of the acorn config file to use" name:"config" env:"ACORN_CONFIG_FILE"`
+	Kubeconfig  string `usage:"Explicitly use kubeconfig file, overriding the default context" env:"ACORN_KUBECONFIG"`
+	Project     string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
+	Debug       bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
+	DebugLevel  int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
 }
 
 func setEnv(key, value string) error {

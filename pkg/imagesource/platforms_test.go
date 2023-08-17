@@ -14,7 +14,7 @@ func TestParamsHelp(t *testing.T) {
 		file = "testdata/params/Acornfile"
 		cwd  = "testdata/params"
 	)
-	_, _, err := NewImageSource(file, []string{
+	_, _, err := NewImageSource("", file, []string{
 		cwd,
 		"image-name",
 		"--str=s",
@@ -30,10 +30,11 @@ func TestParamsHelp(t *testing.T) {
 
 func TestParams(t *testing.T) {
 	var (
-		file = "testdata/params/Acornfile"
-		cwd  = "testdata/params"
+		acornConfig string
+		file        = "testdata/params/Acornfile"
+		cwd         = "testdata/params"
 	)
-	_, params, err := NewImageSource(file, []string{
+	_, params, err := NewImageSource(acornConfig, file, []string{
 		cwd,
 		"image-name",
 		"--str=s",
