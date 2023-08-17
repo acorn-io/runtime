@@ -74,6 +74,9 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	if len(pass) == 0 {
+		pass = nil // nothing instead of empty pass
+	}
 
 	pf := func(_ bool) ([]byte, error) {
 		return pass, nil
@@ -87,7 +90,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		pterm.Debug.Printf("Key %s is not a supported PEM key, importing...\n", a.Key)
-		keyBytes, err := cosign.ImportKeyPair(a.Key, pf)
+		keyBytes, err := acornsign.ImportKeyPair(a.Key, pass)
 		if err != nil {
 			return err
 		}
@@ -121,12 +124,12 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pem, _, err := acornsign.PemEncodeCryptoPublicKey(pubkey)
-	if err != nil {
-		return err
-	}
-
 	if pubkey != nil {
+		pem, _, err := acornsign.PemEncodeCryptoPublicKey(pubkey)
+		if err != nil {
+			return err
+		}
+
 		imageSignOpts.PublicKey = string(pem)
 	}
 
