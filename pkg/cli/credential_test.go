@@ -10,16 +10,16 @@ import (
 	"github.com/acorn-io/runtime/pkg/cli/testdata"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCredential(t *testing.T) {
 	cfgDir, err := os.MkdirTemp("", "acorn-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	defer os.RemoveAll(cfgDir)
-	os.Setenv("ACORN_CONFIG_FILE", filepath.Join(cfgDir, "acorn.yaml"))
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, os.RemoveAll(cfgDir))
+	}()
+	acornConfigFile := filepath.Join(cfgDir, "acorn.yaml")
 
 	type fields struct {
 		Quiet  bool
@@ -47,10 +47,12 @@ func TestCredential(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
+				ClientFactory: &testdata.MockClientFactory{
+					MockAcornConfigFile: acornConfigFile,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader(""),
 			},
 			args: args{
 				args:   []string{"--", "test-server-address"},
@@ -66,10 +68,12 @@ func TestCredential(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
+				ClientFactory: &testdata.MockClientFactory{
+					MockAcornConfigFile: acornConfigFile,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader(""),
 			},
 			args: args{
 				args:   []string{"--", "dne"},
@@ -85,10 +89,12 @@ func TestCredential(t *testing.T) {
 				Output: "",
 			},
 			commandContext: CommandContext{
-				ClientFactory: &testdata.MockClientFactory{},
-				StdOut:        w,
-				StdErr:        w,
-				StdIn:         strings.NewReader(""),
+				ClientFactory: &testdata.MockClientFactory{
+					MockAcornConfigFile: acornConfigFile,
+				},
+				StdOut: w,
+				StdErr: w,
+				StdIn:  strings.NewReader(""),
 			},
 			args: args{
 				args:   []string{},
@@ -111,7 +117,7 @@ func TestCredential(t *testing.T) {
 			} else if err != nil && tt.wantErr {
 				assert.Equal(t, tt.wantOut, err.Error())
 			} else {
-				w.Close()
+				require.NoError(t, w.Close())
 				out, _ := io.ReadAll(r)
 				assert.Equal(t, tt.wantOut, string(out))
 			}

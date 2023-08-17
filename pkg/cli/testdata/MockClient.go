@@ -19,11 +19,14 @@ import (
 )
 
 type MockClientFactoryManual struct {
-	Client client.Client
+	MockAcornConfigFile string
+	Client              client.Client
 }
 
 func (dc *MockClientFactoryManual) Options() project.Options {
-	return project.Options{}
+	return project.Options{
+		AcornConfigFile: dc.MockAcornConfigFile,
+	}
 }
 
 func (dc *MockClientFactoryManual) CreateDefault() (client.Client, error) {
@@ -34,35 +37,42 @@ func (dc *MockClientFactoryManual) CreateWithAllProjects() (client.Client, error
 	return dc.Client, nil
 }
 
+func (dc *MockClientFactoryManual) AcornConfigFile() string {
+	return dc.MockAcornConfigFile
+}
+
 type MockClientFactory struct {
-	AppList          []apiv1.App
-	AppItem          *apiv1.App
-	ContainerList    []apiv1.ContainerReplica
-	ContainerItem    *apiv1.ContainerReplica
-	JobList          []apiv1.Job
-	JobItem          *apiv1.Job
-	CredentialList   []apiv1.Credential
-	CredentialItem   *apiv1.Credential
-	VolumeList       []apiv1.Volume
-	VolumeItem       *apiv1.Volume
-	SecretList       []apiv1.Secret
-	SecretItem       *apiv1.Secret
-	ImageList        []apiv1.Image
-	ImageItem        *apiv1.Image
-	ProjectList      []apiv1.Project
-	ProjectItem      *apiv1.Project
-	VolumeClassList  []apiv1.VolumeClass
-	VolumeClassItem  *apiv1.VolumeClass
-	ComputeClassList []apiv1.ComputeClass
-	ComputeClassItem *apiv1.ComputeClass
-	RegionList       []apiv1.Region
-	RegionItem       *apiv1.Region
-	EventList        []apiv1.Event
-	EventItem        *apiv1.Event
+	MockAcornConfigFile string
+	AppList             []apiv1.App
+	AppItem             *apiv1.App
+	ContainerList       []apiv1.ContainerReplica
+	ContainerItem       *apiv1.ContainerReplica
+	JobList             []apiv1.Job
+	JobItem             *apiv1.Job
+	CredentialList      []apiv1.Credential
+	CredentialItem      *apiv1.Credential
+	VolumeList          []apiv1.Volume
+	VolumeItem          *apiv1.Volume
+	SecretList          []apiv1.Secret
+	SecretItem          *apiv1.Secret
+	ImageList           []apiv1.Image
+	ImageItem           *apiv1.Image
+	ProjectList         []apiv1.Project
+	ProjectItem         *apiv1.Project
+	VolumeClassList     []apiv1.VolumeClass
+	VolumeClassItem     *apiv1.VolumeClass
+	ComputeClassList    []apiv1.ComputeClass
+	ComputeClassItem    *apiv1.ComputeClass
+	RegionList          []apiv1.Region
+	RegionItem          *apiv1.Region
+	EventList           []apiv1.Event
+	EventItem           *apiv1.Event
 }
 
 func (dc *MockClientFactory) Options() project.Options {
-	return project.Options{}
+	return project.Options{
+		AcornConfigFile: dc.MockAcornConfigFile,
+	}
 }
 
 func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
@@ -96,6 +106,10 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 
 func (dc *MockClientFactory) CreateWithAllProjects() (client.Client, error) {
 	return dc.CreateDefault()
+}
+
+func (dc *MockClientFactory) AcornConfigFile() string {
+	return dc.MockAcornConfigFile
 }
 
 type MockClient struct {
@@ -240,14 +254,14 @@ func (m *MockClient) AppRun(ctx context.Context, image string, opts *client.AppR
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{Ready: true},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	}
@@ -265,14 +279,14 @@ func (m *MockClient) AppUpdate(ctx context.Context, name string, opts *client.Ap
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	case "found.container":
 		return &apiv1.App{
 			TypeMeta:   metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{Name: "found.container"},
-			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{v1.SecretBinding{Secret: "found.secret", Target: "found"}}},
+			Spec:       v1.AppInstanceSpec{Secrets: []v1.SecretBinding{{Secret: "found.secret", Target: "found"}}},
 			Status:     v1.AppInstanceStatus{},
 		}, nil
 	}
@@ -747,7 +761,7 @@ func (m *MockClient) ImageTag(ctx context.Context, image, tag string) error {
 func (m *MockClient) ImageDetails(ctx context.Context, imageName string, opts *client.ImageDetailsOptions) (*client.ImageDetails, error) {
 	return &client.ImageDetails{
 		AppImage: v1.AppImage{ID: imageName, ImageData: v1.ImagesData{
-			Containers: map[string]v1.ContainerData{"test-image-running-container": v1.ContainerData{
+			Containers: map[string]v1.ContainerData{"test-image-running-container": {
 				Image:    "test-image-running-container",
 				Sidecars: nil,
 			}},

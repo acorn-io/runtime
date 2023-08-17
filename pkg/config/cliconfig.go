@@ -55,12 +55,11 @@ type CLIConfig struct {
 	ProjectAliases    map[string]string     `json:"projectAliases,omitempty"`
 	DefaultContext    string                `json:"defaultContext,omitempty"`
 	CurrentProject    string                `json:"currentProject,omitempty"`
-	AcornConfig       string                `json:"acornConfig,omitempty"`
+	AcornConfigFile   string                `json:"acornConfig,omitempty"`
 
 	// ProjectURLs is used for testing to return EndpointURLs for remote projects
 	ProjectURLs map[string]string `json:"projectURLs,omitempty"`
 
-	filename  string
 	auths     map[string]types.AuthConfig
 	authsLock *sync.Mutex
 }
@@ -96,7 +95,7 @@ func (c *CLIConfig) Save() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(c.filename, data, 0655)
+	return os.WriteFile(c.AcornConfigFile, data, 0655)
 }
 
 func (c *CLIConfig) GetAuthConfigs() map[string]types.AuthConfig {
@@ -116,27 +115,32 @@ func (c *CLIConfig) GetAuthConfigs() map[string]types.AuthConfig {
 }
 
 func (c *CLIConfig) GetFilename() string {
-	return c.filename
+	return c.AcornConfigFile
 }
 
-func ReadCLIConfig(kubeconfigOnly bool) (*CLIConfig, error) {
-	filename, err := CLIConfigFile()
-	if err != nil {
-		return nil, err
+func ReadCLIConfig(acornConfigFile string, kubeconfigOnly bool) (*CLIConfig, error) {
+	if acornConfigFile == "" {
+		// If acornConfigFile isn't provided, check the environment variable
+		if acornConfigFile = os.Getenv("ACORN_CONFIG_FILE"); acornConfigFile == "" {
+			// If an environment variable isn't provided, check the default location
+			var err error
+			if acornConfigFile, err = xdg.ConfigFile("acorn/config.yaml"); err != nil {
+				return nil, fmt.Errorf("failed to read user config from standard location: %w", err)
+			}
+		}
 	}
-	data, err := readFile(filename)
+
+	data, err := readFile(acornConfigFile)
 	if err != nil {
 		return nil, err
 	}
 	result := &CLIConfig{
-		authsLock:   &sync.Mutex{},
-		AcornConfig: filename,
+		authsLock:       &sync.Mutex{},
+		AcornConfigFile: acornConfigFile,
 	}
 	if err := yaml.Unmarshal(data, result); err != nil {
 		return nil, err
 	}
-
-	result.filename = filename
 
 	if len(result.AcornServers) == 0 {
 		result.AcornServers = []string{system.DefaultManagerAddress}
@@ -150,28 +154,12 @@ func ReadCLIConfig(kubeconfigOnly bool) (*CLIConfig, error) {
 	return result, nil
 }
 
-func CLIConfigFile() (string, error) {
-	var (
-		location = os.Getenv("ACORN_CONFIG_FILE")
-		err      error
-	)
-
-	if location == "" {
-		location, err = xdg.ConfigFile("acorn/config.yaml")
-		if err != nil {
-			return "", fmt.Errorf("failed to read user config from standard location: %w", err)
-		}
-	}
-
-	return location, nil
-}
-
-func readFile(location string) ([]byte, error) {
-	data, err := os.ReadFile(location)
+func readFile(path string) ([]byte, error) {
+	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		return []byte("{}"), nil
 	} else if err != nil {
-		return nil, fmt.Errorf("failed to read user config %s: %w", location, err)
+		return nil, fmt.Errorf("failed to read user config %s: %w", path, err)
 	}
 
 	return data, nil

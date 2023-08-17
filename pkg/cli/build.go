@@ -57,7 +57,7 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	helper := imagesource.NewImageSource(s.File, args, s.Profile, s.Platform, false)
+	helper := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, s.Platform, false)
 
 	image, _, err := helper.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {

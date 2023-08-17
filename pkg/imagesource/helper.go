@@ -25,9 +25,13 @@ type ImageSource struct {
 	// NoDefaultRegistry - if true, indicates that no container registry should be assumed for the Image.
 	// This is used if the ImageSource is for an app with auto-upgrade enabled.
 	NoDefaultRegistry bool
+
+	// acornConfig is the path to the acorn config file.
+	acornConfig string
 }
 
-func NewImageSource(file string, args, profiles, platforms []string, noDefaultReg bool) (result ImageSource) {
+func NewImageSource(acornConfig string, file string, args, profiles, platforms []string, noDefaultReg bool) (result ImageSource) {
+	result.acornConfig = acornConfig
 	result.File = file
 	result.Image, result.Args = splitImageAndArgs(args)
 	result.Profiles = profiles
@@ -172,7 +176,7 @@ func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client)
 	// if file is set, then we must build to get the image, if it's not set, then
 	// it must be an external image
 	if i.File != "" {
-		creds, err := GetCreds(c)
+		creds, err := GetCreds(i.acornConfig, c)
 		if err != nil {
 			return "", nil, err
 		}
@@ -204,8 +208,8 @@ func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client)
 	return i.Image, deployArgs, err
 }
 
-func GetCreds(c client.Client) (client.CredentialLookup, error) {
-	cfg, err := config.ReadCLIConfig(false)
+func GetCreds(acornConfig string, c client.Client) (client.CredentialLookup, error) {
+	cfg, err := config.ReadCLIConfig(acornConfig, false)
 	if err != nil {
 		return nil, err
 	}

@@ -76,7 +76,7 @@ func New() *cobra.Command {
 	)
 	// This will produce an error if the project flag doesn't exist or a completion function has already
 	// been registered for this flag. Not returning the error since neither of these is likely occur.
-	if err := root.RegisterFlagCompletionFunc("project", newCompletion(cmdContext.ClientFactory, projectsCompletion).complete); err != nil {
+	if err := root.RegisterFlagCompletionFunc("project", newCompletion(cmdContext.ClientFactory, projectsCompletion(cmdContext.ClientFactory)).complete); err != nil {
 		root.Printf("Error registering completion function for -j flag: %v\n", err)
 	}
 	root.InitDefaultHelpCmd()
@@ -84,10 +84,11 @@ func New() *cobra.Command {
 }
 
 type Acorn struct {
-	Kubeconfig string `usage:"Explicitly use kubeconfig file, overriding the default context" env:"ACORN_KUBECONFIG"`
-	Project    string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
-	Debug      bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
-	DebugLevel int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
+	AcornConfigFile string `usage:"Path of the acorn config file to use" name:"config-file" env:"ACORN_CONFIG_FILE"`
+	Kubeconfig      string `usage:"Explicitly use kubeconfig file, overriding the default context" env:"ACORN_KUBECONFIG"`
+	Project         string `usage:"Project to work in" short:"j" env:"ACORN_PROJECT"`
+	Debug           bool   `usage:"Enable debug logging" env:"ACORN_DEBUG"`
+	DebugLevel      int    `usage:"Debug log level (valid 0-9) (default 7)" env:"ACORN_DEBUG_LEVEL"`
 }
 
 func setEnv(key, value string) error {
@@ -97,10 +98,13 @@ func setEnv(key, value string) error {
 	return nil
 }
 
-func (a *Acorn) PersistentPre(cmd *cobra.Command, args []string) error {
+func (a *Acorn) PersistentPre(_ *cobra.Command, _ []string) error {
 	// If --kubeconfig is used set it to KUBECONFIG env (if env is unset) so that all
 	// kubeconfig file looks will find it
 	if err := setEnv("KUBECONFIG", a.Kubeconfig); err != nil {
+		return err
+	}
+	if err := setEnv("ACORN_CONFIG_FILE", a.AcornConfigFile); err != nil {
 		return err
 	}
 	if !term.IsTerminal(os.Stdout) || !term.IsTerminal(os.Stderr) || os.Getenv("NO_COLOR") != "" || os.Getenv("NOCOLOR") != "" {

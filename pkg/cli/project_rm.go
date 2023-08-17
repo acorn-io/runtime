@@ -17,7 +17,7 @@ acorn project rm my-project
 		SilenceUsage:      true,
 		Short:             "Deletes projects",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion(c.ClientFactory)).complete,
 	})
 	return cmd
 }
