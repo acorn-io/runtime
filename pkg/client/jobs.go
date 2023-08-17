@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -40,12 +39,10 @@ func (c *DefaultClient) JobList(ctx context.Context, opts *JobListOptions) ([]ap
 }
 
 func (c *DefaultClient) JobRestart(ctx context.Context, name string) error {
-	rs := &apiv1.JobRestart{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: c.Namespace}}
-
 	return c.RESTClient.Post().
 		Namespace(c.Namespace).
 		Resource("jobs").
 		Name(name).
 		SubResource("restart").
-		Body(rs).Do(ctx).Error()
+		Body(&apiv1.JobRestart{}).Do(ctx).Error()
 }
