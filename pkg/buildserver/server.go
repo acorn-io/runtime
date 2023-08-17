@@ -175,14 +175,7 @@ func (s *Server) recordBuild(ctx context.Context, recordRepo string, build *v1.A
 	}
 
 	imageInst := new(v1.ImageInstance)
-	if err := s.client.Get(ctx, kclient.ObjectKey{Name: image.ID, Namespace: build.Namespace}, imageInst); err == nil && imageInst.Remote {
-		// Ensure that the image is not remote since  it was built locally.
-		// This can happen if an image was pulled from a remote registry and then built locally.
-		imageInst.Remote = false
-		if err = s.client.Update(ctx, imageInst); err != nil {
-			return err
-		}
-	} else if apierrors.IsNotFound(err) {
+	if err := s.client.Get(ctx, kclient.ObjectKey{Name: image.ID, Namespace: build.Namespace}, imageInst); apierrors.IsNotFound(err) {
 		if err = apply.New(s.client).Ensure(ctx, &v1.ImageInstance{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      image.ID,

@@ -13,6 +13,28 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func MigrateRemoteImages(req router.Request, _ router.Response) error {
+	image := req.Object.(*v1.ImageInstance)
+	if !image.ZZ_Remote || image.Repo == "" || image.Digest == "" {
+		return nil
+	}
+	apps := &v1.AppInstanceList{}
+	if err := req.List(apps, &kclient.ListOptions{}); err != nil {
+		return err
+	}
+
+	for _, app := range apps.Items {
+		if app.Status.AppImage.ID == image.Name && app.Status.AppImage.Digest == image.Digest {
+			app.Status.AppImage.ID = image.Repo
+			if err := req.Client.Status().Update(req.Ctx, &app); err != nil {
+				return err
+			}
+		}
+	}
+
+	return req.Client.Delete(req.Ctx, image)
+}
+
 func CreateImages(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	if app.Status.AppImage.ID == "" || app.Status.AppImage.Digest == "" || app.Status.ObservedImageDigest == app.Status.AppImage.Digest {
@@ -20,15 +42,15 @@ func CreateImages(req router.Request, _ router.Response) error {
 		return nil
 	}
 
-	self, err := createImageForSelf(req, app)
+	repo, err := getRepo(req, app)
 	if err != nil {
 		return nil
 	}
 
-	return createNestedReferences(req, app, self)
+	return createNestedReferences(req, app, repo)
 }
 
-func createNestedReferences(req router.Request, app *v1.AppInstance, self *v1.ImageInstance) error {
+func createNestedReferences(req router.Request, app *v1.AppInstance, repo string) error {
 	for _, imageData := range typed.Concat(app.Status.AppImage.ImageData.Acorns, app.Status.AppImage.ImageData.Images) {
 		if !tags.IsLocalReference(imageData.Image) {
 			continue
@@ -46,8 +68,7 @@ func createNestedReferences(req router.Request, app *v1.AppInstance, self *v1.Im
 					Name:      imageName,
 					Namespace: app.Namespace,
 				},
-				Remote: self.Remote,
-				Repo:   self.Repo,
+				Repo:   repo,
 				Digest: "sha256:" + imageName,
 			})
 		}
@@ -59,116 +80,23 @@ func createNestedReferences(req router.Request, app *v1.AppInstance, self *v1.Im
 	return nil
 }
 
-func createImageForSelf(req router.Request, app *v1.AppInstance) (*v1.ImageInstance, error) {
+func getRepo(req router.Request, app *v1.AppInstance) (string, error) {
 	var (
-		digest    = app.Status.AppImage.Digest
-		digestHex = strings.TrimPrefix(digest, "sha256:")
 		imageName = app.Status.AppImage.ID
-		// update == false means create
-		update = true
-		image  = &v1.ImageInstance{}
 	)
 
 	if tags.IsLocalReference(imageName) {
-		return image, req.Get(image, app.Namespace, imageName)
+		image := &v1.ImageInstance{}
+		if err := req.Get(image, app.Namespace, imageName); err != nil {
+			return "", err
+		}
+		return image.Repo, nil
 	}
 
 	ref, err := name.ParseReference(imageName, name.WithDefaultTag(""))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	hasTag := true
-	// if reference is a digest just store the repo
-	if d, ok := ref.(name.Digest); ok {
-		imageName = d.Context().String()
-		hasTag = false
-	} else if t, ok := ref.(name.Tag); ok {
-		hasTag = t.TagStr() != ""
-	}
-
-	err = req.Get(image, app.Namespace, digestHex)
-	if err != nil && !apierror.IsNotFound(err) {
-		return nil, err
-	} else if apierror.IsNotFound(err) {
-		update = false
-	}
-
-	if update {
-		for _, tag := range image.Tags {
-			if tag == imageName {
-				// We found the existing image and the tag is there, no need to do anything
-				return image, nil
-			} else if !hasTag && strings.HasPrefix(tag, imageName+":") {
-				// We found a close enough match
-				return image, nil
-			}
-		}
-	}
-
-	// remove tag from existing images
-	if err := removeTag(req, app, imageName); err != nil {
-		return nil, err
-	}
-
-	if update {
-		tags := []string{imageName}
-		for _, tag := range image.Tags {
-			if tag == ref.Context().String() {
-				// remove the "repo only" tag
-				continue
-			}
-			tags = append(tags, tag)
-		}
-		image.Tags = tags
-		return image, req.Client.Update(req.Ctx, image)
-	}
-
-	image = &v1.ImageInstance{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      digestHex,
-			Namespace: app.Namespace,
-		},
-		Remote: true,
-		Repo:   ref.Context().String(),
-		Digest: digest,
-		Tags: []string{
-			imageName,
-		},
-	}
-
-	return image, req.Client.Create(req.Ctx, image)
-}
-
-func removeTag(req router.Request, app *v1.AppInstance, tag string) error {
-	images := &v1.ImageInstanceList{}
-	err := req.List(images, &kclient.ListOptions{
-		Namespace: app.Namespace,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, image := range images.Items {
-		if len(image.Tags) == 0 {
-			continue
-		}
-
-		newTags := make([]string, 0, len(image.Tags))
-		for _, existingTag := range image.Tags {
-			if existingTag == tag {
-				continue
-			}
-			newTags = append(newTags, existingTag)
-		}
-
-		if len(newTags) != len(image.Tags) {
-			image.Tags = newTags
-			if err := req.Client.Update(req.Ctx, &image); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	return ref.Context().String(), nil
 }

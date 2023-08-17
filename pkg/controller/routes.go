@@ -98,6 +98,8 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 
 	router.Type(&v1.ServiceInstance{}).HandlerFunc(service.RenderServices)
 
+	router.Type(&v1.ImageInstance{}).HandlerFunc(images.MigrateRemoteImages)
+
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(defaults.SetDefaultRegion)
 	router.Type(&v1.BuilderInstance{}).HandlerFunc(builder.DeployBuilder)
 

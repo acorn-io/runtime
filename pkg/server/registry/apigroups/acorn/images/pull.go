@@ -217,7 +217,6 @@ func (i *ImagePull) recordImage(ctx context.Context, hash ggcrv1.Hash, namespace
 			return err
 		}
 		img.Repo = recordRepo
-		img.Remote = false
 		if err := i.client.Update(ctx, img); err != nil {
 			return err
 		}

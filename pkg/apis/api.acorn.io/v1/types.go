@@ -160,10 +160,10 @@ type Image struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Remote bool     `json:"remote,omitempty"`
-	Repo   string   `json:"repo,omitempty"`
-	Digest string   `json:"digest,omitempty"`
-	Tags   []string `json:"tags,omitempty"`
+	ZZ_Remote bool     `json:"remote,omitempty"`
+	Repo      string   `json:"repo,omitempty"`
+	Digest    string   `json:"digest,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
