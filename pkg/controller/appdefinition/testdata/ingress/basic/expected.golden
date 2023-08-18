@@ -38,6 +38,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"custom-dockerfile"},"image":"sha256:build-image","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":443,"protocol":"tcp","publish":true,"targetPort":91}],"probes":null}'
+        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -136,6 +137,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","publish":true,"targetPort":91}],"probes":null}}}'
+        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

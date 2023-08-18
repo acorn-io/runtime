@@ -38,6 +38,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
+        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -134,6 +135,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81}],"probes":null}'
+        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
