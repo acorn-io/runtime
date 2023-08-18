@@ -25,7 +25,7 @@ func getAuthForImage(ctx context.Context, clientFactory ClientFactory, image str
 		return nil, nil
 	}
 
-	creds, err := imagesource.GetCreds(c)
+	creds, err := imagesource.GetCreds(clientFactory.AcornConfigFile(), c)
 	if err != nil {
 		return nil, err
 	}

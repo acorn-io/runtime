@@ -17,7 +17,7 @@ acorn project update my-project
 		SilenceUsage:      true,
 		Short:             "Update project",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion).complete,
+		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion(c.ClientFactory)).complete,
 	})
 	// This will produce an error if the region flag doesn't exist or a completion function has already
 	// been registered for this flag. Not returning the error since neither of these is likely occur.

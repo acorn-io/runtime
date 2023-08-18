@@ -22,14 +22,15 @@ var (
 )
 
 type Options struct {
-	Project     string
-	Kubeconfig  string
-	ContextEnv  string
-	AllProjects bool
+	AcornConfigFile string
+	Project         string
+	Kubeconfig      string
+	ContextEnv      string
+	AllProjects     bool
 }
 
 func (o Options) CLIConfig() (*config.CLIConfig, error) {
-	return config.ReadCLIConfig(o.Kubeconfig != "")
+	return config.ReadCLIConfig(o.AcornConfigFile, o.Kubeconfig != "")
 }
 
 func Client(ctx context.Context, opts Options) (client.Client, error) {

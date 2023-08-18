@@ -272,20 +272,29 @@ func secretsCompletion(ctx context.Context, c client.Client, toComplete string) 
 	return result, nil
 }
 
-func projectsCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
-	projects, _, err := project.List(ctx, false, project.Options{})
-	if err != nil {
-		return nil, err
-	}
-
-	var result []string
-	for _, project := range projects {
-		if strings.HasPrefix(project, toComplete) {
-			result = append(result, project)
+func projectsCompletion(f ClientFactory) completionFunc {
+	return func(ctx context.Context, c client.Client, toComplete string) ([]string, error) {
+		var acornConfigFile string
+		if f != nil {
+			acornConfigFile = f.AcornConfigFile()
 		}
-	}
 
-	return result, nil
+		projects, _, err := project.List(ctx, false, project.Options{
+			AcornConfigFile: acornConfigFile,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var result []string
+		for _, project := range projects {
+			if strings.HasPrefix(project, toComplete) {
+				result = append(result, project)
+			}
+		}
+
+		return result, nil
+	}
 }
 
 func volumeClassCompletion(ctx context.Context, c client.Client, toComplete string) ([]string, error) {

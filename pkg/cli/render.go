@@ -30,7 +30,7 @@ type Render struct {
 func (s *Render) Run(cmd *cobra.Command, args []string) error {
 	var c client2.Client
 
-	imageAndArgs := imagesource.NewImageSource(s.File, args, s.Profile, nil, false)
+	imageAndArgs := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, nil, false)
 
 	_, file, err := imageAndArgs.ResolveImageAndFile()
 	if err != nil {

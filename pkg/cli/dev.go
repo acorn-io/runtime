@@ -59,7 +59,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	imageSource := imagesource.NewImageSource(s.File, args, s.Profile, nil, s.AutoUpgrade != nil && *s.AutoUpgrade)
+	imageSource := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, nil, s.AutoUpgrade != nil && *s.AutoUpgrade)
 
 	opts, err := s.ToOpts()
 	if err != nil {
