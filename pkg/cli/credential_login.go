@@ -54,8 +54,7 @@ func (a *CredentialLogin) Run(cmd *cobra.Command, args []string) error {
 
 	var serverAddress string
 	if len(args) == 0 {
-		// ManagerServer slice length is guaranteed to be >=1 by the ReadCLIConfig method
-		serverAddress = cfg.AcornServers[0]
+		serverAddress = cfg.GetDefaultAcornServer()
 	} else if len(args) > 0 {
 		serverAddress = args[0]
 	}

@@ -20,7 +20,6 @@ func NewCredentialLogout(root bool, c CommandContext) *cobra.Command {
 acorn logout ghcr.io`,
 		SilenceUsage:      true,
 		Short:             "Remove registry credentials",
-		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, credentialsCompletion).withShouldCompleteOptions(onlyNumArgs(1)).complete,
 	})
 	if root {
@@ -38,6 +37,10 @@ func (a *CredentialLogout) Run(cmd *cobra.Command, args []string) error {
 	cfg, err := a.client.Options().CLIConfig()
 	if err != nil {
 		return err
+	}
+
+	if len(args) == 0 {
+		args = []string{cfg.GetDefaultAcornServer()}
 	}
 
 	var client client.Client
