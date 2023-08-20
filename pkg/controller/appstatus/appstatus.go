@@ -151,6 +151,7 @@ func setCondition[T commonStatusGetter](obj kclient.Object, conditionName string
 
 	for _, entry := range typed.Sorted(status) {
 		name, status := entry.Key, entry.Value.GetCommonStatus()
+		name = fmt.Sprintf("(%s: %s)", strings.TrimSuffix(conditionName, "s"), name)
 		if len(status.ErrorMessages) > 0 {
 			errorMessages = append(errorMessages, formatMessage(name, status.ErrorMessages, ", "))
 		} else if len(status.TransitioningMessages) > 0 {

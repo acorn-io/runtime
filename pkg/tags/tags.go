@@ -63,9 +63,6 @@ func GetTagsMatchingRepository(ctx context.Context, reference name.Reference, c 
 	}
 	var result []string
 	for _, image := range images.Items {
-		if image.Remote {
-			continue
-		}
 		for _, tag := range image.Tags {
 			r, err := name.ParseReference(tag, name.WithDefaultRegistry(defaultReg))
 			if err != nil {
@@ -98,5 +95,5 @@ func ResolveLocal(ctx context.Context, c kclient.Client, namespace, image string
 	} else if err != nil {
 		return "", false, err
 	}
-	return strings.TrimPrefix(localImage.Digest, "sha256:"), !localImage.Remote, nil
+	return strings.TrimPrefix(localImage.Digest, "sha256:"), true, nil
 }
