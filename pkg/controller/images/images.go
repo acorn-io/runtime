@@ -37,8 +37,7 @@ func MigrateRemoteImages(req router.Request, _ router.Response) error {
 
 func CreateImages(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
-	if app.Status.AppImage.ID == "" || app.Status.AppImage.Digest == "" || app.Status.ObservedImageDigest == app.Status.AppImage.Digest {
-		// If the image hasn't changed, then don't worry about creating it. It would have been created the first time.
+	if app.Status.AppImage.ID == "" {
 		return nil
 	}
 
