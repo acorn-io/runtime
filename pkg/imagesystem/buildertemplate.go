@@ -18,15 +18,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, builderUID, forwardAddress string, cfg *apiv1.Config) []client.Object {
+func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, depotToken, depotProjectId, builderUID, forwardAddress string, cfg *apiv1.Config) []client.Object {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"pub":  []byte(pub),
-			"priv": []byte(privKey),
+			"pub":            []byte(pub),
+			"priv":           []byte(privKey),
+			"depotToken":     []byte(depotToken),
+			"depotProjectId": []byte(depotProjectId),
 		},
 	}
 
@@ -137,6 +139,28 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 										},
 									},
 								},
+								{
+									Name: "DEPOT_TOKEN",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: name,
+											},
+											Key: "depotToken",
+										},
+									},
+								},
+								{
+									Name: "DEPOT_PROJECT_ID",
+									ValueFrom: &corev1.EnvVarSource{
+										SecretKeyRef: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: name,
+											},
+											Key: "depotProjectId",
+										},
+									},
+								},
 							},
 							Args: []string{
 								"build-server",
@@ -182,6 +206,13 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 				},
 			},
 		},
+	}
+
+	if depotToken != "" && depotProjectId != "" {
+		// Drop buildkit
+		deployment.Spec.Template.Spec.Containers = []corev1.Container{
+			deployment.Spec.Template.Spec.Containers[1],
+		}
 	}
 
 	pdb := &policyv1.PodDisruptionBudget{
@@ -239,5 +270,6 @@ func BuilderObjects(name, namespace, forNamespace, buildKitImage, pub, privKey, 
 			},
 		})
 	}
+
 	return []client.Object{secret, deployment, pdb, svc}
 }

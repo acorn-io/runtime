@@ -25,6 +25,7 @@ require (
 	github.com/containerd/console v1.0.3
 	github.com/containerd/containerd v1.6.20
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/depot/depot-go v0.0.0-20230819013533-12cec5cbd2f9
 	github.com/docker/cli v23.0.5+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-acme/lego/v4 v4.9.1
@@ -52,7 +53,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/tonistiigi/fsutil v0.0.0-20230407161946-9e7a6df48576
+	github.com/tonistiigi/fsutil v0.0.0-20230629203738-36ef4d8c0dbb
 	github.com/wI2L/jsondiff v0.3.0
 	golang.org/x/crypto v0.11.0
 	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
@@ -103,13 +104,14 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/bmatcuk/doublestar v1.1.1 // indirect
 	github.com/bombsimon/logrusr/v4 v4.0.0 // indirect
+	github.com/bufbuild/connect-go v1.7.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
-	github.com/containerd/continuity v0.3.1-0.20230206214859-2a963a2f56e8 // indirect
+	github.com/containerd/continuity v0.4.1 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
-	github.com/containerd/typeurl v1.0.2 // indirect
+	github.com/containerd/typeurl v1.0.3-0.20220422153119-7f6e6d160d67 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
