@@ -193,7 +193,7 @@ func TestCLIConfig(t *testing.T) {
 				}
 				assert.Len(t, clients, 3)
 			},
-			wantProject:   "kubeconfig/ns2,example.com/acct/prj1,defns",
+			wantProject:   "kubeconfig/ns2,example.com/acct/prj1,kubeconfig/defns",
 			wantNamespace: "ns2",
 		},
 	}

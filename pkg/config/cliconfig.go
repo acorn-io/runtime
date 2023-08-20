@@ -48,20 +48,28 @@ func (a *AuthConfig) UnmarshalJSON(data []byte) error {
 }
 
 type CLIConfig struct {
-	Auths             map[string]AuthConfig `json:"auths,omitempty"`
-	CredentialsStore  string                `json:"credsStore,omitempty"`
-	CredentialHelpers map[string]string     `json:"credHelpers,omitempty"`
-	AcornServers      []string              `json:"acornServers,omitempty"`
-	ProjectAliases    map[string]string     `json:"projectAliases,omitempty"`
-	DefaultContext    string                `json:"defaultContext,omitempty"`
-	CurrentProject    string                `json:"currentProject,omitempty"`
-	AcornConfigFile   string                `json:"acornConfig,omitempty"`
+	Auths              map[string]AuthConfig `json:"auths,omitempty"`
+	CredentialsStore   string                `json:"credsStore,omitempty"`
+	CredentialHelpers  map[string]string     `json:"credHelpers,omitempty"`
+	DefaultAcornServer string                `json:"defaultAcornServer,omitempty"`
+	AcornServers       []string              `json:"acornServers,omitempty"`
+	ProjectAliases     map[string]string     `json:"projectAliases,omitempty"`
+	DefaultContext     string                `json:"defaultContext,omitempty"`
+	CurrentProject     string                `json:"currentProject,omitempty"`
+	AcornConfigFile    string                `json:"acornConfig,omitempty"`
 
 	// ProjectURLs is used for testing to return EndpointURLs for remote projects
 	ProjectURLs map[string]string `json:"projectURLs,omitempty"`
 
 	auths     map[string]types.AuthConfig
 	authsLock *sync.Mutex
+}
+
+func (c *CLIConfig) GetDefaultAcornServer() string {
+	if c == nil || c.DefaultAcornServer == "" {
+		return system.DefaultManagerAddress
+	}
+	return c.DefaultAcornServer
 }
 
 func (c *CLIConfig) Sanitize() *CLIConfig {
@@ -143,7 +151,7 @@ func ReadCLIConfig(acornConfigFile string, kubeconfigOnly bool) (*CLIConfig, err
 	}
 
 	if len(result.AcornServers) == 0 {
-		result.AcornServers = []string{system.DefaultManagerAddress}
+		result.AcornServers = []string{result.GetDefaultAcornServer()}
 	}
 
 	if kubeconfigOnly {

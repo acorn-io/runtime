@@ -149,7 +149,7 @@ var (
 		},
 		Admin: {
 			{
-				Verbs: []string{"*"},
+				Verbs: []string{"create", "update", "delete", "patch", "get", "list", "watch"},
 				Resources: []string{
 					"projectvolumeclasses",
 					"clustervolumeclasses",
@@ -159,7 +159,7 @@ var (
 				APIGroups: []string{admin_acorn_io.Group},
 			},
 			{
-				Verbs: []string{"*"},
+				Verbs: []string{"create", "update", "delete", "patch"},
 				Resources: []string{
 					"imageallowrules",
 				},

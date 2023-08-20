@@ -186,6 +186,12 @@ func Command(obj Runnable, cmd cobra.Command) *cobra.Command {
 				}
 			})
 		}
+
+		if fieldType.Tag.Get("hidden") == "true" {
+			if err := flags.MarkHidden(name); err != nil {
+				panic(err)
+			}
+		}
 	}
 
 	if p, ok := obj.(PersistentPreRunnable); ok {
