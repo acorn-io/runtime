@@ -9,6 +9,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/acorn-io/runtime/pkg/version"
@@ -27,8 +28,9 @@ func NewInfo(c CommandContext) *cobra.Command {
 }
 
 type Info struct {
-	Output string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o" default:"yaml"`
-	client ClientFactory
+	Output      string `usage:"Output format (json, yaml, {{gotemplate}})" short:"o" default:"yaml"`
+	AllProjects bool   `usage:"Include all projects to all currently logged in servers" short:"A"`
+	client      ClientFactory
 }
 
 type InfoCLIResponse struct {
@@ -40,9 +42,21 @@ type InfoCLIResponse struct {
 }
 
 func (s *Info) Run(cmd *cobra.Command, _ []string) error {
-	c, err := s.client.CreateDefault()
-	if err != nil {
-		return err
+	var (
+		c   client.Client
+		err error
+	)
+
+	if s.AllProjects {
+		c, err = s.client.CreateWithAllProjectsAllServers()
+		if err != nil {
+			return err
+		}
+	} else {
+		c, err = s.client.CreateDefault()
+		if err != nil {
+			return err
+		}
 	}
 
 	info, err := c.Info(cmd.Context())

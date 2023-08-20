@@ -27,6 +27,7 @@ type Options struct {
 	Kubeconfig      string
 	ContextEnv      string
 	AllProjects     bool
+	AllServers      bool
 }
 
 func (o Options) CLIConfig() (*config.CLIConfig, error) {
@@ -166,7 +167,7 @@ func ParseProject(project string, defaultContext string) (server, account, names
 
 func getDesiredProjects(ctx context.Context, cfg *config.CLIConfig, opts Options) (result []string, err error) {
 	if opts.AllProjects {
-		projects, _, err := List(ctx, true, opts)
+		projects, _, err := List(ctx, !opts.AllServers, opts)
 		return projects, err
 	}
 

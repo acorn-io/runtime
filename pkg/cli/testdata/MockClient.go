@@ -37,6 +37,10 @@ func (dc *MockClientFactoryManual) CreateWithAllProjects() (client.Client, error
 	return dc.Client, nil
 }
 
+func (dc *MockClientFactoryManual) CreateWithAllProjectsAllServers() (client.Client, error) {
+	return dc.Client, nil
+}
+
 func (dc *MockClientFactoryManual) AcornConfigFile() string {
 	return dc.MockAcornConfigFile
 }
@@ -105,6 +109,10 @@ func (dc *MockClientFactory) CreateDefault() (client.Client, error) {
 }
 
 func (dc *MockClientFactory) CreateWithAllProjects() (client.Client, error) {
+	return dc.CreateDefault()
+}
+
+func (dc *MockClientFactory) CreateWithAllProjectsAllServers() (client.Client, error) {
 	return dc.CreateDefault()
 }
 
