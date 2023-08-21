@@ -137,7 +137,7 @@ func TestImageAllowRules(t *testing.T) {
 
 	// try to run - expect success
 	app, err := c.AppRun(ctx, tagName, nil)
-	assert.NoError(t, err, "should not error since image is covered by images scope of IAR and there are not other rules")
+	assert.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", tagName, iar.Images)
 
 	// remove app
 	_, err = c.AppDelete(ctx, app.Name)

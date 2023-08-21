@@ -14,6 +14,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
+	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/tables"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -175,23 +176,26 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 		return nil, err
 	}
 
-	// Prune signatures
-	ref, err := images.GetImageReference(ctx, s.client, image.Namespace, image.Name)
-	if err != nil {
-		return nil, err
-	}
+	// Prune signatures - from cluster (internal) registry only
+	if !image.Remote && image.Repo == "" {
+		remoteOpts := []remote.Option{remote.WithTransport(s.transport)}
 
-	remoteOpts := []remote.Option{remote.WithTransport(s.transport)}
-
-	sigTag, sigDigest, err := acornsign.FindSignature(ref.Context().Digest(image.Digest), remoteOpts...)
-	if err != nil {
-		return nil, err
-	}
-
-	if sigDigest.Hex != "" {
-		logrus.Debugf("Deleting signature artifact %s (digest %s) from registry", sigTag.Name(), sigDigest.String())
-		if err := remote.Delete(sigTag.Context().Digest(sigDigest.String()), remoteOpts...); err != nil {
+		// make sure we're only searching in the internal registry
+		repo, _, err := imagesystem.GetInternalRepoForNamespace(ctx, s.client, image.Namespace)
+		if err != nil {
 			return nil, err
+		}
+
+		sigTag, sigDigest, err := acornsign.FindSignature(repo.Digest(image.Digest), remoteOpts...)
+		if err != nil {
+			return nil, err
+		}
+
+		if sigDigest.Hex != "" {
+			logrus.Debugf("Deleting signature artifact %s (digest %s) from registry", sigTag.Name(), sigDigest.String())
+			if err := remote.Delete(sigTag.Context().Digest(sigDigest.String()), remoteOpts...); err != nil {
+				return nil, err
+			}
 		}
 	}
 

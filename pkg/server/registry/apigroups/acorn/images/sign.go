@@ -92,7 +92,7 @@ func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, sig
 		mutateOpts = append(mutateOpts, mutate.WithDupeDetector(dupeDetector))
 	}
 
-	ociEntity, err := ociremote.SignedEntity(ref, ociremote.WithRemoteOptions(remoteOpts...))
+	targetEntity, err := ociremote.SignedEntity(ref, ociremote.WithRemoteOptions(remoteOpts...))
 	if err != nil {
 		return "", fmt.Errorf("accessing entity: %w", err)
 	}
@@ -102,22 +102,27 @@ func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, sig
 		return "", err
 	}
 
-	sigOCIDigest, err := signatureOCI.Digest()
-	if err != nil {
-		return "", err
-	}
-
-	mutatedOCIEntity, err := mutate.AttachSignatureToEntity(ociEntity, signatureOCI, mutateOpts...)
+	signedEntity, err := mutate.AttachSignatureToEntity(targetEntity, signatureOCI, mutateOpts...)
 	if err != nil {
 		return "", err
 	}
 
 	targetRepo := ref.Context()
-	if err := ociremote.WriteSignatures(targetRepo, mutatedOCIEntity, ociremote.WithRemoteOptions(remoteOpts...)); err != nil {
+
+	if err := ociremote.WriteSignatures(targetRepo, signedEntity, ociremote.WithRemoteOptions(remoteOpts...)); err != nil {
 		return "", err
 	}
 
-	logrus.Debugf("Wrote signature %s to %s", sigOCIDigest, targetRepo.Name())
+	// Get the digest of the signature artifact we just wrote
+	se, err := signedEntity.Signatures()
+	if err != nil {
+		return "", err
+	}
+	sigDigest, err := se.Digest()
+	if err != nil {
+		return "", err
+	}
+	logrus.Infof("Wrote signatures artifact %s to %s", sigDigest, targetRepo.Name())
 
-	return sigOCIDigest.String(), nil
+	return sigDigest.String(), nil
 }
