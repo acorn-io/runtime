@@ -241,8 +241,8 @@ github.com/digitorus/pkcs7 v0.0.0-20221212123742-001c36b64ec3/go.mod h1:SKVExuS+
 github.com/digitorus/timestamp v0.0.0-20221019182153-ef3b63b79b31 h1:3go0tpsBpbs9L/oysk3jDwRprlLRRkpSU7YxKlTfU+o=
 github.com/digitorus/timestamp v0.0.0-20221019182153-ef3b63b79b31/go.mod h1:6V2ND8Yf8TOJ4h+9pmUlx8kXvNLBB2QplToVVZQ3rF0=
 github.com/dimchansky/utfbom v1.1.1 h1:vV6w1AhK4VMnhBno/TPVCoK9U/LP0PkLCS9tbxHdi/U=
-github.com/docker/cli v23.0.5+incompatible h1:ufWmAOuD3Vmr7JP2G5K3cyuNC4YZWiAsuDEvFVVDafE=
-github.com/docker/cli v23.0.5+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
+github.com/docker/cli v23.0.6+incompatible h1:CScadyCJ2ZKUDpAMZta6vK8I+6/m60VIjGIV7Wg/Eu4=
+github.com/docker/cli v23.0.6+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
 github.com/docker/distribution v2.8.2+incompatible h1:T3de5rq0dB1j30rp0sA2rER+m322EBzniBPB6ZIzuh8=
 github.com/docker/distribution v2.8.2+incompatible/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
 github.com/docker/docker v20.10.3-0.20220121014307-40bb9831756f+incompatible h1:IDzw9qR4h7PF3aEriDajLKrkvc3owPWHasPKUEliWUE=

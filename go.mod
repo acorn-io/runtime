@@ -26,7 +26,7 @@ require (
 	github.com/containerd/containerd v1.6.20
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/depot/depot-go v0.0.0-20230819013533-12cec5cbd2f9
-	github.com/docker/cli v23.0.5+incompatible
+	github.com/docker/cli v23.0.6+incompatible
 	github.com/docker/docker-credential-helpers v0.7.0
 	github.com/go-acme/lego/v4 v4.9.1
 	github.com/golang/mock v1.6.0
