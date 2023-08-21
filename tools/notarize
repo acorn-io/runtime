@@ -3,9 +3,6 @@ set -e
 
 cd $(dirname $0)/..
 
-: ${KEYCHAIN="build.keychain"}
-: ${SIGN=""}
-: ${NOTARIZE=""}
 : ${AC_BUNDLE="io.acorn.cli"}
 
 BINARY="$1"
@@ -13,12 +10,7 @@ DIR="releases/mac_darwin_all"
 ZIP="releases/$2.zip"
 CHECKSUMS="releases/checksums.txt"
 
-if [[ -z "${NOTARIZE}" && "${GITHUB_REF}" =~ "refs/tags/v" ]]; then
-  echo "Enabling notarize..."
-  NOTARIZE="1"
-fi
-
-echo "NOTARIZE=${NOTARIZE} BUNDLE=${AC_BUNDLE} BINARY=${BINARY} ZIP=${ZIP}"
+echo "BUNDLE=${AC_BUNDLE} BINARY=${BINARY}"
 
 sudo apt-get update -y  
 
@@ -27,11 +19,17 @@ echo "Signing the binary..."
 
 # Install rcodesign from the release page.
 which wget || sudo apt-get install wget -y
-wget https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz
-tar -xvf apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz
-mv apple-codesign-0.22.0-x86_64-unknown-linux-musl/rcodesign /usr/local/bin
+if ! command -v rcodesign &> /dev/null; then
+  echo "Installing rcodesign..."
+  wget https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign%2F0.22.0/apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz
+  tar -xvf apple-codesign-0.22.0-x86_64-unknown-linux-musl.tar.gz
+  mv apple-codesign-0.22.0-x86_64-unknown-linux-musl/rcodesign /usr/local/bin
+else
+  echo "rcodesign already installed!"
+fi
 
-# Sign the binary using rcodesign.
+# Sign the binary using rcodesign. This gives our binary a valid signature.
+# https://gregoryszorc.com/docs/apple-codesign/0.17.0/apple_codesign_concepts.html#code-signing
 echo "Signing ${BINARY}..."
 echo "${AC_P12}" | base64 --decode > signing.p12
 rcodesign sign \
@@ -43,51 +41,44 @@ rcodesign sign \
   "${BINARY}"
 echo "Signed ${BINARY}!"
 
-# Currently, NOTARIZE is always set to 0. In effect, this means that the
-# binary is signed, but not zipped up, notarized or stapled. Since all of the 
-# official installation processes are through brew or wget, the notarized DMG we were
-# creating was not necessary. Where this does become a problem is if a user 
-# wants to install from a browser. In this situation, there will need to be 
-# a notarization process otherwise MacOS will mark our binary as unsafe and 
-# the user will need to go through hoops to install it. In this instance,
-# setting NOTARIZE to 1 will create a ZIP file (since it was difficult to create
-# a DMG while not on MacOS) and Notarize it.
+# Zip up the release files.
+which zip || sudo apt-get install zip -y
+echo "Building ${ZIP}..."
+cp LICENSE README.md "${DIR}/"
+zip -j "${ZIP}" "${DIR}"/*
+echo "Built ${ZIP}!"
+
+# Build the app-store-connect-api-key from our private key information.
+echo "Building app-store-connect-api-key..."
+echo "${AC_PRIVATE_KEY}" | base64 --decode > private.p8
+rcodesign encode-app-store-connect-api-key \
+  -o ./key.json \
+  "${AC_ISSUER_ID}" \
+  "${AC_KEY_ID}" \
+  private.p8
+echo "Built app-store-connect-api-key!"
+
+# Notarize the ZIP. This uploads the ZIP to Apple's servers for notarization and waits for
+# Apple to complete the notarization ticket. This should not take more than a minute or two.
+# https://gregoryszorc.com/docs/apple-codesign/0.17.0/apple_codesign_concepts.html#notarization
+echo "Notarizing ${ZIP}..."
+rcodesign notary-submit --wait --api-key-path ./key.json "${ZIP}"
+echo "Notarized ${ZIP}!"
+
+# Staple the ZIP. This adds the notarization ticket to the ZIP. 
+# https://gregoryszorc.com/docs/apple-codesign/0.17.0/apple_codesign_concepts.html#stapling
+# 
+# Note: Currently disabled as rcodesign doesn't support stapling of ZIP files. We would need 
+#       to switch to a DMG, App bundle, or XAR file to support stapling. Leaving this here 
+#       for future reference.
 #
-# Note - If you want to staple that ZIP, you will need to staple each individual
-#        item in the zip file.
+#       https://github.com/indygreg/apple-platform-rs/blob/6fc832919eb89f86ac381dfb02196b8cbb3de58c/apple-codesign/src/stapling.rs#L325-L327
 #
-# References: 
-# https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
-# https://gregoryszorc.com/docs/apple-codesign/0.17.0/apple_codesign_rcodesign.html
-if [[ "${NOTARIZE}" == "1" ]]; then
-  which zip || sudo apt-get install zip -y
+# echo "Stapling ${ZIP}..."
+# rcodesign staple "${ZIP}"
+# echo "Stapled ${ZIP}!"
 
-  # Zip everything up
-  echo "Building ${ZIP}..."
-  cp LICENSE README.md "${DIR}/"
-  zip -r "${ZIP}" "${DIR}"
-  echo "Built ${ZIP}!"
-
-  # Notarize the ZIP
-  echo "Building app-store-connect-api-key..."
-  echo "${AC_PRIVATE_KEY}" | base64 --decode > private.p8
-  rcodesign encode-app-store-connect-api-key \
-    -o ./key.json \
-    "${AC_ISSUER_ID}" \
-    "${AC_KEY_ID}" \
-    private.p8
-  echo "Built app-store-connect-api-key!"
-
-  echo "Notarizing ${ZIP}..."
-  rcodesign notary-submit --api-key-path ./key.json "${ZIP}"
-  echo "Notarized ${ZIP}!"
-
-  # Add the sha256sum of the ZIP to the checksums file
-  echo "Adding ${ZIP}'s checksum to the checksums file..."
-  sha256sum "${ZIP}" >> "${CHECKSUMS}"
-  echo "Added ${ZIP}'s checksums!"
-
-else
-  echo "Skipping zip creation and notarization"
-fi
-
+# Add the sha256sum of the ZIP to the checksums file
+echo "Adding ${ZIP}'s checksum to the checksums file..."
+sha256sum "${ZIP}" >> "${CHECKSUMS}"
+echo "Added ${ZIP}'s checksums!"

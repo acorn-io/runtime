@@ -37,7 +37,6 @@ universal_binaries:
         - cmd: ./tools/notarize "{{ .Path }}" "acorn-v{{ .Version }}-macOS-universal"
           output: true
           env:
-            - NOTARIZE=0 # Always disable Notarization since it is not currently necessary.
             - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
             - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
             - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}

@@ -78,7 +78,7 @@ Uncompress and move the binary to your PATH.
 #### Development Binaries (main build)
 
 The last successful build from the HEAD of the main branch is available for
-[macOS](https://cdn.acrn.io/cli/default_darwin_amd64_v1/acorn),
+[macOS](https://cdn.acrn.io/cli/mac_darwin_all/acorn),
 [Linux](https://cdn.acrn.io/cli/default_linux_amd64_v1/acorn), and
 [Windows](https://cdn.acrn.io/cli/default_windows_amd64_v1/acorn.exe)
 
