@@ -43,23 +43,14 @@ func Build(ctx context.Context, pushRepo string, local bool, cwd string, platfor
 	)
 
 	if len(platforms) == 0 {
-		workers, err := bkc.ListWorkers(ctx)
-		if err != nil {
-			return nil, nil, err
-		}
-		if len(workers) == 0 {
-			return nil, nil, fmt.Errorf("no workers found on buildkit server")
-		}
-		if len(workers[0].Platforms) == 0 {
-			return nil, nil, fmt.Errorf("no platforms found on workers on buildkit server")
-		}
+		defaultPlatform := cplatforms.DefaultSpec()
 		platforms = []v1.Platform{
 			{
-				Architecture: workers[0].Platforms[0].Architecture,
-				OS:           workers[0].Platforms[0].OS,
-				OSVersion:    workers[0].Platforms[0].OSVersion,
-				OSFeatures:   workers[0].Platforms[0].OSFeatures,
-				Variant:      workers[0].Platforms[0].Variant,
+				Architecture: defaultPlatform.Architecture,
+				OS:           defaultPlatform.OS,
+				OSVersion:    defaultPlatform.OSVersion,
+				OSFeatures:   defaultPlatform.OSFeatures,
+				Variant:      defaultPlatform.Variant,
 			},
 		}
 	}
@@ -114,22 +105,38 @@ func Build(ctx context.Context, pushRepo string, local bool, cwd string, platfor
 			options.FrontendAttrs["build-arg:"+key] = value
 		}
 
-		ch, progressDone := progress(messages)
-		defer func() { <-progressDone }()
-
-		res, err := bkc.Solve(ctx, nil, options, ch)
+		imageName, err := buildImage(ctx, pushRepo, options, messages)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		imageName := pushRepo + "@" + res.ExporterResponse["containerimage.digest"]
 		result = append(result, imageName)
 	}
 
 	return platforms, result, nil
 }
 
-func progress(messages buildclient.Messages) (chan *buildkit.SolveStatus, chan struct{}) {
+func buildImage(ctx context.Context, pushRepo string, options buildkit.SolveOpt, messages buildclient.Messages) (imageName string, returnErr error) {
+	bkc, bkcClose, err := newClient(ctx, pushRepo, options.FrontendAttrs["platform"])
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		bkcClose(returnErr)
+	}()
+
+	ch, progressDone := progressWriter(messages)
+	defer func() { <-progressDone }()
+
+	res, err := bkc.Solve(ctx, nil, options, ch)
+	if err != nil {
+		return "", err
+	}
+
+	return pushRepo + "@" + res.ExporterResponse["containerimage.digest"], nil
+}
+
+func progressWriter(messages buildclient.Messages) (chan *buildkit.SolveStatus, chan struct{}) {
 	var (
 		done      = make(chan struct{})
 		ch        = make(chan *buildkit.SolveStatus, 1)
