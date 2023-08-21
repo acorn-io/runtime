@@ -15,9 +15,9 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/secure-systems-lab/go-securesystemslib/encrypted"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/sigstore/pkg/cryptoutils"
-	"github.com/theupdateframework/go-tuf/encrypted"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -111,6 +111,7 @@ func UnmarshalPEMToPublicKey(pemBytes []byte) (crypto.PublicKey, error) {
 
 /*
   Adapted from sigstore/cosign to include support for OPENSSH PRIVATE KEY
+	Source: https://github.com/sigstore/cosign/blob/b43ce66500a808b932392557fb95f668625c4dbb/pkg/cosign/keys.go#L78-L181
 */
 
 type Keys struct {
