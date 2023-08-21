@@ -56,7 +56,6 @@ jobs:
           version: latest
           args: release --clean --snapshot
         env:
-          NOTARIZE: "0"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_PROJECT_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
