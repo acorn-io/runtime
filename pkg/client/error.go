@@ -44,12 +44,3 @@ func (e *ErrNotAuthorized) Error() string {
 	}
 	return fmt.Sprintf("not authorized: %s", perms)
 }
-
-// ErrRegistryUnauthorized denotes that we're missing credentials for a registry
-type ErrRegistryUnauthorized struct {
-	Image string
-}
-
-func (e *ErrRegistryUnauthorized) Error() string {
-	return fmt.Sprintf("not authorized to pull %s - Use `acorn login REGISTRY` to login to the registry", e.Image)
-}
