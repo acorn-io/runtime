@@ -290,6 +290,11 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	image, deployArgs, err := imageSource.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
+		err = client.TranslateUnauthorized(err)
+		if uaErr := (*client.ErrRegistryUnauthorized)(nil); errors.As(err, &uaErr) {
+			uaErr.Image = image
+			return uaErr
+		}
 		err = client.TranslateNotAllowed(err)
 		if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 			if _, isPattern := autoupgrade.AutoUpgradePattern(image); isPattern {

@@ -260,6 +260,18 @@ func TranslateNotAllowed(err error) error {
 	return err
 }
 
+func TranslateUnauthorized(err error) error {
+	if err == nil {
+		return err
+	}
+
+	if strings.Contains(err.Error(), "UNAUTHORIZED") {
+		return &ErrRegistryUnauthorized{}
+	}
+
+	return err
+}
+
 func translatePermissions(err error) error {
 	if err == nil {
 		return err
