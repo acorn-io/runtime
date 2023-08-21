@@ -292,7 +292,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		if apierrors.IsUnauthorized(err) {
 			logrus.Debugf("Error pulling %s: %v", image, err)
-			return fmt.Errorf("not authorized to pull %s - Use `acorn login REGISTRY` to login to the registry", image)
+			return fmt.Errorf("not authorized to pull %s - Use `acorn login <REGISTRY>` to login to the registry", image)
 		}
 		err = client.TranslateNotAllowed(err)
 		if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
