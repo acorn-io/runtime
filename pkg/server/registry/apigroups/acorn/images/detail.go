@@ -9,6 +9,7 @@ import (
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
 	"github.com/acorn-io/mink/pkg/validator"
+	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/imagedetails"
 	"github.com/acorn-io/runtime/pkg/images"
@@ -88,11 +89,11 @@ func translateRegistryErrors(in error, imageName string) error {
 	if terr, ok := in.(*transport.Error); ok {
 		switch terr.StatusCode {
 		case http.StatusNotFound:
-			return errors.NewNotFound(schema.GroupResource{Resource: "images"}, imageName)
+			return errors.NewNotFound(schema.GroupResource{Group: api.Group, Resource: "images"}, imageName)
 		case http.StatusUnauthorized:
 			return errors.NewUnauthorized(fmt.Sprintf("pulling image %s: %v", imageName, terr))
 		case http.StatusForbidden:
-			return errors.NewForbidden(schema.GroupResource{Resource: "images"}, imageName, terr)
+			return errors.NewForbidden(schema.GroupResource{Group: api.Group, Resource: "images"}, imageName, terr)
 		}
 	}
 	return in
