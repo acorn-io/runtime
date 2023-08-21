@@ -177,7 +177,7 @@ func (s *Strategy) Delete(ctx context.Context, obj types.Object) (types.Object, 
 	}
 
 	// Prune signatures - from cluster (internal) registry only
-	if !image.Remote && image.Repo == "" {
+	if image.Repo == "" {
 		remoteOpts := []remote.Option{remote.WithTransport(s.transport)}
 
 		// make sure we're only searching in the internal registry
