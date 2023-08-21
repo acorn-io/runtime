@@ -70,6 +70,7 @@ acorn install
       --service-lb-annotation strings                   Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)
       --set-pod-security-enforce-profile                Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                                     Bypass installation checks
+      --use-cilium-layer-7                              Add Cilium proxy visibility annotations to all Acorn apps
       --use-custom-ca-bundle                            Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false.
   -m, --workload-memory-default string                  Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default 0)
       --workload-memory-maximum string                  Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default 0)

@@ -568,6 +568,11 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.UseCiliumLayer7 != nil {
+		in, out := &in.UseCiliumLayer7, &out.UseCiliumLayer7
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Profile != nil {
 		in, out := &in.Profile, &out.Profile
 		*out = new(string)
