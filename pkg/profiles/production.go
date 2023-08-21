@@ -19,6 +19,7 @@ func productionProfile() apiv1.Config {
 	conf.ManageVolumeClasses = z.Pointer(true)
 	conf.NetworkPolicies = z.Pointer(true)
 	conf.PublishBuilders = z.Pointer(true)
+	conf.UseCiliumLayer7 = z.Pointer(true)
 
 	// These values are based on internal testing and usage
 	// statistics. They are not based on any formal benchmarking.

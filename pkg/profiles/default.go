@@ -55,6 +55,7 @@ func defaultProfile() apiv1.Config {
 		PublishBuilders:                new(bool),
 		RecordBuilds:                   new(bool),
 		SetPodSecurityEnforceProfile:   z.Pointer(true),
+		UseCiliumLayer7:                new(bool),
 		UseCustomCABundle:              new(bool),
 		WorkloadMemoryDefault:          new(int64),
 		WorkloadMemoryMaximum:          new(int64),

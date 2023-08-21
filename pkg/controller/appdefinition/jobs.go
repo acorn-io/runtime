@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/jobs"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/publicname"
@@ -98,6 +99,11 @@ func setSecretOutputVolume(containers []corev1.Container) (result []corev1.Conta
 }
 
 func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, name string, container v1.Container, interpolator *secrets.Interpolator) (kclient.Object, error) {
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return nil, err
+	}
+
 	interpolator = interpolator.ForJob(name)
 	jobEventName := jobs.GetEvent(name, appInstance)
 
@@ -150,7 +156,7 @@ func toJob(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSec
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      podLabels,
-				Annotations: labels.Merge(podAnnotations(appInstance, container), baseAnnotations),
+				Annotations: labels.Merge(podAnnotations(appInstance, container, cfg), baseAnnotations),
 			},
 			Spec: corev1.PodSpec{
 				Affinity:                      appInstance.Status.Scheduling[name].Affinity,

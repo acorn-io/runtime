@@ -108,6 +108,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.AWSIdentityProviderARN == nil {
 		c.AWSIdentityProviderARN = profile.AWSIdentityProviderARN
 	}
+	if c.UseCiliumLayer7 == nil {
+		c.UseCiliumLayer7 = profile.UseCiliumLayer7
+	}
 	if c.RegistryMemory == nil {
 		c.RegistryMemory = profile.RegistryMemory
 	}
@@ -380,6 +383,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.CertManagerIssuer != nil {
 		mergedConfig.CertManagerIssuer = newConfig.CertManagerIssuer
+	}
+	if newConfig.UseCiliumLayer7 != nil {
+		mergedConfig.UseCiliumLayer7 = newConfig.UseCiliumLayer7
 	}
 	if newConfig.Features != nil {
 		mergedConfig.Features = newConfig.Features

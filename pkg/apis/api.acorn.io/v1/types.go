@@ -552,6 +552,7 @@ type Config struct {
 	EventTTL                       *string         `json:"eventTTL" name:"event-ttl" usage:"Amount of time an Acorn event will be stored before being deleted (default '168h' - 7 days)"`
 	Features                       map[string]bool `json:"features" name:"features" boolmap:"true" usage:"Enable or disable features. (example foo=true,bar=false)"`
 	CertManagerIssuer              *string         `json:"certManagerIssuer" name:"cert-manager-issuer" usage:"The name of the cert-manager cluster issuer to use for TLS certificates on custom domains" default:""`
+	UseCiliumLayer7                *bool           `json:"userCiliumLayer7" name:"use-cilium-layer-7" usage:"Add Cilium proxy visibility annotations to all Acorn apps"`
 	Profile                        *string         `json:"profile" name:"profile" usage:"The name of the profile to use for the installation. Profiles options are production (prod) and default. (default profile is default)"`
 
 	// Flags for setting resource request and limits on sytem components

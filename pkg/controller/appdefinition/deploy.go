@@ -13,6 +13,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
 	"github.com/acorn-io/runtime/pkg/condition"
@@ -512,12 +513,12 @@ func containerAnnotation(container v1.Container) string {
 	return string(json)
 }
 
-func podAnnotations(appInstance *v1.AppInstance, container v1.Container) map[string]string {
+func podAnnotations(appInstance *v1.AppInstance, container v1.Container, cfg *apiv1.Config) map[string]string {
 	annotations := map[string]string{
 		labels.AcornContainerSpec: containerAnnotation(container),
 	}
 	addPrometheusAnnotations(annotations, container)
-	addCiliumAnnotations(annotations, container)
+	addCiliumAnnotations(annotations, container, cfg)
 
 	images := map[string]string{}
 	addImageAnnotations(images, appInstance, container)
@@ -554,15 +555,17 @@ func addPrometheusAnnotations(annotations map[string]string, container v1.Contai
 	}
 }
 
-func addCiliumAnnotations(annotations map[string]string, container v1.Container) {
-	var visibilityConfigs []string
-	for _, port := range container.Ports {
-		if port.Protocol == v1.ProtocolHTTP {
-			visibilityConfigs = append(visibilityConfigs, fmt.Sprintf("<Ingress/%d/TCP/HTTP>", port.TargetPort))
+func addCiliumAnnotations(annotations map[string]string, container v1.Container, cfg *apiv1.Config) {
+	if cfg.UseCiliumLayer7 != nil && *cfg.UseCiliumLayer7 {
+		var visibilityConfigs []string
+		for _, port := range container.Ports {
+			if port.Protocol == v1.ProtocolHTTP {
+				visibilityConfigs = append(visibilityConfigs, fmt.Sprintf("<Ingress/%d/TCP/HTTP>", port.TargetPort))
+			}
 		}
-	}
-	if len(visibilityConfigs) > 0 {
-		annotations[labels.CiliumProxyVisibility] = strings.Join(visibilityConfigs, ",")
+		if len(visibilityConfigs) > 0 {
+			annotations[labels.CiliumProxyVisibility] = strings.Join(visibilityConfigs, ",")
+		}
 	}
 }
 
@@ -651,6 +654,11 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 		stateful = isStateful(appInstance, container)
 	)
 
+	cfg, err := config.Get(req.Ctx, req.Client)
+	if err != nil {
+		return nil, err
+	}
+
 	interpolator = interpolator.ForContainer(name)
 
 	containers, initContainers := toContainers(appInstance, tag, name, container, interpolator)
@@ -692,7 +700,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      podLabels,
-					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, container), secretAnnotations),
+					Annotations: typed.Concat(deploymentAnnotations, podAnnotations(appInstance, container, cfg), secretAnnotations),
 				},
 				Spec: corev1.PodSpec{
 					Affinity:                      appInstance.Status.Scheduling[name].Affinity,
