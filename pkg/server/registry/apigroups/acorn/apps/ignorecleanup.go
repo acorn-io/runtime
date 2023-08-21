@@ -14,6 +14,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/strings/slices"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -36,40 +37,44 @@ func (s *ignoreCleanupStrategy) Create(ctx context.Context, obj types.Object) (t
 		return obj, nil
 	}
 
-	// Use app instance here because in Manager this request is forwarded to the workload cluster.
-	// The app validation logic should not run there.
-	app := &v1.AppInstance{}
-	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
-	if apierrors.IsNotFound(err) {
-		// See if this is a public name
-		appList := &v1.AppInstanceList{}
-		listErr := s.client.List(ctx, appList, client.MatchingLabels{labels.AcornPublicName: ri.Name}, client.InNamespace(ri.Namespace))
-		if listErr != nil {
-			return nil, listErr
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		// Use app instance here because in Manager this request is forwarded to the workload cluster.
+		// The app validation logic should not run there.
+		app := &v1.AppInstance{}
+		err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
+		if apierrors.IsNotFound(err) {
+			// See if this is a public name
+			appList := &v1.AppInstanceList{}
+			listErr := s.client.List(ctx, appList, client.MatchingLabels{labels.AcornPublicName: ri.Name}, client.InNamespace(ri.Namespace))
+			if listErr != nil {
+				return listErr
+			}
+			if len(appList.Items) != 1 {
+				// return the NotFound error we got originally
+				return err
+			}
+			app = &appList.Items[0]
+		} else if err != nil {
+			return err
 		}
-		if len(appList.Items) != 1 {
-			// return the NotFound error we got originally
-			return nil, err
+
+		if app.DeletionTimestamp.IsZero() {
+			return fmt.Errorf("cannot force delete app %s because it is not being deleted", app.Name)
 		}
-		app = &appList.Items[0]
-	} else if err != nil {
-		return nil, err
-	}
 
-	if app.DeletionTimestamp.IsZero() {
-		return nil, fmt.Errorf("cannot force delete app %s because it is not being deleted", app.Name)
-	}
+		// If the app has the destroy job finalizer, remove it to force delete
+		if idx := slices.Index(app.Finalizers, jobs.DestroyJobFinalizer); idx >= 0 {
+			app.Finalizers = append(app.Finalizers[:idx], app.Finalizers[idx+1:]...)
 
-	// If the app has the destroy job finalizer, remove it to force delete
-	if idx := slices.Index(app.Finalizers, jobs.DestroyJobFinalizer); idx >= 0 {
-		app.Finalizers = append(app.Finalizers[:idx], app.Finalizers[idx+1:]...)
-
-		if err = s.client.Update(ctx, app); err != nil {
-			return nil, err
+			if err = s.client.Update(ctx, app); err != nil {
+				return err
+			}
 		}
-	}
 
-	return obj, nil
+		return nil
+	})
+
+	return obj, err
 }
 
 func (s *ignoreCleanupStrategy) New() types.Object {
