@@ -22,7 +22,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -290,6 +290,10 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 
 	image, deployArgs, err := imageSource.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
+		if apierrors.IsUnauthorized(err) {
+			logrus.Debugf("Error pulling %s: %v", image, err)
+			return fmt.Errorf("not authorized to pull %s - Use `acorn login <REGISTRY>` to login to the registry", image)
+		}
 		err = client.TranslateNotAllowed(err)
 		if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 			if _, isPattern := autoupgrade.AutoUpgradePattern(image); isPattern {
@@ -329,7 +333,7 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 	}
 
 	app, err := c.AppGet(ctx, s.Name)
-	if apierror.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		if !imageSource.IsImageSet() {
 			return nil, false, fmt.Errorf("acorn \"%s\" is missing but can not be created without specifying an image to run or build", s.Name)
 		}
