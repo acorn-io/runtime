@@ -40,7 +40,7 @@ func Truncate(ctx context.Context, client kclient.Client, period time.Duration, 
 
 			var errs []error
 			for _, event := range events.Items[limit:] {
-				if err := client.Delete(ctx, &event); err != nil {
+				if err := kclient.IgnoreNotFound(client.Delete(ctx, &event)); err != nil {
 					errs = append(errs, err)
 				}
 			}
