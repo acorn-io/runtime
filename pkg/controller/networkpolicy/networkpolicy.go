@@ -255,6 +255,13 @@ func ForIngress(req router.Request, resp router.Response) error {
 								},
 							},
 						},
+						{
+							NamespaceSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									labels.AcornAppNamespace: projectName,
+								},
+							},
+						},
 					},
 					Ports: netPolPorts,
 				}},
