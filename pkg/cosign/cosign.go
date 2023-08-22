@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -390,10 +391,10 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 			return nil, fmt.Errorf("failed to load public key from SSH - %s: %w", keyRef, err)
 		}
 		verifiers = append(verifiers, v)
-	} else if strings.HasPrefix(keyRef, "ac://") {
+	} else if strings.HasPrefix(keyRef, "acorn://") {
 		// Acorn Manager
 		logrus.Debugf("Loading public key from Acorn Manager: %s", keyRef)
-		acKeys, err := getAcornPublicKeys(strings.TrimPrefix(keyRef, "ac://"))
+		acKeys, err := getAcornPublicKeys(strings.TrimPrefix(keyRef, "acorn://"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from Acorn Manager - %s: %w", keyRef, err)
 		}
@@ -437,8 +438,11 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		}
 
 		verifiers = append(verifiers, ghVerifiers...)
+	} else if regexp.MustCompile(`^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$`).MatchString(keyRef) {
+		// weak (not length-limited) regexp for github/acorn-manager usernames -> default to acorn manager
+		return LoadVerifiers(ctx, fmt.Sprintf("acorn://%s", keyRef), algorithm)
 	} else {
-		// schemes: k8s://, pkcs11://, gitlab://
+		// schemes: k8s://, pkcs11://, gitlab://, raw, url, ...
 		logrus.Debugf("Loading public key from cosign builtin scheme type: %s", keyRef)
 		v, err := cosignature.PublicKeyFromKeyRef(ctx, keyRef)
 		if err != nil {
