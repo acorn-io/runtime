@@ -12,7 +12,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rancher/wrangler/pkg/merr"
@@ -49,12 +48,7 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image, d
 		return err
 	}
 
-	keychain, err := images.GetAuthenticationRemoteKeychainWithLocalAuth(ctx, nil, nil, c, namespace)
-	if err != nil {
-		return err
-	}
-
-	return CheckImageAgainstRules(ctx, c, namespace, image, digest, rulesList.Items, keychain, opts...)
+	return CheckImageAgainstRules(ctx, c, namespace, image, digest, rulesList.Items, opts...)
 }
 
 // CheckImageAgainstRules checks if the image is allowed by the given ImageAllowRules
@@ -62,7 +56,7 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image, d
 // - DENIED if strict mode (deny-by-default) is enabled
 // - ALLOWED if strict mode is disabled (the default)
 // ! Only one single rule has to allow the image for this to pass !
-func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, digest string, imageAllowRules []v1.ImageAllowRuleInstance, keychain authn.Keychain, opts ...remote.Option) error {
+func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, digest string, imageAllowRules []v1.ImageAllowRuleInstance, opts ...remote.Option) error {
 	cfg, err := config.Get(ctx, c)
 	if err != nil {
 		return err
@@ -89,7 +83,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 		RemoteOpts:         opts,
 	}
 
-	ref, err := name.ParseReference(image, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+	ref, err := images.GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return fmt.Errorf("error parsing image reference %s: %w", image, err)
 	}
