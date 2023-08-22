@@ -15,6 +15,9 @@ spec:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: acorn-system
+    - namespaceSelector:
+        matchLabels:
+          acorn.io/app-namespace: acorn
     ports:
     - port: 9090
       protocol: TCP
@@ -47,6 +50,9 @@ spec:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: acorn-system
+    - namespaceSelector:
+        matchLabels:
+          acorn.io/app-namespace: acorn
     ports:
     - port: 9999
       protocol: TCP

@@ -65,7 +65,6 @@ spec:
         cona3: value
         globala1: value
         globala2: value
-        policy.cilium.io/proxy-visibility: <Ingress/81/TCP/HTTP>
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

@@ -38,7 +38,6 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"foo","metrics":{"path":"/","port":80},"ports":[{"protocol":"http","targetPort":80}],"probes":null}'
-        policy.cilium.io/proxy-visibility: <Ingress/80/TCP/HTTP>
         prometheus.io/path: /
         prometheus.io/port: "80"
         prometheus.io/scrape: "true"
