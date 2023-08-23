@@ -13,6 +13,7 @@ import (
 	"github.com/acorn-io/mink/pkg/strategy"
 	api "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
@@ -109,7 +110,7 @@ func (i *ImagePush) ConnectMethods() []string {
 	return []string{"GET"}
 }
 
-func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan ImageProgress, error) {
+func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName string, auth *apiv1.RegistryAuth) (*apiv1.Image, <-chan images.ImageProgress, error) {
 	pushTag, err := name.NewTag(tagName, name.WithDefaultRegistry(DefaultRegistry))
 	if err != nil {
 		return nil, nil, err
@@ -149,30 +150,30 @@ func (i *ImagePush) ImagePush(ctx context.Context, image *apiv1.Image, tagName s
 	}
 
 	// Signature
-	sigTag, sig, err := findSignatureImage(repo.Digest(image.Digest), opts...)
+	sigTag, sig, err := acornsign.FindSignatureImage(repo.Digest(image.Digest), opts...)
 	if err != nil {
 		return nil, nil, err
 	}
 	sigPushTag := pushTag.Context().Tag(sigTag.TagStr())
 
 	// metachannel is used to send updates to another channel for each index to be copied
-	metachannel := make(chan simpleUpdate)
+	metachannel := make(chan images.SimpleUpdate)
 
 	// progress is the channel returned by this function and used to write websocket messages to the client
-	progress := make(chan ImageProgress)
+	progress := make(chan images.ImageProgress)
 
 	go func() {
 		defer close(progress)
-		forwardUpdates(progress, metachannel)
+		images.ForwardUpdates(progress, metachannel)
 	}()
 
 	// Copy the image and signature
 	go func() {
 		defer close(metachannel)
-		remoteWrite(ctx, metachannel, pushTag, remoteImage, fmt.Sprintf("Pushing image %s ", pushTag), nil, opts...)
+		images.RemoteWrite(metachannel, pushTag, remoteImage, fmt.Sprintf("Pushing image %s ", pushTag), nil, opts...)
 
 		if sig != nil {
-			remoteWrite(ctx, metachannel, sigPushTag, sig, fmt.Sprintf("Pushing signature %s ", sigPushTag), nil, opts...)
+			images.RemoteWrite(metachannel, sigPushTag, sig, fmt.Sprintf("Pushing signature %s ", sigPushTag), nil, opts...)
 		}
 	}()
 

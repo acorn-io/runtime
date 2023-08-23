@@ -731,23 +731,6 @@ func (m *MockClient) ImagePull(ctx context.Context, name string, opts *client.Im
 	}
 }
 
-func (m *MockClient) ImageCopy(_ context.Context, srcImage, _ string, _ *client.ImageCopyOptions) (<-chan client.ImageProgress, error) {
-	switch srcImage {
-	case "found":
-		progresses := make(chan client.ImageProgress)
-		close(progresses)
-		return progresses, nil
-	case "dne":
-		progresses := make(chan client.ImageProgress)
-		close(progresses)
-		return progresses, fmt.Errorf("error: tag %s does not exist", srcImage)
-	default:
-		progresses := make(chan client.ImageProgress)
-		close(progresses)
-		return progresses, fmt.Errorf("error: tag %s does not exist", srcImage)
-	}
-}
-
 func (m *MockClient) ImageTag(ctx context.Context, image, tag string) error {
 	switch image {
 	case "dne":

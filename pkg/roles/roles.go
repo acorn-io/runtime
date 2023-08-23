@@ -126,7 +126,6 @@ var (
 				Resources: []string{
 					"images/push",
 					"images/pull",
-					"images/copy",
 					"containerreplicas/exec",
 					"secrets/reveal",
 				},

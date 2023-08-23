@@ -10,6 +10,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -19,9 +20,7 @@ import (
 	"github.com/acorn-io/mink/pkg/strategy"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
-	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/k8schannel"
-	"github.com/google/go-containerregistry/pkg/name"
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/gorilla/websocket"
@@ -104,29 +103,7 @@ func (i *ImagePull) ConnectMethods() []string {
 	return []string{"GET"}
 }
 
-func findSignatureImage(imageRef name.Reference, opts ...remote.Option) (name.Tag, ggcrv1.Image, error) {
-	if digest, ok := imageRef.(name.Digest); ok {
-		tag, hash, err := acornsign.FindSignature(digest, opts...)
-		if err != nil {
-			return name.Tag{}, nil, err
-		}
-		if hash.Hex == "" {
-			return name.Tag{}, nil, nil
-		}
-
-		img, err := remote.Image(tag, opts...)
-
-		return tag, img, err
-	} else {
-		digeststr, err := acornsign.SimpleDigest(imageRef, opts...)
-		if err != nil {
-			return name.Tag{}, nil, err
-		}
-		return findSignatureImage(imageRef.Context().Digest(digeststr), opts...)
-	}
-}
-
-func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan ImageProgress, error) {
+func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, auth *apiv1.RegistryAuth) (<-chan images.ImageProgress, error) {
 	pullTag, err := imagesystem.ParseAndEnsureNotInternalRepo(ctx, i.client, namespace, imageName)
 	if err != nil {
 		return nil, err
@@ -159,7 +136,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		recordRepo = repo.String()
 	}
 
-	sigTag, sig, err := findSignatureImage(pullTag.Context().Digest(hash.String()), opts...)
+	sigTag, sig, err := acornsign.FindSignatureImage(pullTag.Context().Digest(hash.String()), opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -176,14 +153,14 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 	}
 
 	// metachannel is used to send updates to another channel for each index to be copied
-	metachannel := make(chan simpleUpdate)
+	metachannel := make(chan images.SimpleUpdate)
 
 	// progress is the channel returned by this function and used to write websocket messages to the client
-	progress := make(chan ImageProgress)
+	progress := make(chan images.ImageProgress)
 
 	go func() {
 		defer close(progress)
-		forwardUpdates(progress, metachannel)
+		images.ForwardUpdates(progress, metachannel)
 	}()
 
 	// Copy the image and signature
@@ -193,10 +170,10 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		record := func() error {
 			return i.recordImage(ctx, hash, namespace, imageName, recordRepo)
 		}
-		remoteWrite(ctx, metachannel, repo.Digest(hash.Hex), index, fmt.Sprintf("Pulling image %s ", pullTag.Context().Tag(pullTag.Identifier())), record, opts...)
+		images.RemoteWrite(metachannel, repo.Digest(hash.Hex), index, fmt.Sprintf("Pulling image %s ", pullTag.Context().Tag(pullTag.Identifier())), record, opts...)
 
 		if sig != nil {
-			remoteWrite(ctx, metachannel, repo.Tag(sigTag.TagStr()), sig, fmt.Sprintf("Pulling signature %s ", sigTag.TagStr()), nil, opts...)
+			images.RemoteWrite(metachannel, repo.Tag(sigTag.TagStr()), sig, fmt.Sprintf("Pulling signature %s ", sigTag.TagStr()), nil, opts...)
 		}
 	}()
 

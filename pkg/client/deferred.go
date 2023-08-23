@@ -325,13 +325,6 @@ func (d *DeferredClient) ImageDetails(ctx context.Context, imageName string, opt
 	return d.Client.ImageDetails(ctx, imageName, opts)
 }
 
-func (d *DeferredClient) ImageCopy(ctx context.Context, srcImage, dstImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error) {
-	if err := d.create(); err != nil {
-		return nil, err
-	}
-	return d.Client.ImageCopy(ctx, srcImage, dstImage, opts)
-}
-
 func (d *DeferredClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error) {
 	if err := d.create(); err != nil {
 		return nil, err

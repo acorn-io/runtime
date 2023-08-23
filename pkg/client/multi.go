@@ -438,14 +438,6 @@ func (m *MultiClient) ImageDetails(ctx context.Context, imageName string, opts *
 	return c.ImageDetails(ctx, imageName, opts)
 }
 
-func (m *MultiClient) ImageCopy(ctx context.Context, srcImage, dstImage string, opts *ImageCopyOptions) (result <-chan ImageProgress, err error) {
-	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
-	if err != nil {
-		return nil, err
-	}
-	return c.ImageCopy(ctx, srcImage, dstImage, opts)
-}
-
 func (m *MultiClient) ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error) {
 	c, err := m.Factory.ForProject(ctx, m.Factory.DefaultProject())
 	if err != nil {
