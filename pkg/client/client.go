@@ -214,6 +214,7 @@ type Client interface {
 	AppRun(ctx context.Context, image string, opts *AppRunOptions) (*apiv1.App, error)
 	AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error)
 	AppLog(ctx context.Context, name string, opts *LogOptions) (<-chan apiv1.LogMessage, error)
+	AppInfo(ctx context.Context, name string) (string, error)
 	AppConfirmUpgrade(ctx context.Context, name string) error
 	AppPullImage(ctx context.Context, name string) error
 	AppIgnoreDeleteCleanup(ctx context.Context, name string) error

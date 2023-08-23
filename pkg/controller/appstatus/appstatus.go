@@ -156,6 +156,12 @@ func setCondition[T commonStatusGetter](obj kclient.Object, conditionName string
 			errorMessages = append(errorMessages, formatMessage(name, status.ErrorMessages, ", "))
 		} else if len(status.TransitioningMessages) > 0 {
 			transitioningMessages = append(transitioningMessages, formatMessage(name, status.TransitioningMessages, ", "))
+		} else if !status.Defined {
+			transitioningMessages = append(transitioningMessages, formatMessage(name, []string{"pending"}, ", "))
+		} else if !status.UpToDate {
+			transitioningMessages = append(transitioningMessages, formatMessage(name, []string{"updating"}, ", "))
+		} else if !status.Ready {
+			transitioningMessages = append(transitioningMessages, formatMessage(name, []string{"not ready"}, ", "))
 		}
 	}
 

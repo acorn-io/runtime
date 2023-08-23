@@ -1,0 +1,6 @@
+info: "top message"
+acorns: nested: {
+    build: {
+        acornfile: "./nested.acorn"
+    }
+}

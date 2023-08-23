@@ -159,6 +159,11 @@ func (m *MockClient) DevSessionRelease(ctx context.Context, name string) error {
 	panic("implement me")
 }
 
+func (m *MockClient) AppInfo(ctx context.Context, name string) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *MockClient) AppPullImage(ctx context.Context, name string) error {
 	return nil
 }

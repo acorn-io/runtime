@@ -73,6 +73,13 @@ func (d *DeferredClient) AppRun(ctx context.Context, image string, opts *AppRunO
 	return d.Client.AppRun(ctx, image, opts)
 }
 
+func (d *DeferredClient) AppInfo(ctx context.Context, name string) (string, error) {
+	if err := d.create(); err != nil {
+		return "", err
+	}
+	return d.Client.AppInfo(ctx, name)
+}
+
 func (d *DeferredClient) AppUpdate(ctx context.Context, name string, opts *AppUpdateOptions) (*apiv1.App, error) {
 	if err := d.create(); err != nil {
 		return nil, err

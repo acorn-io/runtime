@@ -2,6 +2,7 @@ package apps
 
 import (
 	"context"
+	"strings"
 
 	"github.com/acorn-io/mink/pkg/stores"
 	"github.com/acorn-io/mink/pkg/types"
@@ -34,31 +35,43 @@ type InfoStrategy struct {
 func (s *InfoStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
 	ri, _ := request.RequestInfoFrom(ctx)
 
-	app := &apiv1.App{}
-	err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		appInstance = &v1.AppInstance{}
+		err         error
+	)
 
-	appInstances := &v1.AppInstanceList{}
-	err = s.client.List(ctx, appInstances, &kclient.ListOptions{
-		LabelSelector: klabels.SelectorFromSet(klabels.Set{
-			labels.AcornPublicName: name,
-		}),
-		Namespace: ri.Namespace,
-	})
-	if err != nil {
-		return nil, err
-	}
+	if strings.Contains(name, ".") {
+		app := &apiv1.App{}
+		err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
+		if err != nil {
+			return nil, err
+		}
 
-	if len(appInstances.Items) != 1 {
-		return nil, apierrors.NewNotFound(schema.GroupResource{
-			Group:    apiv1.SchemeGroupVersion.Group,
-			Resource: "apps",
-		}, name)
-	}
+		appInstances := &v1.AppInstanceList{}
+		err = s.client.List(ctx, appInstances, &kclient.ListOptions{
+			LabelSelector: klabels.SelectorFromSet(klabels.Set{
+				labels.AcornPublicName: name,
+			}),
+			Namespace: ri.Namespace,
+		})
+		if err != nil {
+			return nil, err
+		}
 
-	appInstance := &appInstances.Items[0]
+		if len(appInstances.Items) != 1 {
+			return nil, apierrors.NewNotFound(schema.GroupResource{
+				Group:    apiv1.SchemeGroupVersion.Group,
+				Resource: "apps",
+			}, name)
+		}
+
+		appInstance = &appInstances.Items[0]
+	} else {
+		err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, appInstance)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	resp := &apiv1.AppInfo{
 		ObjectMeta: metav1.ObjectMeta{

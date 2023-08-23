@@ -594,6 +594,26 @@ func (c *DefaultClient) AppConfirmUpgrade(ctx context.Context, name string) erro
 		Body(&apiv1.ConfirmUpgrade{}).Do(ctx).Error()
 }
 
+func (c *DefaultClient) AppInfo(ctx context.Context, name string) (string, error) {
+	app := &apiv1.App{}
+	err := c.Client.Get(ctx, kclient.ObjectKey{
+		Name:      name,
+		Namespace: c.Namespace,
+	}, app)
+	if err != nil {
+		return "", err
+	}
+
+	info := &apiv1.AppInfo{}
+	err = c.RESTClient.Get().
+		Namespace(app.Namespace).
+		Resource("apps").
+		Name(app.Name).
+		SubResource("info").
+		Do(ctx).Into(info)
+	return info.Info, err
+}
+
 func (c *DefaultClient) AppPullImage(ctx context.Context, name string) error {
 	app := &apiv1.App{}
 	err := c.Client.Get(ctx, kclient.ObjectKey{
