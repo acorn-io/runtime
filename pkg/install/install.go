@@ -61,6 +61,7 @@ type Options struct {
 	SkipChecks                          bool
 	OutputFormat                        string
 	APIServerReplicas                   *int
+	APIServerPodAnnotations             map[string]string
 	ControllerReplicas                  *int
 	ControllerServiceAccountAnnotations map[string]string
 	Config                              apiv1.Config
@@ -251,7 +252,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 
 	s = opts.Progress.New(fmt.Sprintf("Installing APIServer and Controller (image %s)", image))
 	if err := applyDeployments(ctx, image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.Config.UseCustomCABundle,
-		opts.ControllerServiceAccountAnnotations, apply, c); err != nil {
+		opts.ControllerServiceAccountAnnotations, opts.APIServerPodAnnotations, apply, c); err != nil {
 		return s.Fail(err)
 	}
 	s.Success()
@@ -467,7 +468,7 @@ func resources(image string, opts *Options) ([]kclient.Object, error) {
 	objs = append(objs, namespace...)
 
 	deps, err := Deployments(image, *opts.APIServerReplicas, *opts.ControllerReplicas, *opts.Config.UseCustomCABundle,
-		opts.ControllerServiceAccountAnnotations)
+		opts.ControllerServiceAccountAnnotations, opts.APIServerPodAnnotations)
 	if err != nil {
 		return nil, err
 	}
@@ -508,7 +509,7 @@ func printObject(image string, opts *Options) error {
 	return err
 }
 
-func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, annotations map[string]string, apply apply.Apply, c kclient.Client) error {
+func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, controllerSAAnnotations, apiPodAnnotations map[string]string, apply apply.Apply, c kclient.Client) error {
 	// handle upgrade from <= v0.3.x
 	if err := resetNamespace(ctx, c); err != nil {
 		return err
@@ -519,7 +520,7 @@ func applyDeployments(ctx context.Context, imageName string, apiServerReplicas, 
 		return err
 	}
 
-	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas, useCustomCABundle, annotations)
+	deps, err := Deployments(imageName, apiServerReplicas, controllerReplicas, useCustomCABundle, controllerSAAnnotations, apiPodAnnotations)
 	if err != nil {
 		return err
 	}
@@ -559,7 +560,7 @@ func Namespace() ([]kclient.Object, error) {
 	return objectsFromFile("namespace.yaml")
 }
 
-func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, annotations map[string]string) ([]kclient.Object, error) {
+func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int, useCustomCABundle bool, controllerSAAnnotations, apiPodAnnotations map[string]string) ([]kclient.Object, error) {
 	apiServerObjects, err := objectsFromFile("apiserver.yaml")
 	if err != nil {
 		return nil, err
@@ -575,12 +576,17 @@ func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int,
 		return nil, err
 	}
 
+	apiServerObjects, err = replacePodAnnotations(apiPodAnnotations, apiServerObjects)
+	if err != nil {
+		return nil, err
+	}
+
 	controllerObjects, err = replaceReplicas(controllerReplicas, controllerObjects)
 	if err != nil {
 		return nil, err
 	}
 
-	controllerObjects, err = replaceAnnotations(annotations, controllerObjects)
+	controllerObjects, err = replaceSAAnnotations(controllerSAAnnotations, controllerObjects)
 	if err != nil {
 		return nil, err
 	}
@@ -597,14 +603,37 @@ func Deployments(runtimeImage string, apiServerReplicas, controllerReplicas int,
 	return replaceImage(runtimeImage, objects)
 }
 
-func replaceAnnotations(annotations map[string]string, objs []kclient.Object) ([]kclient.Object, error) {
-	val := map[string]any{}
+func replacePodAnnotations(annotations map[string]string, objs []kclient.Object) ([]kclient.Object, error) {
+	if len(annotations) == 0 {
+		return objs, nil
+	}
+
+	val := make(map[string]any, len(annotations))
 	for k, v := range annotations {
 		val[k] = v
 	}
 
-	if len(val) == 0 {
+	for _, obj := range objs {
+		ustr := obj.(*unstructured.Unstructured)
+		if ustr.GetKind() == "Deployment" {
+			err := unstructured.SetNestedField(ustr.Object, val, "spec", "template", "metadata", "annotations")
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return objs, nil
+}
+
+func replaceSAAnnotations(annotations map[string]string, objs []kclient.Object) ([]kclient.Object, error) {
+	if len(annotations) == 0 {
 		return objs, nil
+	}
+
+	val := make(map[string]any, len(annotations))
+	for k, v := range annotations {
+		val[k] = v
 	}
 
 	for _, obj := range objs {

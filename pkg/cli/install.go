@@ -35,6 +35,7 @@ type Install struct {
 	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 
 	APIServerReplicas                  *int     `usage:"acorn-api deployment replica count" name:"api-server-replicas"`
+	APIServerPodAnnotations            []string `usage:"annotations to apply to acorn-api pods" name:"api-server-pod-annotations" split:"false"`
 	ControllerReplicas                 *int     `usage:"acorn-controller deployment replica count"`
 	ControllerServiceAccountAnnotation []string `usage:"annotation to apply to the acorn-system service account"`
 
@@ -83,13 +84,14 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 		image = i.Image
 	}
 
-	annotations := map[string]string{}
-	for _, anno := range i.ControllerServiceAccountAnnotation {
-		k, v, ok := strings.Cut(anno, "=")
-		if !ok {
-			return fmt.Errorf("--controller-service-account-annotation must be in key=value format got [%s]", anno)
-		}
-		annotations[k] = v
+	controllerSAAnnotations, err := parseAnnotations(i.ControllerServiceAccountAnnotation)
+	if err != nil {
+		return fmt.Errorf("invalid --controller-service-account-annotation %w", err)
+	}
+
+	apiPodAnnotations, err := parseAnnotations(i.APIServerPodAnnotations)
+	if err != nil {
+		return fmt.Errorf("invalid --api-server-pod-annotations: %w", err)
 	}
 
 	opts := &install.Options{
@@ -97,8 +99,9 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 		OutputFormat:                        i.Output,
 		Config:                              i.Config,
 		APIServerReplicas:                   i.APIServerReplicas,
+		APIServerPodAnnotations:             apiPodAnnotations,
 		ControllerReplicas:                  i.ControllerReplicas,
-		ControllerServiceAccountAnnotations: annotations,
+		ControllerServiceAccountAnnotations: controllerSAAnnotations,
 	}
 
 	if i.Dev != "" {
@@ -106,4 +109,16 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	return install.Install(cmd.Context(), image, opts)
+}
+
+func parseAnnotations(annotations []string) (map[string]string, error) {
+	result := make(map[string]string, len(annotations))
+	for _, anno := range annotations {
+		k, v, ok := strings.Cut(anno, "=")
+		if !ok {
+			return nil, fmt.Errorf("annotation must be in key=value format got [%s]", anno)
+		}
+		result[k] = v
+	}
+	return result, nil
 }
