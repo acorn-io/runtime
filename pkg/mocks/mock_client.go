@@ -157,6 +157,21 @@ func (mr *MockClientMockRecorder) AppIgnoreDeleteCleanup(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppIgnoreDeleteCleanup", reflect.TypeOf((*MockClient)(nil).AppIgnoreDeleteCleanup), arg0, arg1)
 }
 
+// AppInfo mocks base method.
+func (m *MockClient) AppInfo(arg0 context.Context, arg1 string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AppInfo", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AppInfo indicates an expected call of AppInfo.
+func (mr *MockClientMockRecorder) AppInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppInfo", reflect.TypeOf((*MockClient)(nil).AppInfo), arg0, arg1)
+}
+
 // AppList mocks base method.
 func (m *MockClient) AppList(arg0 context.Context) ([]v1.App, error) {
 	m.ctrl.T.Helper()

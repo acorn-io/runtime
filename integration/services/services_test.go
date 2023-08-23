@@ -9,7 +9,44 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestServiceInfo(t *testing.T) {
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndProject(t)
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/info/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/info",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppRun(ctx, image.ID, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	k, err := c.GetClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	helper.WaitForObject(t, k.Watch, &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Ready
+	})
+
+	i, err := c.AppInfo(ctx, app.Name)
+	require.NoError(t, err)
+	assert.Equal(t, "top message", i)
+
+	i, err = c.AppInfo(ctx, app.Name+".nested")
+	require.NoError(t, err)
+	assert.Equal(t, "nested message", i)
+}
 
 func TestServices(t *testing.T) {
 	helper.StartController(t)

@@ -149,6 +149,20 @@ func (m *MultiClient) AppStop(ctx context.Context, name string) error {
 	return err
 }
 
+func (m *MultiClient) AppInfo(ctx context.Context, name string) (string, error) {
+	var (
+		info = ""
+		err  error
+	)
+
+	_, err = onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
+		info, err = c.AppInfo(ctx, name)
+		return &apiv1.App{}, err
+	})
+
+	return info, err
+}
+
 func (m *MultiClient) AppStart(ctx context.Context, name string) error {
 	_, err := onOne(ctx, m.Factory, name, func(name string, c Client) (*apiv1.App, error) {
 		return &apiv1.App{}, c.AppStart(ctx, name)
