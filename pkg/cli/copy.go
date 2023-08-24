@@ -276,6 +276,12 @@ func (a *ImageCopy) copyTag(source name.Reference, newTag string, sourceOpts []r
 
 	dest := source.Context().Tag(newTag)
 
+	// Parse it again to make sure that the tag provided by the user is valid
+	_, err = name.ParseReference(dest.String())
+	if err != nil {
+		return err
+	}
+
 	if !a.Force {
 		if err := errIfImageExistsAndIsDifferent(sourceIndex, dest, sourceOpts); err != nil {
 			return err
