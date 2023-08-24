@@ -25,7 +25,8 @@ func NewImageCopy(c CommandContext) *cobra.Command {
 		Use: `copy [flags] SOURCE DESTINATION
 
   This command copies Acorn images between remote image registries.
-  It does not interact with images stored in the Acorn internal registry, or with the Acorn API in any way.`,
+  It does not interact with images stored in the Acorn internal registry, or with the Acorn API in any way.
+  To set up credentials for a registry, use 'acorn login -l <registry>'. It only works with locally stored credentials.`,
 		Aliases:           []string{"cp"},
 		SilenceUsage:      true,
 		Short:             "Copy Acorn images between registries",
@@ -248,6 +249,11 @@ func (a *ImageCopy) copyRepo(args []string, sourceOpts, destOpts []remote.Option
 }
 
 func (a *ImageCopy) copyTag(source name.Reference, newTag string, sourceOpts []remote.Option) error {
+	// -a is not supported for this operation, so check if it is set and return an error if so
+	if a.AllTags {
+		return errors.New("cannot use --all-tags with a tag destination")
+	}
+
 	sourceIndex, err := remote.Index(source, sourceOpts...)
 	if err != nil {
 		return err
