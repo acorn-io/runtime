@@ -540,21 +540,6 @@ func (mr *MockClientMockRecorder) GetProject() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProject", reflect.TypeOf((*MockClient)(nil).GetProject))
 }
 
-// ImageCopy mocks base method.
-func (m *MockClient) ImageCopy(arg0 context.Context, arg1, arg2 string, arg3 *client.ImageCopyOptions) (<-chan client.ImageProgress, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ImageCopy", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(<-chan client.ImageProgress)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ImageCopy indicates an expected call of ImageCopy.
-func (mr *MockClientMockRecorder) ImageCopy(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImageCopy", reflect.TypeOf((*MockClient)(nil).ImageCopy), arg0, arg1, arg2, arg3)
-}
-
 // ImageDelete mocks base method.
 func (m *MockClient) ImageDelete(arg0 context.Context, arg1 string, arg2 *client.ImageDeleteOptions) (*v1.Image, []string, error) {
 	m.ctrl.T.Helper()

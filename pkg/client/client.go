@@ -256,7 +256,6 @@ type Client interface {
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) (<-chan ImageProgress, error)
 	ImageTag(ctx context.Context, image, tag string) error
 	ImageDetails(ctx context.Context, imageName string, opts *ImageDetailsOptions) (*ImageDetails, error)
-	ImageCopy(ctx context.Context, srcImage, destImage string, opts *ImageCopyOptions) (<-chan ImageProgress, error)
 
 	ImageSign(ctx context.Context, image string, payload []byte, signatureB64 string, opts *ImageSignOptions) (*apiv1.ImageSignature, error)
 	ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error)
@@ -342,13 +341,6 @@ type ImageDetailsOptions struct {
 
 type ImageDeleteOptions struct {
 	Force bool `json:"force,omitempty"`
-}
-
-type ImageCopyOptions struct {
-	AllTags    bool                `json:"allTags,omitempty"`
-	Force      bool                `json:"force,omitempty"`
-	SourceAuth *apiv1.RegistryAuth `json:"sourceAuth,omitempty"`
-	DestAuth   *apiv1.RegistryAuth `json:"destAuth,omitempty"`
 }
 
 type ContainerReplicaExecOptions struct {

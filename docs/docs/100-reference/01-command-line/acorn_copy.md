@@ -8,20 +8,18 @@ Copy Acorn images between registries
 ```
 acorn copy [flags] SOURCE DESTINATION
 
-  This command can copy local images to remote registries, and can copy images between remote registries.
-  It cannot copy images from remote registries to the local registry (use acorn pull instead).
-
-  The --all-tags option only works with remote registries.
+  This command copies Acorn images between remote image registries.
+  It does not interact with images stored in the Acorn internal registry, or with the Acorn API in any way.
 ```
 
 ### Examples
 
 ```
-  # Copy the local image tagged "myimage:v1" to Docker Hub:
-    acorn copy myimage:v1 docker.io/<username>/myimage:v1
-
   # Copy an image from Docker Hub to GHCR:
     acorn copy docker.io/<username>/myimage:v1 ghcr.io/<username>/myimage:v1
+
+  # Copy the 'main' tag on an image to the 'prod' tag on the same image, and overwrite if it already exists:
+    acorn copy docker.io/<username>/myimage:main prod --force
 
   # Copy all tags on a particular image repo in Docker Hub to GHCR:
     acorn copy --all-tags docker.io/<username>/myimage ghcr.io/<username>/myimage

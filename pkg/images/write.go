@@ -1,7 +1,6 @@
 package images
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -16,12 +15,12 @@ type ImageProgress struct {
 	CurrentTask string `json:"currentTask,omitempty"`
 }
 
-type simpleUpdate struct {
+type SimpleUpdate struct {
 	updateChan  chan ggcrv1.Update
 	description string
 }
 
-func forwardUpdates(progress chan<- ImageProgress, updates chan simpleUpdate) {
+func ForwardUpdates(progress chan<- ImageProgress, updates chan SimpleUpdate) {
 	for c := range updates {
 		for update := range c.updateChan {
 			var errString string
@@ -38,9 +37,9 @@ func forwardUpdates(progress chan<- ImageProgress, updates chan simpleUpdate) {
 	}
 }
 
-func remoteWrite(ctx context.Context, progress chan<- simpleUpdate, destRef name.Reference, source any, description string, postWriteFn func() error, opts ...remote.Option) {
+func RemoteWrite(progress chan<- SimpleUpdate, destRef name.Reference, source any, description string, postWriteFn func() error, opts ...remote.Option) {
 	writeProgress := make(chan ggcrv1.Update)
-	progress <- simpleUpdate{
+	progress <- SimpleUpdate{
 		updateChan:  writeProgress,
 		description: description,
 	}
@@ -56,7 +55,7 @@ func remoteWrite(ctx context.Context, progress chan<- simpleUpdate, destRef name
 	}
 
 	if err != nil {
-		handleremoteWriteError(err, writeProgress)
+		handleRemoteWriteError(err, writeProgress)
 	}
 	if postWriteFn != nil {
 		if err := postWriteFn(); err != nil {
@@ -67,7 +66,7 @@ func remoteWrite(ctx context.Context, progress chan<- simpleUpdate, destRef name
 	}
 }
 
-func handleremoteWriteError(err error, progress chan ggcrv1.Update) {
+func handleRemoteWriteError(err error, progress chan ggcrv1.Update) {
 	if err == nil {
 		return
 	}
