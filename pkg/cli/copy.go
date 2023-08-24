@@ -16,6 +16,7 @@ import (
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
@@ -49,7 +50,21 @@ type ImageCopy struct {
 	client  ClientFactory
 }
 
-func (a *ImageCopy) Run(cmd *cobra.Command, args []string) error {
+func (a *ImageCopy) Run(cmd *cobra.Command, args []string) (err error) {
+	// Print a helpful error message for the user if they end up getting an authentication error
+	defer func() {
+		if err != nil {
+			var terr *transport.Error
+			if ok := errors.As(err, &terr); ok {
+				if terr.StatusCode == http.StatusForbidden {
+					logrus.Warnf("Registry authentication failed. Try running 'acorn login -l <registry>'")
+				} else if terr.StatusCode == http.StatusUnauthorized {
+					logrus.Warnf("Registry authorization failed. Ensure that you have the correct permissions to push to this registry. Run 'acorn login -l <registry>' if you have not logged in yet.")
+				}
+			}
+		}
+	}()
+
 	source, err := name.ParseReference(args[0], name.WithDefaultRegistry(images.NoDefaultRegistry))
 	if err != nil {
 		return err
