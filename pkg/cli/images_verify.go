@@ -28,6 +28,7 @@ acorn image verify my-image --key acorn://ibuildthecloud
 		Short:             "Verify Image Signatures",
 		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).complete,
 		Args:              cobra.ExactArgs(1),
+		Hidden:            true,
 	})
 	_ = cmd.MarkFlagFilename("key")
 	return cmd

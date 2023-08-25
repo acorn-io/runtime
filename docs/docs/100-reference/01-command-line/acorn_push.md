@@ -12,10 +12,7 @@ acorn push [flags] IMAGE
 ### Options
 
 ```
-  -h, --help                           help for push
-  -k, --key string                     Key to use for signing (default "./cosign.key")
-  -s, --sign                           Sign the image before pushing
-  -a, --signature-annotation strings   Annotations to add to the signature
+  -h, --help   help for push
 ```
 
 ### Options inherited from parent commands
