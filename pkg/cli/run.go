@@ -129,7 +129,7 @@ More Usages:
      - Bind the acorn volume named "mydata" into the current app, replacing the volume named "data", See "acorn volumes --help for more info"
         acorn run --volume mydata:data .`
 
-var hideRunFlags = []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
+var hideRunFlags = []string{"dangerous", "memory", "secret", "volume", "region", "publish-all",
 	"publish", "link", "label", "interval", "env", "compute-class", "annotation", "update", "replace"}
 
 type Run struct {
@@ -160,7 +160,6 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 	opts.Name = s.Name
 	opts.Region = s.Region
 	opts.Profiles = s.Profile
-	opts.TargetNamespace = s.TargetNamespace
 	opts.AutoUpgrade = s.AutoUpgrade
 	opts.NotifyUpgrade = s.NotifyUpgrade
 	opts.AutoUpgradeInterval = s.Interval

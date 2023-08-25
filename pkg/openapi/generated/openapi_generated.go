@@ -6448,12 +6448,6 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"targetNamespace": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"services": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},

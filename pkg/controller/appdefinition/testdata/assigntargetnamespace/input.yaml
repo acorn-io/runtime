@@ -1,8 +1,0 @@
-kind: AppInstance
-apiVersion: internal.acorn.io/v1
-metadata:
-  uid: 1234567890abcdef
-  name: default
-  namespace: random
-spec:
-  targetNamespace: foo
