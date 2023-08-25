@@ -20,9 +20,9 @@ func NewPush(c CommandContext) *cobra.Command {
 
 type Push struct {
 	client               ClientFactory
-	Sign                 bool              `usage:"Sign the image before pushing" short:"s" local:"true" default:"false"`
-	Key                  string            `usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
-	SignatureAnnotations map[string]string `usage:"Annotations to add to the signature" short:"a" local:"true" name:"signature-annotation"`
+	Sign                 bool              `hidden:"true" usage:"Sign the image before pushing" short:"s" local:"true" default:"false" `
+	Key                  string            `hidden:"true" usage:"Key to use for signing" short:"k" local:"true" default:"./cosign.key"`
+	SignatureAnnotations map[string]string `hidden:"true" usage:"Annotations to add to the signature" short:"a" local:"true" name:"signature-annotation"`
 }
 
 func (s *Push) Run(cmd *cobra.Command, args []string) error {

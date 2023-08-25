@@ -28,6 +28,7 @@ func NewImageSign(c CommandContext) *cobra.Command {
 		Short:             "Sign an Image",
 		ValidArgsFunction: newCompletion(c.ClientFactory, imagesCompletion(true)).complete,
 		Args:              cobra.ExactArgs(1),
+		Hidden:            true,
 	})
 	_ = cmd.MarkFlagFilename("key")
 	return cmd
