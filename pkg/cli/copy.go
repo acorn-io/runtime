@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -16,7 +17,6 @@ import (
 	ggcrv1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/strings/slices"
 )
@@ -57,9 +57,9 @@ func (a *ImageCopy) Run(cmd *cobra.Command, args []string) (err error) {
 			var terr *transport.Error
 			if ok := errors.As(err, &terr); ok {
 				if terr.StatusCode == http.StatusForbidden {
-					logrus.Warnf("Registry authentication failed. Try running 'acorn login -l <registry>'")
+					_, _ = fmt.Fprintln(os.Stderr, "Registry authentication failed. Try running 'acorn login -l <registry>'")
 				} else if terr.StatusCode == http.StatusUnauthorized {
-					logrus.Warnf("Registry authorization failed. Ensure that you have the correct permissions to push to this registry. Run 'acorn login -l <registry>' if you have not logged in yet.")
+					_, _ = fmt.Fprintln(os.Stderr, "Registry authorization failed. Ensure that you have the correct permissions to push to this registry. Run 'acorn login -l <registry>' if you have not logged in yet.")
 				}
 			}
 		}
@@ -277,8 +277,7 @@ func (a *ImageCopy) copyTag(source name.Reference, newTag string, sourceOpts []r
 	dest := source.Context().Tag(newTag)
 
 	// Parse it again to make sure that the tag provided by the user is valid
-	_, err = name.ParseReference(dest.String())
-	if err != nil {
+	if _, err := name.ParseReference(dest.String()); err != nil {
 		return err
 	}
 
