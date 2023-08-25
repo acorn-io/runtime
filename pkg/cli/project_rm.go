@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
@@ -16,18 +17,34 @@ acorn project rm my-project
 `,
 		SilenceUsage:      true,
 		Short:             "Deletes projects",
-		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: newCompletion(c.ClientFactory, projectsCompletion(c.ClientFactory)).complete,
 	})
 	return cmd
 }
 
 type ProjectRm struct {
+	Stdin  bool `usage:"Take project names from stdin"`
 	client ClientFactory
 }
 
 func (a *ProjectRm) Run(cmd *cobra.Command, args []string) error {
-	for _, projectName := range args {
+	projectNames := make([]string, 0)
+	if a.Stdin {
+		scanner := bufio.NewScanner(cmd.InOrStdin())
+		scanner.Split(bufio.ScanWords)
+		for scanner.Scan() {
+			projectNames = append(projectNames, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+	} else {
+		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+			return err
+		}
+		projectNames = append(projectNames, args...)
+	}
+	for _, projectName := range projectNames {
 		if proj, err := project.Remove(cmd.Context(), a.client.Options(), projectName); err != nil {
 			return err
 		} else if proj != nil {
