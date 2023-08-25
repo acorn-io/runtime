@@ -102,7 +102,6 @@ type AppUpdateOptions struct {
 	DeployArgs          map[string]any
 	Stop                *bool
 	Image               string
-	TargetNamespace     string
 	Replace             bool // Replace is used to indicate whether the update should be a patch (replace=false: only change specified fields) or a full update (replace=true: reset unspecified fields to defaults)
 	AutoUpgrade         *bool
 	NotifyUpgrade       *bool
@@ -127,7 +126,6 @@ type AppRunOptions struct {
 	Publish             []v1.PortBinding
 	Env                 []v1.NameValue
 	Profiles            []string
-	TargetNamespace     string
 	DeployArgs          map[string]any
 	Stop                *bool
 	Permissions         []v1.Permissions
@@ -152,7 +150,6 @@ func (a AppRunOptions) ToUpdate() AppUpdateOptions {
 		Profiles:            a.Profiles,
 		Permissions:         a.Permissions,
 		Env:                 a.Env,
-		TargetNamespace:     a.TargetNamespace,
 		AutoUpgrade:         a.AutoUpgrade,
 		NotifyUpgrade:       a.NotifyUpgrade,
 		AutoUpgradeInterval: a.AutoUpgradeInterval,
@@ -175,7 +172,6 @@ func (a AppUpdateOptions) ToRun() AppRunOptions {
 		Profiles:            a.Profiles,
 		Permissions:         a.Permissions,
 		Env:                 a.Env,
-		TargetNamespace:     a.TargetNamespace,
 		AutoUpgrade:         a.AutoUpgrade,
 		NotifyUpgrade:       a.NotifyUpgrade,
 		AutoUpgradeInterval: a.AutoUpgradeInterval,

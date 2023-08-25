@@ -63,7 +63,6 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Environment:         opts.Env,
 			Labels:              opts.Labels,
 			Annotations:         opts.Annotations,
-			TargetNamespace:     opts.TargetNamespace,
 			AutoUpgrade:         opts.AutoUpgrade,
 			NotifyUpgrade:       opts.NotifyUpgrade,
 			AutoUpgradeInterval: opts.AutoUpgradeInterval,
@@ -153,9 +152,6 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	}
 	if opts.Permissions != nil {
 		app.Spec.Permissions = opts.Permissions
-	}
-	if opts.TargetNamespace != "" {
-		app.Spec.TargetNamespace = opts.TargetNamespace
 	}
 	if opts.AutoUpgrade != nil {
 		app.Spec.AutoUpgrade = opts.AutoUpgrade

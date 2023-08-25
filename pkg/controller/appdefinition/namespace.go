@@ -1,7 +1,6 @@
 package appdefinition
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/acorn-io/baaah/pkg/router"
@@ -10,7 +9,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -23,43 +21,10 @@ func AssignNamespace(req router.Request, resp router.Response) (err error) {
 		err = nil
 	}()
 
-	if appInstance.Spec.TargetNamespace != "" {
-		if err := ensureNamespaceOwned(req, appInstance); err != nil {
-			return err
-		}
-	}
-
-	if appInstance.Spec.TargetNamespace == "" {
-		parts := strings.Split(appInstance.Name, ".")
-		appInstance.Status.Namespace = name.SafeConcatName(parts[len(parts)-1], appInstance.ShortID())
-	} else {
-		appInstance.Status.Namespace = appInstance.Spec.TargetNamespace
-	}
+	parts := strings.Split(appInstance.Name, ".")
+	appInstance.Status.Namespace = name.SafeConcatName(parts[len(parts)-1], appInstance.ShortID())
 
 	resp.Objects(appInstance)
-	return nil
-}
-
-func ensureNamespaceOwned(req router.Request, appInstance *v1.AppInstance) error {
-	ns := &corev1.Namespace{}
-	err := req.Get(ns, "", appInstance.Spec.TargetNamespace)
-	if apierror.IsNotFound(err) {
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	if ns.Labels[labels.AcornAppNamespace] != appInstance.Namespace ||
-		ns.Labels[labels.AcornAppName] != appInstance.Name {
-		err := fmt.Errorf("can not use namespace %s, existing namespace must have labels "+
-			"acorn.io/app-namespace"+" and acorn.io/app-name (Apply Using: kubectl label namespaces %s acorn.io/app-name=%s; "+
-			"kubectl label namespaces %s acorn.io/app-namespace=acorn) "+
-			"Namespace will be deleted when the app is deleted",
-			appInstance.Spec.TargetNamespace, appInstance.Spec.TargetNamespace, appInstance.Name,
-			appInstance.Spec.TargetNamespace)
-		appInstance.Status.Columns.Message = err.Error()
-		return err
-	}
 	return nil
 }
 

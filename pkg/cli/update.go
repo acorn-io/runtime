@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hideUpdateFlags = []string{"dangerous", "memory", "target-namespace", "secret", "volume", "region", "publish-all",
+var hideUpdateFlags = []string{"dangerous", "memory", "secret", "volume", "region", "publish-all",
 	"publish", "link", "label", "interval", "env", "compute-class", "annotation"}
 
 func NewUpdate(c CommandContext) *cobra.Command {
@@ -34,25 +34,24 @@ func NewUpdate(c CommandContext) *cobra.Command {
 }
 
 type UpdateArgs struct {
-	Region          string   `usage:"Region in which to deploy the app, immutable"`
-	File            string   `short:"f" usage:"Name of the build file (default \"DIRECTORY/Acornfile\")"`
-	Volume          []string `usage:"Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)" short:"v" split:"false"`
-	Secret          []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
-	Link            []string `usage:"Link external app as a service in the current app (format app-name:container-name)"`
-	PublishAll      *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
-	Publish         []string `usage:"Publish port of application (format [public:]private) (ex 81:80)" short:"p"`
-	Profile         []string `usage:"Profile to assign default values"`
-	Env             []string `usage:"Environment variables to set on running containers" short:"e"`
-	Label           []string `usage:"Add labels to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)" short:"l"`
-	Annotation      []string `usage:"Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)"`
-	Dangerous       bool     `usage:"Automatically approve all privileges requested by the application"`
-	Output          string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
-	TargetNamespace string   `usage:"The name of the namespace to be created and deleted for the application resources"`
-	NotifyUpgrade   *bool    `usage:"If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it"`
-	AutoUpgrade     *bool    `usage:"Enabled automatic upgrades."`
-	Interval        string   `usage:"If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)"`
-	Memory          []string `usage:"Set memory for a workload in the format of workload=memory. Only specify an amount to set all workloads. (ex foo=512Mi or 512Mi)" short:"m"`
-	ComputeClass    []string `usage:"Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)"`
+	Region        string   `usage:"Region in which to deploy the app, immutable"`
+	File          string   `short:"f" usage:"Name of the build file (default \"DIRECTORY/Acornfile\")"`
+	Volume        []string `usage:"Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)" short:"v" split:"false"`
+	Secret        []string `usage:"Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)" short:"s"`
+	Link          []string `usage:"Link external app as a service in the current app (format app-name:container-name)"`
+	PublishAll    *bool    `usage:"Publish all (true) or none (false) of the defined ports of application" short:"P"`
+	Publish       []string `usage:"Publish port of application (format [public:]private) (ex 81:80)" short:"p"`
+	Profile       []string `usage:"Profile to assign default values"`
+	Env           []string `usage:"Environment variables to set on running containers" short:"e"`
+	Label         []string `usage:"Add labels to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)" short:"l"`
+	Annotation    []string `usage:"Add annotations to the app and the resources it creates (format [type:][name:]key=value) (ex k=v, containers:k=v)"`
+	Dangerous     bool     `usage:"Automatically approve all privileges requested by the application"`
+	Output        string   `usage:"Output API request without creating app (json, yaml)" short:"o"`
+	NotifyUpgrade *bool    `usage:"If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it"`
+	AutoUpgrade   *bool    `usage:"Enabled automatic upgrades."`
+	Interval      string   `usage:"If configured for auto-upgrade, this is the time interval at which to check for new releases (ex: 1h, 5m)"`
+	Memory        []string `usage:"Set memory for a workload in the format of workload=memory. Only specify an amount to set all workloads. (ex foo=512Mi or 512Mi)" short:"m"`
+	ComputeClass  []string `usage:"Set computeclass for a workload in the format of workload=computeclass. Specify a single computeclass to set all workloads. (ex foo=example-class or example-class)"`
 }
 
 type Update struct {

@@ -97,7 +97,6 @@ type AppInstanceSpec struct {
 	Secrets                 []SecretBinding  `json:"secrets,omitempty"`
 	Environment             []NameValue      `json:"environment,omitempty"`
 	PublishMode             PublishMode      `json:"publishMode,omitempty"`
-	TargetNamespace         string           `json:"targetNamespace,omitempty"`
 	Links                   []ServiceBinding `json:"services,omitempty"`
 	Publish                 []PortBinding    `json:"ports,omitempty"`
 	DeployArgs              GenericMap       `json:"deployArgs,omitempty"`
