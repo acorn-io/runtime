@@ -10,6 +10,7 @@ acorn copy [flags] SOURCE DESTINATION
 
   This command copies Acorn images between remote image registries.
   It does not interact with images stored in the Acorn internal registry, or with the Acorn API in any way.
+  To set up credentials for a registry, use 'acorn login -l <registry>'. It only works with locally stored credentials.
 ```
 
 ### Examples

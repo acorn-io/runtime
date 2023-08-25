@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/acorn-io/baaah/pkg/typed"
@@ -25,7 +26,8 @@ func NewImageCopy(c CommandContext) *cobra.Command {
 		Use: `copy [flags] SOURCE DESTINATION
 
   This command copies Acorn images between remote image registries.
-  It does not interact with images stored in the Acorn internal registry, or with the Acorn API in any way.`,
+  It does not interact with images stored in the Acorn internal registry, or with the Acorn API in any way.
+  To set up credentials for a registry, use 'acorn login -l <registry>'. It only works with locally stored credentials.`,
 		Aliases:           []string{"cp"},
 		SilenceUsage:      true,
 		Short:             "Copy Acorn images between registries",
@@ -48,7 +50,21 @@ type ImageCopy struct {
 	client  ClientFactory
 }
 
-func (a *ImageCopy) Run(cmd *cobra.Command, args []string) error {
+func (a *ImageCopy) Run(cmd *cobra.Command, args []string) (err error) {
+	// Print a helpful error message for the user if they end up getting an authentication error
+	defer func() {
+		if err != nil {
+			var terr *transport.Error
+			if ok := errors.As(err, &terr); ok {
+				if terr.StatusCode == http.StatusForbidden {
+					_, _ = fmt.Fprintln(os.Stderr, "Registry authentication failed. Try running 'acorn login -l <registry>'")
+				} else if terr.StatusCode == http.StatusUnauthorized {
+					_, _ = fmt.Fprintln(os.Stderr, "Registry authorization failed. Ensure that you have the correct permissions to push to this registry. Run 'acorn login -l <registry>' if you have not logged in yet.")
+				}
+			}
+		}
+	}()
+
 	source, err := name.ParseReference(args[0], name.WithDefaultRegistry(images.NoDefaultRegistry))
 	if err != nil {
 		return err
@@ -248,12 +264,22 @@ func (a *ImageCopy) copyRepo(args []string, sourceOpts, destOpts []remote.Option
 }
 
 func (a *ImageCopy) copyTag(source name.Reference, newTag string, sourceOpts []remote.Option) error {
+	// -a is not supported for this operation, so check if it is set and return an error if so
+	if a.AllTags {
+		return errors.New("cannot use --all-tags with a tag destination")
+	}
+
 	sourceIndex, err := remote.Index(source, sourceOpts...)
 	if err != nil {
 		return err
 	}
 
 	dest := source.Context().Tag(newTag)
+
+	// Parse it again to make sure that the tag provided by the user is valid
+	if _, err := name.ParseReference(dest.String()); err != nil {
+		return err
+	}
 
 	if !a.Force {
 		if err := errIfImageExistsAndIsDifferent(sourceIndex, dest, sourceOpts); err != nil {
