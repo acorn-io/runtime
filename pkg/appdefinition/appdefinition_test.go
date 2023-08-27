@@ -12,7 +12,10 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/z"
+	"github.com/hexops/autogold/v2"
+	"github.com/hexops/valast"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReadMeInfoIcon(t *testing.T) {
@@ -2964,6 +2967,109 @@ containers: default: image: "foo"
 	assert.Equal(t, v1.Probes{}, spec.Containers["array"].Probes)
 	assert.Equal(t, v1.Probes{}, spec.Containers["map"].Probes)
 	assert.Equal(t, v1.Probes(nil), spec.Containers["default"].Probes)
+}
+
+func TestComputeMemOnNested(t *testing.T) {
+	appImage, err := NewAppDefinition([]byte(`
+services: sdef: {
+	class: "foo"
+	mem: 1G
+}
+services: snodef: {
+	class: {
+		"foo": "bar"
+	}
+	mem: {
+		"foo": 1G
+	}
+}
+acorns: def: {
+	class: "foo"
+	mem: 1G
+}
+acorns: nodef: {
+	class: {
+		"foo": "bar"
+	}
+	mem: {
+		"foo": 1G
+	}
+}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	require.NoError(t, err)
+
+	autogold.Expect(&v1.AppSpec{
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+		Containers:  map[string]v1.Container{},
+		Jobs:        map[string]v1.Container{},
+		Images:      map[string]v1.Image{},
+		Volumes:     map[string]v1.VolumeRequest{},
+		Secrets:     map[string]v1.Secret{},
+		Acorns: map[string]v1.Acorn{
+			"def": {
+				Labels:         v1.ScopedLabels{},
+				Annotations:    v1.ScopedLabels{},
+				Profiles:       []string{},
+				DeployArgs:     v1.GenericMap{},
+				Publish:        v1.PortBindings{},
+				Secrets:        v1.SecretBindings{},
+				Volumes:        v1.VolumeBindings{},
+				Links:          v1.ServiceBindings{},
+				AutoUpgrade:    valast.Addr(false).(*bool),
+				NotifyUpgrade:  valast.Addr(false).(*bool),
+				Memory:         v1.MemoryMap{"": valast.Addr(int64(1000000000)).(*int64)},
+				ComputeClasses: v1.ComputeClassMap{"": "foo"},
+				Permissions:    map[string]v1.Permissions{},
+			},
+			"nodef": {
+				Labels:         v1.ScopedLabels{},
+				Annotations:    v1.ScopedLabels{},
+				Profiles:       []string{},
+				DeployArgs:     v1.GenericMap{},
+				Publish:        v1.PortBindings{},
+				Secrets:        v1.SecretBindings{},
+				Volumes:        v1.VolumeBindings{},
+				Links:          v1.ServiceBindings{},
+				AutoUpgrade:    valast.Addr(false).(*bool),
+				NotifyUpgrade:  valast.Addr(false).(*bool),
+				Memory:         v1.MemoryMap{"foo": valast.Addr(int64(1000000000)).(*int64)},
+				ComputeClasses: v1.ComputeClassMap{"foo": "bar"},
+				Permissions:    map[string]v1.Permissions{},
+			},
+		},
+		Routers: map[string]v1.Router{},
+		Services: map[string]v1.Service{
+			"sdef": {
+				Labels:         v1.ScopedLabels{},
+				Annotations:    v1.ScopedLabels{},
+				ServiceArgs:    v1.GenericMap{},
+				Secrets:        v1.SecretBindings{},
+				Links:          v1.ServiceBindings{},
+				AutoUpgrade:    valast.Addr(false).(*bool),
+				NotifyUpgrade:  valast.Addr(false).(*bool),
+				Memory:         v1.MemoryMap{"": valast.Addr(int64(1000000000)).(*int64)},
+				ComputeClasses: v1.ComputeClassMap{"": "foo"},
+				Permissions:    map[string]v1.Permissions{},
+			},
+			"snodef": {
+				Labels:         v1.ScopedLabels{},
+				Annotations:    v1.ScopedLabels{},
+				ServiceArgs:    v1.GenericMap{},
+				Secrets:        v1.SecretBindings{},
+				Links:          v1.ServiceBindings{},
+				AutoUpgrade:    valast.Addr(false).(*bool),
+				NotifyUpgrade:  valast.Addr(false).(*bool),
+				Memory:         v1.MemoryMap{"foo": valast.Addr(int64(1000000000)).(*int64)},
+				ComputeClasses: v1.ComputeClassMap{"foo": "bar"},
+				Permissions:    map[string]v1.Permissions{},
+			},
+		},
+	}).Equal(t, appSpec)
 }
 
 func TestNestedScopedLabels(t *testing.T) {

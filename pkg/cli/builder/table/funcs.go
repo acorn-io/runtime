@@ -62,14 +62,20 @@ func Noop(obj any) string {
 }
 
 func Trunc(s string) string {
-	if tags.SHAPattern.MatchString(s) && len(s) > 12 {
-		return s[:12]
+	t := s
+	suffix := ""
+	if strings.HasSuffix(t, "*") {
+		t = t[:len(t)-1]
+		suffix = "*"
 	}
-	if tags.DigestPattern.MatchString(s) && len(s) > 12 {
-		return s[7:19]
+	if tags.SHAPattern.MatchString(t) && len(s) > 12 {
+		return s[:12] + suffix
 	}
-	if tags.CommitPattern.MatchString(s) && len(s) > 12 {
-		return s[:12]
+	if tags.DigestPattern.MatchString(t) && len(s) > 12 {
+		return t[7:19] + suffix
+	}
+	if tags.CommitPattern.MatchString(t) && len(s) > 12 {
+		return t[:12] + suffix
 	}
 	return s
 }

@@ -5675,7 +5675,7 @@ func schema_pkg_apis_internalacornio_v1_Acorn(ref common.ReferenceCallback) comm
 							},
 						},
 					},
-					"computeClasses": {
+					"class": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
@@ -11070,6 +11070,21 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 									SchemaProps: spec.SchemaProps{
 										Type:   []string{"integer"},
 										Format: "int64",
+									},
+								},
+							},
+						},
+					},
+					"class": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
 									},
 								},
 							},

@@ -80,8 +80,9 @@ func (c *Controller) initData(ctx context.Context) error {
 			},
 		},
 		RoleRef: rbacv1.RoleRef{
-			Name: "acorn:system:builder",
-			Kind: "ClusterRole",
+			APIGroup: "rbac.authorization.k8s.io",
+			Name:     "acorn:system:builder",
+			Kind:     "ClusterRole",
 		},
 	}, &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{

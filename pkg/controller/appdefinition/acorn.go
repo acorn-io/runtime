@@ -71,6 +71,7 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 			NotifyUpgrade:       service.NotifyUpgrade,
 			AutoUpgradeInterval: service.AutoUpgradeInterval,
 			Memory:              service.Memory,
+			ComputeClasses:      service.ComputeClasses,
 		}))
 	}
 	return result
@@ -81,6 +82,59 @@ func scopeSecrets(app *v1.AppInstance, bindings v1.SecretBindings) (result v1.Se
 		binding.Secret = publicname.Get(app) + "." + binding.Secret
 		result = append(result, binding)
 	}
+	return
+}
+
+func trimPrefixComputeClass(app *v1.AppInstance, compute v1.ComputeClassMap, name string) (result v1.ComputeClassMap) {
+	prefix := name + "."
+	result = map[string]string{}
+	for k, v := range compute {
+		result[k] = v
+	}
+
+	// add default first to maintain idempotency
+	for id, class := range app.Spec.ComputeClasses {
+		if id == "" {
+			result[""] = class
+		}
+	}
+
+	for id, class := range app.Spec.ComputeClasses {
+		if id == "" {
+			continue
+		}
+		if strings.HasPrefix(id, prefix) {
+			result[strings.TrimPrefix(id, prefix)] = class
+		} else if id == name {
+			result[""] = class
+		}
+	}
+
+	return
+}
+
+func trimPrefixMemory(app *v1.AppInstance, memory v1.MemoryMap, name string) (result v1.MemoryMap) {
+	prefix := name + "."
+	result = map[string]*int64{}
+	for k, v := range memory {
+		result[k] = v
+	}
+
+	// add default first to maintain idempotency
+	for id, mem := range app.Spec.Memory {
+		if id == "" {
+			result[""] = mem
+		}
+	}
+
+	for id, mem := range app.Spec.Memory {
+		if strings.HasPrefix(id, prefix) {
+			result[strings.TrimPrefix(id, prefix)] = mem
+		} else if id == name {
+			result[""] = mem
+		}
+	}
+
 	return
 }
 
@@ -147,6 +201,8 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			AutoUpgrade:         acorn.AutoUpgrade,
 			AutoUpgradeInterval: acorn.AutoUpgradeInterval,
 			NotifyUpgrade:       acorn.NotifyUpgrade,
+			ComputeClasses:      trimPrefixComputeClass(appInstance, acorn.ComputeClasses, acornName),
+			Memory:              trimPrefixMemory(appInstance, acorn.Memory, acornName),
 		},
 	}
 

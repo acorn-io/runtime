@@ -160,6 +160,20 @@ func (in *Quantity) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (in *ComputeClassMap) UnmarshalJSON(data []byte) error {
+	if isObject(data) {
+		return json.Unmarshal(data, (*map[string]string)(in))
+	}
+	s, err := parseString(data)
+	if err != nil {
+		return err
+	}
+	*in = ComputeClassMap{
+		"": s,
+	}
+	return nil
+}
+
 func (in *MemoryMap) UnmarshalJSON(data []byte) error {
 	if isObject(data) {
 		return json.Unmarshal(data, (*map[string]*int64)(in))
