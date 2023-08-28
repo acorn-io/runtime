@@ -38,7 +38,6 @@ universal_binaries:
           output: true
           env:
             - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
-            - AC_PROJECT={{ if index .Env "AC_PROJECT" }}{{ .Env.AC_PROJECT }}{{ end }}
             - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
             - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
             - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
