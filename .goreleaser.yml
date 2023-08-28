@@ -38,9 +38,15 @@ universal_binaries:
           output: true
           env:
             - AC_IDENTITY={{ if index .Env "AC_IDENTITY" }}{{ .Env.AC_IDENTITY }}{{ end }}
+            - AC_PROJECT={{ if index .Env "AC_PROJECT" }}{{ .Env.AC_PROJECT }}{{ end }}
             - AC_PROVIDER={{ if index .Env "AC_PROVIDER" }}{{ .Env.AC_PROVIDER }}{{ end }}
             - AC_USERNAME={{ if index .Env "AC_USERNAME" }}{{ .Env.AC_USERNAME }}{{ end }}
             - AC_PASSWORD={{ if index .Env "AC_PASSWORD" }}{{ .Env.AC_PASSWORD }}{{ end }}
+            - AC_P12={{ if index .Env "AC_P12" }}{{ .Env.AC_P12 }}{{ end }}
+            - AC_P12_PASSWORD={{ if index .Env "AC_P12_PASSWORD" }}{{ .Env.AC_P12_PASSWORD }}{{ end }}
+            - AC_ISSUER_ID={{ if index .Env "AC_ISSUER_ID" }}{{ .Env.AC_ISSUER_ID }}{{ end }}
+            - AC_KEY_ID={{ if index .Env "AC_KEY_ID" }}{{ .Env.AC_KEY_ID }}{{ end }}
+            - AC_PRIVATE_KEY={{ if index .Env "AC_PRIVATE_KEY" }}{{ .Env.AC_PRIVATE_KEY }}{{ end }}
 
 archives:
   - id: default
