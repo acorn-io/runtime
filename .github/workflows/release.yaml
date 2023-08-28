@@ -56,7 +56,6 @@ jobs:
           GH_PROJECT_TOKEN: ${{ secrets.GH_PROJECT_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           AC_IDENTITY: ${{ secrets.AC_IDENTITY }}
-          AC_PROJECT: ${{ secrets.AC_PROJECT }}
           AC_USERNAME: ${{ secrets.AC_USERNAME }}
           AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
           AC_P12: ${{ secrets.AC_P12 }}
