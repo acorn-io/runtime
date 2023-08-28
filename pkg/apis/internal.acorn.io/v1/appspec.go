@@ -737,7 +737,7 @@ type Acorn struct {
 	NotifyUpgrade       *bool                  `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string                 `json:"autoUpgradeInterval,omitempty"`
 	Memory              MemoryMap              `json:"memory,omitempty"`
-	ComputeClasses      ComputeClassMap        `json:"computeClasses,omitempty"`
+	ComputeClasses      ComputeClassMap        `json:"class,omitempty"`
 	Permissions         map[string]Permissions `json:"permissions,omitempty"`
 }
 
@@ -803,6 +803,7 @@ type Service struct {
 	NotifyUpgrade       *bool                  `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval string                 `json:"autoUpgradeInterval,omitempty"`
 	Memory              MemoryMap              `json:"memory,omitempty"`
+	ComputeClasses      ComputeClassMap        `json:"class,omitempty"`
 	Permissions         map[string]Permissions `json:"permissions,omitempty"`
 	Consumer            *ServiceConsumer       `json:"consumer,omitempty"`
 }

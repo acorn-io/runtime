@@ -1,0 +1,201 @@
+`apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: byname
+    acorn.io/app-name: app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app.byname
+  name: byname
+  namespace: app-created-namespace
+spec:
+  appName: app
+  appNamespace: app-namespace
+  default: false
+  external: app.byname
+  labels:
+    acorn.io/acorn-name: byname
+    acorn.io/app-name: app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: ServiceInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: other
+    acorn.io/app-name: app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app.other
+  name: other
+  namespace: app-created-namespace
+spec:
+  appName: app
+  appNamespace: app-namespace
+  default: false
+  external: app.other
+  labels:
+    acorn.io/acorn-name: other
+    acorn.io/app-name: app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+status: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/original-image: foo
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: byname
+    acorn.io/app-name: app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/parent-acorn-name: app
+    acorn.io/public-name: app.byname
+  name: app-byname-9f312508
+  namespace: app-namespace
+spec:
+  computeClass:
+    "": byNameValue
+    child: byNameChildValue
+  image: foo
+  memory:
+    "": 2
+    child: 3
+  stop: false
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  defaults: {}
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
+  summary: {}
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  annotations:
+    acorn.io/app-generation: "0"
+    acorn.io/original-image: foo
+  creationTimestamp: null
+  labels:
+    acorn.io/acorn-name: other
+    acorn.io/app-name: app
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/parent-acorn-name: app
+    acorn.io/public-name: app.other
+  name: app-other-907168e3
+  namespace: app-namespace
+spec:
+  computeClass:
+    "": defaultValue
+  image: foo
+  memory:
+    "": 1
+  stop: false
+status:
+  appImage:
+    imageData: {}
+    vcs: {}
+  appSpec: {}
+  appStatus: {}
+  columns: {}
+  defaults: {}
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
+  summary: {}
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: byname-pull-
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJpbmRleC5kb2NrZXIuaW8iOnsiYXV0aCI6Ik9nPT0ifX19
+kind: Secret
+metadata:
+  creationTimestamp: null
+  labels:
+    acorn.io/managed: "true"
+    acorn.io/pull-secret: "true"
+  name: other-pull-
+  namespace: app-created-namespace
+type: kubernetes.io/dockerconfigjson
+
+---
+apiVersion: internal.acorn.io/v1
+kind: AppInstance
+metadata:
+  creationTimestamp: null
+  name: app
+  namespace: app-namespace
+spec:
+  computeClass:
+    "": defaultValue
+    byname: byNameValue
+    byname.child: byNameChildValue
+  memory:
+    "": 1
+    byname: 2
+    byname.child: 3
+status:
+  appImage:
+    id: foo
+    imageData: {}
+    vcs: {}
+  appSpec:
+    acorns:
+      byname:
+        image: foo
+      other:
+        image: foo
+  appStatus: {}
+  columns: {}
+  conditions:
+    reason: Success
+    status: "True"
+    success: true
+    type: defined
+  defaults: {}
+  namespace: app-created-namespace
+  staged:
+    appImage:
+      imageData: {}
+      vcs: {}
+  summary: {}
+`

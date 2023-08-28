@@ -82,6 +82,8 @@ spec:
   labels:
   - key: myLabel
     value: myValue
+  memory:
+    workload1: 1024
   notifyUpgrade: true
   ports:
   - port: 4444
@@ -155,8 +157,6 @@ status:
           value: myValue
         autoUpgrade: true
         autoUpgradeInterval: 1m
-        computeClasses:
-          workload1: default
         deployArgs:
           myArg: value
         environment:

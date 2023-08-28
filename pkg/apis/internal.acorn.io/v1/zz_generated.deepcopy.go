@@ -2856,6 +2856,13 @@ func (in *Service) DeepCopyInto(out *Service) {
 			(*out)[key] = outVal
 		}
 	}
+	if in.ComputeClasses != nil {
+		in, out := &in.ComputeClasses, &out.ComputeClasses
+		*out = make(ComputeClassMap, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Permissions != nil {
 		in, out := &in.Permissions, &out.Permissions
 		*out = make(map[string]Permissions, len(*in))

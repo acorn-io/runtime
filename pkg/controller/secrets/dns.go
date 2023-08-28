@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func HandleDNSSecret(req router.Request, resp router.Response) error {
@@ -49,7 +50,8 @@ func HandleDNSSecret(req router.Request, resp router.Response) error {
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
-				Port: 80,
+				Port:       80,
+				TargetPort: intstr.FromInt(80),
 			}},
 			Selector: map[string]string{
 				"app": system.Namespace,

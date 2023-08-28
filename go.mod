@@ -13,8 +13,8 @@ replace (
 require (
 	cuelang.org/go v0.5.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20230814072513-12acbd5f883c
-	github.com/acorn-io/baaah v0.0.0-20230818001243-36c10b8f8e7b
+	github.com/acorn-io/aml v0.0.0-20230827061234-6707a74cdc97
+	github.com/acorn-io/baaah v0.0.0-20230827055549-50fb849cd5d3
 	github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
@@ -37,6 +37,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hexops/autogold/v2 v2.1.0
+	github.com/hexops/valast v1.4.3
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
 	github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98
 	github.com/moby/buildkit v0.11.6
@@ -171,7 +172,6 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
-	github.com/hexops/valast v1.4.3 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/in-toto/in-toto-golang v0.9.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
