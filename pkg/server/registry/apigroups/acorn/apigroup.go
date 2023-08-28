@@ -72,6 +72,11 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		return nil, err
 	}
 
+	projectStorage, err := projects.NewStorage(c, true)
+	if err != nil {
+		return nil, err
+	}
+
 	volumesStorage := volumes.NewStorage(c)
 
 	stores := map[string]rest.Storage{
@@ -93,7 +98,7 @@ func Stores(c kclient.WithWatch, cfg, localCfg *clientgo.Config) (map[string]res
 		"images/details":                images.NewImageDetails(c, transport),
 		"images/sign":                   images.NewImageSign(c, transport),
 		"images/verify":                 images.NewImageVerify(c, transport),
-		"projects":                      projects.NewStorage(c, true),
+		"projects":                      projectStorage,
 		"volumes":                       volumesStorage,
 		"volumeclasses":                 class.NewClassStorage(c),
 		"containerreplicas":             containersStorage,
