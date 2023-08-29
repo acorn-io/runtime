@@ -60,7 +60,7 @@ archives:
 checksum:
   name_template: "checksums.txt"
   extra_files:
-    - glob: "./releases/*.dmg"
+    - glob: "./releases/*.zip"
 
 signs:
   - id: cosign
@@ -86,7 +86,7 @@ release:
   prerelease: auto
   extra_files:
     - glob: ./cosign.pub
-    - glob: "./releases/*.dmg"
+    - glob: "./releases/*.zip"
 
 brews:
   - description: "Acorn CLI"
