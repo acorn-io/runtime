@@ -20,8 +20,6 @@ func UnlimitedQuantity() resource.Quantity {
 // external controllers to programmatically set the resources easier. Calls to
 // its functions are mutating.
 type Resources struct {
-	Unlimited bool `json:"unlimited,omitempty"`
-
 	Apps       int `json:"apps,omitempty"`
 	Containers int `json:"containers,omitempty"`
 	Jobs       int `json:"jobs,omitempty"`
@@ -127,10 +125,6 @@ func (current *Resources) Remove(incoming Resources, all bool) {
 // an aggregated error will be returned with all exceeded resources.
 // If the current resources defines unlimited, then it will always fit.
 func (current *Resources) Fits(incoming Resources) error {
-	if current.Unlimited {
-		return nil
-	}
-
 	exceededResources := []string{}
 
 	// Define function for checking int resources to keep code DRY
@@ -204,8 +198,7 @@ func (current *Resources) NonEmptyString() string {
 // Equals will check if the current Resources struct is equal to another. This is useful
 // to avoid needing to do a deep equal on the entire struct.
 func (current *Resources) Equals(incoming Resources) bool {
-	return current.Unlimited == incoming.Unlimited &&
-		current.Apps == incoming.Apps &&
+	return current.Apps == incoming.Apps &&
 		current.Containers == incoming.Containers &&
 		current.Jobs == incoming.Jobs &&
 		current.Volumes == incoming.Volumes &&

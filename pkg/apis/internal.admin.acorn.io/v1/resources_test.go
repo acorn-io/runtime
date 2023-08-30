@@ -48,19 +48,6 @@ func TestAdd(t *testing.T) {
 			},
 		},
 		{
-			name:    "does not change flags",
-			current: Resources{},
-			incoming: Resources{
-				Unlimited:     true,
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			expected: Resources{
-				Apps:          1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-		},
-		{
 			name: "add where current has a resource specified with unlimited",
 			current: Resources{
 				Apps:   Unlimited,
@@ -353,20 +340,6 @@ func TestFits(t *testing.T) {
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 			expectedErr: ErrExceededResources,
-		},
-		{
-			name: "fits resources with unlimited flag set",
-			current: Resources{
-				Unlimited:     true,
-				Apps:          1,
-				Secrets:       1,
-				VolumeStorage: resource.MustParse("1Mi"),
-			},
-			incoming: Resources{
-				Apps:          2,
-				Secrets:       2,
-				VolumeStorage: resource.MustParse("2Mi"),
-			},
 		},
 		{
 			name: "fits resources with specified unlimited values",
