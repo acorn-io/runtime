@@ -66,6 +66,7 @@ type Options struct {
 	ControllerServiceAccountAnnotations map[string]string
 	Config                              apiv1.Config
 	Progress                            progress.Builder
+	Quiet                               bool
 }
 
 func (o *Options) complete() *Options {
@@ -75,7 +76,11 @@ func (o *Options) complete() *Options {
 	}
 
 	if o.Progress == nil {
-		o.Progress = &term.Builder{}
+		if o.Quiet {
+			o.Progress = &term.QuietBuilder{}
+		} else {
+			o.Progress = &term.Builder{}
+		}
 	}
 
 	if o.APIServerReplicas == nil {
@@ -293,7 +298,9 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		}
 	}
 
-	pterm.Success.Println("Installation done")
+	if !opts.Quiet {
+		pterm.Success.Println("Installation done")
+	}
 	return nil
 }
 
