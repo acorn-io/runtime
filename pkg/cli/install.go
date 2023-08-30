@@ -29,10 +29,10 @@ acorn install`,
 }
 
 type Install struct {
-	SkipChecks bool `usage:"Bypass installation checks"`
-
-	Image  string `usage:"Override the default image used for the deployment"`
-	Output string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
+	SkipChecks bool   `usage:"Bypass installation checks"`
+	Quiet      bool   `usage:"Only output errors encountered during installation"`
+	Image      string `usage:"Override the default image used for the deployment"`
+	Output     string `usage:"Output manifests instead of applying them (json, yaml)" short:"o"`
 
 	APIServerReplicas                  *int     `usage:"acorn-api deployment replica count" name:"api-server-replicas"`
 	APIServerPodAnnotations            []string `usage:"annotations to apply to acorn-api pods" name:"api-server-pod-annotations" split:"false"`
@@ -96,6 +96,7 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 
 	opts := &install.Options{
 		SkipChecks:                          i.SkipChecks,
+		Quiet:                               i.Quiet,
 		OutputFormat:                        i.Output,
 		Config:                              i.Config,
 		APIServerReplicas:                   i.APIServerReplicas,
