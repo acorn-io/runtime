@@ -162,7 +162,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 			}
 			opts.Config.LetsEncryptEmail = result
 		}
-		pterm.Info.Println("You've enabled automatic TLS certificate provisioning with Let's Encrypt. This can take a few minutes to configure.")
+		info(opts, "You've enabled automatic TLS certificate provisioning with Let's Encrypt. This can take a few minutes to configure.")
 	}
 
 	// Validate E-Mail address provided for Let's Encrypt registration
@@ -181,7 +181,7 @@ func Install(ctx context.Context, image string, opts *Options) error {
 		return err
 	}
 
-	if err = validateMemoryArgs(*finalConfForValidation.WorkloadMemoryDefault, *finalConfForValidation.WorkloadMemoryMaximum); err != nil {
+	if err = validateMemoryArgs(*finalConfForValidation.WorkloadMemoryDefault, *finalConfForValidation.WorkloadMemoryMaximum, opts); err != nil {
 		return err
 	}
 
@@ -304,6 +304,12 @@ func Install(ctx context.Context, image string, opts *Options) error {
 	return nil
 }
 
+func info(opts *Options, a ...any) {
+	if !opts.Quiet {
+		pterm.Info.Println(a...)
+	}
+}
+
 func validateServiceLBAnnotations(annotations []string) error {
 	for _, annotation := range annotations {
 		_, _, found := strings.Cut(annotation, "=")
@@ -314,10 +320,10 @@ func validateServiceLBAnnotations(annotations []string) error {
 	return nil
 }
 
-func validateMemoryArgs(defaultMemory int64, maximumMemory int64) error {
+func validateMemoryArgs(defaultMemory int64, maximumMemory int64, opts *Options) error {
 	// if default is set to unrestricted memory (0) and max memory is not default will be set to maximum
 	if defaultMemory == 0 && maximumMemory != 0 {
-		pterm.Info.Println("workload-memory-default is being set to workload-memory-maximum. If this is not intended please specify workload-memory-default to non-zero value")
+		info(opts, "workload-memory-default is being set to workload-memory-maximum. If this is not intended please specify workload-memory-default to non-zero value")
 		return nil
 	}
 	// if max memory is not set to unlimited default must be smaller than maximum
