@@ -111,11 +111,6 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		return
 	}
 
-	region := app.Spec.Region
-	if region == "" {
-		region = project.Status.DefaultRegion
-	}
-
 	if err := imagesystem.IsNotInternalRepo(ctx, s.client, app.Namespace, app.Spec.Image); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
 		return
@@ -213,7 +208,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		}
 
 		var imageRejectedPerms []v1.Permissions
-		imageGrantedPerms, imageRejectedPerms, err = s.imageGrants(ctx, imageDetails, region)
+		imageGrantedPerms, imageRejectedPerms, err = s.imageGrants(ctx, imageDetails)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 			return
@@ -739,16 +734,13 @@ func validateVolumeClasses(ctx context.Context, c kclient.Client, namespace stri
 	return nil
 }
 
-func (s *Validator) imageSAR(ns, imageName, imageDigest string, perms []v1.Permissions, region string) (result []sarRequest, _ error) {
+func (s *Validator) imageSAR(ns, imageName, imageDigest string, perms []v1.Permissions) (result []sarRequest, _ error) {
 	sar := &authv1.SubjectAccessReview{
 		Spec: authv1.SubjectAccessReviewSpec{
 			User: "image://" + imageName,
 			Extra: map[string]authv1.ExtraValue{
 				"digest": {
 					imageDigest,
-				},
-				"region": {
-					region,
 				},
 			},
 		},
@@ -764,7 +756,7 @@ func (s *Validator) imageSAR(ns, imageName, imageDigest string, perms []v1.Permi
 	return
 }
 
-func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails, region string) (granted, rejected []v1.Permissions, _ error) {
+func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails) (granted, rejected []v1.Permissions, _ error) {
 	defer func() {
 		granted = v1.SimplifySet(granted)
 		rejected = v1.SimplifySet(rejected)
@@ -773,14 +765,14 @@ func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails
 	ns, _ := request.NamespaceFrom(ctx)
 	var sars []sarRequest
 
-	newSars, err := s.imageSAR(ns, details.AppImage.Name, details.AppImage.Digest, details.Permissions, region)
+	newSars, err := s.imageSAR(ns, details.AppImage.Name, details.AppImage.Digest, details.Permissions)
 	if err != nil {
 		return nil, nil, err
 	}
 	sars = append(sars, newSars...)
 
 	for _, nested := range details.NestedImages {
-		newSars, err := s.imageSAR(ns, nested.Name, nested.Digest, nested.Permissions, region)
+		newSars, err := s.imageSAR(ns, nested.Name, nested.Digest, nested.Permissions)
 		if err != nil {
 			return nil, nil, err
 		}
