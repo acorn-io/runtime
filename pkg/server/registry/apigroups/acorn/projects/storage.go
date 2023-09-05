@@ -16,6 +16,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/tables"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -98,7 +99,10 @@ func migrateLegacyNamespaces(ctx context.Context, c kclient.Client) error {
 	}).Add(*notManaged)
 	namespaces := corev1.NamespaceList{}
 	if err := c.List(ctx, &namespaces, kclient.MatchingLabelsSelector{Selector: nsSelector}); err != nil {
-		return err
+		// If the namespace list call fails, then we just ignore it and move on. This is necessary to
+		// ensure that the migration doesn't block Manager start-up where namespaces don't exist.
+		logrus.WithError(err).Debug("namespace list call failed during migration of legacy namespaces, ignoring and moving on")
+		return nil
 	}
 
 	for _, ns := range namespaces.Items {
