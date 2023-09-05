@@ -79,22 +79,21 @@ func (current *BaseResources) Fits(incoming BaseResources) error {
 	return nil
 }
 
-// NonEmptyString will return a string representation of the non-empty
-// Resources within the struct.
-func (current *BaseResources) NonEmptyString() string {
-	var resources []string
-
-	resources = append(resources, ResourceToString("Apps", current.Apps)...)
-	resources = append(resources, ResourceToString("Containers", current.Containers)...)
-	resources = append(resources, ResourceToString("Jobs", current.Jobs)...)
-	resources = append(resources, ResourceToString("Volumes", current.Volumes)...)
-	resources = append(resources, ResourceToString("Images", current.Images)...)
-
-	resources = append(resources, QuantityResourceToString("VolumeStorage", current.VolumeStorage)...)
-	resources = append(resources, QuantityResourceToString("Memory", current.Memory)...)
-	resources = append(resources, QuantityResourceToString("Cpu", current.CPU)...)
-
-	return strings.Join(resources, ", ")
+// ToString will return a string representation of the Resources within the struct.
+func (current *BaseResources) ToString() string {
+	return ResourcesToString(
+		map[string]int{
+			"Apps":       current.Apps,
+			"Containers": current.Containers,
+			"Jobs":       current.Jobs,
+			"Volumes":    current.Volumes,
+			"Images":     current.Images,
+		},
+		map[string]resource.Quantity{
+			"VolumeStorage": current.VolumeStorage,
+			"Memory":        current.Memory,
+			"Cpu":           current.CPU,
+		})
 }
 
 // Equals will check if the current Resources struct is equal to another. This is useful

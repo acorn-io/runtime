@@ -53,7 +53,7 @@ func WaitForAllocation(req router.Request, resp router.Response) error {
 		4. Exists and has successfully allocated the resources requested.
 	*/
 	if quotaRequest.Status.FailedResources != nil {
-		status.Error(fmt.Errorf("failed to provision the following resources: %v", quotaRequest.Status.FailedResources.NonEmptyString()))
+		status.Error(fmt.Errorf("failed to provision the following resources: %v", quotaRequest.Status.FailedResources.ToString()))
 	} else if cond := quotaRequest.Status.Condition(adminv1.QuotaRequestCondition); cond.Error {
 		status.Error(fmt.Errorf("error occurred while trying to allocate quota: %v", cond.Message))
 	} else if err != nil || !quotaRequest.Spec.Resources.Equals(quotaRequest.Status.AllocatedResources) {

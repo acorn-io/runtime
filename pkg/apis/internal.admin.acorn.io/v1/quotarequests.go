@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -98,20 +99,29 @@ func (current *QuotaRequestResources) Remove(incoming QuotaRequestResources, all
 // an aggregated error will be returned with all exceeded resources.
 // If the current resources defines unlimited, then it will always fit.
 func (current *QuotaRequestResources) Fits(incoming QuotaRequestResources) error {
-	exceededResources := []string{}
-	Fits(exceededResources, "Secrets", current.Secrets, incoming.Secrets)
+	exceededResources := Fits([]string{}, "Secrets", current.Secrets, incoming.Secrets)
+
 	// Build an aggregated error message for the exceeded resources
+	var err error
 	if len(exceededResources) > 0 {
 		return fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
 	}
-	return current.BaseResources.Fits(incoming.BaseResources)
+
+	return errors.Join(err, current.BaseResources.Fits(incoming.BaseResources))
 }
 
-// NonEmptyString will return a string representation of the non-empty
-// Resources within the struct.
-func (current *QuotaRequestResources) NonEmptyString() string {
-	resources := ResourceToString("Secrets", current.Secrets)
-	return strings.Join([]string{current.BaseResources.NonEmptyString(), strings.Join(resources, ", ")}, ", ")
+// ToString will return a string representation of the Resources within the struct.
+func (current *QuotaRequestResources) ToString() string {
+	result := ResourcesToString(
+		map[string]int{"Secrets": current.Secrets},
+		nil,
+	)
+
+	if result != "" {
+		result += ", "
+	}
+
+	return result + current.BaseResources.ToString()
 }
 
 // Equals will check if the current Resources struct is equal to another. This is useful

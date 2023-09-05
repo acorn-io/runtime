@@ -2,13 +2,14 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var (
-	ErrExceededResources       = fmt.Errorf("quota would be exceeded for resources")
-	comparableUnlimitedQuntity = UnlimitedQuantity()
+	ErrExceededResources        = fmt.Errorf("quota would be exceeded for resources")
+	comparableUnlimitedQuantity = UnlimitedQuantity()
 )
 
 const Unlimited = -1
@@ -26,7 +27,7 @@ func Add(c, i int) int {
 }
 
 func AddQuantity(c, i resource.Quantity) resource.Quantity {
-	if c.Equal(comparableUnlimitedQuntity) || i.Equal(comparableUnlimitedQuntity) {
+	if c.Equal(comparableUnlimitedQuantity) || i.Equal(comparableUnlimitedQuantity) {
 		return UnlimitedQuantity()
 	}
 	c.Add(i)
@@ -56,7 +57,7 @@ func Sub(c, i int) int {
 }
 
 func SubQuantity(c, i resource.Quantity) resource.Quantity {
-	if c.Equal(comparableUnlimitedQuntity) || i.Equal(comparableUnlimitedQuntity) {
+	if c.Equal(comparableUnlimitedQuantity) || i.Equal(comparableUnlimitedQuantity) {
 		return c
 	}
 	c.Sub(i)
@@ -74,7 +75,7 @@ func Fits(toAppend []string, resource string, current, incoming int) []string {
 }
 
 func FitsQuantity(toAppend []string, resource string, current, incoming resource.Quantity) []string {
-	if !current.Equal(comparableUnlimitedQuntity) && current.Cmp(incoming) < 0 {
+	if !current.Equal(comparableUnlimitedQuantity) && current.Cmp(incoming) < 0 {
 		return append(toAppend, resource)
 	}
 	return toAppend
@@ -82,18 +83,26 @@ func FitsQuantity(toAppend []string, resource string, current, incoming resource
 
 // ResourceToString will return a string representation of the resource and value
 // if its the value is greater than 0.
-func ResourceToString(resource string, value int) []string {
-	if value > 0 {
-		return []string{fmt.Sprintf("%s: %d", resource, value)}
-	}
-	return []string{}
-}
+func ResourcesToString(resources map[string]int, quantityResources map[string]resource.Quantity) string {
+	var resourceStrings []string
 
-// QuantityResourceToString will return a string representation of the resource and value
-// if its the value is greater than 0.
-func QuantityResourceToString(resource string, value resource.Quantity) []string {
-	if !value.Equal(comparableUnlimitedQuntity) && value.CmpInt64(0) > 0 {
-		return []string{fmt.Sprintf("%s: %s", resource, value.String())}
+	for resource, value := range resources {
+		if value > 0 {
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %d", resource, value))
+		}
+		if value == Unlimited {
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource))
+		}
 	}
-	return []string{}
+
+	for resource, quantity := range quantityResources {
+		if quantity.CmpInt64(0) > 0 {
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %s", resource, quantity.String()))
+		}
+		if quantity.Equal(comparableUnlimitedQuantity) {
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource))
+		}
+	}
+
+	return strings.Join(resourceStrings, ", ")
 }

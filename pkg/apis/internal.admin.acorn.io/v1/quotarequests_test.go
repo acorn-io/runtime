@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func TestAdd(t *testing.T) {
+func TestQuotaRequestResourcesAdd(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
@@ -143,7 +143,7 @@ func TestAdd(t *testing.T) {
 		})
 	}
 }
-func TestRemove(t *testing.T) {
+func TestQuotaRequestResourcesRemove(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
@@ -305,7 +305,7 @@ func TestRemove(t *testing.T) {
 		})
 	}
 }
-func TestEquals(t *testing.T) {
+func TestQuotaRequestResourcesEquals(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
@@ -381,7 +381,7 @@ func TestEquals(t *testing.T) {
 		})
 	}
 }
-func TestFits(t *testing.T) {
+func TestQuotaRequestResourcesFits(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name        string
@@ -487,6 +487,50 @@ func TestFits(t *testing.T) {
 			if !errors.Is(err, tc.expectedErr) {
 				t.Errorf("expected %v, got %v", tc.expectedErr, err)
 			}
+		})
+	}
+}
+
+func TestQuotaRequestResourcesToString(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name     string
+		current  QuotaRequestResources
+		expected string
+	}{
+		{
+			name:     "empty BaseResources",
+			current:  QuotaRequestResources{},
+			expected: "",
+		},
+		{
+			name: "populated BaseResources",
+			current: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
+				Secrets: 1,
+			},
+			expected: "Secrets: 1, Apps: 1, VolumeStorage: 1Mi",
+		},
+		{
+			name: "populated BaseResources with unlimited values",
+			current: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          Unlimited,
+					VolumeStorage: UnlimitedQuantity(),
+				},
+				Secrets: Unlimited,
+			},
+			expected: "Secrets: unlimited, Apps: unlimited, VolumeStorage: unlimited",
+		},
+	}
+
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.current.ToString())
 		})
 	}
 }

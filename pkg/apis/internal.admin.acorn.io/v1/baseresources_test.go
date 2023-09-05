@@ -371,3 +371,41 @@ func TestBaseResourcesFits(t *testing.T) {
 		})
 	}
 }
+
+func TestBaseResourcesToString(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name     string
+		current  BaseResources
+		expected string
+	}{
+		{
+			name:     "empty BaseResources",
+			current:  BaseResources{},
+			expected: "",
+		},
+		{
+			name: "populated BaseResources",
+			current: BaseResources{
+				Apps:          1,
+				VolumeStorage: resource.MustParse("1Mi"),
+			},
+			expected: "Apps: 1, VolumeStorage: 1Mi",
+		},
+		{
+			name: "populated BaseResources with unlimited values",
+			current: BaseResources{
+				Apps:          Unlimited,
+				VolumeStorage: UnlimitedQuantity(),
+			},
+			expected: "Apps: unlimited, VolumeStorage: unlimited",
+		},
+	}
+
+	// Run the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.current.ToString())
+		})
+	}
+}
