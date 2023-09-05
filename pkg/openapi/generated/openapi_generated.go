@@ -213,6 +213,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.routeTarget":                           schema_pkg_apis_internalacornio_v1_routeTarget(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.secretReference":                       schema_pkg_apis_internalacornio_v1_secretReference(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.serviceConsumerAliases":                schema_pkg_apis_internalacornio_v1_serviceConsumerAliases(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.BaseResources":                   schema_pkg_apis_internaladminacornio_v1_BaseResources(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstance":     schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterComputeClassInstanceList": schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstanceList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ClusterVolumeClassInstance":      schema_pkg_apis_internaladminacornio_v1_ClusterVolumeClassInstance(ref),
@@ -226,7 +227,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceList":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec":        schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus":      schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources":                       schema_pkg_apis_internaladminacornio_v1_Resources(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources":           schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                 schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                             schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
 		"k8s.io/api/core/v1.Affinity":                                                                     schema_k8sio_api_core_v1_Affinity(ref),
@@ -12459,6 +12460,68 @@ func schema_pkg_apis_internalacornio_v1_serviceConsumerAliases(ref common.Refere
 	}
 }
 
+func schema_pkg_apis_internaladminacornio_v1_BaseResources(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"apps": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"containers": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"jobs": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"volumes": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"images": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"volumeStorage": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"memory": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"cpu": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/api/resource.Quantity"},
+	}
+}
+
 func schema_pkg_apis_internaladminacornio_v1_ClusterComputeClassInstance(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -13190,14 +13253,14 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref common
 					"resources": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources"},
 	}
 }
 
@@ -13216,12 +13279,12 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref comm
 					"allocatedResources": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources"),
 						},
 					},
 					"failedResources": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"),
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources"),
 						},
 					},
 					"conditions": {
@@ -13241,16 +13304,15 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref comm
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.Resources"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources"},
 	}
 }
 
-func schema_pkg_apis_internaladminacornio_v1_Resources(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "Resources is a struct separate from the QuotaRequestInstanceSpec to allow for external controllers to programmatically set the resources easier. Calls to its functions are mutating.",
-				Type:        []string{"object"},
+				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apps": {
 						SchemaProps: spec.SchemaProps{
@@ -13276,19 +13338,7 @@ func schema_pkg_apis_internaladminacornio_v1_Resources(ref common.ReferenceCallb
 							Format: "int32",
 						},
 					},
-					"secrets": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
 					"images": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"projects": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
 							Format: "int32",
@@ -13310,6 +13360,12 @@ func schema_pkg_apis_internaladminacornio_v1_Resources(ref common.ReferenceCallb
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
 							Ref:     ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
+						},
+					},
+					"secrets": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
 						},
 					},
 				},

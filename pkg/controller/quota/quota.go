@@ -79,10 +79,12 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 	quotaRequest := &adminv1.QuotaRequestInstance{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
 		Spec: adminv1.QuotaRequestInstanceSpec{
-			Resources: adminv1.Resources{
-				Jobs:    len(app.Jobs),
-				Volumes: len(app.Volumes),
-				Images:  len(app.Images),
+			Resources: adminv1.QuotaRequestResources{
+				BaseResources: adminv1.BaseResources{
+					Jobs:    len(app.Jobs),
+					Volumes: len(app.Volumes),
+					Images:  len(app.Images),
+				},
 			},
 		},
 	}

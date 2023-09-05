@@ -8,39 +8,39 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-func TestAdd(t *testing.T) {
+func TestBaseResourcesAdd(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
-		current  Resources
-		incoming Resources
-		expected Resources
+		current  BaseResources
+		incoming BaseResources
+		expected BaseResources
 	}{
 		{
-			name:    "add to empty resources",
-			current: Resources{},
-			incoming: Resources{
+			name:    "add to empty BaseResources resources",
+			current: BaseResources{},
+			incoming: BaseResources{
 				Apps:          1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:          1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 		},
 		{
-			name: "add to existing resources",
-			current: Resources{
+			name: "add to existing BaseResources resources",
+			current: BaseResources{
 				Apps:          1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          1,
 				Images:        1,
 				VolumeStorage: resource.MustParse("1Mi"),
 				CPU:           resource.MustParse("20m"),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:          2,
 				Images:        1,
 				VolumeStorage: resource.MustParse("2Mi"),
@@ -49,45 +49,45 @@ func TestAdd(t *testing.T) {
 		},
 		{
 			name: "add where current has a resource specified with unlimited",
-			current: Resources{
+			current: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
 		},
 		{
 			name: "add where incoming has a resource specified with unlimited",
-			current: Resources{
+			current: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
 		},
 		{
 			name: "add where current and incoming have a resource specified with unlimited",
-			current: Resources{
+			current: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
@@ -103,122 +103,115 @@ func TestAdd(t *testing.T) {
 	}
 }
 
-func TestRemove(t *testing.T) {
+func TestBaseResourcesRemove(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
-		current  Resources
-		incoming Resources
+		current  BaseResources
+		incoming BaseResources
 		all      bool
-		expected Resources
+		expected BaseResources
 	}{
 		{
-			name:    "remove from empty resources",
-			current: Resources{},
-			incoming: Resources{
+			name:    "remove from empty BaseResources resources",
+			current: BaseResources{},
+			incoming: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			expected: Resources{},
+			expected: BaseResources{},
 		},
 		{
-			name: "remove from existing resources",
-			current: Resources{
+			name: "remove from existing BaseResources resources",
+			current: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			expected: Resources{},
+			expected: BaseResources{},
 		},
 		{
 			name: "should never get negative values",
 			all:  true,
-			current: Resources{
+			current: BaseResources{
 				Apps:          1,
 				Memory:        resource.MustParse("1Mi"),
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          2,
 				Memory:        resource.MustParse("2Mi"),
-				Secrets:       2,
 				VolumeStorage: resource.MustParse("2Mi"),
 			},
-			expected: Resources{},
+			expected: BaseResources{},
 		},
 		{
 			name: "remove persistent counts with all",
-			current: Resources{
-				Secrets:       1,
+			current: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
-				Secrets:       1,
+			incoming: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 			all:      true,
-			expected: Resources{},
+			expected: BaseResources{},
 		},
 		{
 			name: "does not remove persistent counts without all",
-			current: Resources{
-				Secrets:       1,
+			current: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
-				Secrets:       1,
+			incoming: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			expected: Resources{
-				Secrets:       1,
+			expected: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 		},
 		{
 			name: "remove where current has a resource specified with unlimited",
-			current: Resources{
+			current: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
 		},
 		{
 			name: "remove where incoming has a resource specified with unlimited",
-			current: Resources{
+			current: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:   1,
 				Memory: resource.MustParse("1Mi"),
 			},
 		},
 		{
 			name: "remove where current and incoming have a resource specified with unlimited",
-			current: Resources{
+			current: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
-			expected: Resources{
+			expected: BaseResources{
 				Apps:   Unlimited,
 				Memory: UnlimitedQuantity(),
 			},
@@ -234,58 +227,52 @@ func TestRemove(t *testing.T) {
 	}
 }
 
-func TestEquals(t *testing.T) {
+func TestBaseResourcesEquals(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name     string
-		current  Resources
-		incoming Resources
+		current  BaseResources
+		incoming BaseResources
 		expected bool
 	}{
 		{
-			name:     "empty resources",
-			current:  Resources{},
-			incoming: Resources{},
+			name:     "empty BaseResources resources",
+			current:  BaseResources{},
+			incoming: BaseResources{},
 			expected: true,
 		},
 		{
-			name: "equal resources",
-			current: Resources{
+			name: "equal BaseResources resources",
+			current: BaseResources{
 				Apps:          1,
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          1,
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 			expected: true,
 		},
 		{
-			name: "unequal resources",
-			current: Resources{
+			name: "unequal BaseResources resources",
+			current: BaseResources{
 				Apps:          1,
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          2,
-				Secrets:       2,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 			expected: false,
 		},
 		{
-			name: "equal resources with unlimited values",
-			current: Resources{
+			name: "equal BaseResources resources with unlimited values",
+			current: BaseResources{
 				Apps:          Unlimited,
-				Secrets:       Unlimited,
 				VolumeStorage: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          Unlimited,
-				Secrets:       Unlimited,
 				VolumeStorage: UnlimitedQuantity(),
 			},
 			expected: true,
@@ -300,81 +287,73 @@ func TestEquals(t *testing.T) {
 	}
 }
 
-func TestFits(t *testing.T) {
+func TestBaseResourcesFits(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name        string
-		current     Resources
-		incoming    Resources
+		current     BaseResources
+		incoming    BaseResources
 		expectedErr error
 	}{
 		{
-			name:     "empty resources",
-			current:  Resources{},
-			incoming: Resources{},
+			name:     "empty BaseResources resources",
+			current:  BaseResources{},
+			incoming: BaseResources{},
 		},
 		{
-			name: "fits resources",
-			current: Resources{
+			name: "fits BaseResources",
+			current: BaseResources{
 				Apps:          1,
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          1,
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 		},
 
 		{
-			name: "does not fit resources",
-			current: Resources{
+			name: "does not fit BaseResources resources",
+			current: BaseResources{
 				Apps:          1,
-				Secrets:       1,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          2,
-				Secrets:       2,
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
 			expectedErr: ErrExceededResources,
 		},
 		{
-			name: "fits resources with specified unlimited values",
-			current: Resources{
+			name: "fits BaseResources resources with specified unlimited values",
+			current: BaseResources{
 				Apps:          Unlimited,
-				Secrets:       Unlimited,
 				VolumeStorage: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				Apps:          2,
-				Secrets:       2,
 				VolumeStorage: resource.MustParse("2Mi"),
 			},
 		},
 		{
-			name: "fits count resources with specified unlimited values but not others",
-			current: Resources{
-				Jobs:    0,
-				Apps:    Unlimited,
-				Secrets: Unlimited,
+			name: "fits count BaseResources resources with specified unlimited values but not others",
+			current: BaseResources{
+				Jobs: 0,
+				Apps: Unlimited,
 			},
-			incoming: Resources{
-				Jobs:    2,
-				Apps:    2,
-				Secrets: 2,
+			incoming: BaseResources{
+				Jobs: 2,
+				Apps: 2,
 			},
 			expectedErr: ErrExceededResources,
 		},
 
 		{
-			name: "fits quantity resources with specified unlimited values but not others",
-			current: Resources{
+			name: "fits quantity BaseResources resources with specified unlimited values but not others",
+			current: BaseResources{
 				VolumeStorage: UnlimitedQuantity(),
 			},
-			incoming: Resources{
+			incoming: BaseResources{
 				CPU:           resource.MustParse("100m"),
 				VolumeStorage: resource.MustParse("2Mi"),
 			},
