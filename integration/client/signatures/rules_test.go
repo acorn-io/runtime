@@ -120,7 +120,7 @@ func TestImageAllowRules(t *testing.T) {
 	assert.Error(t, err, "should error since image is not covered by images scope of IAR")
 
 	// update image allow rule to cover that image
-	iar.Images = []string{tagName}
+	iar.Images = []string{"**"}
 
 	err = kclient.Update(ctx, iar)
 	if err != nil {

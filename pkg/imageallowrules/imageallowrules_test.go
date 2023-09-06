@@ -3,10 +3,8 @@ package imageallowrules
 import (
 	"testing"
 
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestImageCovered(t *testing.T) {
@@ -91,13 +89,7 @@ func TestImageCovered(t *testing.T) {
 				t.Fatalf("failed to parse image %s: %v", tc.image, err)
 			}
 
-			match := imageCovered(ref, "", v1.ImageAllowRuleInstance{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "testns",
-				},
-				Images: []string{tc.pattern},
-			})
+			match := ImageCovered(ref, "", []string{tc.pattern})
 
 			assert.Equal(t, tc.shouldMatch, match)
 		})

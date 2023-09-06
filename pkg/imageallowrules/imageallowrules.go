@@ -106,7 +106,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace stri
 iarLoop:
 	for _, imageAllowRule := range imageAllowRules {
 		// Check if the image is in scope of the ImageAllowRule
-		if !imageCovered(ref, digest, imageAllowRule) {
+		if !ImageCovered(ref, digest, imageAllowRule.Images) {
 			logrus.Infof("Image %s (%s) is not covered by ImageAllowRule %s/%s: %#v", image, digest, imageAllowRule.Namespace, imageAllowRule.Name, imageAllowRule.Images)
 			continue
 		}
@@ -114,65 +114,66 @@ iarLoop:
 		// > Signatures
 		// Any verification error or failed verification issue will skip on to the next IAR
 		for _, rule := range imageAllowRule.Signatures.Rules {
-			if err := cosign.EnsureReferences(ctx, c, image, namespace, &verifyOpts); err != nil {
-				logrus.Infof("failed checking image %s against %s/%s.signatures: %v", image, imageAllowRule.Namespace, imageAllowRule.Name, err)
+			if err := VerifySignatureRule(ctx, c, namespace, image, rule, verifyOpts); err != nil {
+				logrus.Errorf("Verification failed for %s against %s/%s: %v", image, imageAllowRule.Namespace, imageAllowRule.Name, err)
 				continue iarLoop
 			}
-			verifyOpts.AnnotationRules = rule.Annotations
-
-			// allOf: all signatures must pass verification
-			if len(rule.SignedBy.AllOf) != 0 {
-				for allOfRuleIndex, signer := range rule.SignedBy.AllOf {
-					logrus.Debugf("Checking image %s against %s/%s.signatures.allOf.%d", image, imageAllowRule.Namespace, imageAllowRule.Name, allOfRuleIndex)
-					verifyOpts.Key = signer
-					err := cosign.VerifySignature(ctx, verifyOpts)
-					if err != nil {
-						if _, ok := err.(*ocosign.VerificationError); !ok {
-							logrus.Errorf("error verifying image %s against %s/%s.signatures.allOf.%d: %v", image, imageAllowRule.Namespace, imageAllowRule.Name, allOfRuleIndex, err)
-						}
-						continue iarLoop // failed or errored in allOf, try next IAR
-					}
-				}
-			}
-			// anyOf: only one signature must pass verification
-			var anyOfErrs []error
-			if len(rule.SignedBy.AnyOf) != 0 {
-				anyOfOK := false
-				for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
-					logrus.Debugf("Checking image %s against %s/%s.signatures.anyOf.%d", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex)
-					verifyOpts.Key = signer
-					err := cosign.VerifySignature(ctx, verifyOpts)
-					if err == nil {
-						anyOfOK = true
-						break
-					} else {
-						if _, ok := err.(*ocosign.VerificationError); ok {
-							logrus.Debugf("image %s not allowed as per %s/%s.signatures.anyOf.%d: %v", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex, err)
-						} else {
-							e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.%d: %w", image, imageAllowRule.Namespace, imageAllowRule.Name, anyOfRuleIndex, err)
-							anyOfErrs = append(anyOfErrs, e)
-							logrus.Errorln(e.Error())
-						}
-					}
-				}
-				if !anyOfOK {
-					if len(anyOfErrs) == len(rule.SignedBy.AnyOf) {
-						// we had errors for all anyOf rules (not failed verification, but actual errors)
-						e := fmt.Errorf("error verifying image %s against %s/%s.signatures.anyOf.*: %w", image, imageAllowRule.Namespace, imageAllowRule.Name, merr.NewErrors(anyOfErrs...))
-						logrus.Errorln(e.Error())
-					}
-					continue iarLoop // failed or errored in all anyOf, try next IAR
-				}
-			}
 		}
-
+		logrus.Debugf("Image %s (%s) is allowed by ImageAllowRule %s/%s", image, digest, imageAllowRule.Namespace, imageAllowRule.Name)
 		return nil
 	}
 	return &ErrImageNotAllowed{Image: image}
 }
 
-func imageCovered(image name.Reference, digest string, iar v1.ImageAllowRuleInstance) bool {
-	for _, pattern := range iar.Images {
+func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string, image string, rule v1.SignatureRules, verifyOpts cosign.VerifyOpts) error {
+	if err := cosign.EnsureReferences(ctx, c, image, namespace, &verifyOpts); err != nil {
+		return fmt.Errorf(".signatures: %w", err)
+	}
+	verifyOpts.AnnotationRules = rule.Annotations
+
+	// allOf: all signatures must pass verification
+	if len(rule.SignedBy.AllOf) != 0 {
+		for allOfRuleIndex, signer := range rule.SignedBy.AllOf {
+			verifyOpts.Key = signer
+			err := cosign.VerifySignature(ctx, verifyOpts)
+			if err != nil {
+				if _, ok := err.(*ocosign.VerificationError); !ok {
+					return fmt.Errorf(".signatures.allOf.%d: %w", allOfRuleIndex, err)
+				}
+				return err // failed or errored in allOf, try next IAR
+			}
+		}
+	}
+	// anyOf: only one signature must pass verification
+	var anyOfErrs []error
+	if len(rule.SignedBy.AnyOf) != 0 {
+		anyOfOK := false
+		for anyOfRuleIndex, signer := range rule.SignedBy.AnyOf {
+			verifyOpts.Key = signer
+			err := cosign.VerifySignature(ctx, verifyOpts)
+			if err == nil {
+				anyOfOK = true
+				break
+			} else {
+				if _, ok := err.(*ocosign.VerificationError); !ok {
+					e := fmt.Errorf(".signatures.anyOf.%d: %w", anyOfRuleIndex, err)
+					anyOfErrs = append(anyOfErrs, e)
+				}
+			}
+		}
+		if !anyOfOK {
+			if len(anyOfErrs) == len(rule.SignedBy.AnyOf) {
+				// we had errors for all anyOf rules (not failed verification, but actual errors)
+				return fmt.Errorf(".signatures.anyOf.*: %w", merr.NewErrors(anyOfErrs...))
+			}
+			return fmt.Errorf(".signature.anyOf: failed") // failed or errored in all anyOf, try next IAR
+		}
+	}
+	return nil
+}
+
+func ImageCovered(image name.Reference, digest string, patterns []string) bool {
+	for _, pattern := range patterns {
 		// empty pattern? skip (should've been caught by IAR validation already)
 		if strings.TrimSpace(pattern) == "" {
 			continue
@@ -198,13 +199,11 @@ func imageCovered(image name.Reference, digest string, iar v1.ImageAllowRuleInst
 		}
 
 		if err := matchContext(contextPattern, image.Context().String()); err != nil {
-			logrus.Debugf("image %s not in scope of ImageAllowRule %s/%s: %v", image, iar.Namespace, iar.Name, err)
 			continue
 		}
 
 		if tagPattern != "" {
 			if err := matchTag(tagPattern, image.Identifier()); err != nil {
-				logrus.Debugf("image %s not in scope of ImageAllowRule %s/%s: %v", image, iar.Namespace, iar.Name, err)
 				continue
 			}
 		}
