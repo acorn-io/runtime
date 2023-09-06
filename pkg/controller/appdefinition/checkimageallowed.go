@@ -38,7 +38,7 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 		targetImage := strings.TrimSuffix(ref.Name(), ":")
 		targetImageDigest := appInstance.Status.AppImage.Digest
 
-		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, targetImageDigest, remote.WithTransport(transport)); err != nil {
+		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, appInstance.Status.AppImage.ID, targetImageDigest, remote.WithTransport(transport)); err != nil {
 			if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {
 				cond.Error(err)
 				return nil
