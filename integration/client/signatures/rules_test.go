@@ -11,7 +11,7 @@ import (
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	cclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,7 +99,7 @@ func TestImageAllowRules(t *testing.T) {
 
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
-	assert.Empty(t, details.SignatureDigest, "signature digest should be empty before signing")
+	require.Empty(t, details.SignatureDigest, "signature digest should be empty before signing")
 
 	// create image allow rule
 	iar := &v1.ImageAllowRule{
@@ -117,10 +117,10 @@ func TestImageAllowRules(t *testing.T) {
 
 	// try to run - expect failure
 	_, err = c.AppRun(ctx, tagName, nil)
-	assert.Error(t, err, "should error since image is not covered by images scope of IAR")
+	require.Error(t, err, "should error since image is not covered by images scope of IAR")
 
 	// update image allow rule to cover that image
-	iar.Images = []string{"**"}
+	iar.Images = []string{tagName, id}
 
 	err = kclient.Update(ctx, iar)
 	if err != nil {
@@ -133,11 +133,21 @@ func TestImageAllowRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, iar.Images, niar.Images)
+	require.Equal(t, iar.Images, niar.Images)
 
-	// try to run - expect success
+	// try to run by tagName - expect success
 	app, err := c.AppRun(ctx, tagName, nil)
-	assert.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", tagName, iar.Images)
+	require.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", tagName, iar.Images)
+
+	// remove app
+	_, err = c.AppDelete(ctx, app.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// try to run by ID - expect success
+	app, err = c.AppRun(ctx, id, nil)
+	require.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", id, iar.Images)
 
 	// remove app
 	_, err = c.AppDelete(ctx, app.Name)
@@ -163,7 +173,7 @@ func TestImageAllowRules(t *testing.T) {
 
 	// try to run - expect failure
 	_, err = c.AppRun(ctx, tagName, nil)
-	assert.Error(t, err, "should error since image is not signed by the required key")
+	require.Error(t, err, "should error since image %s is not signed by the required key", tagName)
 
 	// sign image
 	nsig, err := signImage(ctx, c, targetDigest, "./testdata/cosign.key")
@@ -183,7 +193,7 @@ func TestImageAllowRules(t *testing.T) {
 		}
 	}
 
-	assert.NotEmpty(t, nsig.SignatureDigest, "signature should not be empty")
+	require.NotEmpty(t, nsig.SignatureDigest, "signature should not be empty")
 
 	ndetails, err := c.ImageDetails(ctx, tagName, nil)
 	if err != nil {
@@ -191,17 +201,49 @@ func TestImageAllowRules(t *testing.T) {
 	}
 
 	t.Logf("Image %s has signature %s", tagName, ndetails.SignatureDigest)
-	assert.NotEmpty(t, ndetails.SignatureDigest, "signature digest should not be empty after signing")
+	require.NotEmpty(t, ndetails.SignatureDigest, "signature digest should not be empty after signing")
 
-	// try to run - expect success
+	// try to run by tagName - expect success
 	app, err = c.AppRun(ctx, tagName, nil)
-	assert.NoError(t, err, "should not error since image is signed by the required key")
+	require.NoError(t, err, "should not error since image %s is signed by the required key", tagName)
 
 	// remove app
 	_, err = c.AppDelete(ctx, app.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// try to run by ID - expect success
+	app, err = c.AppRun(ctx, id, nil)
+	require.NoError(t, err, "should not error since image %s is signed by the required key", id)
+
+	// remove app
+	_, err = c.AppDelete(ctx, app.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Delete the image, so that it's only in the external registry
+	img, tags, err := c.ImageDelete(ctx, id, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	require.Contains(t, tags, tagName, "tag %s should be deleted", tagName)
+	require.Equal(t, id, img.Name, "image %s should be deleted", id)
+
+	// try to run by tagName - expect success
+	app, err = c.AppRun(ctx, tagName, nil)
+	require.NoError(t, err, "should not error since image %s is signed by the required key", tagName)
+
+	// remove app
+	_, err = c.AppDelete(ctx, app.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// try to run by id - expect failure
+	_, err = c.AppRun(ctx, id, nil)
+	require.Error(t, err, "should error since image %s was deleted", id)
 
 	// update iar to require a signature with specific annotation
 	iar.Signatures = internalv1.ImageAllowRuleSignatures{
@@ -226,5 +268,5 @@ func TestImageAllowRules(t *testing.T) {
 
 	// try to run - expect failure
 	_, err = c.AppRun(ctx, tagName, nil)
-	assert.Error(t, err, "should error since image is signed by the required key but does not match the required annotation")
+	require.Error(t, err, "should error since image is signed by the required key but does not match the required annotation")
 }

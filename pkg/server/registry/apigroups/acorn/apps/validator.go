@@ -178,7 +178,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		}
 
 		if !disableCheckImageAllowRules {
-			if err := imageallowrules.CheckImageAllowed(ctx, s.client, app.Namespace, checkImage, imageDetails.AppImage.Digest, remote.WithTransport(s.transport)); err != nil {
+			if err := imageallowrules.CheckImageAllowed(ctx, s.client, app.Namespace, checkImage, image, imageDetails.AppImage.Digest, remote.WithTransport(s.transport)); err != nil {
 				result = append(result, field.Forbidden(field.NewPath("spec", "image"), fmt.Sprintf("%s not allowed to run: %s", app.Spec.Image, err.Error())))
 				return
 			}

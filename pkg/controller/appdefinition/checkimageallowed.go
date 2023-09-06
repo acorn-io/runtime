@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -26,7 +27,7 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
-		ref, err := name.ParseReference(appInstance.Status.AppImage.Name, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+		ref, err := name.ParseReference(appInstance.Status.AppImage.ID, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
 		if err != nil {
 			e := fmt.Errorf("failed to parse image name: %w", err)
 			logrus.Error(e)
@@ -34,10 +35,10 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 			return nil
 		}
 
-		targetImage := ref.Name()
+		targetImage := strings.TrimSuffix(ref.Name(), ":")
 		targetImageDigest := appInstance.Status.AppImage.Digest
 
-		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, targetImageDigest, remote.WithTransport(transport)); err != nil {
+		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, appInstance.Status.AppImage.ID, targetImageDigest, remote.WithTransport(transport)); err != nil {
 			if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {
 				cond.Error(err)
 				return nil

@@ -227,6 +227,7 @@ func GetImageReference(ctx context.Context, c client.Reader, namespace, image st
 	if tags.SHAPattern.MatchString(image) {
 		return imagesystem.GetInternalRepoForNamespaceAndID(ctx, c, namespace, image)
 	}
+
 	return imagename.ParseReference(image)
 }
 
