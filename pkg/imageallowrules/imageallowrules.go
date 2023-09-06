@@ -38,13 +38,23 @@ func (e *ErrImageNotAllowed) Is(target error) bool {
 
 // CheckImageAllowed checks if the image is allowed by the ImageAllowRules on cluster and project level
 func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image, digest string, opts ...remote.Option) error {
+	cfg, err := config.Get(ctx, c)
+	if err != nil {
+		return err
+	}
+
+	// IAR not enabled? Allow all images.
+	if cfg.Features == nil || !cfg.Features[profiles.FeatureImageAllowRules] {
+		return nil
+	}
+
 	// Get ImageAllowRules in the same namespace as the AppInstance
 	rulesList := &v1.ImageAllowRuleInstanceList{}
 	if err := c.List(ctx, rulesList, &client.ListOptions{Namespace: namespace}); err != nil {
 		return fmt.Errorf("failed to list ImageAllowRules: %w", err)
 	}
 
-	opts, err := images.GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
+	opts, err = images.GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
 	if err != nil {
 		return err
 	}
@@ -63,16 +73,6 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, image, d
 // - ALLOWED if strict mode is disabled (the default)
 // ! Only one single rule has to allow the image for this to pass !
 func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace string, image string, digest string, imageAllowRules []v1.ImageAllowRuleInstance, keychain authn.Keychain, opts ...remote.Option) error {
-	cfg, err := config.Get(ctx, c)
-	if err != nil {
-		return err
-	}
-
-	// IAR not enabled? Allow all images.
-	if cfg.Features == nil || !cfg.Features[profiles.FeatureImageAllowRules] {
-		return nil
-	}
-
 	// No rules? Deny all images.
 	if len(imageAllowRules) == 0 {
 		return &ErrImageNotAllowed{Image: image}

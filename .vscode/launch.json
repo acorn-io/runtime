@@ -23,7 +23,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceRoot}",
-            "args": ["run", "${input:acornfile}"],
+            "args": ["image", "sign", "--key", "/home/thklein/.ssh/id_rsa", "-a", "tag=ok", "harbor.thklein.dev/public/acorn@sha256:ff11aa8e01da1a0b7c44cb357dfa0f0332053070ed7325af3bec89cb9bbcdb3c"],
             "console": "integratedTerminal",
         },
         {

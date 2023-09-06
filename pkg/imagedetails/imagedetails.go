@@ -178,8 +178,9 @@ func prependServiceName(serviceName string, perms []v1.Permissions) (result []v1
 	return
 }
 
-func toNestedImage(serviceName string, details *apiv1.ImageDetails) (result []apiv1.NestedImage) {
+func toNestedImage(serviceName string, details *apiv1.ImageDetails, imageName string) (result []apiv1.NestedImage) {
 	result = append(result, apiv1.NestedImage{
+		ImageRef:        imageName,
 		Name:            details.AppImage.Name,
 		Digest:          details.AppImage.Digest,
 		SignatureDigest: details.SignatureDigest,
@@ -189,6 +190,7 @@ func toNestedImage(serviceName string, details *apiv1.ImageDetails) (result []ap
 
 	for _, nested := range details.NestedImages {
 		result = append(result, apiv1.NestedImage{
+			ImageRef:        nested.ImageRef,
 			Name:            nested.Name,
 			Digest:          nested.Digest,
 			SignatureDigest: nested.SignatureDigest,
@@ -225,7 +227,7 @@ func getNestedAcorns(ctx context.Context, c kclient.Client, namespace, image str
 			return nil, err
 		}
 
-		result = append(result, toNestedImage(acornName, details)...)
+		result = append(result, toNestedImage(acornName, details, acorn.Image)...)
 	}
 
 	return
@@ -259,7 +261,7 @@ func getNestedServices(ctx context.Context, c kclient.Client, namespace, image s
 			return nil, err
 		}
 
-		result = append(result, toNestedImage(serviceName, details)...)
+		result = append(result, toNestedImage(serviceName, details, service.Image)...)
 	}
 
 	return

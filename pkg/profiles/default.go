@@ -39,6 +39,7 @@ func defaultProfile() apiv1.Config {
 		CertManagerIssuer:              new(string),
 		EventTTL:                       new(string),
 		Features:                       FeatureDefaults,
+		RestrictedAPIGroups:            map[string]string{},
 		HttpEndpointPattern:            z.Pointer(HttpEndpointPatternDefault),
 		IgnoreUserLabelsAndAnnotations: new(bool),
 		IngressClassName:               new(string),

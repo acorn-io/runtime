@@ -67,6 +67,7 @@ acorn install
       --record-builds                                   Keep a record of each acorn build that happens
       --registry-cpu string                             The CPU to allocate to the registry in the format of <req>:<limit> (example 200m:1000m)
       --registry-memory string                          The memory to allocate to the registry in the format of <req>:<limit> (example 256Mi:1Gi)
+      --restricted-api-group strings                    Restrict access to the specified API groups via Image Signatures (example aws.acorn.io=acorn://thisisus)
       --service-lb-annotation strings                   Annotation to add to the service of type LoadBalancer. Defaults to empty. (example key=value)
       --set-pod-security-enforce-profile                Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                                     Bypass installation checks

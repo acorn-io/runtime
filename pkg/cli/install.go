@@ -94,6 +94,8 @@ func (i *Install) Run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid --api-server-pod-annotations: %w", err)
 	}
 
+	i.Config.RestrictedAPIGroups = i.RestrictedAPIGroups
+
 	opts := &install.Options{
 		SkipChecks:                          i.SkipChecks,
 		Quiet:                               i.Quiet,

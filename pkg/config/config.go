@@ -147,6 +147,11 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 			}
 		}
 	}
+
+	if c.RestrictedAPIGroups == nil {
+		c.RestrictedAPIGroups = profile.RestrictedAPIGroups
+	}
+
 	if c.CertManagerIssuer == nil {
 		c.CertManagerIssuer = profile.CertManagerIssuer
 	}
@@ -383,6 +388,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.Features != nil {
 		mergedConfig.Features = newConfig.Features
+	}
+	if newConfig.RestrictedAPIGroups != nil {
+		mergedConfig.RestrictedAPIGroups = newConfig.RestrictedAPIGroups
 	}
 
 	if len(newConfig.PropagateProjectAnnotations) > 0 && newConfig.PropagateProjectAnnotations[0] == "" {

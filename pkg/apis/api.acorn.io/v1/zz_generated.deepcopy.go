@@ -573,6 +573,13 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.RestrictedAPIGroups != nil {
+		in, out := &in.RestrictedAPIGroups, &out.RestrictedAPIGroups
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.ControllerMemory != nil {
 		in, out := &in.ControllerMemory, &out.ControllerMemory
 		*out = new(string)
