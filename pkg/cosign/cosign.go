@@ -105,10 +105,8 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 
 	// -- signature hash
 	if sigHash.Hex == "" {
-		// signature artifact not found -> that's an actual verification error
-		cerr := cosign.NewVerificationError(fmt.Sprintf("signature verification failed: expected signature artifact %s not found", sigTag.Name()))
-		cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoSignaturesFoundType)
-		return nil, cerr
+		// signature artifact not found -> that's an actual verification failure
+		return nil, NewVerificationFailure(&ErrNoSignaturesFound{Err: fmt.Errorf("signature verification failed: expected signature artifact %s not found", sigTag.Name())})
 	}
 
 	sigRefToUse, err := name.ParseReference(sigTag.String(), name.WeakValidation)
@@ -209,8 +207,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		errs = append(errs, err)
 	}
 
-	err = cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))
-	err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+	err = &VerificationFailure{&ErrNoMatchingSignatures{fmt.Errorf("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))}}
 	logrus.Debugf("%s: %v", err, errors.Join(errs...))
 	return err
 }
@@ -338,8 +335,7 @@ func verifySignatures(ctx context.Context, sigs oci.Signatures, h ggcrv1.Hash, c
 		checkedSignatures = append(checkedSignatures, sig)
 	}
 	if len(checkedSignatures) == 0 {
-		cerr := cosign.NewVerificationError(cosign.ErrNoMatchingSignaturesMessage)
-		cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+		cerr := NewVerificationFailure(&ErrNoMatchingSignatures{Err: fmt.Errorf("no matching signatures found")})
 		return nil, false, fmt.Errorf("%w:\n%s", cerr, strings.Join(validationErrs, "\n "))
 	}
 	return checkedSignatures, bundleVerified, nil
