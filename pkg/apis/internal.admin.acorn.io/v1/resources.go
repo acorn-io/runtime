@@ -57,6 +57,7 @@ func Sub(c, i int) int {
 }
 
 func SubQuantity(c, i resource.Quantity) resource.Quantity {
+	// We don't expect this situation to happen by the same logic that is described in the Sub function.
 	if c.Equal(comparableUnlimitedQuantity) || i.Equal(comparableUnlimitedQuantity) {
 		return c
 	}
@@ -67,30 +68,29 @@ func SubQuantity(c, i resource.Quantity) resource.Quantity {
 	return c
 }
 
-func Fits(toAppend []string, resource string, current, incoming int) []string {
+func Fits(current, incoming int) bool {
 	if current != Unlimited && current < incoming {
-		return append(toAppend, resource)
+		return false
 	}
-	return toAppend
+	return true
 }
 
-func FitsQuantity(toAppend []string, resource string, current, incoming resource.Quantity) []string {
+func FitsQuantity(current, incoming resource.Quantity) bool {
 	if !current.Equal(comparableUnlimitedQuantity) && current.Cmp(incoming) < 0 {
-		return append(toAppend, resource)
+		return false
 	}
-	return toAppend
+	return true
 }
 
 // ResourceToString will return a string representation of the resource and value
-// if its the value is greater than 0.
+// if its value is greater than 0.
 func ResourcesToString(resources map[string]int, quantityResources map[string]resource.Quantity) string {
 	var resourceStrings []string
 
 	for resource, value := range resources {
 		if value > 0 {
 			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %d", resource, value))
-		}
-		if value == Unlimited {
+		} else if value == Unlimited {
 			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource))
 		}
 	}
@@ -98,8 +98,7 @@ func ResourcesToString(resources map[string]int, quantityResources map[string]re
 	for resource, quantity := range quantityResources {
 		if quantity.CmpInt64(0) > 0 {
 			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %s", resource, quantity.String()))
-		}
-		if quantity.Equal(comparableUnlimitedQuantity) {
+		} else if quantity.Equal(comparableUnlimitedQuantity) {
 			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource))
 		}
 	}

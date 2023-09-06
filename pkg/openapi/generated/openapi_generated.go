@@ -13312,7 +13312,8 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.Re
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "QuotaRequestResources defines resources that should can be created by an AppInstance.",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apps": {
 						SchemaProps: spec.SchemaProps{

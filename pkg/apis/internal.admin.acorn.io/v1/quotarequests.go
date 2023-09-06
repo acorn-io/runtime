@@ -3,7 +3,6 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,18 +73,20 @@ type QuotaRequestInstanceList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []QuotaRequestInstance `json:"items"`
 }
+
+// QuotaRequestResources defines resources that should can be created by an AppInstance.
 type QuotaRequestResources struct {
 	BaseResources `json:",inline"`
 	Secrets       int `json:"secrets,omitempty"`
 }
 
-// Add will add the resources of another Resources struct into the current one.
+// Add will add the QuotaRequestResources of another QuotaRequestResources struct into the current one.
 func (current *QuotaRequestResources) Add(incoming QuotaRequestResources) {
 	current.Secrets = Add(current.Secrets, incoming.Secrets)
 	current.BaseResources.Add(incoming.BaseResources)
 }
 
-// Remove will remove the resources of another Resources struct from the current one. Calling remove
+// Remove will remove the QuotaRequestResources of another QuotaRequestResources struct from the current one. Calling remove
 // will be a no-op for any resource values that are set to unlimited.
 func (current *QuotaRequestResources) Remove(incoming QuotaRequestResources, all bool) {
 	if all {
@@ -94,23 +95,20 @@ func (current *QuotaRequestResources) Remove(incoming QuotaRequestResources, all
 	current.BaseResources.Remove(incoming.BaseResources, all)
 }
 
-// Fits will check if a group of resources will be able to contain
-// another group of resources. If the resources are not able to fit,
-// an aggregated error will be returned with all exceeded resources.
-// If the current resources defines unlimited, then it will always fit.
+// Fits will check if a group QuotaRequestResources will be able to contain
+// another group of QuotaRequestResources. If the QuotaRequestResources are not able to fit,
+// an aggregated error will be returned with all exceeded QuotaRequestResources.
+// If the current QuotaRequestResources defines unlimited, then it will always fit.
 func (current *QuotaRequestResources) Fits(incoming QuotaRequestResources) error {
-	exceededResources := Fits([]string{}, "Secrets", current.Secrets, incoming.Secrets)
-
-	// Build an aggregated error message for the exceeded resources
 	var err error
-	if len(exceededResources) > 0 {
-		err = fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
+	if !Fits(current.Secrets, incoming.Secrets) {
+		err = fmt.Errorf("%w: Secrets", ErrExceededResources)
 	}
 
 	return errors.Join(err, current.BaseResources.Fits(incoming.BaseResources))
 }
 
-// ToString will return a string representation of the Resources within the struct.
+// ToString will return a string representation of the QuotaRequestResources within the struct.
 func (current *QuotaRequestResources) ToString() string {
 	result := ResourcesToString(
 		map[string]int{"Secrets": current.Secrets},
@@ -124,7 +122,7 @@ func (current *QuotaRequestResources) ToString() string {
 	return result + current.BaseResources.ToString()
 }
 
-// Equals will check if the current Resources struct is equal to another. This is useful
+// Equals will check if the current QuotaRequestResources struct is equal to another. This is useful
 // to avoid needing to do a deep equal on the entire struct.
 func (current *QuotaRequestResources) Equals(incoming QuotaRequestResources) bool {
 	return current.BaseResources.Equals(incoming.BaseResources) &&

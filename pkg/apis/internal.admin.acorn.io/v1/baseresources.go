@@ -7,9 +7,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// Resources is a struct separate from the QuotaRequestInstanceSpec to allow for
-// external controllers to programmatically set the resources easier. Calls to
-// its functions are mutating.
+// BaseResources defines resources that should be tracked at any scoped. The two main exclusions
+// currently are Secrets and Projects as they have situations they should be not be tracked.
 
 type BaseResources struct {
 	Apps       int `json:"apps,omitempty"`
@@ -23,7 +22,7 @@ type BaseResources struct {
 	CPU           resource.Quantity `json:"cpu,omitempty"`
 }
 
-// Add will add the resources of another Resources struct into the current one.
+// Add will add the BaseResources of another BaseResources struct into the current one.
 func (current *BaseResources) Add(incoming BaseResources) {
 	current.Apps = Add(current.Apps, incoming.Apps)
 	current.Containers = Add(current.Containers, incoming.Containers)
@@ -36,7 +35,7 @@ func (current *BaseResources) Add(incoming BaseResources) {
 	current.CPU = AddQuantity(current.CPU, incoming.CPU)
 }
 
-// Remove will remove the resources of another Resources struct from the current one. Calling remove
+// Remove will remove the BaseResources of another BaseResources struct from the current one. Calling remove
 // will be a no-op for any resource values that are set to unlimited.
 func (current *BaseResources) Remove(incoming BaseResources, all bool) {
 	current.Apps = Sub(current.Apps, incoming.Apps)
@@ -54,22 +53,34 @@ func (current *BaseResources) Remove(incoming BaseResources, all bool) {
 	}
 }
 
-// Fits will check if a group of resources will be able to contain
-// another group of resources. If the resources are not able to fit,
-// an aggregated error will be returned with all exceeded resources.
-// If the current resources defines unlimited, then it will always fit.
+// Fits will check if a group of BaseResources will be able to contain
+// another group of BaseResources. If the BaseResources are not able to fit,
+// an aggregated error will be returned with all exceeded BaseResources.
+// If the current BaseResources defines unlimited, then it will always fit.
 func (current *BaseResources) Fits(incoming BaseResources) error {
 	exceededResources := []string{}
 
-	exceededResources = Fits(exceededResources, "Apps", current.Apps, incoming.Apps)
-	exceededResources = Fits(exceededResources, "Containers", current.Containers, incoming.Containers)
-	exceededResources = Fits(exceededResources, "Jobs", current.Jobs, incoming.Jobs)
-	exceededResources = Fits(exceededResources, "Volumes", current.Volumes, incoming.Volumes)
-	exceededResources = Fits(exceededResources, "Images", current.Images, incoming.Images)
+	for resource, values := range map[string][]int{
+		"Apps":       {current.Apps, incoming.Apps},
+		"Containers": {current.Containers, incoming.Containers},
+		"Jobs":       {current.Jobs, incoming.Jobs},
+		"Volumes":    {current.Volumes, incoming.Volumes},
+		"Images":     {current.Images, incoming.Images},
+	} {
+		if !Fits(values[0], values[1]) {
+			exceededResources = append(exceededResources, resource)
+		}
+	}
 
-	exceededResources = FitsQuantity(exceededResources, "VolumeStorage", current.VolumeStorage, incoming.VolumeStorage)
-	exceededResources = FitsQuantity(exceededResources, "Memory", current.Memory, incoming.Memory)
-	exceededResources = FitsQuantity(exceededResources, "Cpu", current.CPU, incoming.CPU)
+	for resource, values := range map[string][]resource.Quantity{
+		"VolumeStorage": {current.VolumeStorage, incoming.VolumeStorage},
+		"Memory":        {current.Memory, incoming.Memory},
+		"Cpu":           {current.CPU, incoming.CPU},
+	} {
+		if !FitsQuantity(values[0], values[1]) {
+			exceededResources = append(exceededResources, resource)
+		}
+	}
 
 	// Build an aggregated error message for the exceeded resources
 	if len(exceededResources) > 0 {
@@ -79,7 +90,7 @@ func (current *BaseResources) Fits(incoming BaseResources) error {
 	return nil
 }
 
-// ToString will return a string representation of the Resources within the struct.
+// ToString will return a string representation of the BaseResources within the struct.
 func (current *BaseResources) ToString() string {
 	return ResourcesToString(
 		map[string]int{
@@ -96,7 +107,7 @@ func (current *BaseResources) ToString() string {
 		})
 }
 
-// Equals will check if the current Resources struct is equal to another. This is useful
+// Equals will check if the current BaseResources struct is equal to another. This is useful
 // to avoid needing to do a deep equal on the entire struct.
 func (current *BaseResources) Equals(incoming BaseResources) bool {
 	return current.Apps == incoming.Apps &&
