@@ -188,7 +188,7 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			},
 		},
 		{
-			name: "remove resources counts with all",
+			name: "removes persistent resources with all",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
 					VolumeStorage: resource.MustParse("1Mi"),
@@ -207,7 +207,7 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			},
 		},
 		{
-			name: "does not remove resources counts without all",
+			name: "does not remove persistent resources without all",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
 					VolumeStorage: resource.MustParse("1Mi"),

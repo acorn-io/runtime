@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/acorn-io/baaah/pkg/typed"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -87,19 +88,21 @@ func FitsQuantity(current, incoming resource.Quantity) bool {
 func ResourcesToString(resources map[string]int, quantityResources map[string]resource.Quantity) string {
 	var resourceStrings []string
 
-	for resource, value := range resources {
-		if value > 0 {
-			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %d", resource, value))
-		} else if value == Unlimited {
-			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource))
+	for _, resource := range typed.Sorted(resources) {
+		switch {
+		case resource.Value > 0:
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %d", resource.Key, resource.Value))
+		case resource.Value == Unlimited:
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource.Key))
 		}
 	}
 
-	for resource, quantity := range quantityResources {
-		if quantity.CmpInt64(0) > 0 {
-			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %s", resource, quantity.String()))
-		} else if quantity.Equal(comparableUnlimitedQuantity) {
-			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource))
+	for _, resource := range typed.Sorted(quantityResources) {
+		switch {
+		case resource.Value.CmpInt64(0) > 0:
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: %s", resource.Key, resource.Value.String()))
+		case resource.Value.Equal(comparableUnlimitedQuantity):
+			resourceStrings = append(resourceStrings, fmt.Sprintf("%s: unlimited", resource.Key))
 		}
 	}
 

@@ -9,7 +9,6 @@ import (
 
 // BaseResources defines resources that should be tracked at any scoped. The two main exclusions
 // currently are Secrets and Projects as they have situations they should be not be tracked.
-
 type BaseResources struct {
 	Apps       int `json:"apps,omitempty"`
 	Containers int `json:"containers,omitempty"`
@@ -58,27 +57,35 @@ func (current *BaseResources) Remove(incoming BaseResources, all bool) {
 // an aggregated error will be returned with all exceeded BaseResources.
 // If the current BaseResources defines unlimited, then it will always fit.
 func (current *BaseResources) Fits(incoming BaseResources) error {
-	exceededResources := []string{}
+	var exceededResources []string
 
-	for resource, values := range map[string][]int{
-		"Apps":       {current.Apps, incoming.Apps},
-		"Containers": {current.Containers, incoming.Containers},
-		"Jobs":       {current.Jobs, incoming.Jobs},
-		"Volumes":    {current.Volumes, incoming.Volumes},
-		"Images":     {current.Images, incoming.Images},
+	// Check if any of the resources are exceeded
+	for _, r := range []struct {
+		resource          string
+		current, incoming int
+	}{
+		{"Apps", current.Apps, incoming.Apps},
+		{"Containers", current.Containers, incoming.Containers},
+		{"Jobs", current.Jobs, incoming.Jobs},
+		{"Volumes", current.Volumes, incoming.Volumes},
+		{"Images", current.Images, incoming.Images},
 	} {
-		if !Fits(values[0], values[1]) {
-			exceededResources = append(exceededResources, resource)
+		if !Fits(r.current, r.incoming) {
+			exceededResources = append(exceededResources, r.resource)
 		}
 	}
 
-	for resource, values := range map[string][]resource.Quantity{
-		"VolumeStorage": {current.VolumeStorage, incoming.VolumeStorage},
-		"Memory":        {current.Memory, incoming.Memory},
-		"Cpu":           {current.CPU, incoming.CPU},
+	// Check if any of the quantity resources are exceeded
+	for _, r := range []struct {
+		resource          string
+		current, incoming resource.Quantity
+	}{
+		{"VolumeStorage", current.VolumeStorage, incoming.VolumeStorage},
+		{"Memory", current.Memory, incoming.Memory},
+		{"Cpu", current.CPU, incoming.CPU},
 	} {
-		if !FitsQuantity(values[0], values[1]) {
-			exceededResources = append(exceededResources, resource)
+		if !FitsQuantity(r.current, r.incoming) {
+			exceededResources = append(exceededResources, r.resource)
 		}
 	}
 

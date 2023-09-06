@@ -12464,7 +12464,8 @@ func schema_pkg_apis_internaladminacornio_v1_BaseResources(ref common.ReferenceC
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
+				Description: "BaseResources defines resources that should be tracked at any scoped. The two main exclusions currently are Secrets and Projects as they have situations they should be not be tracked.",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apps": {
 						SchemaProps: spec.SchemaProps{
