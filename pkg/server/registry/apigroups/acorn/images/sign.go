@@ -79,7 +79,7 @@ func (t *ImageSignStrategy) ImageSign(ctx context.Context, namespace string, sig
 	var mutateOpts []mutate.SignOption
 
 	if signature.PublicKey != "" {
-		verifiers, err := acornsign.LoadVerifiers(ctx, signature.PublicKey, "sha256")
+		verifiers, err := acornsign.VerifiersFromPublicKeyRef(ctx, signature.PublicKey, "sha256")
 		if err != nil {
 			return "", err
 		}

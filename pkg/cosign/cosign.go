@@ -190,7 +190,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 
 	// --- parse key
 	if opts.Key != "" {
-		verifiers, err := LoadVerifiers(ctx, opts.Key, opts.SignatureAlgorithm)
+		verifiers, err := VerifiersFromPublicKeyRef(ctx, opts.Key, opts.SignatureAlgorithm)
 		if err != nil {
 			return fmt.Errorf("failed to load key: %w", err)
 		}
@@ -365,7 +365,7 @@ var algorithms = map[string]crypto.Hash{
 	"sha512": crypto.SHA512,
 }
 
-func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
+func VerifiersFromPublicKeyRef(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
 	keyRef = strings.TrimSpace(keyRef) // Drop all leading/trailing whitespace (that includes newlines)
 
 	if PrivateKeyPattern.MatchString(keyRef) {
@@ -386,7 +386,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		return nil, fmt.Errorf("failed to load public key from invalid multi-line key reference")
 	} else if strings.HasPrefix(keyRef, "ssh-") {
 		// no scheme, inline SSH
-		logrus.Debugf("Loading public key from SSH: %s", keyRef)
+		logrus.Debugf("Loading public key from SSH: %s", strings.Fields(keyRef)[0])
 		keyData := strings.Fields(keyRef)[1]
 		parsedCryptoKey, err := ParseSSHPublicKey(keyData)
 		if err != nil {
@@ -394,7 +394,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		}
 		v, err := signature.LoadVerifier(parsedCryptoKey, algorithms[algorithm])
 		if err != nil {
-			return nil, fmt.Errorf("failed to load public key from SSH - %s: %w", keyRef, err)
+			return nil, fmt.Errorf("failed to load public key from SSH - %s: %w", strings.Fields(keyRef)[0], err)
 		}
 		verifiers = append(verifiers, v)
 	} else if strings.HasPrefix(keyRef, "acorn://") {
@@ -407,7 +407,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 
 		var acVerifiers []signature.Verifier
 		for _, key := range acKeys {
-			v, err := LoadVerifiers(ctx, key.Key, algorithm)
+			v, err := VerifiersFromPublicKeyRef(ctx, key.Key, algorithm)
 			if err != nil {
 				logrus.Debugf("failed to load public key from Acorn Manager for %s: %v", keyRef, err)
 				continue
@@ -431,7 +431,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		var ghVerifiers []signature.Verifier
 
 		for _, key := range ghKeys {
-			v, err := LoadVerifiers(ctx, key.Key, algorithm)
+			v, err := VerifiersFromPublicKeyRef(ctx, key.Key, algorithm)
 			if err != nil {
 				logrus.Debugf("failed to load verifier for public key from GitHub (type %T): %v", key, err)
 				continue
@@ -446,7 +446,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		verifiers = append(verifiers, ghVerifiers...)
 	} else if regexp.MustCompile(`^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$`).MatchString(keyRef) {
 		// weak (not length-limited) regexp for github/acorn-manager usernames -> default to acorn manager
-		return LoadVerifiers(ctx, fmt.Sprintf("acorn://%s", keyRef), algorithm)
+		return VerifiersFromPublicKeyRef(ctx, fmt.Sprintf("acorn://%s", keyRef), algorithm)
 	} else {
 		// schemes: k8s://, pkcs11://, gitlab://, raw (file), url, ...
 		logrus.Debugf("Loading public key from cosign builtin scheme type: %s", keyRef)

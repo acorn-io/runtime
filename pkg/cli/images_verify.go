@@ -86,7 +86,7 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("key file %s is a private key, not a public key", a.Key)
 		}
 
-		verifiers, err := acornsign.LoadVerifiers(cmd.Context(), string(keyFileBytes), "sha256")
+		verifiers, err := acornsign.VerifiersFromPublicKeyRef(cmd.Context(), string(keyFileBytes), "sha256")
 		if err != nil {
 			return err
 		}

@@ -18,6 +18,9 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/layout"
 	"github.com/google/go-containerregistry/pkg/v1/partial"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/stretchr/testify/require"
+
+	_ "embed"
 )
 
 //go:embed testdata/validkey1.pub
@@ -231,4 +234,32 @@ func TestVerifySignature(t *testing.T) {
 			t.Fatalf("[%d] expected error but got none: %s", ti, tc.description)
 		}
 	}
+}
+
+//go:embed testdata/keys/openssh-rsa-nopw.pub
+var pubkeyOpenSSH string
+
+//go:embed testdata/keys/openssh-rsa-nopw.key
+var privkeyOpenSSH string
+
+//go:embed testdata/validkey1.pub
+var pubkeyCosign string
+
+//go:embed testdata/validkey1.key
+var privkeyCosign string
+
+func TestLoadVerifiers(t *testing.T) {
+	ctx := context.Background()
+
+	_, err := VerifiersFromPublicKeyRef(ctx, pubkeyOpenSSH, "sha256")
+	require.NoError(t, err, "Should be able to import OpenSSH Public Key")
+
+	_, err = VerifiersFromPublicKeyRef(ctx, privkeyOpenSSH, "sha256")
+	require.Error(t, err, "Should not be able to import OpenSSH Private Key as Public Key")
+
+	_, err = VerifiersFromPublicKeyRef(ctx, pubkeyCosign, "sha256")
+	require.NoError(t, err, "Should be able to import Cosign Public Key")
+
+	_, err = VerifiersFromPublicKeyRef(ctx, privkeyCosign, "sha256")
+	require.Error(t, err, "Should not be able to import Cosign Private Key as Public Key")
 }
