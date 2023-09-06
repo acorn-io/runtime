@@ -69,8 +69,6 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
-	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", imageName, targetDigest, a.Key)
-
 	vOpts := &client.ImageVerifyOptions{
 		Annotations: a.Annotations,
 		PublicKey:   a.Key,
@@ -82,6 +80,10 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		keyFileBytes, err := os.ReadFile(a.Key)
 		if err != nil {
 			return err
+		}
+
+		if acornsign.PrivateKeyPattern.Match(keyFileBytes) {
+			return fmt.Errorf("key file %s is a private key, not a public key", a.Key)
 		}
 
 		verifiers, err := acornsign.LoadVerifiers(cmd.Context(), string(keyFileBytes), "sha256")
@@ -99,6 +101,8 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 		}
 		vOpts.PublicKey = string(pem)
 	}
+
+	pterm.Info.Printf("Verifying Image %s (digest: %s) using key %s\n", imageName, targetDigest, a.Key)
 
 	_, err = c.ImageVerify(cmd.Context(), imageName, vOpts)
 	if err == nil {

@@ -246,7 +246,7 @@ func DecodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, 
 	// PEM encoded file.
 	pubKey, err := UnmarshalPEMToPublicKey(raw)
 	if err != nil {
-		logrus.Infof("error unmarshaling PEM: %v", string(raw))
+		logrus.Infoln("error unmarshaling PEM")
 		return nil, fmt.Errorf("pem to public key: %w", err)
 	}
 
@@ -366,14 +366,24 @@ var algorithms = map[string]crypto.Hash{
 }
 
 func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
-	if PubkeyPrefixPattern.MatchString(strings.TrimSpace(keyRef)) {
+	keyRef = strings.TrimSpace(keyRef) // Drop all leading/trailing whitespace (that includes newlines)
+
+	if PrivateKeyPattern.MatchString(keyRef) {
+		return nil, fmt.Errorf("error: private key provided instead of public key")
+	}
+
+	if PublicKeyPattern.MatchString(keyRef) {
 		// no scheme, inline PEM
-		logrus.Debugf("Loading public key from PEM: %s", keyRef)
+		logrus.Debugln("Loading public key from PEM")
 		v, err := DecodePEM([]byte(keyRef), algorithms[algorithm])
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
 		verifiers = append(verifiers, v)
+	} else if strings.Contains(keyRef, "\n") {
+		// The only multi-line input we accept is raw public key PEM - if the above PublicKeyPattern doesn't catch it, we'll kick it out here
+		// -> This also kicks out private keys which accidentally made their way here
+		return nil, fmt.Errorf("failed to load public key from invalid multi-line key reference")
 	} else if strings.HasPrefix(keyRef, "ssh-") {
 		// no scheme, inline SSH
 		logrus.Debugf("Loading public key from SSH: %s", keyRef)
@@ -438,11 +448,11 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		// weak (not length-limited) regexp for github/acorn-manager usernames -> default to acorn manager
 		return LoadVerifiers(ctx, fmt.Sprintf("acorn://%s", keyRef), algorithm)
 	} else {
-		// schemes: k8s://, pkcs11://, gitlab://, raw, url, ...
+		// schemes: k8s://, pkcs11://, gitlab://, raw (file), url, ...
 		logrus.Debugf("Loading public key from cosign builtin scheme type: %s", keyRef)
 		v, err := cosignature.PublicKeyFromKeyRef(ctx, keyRef)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load public key from %s: %w", keyRef, err)
+			return nil, fmt.Errorf("failed to load public key using cosign builtin schemes from %s: %w", keyRef, err)
 		}
 		verifiers = append(verifiers, v)
 	}
