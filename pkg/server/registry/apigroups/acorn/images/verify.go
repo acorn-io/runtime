@@ -14,7 +14,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/imagedetails"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -82,9 +81,7 @@ func (t *ImageVerifyStrategy) ImageVerify(ctx context.Context, namespace string,
 	targetName := imageDetails.Name
 
 	if imageDetails.SignatureDigest == "" {
-		cerr := cosign.NewVerificationError(cosign.ErrNoSignaturesFoundMessage)
-		cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoSignaturesFoundType)
-		return fmt.Errorf("%w: %s", cerr, targetName)
+		return acornsign.NewVerificationFailure(&acornsign.ErrNoSignaturesFound{Err: fmt.Errorf("no signatures found for image %s", targetName)})
 	}
 
 	verifyOpts := &acornsign.VerifyOpts{

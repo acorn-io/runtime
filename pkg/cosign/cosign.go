@@ -105,10 +105,8 @@ func ensureSignatureArtifact(ctx context.Context, c client.Reader, namespace str
 
 	// -- signature hash
 	if sigHash.Hex == "" {
-		// signature artifact not found -> that's an actual verification error
-		cerr := cosign.NewVerificationError(fmt.Sprintf("signature verification failed: expected signature artifact %s not found", sigTag.Name()))
-		cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoSignaturesFoundType)
-		return nil, cerr
+		// signature artifact not found -> that's an actual verification failure
+		return nil, NewVerificationFailure(&ErrNoSignaturesFound{Err: fmt.Errorf("signature verification failed: expected signature artifact %s not found", sigTag.Name())})
 	}
 
 	sigRefToUse, err := name.ParseReference(sigTag.String(), name.WeakValidation)
@@ -192,7 +190,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 
 	// --- parse key
 	if opts.Key != "" {
-		verifiers, err := LoadVerifiers(ctx, opts.Key, opts.SignatureAlgorithm)
+		verifiers, err := VerifiersFromPublicKeyRef(ctx, opts.Key, opts.SignatureAlgorithm)
 		if err != nil {
 			return fmt.Errorf("failed to load key: %w", err)
 		}
@@ -209,8 +207,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		errs = append(errs, err)
 	}
 
-	err = cosign.NewVerificationError("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))
-	err.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+	err = &VerificationFailure{&ErrNoMatchingSignatures{fmt.Errorf("failed to find valid signature for %s matching given identity and annotations using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))}}
 	logrus.Debugf("%s: %v", err, errors.Join(errs...))
 	return err
 }
@@ -249,7 +246,7 @@ func DecodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, 
 	// PEM encoded file.
 	pubKey, err := UnmarshalPEMToPublicKey(raw)
 	if err != nil {
-		logrus.Infof("error unmarshaling PEM: %v", string(raw))
+		logrus.Infoln("error unmarshaling PEM")
 		return nil, fmt.Errorf("pem to public key: %w", err)
 	}
 
@@ -338,8 +335,7 @@ func verifySignatures(ctx context.Context, sigs oci.Signatures, h ggcrv1.Hash, c
 		checkedSignatures = append(checkedSignatures, sig)
 	}
 	if len(checkedSignatures) == 0 {
-		cerr := cosign.NewVerificationError(cosign.ErrNoMatchingSignaturesMessage)
-		cerr.(*cosign.VerificationError).SetErrorType(cosign.ErrNoMatchingSignaturesType)
+		cerr := NewVerificationFailure(&ErrNoMatchingSignatures{Err: fmt.Errorf("no matching signatures found")})
 		return nil, false, fmt.Errorf("%w:\n%s", cerr, strings.Join(validationErrs, "\n "))
 	}
 	return checkedSignatures, bundleVerified, nil
@@ -369,18 +365,28 @@ var algorithms = map[string]crypto.Hash{
 	"sha512": crypto.SHA512,
 }
 
-func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
-	if PubkeyPrefixPattern.MatchString(strings.TrimSpace(keyRef)) {
+func VerifiersFromPublicKeyRef(ctx context.Context, keyRef string, algorithm string) (verifiers []signature.Verifier, err error) {
+	keyRef = strings.TrimSpace(keyRef) // Drop all leading/trailing whitespace (that includes newlines)
+
+	if PrivateKeyPattern.MatchString(keyRef) {
+		return nil, fmt.Errorf("error: private key provided instead of public key")
+	}
+
+	if PublicKeyPattern.MatchString(keyRef) {
 		// no scheme, inline PEM
-		logrus.Debugf("Loading public key from PEM: %s", keyRef)
+		logrus.Debugln("Loading public key from PEM")
 		v, err := DecodePEM([]byte(keyRef), algorithms[algorithm])
 		if err != nil {
 			return nil, fmt.Errorf("failed to load public key from PEM: %w", err)
 		}
 		verifiers = append(verifiers, v)
+	} else if strings.Contains(keyRef, "\n") {
+		// The only multi-line input we accept is raw public key PEM - if the above PublicKeyPattern doesn't catch it, we'll kick it out here
+		// -> This also kicks out private keys which accidentally made their way here
+		return nil, fmt.Errorf("failed to load public key from invalid multi-line key reference")
 	} else if strings.HasPrefix(keyRef, "ssh-") {
 		// no scheme, inline SSH
-		logrus.Debugf("Loading public key from SSH: %s", keyRef)
+		logrus.Debugf("Loading public key from SSH: %s", strings.Fields(keyRef)[0])
 		keyData := strings.Fields(keyRef)[1]
 		parsedCryptoKey, err := ParseSSHPublicKey(keyData)
 		if err != nil {
@@ -388,7 +394,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		}
 		v, err := signature.LoadVerifier(parsedCryptoKey, algorithms[algorithm])
 		if err != nil {
-			return nil, fmt.Errorf("failed to load public key from SSH - %s: %w", keyRef, err)
+			return nil, fmt.Errorf("failed to load public key from SSH - %s: %w", strings.Fields(keyRef)[0], err)
 		}
 		verifiers = append(verifiers, v)
 	} else if strings.HasPrefix(keyRef, "acorn://") {
@@ -401,7 +407,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 
 		var acVerifiers []signature.Verifier
 		for _, key := range acKeys {
-			v, err := LoadVerifiers(ctx, key.Key, algorithm)
+			v, err := VerifiersFromPublicKeyRef(ctx, key.Key, algorithm)
 			if err != nil {
 				logrus.Debugf("failed to load public key from Acorn Manager for %s: %v", keyRef, err)
 				continue
@@ -425,7 +431,7 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		var ghVerifiers []signature.Verifier
 
 		for _, key := range ghKeys {
-			v, err := LoadVerifiers(ctx, key.Key, algorithm)
+			v, err := VerifiersFromPublicKeyRef(ctx, key.Key, algorithm)
 			if err != nil {
 				logrus.Debugf("failed to load verifier for public key from GitHub (type %T): %v", key, err)
 				continue
@@ -440,13 +446,13 @@ func LoadVerifiers(ctx context.Context, keyRef string, algorithm string) (verifi
 		verifiers = append(verifiers, ghVerifiers...)
 	} else if regexp.MustCompile(`^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$`).MatchString(keyRef) {
 		// weak (not length-limited) regexp for github/acorn-manager usernames -> default to acorn manager
-		return LoadVerifiers(ctx, fmt.Sprintf("acorn://%s", keyRef), algorithm)
+		return VerifiersFromPublicKeyRef(ctx, fmt.Sprintf("acorn://%s", keyRef), algorithm)
 	} else {
-		// schemes: k8s://, pkcs11://, gitlab://, raw, url, ...
+		// schemes: k8s://, pkcs11://, gitlab://, raw (file), url, ...
 		logrus.Debugf("Loading public key from cosign builtin scheme type: %s", keyRef)
 		v, err := cosignature.PublicKeyFromKeyRef(ctx, keyRef)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load public key from %s: %w", keyRef, err)
+			return nil, fmt.Errorf("failed to load public key using cosign builtin schemes from %s: %w", keyRef, err)
 		}
 		verifiers = append(verifiers, v)
 	}
