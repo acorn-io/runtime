@@ -104,7 +104,7 @@ func (current *QuotaRequestResources) Fits(incoming QuotaRequestResources) error
 	// Build an aggregated error message for the exceeded resources
 	var err error
 	if len(exceededResources) > 0 {
-		return fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
+		err = fmt.Errorf("%w: %s", ErrExceededResources, strings.Join(exceededResources, ", "))
 	}
 
 	return errors.Join(err, current.BaseResources.Fits(incoming.BaseResources))

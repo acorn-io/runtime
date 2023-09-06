@@ -188,7 +188,7 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			},
 		},
 		{
-			name: "remove persistent counts with all",
+			name: "remove resources counts with all",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
 					VolumeStorage: resource.MustParse("1Mi"),
@@ -207,7 +207,7 @@ func TestQuotaRequestResourcesRemove(t *testing.T) {
 			},
 		},
 		{
-			name: "does not remove persistent counts without all",
+			name: "does not remove resources counts without all",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
 					VolumeStorage: resource.MustParse("1Mi"),
@@ -338,6 +338,42 @@ func TestQuotaRequestResourcesEquals(t *testing.T) {
 			expected: true,
 		},
 		{
+			name: "unequal QuotaRequestResources only",
+			current: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
+				Secrets: 1,
+			},
+			incoming: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "unequal base resources only",
+			current: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          1,
+					Containers:    1,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
+				Secrets: 1,
+			},
+			incoming: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
+				Secrets: 1,
+			},
+			expected: false,
+		},
+		{
 			name: "unequal QuotaRequestResources",
 			current: QuotaRequestResources{
 				BaseResources: BaseResources{
@@ -426,6 +462,32 @@ func TestQuotaRequestResourcesFits(t *testing.T) {
 					VolumeStorage: resource.MustParse("1Mi"),
 				},
 				Secrets: 2,
+			},
+			expectedErr: ErrExceededResources,
+		},
+		{
+			name: "false as expected with only QuotaRequestResources",
+			current: QuotaRequestResources{
+				Secrets: 1,
+			},
+			incoming: QuotaRequestResources{
+				Secrets: 2,
+			},
+			expectedErr: ErrExceededResources,
+		},
+		{
+			name: "false as expected with only base resources",
+			current: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          1,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
+			},
+			incoming: QuotaRequestResources{
+				BaseResources: BaseResources{
+					Apps:          2,
+					VolumeStorage: resource.MustParse("1Mi"),
+				},
 			},
 			expectedErr: ErrExceededResources,
 		},

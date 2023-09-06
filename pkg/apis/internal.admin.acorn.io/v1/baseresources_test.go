@@ -149,7 +149,7 @@ func TestBaseResourcesRemove(t *testing.T) {
 			expected: BaseResources{},
 		},
 		{
-			name: "remove persistent counts with all",
+			name: "remove persistent resources with all",
 			current: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
@@ -160,7 +160,7 @@ func TestBaseResourcesRemove(t *testing.T) {
 			expected: BaseResources{},
 		},
 		{
-			name: "does not remove persistent counts without all",
+			name: "does not remove persistent resources counts without all",
 			current: BaseResources{
 				VolumeStorage: resource.MustParse("1Mi"),
 			},
