@@ -88,16 +88,16 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf)
 	if err != nil {
 		if !strings.Contains(err.Error(), "unsupported pem type") {
-			return err
+			return fmt.Errorf("failed to create signer from private key: %w", err)
 		}
 		pterm.Debug.Printf("Key %s is not a supported PEM key, importing...\n", a.Key)
 		keyBytes, err := acornsign.ImportKeyPair(a.Key, pass)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to import private key: %w", err)
 		}
 		sigSigner, err = cosign.LoadPrivateKey(keyBytes.PrivateBytes, keyBytes.Password())
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create signer from imported private key: %w", err)
 		}
 	}
 
