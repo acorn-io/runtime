@@ -5,7 +5,6 @@ import (
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/z"
-	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/equality"
 )
 
@@ -89,8 +88,6 @@ func findAcornImage(imageData v1.ImagesData, autoUpgrade *bool, image string, ac
 		return image, image != ""
 	}
 
-	logrus.Infof("Looking for image [%s] in image data", image)
-
 	if acornBuild == nil {
 		if image != "" {
 			for _, build := range imageData.Builds {
@@ -128,66 +125,6 @@ func findAcornImage(imageData v1.ImagesData, autoUpgrade *bool, image string, ac
 		}
 		return image, image != ""
 	}
-	return "", false
-}
-
-func GetImageNameForServiceName(svcName string, appSpec *v1.AppSpec, imageData v1.ImagesData) (result string, found bool) {
-	var (
-		parts         = strings.Split(svcName, ".")
-		containerName string
-		sidecarName   string
-	)
-
-	if len(parts) > 2 {
-		return "", false
-	} else if len(parts) == 2 {
-		containerName, sidecarName = parts[0], parts[1]
-	} else {
-		containerName = svcName
-	}
-
-	if serviceDef, ok := appSpec.Services[svcName]; ok {
-		return findAcornImage(imageData, serviceDef.AutoUpgrade, serviceDef.Image, serviceDef.Build)
-	} else if acornDef, ok := appSpec.Acorns[svcName]; ok {
-		return findAcornImage(imageData, acornDef.AutoUpgrade, acornDef.Image, acornDef.Build)
-	} else if containerDef, ok := appSpec.Containers[containerName]; ok {
-		if sidecarName != "" {
-			containerDef, ok = containerDef.Sidecars[sidecarName]
-			if !ok {
-				return "", false
-			}
-		}
-		result, ok := findContainerImage(imageData, containerDef.Image, containerDef.Build)
-		// Only fall back to this check if there are no build records available, or this was a old build
-		// that didn't record build with a context dir properly
-		if !ok && notDirectReference(containerDef, imageData) {
-			return findImageInImageData(imageData, svcName)
-		}
-		return result, ok
-	} else if jobDef, ok := appSpec.Jobs[containerName]; ok {
-		if sidecarName != "" {
-			jobDef, ok = jobDef.Sidecars[sidecarName]
-			if !ok {
-				return "", false
-			}
-		}
-		result, ok := findContainerImage(imageData, jobDef.Image, jobDef.Build)
-		// Only fall back to this check if there are no build records available, or this was a old build
-		// that didn't record build with a context dir properly
-		if !ok && notDirectReference(jobDef, imageData) {
-			return findImageInImageData(imageData, svcName)
-		}
-		return result, ok
-	} else if imageDef, ok := appSpec.Images[svcName]; ok {
-		if imageDef.Build != nil {
-			return findContainerImage(imageData, "", imageDef.Build)
-		} else if imageDef.AcornBuild != nil {
-			return findContainerImage(imageData, "", imageDef.Build)
-		} else {
-			return findImageInImageData(imageData, svcName)
-		}
-	}
-
 	return "", false
 }
 

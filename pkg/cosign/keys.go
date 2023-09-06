@@ -18,7 +18,6 @@ import (
 	"github.com/secure-systems-lab/go-securesystemslib/encrypted"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/sigstore/pkg/cryptoutils"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -144,10 +143,6 @@ func ImportKeyPair(keyPath string, pass []byte) (*KeysBytes, error) {
 
 	var signer crypto.Signer
 
-	if pass != nil && pemBlock.Type != "OPENSSH PRIVATE KEY" {
-		return nil, fmt.Errorf("decryption of protected keys is only supported for OPENSSH and COSIGN Keys")
-	}
-
 	switch pemBlock.Type {
 	case cosign.RSAPrivateKeyPemType:
 		rsaPk, err := x509.ParsePKCS1PrivateKey(pemBlock.Bytes)
@@ -177,7 +172,6 @@ func ImportKeyPair(keyPath string, pass []byte) (*KeysBytes, error) {
 			return nil, err
 		}
 	case "OPENSSH PRIVATE KEY":
-		logrus.Infof("Parsing OpenSSH private key")
 		var (
 			err error
 			key crypto.PrivateKey
