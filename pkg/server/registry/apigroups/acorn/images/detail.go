@@ -2,7 +2,6 @@ package images
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -91,7 +90,7 @@ func translateRegistryErrors(in error, imageName string) error {
 		case http.StatusNotFound:
 			return errors.NewNotFound(schema.GroupResource{Group: api.Group, Resource: "images"}, imageName)
 		case http.StatusUnauthorized:
-			return errors.NewUnauthorized(fmt.Sprintf("pulling image %s: %v", imageName, terr))
+			return errors.NewForbidden(schema.GroupResource{Group: api.Group, Resource: "images"}, imageName, terr)
 		case http.StatusForbidden:
 			return errors.NewForbidden(schema.GroupResource{Group: api.Group, Resource: "images"}, imageName, terr)
 		}
