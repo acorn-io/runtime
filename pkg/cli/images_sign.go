@@ -15,6 +15,7 @@ import (
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"github.com/sigstore/cosign/v2/pkg/signature"
 	sigsig "github.com/sigstore/sigstore/pkg/signature"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/acorn-io/runtime/pkg/prompt"
@@ -90,7 +91,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		if !strings.Contains(err.Error(), "unsupported pem type") {
 			return fmt.Errorf("failed to create signer from private key: %w", err)
 		}
-		pterm.Debug.Printf("Key %s is not a supported PEM key, importing...\n", a.Key)
+		logrus.Debugf("Key %s is not a supported PEM key, importing...\n", a.Key)
 		keyBytes, err := acornsign.ImportKeyPair(a.Key, pass)
 		if err != nil {
 			return fmt.Errorf("failed to import private key: %w", err)
@@ -101,9 +102,8 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	var annotations map[string]interface{}
+	annotations := acornsign.GetDefaultSignatureAnnotations(ref.String())
 	if a.Annotations != nil {
-		annotations = make(map[string]interface{}, len(a.Annotations))
 		for k, v := range a.Annotations {
 			annotations[k] = v
 		}
@@ -113,6 +113,8 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	logrus.Infof("Payload Annotations: %#v", annotations)
 
 	signatureB64 := base64.StdEncoding.EncodeToString(signature)
 

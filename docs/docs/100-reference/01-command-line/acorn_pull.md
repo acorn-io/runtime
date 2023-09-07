@@ -15,6 +15,7 @@ acorn pull [flags] IMAGE
   -a, --annotation strings   Annotations to check for during verification
   -h, --help                 help for pull
   -k, --key string           Key to use for verifying (default "./cosign.pub")
+      --no-verify-name       Do not verify the image name in the signature
   -v, --verify               Verify the image signature BEFORE pulling and only pull on success
 ```
 
