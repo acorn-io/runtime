@@ -84,6 +84,12 @@ func (t *ImageVerifyStrategy) ImageVerify(ctx context.Context, namespace string,
 		return acornsign.NewVerificationFailure(&acornsign.ErrNoSignaturesFound{Err: fmt.Errorf("no signatures found for image %s", targetName)})
 	}
 
+	if !signature.NoVerifyName {
+		if _, ok := signature.Annotations.Match[acornsign.SignatureAnnotationSignedName]; !ok {
+			signature.Annotations.Match[acornsign.SignatureAnnotationSignedName] = signature.Name
+		}
+	}
+
 	verifyOpts := &acornsign.VerifyOpts{
 		AnnotationRules:    signature.Annotations,
 		SignatureAlgorithm: "sha256",

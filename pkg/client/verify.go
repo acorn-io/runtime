@@ -11,8 +11,9 @@ import (
 
 func (c *DefaultClient) ImageVerify(ctx context.Context, image string, opts *ImageVerifyOptions) (*apiv1.ImageSignature, error) {
 	sigInput := &apiv1.ImageSignature{
-		PublicKey: opts.PublicKey,
-		Auth:      opts.Auth,
+		PublicKey:    opts.PublicKey,
+		Auth:         opts.Auth,
+		NoVerifyName: opts.NoVerifyName,
 	}
 
 	if opts.PublicKey == "" {

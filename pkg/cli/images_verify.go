@@ -71,17 +71,13 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
-	if !a.NoVerifyName {
-		// verify the image name in the signature
-		a.Annotations[acornsign.SignatureAnnotationSignedRef] = imageName
-	}
-
 	logrus.Debugf("Verifying Image %s (digest: %s) using key %s and annotations: %#v\n", imageName, targetDigest, a.Key, a.Annotations)
 
 	vOpts := &client.ImageVerifyOptions{
-		Annotations: a.Annotations,
-		PublicKey:   a.Key,
-		Auth:        auth,
+		Annotations:  a.Annotations,
+		PublicKey:    a.Key,
+		Auth:         auth,
+		NoVerifyName: a.NoVerifyName,
 	}
 
 	// load public key from file (if it is a file, not a remote reference)
