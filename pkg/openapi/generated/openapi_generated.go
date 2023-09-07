@@ -3978,6 +3978,12 @@ func schema_pkg_apis_apiacornio_v1_ImageSignature(ref common.ReferenceCallback) 
 							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureAnnotations"),
 						},
 					},
+					"noVerifyName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"payload": {
 						SchemaProps: spec.SchemaProps{
 							Description: "- Signing",

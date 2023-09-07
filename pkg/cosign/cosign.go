@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/imageallowrules/selector"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -259,7 +260,7 @@ var ErrAnnotationsUnmatched = cosign.NewVerificationError("annotations unmatched
 func checkAnnotations(payloads []payload.SimpleContainerImage, annotationRule v1.SignatureAnnotations) error {
 	// We're using Kubernetes' label selector logic here, but we need to override the error handling
 	// since the annotations we're matching on are less restricted than Kubernetes labels
-	sel, err := annotationRule.AsSelector(v1.LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{v1.IgnoreInvalidFieldErrors(v1.LabelValueMaxLengthErrMsg, v1.LabelValueRegexpErrMsg)}})
+	sel, err := selector.GenerateSelector(annotationRule, selector.LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{selector.IgnoreInvalidFieldErrors(selector.LabelValueMaxLengthErrMsg, selector.LabelValueRegexpErrMsg)}})
 	if err != nil {
 		return fmt.Errorf("failed to parse annotation rule: %w", err)
 	}
