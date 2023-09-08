@@ -22,7 +22,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/publicname"
+	"github.com/acorn-io/runtime/pkg/system"
 	"github.com/acorn-io/z"
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -186,14 +188,21 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 		}
 	}
 
+	dnsSecret := &corev1.Secret{}
+	err = req.Client.Get(req.Ctx, router.Key(system.Namespace, system.DNSSecretName), dnsSecret)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, err
+	}
+	acornDomain := string(dnsSecret.Data["domain"])
+
 	var (
-		// Separate rules for cluster domain and custom domain
+		// Separate rules for acorn domain and custom domain
 		// This is needed to have separate ingress resources so that for custom domain, we can apply cert-manager setting to request certificate,
-		// while keeping cluster domain certs as it is with acorn's built-in LE feature.
-		customDomainRules    []networkingv1.IngressRule
-		clusterDomainRules   []networkingv1.IngressRule
-		customDomainTargets  = map[string]Target{}
-		clusterDomainTargets = map[string]Target{}
+		// while keeping acorn domain certs as it is with acorn's built-in LE feature for wildcard DNS certificates.
+		customDomainRules   []networkingv1.IngressRule
+		acornDomainRules    []networkingv1.IngressRule
+		customDomainTargets = map[string]Target{}
+		acornDomainTargets  = map[string]Target{}
 	)
 
 	for _, entry := range typed.Sorted(bindings.ByHostname()) {
@@ -213,8 +222,13 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 					if err != nil {
 						return nil, err
 					}
-					clusterDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
-					clusterDomainRules = append(clusterDomainRules, getIngressRule(svc, hostname, port.Port))
+					if domain == acornDomain {
+						acornDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
+						acornDomainRules = append(acornDomainRules, getIngressRule(svc, hostname, port.Port))
+					} else {
+						customDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
+						customDomainRules = append(customDomainRules, getIngressRule(svc, hostname, port.Port))
+					}
 				}
 			}
 		} else {
@@ -231,7 +245,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 		name   string
 		target map[string]Target
 	}{
-		{rules: clusterDomainRules, name: clusterDomain, target: clusterDomainTargets},
+		{rules: acornDomainRules, name: clusterDomain, target: acornDomainTargets},
 		{rules: customDomainRules, name: customDomain, target: customDomainTargets},
 	} {
 		if len(rules.rules) == 0 {
