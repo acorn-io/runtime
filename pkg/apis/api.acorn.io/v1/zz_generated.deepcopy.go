@@ -1097,7 +1097,8 @@ func (in *Event) DeepCopyInto(out *Event) {
 	in.Observed.DeepCopyInto(&out.Observed)
 	if in.Details != nil {
 		in, out := &in.Details, &out.Details
-		*out = (*in).DeepCopy()
+		x := (*in).DeepCopy()
+		*out = &x
 	}
 }
 
@@ -1300,7 +1301,8 @@ func (in *ImageDetails) DeepCopyInto(out *ImageDetails) {
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
 	if in.DeployArgs != nil {
 		in, out := &in.DeployArgs, &out.DeployArgs
-		*out = (*in).DeepCopy()
+		x := (*in).DeepCopy()
+		*out = &x
 	}
 	if in.Profiles != nil {
 		in, out := &in.Profiles, &out.Profiles

@@ -113,6 +113,12 @@ func (in *GenericMap) DeepCopyInto(out *GenericMap) {
 	}
 }
 
+func (in GenericMap) DeepCopy() GenericMap {
+	var out GenericMap
+	in.DeepCopyInto(&out)
+	return out
+}
+
 func NewGenericMap(data map[string]any) *GenericMap {
 	if data == nil {
 		return nil
