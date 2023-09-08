@@ -61,7 +61,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/managed: "true"
     acorn.io/router-name: router-name
-  name: router-name-cluster-domain
+  name: router-name-acorn-domain
   namespace: app-created-namespace
 spec:
   rules:

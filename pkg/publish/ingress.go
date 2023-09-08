@@ -32,8 +32,8 @@ import (
 )
 
 const (
-	customDomain  = "custom-domain"
-	clusterDomain = "cluster-domain"
+	customDomain = "custom-domain"
+	acornDomain  = "acorn-domain"
 )
 
 var (
@@ -193,7 +193,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
-	acornDomain := string(dnsSecret.Data["domain"])
+	acornDNSDomain := string(dnsSecret.Data["domain"])
 
 	var (
 		// Separate rules for acorn domain and custom domain
@@ -222,7 +222,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 					if err != nil {
 						return nil, err
 					}
-					if domain == acornDomain || strings.HasSuffix(domain, profiles.ClusterDomainDefault) {
+					if domain == acornDNSDomain || strings.HasSuffix(domain, profiles.ClusterDomainDefault) {
 						acornDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
 						acornDomainRules = append(acornDomainRules, getIngressRule(svc, hostname, port.Port))
 					} else {
@@ -245,7 +245,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 		name   string
 		target map[string]Target
 	}{
-		{rules: acornDomainRules, name: clusterDomain, target: acornDomainTargets},
+		{rules: acornDomainRules, name: acornDomain, target: acornDomainTargets},
 		{rules: customDomainRules, name: customDomain, target: customDomainTargets},
 	} {
 		if len(rules.rules) == 0 {

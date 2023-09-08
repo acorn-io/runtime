@@ -37,7 +37,7 @@ metadata:
     acorn.io/app-namespace: app-namespace
     acorn.io/container-name: app1
     acorn.io/managed: "true"
-  name: app1-cluster-domain
+  name: app1-acorn-domain
   namespace: app-created-namespace
 spec:
   rules:
