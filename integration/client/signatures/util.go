@@ -12,13 +12,22 @@ import (
 	sigsig "github.com/sigstore/sigstore/pkg/signature"
 )
 
-func signImage(ctx context.Context, c client.Client, targetDigest name.Digest, key string) (*v1.ImageSignature, error) {
+func signImage(ctx context.Context, c client.Client, targetDigest name.Digest, targetName, key string) (*v1.ImageSignature, error) {
 	sigSigner, err := signature.SignerVerifierFromKeyRef(ctx, key, func(_ bool) ([]byte, error) { return []byte(""), nil })
 	if err != nil {
 		return nil, err
 	}
 
-	payload, sig, err := sigsig.SignImage(sigSigner, targetDigest, map[string]interface{}{})
+	annotations := map[string]string{
+		acornsign.SignatureAnnotationSignedName: targetName,
+	}
+
+	iannotations := map[string]interface{}{}
+	for k, v := range annotations {
+		iannotations[k] = v
+	}
+
+	payload, sig, err := sigsig.SignImage(sigSigner, targetDigest, iannotations)
 	if err != nil {
 		return nil, err
 	}
