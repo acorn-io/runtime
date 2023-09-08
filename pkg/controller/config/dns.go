@@ -101,7 +101,7 @@ func (h *configHandler) Handle(req router.Request, resp router.Response) error {
 		}
 	}
 
-	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") {
+	if !strings.EqualFold(*cfg.LetsEncrypt, "disabled") && domain != "" && token != "" {
 		if err := tls.ProvisionWildcardCert(req, resp, domain, token); err != nil {
 			return err
 		}
