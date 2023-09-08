@@ -85,6 +85,9 @@ func (t *ImageVerifyStrategy) ImageVerify(ctx context.Context, namespace string,
 	}
 
 	if !signature.NoVerifyName {
+		if signature.Annotations.Match == nil {
+			signature.Annotations.Match = make(map[string]string, 1)
+		}
 		if _, ok := signature.Annotations.Match[acornsign.SignatureAnnotationSignedName]; !ok {
 			signature.Annotations.Match[acornsign.SignatureAnnotationSignedName] = signature.Name
 		}
