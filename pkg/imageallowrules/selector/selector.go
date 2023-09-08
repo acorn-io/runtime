@@ -77,7 +77,7 @@ const LabelValueRegexpErrMsg string = "a valid label must be an empty string or 
 
 func IgnoreInvalidFieldErrors(detailsPrefixes ...string) func(error) bool {
 	return func(err error) bool {
-		if ferr := err.(*field.Error); errors.As(err, &ferr) && ferr.Type == field.ErrorTypeInvalid {
+		if ferr := (*field.Error)(nil); errors.As(err, &ferr) && ferr.Type == field.ErrorTypeInvalid {
 			filteredErrs := slices.Filter(nil, strings.Split(ferr.Detail, ";"), func(s string) bool {
 				for _, prefix := range detailsPrefixes {
 					if strings.HasPrefix(strings.TrimSpace(s), prefix) {
