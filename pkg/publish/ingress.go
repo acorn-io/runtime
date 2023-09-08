@@ -222,7 +222,7 @@ func Ingress(req router.Request, svc *v1.ServiceInstance) (result []kclient.Obje
 					if err != nil {
 						return nil, err
 					}
-					if domain == acornDomain {
+					if domain == acornDomain || strings.HasSuffix(domain, profiles.ClusterDomainDefault) {
 						acornDomainTargets[hostname] = Target{Port: port.TargetPort, Service: svc.Name}
 						acornDomainRules = append(acornDomainRules, getIngressRule(svc, hostname, port.Port))
 					} else {
