@@ -445,14 +445,14 @@ func (c *DefaultClient) getRESTConfig(ctx context.Context, opts *KubeProxyAddres
 
 	data, err := json.Marshal(map[string]any{
 		"kind":       "AccessConfig",
-		"apiVersion": "account.manager.acorn.io/v1",
+		"apiVersion": "aws.account.manager.acorn.io/v1",
 		"regionName": opts.Region,
 	})
 	if err != nil {
 		return nil, err
 	}
 	// Could this be prettier
-	resp, err := client.Post(c.RESTConfig.Host+"/apis/account.manager.acorn.io/v1/accessconfigs",
+	resp, err := client.Post(c.RESTConfig.Host+"/apis/aws.account.manager.acorn.io/v1/accessconfigs",
 		"application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
