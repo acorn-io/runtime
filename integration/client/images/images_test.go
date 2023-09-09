@@ -252,6 +252,18 @@ func TestImagePull(t *testing.T) {
 
 	image := images[0]
 	assert.Equal(t, tagName, image.Tags[0])
+
+	// Pull a second time while the image exists already
+	progress, err = c.ImagePull(ctx, tagName, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for update := range progress {
+		if update.Error != "" {
+			t.Fatal(update.Error)
+		}
+	}
 }
 
 func TestImageDetails(t *testing.T) {
