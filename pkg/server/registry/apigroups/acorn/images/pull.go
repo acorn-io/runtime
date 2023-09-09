@@ -170,7 +170,7 @@ func (i *ImagePull) ImagePull(ctx context.Context, namespace, imageName string, 
 		record := func() error {
 			return i.recordImage(ctx, hash, namespace, imageName, recordRepo)
 		}
-		images.RemoteWrite(metachannel, repo.Digest(hash.Hex), index, fmt.Sprintf("Pulling image %s ", pullTag.Context().Tag(pullTag.Identifier())), record, opts...)
+		images.RemoteWrite(metachannel, repo.Digest(hash.String()), index, fmt.Sprintf("Pulling image %s ", pullTag.Context().Tag(pullTag.Identifier())), record, opts...)
 
 		if sig != nil {
 			images.RemoteWrite(metachannel, repo.Tag(sigTag.TagStr()), sig, fmt.Sprintf("Pulling signature %s ", sigTag.TagStr()), nil, opts...)
