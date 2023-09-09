@@ -52,7 +52,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Region:              opts.Region,
 			Image:               image,
 			PublishMode:         opts.PublishMode,
-			DeployArgs:          opts.DeployArgs,
+			DeployArgs:          v1.NewGenericMap(opts.DeployArgs),
 			Volumes:             opts.Volumes,
 			Secrets:             opts.Secrets,
 			Links:               opts.Links,
@@ -140,7 +140,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 	app.Spec.Environment = mergeEnv(app.Spec.Environment, opts.Env)
 	app.Spec.Labels = mergeLabels(app.Spec.Labels, opts.Labels)
 	app.Spec.Annotations = mergeLabels(app.Spec.Annotations, opts.Annotations)
-	app.Spec.DeployArgs = typed.Concat(app.Spec.DeployArgs, opts.DeployArgs)
+	app.Spec.DeployArgs = app.Spec.DeployArgs.Merge(v1.NewGenericMap(opts.DeployArgs))
 	if len(opts.Profiles) > 0 {
 		app.Spec.Profiles = opts.Profiles
 	}

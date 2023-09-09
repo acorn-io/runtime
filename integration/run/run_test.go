@@ -916,9 +916,9 @@ func TestDeployParam(t *testing.T) {
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,
-			DeployArgs: map[string]any{
+			DeployArgs: v1.NewGenericMap(map[string]any{
 				"someInt": 5,
-			},
+			}),
 		},
 	})
 	if err != nil {

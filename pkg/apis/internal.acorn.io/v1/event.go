@@ -62,7 +62,7 @@ type EventInstance struct {
 	// but can be used to hold any data related to the event.
 	//
 	// +optional
-	Details GenericMap `json:"details,omitempty"`
+	Details *GenericMap `json:"details,omitempty"`
 }
 
 // GetObserved returns the time that the Event was first observed.

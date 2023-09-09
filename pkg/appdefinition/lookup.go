@@ -8,6 +8,18 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 )
 
+var semantic = equality.Semantic.Copy()
+
+func init() {
+	// Add custom equality functions
+	z.Must(semantic.AddFunc(func(a, b v1.AcornBuild) bool {
+		return a.OriginalImage == b.OriginalImage &&
+			a.Context == b.Context &&
+			a.Acornfile == b.Acornfile &&
+			equality.Semantic.DeepEqual(a.BuildArgs.GetData(), b.BuildArgs.GetData())
+	}))
+}
+
 func findImageInImageData(imageData v1.ImagesData, imageKey string) (string, bool) {
 	var (
 		parts         = strings.Split(imageKey, ".")
@@ -117,7 +129,7 @@ func findAcornImage(imageData v1.ImagesData, autoUpgrade *bool, image string, ac
 		if testBuild == nil {
 			continue
 		}
-		if !equality.Semantic.DeepEqual(*acornBuild, *testBuild) {
+		if !semantic.DeepEqual(*acornBuild, *testBuild) {
 			continue
 		}
 		if build.ImageKey != "" {

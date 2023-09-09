@@ -99,7 +99,7 @@ type AppInstanceSpec struct {
 	PublishMode             PublishMode      `json:"publishMode,omitempty"`
 	Links                   []ServiceBinding `json:"services,omitempty"`
 	Publish                 []PortBinding    `json:"ports,omitempty"`
-	DeployArgs              GenericMap       `json:"deployArgs,omitempty"`
+	DeployArgs              *GenericMap      `json:"deployArgs,omitempty"`
 	Permissions             []Permissions    `json:"permissions,omitempty"`
 	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"`
 	AutoUpgrade             *bool            `json:"autoUpgrade,omitempty"`

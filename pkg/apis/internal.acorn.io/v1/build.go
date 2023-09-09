@@ -96,13 +96,13 @@ type AcornImageBuildInstance struct {
 }
 
 type AcornImageBuildInstanceSpec struct {
-	ContextCacheKey string     `json:"contextCacheKey,omitempty"`
-	BuilderName     string     `json:"builderName,omitempty" wrangler:"required"`
-	Acornfile       string     `json:"acornfile,omitempty"`
-	Profiles        []string   `json:"profiles,omitempty"`
-	Platforms       []Platform `json:"platforms,omitempty"`
-	Args            GenericMap `json:"args,omitempty"`
-	VCS             VCS        `json:"vcs,omitempty"`
+	ContextCacheKey string      `json:"contextCacheKey,omitempty"`
+	BuilderName     string      `json:"builderName,omitempty" wrangler:"required"`
+	Acornfile       string      `json:"acornfile,omitempty"`
+	Profiles        []string    `json:"profiles,omitempty"`
+	Platforms       []Platform  `json:"platforms,omitempty"`
+	Args            *GenericMap `json:"args,omitempty"`
+	VCS             VCS         `json:"vcs,omitempty"`
 }
 
 type AcornImageBuildInstanceStatus struct {

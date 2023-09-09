@@ -57,7 +57,7 @@ type ServiceInstanceSpec struct {
 	Job             string            `json:"job,omitempty"`
 	ContainerLabels map[string]string `json:"containerLabels,omitempty"`
 	Secrets         []string          `json:"secrets,omitempty"`
-	Data            GenericMap        `json:"data,omitempty"`
+	Data            *GenericMap       `json:"data,omitempty"`
 	Consumer        *ServiceConsumer  `json:"consumer,omitempty"`
 
 	// Fields from app

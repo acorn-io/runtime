@@ -216,7 +216,7 @@ func getNestedAcorns(ctx context.Context, c kclient.Client, namespace, image str
 
 		details, err := GetImageDetails(ctx, c, namespace, acornImage, GetImageDetailsOptions{
 			Profiles:      acorn.Profiles,
-			DeployArgs:    acorn.DeployArgs,
+			DeployArgs:    acorn.DeployArgs.GetData(),
 			Nested:        nestedImage,
 			RemoteOpts:    remoteOpts,
 			IncludeNested: true,
@@ -250,7 +250,7 @@ func getNestedServices(ctx context.Context, c kclient.Client, namespace, image s
 		details, err := GetImageDetails(ctx, c, namespace, serviceImage, GetImageDetailsOptions{
 			// Services don't have profiles
 			Profiles:      nil,
-			DeployArgs:    service.ServiceArgs,
+			DeployArgs:    service.ServiceArgs.GetData(),
 			Nested:        nestedImage,
 			RemoteOpts:    remoteOpts,
 			IncludeNested: true,

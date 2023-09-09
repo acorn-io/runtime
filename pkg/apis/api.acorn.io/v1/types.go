@@ -257,12 +257,12 @@ type ImageDetails struct {
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// Input Params
-	ImageName     string        `json:"imageName,omitempty"`
-	NestedDigest  string        `json:"nestedDigest,omitempty"`
-	DeployArgs    v1.GenericMap `json:"deployArgs,omitempty"`
-	Profiles      []string      `json:"profiles,omitempty"`
-	Auth          *RegistryAuth `json:"auth,omitempty"`
-	IncludeNested bool          `json:"includeNested,omitempty"`
+	ImageName     string         `json:"imageName,omitempty"`
+	NestedDigest  string         `json:"nestedDigest,omitempty"`
+	DeployArgs    *v1.GenericMap `json:"deployArgs,omitempty"`
+	Profiles      []string       `json:"profiles,omitempty"`
+	Auth          *RegistryAuth  `json:"auth,omitempty"`
+	IncludeNested bool           `json:"includeNested,omitempty"`
 	// NoDefaultRegistry - if true, do not assume a default registry on the image if none is specified
 	NoDefaultRegistry bool `json:"noDefaultRegistry,omitempty"`
 

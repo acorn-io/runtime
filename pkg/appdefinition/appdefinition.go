@@ -360,8 +360,8 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, *DataFiles, error) {
 				return nil, nil, err
 			}
 		case BuildDataFile:
-			result.BuildArgs = map[string]any{}
-			err := json.NewDecoder(tar).Decode(&result.BuildArgs)
+			result.BuildArgs = v1.NewGenericMap(map[string]any{})
+			err := json.NewDecoder(tar).Decode(result.BuildArgs)
 			if err != nil {
 				return nil, nil, err
 			}

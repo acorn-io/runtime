@@ -34,10 +34,10 @@ const (
 type ChangeType string
 
 type AcornBuild struct {
-	OriginalImage string     `json:"originalImage,omitempty"`
-	Context       string     `json:"context,omitempty"`
-	Acornfile     string     `json:"acornfile,omitempty"`
-	BuildArgs     GenericMap `json:"buildArgs,omitempty"`
+	OriginalImage string      `json:"originalImage,omitempty"`
+	Context       string      `json:"context,omitempty"`
+	Acornfile     string      `json:"acornfile,omitempty"`
+	BuildArgs     *GenericMap `json:"buildArgs,omitempty"`
 }
 
 type Build struct {
@@ -726,7 +726,7 @@ type Acorn struct {
 	Image               string                 `json:"image,omitempty"`
 	Build               *AcornBuild            `json:"build,omitempty"`
 	Profiles            []string               `json:"profiles,omitempty"`
-	DeployArgs          GenericMap             `json:"deployArgs,omitempty"`
+	DeployArgs          *GenericMap            `json:"deployArgs,omitempty"`
 	Publish             PortBindings           `json:"publish,omitempty"`
 	PublishMode         PublishMode            `json:"publishMode,omitempty"`
 	Environment         NameValues             `json:"environment,omitempty"`
@@ -749,7 +749,7 @@ type Secret struct {
 	Name        string            `json:"name,omitempty"`
 	Description string            `json:"description,omitempty"`
 	Type        string            `json:"type,omitempty"`
-	Params      GenericMap        `json:"params,omitempty"`
+	Params      *GenericMap       `json:"params,omitempty"`
 	Data        map[string]string `json:"data,omitempty"`
 }
 
@@ -791,11 +791,11 @@ type Service struct {
 	Address             string                 `json:"address,omitempty"`
 	Ports               Ports                  `json:"ports,omitempty"`
 	Container           string                 `json:"container,omitempty"`
-	Data                GenericMap             `json:"data,omitempty"`
+	Data                *GenericMap            `json:"data,omitempty"`
 	Generated           *GeneratedService      `json:"generated,omitempty"`
 	Image               string                 `json:"image,omitempty"`
 	Build               *AcornBuild            `json:"build,omitempty"`
-	ServiceArgs         GenericMap             `json:"serviceArgs,omitempty"`
+	ServiceArgs         *GenericMap            `json:"serviceArgs,omitempty"`
 	Environment         NameValues             `json:"environment,omitempty"`
 	Secrets             SecretBindings         `json:"secrets,omitempty"`
 	Links               ServiceBindings        `json:"links,omitempty"`

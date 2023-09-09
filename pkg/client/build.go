@@ -87,7 +87,7 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 			BuilderName:     opts.BuilderName,
 			Acornfile:       string(fileData),
 			Platforms:       opts.Platforms,
-			Args:            opts.Args,
+			Args:            v1.NewGenericMap(opts.Args),
 			Profiles:        opts.Profiles,
 			VCS:             vcs,
 		},

@@ -57,7 +57,7 @@ var (
 
 func getTextSecretData(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, secretRef v1.Secret, secretName string) (*v1.Secret, error) {
 	var output string
-	err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, &output)
+	err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params.GetData()["job"]), secretName, &output)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func getTextSecretData(ctx context.Context, c kclient.Client, appInstance *v1.Ap
 
 func getJSONSecretData(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, secretRef v1.Secret, secretName string) (*v1.Secret, error) {
 	newSecret := &v1.Secret{}
-	err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params["job"]), secretName, newSecret)
+	err := jobs.GetOutputFor(ctx, c, appInstance, convert.ToString(secretRef.Params.GetData()["job"]), secretName, newSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func generatedSecret(req router.Request, appInstance *v1.AppInstance, secretName
 
 	var (
 		newSecret *v1.Secret
-		format    = convert.ToString(secretRef.Params["format"])
+		format    = convert.ToString(secretRef.Params.GetData()["format"])
 		err       error
 	)
 
@@ -207,11 +207,11 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 	}
 
 	if len(secret.Data["token"]) == 0 {
-		length, err := convert.ToNumber(secretRef.Params["length"])
+		length, err := convert.ToNumber(secretRef.Params.GetData()["length"])
 		if err != nil {
 			return nil, err
 		}
-		characters := convert.ToString(secretRef.Params["characters"])
+		characters := convert.ToString(secretRef.Params.GetData()["characters"])
 		v, err := generate(characters, int(length))
 		if err != nil {
 			return nil, err

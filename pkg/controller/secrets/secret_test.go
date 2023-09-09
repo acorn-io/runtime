@@ -185,16 +185,16 @@ func TestTemplateToken_Gen(t *testing.T) {
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
 					"pass": {Type: "token",
-						Params: map[string]any{
+						Params: v1.NewGenericMap(map[string]any{
 							"characters": "abc",
 							"length":     int64(5),
-						},
+						}),
 					},
 					"pass2": {Type: "token",
-						Params: map[string]any{
+						Params: v1.NewGenericMap(map[string]any{
 							"characters": "xyz",
 							"length":     int64(6),
-						},
+						}),
 					},
 					"template": {
 						Type: "template",
