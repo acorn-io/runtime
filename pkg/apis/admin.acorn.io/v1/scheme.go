@@ -27,7 +27,12 @@ func AddToSchemeWithGV(scheme *runtime.Scheme, schemeGroupVersion schema.GroupVe
 		&ClusterComputeClass{},
 		&ClusterComputeClassList{},
 		&ProjectComputeClass{},
-		&ProjectComputeClassList{})
+		&ProjectComputeClassList{},
+		&ImageRoleAuthorization{},
+		&ImageRoleAuthorizationList{},
+		&ClusterImageRoleAuthorization{},
+		&ClusterImageRoleAuthorizationList{},
+	)
 
 	// Add common types
 	scheme.AddKnownTypes(schemeGroupVersion, &metav1.Status{})

@@ -14,6 +14,13 @@ func (in *ClusterImageRoleAuthorization) NamespaceScoped() bool {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type ClusterImageRoleAuthorizationList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ClusterImageRoleAuthorization `json:"items"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 type ImageRoleAuthorization adminv1.ImageRoleAuthorizationInstance
 
