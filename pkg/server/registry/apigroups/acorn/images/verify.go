@@ -78,10 +78,22 @@ func (t *ImageVerifyStrategy) ImageVerify(ctx context.Context, namespace string,
 		return err
 	}
 
-	targetName := imageDetails.Name
+	ref, err = images.GetImageReference(ctx, t.client, namespace, imageDetails.AppImage.ID)
+	if err != nil {
+		return err
+	}
 
 	if imageDetails.SignatureDigest == "" {
-		return acornsign.NewVerificationFailure(&acornsign.ErrNoSignaturesFound{Err: fmt.Errorf("no signatures found for image %s", targetName)})
+		return acornsign.NewVerificationFailure(&acornsign.ErrNoSignaturesFound{Err: fmt.Errorf("no signatures found for image %s", signature.Name)})
+	}
+
+	if !signature.NoVerifyName {
+		if signature.Annotations.Match == nil {
+			signature.Annotations.Match = make(map[string]string, 1)
+		}
+		if _, ok := signature.Annotations.Match[acornsign.SignatureAnnotationSignedName]; !ok {
+			signature.Annotations.Match[acornsign.SignatureAnnotationSignedName] = signature.Name
+		}
 	}
 
 	verifyOpts := &acornsign.VerifyOpts{

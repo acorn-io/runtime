@@ -334,8 +334,9 @@ type ImageSignature struct {
 	Auth *RegistryAuth `json:"auth,omitempty"`
 
 	// - Verification / Deduplication
-	PublicKey   string                  `json:"publicKeys,omitempty"` // either reference or PEM encoded key
-	Annotations v1.SignatureAnnotations `json:"annotations,omitempty"`
+	PublicKey    string                  `json:"publicKeys,omitempty"` // either reference or PEM encoded key
+	Annotations  v1.SignatureAnnotations `json:"annotations,omitempty"`
+	NoVerifyName bool                    `json:"noVerifyName,omitempty"` // do not verify the image name in the signature
 
 	// - Signing
 	Payload      []byte `json:"payload,omitempty"`

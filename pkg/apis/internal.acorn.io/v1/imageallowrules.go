@@ -4,7 +4,6 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 type SignedBy struct {
@@ -15,15 +14,6 @@ type SignedBy struct {
 type SignatureAnnotations struct {
 	Match       map[string]string                 `json:"match,omitempty"`
 	Expressions []metav1.LabelSelectorRequirement `json:"expressions,omitempty"`
-}
-
-func (r *SignatureAnnotations) AsSelector() (labels.Selector, error) {
-	labelselector := &metav1.LabelSelector{
-		MatchLabels:      r.Match,
-		MatchExpressions: r.Expressions,
-	}
-
-	return metav1.LabelSelectorAsSelector(labelselector)
 }
 
 type SignatureRules struct {

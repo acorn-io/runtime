@@ -370,9 +370,10 @@ type ImageSignOptions struct {
 }
 
 type ImageVerifyOptions struct {
-	PublicKey   string              `json:"publicKeys,omitempty"`
-	Annotations map[string]string   `json:"annotations,omitempty"`
-	Auth        *apiv1.RegistryAuth `json:"auth,omitempty"`
+	PublicKey    string              `json:"publicKeys,omitempty"`
+	Annotations  map[string]string   `json:"annotations,omitempty"`
+	Auth         *apiv1.RegistryAuth `json:"auth,omitempty"`
+	NoVerifyName bool                `json:"noVerifyName,omitempty"`
 }
 
 func (o EventStreamOptions) ListOptions() *kclient.ListOptions {

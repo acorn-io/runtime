@@ -176,7 +176,7 @@ func TestImageAllowRules(t *testing.T) {
 	require.Error(t, err, "should error since image %s is not signed by the required key", tagName)
 
 	// sign image
-	nsig, err := signImage(ctx, c, targetDigest, "./testdata/cosign.key")
+	nsig, err := signImage(ctx, c, targetDigest, tagName, "./testdata/cosign.key")
 	if err != nil {
 		t.Fatal(err)
 	}

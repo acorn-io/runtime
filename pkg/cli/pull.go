@@ -19,10 +19,11 @@ func NewPull(c CommandContext) *cobra.Command {
 }
 
 type Pull struct {
-	client      ClientFactory
-	Verify      bool              `usage:"Verify the image signature BEFORE pulling and only pull on success" short:"v" local:"true" default:"false"`
-	Key         string            `usage:"Key to use for verifying" short:"k" local:"true" default:"./cosign.pub"`
-	Annotations map[string]string `usage:"Annotations to check for during verification" short:"a" local:"true" name:"annotation"`
+	client       ClientFactory
+	Verify       bool              `usage:"Verify the image signature BEFORE pulling and only pull on success" short:"v" local:"true" default:"false"`
+	Key          string            `usage:"Key to use for verifying" short:"k" local:"true" default:"./cosign.pub"`
+	Annotations  map[string]string `usage:"Annotations to check for during verification" short:"a" local:"true" name:"annotation"`
+	NoVerifyName bool              `usage:"Do not verify the image name in the signature" local:"true" default:"false"`
 }
 
 func (s *Pull) Run(cmd *cobra.Command, args []string) error {
@@ -38,9 +39,10 @@ func (s *Pull) Run(cmd *cobra.Command, args []string) error {
 
 	if s.Verify {
 		v := ImageVerify{
-			client:      s.client,
-			Key:         s.Key,
-			Annotations: s.Annotations,
+			client:       s.client,
+			Key:          s.Key,
+			Annotations:  s.Annotations,
+			NoVerifyName: s.NoVerifyName,
 		}
 		if err := v.Run(cmd, args); err != nil {
 			return fmt.Errorf("NOT pulling image due to verification issue: %w", err)

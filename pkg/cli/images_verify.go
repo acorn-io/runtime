@@ -9,6 +9,7 @@ import (
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -35,9 +36,10 @@ acorn image verify my-image --key acorn://ibuildthecloud
 }
 
 type ImageVerify struct {
-	client      ClientFactory
-	Key         string            `usage:"Key to use for verifying" short:"k" local:"true"`
-	Annotations map[string]string `usage:"Annotations to check for in the signature" short:"a" local:"true" name:"annotation"`
+	client       ClientFactory
+	Key          string            `usage:"Key to use for verifying" short:"k" local:"true"`
+	Annotations  map[string]string `usage:"Annotations to check for in the signature" short:"a" local:"true" name:"annotation"`
+	NoVerifyName bool              `usage:"Do not verify the image name in the signature" local:"true" default:"false"`
 }
 
 func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
@@ -69,10 +71,13 @@ func (a *ImageVerify) Run(cmd *cobra.Command, args []string) error {
 
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
+	logrus.Debugf("Verifying Image %s (digest: %s) using key %s and annotations: %#v\n", imageName, targetDigest, a.Key, a.Annotations)
+
 	vOpts := &client.ImageVerifyOptions{
-		Annotations: a.Annotations,
-		PublicKey:   a.Key,
-		Auth:        auth,
+		Annotations:  a.Annotations,
+		PublicKey:    a.Key,
+		Auth:         auth,
+		NoVerifyName: a.NoVerifyName,
 	}
 
 	// load public key from file (if it is a file, not a remote reference)
