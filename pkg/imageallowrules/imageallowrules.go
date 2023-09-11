@@ -37,13 +37,10 @@ func (e *ErrImageNotAllowed) Is(target error) bool {
 
 // CheckImageAllowed checks if the image is allowed by the ImageAllowRules on cluster and project level
 func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, opts ...remote.Option) error {
-	cfg, err := config.Get(ctx, c)
-	if err != nil {
-		return err
-	}
-
 	// IAR not enabled? Allow all images.
-	if cfg.Features == nil || !cfg.Features[profiles.FeatureImageAllowRules] {
+	if enabled, err := config.GetFeature(ctx, c, profiles.FeatureImageAllowRules); err != nil {
+		return err
+	} else if !enabled {
 		return nil
 	}
 
@@ -53,7 +50,7 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, imageNam
 		return fmt.Errorf("failed to list ImageAllowRules: %w", err)
 	}
 
-	opts, err = images.GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
+	opts, err := images.GetAuthenticationRemoteOptions(ctx, c, namespace, opts...)
 	if err != nil {
 		return err
 	}
