@@ -4778,6 +4778,12 @@ func schema_pkg_apis_apiacornio_v1_NestedImage(ref common.ReferenceCallback) com
 							Format: "",
 						},
 					},
+					"imageName": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"digest": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -7247,6 +7253,19 @@ func schema_pkg_apis_internalacornio_v1_AppStatusStaged(ref common.ReferenceCall
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
 							Format: "int64",
+						},
+					},
+					"imagePermissionsDenied": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
 						},
 					},
 				},

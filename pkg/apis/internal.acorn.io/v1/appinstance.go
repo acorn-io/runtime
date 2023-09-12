@@ -218,6 +218,7 @@ type AppStatusStaged struct {
 	PermissionsChecked            bool          `json:"permissionsChecked,omitempty"`
 	PermissionsMissing            []Permissions `json:"permissionsMissing,omitempty"`
 	PermissionsObservedGeneration int64         `json:"permissionsObservedGeneration,omitempty"`
+	ImagePermissionsDenied        []Permissions `json:"imagePermissionsDenied,omitempty"`
 }
 
 type Defaults struct {

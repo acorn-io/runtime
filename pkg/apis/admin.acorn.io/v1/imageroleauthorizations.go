@@ -1,13 +1,13 @@
 package v1
 
 import (
-	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ClusterImageRoleAuthorization adminv1.ClusterImageRoleAuthorizationInstance
+type ClusterImageRoleAuthorization internaladminv1.ClusterImageRoleAuthorizationInstance
 
 func (in *ClusterImageRoleAuthorization) NamespaceScoped() bool {
 	return false
@@ -22,7 +22,7 @@ type ClusterImageRoleAuthorizationList struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type ImageRoleAuthorization adminv1.ImageRoleAuthorizationInstance
+type ImageRoleAuthorization internaladminv1.ImageRoleAuthorizationInstance
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

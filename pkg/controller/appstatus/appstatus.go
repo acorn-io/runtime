@@ -124,6 +124,10 @@ func setPermissionCondition(app *v1.AppInstance) {
 		cond.Error(fmt.Errorf("can not run new image due to missing permissions: %w", &client2.ErrRulesNeeded{
 			Permissions: app.Status.Staged.PermissionsMissing,
 		}))
+	} else if len(app.Status.Staged.ImagePermissionsDenied) > 0 {
+		cond.Error(fmt.Errorf("can not run new image due to denied permissions: %w", &client2.ErrRulesNeeded{
+			Permissions: app.Status.Staged.ImagePermissionsDenied,
+		}))
 	} else {
 		cond.Success()
 	}

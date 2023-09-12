@@ -299,6 +299,7 @@ func (i *ImageDetails) GetPermissions() (result []v1.Permissions) {
 
 type NestedImage struct {
 	Name            string           `json:"name,omitempty"`
+	ImageName       string           `json:"imageName,omitempty"`
 	Digest          string           `json:"digest,omitempty"`
 	Permissions     []v1.Permissions `json:"permissions,omitempty"`
 	SignatureDigest string           `json:"signatureDigest,omitempty"`

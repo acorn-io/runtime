@@ -29,7 +29,7 @@ func NewClusterStorage(c client.WithWatch) rest.Storage {
 	remoteResource := translation.NewSimpleTranslationStrategy(&ClusterTranslator{},
 		remote.NewRemote(&internaladminv1.ClusterImageRoleAuthorizationInstance{}, c))
 
-	validator := &Validator{}
+	validator := &ClusterValidator{}
 
 	return stores.NewBuilder(c.Scheme(), &adminv1.ClusterImageRoleAuthorization{}).
 		WithValidateCreate(validator).
