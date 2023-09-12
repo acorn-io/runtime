@@ -21,13 +21,14 @@ const (
 )
 
 var (
-	RegistryName                   = "registry"
-	RegistryPVCSize                = "10Gi"
-	RegistryPort                   = 5000
-	BuildKitName                   = "buildkitd"
-	ControllerName                 = "acorn-controller"
-	APIServerName                  = "acorn-api"
-	BuildkitPort             int32 = 8080
-	ContainerdConfigPathName       = "containerd-config-path"
-	DefaultManagerAddress          = "beta.acorn.io"
+	RegistryName                     = "registry"
+	RegistryPVCSize                  = "10Gi"
+	RegistryPort                     = 5000
+	RegistryServiceAccountName       = "acorn-image-system"
+	BuildKitName                     = "buildkitd"
+	ControllerName                   = "acorn-controller"
+	APIServerName                    = "acorn-api"
+	BuildkitPort               int32 = 8080
+	ContainerdConfigPathName         = "containerd-config-path"
+	DefaultManagerAddress            = "beta.acorn.io"
 )
