@@ -38,6 +38,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"files":{"content-test":{"content":"YmFzZQ==","mode":"0644","secret":{}},"content-test-mode":{"content":"YmFzZS1tb2Rl","mode":"0123","secret":{}},"secret-test":{"mode":"644","secret":{"key":"key-name","name":"ref"}}},"image":"image-name","metrics":{},"probes":null,"sidecars":{"sidecar":{"files":{"sidecar-content-test":{"content":"c2lkZWNhcg==","mode":"0644","secret":{}},"sidecar-content-test-mode":{"content":"c2lkZWNhci1tb2Rl","mode":"0123","secret":{}}},"image":"image-name","metrics":{},"probes":null}}}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

@@ -40,6 +40,7 @@ spec:
         acorn.io/container-spec: '{"environment":[{"name":"foo","secret":{},"value":"prefix
           @{secret.sec-1.key1} after"},{"name":"foo-not-interpolated","secret":{},"value":"prefix
           @{other.sec-1.key1} after"}],"files":{"content-test":{"content":"cHJlZml4IEB7c2VjcmV0cy5zZWMtMS5rZXkxfSBzdWZmaXggQHtzZWNyZXRzLnNlYy0xLmtleTJ9","mode":"0644","secret":{}}},"image":"image-name","metrics":{},"probes":null}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

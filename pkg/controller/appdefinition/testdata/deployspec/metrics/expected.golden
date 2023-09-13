@@ -38,6 +38,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"foo","metrics":{"path":"/","port":80},"ports":[{"protocol":"http","targetPort":80}],"probes":null}'
+        karpenter.sh/do-not-evict: "true"
         prometheus.io/path: /
         prometheus.io/port: "80"
         prometheus.io/scrape: "true"

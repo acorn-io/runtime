@@ -39,6 +39,7 @@ spec:
       annotations:
         acorn.io/container-spec: '{"build":{"baseImage":"image-name","context":".","contextDirs":{"/var/tmp":"./foo"},"dockerfile":"Dockerfile"},"dirs":{"/var/tmp":{"contextDir":"./foo","secret":{}}},"image":"image-name","metrics":{},"probes":null}'
         acorn.io/image-mapping: '{"image-name":"image-name"}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

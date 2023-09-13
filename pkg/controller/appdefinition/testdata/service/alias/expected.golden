@@ -50,6 +50,7 @@ spec:
         acorn.io/container-spec: '{"annotations":{"both":"con1val","con1":"value"},"image":"foo","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"http","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         both: con1val
         con1: value
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -167,6 +168,7 @@ spec:
         acorn.io/container-spec: '{"annotations":{"both":"con2val","con2":"value"},"image":"foo","metrics":{},"ports":[{"port":80,"protocol":"http","publish":true,"targetPort":81},{"port":80,"protocol":"tcp","targetPort":81},{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}'
         both: con2val
         con2: value
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -272,6 +274,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"foo","metrics":{},"ports":[{"port":100,"protocol":"udp","publish":true,"targetPort":101},{"port":100,"protocol":"udp","targetPort":101}],"probes":null}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

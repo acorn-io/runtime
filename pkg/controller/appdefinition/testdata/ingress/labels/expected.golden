@@ -65,6 +65,7 @@ spec:
         cona3: value
         globala1: value
         globala2: value
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

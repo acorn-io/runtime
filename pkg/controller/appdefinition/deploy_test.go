@@ -76,6 +76,10 @@ func TestProbe(t *testing.T) {
 	tester.DefaultTest(t, scheme.Scheme, "testdata/probes", DeploySpec)
 }
 
+func TestKarpenterAnnotation(t *testing.T) {
+	tester.DefaultTest(t, scheme.Scheme, "testdata/deployspec/karpenter", DeploySpec)
+}
+
 func ToDeploymentsTest(t *testing.T, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []kclient.Object) {
 	t.Helper()
 

@@ -66,6 +66,7 @@ spec:
         container-scoped-ann: test-container
         containerAnn: test-container-ann
         global-scoped-ann: test-global
+        karpenter.sh/do-not-evict: "true"
         named-scoped-ann: test-named
       creationTimestamp: null
       labels:
