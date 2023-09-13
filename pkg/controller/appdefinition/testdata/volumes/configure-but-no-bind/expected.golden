@@ -40,6 +40,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"dirs":{"/var/tmp":{"secret":{},"volume":"foo"}},"image":"image-name","metrics":{},"probes":null}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

@@ -67,6 +67,7 @@ spec:
         allowed-container.io: test-allowed-container-ann
         allowed-global.io: test-global
         allowed.io: test-allowed-app-spec-ann
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name

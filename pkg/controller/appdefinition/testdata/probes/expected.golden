@@ -38,6 +38,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":[]}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
@@ -131,6 +132,7 @@ spec:
     metadata:
       annotations:
         acorn.io/container-spec: '{"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"probes":[{"http":{"headers":{"foo":"bar"},"url":"http://localhost/foo/bar"},"type":"readiness"},{"tcp":{"url":"garbage://1.1.1.1:1234/foo/bar"},"type":"startup"},{"exec":{"command":["/bin/true"]},"type":"liveness"}]}}}'
+        karpenter.sh/do-not-evict: "true"
       creationTimestamp: null
       labels:
         acorn.io/app-name: app-name
