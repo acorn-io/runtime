@@ -232,7 +232,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	var (
-		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, nil, s.AutoUpgrade != nil && *s.AutoUpgrade)
+		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, nil, z.Dereference(s.AutoUpgrade))
 		app         *apiv1.App
 		updated     bool
 	)
@@ -242,9 +242,9 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	// If auto-upgrade is not set, set it to the implied value.
-	if !z.Dereference(opts.AutoUpgrade) {
-		opts.AutoUpgrade = z.Pointer(autoupgrade.Implied(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)))
+	// If auto-upgrade is not set, set it to true if auto-upgrade is implied
+	if !z.Dereference(opts.AutoUpgrade) && autoupgrade.Implied(imageSource.Image, s.Interval, z.Dereference(opts.NotifyUpgrade)) {
+		opts.AutoUpgrade = z.Pointer(true)
 	}
 
 	// Force install prompt if needed
