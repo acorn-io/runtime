@@ -17,6 +17,12 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		return append(result, field.Required(field.NewPath("imageSelector", "namePatterns"), "the image selector patterns must be defined to specify which images this rule applies to"))
 	}
 	result = append(result, validateSignatureRules(aiar.ImageSelector.Signatures)...)
+	for _, scope := range aiar.Roles.Scopes {
+		if scope == "cluster" {
+			result = append(result, field.Invalid(field.NewPath("roles", "scopes"), scope, "cannot authorize cluster-scoped in ImageRoleAuthorizations - use ClusterImageRoleAuthorizations instead"))
+		}
+		// TODO(@iwilltry42): do we want to validate possible values here?
+	}
 	return
 }
 

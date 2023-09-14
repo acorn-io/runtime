@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
 	nameselector "github.com/acorn-io/runtime/pkg/imageselector/name"
 	signatureselector "github.com/acorn-io/runtime/pkg/imageselector/signatures"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -24,7 +24,7 @@ func (e *ImageSelectorNoMatchError) Error() string {
 	return fmt.Sprintf("image [%s] does not match selector field [%s]: %v", e.ImageName, e.Field, e.Err)
 }
 
-func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, selector internalv1.ImageSelector, verifyOpts acornsign.VerifyOpts) error {
+func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, selector internalv1.ImageSelector, opts ...remote.Option) error {
 	imageNameRef, err := images.GetImageReference(ctx, c, namespace, imageName)
 	if err != nil {
 		return fmt.Errorf("error parsing image reference %s: %w", imageName, err)
@@ -55,15 +55,15 @@ func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, reso
 		}
 	}
 
-	// Check if the image is in scope of the ImageAllowRule
+	// > NamePatterns
 	if !nameselector.ImageCovered(imageNameRef, digest, selector.NamePatterns) && (resolvedNameRef != nil && !nameselector.ImageCovered(resolvedNameRef, digest, selector.NamePatterns)) { // could be the same check twice here or the latter could be the resolvedNameRef
 		return &ImageSelectorNoMatchError{ImageName: imageName, Field: "namePatterns", Err: fmt.Errorf("Neither image [%s] nor resolved name [%s] match name patterns: %v", imageName, resolvedName, selector.NamePatterns)}
 	}
 
 	// > Signatures
-	// Any verification error or failed verification issue will skip on to the next IAR
+	// Any verification error or failed verification issue will error out
 	for _, rule := range selector.Signatures {
-		if err := signatureselector.VerifySignatureRule(ctx, c, namespace, signatureSourceRef.String(), rule, verifyOpts); err != nil {
+		if err := signatureselector.VerifySignatureRule(ctx, c, namespace, signatureSourceRef.String(), rule, opts...); err != nil {
 			return &ImageSelectorNoMatchError{ImageName: imageName, Field: "signatures", Err: err}
 		}
 	}

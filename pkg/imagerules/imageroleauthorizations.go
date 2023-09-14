@@ -2,20 +2,20 @@ package imagerules
 
 import (
 	"context"
+	"errors"
 
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
-	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/images"
+	"github.com/acorn-io/runtime/pkg/imageselector"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/sirupsen/logrus"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func GetAuthorizedRoles(ctx context.Context, c client.Reader, namespace, imageName, digest string) ([]v1.Permissions, error) {
-	var authorizedPermissions []v1.Permissions
-
+func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, imageName, digest string) ([]v1.Permissions, error) {
 	iras := &adminv1.ImageRoleAuthorizationList{}
 	if err := c.List(ctx, iras, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, err
@@ -44,30 +44,43 @@ func GetAuthorizedRoles(ctx context.Context, c client.Reader, namespace, imageNa
 		return nil, err
 	}
 
-	for _, ira := range iras.Items {
-		// TODO: We should come up with a more generic variation of the function below, at last to clarify the log messages - i.e. do not misuse IARs, but rather create a generic type
-		// that works for both IARs and IRAs (and IRBs in Manager)
-		if err := CheckImageAgainstRules(ctx, c, namespace, imageName, "", digest, []internalv1.ImageAllowRuleInstance{iarFromIRA(ira)}, remoteOpts...); err != nil {
-			if _, ok := err.(*ErrImageNotAllowed); !ok {
-				return nil, err
+	authorizedRoles, err := CheckRoleAuthorizations(ctx, c, namespace, imageName, "", digest, iras.Items, remoteOpts...)
+	if err != nil {
+		if _, ok := err.(*ErrImageNotAllowed); ok {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return resolveAuthorizedRoles(ctx, c, namespace, imageName, authorizedRoles)
+}
+
+func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, iras []adminv1.ImageRoleAuthorization, opts ...remote.Option) ([]internaladminv1.RoleAuthorizations, error) {
+	// No rules? Deny all images.
+	if len(iras) == 0 {
+		return nil, &ErrImageNotAllowed{Image: imageName}
+	}
+
+	logrus.Debugf("Checking image %s (%s) against %d image role authorizations", imageName, digest, len(iras))
+	var authorized []internaladminv1.RoleAuthorizations
+
+	for _, ira := range iras {
+		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, ira.ImageSelector, opts...); err != nil {
+			if ierr := (*imageselector.ImageSelectorNoMatchError)(nil); errors.As(err, &ierr) {
+				logrus.Debugf("ImageRoleAuthorization %s/%s did not match: %v", ira.Namespace, ira.Name, err)
+			} else {
+				logrus.Errorf("Error matching ImageRoleAuthorization %s/%s: %v", ira.Namespace, ira.Name, err)
 			}
 			continue
 		}
-		perms, err := resolveRoleRefs(ctx, c, namespace, imageName, ira.Roles.RoleRefs)
-		if err != nil {
-			return nil, err
-		}
-		authorizedPermissions = append(authorizedPermissions, perms...)
+		logrus.Debugf("Image %s (%s) is allowed by ImageRoleAuthorization %s/%s", imageName, digest, ira.Namespace, ira.Name)
+		authorized = append(authorized, ira.Roles)
 	}
-
-	return authorizedPermissions, nil
-}
-
-func iarFromIRA(ira adminv1.ImageRoleAuthorization) internalv1.ImageAllowRuleInstance {
-	return internalv1.ImageAllowRuleInstance{
-		ObjectMeta:    ira.ObjectMeta,
-		ImageSelector: ira.ImageSelector,
+	if len(authorized) == 0 {
+		return authorized, &ErrImageNotAllowed{Image: imageName}
 	}
+	return authorized, nil
 }
 
 type genericRole struct {
@@ -76,7 +89,7 @@ type genericRole struct {
 	rules     []rbacv1.PolicyRule
 }
 
-func resolveRoleRefs(ctx context.Context, c client.Reader, namespace, imageName string, roleRefs []internaladminv1.RoleRef) ([]v1.Permissions, error) {
+func resolveAuthorizedRoles(ctx context.Context, c client.Reader, namespace, imageName string, authorizedRoles []internaladminv1.RoleAuthorizations) ([]v1.Permissions, error) {
 	existingRoles := make(map[string]genericRole)
 
 	var clusterRoles rbacv1.ClusterRoleList
@@ -105,38 +118,35 @@ func resolveRoleRefs(ctx context.Context, c client.Reader, namespace, imageName 
 	var perms []v1.Permissions
 	seen := make(map[string]struct{})
 
-	for _, roleRef := range roleRefs {
-		roleName := roleRef.Name
-		if roleRef.Kind == "ClusterRole" {
-			roleName = "cluster/" + roleName
-		}
-		if _, ok := seen[roleName]; ok {
-			continue
-		}
-		seen[roleName] = struct{}{}
-		if eRole, ok := existingRoles[roleName]; ok {
-			perms = append(perms, permissionsFromGenericRole(eRole, imageName))
-		} else {
-			logrus.Warnf("RoleRef references non-existent role [%s] in namespace: [%s]", roleName, namespace)
+	for _, ar := range authorizedRoles {
+		for _, roleRef := range ar.RoleRefs {
+			roleName := roleRef.Name
+			if roleRef.Kind == "ClusterRole" {
+				roleName = "cluster/" + roleName
+			}
+			if _, ok := seen[roleName]; ok {
+				continue
+			}
+			seen[roleName] = struct{}{}
+			if eRole, ok := existingRoles[roleName]; ok {
+				perms = append(perms, permissionsFromGenericRole(eRole, imageName, ar.Scopes))
+			} else {
+				logrus.Warnf("RoleRef references non-existent role [%s] in namespace: [%s]", roleName, namespace)
+			}
 		}
 	}
 	return perms, nil
 }
 
-func permissionsFromGenericRole(role genericRole, nameOverride string) v1.Permissions {
-	name := role.name
-	if nameOverride != "" {
-		name = nameOverride
-	}
+func permissionsFromGenericRole(role genericRole, nameOverride string, scopes []string) v1.Permissions {
 	perms := v1.Permissions{
-		ServiceName: name,
+		ServiceName: role.name,
 	}
-	scope := "cluster"
-	if role.namespace != "" {
-		scope = "project:" + role.namespace
+	if nameOverride != "" {
+		perms.ServiceName = nameOverride
 	}
 	for _, rule := range role.rules {
-		perms.Rules = append(perms.Rules, v1.PolicyRule{PolicyRule: rule, Scopes: []string{scope}})
+		perms.Rules = append(perms.Rules, v1.PolicyRule{PolicyRule: rule, Scopes: scopes})
 	}
 	return perms
 }

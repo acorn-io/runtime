@@ -7,7 +7,6 @@ import (
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imageselector"
 	"github.com/acorn-io/runtime/pkg/profiles"
@@ -23,7 +22,7 @@ type ErrImageNotAllowed struct {
 const ErrImageNotAllowedIdentifier = "not allowed by any ImageAllowRule"
 
 func (e *ErrImageNotAllowed) Error() string {
-	return fmt.Sprintf("image <%s> is %s in this project", e.Image, ErrImageNotAllowedIdentifier)
+	return fmt.Sprintf("image [%s] is %s in this project", e.Image, ErrImageNotAllowedIdentifier)
 }
 
 func (e *ErrImageNotAllowed) Is(target error) bool {
@@ -55,9 +54,7 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, imageNam
 }
 
 // CheckImageAgainstRules checks if the image is allowed by the given ImageAllowRules
-// If no rules are given, the image is
-// - DENIED if strict mode (deny-by-default) is enabled
-// - ALLOWED if strict mode is disabled (the default)
+// If no rules are given, the image is denied.
 // ! Only one single rule has to allow the image for this to pass !
 //
 // About image references:
@@ -74,17 +71,8 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace, ima
 
 	logrus.Debugf("Checking image %s (%s) against %d rules", imageName, digest, len(imageAllowRules))
 
-	// Check if the image is allowed
-	verifyOpts := cosign.VerifyOpts{
-		Namespace:          namespace,
-		AnnotationRules:    nil,
-		Key:                "",
-		SignatureAlgorithm: "sha256", // FIXME: make signature algorithm configurable (?)
-		RemoteOpts:         opts,
-	}
-
 	for _, imageAllowRule := range imageAllowRules {
-		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, imageAllowRule.ImageSelector, verifyOpts); err != nil {
+		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, imageAllowRule.ImageSelector, opts...); err != nil {
 			if ierr := (*imageselector.ImageSelectorNoMatchError)(nil); errors.As(err, &ierr) {
 				logrus.Debugf("ImageAllowRule %s/%s did not match: %v", imageAllowRule.Namespace, imageAllowRule.Name, err)
 			} else {

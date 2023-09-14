@@ -74,7 +74,7 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 	if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations); err != nil {
 		return err
 	} else if enabled {
-		parentRoles, err := imagerules.GetAuthorizedRoles(req.Ctx, req.Client, app.Namespace, appImage.Name, appImage.Digest)
+		parentRoles, err := imagerules.GetAuthorizedPermissions(req.Ctx, req.Client, app.Namespace, appImage.Name, appImage.Digest)
 		if err != nil {
 			return err
 		}
@@ -98,7 +98,7 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 			// If the parent image is parentAuthorized for all permissions, we spare checking the nested image, which saves some external requests.
 			parentDenied, parentAuthorized := v1.GrantsAll(app.Namespace, copyWithName(img.Permissions, img.ImageName), copyWithName(parentRoles, img.ImageName))
 			if !parentAuthorized {
-				nestedRoles, err := imagerules.GetAuthorizedRoles(req.Ctx, req.Client, app.Namespace, img.ImageName, img.Digest)
+				nestedRoles, err := imagerules.GetAuthorizedPermissions(req.Ctx, req.Client, app.Namespace, img.ImageName, img.Digest)
 				if err != nil {
 					return err
 				}

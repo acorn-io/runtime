@@ -7,12 +7,23 @@ import (
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/imageselector/signatures/annotations"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rancher/wrangler/pkg/merr"
 	"github.com/sigstore/cosign/v2/pkg/cosign"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string, image string, rule internalv1.SignatureRules, verifyOpts acornsign.VerifyOpts) error {
+func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string, image string, rule internalv1.SignatureRules, opts ...remote.Option) error {
+	// TODO(@iwilltry42): Move this out of here again or only leave default here and merge incoming?
+	// ... alternatively, re-do the function signature to avoid unnecessary external calls in EnsureReferences
+	verifyOpts := acornsign.VerifyOpts{
+		Namespace:          namespace,
+		AnnotationRules:    nil,
+		Key:                "",
+		SignatureAlgorithm: "sha256",
+		RemoteOpts:         opts,
+	}
+
 	if err := acornsign.EnsureReferences(ctx, c, image, namespace, &verifyOpts); err != nil {
 		return fmt.Errorf(".signatures: %w", err)
 	}
@@ -34,7 +45,7 @@ func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string,
 				if _, ok := err.(*cosign.VerificationError); !ok {
 					return fmt.Errorf(".signatures.allOf.%d: %w", allOfRuleIndex, err)
 				}
-				return err // failed or errored in allOf, try next IAR
+				return err // failed or errored in allOf -> noping out
 			}
 		}
 	}
