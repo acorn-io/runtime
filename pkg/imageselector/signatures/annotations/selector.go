@@ -1,11 +1,11 @@
-package selector
+package annotations
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -17,11 +17,13 @@ import (
 
 // UTIL
 
+var DefaultAnnotationOpts = LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{IgnoreInvalidFieldErrors(LabelValueMaxLengthErrMsg, LabelValueRegexpErrMsg)}}
+
 type LabelSelectorOpts struct {
 	LabelRequirementErrorFilters []utilerrors.Matcher
 }
 
-func GenerateSelector(r v1.SignatureAnnotations, opts LabelSelectorOpts) (labels.Selector, error) {
+func GenerateSelector(r internalv1.SignatureAnnotations, opts LabelSelectorOpts) (labels.Selector, error) {
 	labelselector := &metav1.LabelSelector{
 		MatchLabels:      r.Match,
 		MatchExpressions: r.Expressions,

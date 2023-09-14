@@ -8,7 +8,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/condition"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	imagerules "github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/sirupsen/logrus"
@@ -38,8 +38,8 @@ func CheckImageAllowedHandler(transport http.RoundTripper) router.HandlerFunc {
 		targetImage := strings.TrimSuffix(ref.Name(), ":")
 		targetImageDigest := appInstance.Status.AppImage.Digest
 
-		if err := imageallowrules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, appInstance.Status.AppImage.ID, targetImageDigest, remote.WithTransport(transport)); err != nil {
-			if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {
+		if err := imagerules.CheckImageAllowed(req.Ctx, req.Client, appInstance.Namespace, targetImage, appInstance.Status.AppImage.ID, targetImageDigest, remote.WithTransport(transport)); err != nil {
+			if _, ok := err.(*imagerules.ErrImageNotAllowed); ok {
 				cond.Error(err)
 				return nil
 			} else {

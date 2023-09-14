@@ -13,7 +13,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/run"
@@ -249,8 +249,8 @@ func TranslateNotAllowed(err error) error {
 	if err == nil {
 		return err
 	}
-	if strings.Contains(err.Error(), imageallowrules.ErrImageNotAllowedIdentifier) {
-		return &imageallowrules.ErrImageNotAllowed{} // we could actually extract the full error (including) image here, but that's probably not required
+	if strings.Contains(err.Error(), imagerules.ErrImageNotAllowedIdentifier) {
+		return &imagerules.ErrImageNotAllowed{} // we could actually extract the full error (including) image here, but that's probably not required
 	}
 
 	return err

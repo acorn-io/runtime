@@ -10,7 +10,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -74,7 +74,7 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 	if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations); err != nil {
 		return err
 	} else if enabled {
-		parentRoles, err := imageallowrules.GetAuthorizedRoles(req.Ctx, req.Client, app.Namespace, appImage.Name, appImage.Digest)
+		parentRoles, err := imagerules.GetAuthorizedRoles(req.Ctx, req.Client, app.Namespace, appImage.Name, appImage.Digest)
 		if err != nil {
 			return err
 		}
@@ -90,19 +90,19 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 			return nperms
 		}
 
-		denied, _ := imageallowrules.Authorized(appImage.Name, app.Namespace, copyWithName(details.Permissions, appImage.Name), parentRoles)
+		denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, appImage.Name), parentRoles)
 
 		for _, img := range details.NestedImages {
 			// For nested image permissions, we first check if the parent image is parentAuthorized.
 			// For all the permissions that the parent image does not have, we check if the nested image is parentAuthorized.
 			// If the parent image is parentAuthorized for all permissions, we spare checking the nested image, which saves some external requests.
-			parentDenied, parentAuthorized := imageallowrules.Authorized(img.ImageName, app.Namespace, copyWithName(img.Permissions, img.ImageName), parentRoles)
+			parentDenied, parentAuthorized := v1.GrantsAll(app.Namespace, copyWithName(img.Permissions, img.ImageName), copyWithName(parentRoles, img.ImageName))
 			if !parentAuthorized {
-				nestedRoles, err := imageallowrules.GetAuthorizedRoles(req.Ctx, req.Client, app.Namespace, img.ImageName, img.Digest)
+				nestedRoles, err := imagerules.GetAuthorizedRoles(req.Ctx, req.Client, app.Namespace, img.ImageName, img.Digest)
 				if err != nil {
 					return err
 				}
-				nestedDenied, authorized := imageallowrules.Authorized(img.ImageName, app.Namespace, copyWithName(parentDenied, img.ImageName), nestedRoles)
+				nestedDenied, authorized := v1.GrantsAll(app.Namespace, copyWithName(parentDenied, img.ImageName), nestedRoles)
 				if !authorized {
 					denied = append(denied, nestedDenied...)
 				}

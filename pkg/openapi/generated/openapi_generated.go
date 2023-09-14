@@ -157,13 +157,13 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Image":                                           schema_pkg_apis_internalacornio_v1_Image(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance":                          schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstanceList":                      schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures":                        schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageBuilderSpec":                                schema_pkg_apis_internalacornio_v1_ImageBuilderSpec(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData":                                       schema_pkg_apis_internalacornio_v1_ImageData(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstance":                                   schema_pkg_apis_internalacornio_v1_ImageInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstanceList":                               schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCache":                              schema_pkg_apis_internalacornio_v1_ImageMetadataCache(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCacheList":                          schema_pkg_apis_internalacornio_v1_ImageMetadataCacheList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector":                                   schema_pkg_apis_internalacornio_v1_ImageSelector(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImagesData":                                      schema_pkg_apis_internalacornio_v1_ImagesData(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus":                                       schema_pkg_apis_internalacornio_v1_JobStatus(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef":                                      schema_pkg_apis_internalacornio_v1_MetricsDef(ref),
@@ -238,6 +238,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceSpec":                  schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceSpec(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestInstanceStatus":                schema_pkg_apis_internaladminacornio_v1_QuotaRequestInstanceStatus(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.QuotaRequestResources":                     schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations":                        schema_pkg_apis_internaladminacornio_v1_RoleAuthorizations(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef":                                   schema_pkg_apis_internaladminacornio_v1_RoleRef(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.VolumeClassSize":                           schema_pkg_apis_internaladminacornio_v1_VolumeClassSize(ref),
 		"k8s.io/api/core/v1.AWSElasticBlockStoreVolumeSource":                                                       schema_k8sio_api_core_v1_AWSElasticBlockStoreVolumeSource(ref),
@@ -697,45 +698,23 @@ func schema_pkg_apis_adminacornio_v1_ClusterImageRoleAuthorization(ref common.Re
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"images": {
+					"imageSelector": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
 						},
 					},
-					"signatures": {
+					"roles": {
 						SchemaProps: spec.SchemaProps{
-							Description: "list of patterns to match against image names",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
-						},
-					},
-					"roleRefs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef"),
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -956,45 +935,23 @@ func schema_pkg_apis_adminacornio_v1_ImageRoleAuthorization(ref common.Reference
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"images": {
+					"imageSelector": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
 						},
 					},
-					"signatures": {
+					"roles": {
 						SchemaProps: spec.SchemaProps{
-							Description: "list of patterns to match against image names",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
-						},
-					},
-					"roleRefs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef"),
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -3823,32 +3780,17 @@ func schema_pkg_apis_apiacornio_v1_ImageAllowRule(ref common.ReferenceCallback) 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"images": {
+					"imageSelector": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"signatures": {
-						SchemaProps: spec.SchemaProps{
-							Description: "list of patterns to match against image names",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -9166,32 +9108,17 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstance(ref common.Refere
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"images": {
+					"imageSelector": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
-						},
-					},
-					"signatures": {
-						SchemaProps: spec.SchemaProps{
-							Description: "list of patterns to match against image names",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -9240,33 +9167,6 @@ func schema_pkg_apis_internalacornio_v1_ImageAllowRuleInstanceList(ref common.Re
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_ImageAllowRuleSignatures(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"rules": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules"},
 	}
 }
 
@@ -9518,6 +9418,47 @@ func schema_pkg_apis_internalacornio_v1_ImageMetadataCacheList(ref common.Refere
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCache", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_internalacornio_v1_ImageSelector(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"namePatterns": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"signatures": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SignatureRules"},
 	}
 }
 
@@ -13060,45 +13001,23 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterImageRoleAuthorizationInstan
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"images": {
+					"imageSelector": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
 						},
 					},
-					"signatures": {
+					"roles": {
 						SchemaProps: spec.SchemaProps{
-							Description: "list of patterns to match against image names",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
-						},
-					},
-					"roleRefs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef"),
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -13363,45 +13282,23 @@ func schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstance(ref 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"images": {
+					"imageSelector": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
 						},
 					},
-					"signatures": {
+					"roles": {
 						SchemaProps: spec.SchemaProps{
-							Description: "list of patterns to match against image names",
-							Default:     map[string]interface{}{},
-							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures"),
-						},
-					},
-					"roleRefs": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef"),
-									},
-								},
-							},
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageAllowRuleSignatures", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -13975,13 +13872,60 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.Re
 	}
 }
 
+func schema_pkg_apis_internaladminacornio_v1_RoleAuthorizations(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"scopes": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"roleRefs": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleRef"},
+	}
+}
+
 func schema_pkg_apis_internaladminacornio_v1_RoleRef(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"role": {
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

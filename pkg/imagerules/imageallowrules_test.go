@@ -1,8 +1,9 @@
-package imageallowrules
+package imagerules
 
 import (
 	"testing"
 
+	nameselector "github.com/acorn-io/runtime/pkg/imageselector/name"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/assert"
 )
@@ -89,7 +90,7 @@ func TestImageCovered(t *testing.T) {
 				t.Fatalf("failed to parse image %s: %v", tc.image, err)
 			}
 
-			match := ImageCovered(ref, "", []string{tc.pattern})
+			match := nameselector.ImageCovered(ref, "", []string{tc.pattern})
 
 			assert.Equal(t, tc.shouldMatch, match)
 		})

@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/cli/builder/table"
 	"github.com/acorn-io/runtime/pkg/client"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
-	iarutil "github.com/acorn-io/runtime/pkg/imageallowrules/util"
+	"github.com/acorn-io/runtime/pkg/imagerules"
+	iarutil "github.com/acorn-io/runtime/pkg/imagerules/util"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/prompt"
 	"github.com/acorn-io/runtime/pkg/run"
@@ -22,7 +23,7 @@ import (
 // handleNotAllowedError handles the case where an image is not allowed by IARs and prompts the user to create a basic one (image pattern only, no signatures, etc.)
 // @param opts can be either *client.AppRunOptions or *client.AppUpdateOptions and based on that we'll call either AppRun or AppUpdate in the end
 func handleNotAllowedError(ctx context.Context, c client.Client, dangerous bool, image string, inErr error, app *apiv1.App, opts any) (*apiv1.App, error) {
-	inErr.(*imageallowrules.ErrImageNotAllowed).Image = image
+	inErr.(*imagerules.ErrImageNotAllowed).Image = image
 
 	// We're checking for images first, since we could run existing images by ID
 	var il []apiv1.Image
@@ -79,7 +80,7 @@ func PromptRun(ctx context.Context, c client.Client, dangerous bool, image strin
 	}
 
 	// ImageAllowRules are enabled and this image is not allowed
-	if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
+	if naErr := (*imagerules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 		app, err = handleNotAllowedError(ctx, c, dangerous, image, err, app, &opts)
 	}
 	return app, err
@@ -97,7 +98,7 @@ func PromptUpdate(ctx context.Context, c client.Client, dangerous bool, name str
 	}
 
 	// ImageAllowRules are enabled and this image is not allowed
-	if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
+	if naErr := (*imagerules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 		image := opts.Image
 		if image == "" {
 			image = app.Spec.Image
@@ -191,7 +192,7 @@ func CreateImageAllowRule(ctx context.Context, c client.Client, image, choice st
 
 	for _, extra := range extraExactMatches {
 		if extra != image && extra != "" {
-			iar.Images = append(iar.Images, extra)
+			iar.ImageSelector.NamePatterns = append(iar.ImageSelector.NamePatterns, extra)
 		}
 	}
 
@@ -202,6 +203,6 @@ func CreateImageAllowRule(ctx context.Context, c client.Client, image, choice st
 	if err := cli.Create(ctx, iar); err != nil {
 		return fmt.Errorf("error creating ImageAllowRule: %w", err)
 	}
-	pterm.Success.Printf("Created ImageAllowRules %s/%s with image scope %s\n", iar.Namespace, iar.Name, iar.Images[0])
+	pterm.Success.Printf("Created ImageAllowRules %s/%s with image name patterns [%s]\n", iar.Namespace, iar.Name, strings.Join(iar.ImageSelector.NamePatterns, ","))
 	return nil
 }

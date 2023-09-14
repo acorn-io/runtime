@@ -330,13 +330,8 @@ func (p PolicyRule) Grants(currentNamespace string, requested PolicyRule) bool {
 
 func (p PolicyRule) IsAccountScoped() bool {
 	for _, scope := range p.Scopes {
-		if scope == "" {
-			return true
-		}
-		if scope == "cluster" {
-			return true
-		}
-		if scope == "account" {
+		switch scope {
+		case "", "cluster", "account":
 			return true
 		}
 	}
@@ -344,15 +339,7 @@ func (p PolicyRule) IsAccountScoped() bool {
 }
 
 func (p PolicyRule) IsProjectScoped() bool {
-	if len(p.Scopes) == 0 {
-		return true
-	}
-	for _, scope := range p.Scopes {
-		if scope == "project" {
-			return true
-		}
-	}
-	return false
+	return len(p.Scopes) == 0 || slices.Contains(p.Scopes, "project")
 }
 
 func (p PolicyRule) ResolveNamespaces(currentNamespace string) (result []string) {

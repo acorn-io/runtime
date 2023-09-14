@@ -7,8 +7,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type RoleAuthorizations struct {
+	Scopes   []string  `json:"scopes,omitempty"`
+	RoleRefs []RoleRef `json:"roleRefs,omitempty"`
+}
+
 type RoleRef struct {
-	RoleName string `json:"role,omitempty"`
+	Name string `json:"name,omitempty"`
+	Kind string `json:"kind,omitempty"` // ClusterRole (or Role - if not cluster-scoped)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -33,9 +39,8 @@ type ImageRoleAuthorizationInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	Images     []string                            `json:"images,omitempty"` // list of patterns to match against image names
-	Signatures internalv1.ImageAllowRuleSignatures `json:"signatures,omitempty"`
-	RoleRefs   []RoleRef                           `json:"roleRefs,omitempty"`
+	ImageSelector internalv1.ImageSelector `json:"imageSelector,omitempty"`
+	Roles         RoleAuthorizations       `json:"roles,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

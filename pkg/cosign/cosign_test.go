@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	signatureannotations "github.com/acorn-io/runtime/pkg/imageselector/signatures/annotations"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/registry"
@@ -219,7 +220,11 @@ func TestVerifySignature(t *testing.T) {
 		}
 
 		opts.Key = tc.key
-		opts.AnnotationRules = tc.annotationrules
+		sel, err := signatureannotations.GenerateSelector(tc.annotationrules, signatureannotations.LabelSelectorOpts{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		opts.AnnotationRules = sel
 
 		if err := EnsureReferences(context.Background(), nil, imgName, "acorn", &opts); err != nil {
 			t.Fatal(err)

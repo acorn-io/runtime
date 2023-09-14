@@ -13,6 +13,7 @@ import (
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
 	"github.com/acorn-io/runtime/pkg/imagedetails"
 	"github.com/acorn-io/runtime/pkg/images"
+	signatureannotations "github.com/acorn-io/runtime/pkg/imageselector/signatures/annotations"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -96,8 +97,13 @@ func (t *ImageVerifyStrategy) ImageVerify(ctx context.Context, namespace string,
 		}
 	}
 
+	sel, err := signatureannotations.GenerateSelector(signature.Annotations, signatureannotations.DefaultAnnotationOpts)
+	if err != nil {
+		return fmt.Errorf("failed to parse annotation rule: %w", err)
+	}
+
 	verifyOpts := &acornsign.VerifyOpts{
-		AnnotationRules:    signature.Annotations,
+		AnnotationRules:    sel,
 		SignatureAlgorithm: "sha256",
 		Key:                signature.PublicKey,
 		NoCache:            false,

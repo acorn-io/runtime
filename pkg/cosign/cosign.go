@@ -10,8 +10,6 @@ import (
 	"regexp"
 	"strings"
 
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/imageallowrules/selector"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -28,7 +26,6 @@ import (
 	"github.com/sigstore/sigstore/pkg/signature/payload"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/labels"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -36,7 +33,7 @@ type VerifyOpts struct {
 	ImageRef           name.Digest
 	SignatureRef       name.Reference
 	Namespace          string
-	AnnotationRules    v1.SignatureAnnotations
+	AnnotationRules    labels.Selector
 	Key                string
 	SignatureAlgorithm string
 	RemoteOpts         []remote.Option
@@ -209,7 +206,7 @@ func VerifySignature(ctx context.Context, opts VerifyOpts) error {
 		errs = append(errs, err)
 	}
 
-	err = &VerificationFailure{&ErrNoMatchingSignatures{fmt.Errorf("failed to find valid signature for %s matching given identity and %d annotation rules using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.AnnotationRules.Match)+len(opts.AnnotationRules.Expressions), len(opts.Verifiers))}}
+	err = &VerificationFailure{&ErrNoMatchingSignatures{fmt.Errorf("failed to find valid signature for %s matching given identity and annotation rules using %d loaded verifiers/keys", opts.ImageRef.String(), len(opts.Verifiers))}}
 	logrus.Debugf("%s: %v", err, errors.Join(errs...))
 	return err
 }
@@ -257,14 +254,7 @@ func DecodePEM(raw []byte, signatureAlgorithm crypto.Hash) (signature.Verifier, 
 
 var ErrAnnotationsUnmatched = cosign.NewVerificationError("annotations unmatched")
 
-func checkAnnotations(payloads []payload.SimpleContainerImage, annotationRule v1.SignatureAnnotations) error {
-	// We're using Kubernetes' label selector logic here, but we need to override the error handling
-	// since the annotations we're matching on are less restricted than Kubernetes labels
-	sel, err := selector.GenerateSelector(annotationRule, selector.LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{selector.IgnoreInvalidFieldErrors(selector.LabelValueMaxLengthErrMsg, selector.LabelValueRegexpErrMsg)}})
-	if err != nil {
-		return fmt.Errorf("failed to parse annotation rule: %w", err)
-	}
-
+func checkAnnotations(payloads []payload.SimpleContainerImage, sel labels.Selector) error {
 	if sel == nil || sel.Empty() {
 		return nil
 	}

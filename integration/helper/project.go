@@ -82,7 +82,9 @@ func createAllowAllIAR(t *testing.T, kclient client.Client, namespace string) {
 			Name:      "testing-allow-all",
 			Namespace: namespace,
 		},
-		Images: []string{"**"},
+		ImageSelector: v1.ImageSelector{
+			NamePatterns: []string{"**"},
+		},
 	})
 	if err != nil {
 		t.Fatalf("failed to create allow all image allow rule: %v", err)
