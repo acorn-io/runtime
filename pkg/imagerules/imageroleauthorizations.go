@@ -84,9 +84,8 @@ func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, im
 }
 
 type genericRole struct {
-	name      string
-	namespace string
-	rules     []rbacv1.PolicyRule
+	name  string
+	rules []rbacv1.PolicyRule
 }
 
 func resolveAuthorizedRoles(ctx context.Context, c client.Reader, namespace, imageName string, authorizedRoles []internaladminv1.RoleAuthorizations) ([]v1.Permissions, error) {
@@ -109,14 +108,12 @@ func resolveAuthorizedRoles(ctx context.Context, c client.Reader, namespace, ima
 	}
 	for _, pr := range projectroles.Items {
 		existingRoles[pr.GetName()] = genericRole{
-			name:      pr.GetName(),
-			rules:     pr.Rules,
-			namespace: namespace,
+			name:  pr.GetName(),
+			rules: pr.Rules,
 		}
 	}
 
 	var perms []v1.Permissions
-	seen := make(map[string]struct{})
 
 	for _, ar := range authorizedRoles {
 		for _, roleRef := range ar.RoleRefs {
@@ -124,12 +121,8 @@ func resolveAuthorizedRoles(ctx context.Context, c client.Reader, namespace, ima
 			if roleRef.Kind == "ClusterRole" {
 				roleName = "cluster/" + roleName
 			}
-			if _, ok := seen[roleName]; ok {
-				continue
-			}
-			seen[roleName] = struct{}{}
 			if eRole, ok := existingRoles[roleName]; ok {
-				perms = append(perms, permissionsFromGenericRole(eRole, imageName, ar.Scopes))
+				perms = append(perms, resolveGenericRole(eRole, imageName, ar.Scopes))
 			} else {
 				logrus.Warnf("RoleRef references non-existent role [%s] in namespace: [%s]", roleName, namespace)
 			}
@@ -138,7 +131,7 @@ func resolveAuthorizedRoles(ctx context.Context, c client.Reader, namespace, ima
 	return perms, nil
 }
 
-func permissionsFromGenericRole(role genericRole, nameOverride string, scopes []string) v1.Permissions {
+func resolveGenericRole(role genericRole, nameOverride string, scopes []string) v1.Permissions {
 	perms := v1.Permissions{
 		ServiceName: role.name,
 	}

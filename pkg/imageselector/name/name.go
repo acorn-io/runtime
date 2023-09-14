@@ -1,4 +1,4 @@
-package imageselector
+package name
 
 import (
 	"fmt"
