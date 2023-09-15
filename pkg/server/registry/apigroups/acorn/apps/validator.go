@@ -171,35 +171,37 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 			return
 		}
 
-		disableCheckImageAllowRules := false
-		if app.Spec.Stop != nil && *app.Spec.Stop {
-			// app was stopped, so we don't need to check image allow rules (this could prevent stopping an app if the image allow rules changed)
-			disableCheckImageAllowRules = true
-		}
-
-		if !disableCheckImageAllowRules {
+		if !z.Dereference(app.Spec.Stop) {
+			// App was stopped, so we don't need to check image allow rules or compute classes
+			// (this could prevent stopping an app if either of these have changed)
 			if err := imageallowrules.CheckImageAllowed(ctx, s.client, app.Namespace, checkImage, image, imageDetails.AppImage.Digest, remote.WithTransport(s.transport)); err != nil {
 				result = append(result, field.Forbidden(field.NewPath("spec", "image"), fmt.Sprintf("%s not allowed to run: %s", app.Spec.Image, err.Error())))
 				return
 			}
-		}
 
-		workloadsFromImage, err := s.getWorkloads(imageDetails)
-		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
-			return
-		}
+			workloadsFromImage, err := s.getWorkloads(imageDetails)
+			if err != nil {
+				result = append(result, field.Invalid(field.NewPath("spec", "image"), app.Spec.Image, err.Error()))
+				return
+			}
 
-		apiv1cfg, err := apiv1config.Get(ctx, s.client)
-		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("config"), app.Spec.Image, err.Error()))
-			return
-		}
+			var apiv1cfg *apiv1.Config
+			apiv1cfg, err = apiv1config.Get(ctx, s.client)
+			if err != nil {
+				result = append(result, field.Invalid(field.NewPath("config"), app.Spec.Image, err.Error()))
+				return
+			}
 
-		errs := s.checkScheduling(ctx, app, project, workloadsFromImage, apiv1cfg.WorkloadMemoryDefault, apiv1cfg.WorkloadMemoryMaximum)
-		if len(errs) != 0 {
-			result = append(result, errs...)
-			return
+			errs := s.checkScheduling(ctx,
+				app,
+				project,
+				workloadsFromImage,
+				apiv1cfg.WorkloadMemoryDefault,
+				apiv1cfg.WorkloadMemoryMaximum)
+			if len(errs) != 0 {
+				result = append(result, errs...)
+				return
+			}
 		}
 
 		if err := validateVolumeClasses(ctx, s.client, app.Namespace, app.Spec, imageDetails.AppSpec, project); err != nil {
@@ -561,7 +563,7 @@ func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, 
 	return s.checkSARs(ctx, sars)
 }
 
-// checkScheduling must use apiv1.ComputeCLass to validate the scheduling instead of the Instance counterparts.
+// checkScheduling must use apiv1.ComputeClass to validate the scheduling instead of the Instance counterparts.
 func (s *Validator) checkScheduling(ctx context.Context, params *apiv1.App, project *v1.ProjectInstance, workloads map[string]v1.Container, specMemDefault, specMemMaximum *int64) []*field.Error {
 	var (
 		memory        = params.Spec.Memory
