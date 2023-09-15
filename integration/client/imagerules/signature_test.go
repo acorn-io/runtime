@@ -1,4 +1,4 @@
-package signatures
+package imagerules
 
 import (
 	"crypto"
@@ -16,7 +16,7 @@ import (
 	_ "embed"
 )
 
-func TestImageSignature(t *testing.T) {
+func TestImageSignVerify(t *testing.T) {
 	helper.StartController(t)
 	registry, close := helper.StartRegistry(t)
 	defer close()

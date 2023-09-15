@@ -1,4 +1,4 @@
-package signatures
+package imagerules
 
 import (
 	"testing"
@@ -23,6 +23,7 @@ import (
 var testPubKey []byte
 
 func TestImageAllowRules(t *testing.T) {
+	// TODO(@iwilltry42): Add test for auto-upgrade pattern
 	helper.StartController(t)
 	registry, close := helper.StartRegistry(t)
 	defer close()
