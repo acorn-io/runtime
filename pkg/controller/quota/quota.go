@@ -80,10 +80,9 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
 		Spec: adminv1.QuotaRequestInstanceSpec{
 			Resources: adminv1.Resources{
-				Containers: len(app.Containers),
-				Jobs:       len(app.Jobs),
-				Volumes:    len(app.Volumes),
-				Images:     len(app.Images),
+				Jobs:    len(app.Jobs),
+				Volumes: len(app.Volumes),
+				Images:  len(app.Images),
 			},
 		},
 	}
@@ -91,6 +90,7 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuota)
 
 	// Add the more complex values to the quota request
+	addContainers(app.Containers, quotaRequest)
 	addCompute(app.Containers, appInstance, quotaRequest)
 	addCompute(app.Jobs, appInstance, quotaRequest)
 	if err := addStorage(appInstance, quotaRequest); err != nil {
@@ -100,6 +100,13 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 
 	resp.Objects(quotaRequest)
 	return nil
+}
+
+// addContainers adds the number of containers and accounts for the scale of each container.
+func addContainers(containers map[string]apiv1.Container, quotaRequest *adminv1.QuotaRequestInstance) {
+	for _, container := range containers {
+		quotaRequest.Spec.Resources.Containers += replicas(container.Scale)
+	}
 }
 
 // addCompute adds the compute resources of the containers passed to the quota request.
@@ -113,8 +120,11 @@ func addCompute(containers map[string]apiv1.Container, appInstance *apiv1.AppIns
 			requirements = all.Requirements
 		}
 
-		quotaRequest.Spec.Resources.CPU.Add(requirements.Requests["cpu"])
-		quotaRequest.Spec.Resources.Memory.Add(requirements.Requests["memory"])
+		// Add the memory/cpu requests to the quota request for each container at the scale specified
+		for i := 0; i < replicas(container.Scale); i++ {
+			quotaRequest.Spec.Resources.CPU.Add(requirements.Requests["cpu"])
+			quotaRequest.Spec.Resources.Memory.Add(requirements.Requests["memory"])
+		}
 
 		// Recurse over any sidecars. Since sidecars can't have sidecars, this is safe.
 		addCompute(container.Sidecars, appInstance, quotaRequest)
@@ -185,4 +195,13 @@ func isEnforced(req router.Request, namespace string) (bool, error) {
 		return false, err
 	}
 	return project.Annotations[labels.ProjectEnforcedQuotaAnnotation] == "true", nil
+}
+
+// replicas returns the number of replicas based on an int32 pointer. If the
+// pointer is nil, it is assumed to be 1.
+func replicas(s *int32) int {
+	if s != nil {
+		return int(*s)
+	}
+	return 1
 }

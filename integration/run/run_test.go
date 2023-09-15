@@ -1638,9 +1638,9 @@ func TestEnforcedQuota(t *testing.T) {
 		return kclient.Update(ctx, obj) == nil
 	})
 
-	// Run a simple app.
-	image, err := c.AcornImageBuild(ctx, "./testdata/simple/Acornfile", &client.AcornImageBuildOptions{
-		Cwd: "./testdata/volume",
+	// Run a scaled app.
+	image, err := c.AcornImageBuild(ctx, "./testdata/scaled/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/scaled",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1668,7 +1668,7 @@ func TestEnforcedQuota(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, quotaRequest.Spec.Resources.Containers, 1)
+	assert.Equal(t, 2, quotaRequest.Spec.Resources.Containers)
 
 	// Update the status of the QuotaRequest to communicate readiness.
 	quotaRequest.Status = adminv1.QuotaRequestInstanceStatus{
