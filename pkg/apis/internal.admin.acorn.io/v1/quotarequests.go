@@ -1,6 +1,9 @@
 package v1
 
 import (
+	"errors"
+	"fmt"
+
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -39,15 +42,15 @@ func (in *QuotaRequestInstance) GetRegion() string {
 }
 
 type QuotaRequestInstanceSpec struct {
-	Region    string    `json:"region,omitempty"`
-	Resources Resources `json:"resources,omitempty"`
+	Region    string                `json:"region,omitempty"`
+	Resources QuotaRequestResources `json:"resources,omitempty"`
 }
 
 type QuotaRequestInstanceStatus struct {
-	ObservedGeneration int64          `json:"observedGeneration,omitempty"`
-	AllocatedResources Resources      `json:"allocatedResources,omitempty"`
-	FailedResources    *Resources     `json:"failedResources,omitempty"`
-	Conditions         []v1.Condition `json:"conditions,omitempty"`
+	ObservedGeneration int64                  `json:"observedGeneration,omitempty"`
+	AllocatedResources QuotaRequestResources  `json:"allocatedResources,omitempty"`
+	FailedResources    *QuotaRequestResources `json:"failedResources,omitempty"`
+	Conditions         []v1.Condition         `json:"conditions,omitempty"`
 }
 
 func (in *QuotaRequestInstanceStatus) Condition(name string) v1.Condition {
@@ -69,4 +72,59 @@ type QuotaRequestInstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []QuotaRequestInstance `json:"items"`
+}
+
+// QuotaRequestResources defines resources that should can be created by an AppInstance.
+type QuotaRequestResources struct {
+	BaseResources `json:",inline"`
+	Secrets       int `json:"secrets,omitempty"`
+}
+
+// Add will add the QuotaRequestResources of another QuotaRequestResources struct into the current one.
+func (current *QuotaRequestResources) Add(incoming QuotaRequestResources) {
+	current.Secrets = Add(current.Secrets, incoming.Secrets)
+	current.BaseResources.Add(incoming.BaseResources)
+}
+
+// Remove will remove the QuotaRequestResources of another QuotaRequestResources struct from the current one. Calling remove
+// will be a no-op for any resource values that are set to unlimited.
+func (current *QuotaRequestResources) Remove(incoming QuotaRequestResources, all bool) {
+	if all {
+		current.Secrets = Sub(current.Secrets, incoming.Secrets)
+	}
+	current.BaseResources.Remove(incoming.BaseResources, all)
+}
+
+// Fits will check if a group QuotaRequestResources will be able to contain
+// another group of QuotaRequestResources. If the QuotaRequestResources are not able to fit,
+// an aggregated error will be returned with all exceeded QuotaRequestResources.
+// If the current QuotaRequestResources defines unlimited, then it will always fit.
+func (current *QuotaRequestResources) Fits(incoming QuotaRequestResources) error {
+	var err error
+	if !Fits(current.Secrets, incoming.Secrets) {
+		err = fmt.Errorf("%w: Secrets", ErrExceededResources)
+	}
+
+	return errors.Join(err, current.BaseResources.Fits(incoming.BaseResources))
+}
+
+// ToString will return a string representation of the QuotaRequestResources within the struct.
+func (current *QuotaRequestResources) ToString() string {
+	result := ResourcesToString(
+		map[string]int{"Secrets": current.Secrets},
+		nil,
+	)
+
+	if result != "" {
+		result += ", "
+	}
+
+	return result + current.BaseResources.ToString()
+}
+
+// Equals will check if the current QuotaRequestResources struct is equal to another. This is useful
+// to avoid needing to do a deep equal on the entire struct.
+func (current *QuotaRequestResources) Equals(incoming QuotaRequestResources) bool {
+	return current.BaseResources.Equals(incoming.BaseResources) &&
+		current.Secrets == incoming.Secrets
 }

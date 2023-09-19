@@ -53,7 +53,7 @@ func WaitForAllocation(req router.Request, resp router.Response) error {
 		4. Exists and has successfully allocated the resources requested.
 	*/
 	if quotaRequest.Status.FailedResources != nil {
-		status.Error(fmt.Errorf("failed to provision the following resources: %v", quotaRequest.Status.FailedResources.NonEmptyString()))
+		status.Error(fmt.Errorf("failed to provision the following resources: %v", quotaRequest.Status.FailedResources.ToString()))
 	} else if cond := quotaRequest.Status.Condition(adminv1.QuotaRequestCondition); cond.Error {
 		status.Error(fmt.Errorf("error occurred while trying to allocate quota: %v", cond.Message))
 	} else if err != nil || !quotaRequest.Spec.Resources.Equals(quotaRequest.Status.AllocatedResources) {
@@ -79,10 +79,12 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 	quotaRequest := &adminv1.QuotaRequestInstance{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
 		Spec: adminv1.QuotaRequestInstanceSpec{
-			Resources: adminv1.Resources{
-				Jobs:    len(app.Jobs),
-				Volumes: len(app.Volumes),
-				Images:  len(app.Images),
+			Resources: adminv1.QuotaRequestResources{
+				BaseResources: adminv1.BaseResources{
+					Jobs:    len(app.Jobs),
+					Volumes: len(app.Volumes),
+					Images:  len(app.Images),
+				},
 			},
 		},
 	}
