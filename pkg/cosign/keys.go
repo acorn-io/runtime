@@ -130,10 +130,17 @@ func (k *KeysBytes) Password() []byte {
 	return k.password
 }
 
-func ImportKeyPair(keyPath string, pass []byte) (*KeysBytes, error) {
-	pemBytes, err := os.ReadFile(filepath.Clean(keyPath))
-	if err != nil {
-		return nil, err
+func ImportKeyPair(keyRef string, pass []byte) (*KeysBytes, error) {
+	pemBytes := []byte(keyRef)
+
+	finfo, err := os.Stat(keyRef)
+	if (err != nil && !os.IsNotExist(err)) || (err == nil && finfo.IsDir()) {
+		return nil, fmt.Errorf("invalid key file")
+	} else if err == nil {
+		pemBytes, err = os.ReadFile(filepath.Clean(keyRef))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	pemBlock, _ := pem.Decode(pemBytes)

@@ -71,9 +71,9 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	targetDigest := ref.Context().Digest(details.AppImage.Digest)
 
-	pterm.Info.Printf("Signing Image %s (digest: %s) using key %s\n", imageName, targetDigest, a.Key)
+	pterm.Info.Printf("Signing Image %s (digest: %s)\n", imageName, targetDigest)
 
-	pass, err := getPrivateKeyPass(a.Key)
+	pass, err := getPrivateKeyPass()
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,21 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	// Get a sigSigner-verifier from a private key and if the key type is not supported, try to import it first
 	var sigSigner sigsig.SignerVerifier
-	sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf)
+	finfo, err := os.Stat(a.Key)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Not a file - load from raw key data
+			sigSigner, err = cosign.LoadPrivateKey([]byte(a.Key), pass)
+		} else {
+			return fmt.Errorf("failed to stat key file: %w", err)
+		}
+	} else {
+		if finfo.IsDir() {
+			return fmt.Errorf("invalid key file: is directory")
+		}
+		// Load from file
+		sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf)
+	}
 	if err != nil {
 		if !strings.Contains(err.Error(), "unsupported pem type") {
 			return fmt.Errorf("failed to create signer from private key: %w", err)
@@ -154,13 +168,13 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 // Get password for private key from environment, prompt or stdin (piped)
 // Adapted from Cosign's readPasswordFn
-func getPrivateKeyPass(keyfile string) ([]byte, error) {
+func getPrivateKeyPass() ([]byte, error) {
 	pw, ok := os.LookupEnv("ACORN_IMAGE_SIGN_PASSWORD")
 	switch {
 	case ok:
 		return []byte(pw), nil
 	case isTerm():
-		return prompt.Password(fmt.Sprintf("Enter password for private key %s:", keyfile))
+		return prompt.Password("Enter password for private key:")
 	default:
 		return io.ReadAll(os.Stdin)
 	}
