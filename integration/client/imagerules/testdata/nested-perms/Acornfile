@@ -1,0 +1,13 @@
+containers: {
+  "rootapp": {
+      image: "nginx:latest"
+      permissions: rules: [{
+        verbs: ["get"]
+        apiGroups: ["api.acorn.io"]
+      }]
+  }
+  
+}
+
+acorns: foo: build: acornfile: "nested.acorn"
+

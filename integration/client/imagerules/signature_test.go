@@ -12,8 +12,6 @@ import (
 	"github.com/sigstore/cosign/v2/pkg/signature"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	_ "embed"
 )
 
 func TestImageSignVerify(t *testing.T) {

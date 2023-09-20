@@ -56,7 +56,9 @@ func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, reso
 	}
 
 	// > NamePatterns
-	if !nameselector.ImageCovered(imageNameRef, digest, selector.NamePatterns) && (resolvedNameRef != nil && !nameselector.ImageCovered(resolvedNameRef, digest, selector.NamePatterns)) { // could be the same check twice here or the latter could be the resolvedNameRef
+	imagenameCovered := nameselector.ImageCovered(imageNameRef, digest, selector.NamePatterns)
+	resolvedNameCovered := resolvedNameRef != nil && nameselector.ImageCovered(resolvedNameRef, digest, selector.NamePatterns)
+	if !imagenameCovered && !resolvedNameCovered { // could be the same check twice here or the latter could be the resolvedNameRef
 		return &ImageSelectorNoMatchError{ImageName: imageName, Field: "namePatterns", Err: fmt.Errorf("Neither image [%s] nor resolved name [%s] match name patterns: %v", imageName, resolvedName, selector.NamePatterns)}
 	}
 

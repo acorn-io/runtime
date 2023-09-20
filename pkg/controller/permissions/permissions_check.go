@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -74,7 +75,7 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 	if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations); err != nil {
 		return err
 	} else if enabled {
-		parentRoles, err := imagerules.GetAuthorizedPermissions(req.Ctx, req.Client, app.Namespace, appImage.Name, appImage.Digest)
+		authzPerms, err := imagerules.GetAuthorizedPermissions(req.Ctx, req.Client, app.Namespace, appImage.Name, appImage.Digest)
 		if err != nil {
 			return err
 		}
@@ -90,25 +91,28 @@ func CheckImagePermissions(req router.Request, resp router.Response) error {
 			return nperms
 		}
 
-		denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, appImage.Name), parentRoles)
+		denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, appImage.Name), authzPerms)
+		logrus.Errorf("@@@ [%s] denied (current: appImage.Name = %s): %#v", app.Name, appImage.Name, denied)
 
-		for _, img := range details.NestedImages {
-			// For nested image permissions, we first check if the parent image is parentAuthorized.
-			// For all the permissions that the parent image does not have, we check if the nested image is parentAuthorized.
-			// If the parent image is parentAuthorized for all permissions, we spare checking the nested image, which saves some external requests.
-			parentDenied, parentAuthorized := v1.GrantsAll(app.Namespace, copyWithName(img.Permissions, img.ImageName), copyWithName(parentRoles, img.ImageName))
+		for _, nestedImage := range details.NestedImages {
+			// For nested image permissions, we first check if the parent (current) image is authorized.
+			// For all the permissions that the parent image does not have, we check if the nested image is authorized.
+			// If the parent image is authorized for all permissions, we spare checking the nested image, which saves some external requests.
+			parentDenied, parentAuthorized := v1.GrantsAll(app.Namespace, copyWithName(nestedImage.Permissions, nestedImage.ImageName), copyWithName(authzPerms, nestedImage.ImageName))
 			if !parentAuthorized {
-				nestedRoles, err := imagerules.GetAuthorizedPermissions(req.Ctx, req.Client, app.Namespace, img.ImageName, img.Digest)
+				logrus.Errorf("@@@  [%s] parentDenied (parent: appImage.Name = %s / child: %s [%s]): %#v \n --> Parent Roles: %#v", app.Name, appImage.Name, nestedImage.ImageName, nestedImage.Digest, parentDenied, authzPerms)
+				nestedRoles, err := imagerules.GetAuthorizedPermissions(req.Ctx, req.Client, app.Namespace, nestedImage.ImageName, nestedImage.Digest)
 				if err != nil {
 					return err
 				}
-				nestedDenied, authorized := v1.GrantsAll(app.Namespace, copyWithName(parentDenied, img.ImageName), nestedRoles)
+				nestedDenied, authorized := v1.GrantsAll(app.Namespace, copyWithName(parentDenied, nestedImage.ImageName), nestedRoles)
 				if !authorized {
 					denied = append(denied, nestedDenied...)
+					logrus.Errorf("@@@  [%s] denied (parent: appImage.Name = %s / child: %s): %#v", app.Name, appImage.Name, nestedImage.ImageName, denied)
 				}
 			}
 		}
-
+		logrus.Infof("@@@  [%s] denied (final): %#v", app.Name, denied)
 		app.Status.Staged.ImagePermissionsDenied = denied
 	}
 

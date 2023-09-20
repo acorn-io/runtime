@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 	rbacv1 "k8s.io/api/rbac/v1"
 )
@@ -564,6 +565,7 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 }
 
 func GrantsAll(currentNamespace string, requestedPerms, grantedUserPerms []Permissions) (missing []Permissions, granted bool) {
+	logrus.Errorf("R: %#v\nG: %#v\n", requestedPerms, grantedUserPerms)
 	var (
 		grantedByServiceName = GroupByServiceName(grantedUserPerms)
 	)

@@ -7,20 +7,13 @@ import (
 	"github.com/acorn-io/runtime/integration/helper"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/config"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/require"
-	cclient "sigs.k8s.io/controller-runtime/pkg/client"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	_ "embed"
+	cclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-//go:embed testdata/cosign.pub
-var testPubKey []byte
 
 func TestImageAllowRules(t *testing.T) {
 	// TODO(@iwilltry42): Add test for auto-upgrade pattern
@@ -33,37 +26,10 @@ func TestImageAllowRules(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 
 	// enable image allow rules in acorn config
-	cfg, err := config.Get(ctx, kclient)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	iarFeatureStateOriginal := cfg.Features[profiles.FeatureImageAllowRules]
-
-	if cfg.Features == nil {
-		cfg.Features = map[string]bool{}
-	}
-	cfg.Features[profiles.FeatureImageAllowRules] = true
-
-	t.Cleanup(func() {
-		// Reset feature state to original value (especially heplful when testing locally)
-		cfg.Features = map[string]bool{
-			profiles.FeatureImageAllowRules: iarFeatureStateOriginal,
-		}
-
-		err = config.Set(ctx, kclient, cfg)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	err = config.Set(ctx, kclient, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helper.EnableFeatureWithRestore(t, ctx, kclient, profiles.FeatureImageAllowRules)
 
 	// Delete any existing IARs from this project namespace
-	err = kclient.DeleteAllOf(ctx, &internalv1.ImageAllowRuleInstance{}, cclient.InNamespace(c.GetNamespace()))
+	err := kclient.DeleteAllOf(ctx, &internalv1.ImageAllowRuleInstance{}, cclient.InNamespace(c.GetNamespace()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +128,7 @@ func TestImageAllowRules(t *testing.T) {
 	iar.ImageSelector.Signatures = []internalv1.SignatureRules{
 		{
 			SignedBy: internalv1.SignedBy{
-				AllOf: []string{string(testPubKey)},
+				AllOf: []string{string(pubkeyCosign)},
 			},
 		},
 	}
@@ -250,7 +216,7 @@ func TestImageAllowRules(t *testing.T) {
 	iar.ImageSelector.Signatures = []internalv1.SignatureRules{
 		{
 			SignedBy: internalv1.SignedBy{
-				AllOf: []string{string(testPubKey)},
+				AllOf: []string{string(pubkeyCosign)},
 			},
 			Annotations: internalv1.SignatureAnnotations{
 				Match: map[string]string{

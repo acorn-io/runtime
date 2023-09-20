@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/images"
@@ -16,19 +15,19 @@ import (
 )
 
 func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, imageName, digest string) ([]v1.Permissions, error) {
-	iras := &adminv1.ImageRoleAuthorizationList{}
+	iras := &internaladminv1.ImageRoleAuthorizationInstanceList{}
 	if err := c.List(ctx, iras, &client.ListOptions{Namespace: namespace}); err != nil {
 		return nil, err
 	}
 
-	ciras := &adminv1.ClusterImageRoleAuthorizationList{}
+	ciras := &internaladminv1.ClusterImageRoleAuthorizationInstanceList{}
 	if err := c.List(ctx, ciras); err != nil {
 		return nil, err
 	}
 
 	// Create a single list from both IRAs and CIRAs
 	for _, cira := range ciras.Items {
-		iras.Items = append(iras.Items, adminv1.ImageRoleAuthorization{
+		iras.Items = append(iras.Items, internaladminv1.ImageRoleAuthorizationInstance{
 			ObjectMeta:    cira.ObjectMeta,
 			ImageSelector: cira.ImageSelector,
 			Roles:         cira.Roles,
@@ -56,7 +55,7 @@ func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, i
 	return resolveAuthorizedRoles(ctx, c, namespace, imageName, authorizedRoles)
 }
 
-func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, iras []adminv1.ImageRoleAuthorization, opts ...remote.Option) ([]internaladminv1.RoleAuthorizations, error) {
+func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, iras []internaladminv1.ImageRoleAuthorizationInstance, opts ...remote.Option) ([]internaladminv1.RoleAuthorizations, error) {
 	// No rules? Deny all images.
 	if len(iras) == 0 {
 		return nil, &ErrImageNotAllowed{Image: imageName}
