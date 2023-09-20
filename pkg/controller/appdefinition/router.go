@@ -136,7 +136,7 @@ func toRouter(appInstance *v1.AppInstance, routerName string, router v1.Router) 
 		},
 	}
 
-	if appInstance.Spec.Stop != nil && *appInstance.Spec.Stop {
+	if z.Dereference(appInstance.Spec.Stop) {
 		dep.Spec.Replicas = new(int32)
 	}
 

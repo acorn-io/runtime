@@ -11112,6 +11112,21 @@ func schema_pkg_apis_internalacornio_v1_Service(ref common.ReferenceCallback) co
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceConsumer"),
 						},
 					},
+					"containerLabels": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
