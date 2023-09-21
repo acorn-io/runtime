@@ -3,11 +3,11 @@ containers: {
       image: "nginx:latest"
       permissions: rules: [{
         verbs: ["get"]
-        apiGroups: ["api.acorn.io"]
+        apiGroups: ["foo.bar.com"]
       }]
   }
   
 }
 
-acorns: foo: build: acornfile: "nested.acorn"
+acorns: foo: image: "%REPLACE_IMAGE%"
 
