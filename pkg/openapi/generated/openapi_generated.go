@@ -171,7 +171,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.NameValue":                                       schema_pkg_apis_internalacornio_v1_NameValue(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Param":                                           schema_pkg_apis_internalacornio_v1_Param(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParamSpec":                                       schema_pkg_apis_internalacornio_v1_ParamSpec(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParentStatus":                                    schema_pkg_apis_internalacornio_v1_ParentStatus(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions":                                     schema_pkg_apis_internalacornio_v1_Permissions(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Platform":                                        schema_pkg_apis_internalacornio_v1_Platform(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.PolicyRule":                                      schema_pkg_apis_internalacornio_v1_PolicyRule(ref),
@@ -6830,25 +6829,11 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonSummary"),
 						},
 					},
-					"parents": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParentStatus"),
-									},
-								},
-							},
-						},
-					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatusStaged", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonSummary", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ParentStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatusStaged", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonSummary", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling"},
 	}
 }
 
@@ -9873,30 +9858,6 @@ func schema_pkg_apis_internalacornio_v1_ParamSpec(ref common.ReferenceCallback) 
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Param", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Profile"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_ParentStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"imageName": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"imageDigest": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
