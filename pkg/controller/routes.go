@@ -63,6 +63,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
 	appRouter.HandlerFunc(appdefinition.CheckImageAllowedHandler(registryTransport))
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
+	appRouter.HandlerFunc(appstatus.SetParentStatus)
 	appRouter.HandlerFunc(permissions.CheckImagePermissions)
 	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)
 	appRouter.HandlerFunc(images.CreateImages)

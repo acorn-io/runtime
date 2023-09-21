@@ -211,6 +211,12 @@ type AppInstanceStatus struct {
 	Conditions             []Condition             `json:"conditions,omitempty"`
 	Defaults               Defaults                `json:"defaults,omitempty"`
 	Summary                CommonSummary           `json:"summary,omitempty"`
+	Parents                map[string]ParentStatus `json:"parents,omitempty"`
+}
+
+type ParentStatus struct {
+	ImageName   string `json:"imageName,omitempty"`
+	ImageDigest string `json:"imageDigest,omitempty"`
 }
 
 type AppStatusStaged struct {
