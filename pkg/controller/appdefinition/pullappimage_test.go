@@ -104,7 +104,7 @@ func TestAutoUpgradeImageResolution(t *testing.T) {
 
 func testPullAppImage(transport http.RoundTripper) router.HandlerFunc {
 	return pullAppImage(transport, pullClient{
-		pull: func(_ context.Context, _ kclient.Reader, _ string, _ string, _ string, _ ...remote.Option) (*v1.AppImage, error) {
+		pull: func(_ context.Context, _ kclient.Client, _ string, _ string, _ string, _ ...remote.Option) (*v1.AppImage, error) {
 			return &v1.AppImage{
 				Name:   "myimage:latest",
 				Digest: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
