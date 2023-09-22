@@ -34,8 +34,6 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&DevSessionInstanceList{},
 		&ProjectInstance{},
 		&ProjectInstanceList{},
-		&ImageMetadataCache{},
-		&ImageMetadataCacheList{},
 	)
 
 	// Add common types

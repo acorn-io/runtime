@@ -23,7 +23,7 @@ func PullAppImage(transport http.RoundTripper, recorder event.Recorder) router.H
 	})
 }
 
-type pullImageFunc func(ctx context.Context, c kclient.Client, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error)
+type pullImageFunc func(ctx context.Context, c kclient.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error)
 
 type pullClient struct {
 	pull pullImageFunc

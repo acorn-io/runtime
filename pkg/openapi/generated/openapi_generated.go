@@ -158,8 +158,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageData":                             schema_pkg_apis_internalacornio_v1_ImageData(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstance":                         schema_pkg_apis_internalacornio_v1_ImageInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstanceList":                     schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCache":                    schema_pkg_apis_internalacornio_v1_ImageMetadataCache(ref),
-		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCacheList":                schema_pkg_apis_internalacornio_v1_ImageMetadataCacheList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImagesData":                            schema_pkg_apis_internalacornio_v1_ImagesData(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus":                             schema_pkg_apis_internalacornio_v1_JobStatus(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.MetricsDef":                            schema_pkg_apis_internalacornio_v1_MetricsDef(ref),
@@ -9170,94 +9168,6 @@ func schema_pkg_apis_internalacornio_v1_ImageInstanceList(ref common.ReferenceCa
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_ImageMetadataCache(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"data": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "byte",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
-	}
-}
-
-func schema_pkg_apis_internalacornio_v1_ImageMetadataCacheList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCache"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageMetadataCache", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
