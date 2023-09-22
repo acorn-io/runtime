@@ -1,15 +1,10 @@
 package images
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 
-	"github.com/acorn-io/baaah/pkg/router"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
@@ -19,7 +14,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -68,7 +62,7 @@ type AppImageWithData struct {
 	IconSuffix string
 }
 
-func PullAppImage(ctx context.Context, c client.Client, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error) {
+func PullAppImage(ctx context.Context, c client.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*v1.AppImage, error) {
 	data, err := PullAppImageWithDataFiles(ctx, c, namespace, image, nestedDigest, opts...)
 	if err != nil {
 		return nil, err
@@ -76,7 +70,7 @@ func PullAppImage(ctx context.Context, c client.Client, namespace, image, nested
 	return data.AppImage, nil
 }
 
-func PullAppImageWithDataFiles(ctx context.Context, c client.Client, namespace, image, nestedDigest string, opts ...remote.Option) (*AppImageWithData, error) {
+func PullAppImageWithDataFiles(ctx context.Context, c client.Reader, namespace, image, nestedDigest string, opts ...remote.Option) (*AppImageWithData, error) {
 	tag, err := GetImageReference(ctx, c, namespace, image)
 	if err != nil {
 		return nil, err
@@ -99,7 +93,7 @@ func PullAppImageWithDataFiles(ctx context.Context, c client.Client, namespace, 
 		return nil, err
 	}
 
-	appImageWithData, err := pullIndex(ctx, c, namespace, tag, opts)
+	appImageWithData, err := pullIndex(tag, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -165,32 +159,11 @@ func IsImageRemote(ctx context.Context, c client.Reader, namespace, image string
 	return err == nil
 }
 
-func pullIndex(ctx context.Context, c client.Client, namespace string, tag imagename.Reference, opts []remote.Option) (*AppImageWithData, error) {
-	ref, err := remote.Head(tag, opts...)
-	if err == nil {
-		digestKey := strings.TrimPrefix(ref.Digest.String(), "sha256:")
-		metadata := v1.ImageMetadataCache{}
-		if err := c.Get(ctx, router.Key(namespace, digestKey), &metadata); err == nil {
-			data := &AppImageWithData{}
-			gz, err := gzip.NewReader(bytes.NewReader(metadata.Data))
-			if err == nil {
-				if err := json.NewDecoder(gz).Decode(data); err == nil {
-					return data, nil
-				}
-			}
-		}
-	}
-
+func pullIndex(tag imagename.Reference, opts []remote.Option) (*AppImageWithData, error) {
 	img, err := remote.Index(tag, opts...)
 	if err != nil {
 		return nil, err
 	}
-
-	digest, err := img.Digest()
-	if err != nil {
-		return nil, err
-	}
-	digestKey := strings.TrimPrefix(digest.String(), "sha256:")
 
 	manifest, err := img.IndexManifest()
 	if err != nil {
@@ -225,32 +198,17 @@ func pullIndex(ctx context.Context, c client.Client, namespace string, tag image
 		return nil, fmt.Errorf("invalid image %s: %v", tag, err)
 	}
 
+	digest, err := img.Digest()
+	if err != nil {
+		return nil, err
+	}
 	app.Digest = digest.String()
-	data := &AppImageWithData{
+	return &AppImageWithData{
 		AppImage:   app,
 		Readme:     dataFiles.Readme,
 		Icon:       dataFiles.Icon,
 		IconSuffix: dataFiles.IconSuffix,
-	}
-
-	out := &bytes.Buffer{}
-	gz := gzip.NewWriter(out)
-	if err := json.NewEncoder(gz).Encode(data); err == nil {
-		if err := gz.Close(); err == nil {
-			data := out.Bytes()
-			if len(data) < 1_000_000 {
-				_ = c.Create(ctx, &v1.ImageMetadataCache{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      digestKey,
-						Namespace: namespace,
-					},
-					Data: data,
-				})
-			}
-		}
-	}
-
-	return data, nil
+	}, nil
 }
 
 // GetRuntimePullableImageReference is similar to GetImageReference but will return 127.0.0.1:NODEPORT instead of
@@ -273,7 +231,7 @@ func GetImageReference(ctx context.Context, c client.Reader, namespace, image st
 	return imagename.ParseReference(image)
 }
 
-func getAuthenticationRemoteKeychainWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string) (authn.Keychain, error) {
+func GetAuthenticationRemoteKeychainWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string) (authn.Keychain, error) {
 	authn, err := pullsecret.Keychain(ctx, client, namespace)
 	if err != nil {
 		return nil, err
@@ -287,7 +245,7 @@ func getAuthenticationRemoteKeychainWithLocalAuth(ctx context.Context, registry 
 }
 
 func GetAuthenticationRemoteOptionsWithLocalAuth(ctx context.Context, registry authn.Resource, localAuth *apiv1.RegistryAuth, client client.Reader, namespace string, additionalOpts ...remote.Option) ([]remote.Option, error) {
-	authn, err := getAuthenticationRemoteKeychainWithLocalAuth(ctx, registry, localAuth, client, namespace)
+	authn, err := GetAuthenticationRemoteKeychainWithLocalAuth(ctx, registry, localAuth, client, namespace)
 	if err != nil {
 		return nil, err
 	}
