@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/tags"
+	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -23,7 +24,8 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 	if app.Status.Staged.AppImage.ID != "" &&
 		app.Status.Staged.PermissionsChecked &&
 		len(app.Status.Staged.PermissionsMissing) == 0 &&
-		len(app.Status.Staged.ImagePermissionsDenied) == 0 {
+		len(app.Status.Staged.ImagePermissionsDenied) == 0 &&
+		z.Dereference[bool](app.Status.Staged.ImageAllowed) {
 		app.Status.AppImage = app.Status.Staged.AppImage
 	}
 	return nil

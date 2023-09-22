@@ -61,7 +61,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appRouter := router.Type(&v1.AppInstance{}).Middleware(devsession.OverlayDevSession).IncludeFinalizing()
 	appRouter.HandlerFunc(appstatus.PrepareStatus)
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
-	appRouter.HandlerFunc(appdefinition.CheckImageAllowedHandler(registryTransport))
+	appRouter.HandlerFunc(permissions.CheckImageAllowed(registryTransport))
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
 	appRouter.HandlerFunc(permissions.CheckImagePermissions)
 	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)

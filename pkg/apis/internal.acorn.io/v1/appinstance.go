@@ -12,24 +12,23 @@ import (
 type AppInstanceCondition string
 
 var (
-	AppInstanceConditionDefined      = "defined"
-	AppInstanceConditionDefaults     = "defaults"
-	AppInstanceConditionScheduling   = "scheduling"
-	AppInstanceConditionNamespace    = "namespace"
-	AppInstanceConditionParsed       = "parsed"
-	AppInstanceConditionController   = "controller"
-	AppInstanceConditionPulled       = "image-pull"
-	AppInstanceConditionSecrets      = "secrets"
-	AppInstanceConditionServices     = "services"
-	AppInstanceConditionContainers   = "containers"
-	AppInstanceConditionJobs         = "jobs"
-	AppInstanceConditionAcorns       = "acorns"
-	AppInstanceConditionRouters      = "routers"
-	AppInstanceConditionPermissions  = "permissions"
-	AppInstanceConditionReady        = "Ready"
-	AppInstanceConditionVolumes      = "volumes"
-	AppInstanceConditionImageAllowed = "image-allowed"
-	AppInstanceConditionQuota        = "quota"
+	AppInstanceConditionDefined     = "defined"
+	AppInstanceConditionDefaults    = "defaults"
+	AppInstanceConditionScheduling  = "scheduling"
+	AppInstanceConditionNamespace   = "namespace"
+	AppInstanceConditionParsed      = "parsed"
+	AppInstanceConditionController  = "controller"
+	AppInstanceConditionPulled      = "image-pull"
+	AppInstanceConditionSecrets     = "secrets"
+	AppInstanceConditionServices    = "services"
+	AppInstanceConditionContainers  = "containers"
+	AppInstanceConditionJobs        = "jobs"
+	AppInstanceConditionAcorns      = "acorns"
+	AppInstanceConditionRouters     = "routers"
+	AppInstanceConditionPermissions = "permissions"
+	AppInstanceConditionReady       = "Ready"
+	AppInstanceConditionVolumes     = "volumes"
+	AppInstanceConditionQuota       = "quota"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -219,6 +218,7 @@ type AppStatusStaged struct {
 	PermissionsMissing            []Permissions `json:"permissionsMissing,omitempty"`
 	PermissionsObservedGeneration int64         `json:"permissionsObservedGeneration,omitempty"`
 	ImagePermissionsDenied        []Permissions `json:"imagePermissionsDenied,omitempty"`
+	ImageAllowed                  *bool         `json:"imageAllowed,omitempty"`
 }
 
 type Defaults struct {

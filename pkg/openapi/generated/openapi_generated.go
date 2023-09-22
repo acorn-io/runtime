@@ -7210,6 +7210,12 @@ func schema_pkg_apis_internalacornio_v1_AppStatusStaged(ref common.ReferenceCall
 							},
 						},
 					},
+					"imageAllowed": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
