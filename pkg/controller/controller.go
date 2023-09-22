@@ -15,6 +15,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/crds"
 	"github.com/acorn-io/runtime/pkg/dns"
 	"github.com/acorn-io/runtime/pkg/event"
+	"github.com/acorn-io/runtime/pkg/imagemetadatacache"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/logserver"
@@ -112,6 +113,8 @@ func (c *Controller) Start(ctx context.Context) error {
 	// Use c.Router.Backend() to ensure we hit the cache when possible.
 	// Note: the cache will only be populated for EventInstances if a handler for EventInstances has been registered.
 	go event.Truncate(ctx, c.Router.Backend(), 5*time.Minute, 1000)
+
+	go imagemetadatacache.Purge(ctx, c.client)
 
 	return c.Router.Start(ctx)
 }
