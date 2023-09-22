@@ -110,7 +110,7 @@ func Nodes(req router.Request, computeClass *adminv1.ProjectComputeClassInstance
 	return computeClass.Affinity, computeClass.Tolerations
 }
 
-// PriorityClass checks that a defined PriorityClass exists and returns the name of it
+// PriorityClassName checks that a defined PriorityClass exists and returns the name of it
 func PriorityClassName(req router.Request, computeClass *adminv1.ProjectComputeClassInstance) (string, error) {
 	if computeClass == nil || computeClass.PriorityClassName == "" {
 		return "", nil
