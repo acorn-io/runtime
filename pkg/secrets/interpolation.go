@@ -66,6 +66,7 @@ type Interpolator struct {
 	containerName string
 	jobName       string
 	serviceName   string
+	acornName     string
 }
 
 func NewInterpolator(ctx context.Context, c kclient.Client, app *v1.AppInstance) *Interpolator {
@@ -94,6 +95,7 @@ func (i *Interpolator) ForJob(jobName string) *Interpolator {
 	cp.jobName = jobName
 	cp.containerName = ""
 	cp.serviceName = ""
+	cp.acornName = ""
 	return &cp
 }
 
@@ -102,6 +104,7 @@ func (i *Interpolator) ForContainer(containerName string) *Interpolator {
 	cp.jobName = ""
 	cp.serviceName = ""
 	cp.containerName = containerName
+	cp.acornName = ""
 	return &cp
 }
 
@@ -110,6 +113,16 @@ func (i *Interpolator) ForService(serviceName string) *Interpolator {
 	cp.jobName = ""
 	cp.serviceName = serviceName
 	cp.containerName = ""
+	cp.acornName = ""
+	return &cp
+}
+
+func (i *Interpolator) ForAcorn(acornName string) *Interpolator {
+	cp := *i
+	cp.jobName = ""
+	cp.serviceName = ""
+	cp.containerName = ""
+	cp.acornName = acornName
 	return &cp
 }
 
@@ -562,6 +575,42 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 			},
 		},
 	}, !strings.Contains(newKey, ".")
+}
+
+func (i *Interpolator) InterpolateGenericMap(args *v1.GenericMap) *v1.GenericMap {
+	result := v1.GenericMap{}
+	result.Data = map[string]any{}
+	for k, v := range args.Data {
+		if vStr, ok := v.(string); ok {
+			newV, err := i.Replace(vStr)
+			if err != nil {
+				i.saveError(err)
+				result.Data[k] = v
+			} else {
+				result.Data[k] = newV
+			}
+		} else if vArray, ok := v.([]any); ok {
+			for idx, value := range vArray {
+				if vStr, ok := value.(string); ok {
+					newValue, err := i.Replace(vStr)
+					if err != nil {
+						i.saveError(err)
+						vArray[idx] = value
+					} else {
+						vArray[idx] = newValue
+					}
+				} else {
+					vArray[idx] = value
+				}
+			}
+			result.Data[k] = vArray
+		} else if vMap, ok := v.(map[string]any); ok {
+			result.Data[k] = i.InterpolateGenericMap(v1.NewGenericMap(vMap)).Data
+		} else {
+			result.Data[k] = v
+		}
+	}
+	return &result
 }
 
 func (i *Interpolator) Objects() []kclient.Object {

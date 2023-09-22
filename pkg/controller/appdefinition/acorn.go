@@ -15,14 +15,15 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
+	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/google/go-containerregistry/pkg/name"
 	"golang.org/x/exp/slices"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, resp router.Response) error {
-	for _, acorn := range toAcorns(appInstance, tag, pullSecrets) {
+func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, interpolator *secrets.Interpolator, resp router.Response) error {
+	for _, acorn := range toAcorns(appInstance, tag, pullSecrets, interpolator) {
 		var devSession v1.DevSessionInstance
 		err := req.Get(&devSession, acorn.Namespace, acorn.Name)
 		if err == nil {
@@ -45,13 +46,13 @@ func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Referen
 	return nil
 }
 
-func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets) (result []*v1.AppInstance) {
+func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, interpolator *secrets.Interpolator) (result []*v1.AppInstance) {
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Acorns) {
 		acornName, acorn := entry.Key, entry.Value
 		if ports.IsLinked(appInstance, acornName) {
 			continue
 		}
-		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn))
+		result = append(result, toAcorn(appInstance, tag, pullSecrets, acornName, acorn, interpolator))
 	}
 	for _, entry := range typed.Sorted(appInstance.Status.AppSpec.Services) {
 		serviceName, service := entry.Key, entry.Value
@@ -72,7 +73,7 @@ func toAcorns(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *Pull
 			AutoUpgradeInterval: service.AutoUpgradeInterval,
 			Memory:              service.Memory,
 			ComputeClasses:      service.ComputeClasses,
-		}))
+		}, interpolator))
 	}
 	return result
 }
@@ -146,7 +147,7 @@ func scopeLinks(app *v1.AppInstance, bindings v1.ServiceBindings) (result v1.Ser
 	return
 }
 
-func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn) *v1.AppInstance {
+func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, acornName string, acorn v1.Acorn, interpolator *secrets.Interpolator) *v1.AppInstance {
 	var image string
 	pattern, isPattern := autoupgrade.AutoUpgradePattern(acorn.Image)
 	if isPattern {
@@ -193,7 +194,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			PublishMode:         publishMode,
 			Links:               scopeLinks(appInstance, acorn.Links),
 			Profiles:            acorn.Profiles,
-			DeployArgs:          acorn.DeployArgs,
+			DeployArgs:          interpolator.InterpolateGenericMap(acorn.DeployArgs),
 			Publish:             acorn.Publish,
 			Stop:                typed.Pointer(appInstance.GetStopped()),
 			Environment:         append(acorn.Environment, trimEnvPrefix(appInstance.Spec.Environment, acornName)...),

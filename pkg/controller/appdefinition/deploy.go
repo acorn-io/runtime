@@ -104,7 +104,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	if err := addPVCs(req, appInstance, resp); err != nil {
 		return err
 	}
-	if err := addAcorns(req, appInstance, tag, pullSecrets, resp); err != nil {
+	if err := addAcorns(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
 
