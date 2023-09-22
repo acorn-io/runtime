@@ -32,7 +32,7 @@ func devImage(imageName string) (string, error) {
 	}
 	defer os.Remove(idfile.Name())
 
-	cmd := exec.Command("docker", "build", "-t", imageName, "--iidfile", idfile.Name(), "--push", ".")
+	cmd := exec.Command("docker", "build", "--platform", "linux/amd64", "-t", imageName, "--iidfile", idfile.Name(), "--push", ".")
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr

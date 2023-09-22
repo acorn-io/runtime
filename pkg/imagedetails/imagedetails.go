@@ -53,11 +53,25 @@ type GetImageDetailsOptions struct {
 }
 
 func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, opts GetImageDetailsOptions) (*apiv1.ImageDetails, error) {
+	remoteOpts, err := images.GetAuthenticationRemoteOptions(ctx, c, namespace, opts.RemoteOpts...)
+	if err != nil {
+		return nil, err
+	}
+
+	puller, err := remote.NewPuller(remoteOpts...)
+	if err != nil {
+		return nil, err
+	}
+	opts.RemoteOpts = append(opts.RemoteOpts, remote.Reuse(puller))
+	return getImageDetails(ctx, c, namespace, imageName, opts)
+}
+
+func getImageDetails(ctx context.Context, c kclient.Client, namespace, imageName string, opts GetImageDetailsOptions) (*apiv1.ImageDetails, error) {
 	imageName = strings.ReplaceAll(imageName, "+", "/")
 	name := strings.ReplaceAll(imageName, "/", "+")
 
 	if tagPattern, isPattern := autoupgrade.AutoUpgradePattern(imageName); isPattern {
-		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern); err != nil {
+		if latestImage, found, err := autoupgrade.FindLatestTagForImageWithPattern(ctx, c, "", namespace, imageName, tagPattern, opts.RemoteOpts...); err != nil {
 			return nil, err
 		} else if !found {
 			// Check and see if no registry was specified on the image.
@@ -120,7 +134,7 @@ func GetImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 
 	var nestedImages []apiv1.NestedImage
 	if opts.IncludeNested {
-		nestedImages, err = getNested(ctx, c, namespace, imageName, details.AppSpec, appImageWithData.AppImage.ImageData, opts.RemoteOpts)
+		nestedImages, err = getNested(ctx, c, namespace, imageName, details.AppSpec, appImageWithData.AppImage.ImageData, remoteOpts)
 		if err != nil {
 			return nil, err
 		}
@@ -214,7 +228,7 @@ func getNestedAcorns(ctx context.Context, c kclient.Client, namespace, image str
 			acornImage = image
 		}
 
-		details, err := GetImageDetails(ctx, c, namespace, acornImage, GetImageDetailsOptions{
+		details, err := getImageDetails(ctx, c, namespace, acornImage, GetImageDetailsOptions{
 			Profiles:      acorn.Profiles,
 			DeployArgs:    acorn.DeployArgs.GetData(),
 			Nested:        nestedImage,
@@ -247,7 +261,7 @@ func getNestedServices(ctx context.Context, c kclient.Client, namespace, image s
 			serviceImage = image
 		}
 
-		details, err := GetImageDetails(ctx, c, namespace, serviceImage, GetImageDetailsOptions{
+		details, err := getImageDetails(ctx, c, namespace, serviceImage, GetImageDetailsOptions{
 			// Services don't have profiles
 			Profiles:      nil,
 			DeployArgs:    service.ServiceArgs.GetData(),
