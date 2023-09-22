@@ -13,12 +13,19 @@ import (
 var interval = 24 * time.Hour
 
 func Purge(ctx context.Context, c kclient.Client) {
+	timer := time.NewTimer(interval)
 	for {
-		err := doPurge(ctx, c)
-		if err != nil {
-			logrus.Errorf("Failed to purge imagemetadatacache: %v", err)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+			err := doPurge(ctx, c)
+			if err != nil {
+				logrus.Errorf("Failed to purge imagemetadatacache: %v", err)
+			}
+			timer.Reset(interval)
 		}
-		time.Sleep(interval)
 	}
 }
 
