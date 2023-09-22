@@ -29,6 +29,7 @@ func ImageCovered(image name.Reference, digest string, patterns []string) bool {
 		if len(parts) > 1 {
 			if !strings.Contains(parts[len(parts)-1], "/") {
 				tagPattern = parts[len(parts)-1] // last part is tag
+				contextPattern = strings.TrimSuffix(pattern, ":"+tagPattern)
 			} else {
 				contextPattern = pattern // : was part of the context pattern (port)
 			}

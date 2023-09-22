@@ -155,7 +155,6 @@ func TestImageRoleAuthorizations(t *testing.T) {
 				},
 			},
 		},
-		Status: internalv1.AppInstanceStatus{},
 	}
 
 	// --------------------------------------------------------------------
@@ -263,11 +262,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	// --------------------------------------------------------------------
 	// Run #3 - Expect denied permissions since we have an IRA but it does only cover one api group
 	// --------------------------------------------------------------------
-	ira.ImageSelector.NamePatterns = []string{tagName, id}
-	for _, ni := range details.NestedImages {
-		ira.ImageSelector.NamePatterns = append(ira.ImageSelector.NamePatterns, ni.ImageName)
-		ira.ImageSelector.NamePatterns = append(ira.ImageSelector.NamePatterns, ni.Digest)
-	}
+	ira.ImageSelector.NamePatterns = []string{tagName, nestedImageTagName}
 	err = kclient.Update(ctx, ira)
 	require.NoError(t, err, "should not error while updating IRA")
 
@@ -328,7 +323,6 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	// --------------------------------------------------------------------
 
 	// Add the missing api group to the IRA
-	ira.ImageSelector.NamePatterns = []string{tagName, nestedImageTagName}
 	ira.Roles.RoleRefs = append(ira.Roles.RoleRefs, internaladminv1.RoleRef{
 		Name: "acorn:aws:admin", // required by foo.awsapp
 		Kind: "ClusterRole",     // current namespace only
