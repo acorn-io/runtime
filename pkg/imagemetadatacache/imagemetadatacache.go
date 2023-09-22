@@ -18,7 +18,11 @@ func Purge(ctx context.Context, c kclient.Client) {
 		if err != nil {
 			logrus.Errorf("Failed to purge imagemetadatacache: %v", err)
 		}
-		time.Sleep(interval)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(interval):
+		}
 	}
 }
 
