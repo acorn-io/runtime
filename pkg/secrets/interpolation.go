@@ -578,6 +578,10 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 }
 
 func (i *Interpolator) InterpolateGenericMap(args *v1.GenericMap) *v1.GenericMap {
+	if args == nil || args.Data == nil {
+		return nil
+	}
+
 	result := v1.GenericMap{}
 	result.Data = map[string]any{}
 	for k, v := range args.Data {
