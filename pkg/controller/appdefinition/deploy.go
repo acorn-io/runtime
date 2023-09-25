@@ -737,7 +737,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms)
+		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms, secrets)
 		if err != nil {
 			return nil, err
 		}

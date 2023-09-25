@@ -8,12 +8,13 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/awspermissions"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/secrets"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func toServiceAccount(req router.Request, saName string, labelMap, annotations map[string]string, appInstance *v1.AppInstance, perms v1.Permissions) (result kclient.Object, _ error) {
+func toServiceAccount(req router.Request, saName string, labelMap, annotations map[string]string, appInstance *v1.AppInstance, perms v1.Permissions, interpolator *secrets.Interpolator) (result kclient.Object, _ error) {
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        saName,
@@ -22,7 +23,11 @@ func toServiceAccount(req router.Request, saName string, labelMap, annotations m
 			Annotations: annotations,
 		},
 	}
-	return sa, addAWS(req, appInstance, sa, perms)
+	interpolatedPerms := v1.Permissions{}
+	for _, rule := range perms.GetRules() {
+		interpolatedPerms.Rules = append(interpolatedPerms.Rules, interpolator.ForPolicyRule(rule))
+	}
+	return sa, addAWS(req, appInstance, sa, interpolatedPerms)
 }
 
 func addAWS(req router.Request, appInstance *v1.AppInstance, sa *corev1.ServiceAccount, perms v1.Permissions) error {
