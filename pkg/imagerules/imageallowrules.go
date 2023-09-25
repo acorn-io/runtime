@@ -64,11 +64,6 @@ func CheckImageAllowed(ctx context.Context, c client.Reader, namespace, imageNam
 // We will use all of those to check if an image is covered by an IAR.
 // We will prefer resolvedName to find signature artifacts (potentially in the internal registry)
 func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, imageAllowRules []v1.ImageAllowRuleInstance, opts ...remote.Option) error {
-	// No rules? Deny all images.
-	if len(imageAllowRules) == 0 {
-		return &ErrImageNotAllowed{Image: imageName}
-	}
-
 	logrus.Debugf("Checking image %s (%s) against %d rules", imageName, digest, len(imageAllowRules))
 
 	for _, imageAllowRule := range imageAllowRules {

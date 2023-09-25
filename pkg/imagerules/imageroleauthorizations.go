@@ -56,11 +56,6 @@ func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, i
 }
 
 func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, iras []internaladminv1.ImageRoleAuthorizationInstance, opts ...remote.Option) ([]internaladminv1.RoleAuthorizations, error) {
-	// No rules? Deny all images.
-	if len(iras) == 0 {
-		return nil, &ErrImageNotAllowed{Image: imageName}
-	}
-
 	logrus.Debugf("Checking image %s (%s) against %d image role authorizations", imageName, digest, len(iras))
 	var authorized []internaladminv1.RoleAuthorizations
 

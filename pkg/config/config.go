@@ -573,15 +573,9 @@ func GetFeature(ctx context.Context, getter kclient.Reader, featureName string) 
 		return false, fmt.Errorf("unknown feature %s", featureName)
 	}
 
-	// Return the default if the features map is undefined
-	if cfg.Features == nil {
-		return profiles.FeatureDefaults[featureName], nil
-	}
-
 	// Configured value or default
 	if enabled, ok := cfg.Features[featureName]; ok {
 		return enabled, nil
-	} else {
-		return profiles.FeatureDefaults[featureName], nil
 	}
+	return profiles.FeatureDefaults[featureName], nil
 }
