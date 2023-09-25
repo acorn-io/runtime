@@ -7,9 +7,11 @@ import (
 	"os"
 	"strings"
 
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
+	"github.com/acorn-io/runtime/pkg/imageallowrules/selector"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
@@ -18,6 +20,7 @@ import (
 	sigsig "github.com/sigstore/sigstore/pkg/signature"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/acorn-io/runtime/pkg/prompt"
 )
@@ -45,6 +48,12 @@ type ImageSign struct {
 func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	if a.Key == "" {
 		return fmt.Errorf("key is required")
+	}
+
+	// Validate user-provided Annotations
+	_, err := selector.GenerateSelector(internalv1.SignatureAnnotations{Match: a.Annotations}, selector.LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{selector.IgnoreInvalidFieldErrors(selector.LabelValueMaxLengthErrMsg, selector.LabelValueRegexpErrMsg)}})
+	if err != nil {
+		return fmt.Errorf("failed to parse provided annotations: %w", err)
 	}
 
 	imageName := args[0]
