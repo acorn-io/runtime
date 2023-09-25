@@ -39,7 +39,16 @@ func registryService(namespace string) []client.Object {
 	}
 }
 
-func registryDeployment(namespace, registryImage string, requirements corev1.ResourceRequirements, volumeSource corev1.VolumeSource) []client.Object {
+func registryServiceAccount(namespace string) client.Object {
+	return &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      system.RegistryServiceAccountName,
+			Namespace: system.ImagesNamespace,
+		},
+	}
+}
+
+func registryDeployment(namespace, serviceAccountName, registryImage string, requirements corev1.ResourceRequirements, volumeSource corev1.VolumeSource) []client.Object {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      system.RegistryName,
@@ -115,6 +124,7 @@ func registryDeployment(namespace, registryImage string, requirements corev1.Res
 							},
 						},
 					},
+					ServiceAccountName: serviceAccountName,
 					Volumes: []corev1.Volume{
 						{
 							VolumeSource: volumeSource,

@@ -85,6 +85,13 @@ rules:
   - apiGroups: ["management.cattle.io"]
     resources: ["projects"]
     verbs: ["updatepsa"]
+  - verbs: ["use"]
+    apiGroups:
+    - security.openshift.io
+    resourceNames:
+    - nonroot-v2
+    resources:
+    - securitycontextconstraints
 
 ---
 kind: ClusterRoleBinding
@@ -99,3 +106,29 @@ subjects:
   - kind: ServiceAccount
     namespace: acorn-system
     name: acorn-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acorn-image-system
+rules:
+  - verbs: ["use"]
+    apiGroups:
+    - security.openshift.io
+    resourceNames:
+    - nonroot-v2
+    resources:
+    - securitycontextconstraints
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: acorn-image-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: acorn-image-system
+subjects:
+  - kind: ServiceAccount
+    namespace: acorn-image-system
+    name: acorn-image-system

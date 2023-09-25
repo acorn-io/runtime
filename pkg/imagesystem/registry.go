@@ -159,9 +159,13 @@ func GetRegistryObjects(ctx context.Context, c client.Reader) (result []client.O
 		)
 	}
 
+	sa := registryServiceAccount(system.ImagesNamespace)
+	result = append(result, sa)
+
 	result = append(result,
 		registryDeployment(
 			system.ImagesNamespace,
+			sa.GetName(),
 			system.DefaultImage(),
 			system.ResourceRequirementsFor(*cfg.RegistryMemory, *cfg.RegistryCPU),
 			volumeSource,
