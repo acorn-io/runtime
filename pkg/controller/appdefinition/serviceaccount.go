@@ -23,11 +23,10 @@ func toServiceAccount(req router.Request, saName string, labelMap, annotations m
 			Annotations: annotations,
 		},
 	}
-	interpolatedPerms := v1.Permissions{}
-	for _, rule := range perms.GetRules() {
-		interpolatedPerms.Rules = append(interpolatedPerms.Rules, interpolator.ForPolicyRule(rule))
+	for i, rule := range perms.Rules {
+		perms.Rules[i] = interpolator.ForPolicyRule(rule)
 	}
-	return sa, addAWS(req, appInstance, sa, interpolatedPerms)
+	return sa, addAWS(req, appInstance, sa, perms)
 }
 
 func addAWS(req router.Request, appInstance *v1.AppInstance, sa *corev1.ServiceAccount, perms v1.Permissions) error {
