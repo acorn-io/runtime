@@ -18,6 +18,9 @@ const (
 	ClusterEdit = "acorn:cluster:edit"
 
 	// AWS
+	GroupAWSAcornIO     = "aws.acorn.io"
+	GroupRoleAWSAcornIO = "role.aws.acorn.io"
+
 	AWSAdmin = "acorn:aws:admin"
 )
 
@@ -255,12 +258,16 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			},
 			Rules: projectRoles[Build],
 		},
-		// AWS Roles
+	})
+}
+
+func AWSRoles() []rbacv1.ClusterRole {
+	return []rbacv1.ClusterRole{
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: AWSAdmin,
 			},
 			Rules: awsRoles[AWSAdmin],
 		},
-	})
+	}
 }
