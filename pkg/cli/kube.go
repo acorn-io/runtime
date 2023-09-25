@@ -14,11 +14,13 @@ import (
 func NewKubectl(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Kube{client: c.ClientFactory}, cobra.Command{
 		Use:          "kube [flags] COMMAND",
-		Args:         cobra.MinimumNArgs(1),
 		Hidden:       true,
 		SilenceUsage: true,
 		Short:        "Run command with KUBECONFIG env set to a generated kubeconfig of the current project",
 		Example: `
+  # Write the kubeconfig for the current project that would be used to the provided file:
+  acorn kube -w <filepath>
+
   # Run 'k9s' in the Account API Server for the 'acorn' project:
   acorn -j acorn kube k9s
 
@@ -49,6 +51,10 @@ func (s *Kube) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		return os.WriteFile(s.WriteFile, data, 0644)
+	}
+
+	if err = cobra.MinimumNArgs(1)(cmd, args); err != nil {
+		return err
 	}
 
 	ctx, cancel := context.WithCancel(cmd.Context())
