@@ -8,6 +8,7 @@ import (
 
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +55,7 @@ func (s *Kube) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	if err = cobra.MinimumNArgs(1)(cmd, args); err != nil {
-		return err
+		return errors.Wrap(err, "command required when not using '-w' flag")
 	}
 
 	ctx, cancel := context.WithCancel(cmd.Context())
