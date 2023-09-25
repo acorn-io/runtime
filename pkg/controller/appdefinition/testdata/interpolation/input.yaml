@@ -10,6 +10,15 @@ spec:
   endpoints:
   - target: oneimage
     hostname: localhost
+  permissions:
+  - rules:
+    - apiGroups:
+      - apps
+      resources:
+      - deployments
+      verbs:
+      - "@{secret.sec-1.verb}"
+    serviceName: oneimage
 status:
   namespace: app-created-namespace
   appImage:
@@ -24,3 +33,11 @@ status:
         files:
           content-test:
             content: "cHJlZml4IEB7c2VjcmV0cy5zZWMtMS5rZXkxfSBzdWZmaXggQHtzZWNyZXRzLnNlYy0xLmtleTJ9"
+        permissions:
+          rules:
+          - apiGroups:
+            - apps
+            resources:
+            - deployments
+            verbs:
+            - "@{secret.sec-1.verb}"
