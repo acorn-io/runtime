@@ -564,6 +564,27 @@ func (i *Interpolator) ToEnv(key, value string) (corev1.EnvVar, bool) {
 	}, !strings.Contains(newKey, ".")
 }
 
+func (i *Interpolator) ForPolicyRule(rule v1.PolicyRule) v1.PolicyRule {
+	rule.APIGroups = i.ForStringSlice(rule.APIGroups)
+	rule.Resources = i.ForStringSlice(rule.Resources)
+	rule.Verbs = i.ForStringSlice(rule.Verbs)
+	rule.ResourceNames = i.ForStringSlice(rule.ResourceNames)
+	rule.NonResourceURLs = i.ForStringSlice(rule.NonResourceURLs)
+	return rule
+}
+
+func (i *Interpolator) ForStringSlice(s []string) []string {
+	for idx := range s {
+		newVal, err := i.Replace(s[idx])
+		if err != nil {
+			i.saveError(err)
+		} else {
+			s[idx] = newVal
+		}
+	}
+	return s
+}
+
 func (i *Interpolator) Objects() []kclient.Object {
 	if len(i.data) == 0 {
 		return nil

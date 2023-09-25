@@ -65,7 +65,7 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 			return nil, err
 		}
 		if perms.HasRules() {
-			perms, err := toPermissions(req.Ctx, req.Client, perms, job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance)
+			perms, err := toPermissions(req.Ctx, req.Client, perms, job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance, interpolator)
 			if err != nil {
 				return nil, err
 			}

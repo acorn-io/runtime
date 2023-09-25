@@ -7,6 +7,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
+	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/rancher/wrangler/pkg/name"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -22,10 +23,11 @@ func toRBACPolicyRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
 	return
 }
 
-func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object) {
+func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance, interpolator *secrets.Interpolator) (result []kclient.Object) {
 	byNamespace := map[string][]v1.PolicyRule{}
 
 	for _, rule := range permissions.GetRules() {
+		rule = interpolator.ForPolicyRule(rule)
 		for _, ns := range rule.ResolveNamespaces(appInstance.Namespace) {
 			byNamespace[ns] = append(byNamespace[ns], rule)
 		}
@@ -105,7 +107,7 @@ func toRoleAndRoleBinding(roleName, roleNamespace, serviceAccountName, serviceAc
 	return
 }
 
-func toPermissions(ctx context.Context, c kclient.Client, permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
+func toPermissions(ctx context.Context, c kclient.Client, permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance, interpolator *secrets.Interpolator) (result []kclient.Object, _ error) {
 	var ns corev1.Namespace
 	if err := c.Get(ctx, router.Key("", appInstance.Namespace), &ns); err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
@@ -114,6 +116,6 @@ func toPermissions(ctx context.Context, c kclient.Client, permissions v1.Permiss
 		// Project is managed by acorn identity so don't assume permissions
 		return nil, nil
 	}
-	result = append(result, toClusterPermissions(permissions, labelMap, annotations, appInstance)...)
+	result = append(result, toClusterPermissions(permissions, labelMap, annotations, appInstance, interpolator)...)
 	return result, nil
 }

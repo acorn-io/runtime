@@ -742,7 +742,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 			return nil, err
 		}
 		if perms.HasRules() {
-			perms, err := toPermissions(req.Ctx, req.Client, perms, dep.GetLabels(), dep.GetAnnotations(), appInstance)
+			perms, err := toPermissions(req.Ctx, req.Client, perms, dep.GetLabels(), dep.GetAnnotations(), appInstance, secrets)
 			if err != nil {
 				return nil, err
 			}
