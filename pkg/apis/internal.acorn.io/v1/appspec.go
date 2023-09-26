@@ -806,6 +806,7 @@ type Service struct {
 	ComputeClasses      ComputeClassMap        `json:"class,omitempty"`
 	Permissions         map[string]Permissions `json:"permissions,omitempty"`
 	Consumer            *ServiceConsumer       `json:"consumer,omitempty"`
+	ContainerLabels     map[string]string      `json:"containerLabels,omitempty"`
 }
 
 func (in Service) GetOriginalImage() string {
