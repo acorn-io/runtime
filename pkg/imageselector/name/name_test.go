@@ -95,6 +95,12 @@ func TestImageCovered(t *testing.T) {
 			digest:      "sha256:abc123",
 			shouldMatch: false,
 		},
+		{
+			name:        "match by multi-element repo and semver tag",
+			pattern:     "ghcr.io/acorn-io/aws/**:v#.#.#",
+			image:       "ghcr.io/acorn-io/aws/rds/serverless:v1.0.2",
+			shouldMatch: true,
+		},
 	}
 
 	for _, tc := range testcases {
