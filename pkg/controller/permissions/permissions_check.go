@@ -19,23 +19,33 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CopyPromoteStagedAppImage copies the staged app image to the app image if
+// - the staged app image is set
+// - the permissions have been checked
+// - there are no missing permissions
+// - there are no image permissions denied (if ImageRoleAuthorizations are enabled)
+// Also, we only get to checked permissions if the image is allowed by the image allow rules (if enabled)
 func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	if app.Status.Staged.AppImage.ID != "" &&
 		app.Status.Staged.PermissionsChecked &&
 		len(app.Status.Staged.PermissionsMissing) == 0 &&
-		len(app.Status.Staged.ImagePermissionsDenied) == 0 &&
-		z.Dereference[bool](app.Status.Staged.ImageAllowed) {
+		len(app.Status.Staged.ImagePermissionsDenied) == 0 {
 		app.Status.AppImage = app.Status.Staged.AppImage
 	}
 	return nil
 }
 
+// CheckImagePermissions checks if the permissions requested by all images in the app are
+// a) granted by the user (as set in the app spec)
+// b) authorized by the image role authorizations (if enabled)
+// The check only happens if the image is allowed by the image allow rules (if enabled)
 func CheckImagePermissions(req router.Request, resp router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 	if app.Status.Staged.AppImage.ID == "" ||
 		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest ||
-		app.Status.Staged.PermissionsObservedGeneration == app.Generation {
+		app.Status.Staged.PermissionsObservedGeneration == app.Generation ||
+		!z.Dereference[bool](app.Status.Staged.ImageAllowed) {
 		return nil
 	}
 
