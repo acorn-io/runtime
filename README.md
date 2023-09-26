@@ -8,7 +8,7 @@ A simple application deployment framework for Kubernetes.
 - Simple CLI and powerful API
 - Runs on any Kubernetes cluster
 
-| :memo: | Acorn is a work in progress. Features will evolve over time and there may be breaking changes between releases. Please give us your feedback in Slack, Discussions, or Issues! |
+| :memo: | Acorn is a work in progress. Features will evolve over time and there may be breaking changes between releases. Please give us your feedback in Slack,, Discussions, or Issues! |
 |-|:-|
 
 ## Get Started
