@@ -55,6 +55,7 @@ var (
 					"secrets",
 					"services",
 					"events",
+					"jobs",
 				},
 			},
 			{
@@ -111,6 +112,7 @@ var (
 					"apps/pullimage",
 					"apps/ignorecleanup",
 					"events",
+					"jobs/restart",
 				},
 			},
 			{
