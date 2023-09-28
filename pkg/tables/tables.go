@@ -146,6 +146,11 @@ var (
 	}
 	ImageAllowRuleConverter = MustConverter(ImageAllowRule)
 
+	ImageRoleAuthorization = [][]string{
+		{"Name", "{{ . | name }}"},
+	}
+	ImageRoleAuthorizationConverter = MustConverter(ImageRoleAuthorization)
+
 	Project = [][]string{
 		{"Name", "Name"},
 		{"Created", "{{ago .CreationTimestamp}}"},

@@ -11,7 +11,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	imagerules "github.com/acorn-io/runtime/pkg/imagerules"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -72,7 +72,7 @@ func (m *mockDaemonClient) resolveLocalTag(context.Context, string, string) (str
 
 func (m *mockDaemonClient) checkImageAllowed(_ context.Context, _ string, img string) error {
 	if _, ok := m.imageDenyList[img]; ok {
-		return &imageallowrules.ErrImageNotAllowed{Image: img}
+		return &imagerules.ErrImageNotAllowed{Image: img}
 	}
 	return nil
 }

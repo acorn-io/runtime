@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/acorn-io/baaah/pkg/router"
@@ -559,4 +560,22 @@ func Get(ctx context.Context, getter kclient.Reader) (*apiv1.Config, error) {
 	}
 	err = complete(ctx, cfg, getter, true)
 	return cfg, err
+}
+
+func GetFeature(ctx context.Context, getter kclient.Reader, featureName string) (bool, error) {
+	cfg, err := Get(ctx, getter)
+	if err != nil {
+		return false, err
+	}
+
+	// Is that even a known feature?
+	if _, ok := profiles.FeatureDefaults[featureName]; !ok {
+		return false, fmt.Errorf("unknown feature %s", featureName)
+	}
+
+	// Configured value or default
+	if enabled, ok := cfg.Features[featureName]; ok {
+		return enabled, nil
+	}
+	return profiles.FeatureDefaults[featureName], nil
 }

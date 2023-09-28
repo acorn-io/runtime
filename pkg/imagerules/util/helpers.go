@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +42,9 @@ func GenerateSimpleAllowRule(namespace string, name string, image string, scope 
 			Name:      name,
 			Namespace: namespace,
 		},
-		Images: []string{is},
+		ImageSelector: internalv1.ImageSelector{
+			NamePatterns: []string{is},
+		},
 	}, nil
 }
 

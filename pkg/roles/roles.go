@@ -3,6 +3,7 @@ package roles
 import (
 	admin_acorn_io "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io"
 	api_acorn_io "github.com/acorn-io/runtime/pkg/apis/api.acorn.io"
+	"github.com/acorn-io/runtime/pkg/awspermissions"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -15,9 +16,25 @@ const (
 	Build       = "acorn:project:build"
 	ClusterView = "acorn:cluster:view"
 	ClusterEdit = "acorn:cluster:edit"
+
+	// AWS
+	GroupAWSAcornIO     = "aws.acorn.io"
+	GroupRoleAWSAcornIO = "role.aws.acorn.io"
+
+	AWSAdmin = "acorn:aws:admin"
 )
 
 var (
+	awsRoles = map[string][]rbacv1.PolicyRule{
+		AWSAdmin: {
+			{
+				APIGroups: []string{awspermissions.AWSAPIGroup, awspermissions.AWSRoleAPIGroup},
+				Verbs:     []string{"*"},
+				Resources: []string{"*"},
+			},
+		},
+	}
+
 	clusterRoles = map[string][]rbacv1.PolicyRule{
 		ClusterView: {
 			{
@@ -64,6 +81,7 @@ var (
 					"computeclasses",
 					"regions",
 					"imageallowrules",
+					"imagerolauthorizations",
 				},
 			},
 			{
@@ -154,6 +172,8 @@ var (
 					"clustervolumeclasses",
 					"projectcomputeclasses",
 					"clustercomputeclasses",
+					"imageroleauthorizations",
+					"clusterimageroleauthorizations",
 				},
 				APIGroups: []string{admin_acorn_io.Group},
 			},
@@ -239,4 +259,15 @@ func ClusterRoles() []rbacv1.ClusterRole {
 			Rules: projectRoles[Build],
 		},
 	})
+}
+
+func AWSRoles() []rbacv1.ClusterRole {
+	return []rbacv1.ClusterRole{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: AWSAdmin,
+			},
+			Rules: awsRoles[AWSAdmin],
+		},
+	}
 }

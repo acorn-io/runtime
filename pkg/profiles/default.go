@@ -23,9 +23,11 @@ var (
 	HttpEndpointPatternDefault = "{{hashConcat 8 .Container .App .Namespace | truncate}}.{{.ClusterDomain}}"
 
 	// Features
-	FeatureImageAllowRules = "image-allow-rules"
-	FeatureDefaults        = map[string]bool{
-		FeatureImageAllowRules: false,
+	FeatureImageAllowRules         = "image-allow-rules"
+	FeatureImageRoleAuthorizations = "image-role-authorizations"
+	FeatureDefaults                = map[string]bool{
+		FeatureImageAllowRules:         false,
+		FeatureImageRoleAuthorizations: false,
 	}
 )
 

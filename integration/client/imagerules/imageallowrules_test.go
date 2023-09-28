@@ -1,28 +1,22 @@
-package signatures
+package imagerules
 
 import (
 	"testing"
 
 	client2 "github.com/acorn-io/runtime/integration/client"
 	"github.com/acorn-io/runtime/integration/helper"
-	v1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/config"
 	kclient "github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/stretchr/testify/require"
-	cclient "sigs.k8s.io/controller-runtime/pkg/client"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	_ "embed"
+	cclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-//go:embed testdata/cosign.pub
-var testPubKey []byte
-
 func TestImageAllowRules(t *testing.T) {
+	// TODO(@iwilltry42): Add test for auto-upgrade pattern
 	helper.StartController(t)
 	registry, close := helper.StartRegistry(t)
 	defer close()
@@ -32,37 +26,10 @@ func TestImageAllowRules(t *testing.T) {
 	kclient := helper.MustReturn(kclient.Default)
 
 	// enable image allow rules in acorn config
-	cfg, err := config.Get(ctx, kclient)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	iarFeatureStateOriginal := cfg.Features[profiles.FeatureImageAllowRules]
-
-	if cfg.Features == nil {
-		cfg.Features = map[string]bool{}
-	}
-	cfg.Features[profiles.FeatureImageAllowRules] = true
-
-	t.Cleanup(func() {
-		// Reset feature state to original value (especially heplful when testing locally)
-		cfg.Features = map[string]bool{
-			profiles.FeatureImageAllowRules: iarFeatureStateOriginal,
-		}
-
-		err = config.Set(ctx, kclient, cfg)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
-
-	err = config.Set(ctx, kclient, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helper.EnableFeatureWithRestore(t, ctx, kclient, profiles.FeatureImageAllowRules)
 
 	// Delete any existing IARs from this project namespace
-	err = kclient.DeleteAllOf(ctx, &internalv1.ImageAllowRuleInstance{}, cclient.InNamespace(c.GetNamespace()))
+	err := kclient.DeleteAllOf(ctx, &internalv1.ImageAllowRuleInstance{}, cclient.InNamespace(c.GetNamespace()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,12 +69,14 @@ func TestImageAllowRules(t *testing.T) {
 	require.Empty(t, details.SignatureDigest, "signature digest should be empty before signing")
 
 	// create image allow rule
-	iar := &v1.ImageAllowRule{
+	iar := &apiv1.ImageAllowRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: c.GetNamespace(),
 		},
-		Images: []string{"foobar"}, // does not cover the image
+		ImageSelector: internalv1.ImageSelector{
+			NamePatterns: []string{"foobar"},
+		}, // does not cover the image
 	}
 
 	err = kclient.Create(ctx, iar)
@@ -120,24 +89,24 @@ func TestImageAllowRules(t *testing.T) {
 	require.Error(t, err, "should error since image is not covered by images scope of IAR")
 
 	// update image allow rule to cover that image
-	iar.Images = []string{tagName, id}
+	iar.ImageSelector.NamePatterns = []string{tagName, id}
 
 	err = kclient.Update(ctx, iar)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var niar v1.ImageAllowRule
+	var niar apiv1.ImageAllowRule
 	err = kclient.Get(ctx, cclient.ObjectKeyFromObject(iar), &niar)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	require.Equal(t, iar.Images, niar.Images)
+	require.Equal(t, iar.ImageSelector.NamePatterns, niar.ImageSelector.NamePatterns)
 
 	// try to run by tagName - expect success
 	app, err := c.AppRun(ctx, tagName, nil)
-	require.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", tagName, iar.Images)
+	require.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", tagName, iar.ImageSelector.NamePatterns)
 
 	// remove app
 	_, err = c.AppDelete(ctx, app.Name)
@@ -147,7 +116,7 @@ func TestImageAllowRules(t *testing.T) {
 
 	// try to run by ID - expect success
 	app, err = c.AppRun(ctx, id, nil)
-	require.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", id, iar.Images)
+	require.NoError(t, err, "should not error since image `%s` is covered by images scope `%+v` of IAR and there are not other rules", id, iar.ImageSelector.NamePatterns)
 
 	// remove app
 	_, err = c.AppDelete(ctx, app.Name)
@@ -156,12 +125,10 @@ func TestImageAllowRules(t *testing.T) {
 	}
 
 	// update iar to require a signature
-	iar.Signatures = internalv1.ImageAllowRuleSignatures{
-		Rules: []internalv1.SignatureRules{
-			{
-				SignedBy: internalv1.SignedBy{
-					AllOf: []string{string(testPubKey)},
-				},
+	iar.ImageSelector.Signatures = []internalv1.SignatureRules{
+		{
+			SignedBy: internalv1.SignedBy{
+				AllOf: []string{string(pubkeyCosign)},
 			},
 		},
 	}
@@ -246,16 +213,14 @@ func TestImageAllowRules(t *testing.T) {
 	require.Error(t, err, "should error since image %s was deleted", id)
 
 	// update iar to require a signature with specific annotation
-	iar.Signatures = internalv1.ImageAllowRuleSignatures{
-		Rules: []internalv1.SignatureRules{
-			{
-				SignedBy: internalv1.SignedBy{
-					AllOf: []string{string(testPubKey)},
-				},
-				Annotations: internalv1.SignatureAnnotations{
-					Match: map[string]string{
-						"foo": "bar",
-					},
+	iar.ImageSelector.Signatures = []internalv1.SignatureRules{
+		{
+			SignedBy: internalv1.SignedBy{
+				AllOf: []string{string(pubkeyCosign)},
+			},
+			Annotations: internalv1.SignatureAnnotations{
+				Match: map[string]string{
+					"foo": "bar",
 				},
 			},
 		},

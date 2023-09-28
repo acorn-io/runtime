@@ -6,7 +6,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/images"
 	tags2 "github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -60,5 +60,5 @@ func (c *client) resolveLocalTag(ctx context.Context, namespace, name string) (s
 }
 
 func (c *client) checkImageAllowed(ctx context.Context, namespace, name string) error {
-	return imageallowrules.CheckImageAllowed(ctx, c.client, namespace, name, "", "")
+	return imagerules.CheckImageAllowed(ctx, c.client, namespace, name, "", "")
 }

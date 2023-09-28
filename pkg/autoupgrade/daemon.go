@@ -7,7 +7,7 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	imagename "github.com/google/go-containerregistry/pkg/name"
 	"github.com/sirupsen/logrus"
@@ -231,7 +231,7 @@ func (d *daemon) refreshImages(ctx context.Context, apps map[kclient.ObjectKey]v
 			if updated || strings.TrimPrefix(app.Status.Staged.AppImage.Digest, "sha256:") != strings.TrimPrefix(digest, "sha256:") {
 				if !updated && digest != "" {
 					if err := d.client.checkImageAllowed(ctx, app.Namespace, nextAppImage); err != nil {
-						if _, ok := err.(*imageallowrules.ErrImageNotAllowed); ok {
+						if _, ok := err.(*imagerules.ErrImageNotAllowed); ok {
 							logrus.Debugf("Updated image %s for %s/%s is not allowed: %v", nextAppImage, app.Namespace, app.Name, err)
 							d.appKeysPrevCheck[appKey] = updateTime
 							continue

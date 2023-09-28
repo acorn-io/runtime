@@ -26,6 +26,10 @@ func AddToScheme(scheme *runtime.Scheme) error {
 		&ProjectComputeClassInstanceList{},
 		&QuotaRequestInstance{},
 		&QuotaRequestInstanceList{},
+		&ImageRoleAuthorizationInstance{},
+		&ImageRoleAuthorizationInstanceList{},
+		&ClusterImageRoleAuthorizationInstance{},
+		&ClusterImageRoleAuthorizationInstanceList{},
 	)
 
 	// Add common types

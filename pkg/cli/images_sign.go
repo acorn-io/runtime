@@ -11,7 +11,7 @@ import (
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	acornsign "github.com/acorn-io/runtime/pkg/cosign"
-	"github.com/acorn-io/runtime/pkg/imageallowrules/selector"
+	signatureannotations "github.com/acorn-io/runtime/pkg/imageselector/signatures/annotations"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pterm/pterm"
@@ -51,7 +51,7 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Validate user-provided Annotations
-	_, err := selector.GenerateSelector(internalv1.SignatureAnnotations{Match: a.Annotations}, selector.LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{selector.IgnoreInvalidFieldErrors(selector.LabelValueMaxLengthErrMsg, selector.LabelValueRegexpErrMsg)}})
+	_, err := signatureannotations.GenerateSelector(internalv1.SignatureAnnotations{Match: a.Annotations}, signatureannotations.LabelSelectorOpts{LabelRequirementErrorFilters: []utilerrors.Matcher{signatureannotations.IgnoreInvalidFieldErrors(signatureannotations.LabelValueMaxLengthErrMsg, signatureannotations.LabelValueRegexpErrMsg)}})
 	if err != nil {
 		return fmt.Errorf("failed to parse provided annotations: %w", err)
 	}

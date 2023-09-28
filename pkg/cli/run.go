@@ -14,7 +14,7 @@ import (
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/dev"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
 	"github.com/acorn-io/runtime/pkg/wait"
@@ -294,9 +294,9 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 			return fmt.Errorf("not authorized to pull %s - Use `acorn login <REGISTRY>` to login to the registry", image)
 		}
 		err = client.TranslateNotAllowed(err)
-		if naErr := (*imageallowrules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
+		if naErr := (*imagerules.ErrImageNotAllowed)(nil); errors.As(err, &naErr) {
 			if _, isPattern := autoupgrade.AutoUpgradePattern(image); isPattern {
-				err.(*imageallowrules.ErrImageNotAllowed).Image = image
+				err.(*imagerules.ErrImageNotAllowed).Image = image
 				logrus.Debugf("Valid tags for pattern %s were not allowed to run: %v", image, naErr)
 				if choice, promptErr := rulerequest.HandleNotAllowed(s.Dangerous, image); promptErr != nil {
 					return promptErr

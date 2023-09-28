@@ -1,0 +1,12 @@
+containers: {
+  "awsapp": {
+      image: "nginx:latest"
+      permissions: {
+        rules: [{
+          verbs: ["get"]
+          apiGroups: ["aws.acorn.io"]
+        }]
+      }
+  }
+  
+}

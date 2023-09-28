@@ -21,7 +21,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/computeclasses"
 	apiv1config "github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/runtime/pkg/imageallowrules"
+	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/labels"
@@ -174,7 +174,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		if !z.Dereference(app.Spec.Stop) {
 			// App was stopped, so we don't need to check image allow rules or compute classes
 			// (this could prevent stopping an app if either of these have changed)
-			if err := imageallowrules.CheckImageAllowed(ctx, s.client, app.Namespace, checkImage, image, imageDetails.AppImage.Digest, remote.WithTransport(s.transport)); err != nil {
+			if err := imagerules.CheckImageAllowed(ctx, s.client, app.Namespace, checkImage, image, imageDetails.AppImage.Digest, remote.WithTransport(s.transport)); err != nil {
 				result = append(result, field.Forbidden(field.NewPath("spec", "image"), fmt.Sprintf("%s not allowed to run: %s", app.Spec.Image, err.Error())))
 				return
 			}

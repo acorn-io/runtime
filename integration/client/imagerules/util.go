@@ -1,4 +1,4 @@
-package signatures
+package imagerules
 
 import (
 	"context"
@@ -10,7 +10,14 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/sigstore/cosign/v2/pkg/signature"
 	sigsig "github.com/sigstore/sigstore/pkg/signature"
+
+	_ "embed"
 )
+
+// Commonly used keys embedded
+
+//go:embed testdata/cosign.pub
+var pubkeyCosign []byte
 
 func signImage(ctx context.Context, c client.Client, targetDigest name.Digest, targetName, key string) (*v1.ImageSignature, error) {
 	sigSigner, err := signature.SignerVerifierFromKeyRef(ctx, key, func(_ bool) ([]byte, error) { return []byte(""), nil })

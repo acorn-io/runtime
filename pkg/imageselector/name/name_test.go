@@ -1,4 +1,4 @@
-package imageallowrules
+package name
 
 import (
 	"testing"
@@ -12,6 +12,7 @@ func TestImageCovered(t *testing.T) {
 		name        string
 		pattern     string
 		image       string
+		digest      string
 		shouldMatch bool
 	}{
 		{
@@ -80,6 +81,26 @@ func TestImageCovered(t *testing.T) {
 			image:       "e67e444786a869161b26fa00f4993bbdeba3da677043e0bead8747d7a05eb150",
 			shouldMatch: true,
 		},
+		{
+			name:        "match by digest not image",
+			pattern:     "sha256:e67e444786a869161b26fa00f4993bbdeba3da677043e0bead8747d7a05eb150",
+			image:       "foo/bar:v1",
+			digest:      "sha256:e67e444786a869161b26fa00f4993bbdeba3da677043e0bead8747d7a05eb150",
+			shouldMatch: true,
+		},
+		{
+			name:        "fail by image and digest",
+			pattern:     "sha256:e67e444786a869161b26fa00f4993bbdeba3da677043e0bead8747d7a05eb150",
+			image:       "foo/bar:v1",
+			digest:      "sha256:abc123",
+			shouldMatch: false,
+		},
+		{
+			name:        "match by multi-element repo and semver tag",
+			pattern:     "ghcr.io/acorn-io/aws/**:v#.#.#",
+			image:       "ghcr.io/acorn-io/aws/rds/serverless:v1.0.2",
+			shouldMatch: true,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -89,7 +110,7 @@ func TestImageCovered(t *testing.T) {
 				t.Fatalf("failed to parse image %s: %v", tc.image, err)
 			}
 
-			match := ImageCovered(ref, "", []string{tc.pattern})
+			match := ImageCovered(ref, tc.digest, []string{tc.pattern})
 
 			assert.Equal(t, tc.shouldMatch, match)
 		})
