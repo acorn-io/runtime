@@ -12,15 +12,26 @@ type Details struct {
 	Params     *v1.ParamSpec  `json:"params,omitempty"`
 }
 
-func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string) (*Details, error) {
+func ParseDetails(acornfile string, acornfileV0 bool, deployArgs map[string]any, profiles []string) (*Details, error) {
 	result := &Details{
 		DeployArgs: v1.NewGenericMap(deployArgs),
 		Profiles:   profiles,
 	}
 
-	appDef, err := appdefinition.NewAppDefinition([]byte(acornfile))
-	if err != nil {
-		return nil, err
+	var (
+		appDef *appdefinition.AppDefinition
+		err    error
+	)
+	if acornfileV0 {
+		appDef, err = appdefinition.NewLegacyAppDefinition([]byte(acornfile))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		appDef, err = appdefinition.NewAppDefinition([]byte(acornfile))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(deployArgs) > 0 || len(profiles) > 0 {

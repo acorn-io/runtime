@@ -12,6 +12,8 @@ type AppImage struct {
 	BuildArgs *GenericMap `json:"buildArgs,omitempty"`
 	Profiles  []string    `json:"profiles,omitempty"`
 	VCS       VCS         `json:"vcs,omitempty"`
+
+	AcornfileV0 bool `json:"acornfileV0,omitempty"`
 }
 
 type VCS struct {

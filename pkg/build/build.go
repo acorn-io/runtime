@@ -142,7 +142,7 @@ func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[s
 		key, container := entry.Key, entry.Value
 
 		if container.Image == "" && container.Build == nil {
-			return nil, nil, fmt.Errorf("either image or build field must be set")
+			return nil, nil, fmt.Errorf("either image or build field must be set to build container/job: %s", key)
 		}
 
 		if container.Image != "" && container.Build == nil {

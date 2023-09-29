@@ -119,7 +119,7 @@ func getImageDetails(ctx context.Context, c kclient.Client, namespace, imageName
 		return nil, err
 	}
 
-	details, err := ParseDetails(appImageWithData.AppImage.Acornfile, opts.DeployArgs, opts.Profiles)
+	details, err := ParseDetails(appImageWithData.AppImage.Acornfile, appImageWithData.AppImage.AcornfileV0, opts.DeployArgs, opts.Profiles)
 	if err != nil {
 		return &apiv1.ImageDetails{
 			ObjectMeta: metav1.ObjectMeta{

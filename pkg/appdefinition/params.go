@@ -118,16 +118,22 @@ func fromField(in schema.Field) v1.Field {
 	}
 }
 
-func (a *AppDefinition) ToFlags(programName, argsFile string) (*flagargs.Flags, error) {
+type Flags interface {
+	Parse(args []string) (map[string]any, []string, error)
+}
+
+func (a *AppDefinition) ToFlags(programName, argsFile string, usage func()) (Flags, error) {
 	var file schema.File
 	err := a.decode(&file)
 	if err != nil {
 		return nil, err
 	}
 
-	return flagargs.New(argsFile, programName,
+	args := flagargs.New(argsFile, programName,
 		dropHiddenProfiles(file.ProfileNames),
-		dropHiddenArgs(file.Args.Fields)), nil
+		dropHiddenArgs(file.Args.Fields))
+	args.Usage = usage
+	return args, nil
 }
 
 func (a *AppDefinition) ToParamSpec() (*v1.ParamSpec, error) {
