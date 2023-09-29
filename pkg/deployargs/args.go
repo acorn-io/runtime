@@ -5,24 +5,23 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/acorn-io/aml/cli/pkg/flagargs"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
-	"github.com/acorn-io/runtime/pkg/flagparams"
 	"golang.org/x/exp/maps"
 )
 
-func ToFlags(name string, appDef *appdefinition.AppDefinition) (*flagparams.Flags, error) {
+func ToFlags(programName, argsFile string, appDef *appdefinition.AppDefinition) (*flagargs.Flags, error) {
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
 		return nil, err
 	}
 
-	params, err := appDef.Args()
+	flags, err := appDef.ToFlags(programName, argsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	flags := flagparams.New(name, params)
 	flags.Usage = Usage(appSpec)
 	return flags, nil
 }

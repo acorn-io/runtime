@@ -10,6 +10,7 @@ type AppImage struct {
 	Acornfile string      `json:"acornfile,omitempty"`
 	ImageData ImagesData  `json:"imageData,omitempty"`
 	BuildArgs *GenericMap `json:"buildArgs,omitempty"`
+	Profiles  []string    `json:"profiles,omitempty"`
 	VCS       VCS         `json:"vcs,omitempty"`
 }
 

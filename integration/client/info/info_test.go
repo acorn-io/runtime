@@ -73,7 +73,8 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 	time.Sleep(time.Millisecond * 100)
 
 	// Create multiclient to test commands off of
-	mc, err := project.Client(ctx, project.Options{AllProjects: true})
+	mc, err := project.Client(ctx, project.Options{
+		AllProjects: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,6 +87,10 @@ func TestMultiClientInfoThreeNamespace(t *testing.T) {
 	}
 
 	// check that projectNames is a subset of Info's projects
-	subset := helper.Subset[string, v1.Info, string](t, projectNames, infos, func(ele string) string { return ele }, func(info v1.Info) string { return info.Namespace })
+	subset := helper.Subset[string, v1.Info, string](t, projectNames, infos, func(ele string) string {
+		return ele
+	}, func(info v1.Info) string {
+		return info.Namespace
+	})
 	assert.Truef(t, subset, "%+v is not a subset of %+v", projectNames, infos)
 }

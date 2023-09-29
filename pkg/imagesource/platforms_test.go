@@ -5,28 +5,8 @@ import (
 	"testing"
 
 	"github.com/acorn-io/runtime/pkg/build"
-	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestParamsHelp(t *testing.T) {
-	var (
-		file = "testdata/params/Acornfile"
-		cwd  = "testdata/params"
-	)
-	_, _, err := NewImageSource("", file, []string{
-		cwd,
-		"image-name",
-		"--str=s",
-		"--str-default=d",
-		"-h",
-		"--i=2",
-		"--i-default=3",
-		"--complex",
-		"@testdata/params/test.cue",
-	}, nil, nil, false).GetAppDefinition(context.Background(), nil)
-	assert.Equal(t, pflag.ErrHelp, err)
-}
 
 func TestParams(t *testing.T) {
 	var (
@@ -34,16 +14,16 @@ func TestParams(t *testing.T) {
 		file        = "testdata/params/Acornfile"
 		cwd         = "testdata/params"
 	)
-	_, params, err := NewImageSource(acornConfig, file, []string{
+	_, params, _, err := NewImageSource(acornConfig, file, "", []string{
 		cwd,
 		"image-name",
 		"--str=s",
-		"--str-default=d",
+		"--strDefault=d",
 		"--i=2",
-		"--i-default=3",
+		"--iDefault=3",
 		"--complex",
 		"@testdata/params/test.cue",
-	}, nil, nil, false).GetAppDefinition(context.Background(), nil)
+	}, nil, false).GetAppDefinition(context.Background(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,10 +33,7 @@ func TestParams(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	def, _, err = def.WithArgs(params, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	def = def.WithArgs(params, nil)
 
 	appSpec, err := def.AppSpec()
 	if err != nil {

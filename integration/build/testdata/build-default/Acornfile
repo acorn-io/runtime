@@ -1,8 +1,8 @@
 args: {
-	include: bool | *false
+	include: false
 }
 
-profiles: build: include: bool | *true
+profiles: build: include: true
 
 if args.include {
 	containers: default: image: "ghcr.io/acorn-io/images-mirror/busybox:latest"

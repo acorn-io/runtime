@@ -12,10 +12,10 @@ acorn render [flags] DIRECTORY [acorn args]
 ### Options
 
 ```
-  -f, --file string       Name of the dev file (default "DIRECTORY/Acornfile")
-  -h, --help              help for render
-  -o, --output string     Output in JSON or YAML (default "aml")
-      --profile strings   Profile to assign default values
+      --args-file string   Default args to apply to command (default ".args.acorn")
+  -f, --file string        Name of the dev file (default "DIRECTORY/Acornfile")
+  -h, --help               help for render
+  -o, --output string      Output in JSON or YAML (default "aml")
 ```
 
 ### Options inherited from parent commands

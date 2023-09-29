@@ -24,10 +24,10 @@ acorn build .
 ### Options
 
 ```
+      --args-file string   Default args to apply to the build (default ".build-args.acorn")
   -f, --file string        Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help               help for build
   -p, --platform strings   Target platforms (form os/arch[/variant][:osversion] example linux/amd64)
-      --profile strings    Profile to assign default values
       --push               Push image after build
   -t, --tag strings        Apply a tag to the final build
 ```

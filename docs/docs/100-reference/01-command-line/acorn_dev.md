@@ -23,6 +23,7 @@ acorn dev --name wandering-sound <IMAGE>
 ### Options
 
 ```
+      --args-file string     Default args to apply to run/update command (default ".args.acorn")
       --auto-upgrade         Enabled automatic upgrades.
   -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
   -f, --file string          Name of the build file (default "DIRECTORY/Acornfile")
@@ -31,7 +32,6 @@ acorn dev --name wandering-sound <IMAGE>
   -n, --name string          Name of app to create
       --notify-upgrade       If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it
   -o, --output string        Output API request without creating app (json, yaml)
-      --profile strings      Profile to assign default values
       --replace              Replace the app with only defined values, resetting undefined fields to default values
 ```
 

@@ -159,7 +159,6 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 
 	opts.Name = s.Name
 	opts.Region = s.Region
-	opts.Profiles = s.Profile
 	opts.AutoUpgrade = s.AutoUpgrade
 	opts.NotifyUpgrade = s.NotifyUpgrade
 	opts.AutoUpgradeInterval = s.Interval
@@ -232,7 +231,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	var (
-		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, nil, z.Dereference(s.AutoUpgrade))
+		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
 		app         *apiv1.App
 		updated     bool
 	)
@@ -287,7 +286,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
-	image, deployArgs, err := imageSource.GetImageAndDeployArgs(cmd.Context(), c)
+	image, deployArgs, profiles, err := imageSource.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
 		if apierrors.IsUnauthorized(err) {
 			logrus.Debugf("Error pulling %s: %v", image, err)
@@ -312,6 +311,7 @@ func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 	opts.DeployArgs = deployArgs
+	opts.Profiles = profiles
 
 	if s.Output != "" {
 		app := client.ToApp(c.GetNamespace(), image, &opts)
@@ -345,15 +345,16 @@ func (s *Run) update(ctx context.Context, c client.Client, imageSource imagesour
 	updateOpts.Replace = s.Replace
 
 	if imageSource.IsImageSet() {
-		image, deployArgs, err := imageSource.GetImageAndDeployArgs(ctx, c)
+		image, deployArgs, profiles, err := imageSource.GetImageAndDeployArgs(ctx, c)
 		if err != nil {
 			return nil, false, err
 		}
 		updateOpts.Image = image
 		updateOpts.DeployArgs = deployArgs
+		updateOpts.Profiles = profiles
 	} else if len(imageSource.Args) > 0 {
 		imageSource.Image = app.Status.AppImage.Name
-		if _, updateOpts.DeployArgs, err = imageSource.GetImageAndDeployArgs(ctx, c); err != nil {
+		if _, updateOpts.DeployArgs, updateOpts.Profiles, err = imageSource.GetImageAndDeployArgs(ctx, c); err != nil {
 			return nil, false, err
 		}
 	}

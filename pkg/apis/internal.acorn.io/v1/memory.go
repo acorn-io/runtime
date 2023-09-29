@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/acorn-io/aml"
+	"github.com/acorn-io/aml/pkg/value"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -20,7 +20,7 @@ func ParseMemory(s []string) (MemoryMap, error) {
 			workload = ""
 		}
 
-		quantity, err := aml.ParseInt(memBytes)
+		quantity, err := value.Number(memBytes).ToInt()
 		if err != nil {
 			return MemoryMap{}, err
 		}

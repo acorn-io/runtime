@@ -44,6 +44,7 @@ Examples:
    acorn update --confirm-upgrade myapp
 
 Flags:
+      --args-file string     Default args to apply to run/update command (default ".args.acorn")
       --auto-upgrade         Enabled automatic upgrades.
   -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
   -i, --dev                  Enable interactive dev mode: build image, stream logs/status in the foreground and stop on exit
@@ -53,7 +54,6 @@ Flags:
   -n, --name string          Name of app to create
       --notify-upgrade       If true and the app is configured for auto-upgrades, you will be notified in the CLI when an upgrade is available and must confirm it
   -o, --output string        Output API request without creating app (json, yaml)
-      --profile strings      Profile to assign default values
   -q, --quiet                Do not print status
       --wait                 Wait for app to become ready before command exiting (default: true)
 

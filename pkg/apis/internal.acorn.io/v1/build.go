@@ -69,20 +69,13 @@ type BuilderSpec struct {
 }
 
 type ParamSpec struct {
-	Params   []Param   `json:"params,omitempty"`
+	Args     []Field   `json:"args,omitempty"`
 	Profiles []Profile `json:"profiles,omitempty"`
 }
 
 type Profile struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-}
-
-type Param struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Type        string `json:"type,omitempty" wrangler:"options=string|int|float|bool|object|array"`
-	Schema      string `json:"schema,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

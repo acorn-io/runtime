@@ -904,7 +904,7 @@ func TestDeployParam(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = appDef.Args()
+	_, err = appDef.ToParamSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1766,8 +1766,8 @@ func TestAutoUpgradeLocalImage(t *testing.T) {
 	}
 
 	// Deploy the app
-	imageSource := imagesource.NewImageSource("", "", []string{"mylocalimage"}, []string{}, nil, true)
-	appImage, _, err := imageSource.GetImageAndDeployArgs(ctx, c)
+	imageSource := imagesource.NewImageSource("", "", "", []string{"mylocalimage"}, nil, true)
+	appImage, _, _, err := imageSource.GetImageAndDeployArgs(ctx, c)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -127,7 +127,7 @@ func TestRun(t *testing.T) {
 				args: []string{"-m found.container=256Miii", "found"},
 			},
 			wantErr: true,
-			wantOut: "invalid number \"256Miii\"",
+			wantOut: "strconv.ParseInt: parsing \"256Miii\": invalid syntax",
 		},
 		{
 			name: "acorn run -m found.container=notallowed found ", fields: fields{
@@ -139,7 +139,7 @@ func TestRun(t *testing.T) {
 				args: []string{"-m found.container=notallowed", "found"},
 			},
 			wantErr: true,
-			wantOut: "illegal number start \"notallowed\"",
+			wantOut: "strconv.ParseInt: parsing \"notallowed\": invalid syntax",
 		},
 		{
 			name: "acorn run ./folder but folder doesn't exist", fields: fields{

@@ -1,6 +1,7 @@
 package appdefinition
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -40,6 +41,11 @@ func addAcorns(req router.Request, appInstance *v1.AppInstance, tag name.Referen
 		} else if !apierrors.IsNotFound(err) {
 			return err
 		}
+
+		if strings.Count(acorn.Labels[labels.AcornPublicName], ".") > 10 {
+			return fmt.Errorf("max limit of 10 nested acorns exceeded")
+		}
+
 		resp.Objects(acorn)
 	}
 	return nil

@@ -24,10 +24,7 @@ func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string
 	}
 
 	if len(deployArgs) > 0 || len(profiles) > 0 {
-		appDef, deployArgs, err = appDef.WithArgs(deployArgs, profiles)
-		if err != nil {
-			return nil, err
-		}
+		appDef = appDef.WithArgs(deployArgs, profiles)
 		result.DeployArgs = v1.NewGenericMap(deployArgs)
 	}
 
@@ -36,7 +33,7 @@ func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string
 		return nil, err
 	}
 
-	paramSpec, err := appDef.Args()
+	paramSpec, err := appDef.ToParamSpec()
 	if err != nil {
 		return nil, err
 	}

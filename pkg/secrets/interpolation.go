@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/acorn-io/aml"
-	"github.com/acorn-io/aml/pkg/replace"
+	aml "github.com/acorn-io/aml/legacy"
+	"github.com/acorn-io/aml/legacy/pkg/replace"
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"

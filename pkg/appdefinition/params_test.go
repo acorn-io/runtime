@@ -15,9 +15,9 @@ args: {
 	b: true
 	i: 4
 	f: 5.0
-	e: "hi" | "bye"
-	a: ["hi"]
-	o: {}
+	e: enum("hi", "bye") || default "hi"
+	a: [string] || default ["hi"]
+	o: object || default {}
 }
 `
 	def, err := NewAppDefinition([]byte(acornCue))
@@ -25,35 +25,35 @@ args: {
 		t.Fatal(err)
 	}
 
-	spec, err := def.Args()
+	spec, err := def.ToParamSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "string", spec.Params[0].Type)
-	assert.Equal(t, "bool", spec.Params[1].Type)
-	assert.Equal(t, "int", spec.Params[2].Type)
-	assert.Equal(t, "float", spec.Params[3].Type)
-	assert.Equal(t, "enum", spec.Params[4].Type)
-	assert.Equal(t, "array", spec.Params[5].Type)
-	assert.Equal(t, "object", spec.Params[6].Type)
+	assert.Equal(t, "string", string(spec.Args[0].Type.Kind))
+	assert.Equal(t, "bool", string(spec.Args[1].Type.Kind))
+	assert.Equal(t, "number", string(spec.Args[2].Type.Kind))
+	assert.Equal(t, "number", string(spec.Args[3].Type.Kind))
+	assert.Equal(t, "string", string(spec.Args[4].Type.Kind))
+	assert.Equal(t, "array", string(spec.Args[5].Type.Kind))
+	assert.Equal(t, "object", string(spec.Args[6].Type.Kind))
 }
 
 func TestParamSpec(t *testing.T) {
 	acornCue := `
 args: {
   // Description of a string param
-  foo: string
+  foo: "x"
 
   // Two line Description of an int
   // Description of an int with default
 //
-  bar: int | *4
+  bar: int || default 4
 // This is dropped
 
 // Complex  value 
-  complex: {
-    foo: string
+  complex?: {
+    foo: "hi"
   }
 }
 `
@@ -62,22 +62,19 @@ args: {
 		t.Fatal(err)
 	}
 
-	spec, err := def.Args()
+	spec, err := def.ToParamSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "foo", spec.Params[0].Name)
-	assert.Equal(t, "string", spec.Params[0].Schema)
-	assert.Equal(t, "Description of a string param", spec.Params[0].Description)
+	assert.Equal(t, "foo", spec.Args[0].Name)
+	assert.Equal(t, "Description of a string param", spec.Args[0].Description)
 
-	assert.Equal(t, "bar", spec.Params[1].Name)
-	assert.Equal(t, "*4 | int", spec.Params[1].Schema)
-	assert.Equal(t, "Two line Description of an int\nDescription of an int with default", spec.Params[1].Description)
+	assert.Equal(t, "bar", spec.Args[1].Name)
+	assert.Equal(t, "Two line Description of an int\nDescription of an int with default", spec.Args[1].Description)
 
-	assert.Equal(t, "complex", spec.Params[2].Name)
-	assert.Equal(t, "{\n\tfoo: string\n}", spec.Params[2].Schema)
-	assert.Equal(t, "Complex  value", spec.Params[2].Description)
+	assert.Equal(t, "complex", spec.Args[2].Name)
+	assert.Equal(t, "Complex  value", spec.Args[2].Description)
 }
 
 func TestJSONFloatParsing(t *testing.T) {
@@ -110,16 +107,12 @@ containers: {
 		t.Fatal(err)
 	}
 
-	appDef, args, err := appDef.WithArgs(params.GetData(), []string{"prod"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	appDef = appDef.WithArgs(params.GetData(), []string{"prod"})
 
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, 3, args["replicas"])
 	assert.Equal(t, int32(3), *appSpec.Containers["web"].Scale)
 }

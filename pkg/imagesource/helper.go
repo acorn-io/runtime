@@ -20,7 +20,7 @@ type ImageSource struct {
 	Image     string
 	File      string
 	Args      []string
-	Profiles  []string
+	ArgsFile  string
 	Platforms []string
 	// NoDefaultRegistry - if true, indicates that no container registry should be assumed for the Image.
 	// This is used if the ImageSource is for an app with auto-upgrade enabled.
@@ -30,11 +30,11 @@ type ImageSource struct {
 	acornConfig string
 }
 
-func NewImageSource(acornConfig string, file string, args, profiles, platforms []string, noDefaultReg bool) (result ImageSource) {
+func NewImageSource(acornConfig string, file, argsFile string, args, platforms []string, noDefaultReg bool) (result ImageSource) {
 	result.acornConfig = acornConfig
 	result.File = file
 	result.Image, result.Args = splitImageAndArgs(args)
-	result.Profiles = profiles
+	result.ArgsFile = argsFile
 	result.Platforms = platforms
 
 	// If the image is a pattern, auto-upgrade is on, so assume no default registry
@@ -65,10 +65,10 @@ func (i ImageSource) IsImageSet() bool {
 		i.Image != ""
 }
 
-func (i ImageSource) GetAppDefinition(ctx context.Context, c client.Client) (*appdefinition.AppDefinition, map[string]any, error) {
+func (i ImageSource) GetAppDefinition(ctx context.Context, c client.Client) (*appdefinition.AppDefinition, map[string]any, []string, error) {
 	image, file, err := i.ResolveImageAndFile()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	var (
 		app        *appdefinition.AppDefinition
@@ -78,38 +78,33 @@ func (i ImageSource) GetAppDefinition(ctx context.Context, c client.Client) (*ap
 		sourceName = image
 		imageDetails, err := c.ImageDetails(ctx, image, &client.ImageDetailsOptions{NoDefaultRegistry: i.NoDefaultRegistry})
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		app, err = appdefinition.FromAppImage(&imageDetails.AppImage)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	} else {
 		sourceName = file
 		app, err = build.ResolveAndParse(file)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
-	app, _, err = app.WithArgs(nil, i.Profiles)
+	flags, err := deployargs.ToFlags(sourceName, i.ArgsFile, app)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	flags, err := deployargs.ToFlags(sourceName, app)
+	deployArgs, profiles, err := flags.Parse(i.Args)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	deployArgs, err := flags.Parse(i.Args)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	app, deployArgs, err = app.WithArgs(deployArgs, i.Profiles)
-	return app, deployArgs, err
+	app = app.WithArgs(deployArgs, profiles)
+	return app, deployArgs, profiles, nil
 }
 
 func (i ImageSource) WatchFiles(ctx context.Context, c client.Client) ([]string, error) {
@@ -122,7 +117,7 @@ func (i ImageSource) WatchFiles(ctx context.Context, c client.Client) ([]string,
 		return nil, nil
 	}
 
-	app, _, err := i.GetAppDefinition(ctx, c)
+	app, _, _, err := i.GetAppDefinition(ctx, c)
 	if err != nil {
 		return []string{file}, err
 	}
@@ -166,11 +161,11 @@ func (i ImageSource) WithImage(image string) ImageSource {
 	return i
 }
 
-func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client) (string, map[string]any, error) {
+func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client) (string, map[string]any, []string, error) {
 	var err error
 	i.Image, i.File, err = i.ResolveImageAndFile()
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 
 	// if file is set, then we must build to get the image, if it's not set, then
@@ -178,34 +173,34 @@ func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client)
 	if i.File != "" {
 		creds, err := GetCreds(i.acornConfig, c)
 		if err != nil {
-			return "", nil, err
+			return "", nil, nil, err
 		}
 
-		_, params, err := i.GetAppDefinition(ctx, c)
+		_, params, profiles, err := i.GetAppDefinition(ctx, c)
 		if err != nil {
-			return "", nil, err
+			return "", nil, nil, err
 		}
 
 		platforms, err := build.ParsePlatforms(i.Platforms)
 		if err != nil {
-			return "", nil, err
+			return "", nil, nil, err
 		}
 
 		image, err := c.AcornImageBuild(ctx, i.File, &client.AcornImageBuildOptions{
 			Credentials: creds,
 			Cwd:         i.Image,
 			Args:        params,
-			Profiles:    i.Profiles,
+			Profiles:    profiles,
 			Platforms:   platforms,
 		})
 		if err != nil {
-			return "", nil, err
+			return "", nil, nil, err
 		}
 		i.Image = image.ID
 	}
 
-	_, deployArgs, err := i.GetAppDefinition(ctx, c)
-	return i.Image, deployArgs, err
+	_, deployArgs, profiles, err := i.GetAppDefinition(ctx, c)
+	return i.Image, deployArgs, profiles, err
 }
 
 func GetCreds(acornConfig string, c client.Client) (client.CredentialLookup, error) {

@@ -5,19 +5,19 @@ FROM ghcr.io/acorn-io/images-mirror/moby/buildkit:v0.11.6 AS buildkit
 FROM ghcr.io/acorn-io/images-mirror/registry:2.8.1 AS registry
 FROM ghcr.io/acorn-io/images-mirror/rancher/klipper-lb:v0.3.5 AS klipper-lb
 
-FROM ghcr.io/acorn-io/images-mirror/golang:1.20-alpine AS helper
+FROM ghcr.io/acorn-io/images-mirror/golang:1.21-alpine AS helper
 WORKDIR /usr/src
 RUN apk -U add curl
 RUN curl -sfL https://github.com/loft-sh/devspace/archive/refs/tags/v6.3.2.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/acorn-helper -ldflags "-s -w" ./helper
 
-FROM ghcr.io/acorn-io/images-mirror/golang:1.20-alpine AS loglevel
+FROM ghcr.io/acorn-io/images-mirror/golang:1.21-alpine AS loglevel
 WORKDIR /usr/src
 RUN apk -U add curl
 RUN curl -sfL https://github.com/acorn-io/loglevel/archive/refs/tags/v0.1.6.tar.gz | tar xzf - --strip-components=1
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -o /usr/local/bin/loglevel -ldflags "-s -w"
 
-FROM ghcr.io/acorn-io/images-mirror/golang:1.20 AS build
+FROM ghcr.io/acorn-io/images-mirror/golang:1.21 AS build
 COPY / /src
 WORKDIR /src
 RUN --mount=type=cache,target=/go/pkg --mount=type=cache,target=/root/.cache/go-build make build

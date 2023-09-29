@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/acorn-io/aml/pkg/cue"
+	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/spf13/cobra"
@@ -44,7 +44,7 @@ func (a *SecretCreate) buildSecret() (*apiv1.Secret, error) {
 	}{}
 
 	if a.File != "" {
-		err := cue.UnmarshalFile(a.File, secret)
+		err := amlreadhelper.UnmarshalFile(a.File, secret)
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", a.File, err)
 		}

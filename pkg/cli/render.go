@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/acorn-io/aml/pkg/cue"
+	"github.com/acorn-io/aml"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/imagesource"
@@ -21,16 +21,16 @@ func NewRender(c CommandContext) *cobra.Command {
 }
 
 type Render struct {
-	File    string   `short:"f" usage:"Name of the dev file (default \"DIRECTORY/Acornfile\")"`
-	Profile []string `usage:"Profile to assign default values"`
-	Output  string   `usage:"Output in JSON or YAML" default:"aml" short:"o"`
-	client  ClientFactory
+	ArgsFile string `usage:"Default args to apply to command" default:".args.acorn"`
+	File     string `short:"f" usage:"Name of the dev file (default \"DIRECTORY/Acornfile\")"`
+	Output   string `usage:"Output in JSON or YAML" default:"aml" short:"o"`
+	client   ClientFactory
 }
 
 func (s *Render) Run(cmd *cobra.Command, args []string) error {
 	var c client2.Client
 
-	imageAndArgs := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, nil, false)
+	imageAndArgs := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, nil, false)
 
 	_, file, err := imageAndArgs.ResolveImageAndFile()
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	appDef, _, err := imageAndArgs.GetAppDefinition(cmd.Context(), c)
+	appDef, _, _, err := imageAndArgs.GetAppDefinition(cmd.Context(), c)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (s *Render) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		var d []byte
-		d, err = cue.FmtBytes([]byte(v))
+		d, err = aml.Format([]byte(v))
 		v = string(d)
 	case "json":
 		if v, err = appDef.JSON(); err == nil {

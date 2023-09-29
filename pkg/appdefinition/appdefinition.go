@@ -3,6 +3,7 @@ package appdefinition
 import (
 	"archive/tar"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,9 +11,10 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/acorn-io/aml"
-	"github.com/acorn-io/aml/pkg/cue"
+	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"sigs.k8s.io/yaml"
@@ -109,13 +111,11 @@ func assignImage(originalImage string, build *v1.Build, image string) (string, *
 	return image, build
 }
 
-func (a *AppDefinition) WithArgs(args map[string]any, profiles []string) (*AppDefinition, map[string]any, error) {
+func (a *AppDefinition) WithArgs(args map[string]any, profiles []string) *AppDefinition {
 	result := a.clone()
 	result.args = args
 	result.profiles = profiles
-
-	args, err := result.newDecoder().ComputedArgs()
-	return &result, args, err
+	return &result
 }
 
 func (a *AppDefinition) YAML() (string, error) {
@@ -140,12 +140,33 @@ func (a *AppDefinition) JSON() (string, error) {
 	return string(app), err
 }
 
-func (a *AppDefinition) newDecoder() *aml.Decoder {
-	return aml.NewDecoder(bytes.NewReader(a.data), aml.Options{
-		Args:      a.args,
-		Profiles:  a.profiles,
-		Acornfile: true,
-	})
+func (a *AppDefinition) getData() []byte {
+	def, err := fs.ReadFile(defaultFile)
+	if err != nil {
+		panic(err)
+	}
+	return append(a.data, def...)
+}
+
+func (a *AppDefinition) decode(out any) error {
+	f, err := fs.Open(schemaFile)
+	if err != nil {
+		// this shouldn't happen, this an embedded FS
+		panic(err)
+	}
+	defer f.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	return aml.NewDecoder(bytes.NewReader(a.getData()), aml.DecoderOption{
+		Context:          ctx,
+		SourceName:       "Acornfile",
+		Args:             a.args,
+		Profiles:         a.profiles,
+		SchemaSourceName: "acornfile-schema.acorn",
+		Schema:           f,
+	}).Decode(out)
 }
 
 func (a *AppDefinition) imagesData() (result v1.ImagesData) {
@@ -161,7 +182,7 @@ func (a *AppDefinition) imagesData() (result v1.ImagesData) {
 
 func (a *AppDefinition) AppSpec() (*v1.AppSpec, error) {
 	spec := &v1.AppSpec{}
-	if err := a.newDecoder().Decode(spec); err != nil {
+	if err := a.decode(spec); err != nil {
 		return nil, err
 	}
 
@@ -258,7 +279,7 @@ func addAcorns(fileSet map[string]bool, builds map[string]v1.AcornBuilderSpec, c
 		if build.Build == nil {
 			continue
 		}
-		data, err := cue.ReadCUE(filepath.Join(cwd, build.Build.Acornfile))
+		data, err := amlreadhelper.ReadFile(filepath.Join(cwd, build.Build.Acornfile))
 		if err != nil {
 			return
 		}
@@ -313,7 +334,7 @@ func (a *AppDefinition) WatchFiles(cwd string) (result []string, _ error) {
 
 func (a *AppDefinition) BuilderSpec() (*v1.BuilderSpec, error) {
 	spec := &v1.BuilderSpec{}
-	return spec, a.newDecoder().Decode(spec)
+	return spec, a.decode(spec)
 }
 
 func IconFromTar(reader io.Reader) ([]byte, error) {
