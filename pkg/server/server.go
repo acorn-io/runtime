@@ -59,7 +59,7 @@ func New(cfg Config) (*server.Server, error) {
 		Version:               cfg.Version,
 		HTTPSListenPort:       7443,
 		LongRunningVerbs:      []string{"watch", "proxy"},
-		LongRunningResources:  []string{"exec", "proxy", "log", "registryport", "port", "push", "pull", "portforward", "copy"},
+		LongRunningResources:  []string{"exec", "proxy", "log", "registryport", "port", "push", "pull", "portforward", "copy", "details"},
 		OpenAPIConfig:         openapi.GetOpenAPIDefinitions,
 		Scheme:                scheme.Scheme,
 		CodecFactory:          &scheme.Codecs,
