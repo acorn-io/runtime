@@ -13,7 +13,7 @@ type AppImage struct {
 	Profiles  []string    `json:"profiles,omitempty"`
 	VCS       VCS         `json:"vcs,omitempty"`
 
-	AcornfileV0 bool `json:"acornfileV0,omitempty"`
+	AcornfileV1 bool `json:"acornfileV1,omitempty"`
 }
 
 type VCS struct {
