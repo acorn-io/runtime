@@ -44,6 +44,7 @@ icon: "./icon"
 
 func TestProfilesImplicitArgs(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`profiles: a: {}, profiles: d: {}
+std.debug("debugs", args.profiles)
 	if std.contains(args.profiles, "d") {
 		containers: foo: {}
 	}
@@ -51,17 +52,13 @@ func TestProfilesImplicitArgs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	appDef, args, err := appImage.WithArgs(nil, []string{"a", "b?", "c?", "d?"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	appDef := appImage.WithArgs(nil, []string{"a", "b?", "c?", "d?"})
 
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []any{"a", "d"}, args["profiles"])
 	assert.Equal(t, []string{"a", "b?", "c?", "d?"}, appDef.profiles)
 	assert.Contains(t, appSpec.Containers, "foo")
 }
@@ -71,13 +68,13 @@ func TestDefaultProfiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	args, err := appImage.Args()
+	args, err := appImage.ToParamSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Len(t, args.Profiles, 0)
-	assert.Len(t, args.Params, 0)
+	assert.Len(t, args.Args, 0)
 }
 
 func TestDescription(t *testing.T) {
@@ -149,8 +146,6 @@ routers: {
 	}
 
 	assert.Equal(t, v1.Router{
-		Labels:      map[string]string{},
-		Annotations: map[string]string{},
 		Routes: []v1.Route{
 			{
 				Path:              "/short",
@@ -168,8 +163,6 @@ routers: {
 	}, spec.Routers["slice"])
 
 	assert.Equal(t, v1.Router{
-		Labels:      map[string]string{},
-		Annotations: map[string]string{},
 		Routes: []v1.Route{
 			{
 				Path:              "/bar/exact",
@@ -918,7 +911,8 @@ containers: {
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right2"].Ports[0].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right2"].Ports[0].Protocol, v1.Protocol(""))
 
-	assert.Equal(t, int32(12), appSpec.Containers["s"].Sidecars["right3"].Ports[0].Port)
+	assert.Equal(t, int32(0), appSpec.Containers["s"].Sidecars["right3"].Ports[0].Port)
+	assert.Equal(t, int32(12), appSpec.Containers["s"].Sidecars["right3"].Ports[0].TargetPort)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right3"].Ports[0].Protocol, v1.Protocol(""))
 	assert.Equal(t, int32(80), appSpec.Containers["s"].Sidecars["right3"].Ports[1].Port)
 	assert.Equal(t, appSpec.Containers["s"].Sidecars["right3"].Ports[1].Protocol, v1.Protocol(""))
@@ -1097,8 +1091,6 @@ images: {
 	}
 
 	assert.Equal(t, &v1.BuilderSpec{
-		Services: map[string]v1.AcornBuilderSpec{},
-		Jobs:     map[string]v1.ContainerImageBuilderSpec{},
 		Containers: map[string]v1.ContainerImageBuilderSpec{
 			"image": {
 				Image: "image-image",
@@ -1110,28 +1102,22 @@ images: {
 			},
 			"build": {
 				Build: &v1.Build{
-					BuildArgs:          map[string]string{},
-					AdditionalContexts: map[string]string{},
-					Context:            ".",
-					Dockerfile:         "Dockerfile",
+					Context:    ".",
+					Dockerfile: "Dockerfile",
 				},
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							BuildArgs:          map[string]string{},
-							AdditionalContexts: map[string]string{},
-							Context:            ".",
-							Dockerfile:         "Dockerfile",
+							Context:    ".",
+							Dockerfile: "Dockerfile",
 						},
 					},
 				},
 			},
 			"buildcontext": {
 				Build: &v1.Build{
-					BuildArgs:          map[string]string{},
-					AdditionalContexts: map[string]string{},
-					Context:            ".",
-					Dockerfile:         "Dockerfile",
+					Context:    ".",
+					Dockerfile: "Dockerfile",
 					ContextDirs: map[string]string{
 						"/var/tmp": "./foo/bar",
 					},
@@ -1139,10 +1125,8 @@ images: {
 				Sidecars: map[string]v1.ContainerImageBuilderSpec{
 					"side": {
 						Build: &v1.Build{
-							BuildArgs:          map[string]string{},
-							AdditionalContexts: map[string]string{},
-							Context:            ".",
-							Dockerfile:         "Dockerfile",
+							Context:    ".",
+							Dockerfile: "Dockerfile",
 							ContextDirs: map[string]string{
 								"/var/tmp": "./foo/bar",
 							},
@@ -1180,14 +1164,12 @@ images: {
 				AcornBuild: &v1.AcornBuild{
 					Context:   ".",
 					Acornfile: "Acornfile",
-					BuildArgs: new(v1.GenericMap),
 				},
 			},
 			"iimage": {
 				Image: "images-image-image",
 			},
 		},
-		Acorns: map[string]v1.AcornBuilderSpec{},
 	}, buildSpec)
 
 	app := appImage.WithImageData(v1.ImagesData{
@@ -1284,6 +1266,7 @@ containers: {
 
 func TestVolumes(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`
+args: foo: "baz"
 containers: {
   s: {
     sidecars: left: {
@@ -1346,10 +1329,7 @@ volumes: {
 		Images: nil,
 	})
 
-	appImage, _, err = appImage.WithArgs(map[string]any{"foo": "bar"}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	appImage = appImage.WithArgs(map[string]any{"foo": "bar"}, nil)
 
 	appSpec, err := appImage.AppSpec()
 	if err != nil {
@@ -1445,17 +1425,13 @@ secrets: {
 	}
 
 	assert.Equal(t, v1.Secret{
-		Type:        "opaque",
-		Labels:      map[string]string{},
-		Annotations: map[string]string{},
+		Type: "opaque",
 		Data: map[string]string{
 			"username": "bardata",
 		},
 	}, appSpec.Secrets["explicit"])
 	assert.Equal(t, v1.Secret{
-		Type:        "basic",
-		Labels:      map[string]string{},
-		Annotations: map[string]string{},
+		Type: "basic",
 		Data: map[string]string{
 			"username": "bardata",
 			"password": "barpass",
@@ -1468,10 +1444,7 @@ secrets: {
 		Type: "opaque",
 	}, appSpec.Secrets["file-implicit"])
 	assert.Equal(t, v1.Secret{
-		Type:        "opaque",
-		Labels:      map[string]string{},
-		Annotations: map[string]string{},
-		Data:        map[string]string{},
+		Type: "opaque",
 	}, appSpec.Secrets["dirs-merge"])
 	assert.Equal(t, v1.Secret{
 		Type: "opaque",
@@ -1518,12 +1491,9 @@ containers: c: image: args.image
 
 	assert.Equal(t, "foo-hash", appSpec.Containers["c"].Image)
 
-	app, _, err = app.WithArgs(map[string]any{
+	app = app.WithArgs(map[string]any{
 		"image": "not-foo",
 	}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	_, err = app.AppSpec()
 	assert.ErrorContains(t, err, "failed to find image for container [c] in Acornfile, you may need to define the image/build in the images section of the Acornfile")
@@ -1591,10 +1561,7 @@ for i in std.range(1,args.scale+1) {
 	}
 
 	app = app.WithImageData(*image)
-	devApp, _, err := app.WithArgs(map[string]any{"scale": 2}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	devApp := app.WithArgs(map[string]any{"scale": 2}, nil)
 
 	appSpec, err := devApp.AppSpec()
 	if err != nil {
@@ -1681,10 +1648,7 @@ images: cimage: image: "container-dev"
 	}
 
 	app = app.WithImageData(*image)
-	devApp, _, err := app.WithArgs(nil, []string{"devMode"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	devApp := app.WithArgs(nil, []string{"devMode"})
 
 	appSpec, err := devApp.AppSpec()
 	if err != nil {
@@ -1848,41 +1812,35 @@ func TestBuildProfileParameters(t *testing.T) {
 args: {
   foo: "three"
 }
-profiles: one: foo: string | *"one"
-profiles: two: foo: string | *"two"
-containers: foo: build: buildArgs: one: args.foo
+profiles: one: foo: "from one"
+profiles: two: foo: "from two"
+containers: foo: build: buildArgs: foo: args.foo
 `
 	def, err := NewAppDefinition([]byte(acornCue))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, _, err = def.WithArgs(map[string]any{}, []string{"one", "two", "three"})
+	_, err = def.WithArgs(map[string]any{}, []string{"one", "two", "three"}).AppSpec()
 	assert.Equal(t, "failed to find profile three", err.Error())
 
-	def, _, err = def.WithArgs(map[string]any{}, []string{"one", "two", "three?"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	def = def.WithArgs(map[string]any{}, []string{"one", "two", "three?"})
 
 	buildSpec, err := def.BuilderSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "one", buildSpec.Containers["foo"].Build.BuildArgs["one"])
+	assert.Equal(t, "from two", buildSpec.Containers["foo"].Build.BuildArgs["foo"])
 
-	def, _, err = def.WithArgs(map[string]any{}, []string{"two", "one"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	def = def.WithArgs(map[string]any{}, []string{"two", "one"})
 
 	buildSpec, err = def.BuilderSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "two", buildSpec.Containers["foo"].Build.BuildArgs["one"])
+	assert.Equal(t, "from one", buildSpec.Containers["foo"].Build.BuildArgs["foo"])
 }
 
 func TestBuildParameters(t *testing.T) {
@@ -1897,12 +1855,9 @@ containers: foo: build: buildArgs: one: args.foo
 		t.Fatal(err)
 	}
 
-	def, _, err = def.WithArgs(map[string]any{
+	def = def.WithArgs(map[string]any{
 		"foo": "two",
 	}, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	buildSpec, err := def.BuilderSpec()
 	if err != nil {
@@ -2156,7 +2111,7 @@ acorns: first: {
 
 	assert.Equal(t, v1.PortBinding{
 		Hostname:          "example.com",
-		Port:              80,
+		Port:              0,
 		TargetPort:        80,
 		TargetServiceName: "asdf",
 	}, acorn.Publish[0])
@@ -2493,10 +2448,11 @@ profiles: foo: {}
 		t.Fatal(err)
 	}
 
-	_, _, err = def.WithArgs(nil, []string{"foo"})
+	_, err = def.WithArgs(nil, []string{"foo"}).AppSpec()
 	assert.Nil(t, err)
 
-	_, _, err = def.WithArgs(nil, []string{"missing"})
+	_, err = def.WithArgs(nil, []string{"missing"}).AppSpec()
+	require.Error(t, err)
 	assert.Equal(t, "failed to find profile missing", err.Error())
 }
 
@@ -2556,7 +2512,7 @@ localData: { r: list.Range(1,2,3) }
 
 	_, err := NewAppDefinition([]byte(acornCue))
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "import keyword is not")
+	assert.Contains(t, err.Error(), "key not found \"import\": Acornfile:2:1")
 }
 
 func TestNoPackage(t *testing.T) {
@@ -2575,9 +2531,11 @@ containers: foo: image: localData.data
 localData: {
     data: echo("hi")
 	data: "hi"
-	echo: {
-		args: [_]
-		out: args[0]
+	echo: function {
+		args: {
+			first: string
+		}
+		return: args.first
 	}
 }
 `
@@ -2597,47 +2555,31 @@ localData: {
 
 func TestStdMissing(t *testing.T) {
 	data := `
-let foo = std.toyaml({})
+foo : std.toyaml({})
 `
 
 	_, err := NewAppDefinition([]byte(data))
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "invalid reference to std.toyaml, closest matches [toYAML fromYAML trim]")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "key not found \"toyaml\": Acornfile:2:7")
 }
 
 func TestArgsTopCondition(t *testing.T) {
 	data := `
-let foo = true
-if foo {
 	args: {
 		// test comment
 		test: "adsf",
 	}
-}
 `
 	appDef, err := NewAppDefinition([]byte(data))
 	if err != nil {
 		t.Fatal(err)
 	}
-	args, err := appDef.Args()
+	args, err := appDef.ToParamSpec()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "test comment", args.Params[0].Description)
-}
-
-func TestArgsRejectConditions(t *testing.T) {
-	data := `
-args: {
-	if foo {
-		test: "adsf",
-	}
-}
-`
-	_, err := NewAppDefinition([]byte(data))
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
+	assert.Equal(t, "test comment", args.Args[0].Description)
 }
 
 func getVals(t *testing.T, appDef *AppDefinition) map[string]any {
@@ -2662,36 +2604,10 @@ func getVals(t *testing.T, appDef *AppDefinition) map[string]any {
 	return data
 }
 
-func TestNoConditionInProfile(t *testing.T) {
-	data := `
-profiles: default: {
-	if true {
-		a: "b"
-	}
-}
-`
-	_, err := NewAppDefinition([]byte(data))
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
-}
-
-func TestNoConditionInProfileTop(t *testing.T) {
-	data := `
-profiles: {
-	if true {
-		default: {
-			a: "b"
-		}
-	}
-}
-`
-	_, err := NewAppDefinition([]byte(data))
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "comprehension (if) should not be used inside the args and profiles fields")
-}
-
 func TestProfileDefaultValues(t *testing.T) {
 	data := `
+args: a: "unmatched"
+args: c: "unmatched"
 containers: default: files: a: std.toJSON(args)
 // include some non-alpha characters
 profiles: "foo - bar": {
@@ -2703,18 +2619,17 @@ profiles: "foo - bar": {
 		t.Fatal(err)
 	}
 
-	defaultAppDef, args, err := appDef.WithArgs(nil, []string{"foo - bar"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, map[string]any{"a": "b", "profiles": []any{"foo - bar"}}, args)
-	assert.Equal(t, map[string]any{"a": "b", "dev": false, "autoUpgrade": false, "profiles": []any{"foo - bar"}}, getVals(t, defaultAppDef))
+	defaultAppDef := appDef.WithArgs(nil, []string{"foo - bar"})
 
-	appDef, args, err = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"foo - bar"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, map[string]any{"a": "c", "c": "d", "profiles": []any{"foo - bar"}}, args)
+	assert.Equal(t, map[string]any{
+		"a":           "b",
+		"c":           "unmatched",
+		"dev":         false,
+		"autoUpgrade": false,
+		"profiles":    []any{"foo - bar"}},
+		getVals(t, defaultAppDef))
+
+	appDef = appDef.WithArgs(map[string]any{"a": "c", "c": "d"}, []string{"foo - bar"})
 	assert.Equal(t, map[string]any{"a": "c", "c": "d", "dev": false, "autoUpgrade": false, "profiles": []any{"foo - bar"}}, getVals(t, appDef))
 }
 
@@ -2726,9 +2641,9 @@ args: {
 	f: 6.0
 	b: true
 	bn: false
-	e: "x" | "y" | "z"
-	a: ["val"]
-	o: {}
+	e: enum("x", "y", "z") || default "x"
+	a: [string] || default ["val"]
+	o: object || default {}
 }
 containers: default: files: "a": std.toJSON(args)
 `
@@ -2765,31 +2680,11 @@ containers: default: files: "a": std.toJSON(args)
 		},
 	}
 
-	appDef, _, err = appDef.WithArgs(newValues, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	appDef = appDef.WithArgs(newValues, nil)
 
 	newValues["e"] = "x"
 	newValues["profiles"] = []any{}
 	assert.Equal(t, newValues, getVals(t, appDef))
-}
-
-func TestErrorFriendly(t *testing.T) {
-	data := `
-foo: int
-foo: bar
-bar: baz
-baz: "h"
-`
-	_, err := NewAppDefinition([]byte(data))
-	assert.NotNil(t, err)
-	assert.Equal(t, `foo: conflicting values int and "h" (mismatched types int and string):
-    Acornfile:2:6
-    Acornfile:3:6
-    Acornfile:4:6
-    Acornfile:5:6
-`, err.Error())
 }
 
 func TestEnvValFromArg(t *testing.T) {
@@ -3009,70 +2904,26 @@ acorns: nodef: {
 	require.NoError(t, err)
 
 	autogold.Expect(&v1.AppSpec{
-		Labels:      map[string]string{},
-		Annotations: map[string]string{},
-		Containers:  map[string]v1.Container{},
-		Jobs:        map[string]v1.Container{},
-		Images:      map[string]v1.Image{},
-		Volumes:     map[string]v1.VolumeRequest{},
-		Secrets:     map[string]v1.Secret{},
+		Volumes: map[string]v1.VolumeRequest{},
+		Secrets: map[string]v1.Secret{},
 		Acorns: map[string]v1.Acorn{
 			"def": {
-				Labels:         v1.ScopedLabels{},
-				Annotations:    v1.ScopedLabels{},
-				Profiles:       []string{},
-				DeployArgs:     &v1.GenericMap{},
-				Publish:        v1.PortBindings{},
-				Secrets:        v1.SecretBindings{},
-				Volumes:        v1.VolumeBindings{},
-				Links:          v1.ServiceBindings{},
-				AutoUpgrade:    valast.Addr(false).(*bool),
-				NotifyUpgrade:  valast.Addr(false).(*bool),
 				Memory:         v1.MemoryMap{"": valast.Addr(int64(1000000000)).(*int64)},
 				ComputeClasses: v1.ComputeClassMap{"": "foo"},
-				Permissions:    map[string]v1.Permissions{},
 			},
 			"nodef": {
-				Labels:         v1.ScopedLabels{},
-				Annotations:    v1.ScopedLabels{},
-				Profiles:       []string{},
-				DeployArgs:     &v1.GenericMap{},
-				Publish:        v1.PortBindings{},
-				Secrets:        v1.SecretBindings{},
-				Volumes:        v1.VolumeBindings{},
-				Links:          v1.ServiceBindings{},
-				AutoUpgrade:    valast.Addr(false).(*bool),
-				NotifyUpgrade:  valast.Addr(false).(*bool),
 				Memory:         v1.MemoryMap{"foo": valast.Addr(int64(1000000000)).(*int64)},
 				ComputeClasses: v1.ComputeClassMap{"foo": "bar"},
-				Permissions:    map[string]v1.Permissions{},
 			},
 		},
-		Routers: map[string]v1.Router{},
 		Services: map[string]v1.Service{
 			"sdef": {
-				Labels:         v1.ScopedLabels{},
-				Annotations:    v1.ScopedLabels{},
-				ServiceArgs:    &v1.GenericMap{},
-				Secrets:        v1.SecretBindings{},
-				Links:          v1.ServiceBindings{},
-				AutoUpgrade:    valast.Addr(false).(*bool),
-				NotifyUpgrade:  valast.Addr(false).(*bool),
 				Memory:         v1.MemoryMap{"": valast.Addr(int64(1000000000)).(*int64)},
 				ComputeClasses: v1.ComputeClassMap{"": "foo"},
-				Permissions:    map[string]v1.Permissions{},
 			},
 			"snodef": {
-				Labels:         v1.ScopedLabels{},
-				Annotations:    v1.ScopedLabels{},
-				ServiceArgs:    &v1.GenericMap{},
-				Secrets:        v1.SecretBindings{},
-				Links:          v1.ServiceBindings{},
-				AutoUpgrade:    valast.Addr(false).(*bool),
-				NotifyUpgrade:  valast.Addr(false).(*bool),
 				Memory:         v1.MemoryMap{"foo": valast.Addr(int64(1000000000)).(*int64)},
 				ComputeClasses: v1.ComputeClassMap{"foo": "bar"},
-				Permissions:    map[string]v1.Permissions{},
 			},
 		},
 	}).Equal(t, appSpec)
@@ -3086,7 +2937,7 @@ func TestNestedScopedLabels(t *testing.T) {
 	s: {
 		labels: [
 			{
-				resourceType: "",
+				//resourceType: "",
 				resourceName: "",
 				key: "globalkey",
 				value: "x0"
@@ -3104,7 +2955,7 @@ func TestNestedScopedLabels(t *testing.T) {
 				value: "x2"
 			},
 			{
-				resourceType: "",
+				//resourceType: "",
 				resourceName: "objbar",
 				key: "acorn.io/barkey",
 				value: "x3"

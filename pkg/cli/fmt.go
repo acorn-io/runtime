@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/acorn-io/aml/pkg/cue"
-	"github.com/acorn-io/runtime/pkg/appdefinition"
+	"github.com/acorn-io/aml"
+	"github.com/acorn-io/aml/cli/pkg/cmds"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/spf13/cobra"
 )
@@ -35,7 +35,7 @@ func (s *Fmt) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		result, err := cue.FmtBytes(data)
+		result, err := aml.Format(data)
 		if err != nil {
 			return err
 		}
@@ -48,16 +48,6 @@ func (s *Fmt) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	data, err := cue.ReadCUE(file)
-	if err != nil {
-		return err
-	}
-
-	_, err = appdefinition.NewAppDefinition(data)
-	if err != nil {
-		return err
-	}
-
-	_, err = cue.FmtCUEInPlace(file)
-	return err
+	fmt := cmds.Fmt{}
+	return fmt.Run(cmd, []string{file})
 }

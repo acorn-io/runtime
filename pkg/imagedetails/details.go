@@ -12,22 +12,30 @@ type Details struct {
 	Params     *v1.ParamSpec  `json:"params,omitempty"`
 }
 
-func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string) (*Details, error) {
+func ParseDetails(acornfile string, acornfileV0 bool, deployArgs map[string]any, profiles []string) (*Details, error) {
 	result := &Details{
 		DeployArgs: v1.NewGenericMap(deployArgs),
 		Profiles:   profiles,
 	}
 
-	appDef, err := appdefinition.NewAppDefinition([]byte(acornfile))
-	if err != nil {
-		return nil, err
-	}
-
-	if len(deployArgs) > 0 || len(profiles) > 0 {
-		appDef, deployArgs, err = appDef.WithArgs(deployArgs, profiles)
+	var (
+		appDef *appdefinition.AppDefinition
+		err    error
+	)
+	if acornfileV0 {
+		appDef, err = appdefinition.NewLegacyAppDefinition([]byte(acornfile))
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		appDef, err = appdefinition.NewAppDefinition([]byte(acornfile))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(deployArgs) > 0 || len(profiles) > 0 {
+		appDef = appDef.WithArgs(deployArgs, profiles)
 		result.DeployArgs = v1.NewGenericMap(deployArgs)
 	}
 
@@ -36,7 +44,7 @@ func ParseDetails(acornfile string, deployArgs map[string]any, profiles []string
 		return nil, err
 	}
 
-	paramSpec, err := appDef.Args()
+	paramSpec, err := appDef.ToParamSpec()
 	if err != nil {
 		return nil, err
 	}

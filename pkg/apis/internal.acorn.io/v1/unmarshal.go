@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/acorn-io/aml"
+	"github.com/acorn-io/aml/pkg/value"
 	"github.com/google/shlex"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -178,7 +178,7 @@ func (in *MemoryMap) UnmarshalJSON(data []byte) error {
 	if isObject(data) {
 		return json.Unmarshal(data, (*map[string]*int64)(in))
 	}
-	i, err := aml.ParseInt(string(data))
+	i, err := value.Number(data).ToInt()
 	if err != nil {
 		return err
 	}

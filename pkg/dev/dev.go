@@ -159,7 +159,7 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 			return err
 		}
 
-		image, deployArgs, err := opts.ImageSource.GetImageAndDeployArgs(ctx, client)
+		image, deployArgs, profiles, err := opts.ImageSource.GetImageAndDeployArgs(ctx, client)
 		if err == pflag.ErrHelp {
 			continue
 		} else if err != nil {
@@ -176,7 +176,7 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 		failed.Store(false)
 
 		for {
-			appName, err = runOrUpdate(ctx, client, hash, image, deployArgs, opts)
+			appName, err = runOrUpdate(ctx, client, hash, image, deployArgs, profiles, opts)
 			if apierror.IsConflict(err) {
 				logrus.Errorf("Failed to run/update app: %v", err)
 				select {
@@ -240,11 +240,12 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 	}
 }
 
-func updateApp(ctx context.Context, c client.Client, appName string, client v1.DevSessionInstanceClient, image string, deployArgs map[string]any, opts *Options) (_ string, err error) {
+func updateApp(ctx context.Context, c client.Client, appName string, client v1.DevSessionInstanceClient, image string, deployArgs map[string]any, profiles []string, opts *Options) (_ string, err error) {
 	update := opts.Run.ToUpdate()
 	update.DevSessionClient = &client
 	update.Image = image
 	update.DeployArgs = deployArgs
+	update.Profiles = profiles
 	update.Replace = opts.Replace
 	update.Stop = new(bool)
 	update.AutoUpgrade = new(bool)
@@ -257,7 +258,7 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	return app.Name, nil
 }
 
-func createApp(ctx context.Context, client client.Client, hash clientHash, image string, deployArgs map[string]any, opts *Options) (string, error) {
+func createApp(ctx context.Context, client client.Client, hash clientHash, image string, deployArgs map[string]any, profiles []string, opts *Options) (string, error) {
 	opts.Run.Labels = append(opts.Run.Labels,
 		v1.ScopedLabel{
 			ResourceType: v1.LabelTypeMeta,
@@ -274,6 +275,7 @@ func createApp(ctx context.Context, client client.Client, hash clientHash, image
 
 	runArgs := opts.Run
 	runArgs.DeployArgs = deployArgs
+	runArgs.Profiles = profiles
 	runArgs.Stop = z.Pointer(true)
 
 	app, err := rulerequest.PromptRun(ctx, client, opts.Dangerous, image, runArgs)
@@ -327,15 +329,15 @@ func releaseDevSession(c client.Client, appName string) error {
 	return c.DevSessionRelease(ctx, appName)
 }
 
-func runOrUpdate(ctx context.Context, client client.Client, hash clientHash, image string, deployArgs map[string]any, opts *Options) (string, error) {
+func runOrUpdate(ctx context.Context, client client.Client, hash clientHash, image string, deployArgs map[string]any, profiles []string, opts *Options) (string, error) {
 	appName, err := getExistingApp(ctx, client, opts)
 	if apierror.IsNotFound(err) {
-		appName, err = createApp(ctx, client, hash, image, deployArgs, opts)
+		appName, err = createApp(ctx, client, hash, image, deployArgs, profiles, opts)
 	}
 	if err != nil {
 		return "", err
 	}
-	return updateApp(ctx, client, appName, hash.Client, image, deployArgs, opts)
+	return updateApp(ctx, client, appName, hash.Client, image, deployArgs, profiles, opts)
 }
 
 func appDeleteStop(ctx context.Context, c client.Client, appName string, cancel func()) error {
@@ -480,7 +482,7 @@ func Dev(ctx context.Context, client client.Client, opts *Options) error {
 	}
 
 	optsCopy := *opts
-	optsCopy.ImageSource.Profiles = append([]string{"devMode?"}, opts.ImageSource.Profiles...)
+	optsCopy.ImageSource.Args = append([]string{"--profile=devMode?"}, opts.ImageSource.Args...)
 
 	err = buildLoop(ctx, client, hash, &optsCopy)
 	if errors.Is(err, context.Canceled) {

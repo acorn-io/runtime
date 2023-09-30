@@ -1,0 +1,10 @@
+
+args: {
+	dev: false
+	autoUpgrade: false
+}
+
+profiles: {
+	devMode: dev: true
+	autoUpgrade: autoUpgrade: true
+}

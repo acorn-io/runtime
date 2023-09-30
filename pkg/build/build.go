@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/aml/pkg/cue"
+	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -30,7 +30,7 @@ import (
 )
 
 func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
-	fileData, err := cue.ReadCUE(file)
+	fileData, err := amlreadhelper.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +86,10 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		return nil, err
 	}
 
-	appDefinition, buildArgs, err := appDefinition.WithArgs(ctx.opts.Args.GetData(), append([]string{"build?"}, ctx.opts.Profiles...))
-	if err != nil {
-		return nil, err
-	}
+	buildArgs := ctx.opts.Args.GetData()
+	profiles := ctx.opts.Profiles
+
+	appDefinition = appDefinition.WithArgs(buildArgs, append([]string{"build?"}, profiles...))
 
 	buildSpec, err := appDefinition.BuilderSpec()
 	if err != nil {
@@ -117,6 +117,7 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		Acornfile: string(acornfileData),
 		ImageData: imageData,
 		BuildArgs: v1.NewGenericMap(buildArgs),
+		Profiles:  profiles,
 		VCS:       ctx.opts.VCS,
 	}
 	if err != nil {
@@ -141,7 +142,7 @@ func buildContainers(ctx *buildContext, buildCache *buildCache, containers map[s
 		key, container := entry.Key, entry.Value
 
 		if container.Image == "" && container.Build == nil {
-			return nil, nil, fmt.Errorf("either image or build field must be set")
+			return nil, nil, fmt.Errorf("either image or build field must be set to build container/job: %s", key)
 		}
 
 		if container.Image != "" && container.Build == nil {

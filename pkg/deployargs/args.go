@@ -7,24 +7,16 @@ import (
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
-	"github.com/acorn-io/runtime/pkg/flagparams"
 	"golang.org/x/exp/maps"
 )
 
-func ToFlags(name string, appDef *appdefinition.AppDefinition) (*flagparams.Flags, error) {
+func ToFlags(programName, argsFile string, appDef *appdefinition.AppDefinition) (appdefinition.Flags, error) {
 	appSpec, err := appDef.AppSpec()
 	if err != nil {
 		return nil, err
 	}
 
-	params, err := appDef.Args()
-	if err != nil {
-		return nil, err
-	}
-
-	flags := flagparams.New(name, params)
-	flags.Usage = Usage(appSpec)
-	return flags, nil
+	return appDef.ToFlags(programName, argsFile, Usage(appSpec))
 }
 
 func Usage(app *v1.AppSpec) func() {

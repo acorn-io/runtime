@@ -1,0 +1,479 @@
+ let types: {
+	AcornBuild: {
+		match "buildArgs|args": object
+		context:                "."
+		acornfile:              "Acornfile"
+	}
+
+	StringArray: [string]
+
+	StringMap: {
+		string: string
+	}
+
+	Build: {
+		match "buildArgs|args": object
+		context:                "."
+		additionalContexts?:    StringMap
+		dockerfile?:            string
+		target?:                string
+	}
+
+	EnvVars: StringArray || StringMap
+
+	Sidecar: {
+		ContainerBase
+		init?: bool
+	}
+
+	Sidecars: {
+		string: Sidecar
+	}
+
+	NameDescription: {
+		name?:        string
+		description?: string
+	}
+
+	Metadata: {
+		labels?:      StringMap
+		annotations?: StringMap
+	}
+
+	ScopedMetadata: {
+		labels?:      [ScopedLabel] || ScopedLabelMap
+		annotations?: [ScopedLabel] || ScopedLabelMap
+	}
+
+	Container: {
+		ContainerBase
+		WorkloadBase
+		NameDescription
+		Metadata
+
+		scale?:    int >= 0
+		sidecars?: Sidecars
+	}
+
+	JobEventName: enum("create", "update", "stop", "delete")
+
+	Job: {
+		ContainerBase
+		WorkloadBase
+		NameDescription
+		Metadata
+
+		schedule?: string
+		events?: [JobEventName]
+		sidecars?: Sidecars
+	}
+
+	WorkloadBase: {
+		class?:   string
+		metrics?: Metrics
+	}
+
+	Service: ServiceGeneric || ServiceGenerated || ServiceAcorn
+
+	ServiceGeneric: {
+		NameDescription
+		Metadata
+
+		"default"?:       bool
+		external?:        string
+		alias?:           string
+		address?:         string
+		ports?:           PortSingle || [Port] || PortMap
+		container?:       DNSName
+		containerLabels?: StringMap
+		secrets?:         string || [AcornSecretBinding]
+		links?:           string || [AcornServiceBinding]
+		data?:            object
+		consumer?: {
+			permissions?: {
+				rules: [RuleSpec]
+			}
+			match "env|environment": EnvVars
+			files?: {
+				string: FileContent
+			}
+		}
+		permissions?: {
+			string: {
+				rules: [RuleSpec]
+			}
+		}
+	}
+
+	ServiceGenerated: {
+		Metadata
+		NameDescription
+
+		"default"?: bool
+		generated?: {
+			job: DNSName
+		}
+		consumer?: {
+			permissions: {
+				rules: [RuleSpec]
+			}
+		}
+	}
+
+	ServiceAcorn: {
+		ScopedMetadata
+		NameDescription
+
+		"default":           false
+		image?:              string
+		build?:              string || AcornBuild
+		secrets?:             string || [AcornSecretBinding]
+		links?:               string || [AcornServiceBinding]
+		autoUpgrade?:         bool
+		autoUpgradeInterval?: string
+		notifyUpgrade?:       bool
+		match "mem|memory":  int || {
+			match "\(DNSNamePattern)": int
+		}
+		class?: string || {
+			match "\(DNSNamePattern)": string
+		}
+		match "env|environment":  EnvVars
+		match "serviceArgs|args": object
+		permissions?: {
+			string: {
+				rules: [RuleSpec]
+			}
+		}
+	}
+
+	ProbeMap: {
+		match "^ready|readiness|liveness|startup$": string || ProbeSpec
+	}
+
+	PortMap: {
+		expose:  PortSingle || [Port] || default []
+		publish: PortSingle || [Port] || default []
+		dev:     PortSingle || [Port] || default []
+		// Deprecated, use expose instead
+		internal: PortSingle || [Port] || default []
+	}
+
+	ProbeSpec: {
+		type: string =~ "^readiness|liveness|startup$" || default "readiness"
+		exec?: {
+			command: [string]
+		}
+		http?: {
+			url:      string
+			headers?: StringMap
+		}
+		tcp?: {
+			url: string
+		}
+		initialDelaySeconds: 0
+		timeoutSeconds:      1
+		periodSeconds:       10
+		successThreshold:    1
+		failureThreshold:    3
+	}
+
+	Probes: string || ProbeMap || [ProbeSpec] || null
+
+	FileSecretSpec: {
+		name:     string
+		key:      string
+		onChange: string =~ "redeploy|noAction" || "redeploy"
+	}
+
+	FileSpec: {
+		mode:    string =~ "^[0-7]{3,4}$" || "0644"
+		content: string
+	} || {
+		mode:   string =~ "^[0-7]{3,4}$" || "0644"
+		secret: FileSecretSpec
+	}
+
+	FileContent: string !~ "^secret://" || string =~ "^secret://[a-z][-a-z0-9.]*/[a-z][-a-z0-9]*(.onchange=(redeploy|no-action)|.mode=[0-7]{3,4})*$" || FileSpec
+
+	ContainerBase: {
+		files?: {
+			string: FileContent
+		}
+		match "dirs|directories": {
+			string: Dir
+		}
+		// 1 or both of image or build is required
+		image?:                                   string
+		build?:                                   string || Build
+		entrypoint?:                              string || [string]
+		match "command|cmd":                      string || [string]
+		match "env|environment":                  EnvVars
+		match "work[dD]ir|working[dD]ir":         string
+		match "interactive|tty|stdin":            bool
+		ports?:                                   PortSingle || [Port] || PortMap
+		match "probes|probe":                     Probes
+		match "depends[oO]n|depends_on|consumes": string || [string]
+		match "mem|memory":                       int
+		permissions?: {
+			rules: [RuleSpec]
+			clusterRules?: [ClusterRuleSpec]
+		}
+	}
+
+	ShortVolumeRef: string =~ "^[a-z][-a-z0-9]*$"
+	VolumeRef:      string =~ "^volume://.+$"
+	EphemeralRef:   string =~ "^ephemeral://.*$|^$"
+	ContextDirRef:  string =~ "^\\./.*$"
+	SecretRef:      string =~ "^secret://[a-z][-a-z0-9.]*(.onchange=(redeploy|no-action))?$"
+
+	Dir: ShortVolumeRef || VolumeRef || EphemeralRef || ContextDirRef || SecretRef
+
+	PortSingle: (int > 0 && int < 65536) || PortRegexp
+	Port:       (int > 0 && int < 65536) || PortRegexp || PortSpec
+	PortRegexp: string =~ `^([a-z][-a-z0-9.]+:)?([0-9]+:)?([a-z][-a-z0-9]+:)?([0-9]+)(/(tcp|udp|http))?$`
+
+	PortSpec: {
+		publish?:    bool
+		dev?:        bool
+		hostname?:   string
+		port?:       int
+		targetPort?: int
+		protocol?:   enum("tcp", "udp", "http")
+	}
+
+	Metrics: {
+		port: int > 0 && int < 65536
+		path: string =~ "^/.*"
+	}
+
+	// Allowing [resourceType:][resourceName:][some.random/key]
+	ScopedLabelMapKey: "^([a-z][-a-z0-9]+:)?([a-z][-a-z0-9]+:)?([a-z][-a-z0-9./]+)?$"
+	ScopedLabelMap: {
+		match "\(ScopedLabelMapKey)": string
+	}
+	ScopedLabel: {
+		resourceType?: DNSName
+		resourceName?: string
+		key:           string =~ "[a-z][-a-z0-9./][a-z]*"
+		value?:        string
+	}
+
+	RuleSpec: {
+		verbs?: [string]
+		verb?: string
+		apiGroups?: [string]
+		apiGroup?: string
+		resources?: [string]
+		resource?: string
+		resourceNames?: [string]
+		resourceName?: string
+		nonResourceURLs?: [string]
+		scope?: string
+		scopes?: [string]
+	} || string
+
+	ClusterRuleSpec: {
+		verbs?: [string]
+		namespaces?: [string]
+		apiGroups?: [string]
+		resources?: [string]
+		resourceNames?: [string]
+		nonResourceURLs?: [string]
+	} || string
+
+	Image: {
+		image?:          string
+		acornBuild?:     string || AcornBuild
+		containerBuild?: string || Build
+	}
+
+	AccessMode: enum("readWriteMany", "readWriteOnce", "readOnlyMany")
+
+	Volume: {
+		Metadata
+		NameDescription
+		class?:       string
+		size?:        int || string
+		accessModes?: [AccessMode] || AccessMode
+	}
+
+	SecretBase: {
+		Metadata
+		NameDescription
+
+		external?: string
+		alias?:    string
+	}
+
+	SecretOpaque: {
+		SecretBase
+		type:   "opaque"
+		params?: object
+		data?:  StringMap
+	}
+
+	SecretTemplate: {
+		SecretBase
+		type:  string == "template"
+		data?: StringMap
+	}
+
+	SecretToken: {
+		SecretBase
+		type: string == "token"
+		params: {
+			// The character set used in the generated string
+			characters: string || default "bcdfghjklmnpqrstvwxz2456789"
+			// The length of the token to be generated
+			length: (int >= 0 && int <= 256) || default 54
+		}
+		data?: {
+			token?: string
+		}
+	}
+
+	SecretBasicAuth: {
+		SecretBase
+		type: string == "basic"
+		data?: {
+			username?: string
+			password?: string
+		}
+	}
+
+	SecretGenerated: {
+		SecretBase
+		type: string == "generated"
+		params: {
+			job:     string
+			format?: enum("text", "json", "aml")
+		}
+	}
+
+	Secret: SecretBasicAuth || SecretGenerated || SecretTemplate || SecretToken || SecretOpaque
+
+	AcornSecretBinding: {
+		secret: string
+		target: string
+	} || string
+
+	AcornServiceBinding: {
+		target:  string
+		service: string
+	} || string
+
+	AcornVolumeBinding: {
+		target:       string
+		class?:       string
+		size?:        int || string
+		accessModes?: [AccessMode] || AccessMode
+	} || string
+
+	AcornPublishPortBinding: {
+		port?:             int
+		hostname?:         string
+		targetPort?:       int
+		targetServiceName: DNSName
+		protocol?:         enum("tcp", "udp", "http")
+	} || string || int
+
+	Router: {
+		Metadata
+		NameDescription
+		routes: [Route] || RouteMap
+	}
+
+	Route: {
+		RouteTarget
+		path: string =~ PathName
+	}
+
+	RouteTarget: {
+		pathType:          enum("exact", "prefix") || default "prefix"
+		targetServiceName: DNSName
+		targetPort?:       int
+	}
+
+	RouteMap: {
+		match "\(PathName)": string =~ RouteTargetName || RouteTarget
+	}
+
+	Acorn: {
+		ScopedMetadata
+		NameDescription
+
+		image?:               string
+		build?:               string || AcornBuild
+		publish?:             int || string || [AcornPublishPortBinding]
+		publishMode?:         enum("all", "none", "defined")
+		volumes?:             string || [AcornVolumeBinding]
+		secrets?:             string || [AcornSecretBinding]
+		links?:               string || [AcornServiceBinding]
+		autoUpgrade?:         bool
+		autoUpgradeInterval?: string
+		notifyUpgrade?:       bool
+		match "mem|memory":   int || {
+			match "\(DNSNamePattern)": int
+		}
+		class?: string || {
+			match "\(DNSNamePattern)": string
+		}
+		match "env|environment": EnvVars
+		match "deployArgs|args": object
+		profiles?: [string]
+		permissions?: {
+			string: {
+				rules: [RuleSpec]
+			}
+		}
+	}
+
+	RouteTargetName: "^[a-z][-a-z0-9]*(:[0-9]+)?$"
+
+	PathName: "^/.*$"
+
+	DNSNamePattern: "^[a-z][-a-z0-9]*$"
+	DNSName:        string =~ DNSNamePattern
+
+	App: {
+		Metadata
+		NameDescription
+
+		args?: object
+		profiles?: {
+			string: object
+		}
+		match "local[dD]ata|data": object
+		containers?: {
+			match "\(DNSNamePattern)": Container
+		}
+		jobs?: {
+			match "\(DNSNamePattern)": Job
+		}
+		images?: {
+			match "\(DNSNamePattern)": Image
+		}
+		volumes?: {
+			match "\(DNSNamePattern)": Volume
+		}
+		secrets?: {
+			match "\(DNSNamePattern)": Secret
+		}
+		acorns?: {
+			match "\(DNSNamePattern)": Acorn
+		}
+		routers?: {
+			match "\(DNSNamePattern)": Router
+		}
+		services?: {
+			match "\(DNSNamePattern)": Service
+		}
+
+		readme?: string
+		info?:   string
+		icon?:   string
+	}
+}
+
+types.App

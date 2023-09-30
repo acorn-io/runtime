@@ -29,7 +29,6 @@ status:
           dockerfile: custom-dockerfile
         image: sha256:build-image
         metrics: {}
-        permissions: {}
         probes: null
       oneimage:
         build:
@@ -38,7 +37,6 @@ status:
           dockerfile: Dockerfile
         image: image-name
         metrics: {}
-        permissions: {}
         probes: null
   appStatus: {}
   columns: {}

@@ -28,11 +28,11 @@ acorn build .`,
 }
 
 type Build struct {
+	ArgsFile string   `usage:"Default args to apply to the build" default:".build-args.acorn"`
 	Push     bool     `usage:"Push image after build"`
 	File     string   `short:"f" usage:"Name of the build file (default \"DIRECTORY/Acornfile\")"`
 	Tag      []string `short:"t" usage:"Apply a tag to the final build"`
 	Platform []string `short:"p" usage:"Target platforms (form os/arch[/variant][:osversion] example linux/amd64)"`
-	Profile  []string `usage:"Profile to assign default values"`
 	client   ClientFactory
 }
 
@@ -57,9 +57,9 @@ func (s *Build) Run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	helper := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, args, s.Profile, s.Platform, false)
+	helper := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, s.Platform, false)
 
-	image, _, err := helper.GetImageAndDeployArgs(cmd.Context(), c)
+	image, _, _, err := helper.GetImageAndDeployArgs(cmd.Context(), c)
 	if err != nil {
 		return err
 	}
