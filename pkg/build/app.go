@@ -84,7 +84,7 @@ func getContextFromAppImage(dataFiles appdefinition.DataFiles, appImage *v1.AppI
 		}
 	}
 
-	if err := addFile(tempDir, appdefinition.AcornfileFile, appImage.Acornfile); err != nil {
+	if err := addFile(tempDir, appdefinition.AcornfileV1File, appImage.Acornfile); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, appdefinition.ImageDataFile, imageData); err != nil {

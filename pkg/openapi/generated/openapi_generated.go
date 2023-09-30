@@ -6402,7 +6402,7 @@ func schema_pkg_apis_internalacornio_v1_AppImage(ref common.ReferenceCallback) c
 							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VCS"),
 						},
 					},
-					"acornfileV0": {
+					"acornfileV1": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",

@@ -5,6 +5,7 @@ metadata:
   namespace: random
 status:
   appImage:
+    acornfileV1: true
     acornfile: |
       containers: {
         oneimage: image: "image-name"

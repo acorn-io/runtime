@@ -14,6 +14,7 @@ status:
           dockerfile: "custom-dockerfile"
         }
       }
+    acornfileV1: true
     imageData:
       containers:
         buildimage:

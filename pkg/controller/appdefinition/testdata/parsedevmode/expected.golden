@@ -13,6 +13,7 @@ status:
       containers: {
         oneimage: image: args.image
       }
+    acornfileV1: true
     imageData:
       containers:
         oneimage:

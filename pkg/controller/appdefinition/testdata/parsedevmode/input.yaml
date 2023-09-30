@@ -6,6 +6,7 @@ metadata:
 status:
   devSession: {}
   appImage:
+    acornfileV1: true
     acornfile: |
       args: image: "not-foo"
       profiles: devMode: image: "foo"
