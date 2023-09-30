@@ -12,7 +12,7 @@ func GenerateRandomSecret(length int) (string, error) {
 		uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ"
 		lowercase = "abcdefghijkmnopqrstuvwxyz"
 		numbers   = "23456789"
-		special   = "!@#$%^&*_-=+"
+		special   = "!#$%^&*_-=+"
 	)
 
 	// Create a pool of characters to choose from
