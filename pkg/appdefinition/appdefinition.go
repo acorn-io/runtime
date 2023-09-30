@@ -65,8 +65,6 @@ func FromAppImage(appImage *v1.AppImage) (appDef *AppDefinition, err error) {
 		}
 	}
 
-	appDef.acornfileV0 = appImage.AcornfileV0
-
 	appDef = appDef.WithImageData(appImage.ImageData)
 	return appDef, err
 }
