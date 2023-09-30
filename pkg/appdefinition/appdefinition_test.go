@@ -42,6 +42,28 @@ icon: "./icon"
 	assert.Equal(t, "./icon", appSpec.Icon)
 }
 
+func TestOldSyntax(t *testing.T) {
+	_, err := NewAppDefinition([]byte(`args: name: string | *"hi"
+containers: foo: image: args.name
+`))
+	require.Error(t, err)
+
+	appImage, err := NewAppDefinition([]byte(`//acorn:amlv0
+args: name: string | *"hi"
+containers: foo: image: args.name
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	appSpec, err := appImage.AppSpec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "hi", appSpec.Containers["foo"].Image)
+}
+
 func TestProfilesImplicitArgs(t *testing.T) {
 	appImage, err := NewAppDefinition([]byte(`profiles: a: {}, profiles: d: {}
 std.debug("debugs", args.profiles)
