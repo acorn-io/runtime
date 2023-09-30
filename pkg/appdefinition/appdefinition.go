@@ -34,6 +34,7 @@ const (
 	messageSuffix = ", you may need to define the image/build in the images section of the Acornfile"
 
 	AcornfileSchemaVersion = "v1"
+	V0Pragma               = "//acorn:amlv0"
 )
 
 var (
@@ -88,6 +89,17 @@ func (a *AppDefinition) clone() AppDefinition {
 	}
 }
 
+func (a *AppDefinition) ClearImageData() (_ *AppDefinition, images *v1.ImagesData) {
+	if a.hasImageData {
+		data := a.imagesData()
+		images = &data
+	}
+	result := a.clone()
+	result.hasImageData = false
+	result.imageDatas = nil
+	return &result, images
+}
+
 func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 	result := a.clone()
 	result.hasImageData = true
@@ -109,7 +121,8 @@ func NewLegacyAppDefinition(data []byte) (*AppDefinition, error) {
 
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	appDef := &AppDefinition{
-		data: data,
+		data:        data,
+		acornfileV0: strings.HasPrefix(string(data), V0Pragma),
 	}
 	_, err := appDef.AppSpec()
 	if err != nil {
@@ -442,6 +455,7 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, *DataFiles, error) {
 			}
 			result.Acornfile = string(data)
 		case VersionFile:
+			result.Version = &v1.AppImageVersion{}
 			err := json.NewDecoder(tar).Decode(&result.Version)
 			if err != nil {
 				return nil, nil, err
