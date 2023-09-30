@@ -8,13 +8,15 @@ spec: {}
 status:
   appImage:
     acornfile: |
+      args: {
+        newSyntax: number || default 1
+      }
       containers: {
-        oneimage: image: "image-name"
+        oneimage: image: "image-name\(args.newSyntax)"
         buildimage: build: {
           dockerfile: "custom-dockerfile"
         }
       }
-    acornfileV1: true
     imageData:
       containers:
         buildimage:
@@ -22,6 +24,8 @@ status:
         oneimage:
           image: image-name
     vcs: {}
+    version:
+      acornfileSchema: v1
   appSpec:
     containers:
       buildimage:
@@ -33,7 +37,7 @@ status:
         probes: null
       oneimage:
         build:
-          baseImage: image-name
+          baseImage: image-name1
           context: .
           dockerfile: Dockerfile
         image: image-name

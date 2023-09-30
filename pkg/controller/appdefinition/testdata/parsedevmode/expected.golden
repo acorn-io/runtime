@@ -8,22 +8,23 @@ spec: {}
 status:
   appImage:
     acornfile: |
-      args: image: "not-foo"
+      args: image: string || default "not-foo"
       profiles: devMode: image: "foo"
       containers: {
-        oneimage: image: args.image
+        oneimage: image: "\(args.image)" + args.image
       }
-    acornfileV1: true
     imageData:
       containers:
         oneimage:
           image: sha256:build-image
     vcs: {}
+    version:
+      acornfileSchema: v1
   appSpec:
     containers:
       oneimage:
         build:
-          baseImage: foo
+          baseImage: foofoo
           context: .
           dockerfile: Dockerfile
         image: sha256:build-image

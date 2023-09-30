@@ -7,6 +7,7 @@ import (
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
+	"github.com/acorn-io/runtime/pkg/version"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
@@ -84,13 +85,19 @@ func getContextFromAppImage(dataFiles appdefinition.DataFiles, appImage *v1.AppI
 		}
 	}
 
-	if err := addFile(tempDir, appdefinition.AcornfileV1File, appImage.Acornfile); err != nil {
+	if err := addFile(tempDir, appdefinition.Acornfile, appImage.Acornfile); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, appdefinition.ImageDataFile, imageData); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, appdefinition.VCSDataFile, appImage.VCS); err != nil {
+		return "", err
+	}
+	if err := addFile(tempDir, appdefinition.VersionFile, v1.AppImageVersion{
+		RuntimeVersion:  version.Get().String(),
+		AcornfileSchema: appdefinition.AcornfileSchemaVersion,
+	}); err != nil {
 		return "", err
 	}
 	if err := addFile(tempDir, "Dockerfile", "FROM scratch\nCOPY . /"); err != nil {

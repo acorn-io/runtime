@@ -6,12 +6,13 @@ metadata:
 status:
   devSession: {}
   appImage:
-    acornfileV1: true
+    version:
+      acornfileSchema: v1
     acornfile: |
-      args: image: "not-foo"
+      args: image: string || default "not-foo"
       profiles: devMode: image: "foo"
       containers: {
-        oneimage: image: args.image
+        oneimage: image: "\(args.image)" + args.image
       }
     imageData:
       containers:

@@ -5,10 +5,14 @@ metadata:
   namespace: random
 status:
   appImage:
-    acornfileV1: true
+    version:
+      acornfileSchema: v1
     acornfile: |
+      args: {
+        newSyntax: number || default 1
+      }
       containers: {
-        oneimage: image: "image-name"
+        oneimage: image: "image-name\(args.newSyntax)"
         buildimage: build: {
           dockerfile: "custom-dockerfile"
         }

@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/aml"
 	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
 	amllegacy "github.com/acorn-io/aml/legacy"
+	"github.com/acorn-io/aml/pkg/eval"
 	"github.com/acorn-io/aml/pkg/schema"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -23,19 +24,26 @@ import (
 )
 
 const (
-	IconFile        = "icon"
-	ReadmeFile      = "README"
-	AcornfileV1File = "Acornfile.v1"
-	AcornfileV0File = "Acornfile"
-	ImageDataFile   = "images.json"
-	VCSDataFile     = "vcs.json"
-	BuildDataFile   = "build.json"
-	messageSuffix   = ", you may need to define the image/build in the images section of the Acornfile"
+	IconFile      = "icon"
+	ReadmeFile    = "README"
+	Acornfile     = "Acornfile"
+	ImageDataFile = "images.json"
+	VersionFile   = "version.json"
+	VCSDataFile   = "vcs.json"
+	BuildDataFile = "build.json"
+	messageSuffix = ", you may need to define the image/build in the images section of the Acornfile"
+
+	AcornfileSchemaVersion = "v1"
 )
 
 var (
 	ErrInvalidInput = errors.New("invalid input")
 )
+
+func init() {
+	// Disable AML debug printing
+	eval.DebugEnabled = false
+}
 
 type DataFiles struct {
 	IconSuffix string
@@ -45,7 +53,7 @@ type DataFiles struct {
 
 type AppDefinition struct {
 	data         []byte
-	acornfileV1  bool
+	acornfileV0  bool
 	imageDatas   []v1.ImagesData
 	hasImageData bool
 	args         map[string]any
@@ -53,7 +61,7 @@ type AppDefinition struct {
 }
 
 func FromAppImage(appImage *v1.AppImage) (appDef *AppDefinition, err error) {
-	if appImage.AcornfileV1 {
+	if appImage.Version != nil && appImage.Version.AcornfileSchema == AcornfileSchemaVersion {
 		appDef, err = NewAppDefinition([]byte(appImage.Acornfile))
 		if err != nil {
 			return nil, err
@@ -76,7 +84,7 @@ func (a *AppDefinition) clone() AppDefinition {
 		hasImageData: a.hasImageData,
 		args:         a.args,
 		profiles:     a.profiles,
-		acornfileV1:  a.acornfileV1,
+		acornfileV0:  a.acornfileV0,
 	}
 }
 
@@ -89,7 +97,8 @@ func (a *AppDefinition) WithImageData(imageData v1.ImagesData) *AppDefinition {
 
 func NewLegacyAppDefinition(data []byte) (*AppDefinition, error) {
 	appDef := &AppDefinition{
-		data: data,
+		data:        data,
+		acornfileV0: true,
 	}
 	_, err := appDef.AppSpec()
 	if err != nil {
@@ -100,8 +109,7 @@ func NewLegacyAppDefinition(data []byte) (*AppDefinition, error) {
 
 func NewAppDefinition(data []byte) (*AppDefinition, error) {
 	appDef := &AppDefinition{
-		data:        data,
-		acornfileV1: true,
+		data: data,
 	}
 	_, err := appDef.AppSpec()
 	if err != nil {
@@ -209,7 +217,7 @@ func (a *AppDefinition) decodeLegacy(out any) error {
 }
 
 func (a *AppDefinition) decode(out any) error {
-	if !a.acornfileV1 {
+	if a.acornfileV0 {
 		return a.decodeLegacy(out)
 	}
 	f, err := fs.Open(schemaFile)
@@ -427,19 +435,17 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, *DataFiles, error) {
 		}
 
 		switch header.Name {
-		case AcornfileV1File:
+		case Acornfile:
 			data, err := io.ReadAll(tar)
 			if err != nil {
 				return nil, nil, err
 			}
 			result.Acornfile = string(data)
-			result.AcornfileV1 = true
-		case AcornfileV0File:
-			data, err := io.ReadAll(tar)
+		case VersionFile:
+			err := json.NewDecoder(tar).Decode(&result.Version)
 			if err != nil {
 				return nil, nil, err
 			}
-			result.Acornfile = string(data)
 		case ImageDataFile:
 			err := json.NewDecoder(tar).Decode(&result.ImageData)
 			if err != nil {

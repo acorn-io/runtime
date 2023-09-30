@@ -12,7 +12,7 @@ type Details struct {
 	Params     *v1.ParamSpec  `json:"params,omitempty"`
 }
 
-func ParseDetails(acornfile string, acornfileV1 bool, deployArgs map[string]any, profiles []string) (*Details, error) {
+func ParseDetails(appImage *v1.AppImage, deployArgs map[string]any, profiles []string) (*Details, error) {
 	result := &Details{
 		DeployArgs: v1.NewGenericMap(deployArgs),
 		Profiles:   profiles,
@@ -22,16 +22,9 @@ func ParseDetails(acornfile string, acornfileV1 bool, deployArgs map[string]any,
 		appDef *appdefinition.AppDefinition
 		err    error
 	)
-	if acornfileV1 {
-		appDef, err = appdefinition.NewAppDefinition([]byte(acornfile))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		appDef, err = appdefinition.NewLegacyAppDefinition([]byte(acornfile))
-		if err != nil {
-			return nil, err
-		}
+	appDef, err = appdefinition.FromAppImage(appImage)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(deployArgs) > 0 || len(profiles) > 0 {
