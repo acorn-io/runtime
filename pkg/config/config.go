@@ -10,6 +10,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/profiles"
 	"github.com/acorn-io/runtime/pkg/system"
+	"github.com/acorn-io/z"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -51,7 +52,7 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.AcornDNS == nil {
 		c.AcornDNS = profile.AcornDNS
 	}
-	if c.AcornDNSEndpoint == nil || *c.AcornDNSEndpoint == "" {
+	if z.Dereference(c.AcornDNSEndpoint) == "" {
 		c.AcornDNSEndpoint = profile.AcornDNSEndpoint
 	}
 	err := setClusterDomains(ctx, c, getter)
@@ -67,7 +68,7 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.LetsEncryptTOSAgree == nil {
 		c.LetsEncryptTOSAgree = profile.LetsEncryptTOSAgree
 	}
-	if c.AutoUpgradeInterval == nil || *c.AutoUpgradeInterval == "" {
+	if z.Dereference(c.AutoUpgradeInterval) == "" {
 		c.AutoUpgradeInterval = profile.AutoUpgradeInterval
 	}
 	if c.RecordBuilds == nil {
@@ -79,7 +80,7 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.BuilderPerProject == nil {
 		c.BuilderPerProject = profile.BuilderPerProject
 	}
-	if c.HttpEndpointPattern == nil || *c.HttpEndpointPattern == "" {
+	if z.Dereference(c.HttpEndpointPattern) == "" {
 		c.HttpEndpointPattern = profile.HttpEndpointPattern
 	}
 	if c.WorkloadMemoryDefault == nil {
