@@ -1,7 +1,7 @@
 package appdefinition
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/acorn-io/aml/cli/pkg/flagargs"
 	"github.com/acorn-io/aml/pkg/schema"
@@ -57,7 +57,11 @@ func anyToString(v any) string {
 	if v == nil {
 		return ""
 	}
-	return fmt.Sprint(v)
+	if s, ok := v.(string); ok {
+		return s
+	}
+	d, _ := json.Marshal(v)
+	return string(d)
 }
 
 func fromObject(in *schema.Object) *v1.Object {
@@ -78,7 +82,7 @@ func fromArray(in *schema.Array) *v1.Array {
 		return nil
 	}
 	return &v1.Array{
-		Items: *fromFieldType(&in.Items),
+		Types: fromFieldTypes(in.Types),
 	}
 }
 
@@ -87,9 +91,21 @@ func fromConstraints(in []schema.Constraint) (result []v1.Constraint) {
 		result = append(result, v1.Constraint{
 			Description: item.Description,
 			Op:          item.Op,
-			Left:        anyToString(item.Left),
 			Right:       anyToString(item.Right),
+			Type:        anyToFieldType(item.Right),
 		})
+	}
+	return
+}
+
+func anyToFieldType(v any) *v1.FieldType {
+	rt, _ := v.(*v1.FieldType)
+	return rt
+}
+
+func fromFieldTypes(in []schema.FieldType) (out []v1.FieldType) {
+	for _, fieldType := range in {
+		out = append(out, *fromFieldType(&fieldType))
 	}
 	return
 }
@@ -99,12 +115,12 @@ func fromFieldType(in *schema.FieldType) *v1.FieldType {
 		return nil
 	}
 	return &v1.FieldType{
-		Kind:       string(in.Kind),
-		Object:     fromObject(in.Object),
-		Array:      fromArray(in.Array),
-		Constraint: fromConstraints(in.Constraint),
-		Default:    anyToString(in.Default),
-		Alternate:  fromFieldType(in.Alternate),
+		Kind:        string(in.Kind),
+		Object:      fromObject(in.Object),
+		Array:       fromArray(in.Array),
+		Constraints: fromConstraints(in.Contstraints),
+		Default:     anyToString(in.Default),
+		Alternates:  fromFieldTypes(in.Alternates),
 	}
 }
 

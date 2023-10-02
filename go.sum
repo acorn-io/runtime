@@ -102,10 +102,10 @@ github.com/ThalesIgnite/crypto11 v1.2.5 h1:1IiIIEqYmBvUYFeMnHqRft4bwf/O36jryEUpY
 github.com/ThalesIgnite/crypto11 v1.2.5/go.mod h1:ILDKtnCKiQ7zRoNxcp36Y1ZR8LBPmR2E23+wTQe/MlE=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
-github.com/acorn-io/aml v0.0.0-20230930050145-8926018e7752 h1:c00HLcb8WLDuLkdIfEqJBUuC16v8Jc0B/1Q+t75VYB0=
-github.com/acorn-io/aml v0.0.0-20230930050145-8926018e7752/go.mod h1:I1qN++bfN+6sOV/FiACluqj2Eu5YaHOy82cTAnjLMf0=
-github.com/acorn-io/aml/cli v0.0.0-20230929054110-b12c9629b109 h1:CNiK/y3JKcevLOYqcFDDGU4PWgs1Ehpxnpt63UBsYuo=
-github.com/acorn-io/aml/cli v0.0.0-20230929054110-b12c9629b109/go.mod h1:x7Y6lLMTqMD65KWjgVaGem5tQP2ZeevOQiaps9epJj4=
+github.com/acorn-io/aml v0.0.0-20231002033428-fffd2918563a h1:vfo2HyUI+9OhHEDgOuQvpVjpS2z8RVwur2SSrDZw860=
+github.com/acorn-io/aml v0.0.0-20231002033428-fffd2918563a/go.mod h1:I1qN++bfN+6sOV/FiACluqj2Eu5YaHOy82cTAnjLMf0=
+github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a h1:0oMIx6lH47ImOakNyTDCfJGOonJHH1k5s0N1bLinCEU=
+github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a/go.mod h1:x7Y6lLMTqMD65KWjgVaGem5tQP2ZeevOQiaps9epJj4=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e h1:W67DG9AcoNvBwIOR9OFUCZlSJBaHuvM2kXQ2+C6EnLk=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e/go.mod h1:XnJZSZq/tG/jWPE/tmm2zy90gOZrJRIaOyKpoMulxfE=
 github.com/acorn-io/baaah v0.0.0-20230831185433-be0115009281 h1:3/Avpd1rOQqwARqrey5nd7QK6/E3ryT81b3tuSRr9wU=

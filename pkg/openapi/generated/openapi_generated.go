@@ -7278,10 +7278,17 @@ func schema_pkg_apis_internalacornio_v1_Array(ref common.ReferenceCallback) comm
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"item": {
+					"items": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"),
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -7890,21 +7897,22 @@ func schema_pkg_apis_internalacornio_v1_Constraint(ref common.ReferenceCallback)
 							Format: "",
 						},
 					},
-					"left": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"right": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"),
+						},
+					},
 				},
 			},
 		},
+		Dependencies: []string{
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"},
 	}
 }
 
@@ -9145,7 +9153,7 @@ func schema_pkg_apis_internalacornio_v1_FieldType(ref common.ReferenceCallback) 
 							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Array"),
 						},
 					},
-					"constraint": {
+					"constraints": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
 							Items: &spec.SchemaOrArray{
@@ -9164,9 +9172,17 @@ func schema_pkg_apis_internalacornio_v1_FieldType(ref common.ReferenceCallback) 
 							Format: "",
 						},
 					},
-					"alternate": {
+					"alternates": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"),
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.FieldType"),
+									},
+								},
+							},
 						},
 					},
 				},
