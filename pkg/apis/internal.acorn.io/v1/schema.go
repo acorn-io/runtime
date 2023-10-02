@@ -9,19 +9,19 @@ type Field struct {
 }
 
 type FieldType struct {
-	Kind       string       `json:"kind,omitempty"`
-	Object     *Object      `json:"object,omitempty"`
-	Array      *Array       `json:"array,omitempty"`
-	Constraint []Constraint `json:"constraint,omitempty"`
-	Default    string       `json:"default,omitempty"`
-	Alternate  *FieldType   `json:"alternate,omitempty"`
+	Kind        string       `json:"kind,omitempty"`
+	Object      *Object      `json:"object,omitempty"`
+	Array       *Array       `json:"array,omitempty"`
+	Constraints []Constraint `json:"constraints,omitempty"`
+	Default     string       `json:"default,omitempty"`
+	Alternates  []FieldType  `json:"alternates,omitempty"`
 }
 
 type Constraint struct {
-	Description string `json:"description,omitempty"`
-	Op          string `json:"op,omitempty"`
-	Left        string `json:"left,omitempty"`
-	Right       string `json:"right,omitempty"`
+	Description string     `json:"description,omitempty"`
+	Op          string     `json:"op,omitempty"`
+	Right       string     `json:"right,omitempty"`
+	Type        *FieldType `json:"type,omitempty"`
 }
 
 type Object struct {
@@ -33,5 +33,5 @@ type Object struct {
 }
 
 type Array struct {
-	Items FieldType `json:"item,omitempty"`
+	Types []FieldType `json:"items,omitempty"`
 }
