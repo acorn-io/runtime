@@ -267,7 +267,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	require.NoError(t, err, "should not error while updating IRA")
 
 	// Ensure that the selector matches the image now
-	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), tagName, id, image.Digest, ira.ImageSelector)
+	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), tagName, id, image.Digest, ira.ImageSelector, imageselector.MatchImageOpts{})
 	require.NoError(t, err, "should not error while matching image")
 
 	details, err = c.ImageDetails(ctx, id, &client.ImageDetailsOptions{IncludeNested: true})
@@ -331,7 +331,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	require.NoError(t, err, "should not error while updating IRA")
 
 	// Ensure that the selector matches the image now
-	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), nestedImageTagName, "", nestedImage.Digest, ira.ImageSelector)
+	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), nestedImageTagName, "", nestedImage.Digest, ira.ImageSelector, imageselector.MatchImageOpts{})
 	require.NoError(t, err, "should not error while matching image")
 
 	app = createWaitLoop(ctx, blueprint.DeepCopy())

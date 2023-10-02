@@ -60,7 +60,7 @@ func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, im
 	var authorized []internaladminv1.RoleAuthorizations
 
 	for _, ira := range iras {
-		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, ira.ImageSelector, opts...); err != nil {
+		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, ira.ImageSelector, imageselector.MatchImageOpts{}, opts...); err != nil {
 			if ierr := (*imageselector.ImageSelectorNoMatchError)(nil); errors.As(err, &ierr) {
 				logrus.Debugf("ImageRoleAuthorization %s/%s did not match: %v", ira.Namespace, ira.Name, err)
 			} else {
