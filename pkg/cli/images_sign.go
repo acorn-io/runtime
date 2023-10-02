@@ -96,21 +96,29 @@ func (a *ImageSign) Run(cmd *cobra.Command, args []string) error {
 
 	// Get a sigSigner-verifier from a private key and if the key type is not supported, try to import it first
 	var sigSigner sigsig.SignerVerifier
-	finfo, err := os.Stat(a.Key)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Not a file - load from raw key data
-			sigSigner, err = cosign.LoadPrivateKey([]byte(a.Key), pass)
-		} else {
-			return fmt.Errorf("failed to stat key file: %w", err)
-		}
+
+	if len(a.Key) > 255 || strings.Contains(strings.Trim(a.Key, "\n"), "\n") {
+		// Not a file (filename too long or contains newlines) - load from raw key data
+		sigSigner, err = cosign.LoadPrivateKey([]byte(a.Key), pass)
 	} else {
-		if finfo.IsDir() {
-			return fmt.Errorf("invalid key file: is directory")
+		var finfo os.FileInfo
+		finfo, err = os.Stat(a.Key)
+		if err != nil {
+			if os.IsNotExist(err) || strings.Contains("\n", a.Key) {
+				// Not a file - load from raw key data
+				sigSigner, err = cosign.LoadPrivateKey([]byte(a.Key), pass)
+			} else {
+				return fmt.Errorf("failed to stat key file: %w", err)
+			}
+		} else {
+			if finfo.IsDir() {
+				return fmt.Errorf("invalid key file: is directory")
+			}
+			// Load from file
+			sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf)
 		}
-		// Load from file
-		sigSigner, err = signature.SignerVerifierFromKeyRef(cmd.Context(), a.Key, pf)
 	}
+
 	if err != nil {
 		if !strings.Contains(err.Error(), "unsupported pem type") {
 			return fmt.Errorf("failed to create signer from private key: %w", err)
