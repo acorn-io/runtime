@@ -210,7 +210,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		}
 
 		var imageRejectedPerms []v1.Permissions
-		imageGrantedPerms, imageRejectedPerms, err = s.imageGrants(ctx, imageDetails)
+		imageGrantedPerms, imageRejectedPerms, err = s.imageGrants(ctx, imageDetails, checkImage)
 		if err != nil {
 			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.Permissions, err.Error()))
 			return
@@ -758,7 +758,7 @@ func (s *Validator) imageSAR(ns, imageName, imageDigest string, perms []v1.Permi
 	return
 }
 
-func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails) (granted, rejected []v1.Permissions, _ error) {
+func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails, imageNameOverride string) (granted, rejected []v1.Permissions, _ error) {
 	defer func() {
 		granted = v1.SimplifySet(granted)
 		rejected = v1.SimplifySet(rejected)
@@ -767,14 +767,19 @@ func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails
 	ns, _ := request.NamespaceFrom(ctx)
 	var sars []sarRequest
 
-	newSars, err := s.imageSAR(ns, details.AppImage.Name, details.AppImage.Digest, details.Permissions)
+	imageName := details.AppImage.Name
+	if imageNameOverride != "" {
+		imageName = imageNameOverride
+	}
+
+	newSars, err := s.imageSAR(ns, imageName, details.AppImage.Digest, details.Permissions)
 	if err != nil {
 		return nil, nil, err
 	}
 	sars = append(sars, newSars...)
 
 	for _, nested := range details.NestedImages {
-		newSars, err := s.imageSAR(ns, nested.Name, nested.Digest, nested.Permissions)
+		newSars, err := s.imageSAR(ns, nested.ImageName, nested.Digest, nested.Permissions)
 		if err != nil {
 			return nil, nil, err
 		}
