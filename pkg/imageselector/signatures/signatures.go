@@ -13,7 +13,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string, image string, rule internalv1.SignatureRules, opts ...remote.Option) error {
+type MatchImageSignatureOpts struct {
+	NoCache bool
+}
+
+func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string, image string, rule internalv1.SignatureRules, opts MatchImageSignatureOpts, remoteOpts ...remote.Option) error {
 	// TODO(@iwilltry42): Move this out of here again or only leave default here and merge incoming?
 	// ... alternatively, re-do the function signature to avoid unnecessary external calls in EnsureReferences
 	verifyOpts := acornsign.VerifyOpts{
@@ -21,7 +25,8 @@ func VerifySignatureRule(ctx context.Context, c client.Reader, namespace string,
 		AnnotationRules:    nil,
 		Key:                "",
 		SignatureAlgorithm: "sha256",
-		RemoteOpts:         opts,
+		RemoteOpts:         remoteOpts,
+		NoCache:            opts.NoCache,
 	}
 
 	if err := acornsign.EnsureReferences(ctx, c, image, namespace, &verifyOpts); err != nil {

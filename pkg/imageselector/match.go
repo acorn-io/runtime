@@ -20,11 +20,15 @@ type ImageSelectorNoMatchError struct {
 	Err       error
 }
 
+type MatchImageOpts struct {
+	SignatureOpts signatureselector.MatchImageSignatureOpts
+}
+
 func (e *ImageSelectorNoMatchError) Error() string {
 	return fmt.Sprintf("image [%s] does not match selector field [%s]: %v", e.ImageName, e.Field, e.Err)
 }
 
-func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, selector internalv1.ImageSelector, opts ...remote.Option) error {
+func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, selector internalv1.ImageSelector, opts MatchImageOpts, remoteOpts ...remote.Option) error {
 	imageNameRef, err := images.GetImageReference(ctx, c, namespace, imageName)
 	if err != nil {
 		return fmt.Errorf("error parsing image reference %s: %w", imageName, err)
@@ -65,7 +69,7 @@ func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, reso
 	// > Signatures
 	// Any verification error or failed verification issue will error out
 	for _, rule := range selector.Signatures {
-		if err := signatureselector.VerifySignatureRule(ctx, c, namespace, signatureSourceRef.String(), rule, opts...); err != nil {
+		if err := signatureselector.VerifySignatureRule(ctx, c, namespace, signatureSourceRef.String(), rule, opts.SignatureOpts, remoteOpts...); err != nil {
 			return &ImageSelectorNoMatchError{ImageName: imageName, Field: "signatures", Err: err}
 		}
 	}
