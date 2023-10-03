@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	DefaultSizeQuantity = Quantity("10G")
+	DefaultSizeQuantity = Quantity("1Gi")
 	MinSizeQuantity     = Quantity("5M")
 	DefaultSize         = MustParseResourceQuantity(DefaultSizeQuantity)
 	MinSize             = MustParseResourceQuantity(MinSizeQuantity)
