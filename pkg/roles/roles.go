@@ -22,6 +22,9 @@ const (
 	GroupRoleAWSAcornIO = "role.aws.acorn.io"
 
 	AWSAdmin = "acorn:aws:admin"
+
+	// Cluster Agent Special
+	SuperAdmin = "acorn:super-admin"
 )
 
 var (
@@ -276,6 +279,23 @@ func AWSRoles() []rbacv1.ClusterRole {
 				Name: AWSAdmin,
 			},
 			Rules: awsRoles[AWSAdmin],
+		},
+	}
+}
+
+func SuperAdminRole() rbacv1.ClusterRole {
+	return rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: SuperAdmin,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{"*"},
+				Verbs:     []string{"get", "list", "watch", "update", "patch", "delete", "deletecollection", "create"},
+				Resources: []string{
+					"*",
+				},
+			},
 		},
 	}
 }
