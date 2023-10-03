@@ -29,6 +29,8 @@ var (
 		FeatureImageAllowRules:         false,
 		FeatureImageRoleAuthorizations: false,
 	}
+
+	DefaultVolumeSize = "10G"
 )
 
 func defaultProfile() apiv1.Config {
@@ -51,6 +53,7 @@ func defaultProfile() apiv1.Config {
 		LetsEncryptEmail:               "",
 		LetsEncryptTOSAgree:            new(bool),
 		ManageVolumeClasses:            new(bool),
+		VolumeSizeDefault:              DefaultVolumeSize,
 		NetworkPolicies:                new(bool),
 		PodSecurityEnforceProfile:      "baseline",
 		Profile:                        new(string),

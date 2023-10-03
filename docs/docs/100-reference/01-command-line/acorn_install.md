@@ -71,8 +71,9 @@ acorn install
       --set-pod-security-enforce-profile                Set the PodSecurity profile on created namespaces (default true)
       --skip-checks                                     Bypass installation checks
       --use-custom-ca-bundle                            Use CA bundle for admin supplied secret for all acorn control plane components. Defaults to false.
-  -m, --workload-memory-default string                  Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default 0)
-      --workload-memory-maximum string                  Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" seperators (default 0)
+      --volume-size-default string                      Set the default size for acorn volumes. Accepts storage suffixes (K, M, G, Ki, Mi, Gi, etc) and "." and "_" separators (default 0)
+  -m, --workload-memory-default string                  Set the default memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" separators (default 0)
+      --workload-memory-maximum string                  Set the maximum memory for acorn workloads. Accepts binary suffixes (Ki, Mi, Gi, etc) and "." and "_" separators (default 0)
 ```
 
 ### Options inherited from parent commands

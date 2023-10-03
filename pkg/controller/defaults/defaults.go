@@ -5,7 +5,6 @@ import (
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/condition"
 	"github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/z"
 )
 
 // Calculate is a handler that sets the defaults for an AppInstance to its status if
@@ -31,8 +30,11 @@ func Calculate(req router.Request, resp router.Response) (err error) {
 		}
 	}()
 
-	if appInstance.Status.Defaults.VolumeSize == nil {
-		appInstance.Status.Defaults.VolumeSize = z.Pointer(internalv1.DefaultSize.DeepCopy())
+	// Only set the default volume size if it hasn't been set yet.
+	if appInstance.Status.Defaults.Volumes == nil {
+		if err := addDefaultVolumeSize(req.Ctx, req.Client, appInstance); err != nil {
+			return err
+		}
 	}
 
 	if appInstance.Generation != appInstance.Status.ObservedGeneration {
