@@ -185,6 +185,12 @@ var (
 					"imageallowrules",
 				},
 			},
+			{
+				Verbs: []string{"get", "list", "watch"},
+				Resources: []string{
+					"infos",
+				},
+			},
 		},
 	}
 )
