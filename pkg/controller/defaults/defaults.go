@@ -3,7 +3,6 @@ package defaults
 import (
 	"github.com/acorn-io/baaah/pkg/router"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/condition"
 	"github.com/acorn-io/runtime/pkg/config"
 )
@@ -16,8 +15,8 @@ import (
 // calculating the defaults only when the generation changes, we can ensure that
 // updated defaults are only applied when an AppInstance is updated directly.
 func Calculate(req router.Request, resp router.Response) (err error) {
-	appInstance := req.Object.(*v1.AppInstance)
-	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefaults)
+	appInstance := req.Object.(*internalv1.AppInstance)
+	status := condition.Setter(appInstance, resp, internalv1.AppInstanceConditionDefaults)
 
 	defer func() {
 		if err == nil {
@@ -54,6 +53,10 @@ func calculate(req router.Request, appInstance *internalv1.AppInstance) error {
 	}
 
 	if err = addDefaultMemory(req, cfg, appInstance); err != nil {
+		return err
+	}
+
+	if err = addDefaultVolumeSize(req.Ctx, req.Client, appInstance); err != nil {
 		return err
 	}
 

@@ -48,6 +48,7 @@ status:
       left: 0
       oneimage: 0
     region: local
+    volumeSize: 10G
   namespace: app-created-namespace
   observedGeneration: 1
   staged:
