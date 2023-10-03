@@ -123,6 +123,8 @@ func CheckPermissions(transport http.RoundTripper) router.HandlerFunc {
 			denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, imageName), authzPerms)
 
 			app.Status.Staged.ImagePermissionsDenied = denied
+		} else {
+			app.Status.Staged.ImagePermissionsDenied = nil
 		}
 
 		// This is checking if the user granted all permissions that the app requires
