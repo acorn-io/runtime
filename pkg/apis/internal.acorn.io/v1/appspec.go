@@ -315,7 +315,7 @@ func (p PolicyRule) Grants(currentNamespace string, requested PolicyRule) bool {
 
 	for _, ns := range p.ResolveNamespaces(currentNamespace) {
 		for _, requestedNamespace := range requested.ResolveNamespaces(currentNamespace) {
-			if ns == requestedNamespace &&
+			if (ns == requestedNamespace || ns == "") &&
 				matches(p.Verbs, requested.Verbs, false) &&
 				matches(p.APIGroups, requested.APIGroups, false) &&
 				matches(p.Resources, requested.Resources, false) &&
