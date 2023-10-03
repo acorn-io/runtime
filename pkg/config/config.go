@@ -384,7 +384,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 		mergedConfig.CertManagerIssuer = newConfig.CertManagerIssuer
 	}
 	if newConfig.Features != nil {
-		mergedConfig.Features = newConfig.Features
+		for k, v := range newConfig.Features {
+			mergedConfig.Features[k] = v
+		}
 	}
 
 	if len(newConfig.PropagateProjectAnnotations) > 0 && newConfig.PropagateProjectAnnotations[0] == "" {
