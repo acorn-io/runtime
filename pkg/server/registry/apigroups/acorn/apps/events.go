@@ -25,6 +25,9 @@ const (
 type AppSpecCreateEventDetails struct {
 	// ResourceVersion is the resourceVersion of the App created.
 	ResourceVersion string `json:"resourceVersion"`
+
+	// Spec is the spec of the App that was created.
+	Spec v1.AppInstanceSpec `json:"spec"`
 }
 
 // AppSpecDeleteEventDetails captures additional info about the deletion of an App.
@@ -68,6 +71,7 @@ func (s *eventRecordingStrategy) Create(ctx context.Context, obj types.Object) (
 
 	details, err := apiv1.Mapify(AppSpecCreateEventDetails{
 		ResourceVersion: created.GetResourceVersion(),
+		Spec:            created.(*apiv1.App).Spec,
 	})
 	if err != nil {
 		logrus.Warnf("Failed to generate event details, event recording disabled for request: %s", err.Error())
