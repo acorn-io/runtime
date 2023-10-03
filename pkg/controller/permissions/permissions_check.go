@@ -47,9 +47,23 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 func CheckPermissions(transport http.RoundTripper) router.HandlerFunc {
 	return func(req router.Request, _ router.Response) error {
 		app := req.Object.(*v1.AppInstance)
+
+		iraEnabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations)
+		if err != nil {
+			return err
+		}
+		if !iraEnabled {
+			app.Status.Staged.ImagePermissionsDenied = nil
+		}
+
 		if app.Status.Staged.AppImage.ID == "" ||
 			app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest ||
 			app.Status.Staged.PermissionsObservedGeneration == app.Generation {
+			if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageAllowRules); err != nil {
+				return err
+			} else if !enabled {
+				app.Status.Staged.ImageAllowed = z.Pointer(true)
+			}
 			return nil
 		}
 
@@ -75,7 +89,7 @@ func CheckPermissions(transport http.RoundTripper) router.HandlerFunc {
 			imageName = ref.Context().Digest(appImage.Digest).String()
 		}
 
-		err := req.Client.SubResource("details").Create(req.Ctx, uncached.Get(&apiv1.Image{
+		err = req.Client.SubResource("details").Create(req.Ctx, uncached.Get(&apiv1.Image{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      strings.ReplaceAll(imageName, "/", "+"),
 				Namespace: app.Namespace,
@@ -92,10 +106,8 @@ func CheckPermissions(transport http.RoundTripper) router.HandlerFunc {
 				details.AppImage.Digest, appImage.Digest)
 		}
 
-		// If enabled, check if the Acorn images are authorized to request the defined permissions.
-		if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations); err != nil {
-			return err
-		} else if enabled {
+		// If iraEnabled, check if the Acorn images are authorized to request the defined permissions.
+		if iraEnabled {
 			imageName := appImage.Name
 
 			// E.g. for child Acorns, the appImage.Name is the image ID, but we need the original image name (with registry/repo)
@@ -123,8 +135,6 @@ func CheckPermissions(transport http.RoundTripper) router.HandlerFunc {
 			denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, imageName), authzPerms)
 
 			app.Status.Staged.ImagePermissionsDenied = denied
-		} else {
-			app.Status.Staged.ImagePermissionsDenied = nil
 		}
 
 		// This is checking if the user granted all permissions that the app requires
