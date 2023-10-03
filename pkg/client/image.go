@@ -91,10 +91,9 @@ func (c *DefaultClient) ImagePull(ctx context.Context, imageName string, opts *I
 		return nil, err
 	}
 
-	go func() {
-		<-ctx.Done()
+	stop := context.AfterFunc(ctx, func() {
 		_ = conn.Close()
-	}()
+	})
 
 	if err := conn.WriteJSON(body); err != nil {
 		return nil, err
@@ -104,6 +103,7 @@ func (c *DefaultClient) ImagePull(ctx context.Context, imageName string, opts *I
 	go func() {
 		defer close(result)
 		defer conn.Close()
+		defer stop()
 		for {
 			_, data, err := conn.ReadMessage()
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
@@ -152,10 +152,9 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 		return nil, err
 	}
 
-	go func() {
-		<-ctx.Done()
+	stop := context.AfterFunc(ctx, func() {
 		_ = conn.Close()
-	}()
+	})
 
 	if err := conn.WriteJSON(body); err != nil {
 		return nil, err
@@ -165,6 +164,7 @@ func (c *DefaultClient) ImagePush(ctx context.Context, imageName string, opts *I
 	go func() {
 		defer close(result)
 		defer conn.Close()
+		defer stop()
 		for {
 			_, data, err := conn.ReadMessage()
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {

@@ -316,20 +316,20 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 		return nil, err
 	}
 
-	go func() {
-		<-ctx.Done()
+	stop := context.AfterFunc(ctx, func() {
 		// Set a past read deadline with `conn.SetReadDeadline`
 		// to trigger a "use of closed network connection" error
 		// for graceful closure handling without printing the error.
 		_ = conn.SetReadDeadline(time.Now())
 		_ = conn.Close()
-	}()
+	})
 
 	result := make(chan apiv1.LogMessage)
 
 	go func() {
 		defer close(result)
 		defer conn.Close()
+		defer stop()
 		for {
 			_, data, err := conn.ReadMessage()
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {

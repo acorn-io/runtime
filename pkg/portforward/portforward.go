@@ -41,10 +41,12 @@ func PortForward(ctx context.Context, c client.Client, containerName string, add
 		fmt.Printf("Forwarding %s => %d for container [%s]\n", l.Addr().String(), port, containerName)
 		return l, err
 	}
-	go func() {
-		<-ctx.Done()
+
+	stop := context.AfterFunc(ctx, func() {
 		_ = p.Close()
-	}()
+	})
+	defer stop()
+
 	if err := p.Start(); err != nil {
 		return err
 	}
