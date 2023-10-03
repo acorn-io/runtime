@@ -78,7 +78,7 @@ func (g *GenericMap) Merge(from *GenericMap) *GenericMap {
 }
 
 // MarshalJSON may get called on pointers or values, so implement MarshalJSON on value.
-func (g GenericMap) MarshalJSON() ([]byte, error) {
+func (g *GenericMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(g.GetData())
 }
 
