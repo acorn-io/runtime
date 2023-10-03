@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -222,9 +223,10 @@ type AppStatusStaged struct {
 }
 
 type Defaults struct {
-	Volumes map[string]VolumeDefault `json:"volumes,omitempty"`
-	Memory  map[string]*int64        `json:"memory,omitempty"`
-	Region  string                   `json:"region,omitempty"`
+	VolumeSize *resource.Quantity       `json:"volumeSize,omitempty"`
+	Volumes    map[string]VolumeDefault `json:"volumes,omitempty"`
+	Memory     map[string]*int64        `json:"memory,omitempty"`
+	Region     string                   `json:"region,omitempty"`
 }
 
 type VolumeDefault struct {
