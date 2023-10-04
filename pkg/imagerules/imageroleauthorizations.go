@@ -28,9 +28,8 @@ func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, i
 	// Create a single list from both IRAs and CIRAs
 	for _, cira := range ciras.Items {
 		iras.Items = append(iras.Items, internaladminv1.ImageRoleAuthorizationInstance{
-			ObjectMeta:    cira.ObjectMeta,
-			ImageSelector: cira.ImageSelector,
-			Roles:         cira.Roles,
+			ObjectMeta: cira.ObjectMeta,
+			Spec:       cira.Spec,
 		})
 	}
 
@@ -43,7 +42,7 @@ func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, i
 		return nil, err
 	}
 
-	authorizedRoles, err := CheckRoleAuthorizations(ctx, c, namespace, imageName, "", digest, iras.Items, remoteOpts...)
+	authorizedRoles, err := CheckRoleAuthorizations(ctx, c, namespace, imageName, digest, iras.Items, remoteOpts...)
 	if err != nil {
 		if _, ok := err.(*ErrImageNotAllowed); ok {
 			return nil, nil
@@ -55,13 +54,13 @@ func GetAuthorizedPermissions(ctx context.Context, c client.Reader, namespace, i
 	return resolveAuthorizedRoles(ctx, c, namespace, imageName, authorizedRoles)
 }
 
-func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, iras []internaladminv1.ImageRoleAuthorizationInstance, opts ...remote.Option) ([]internaladminv1.RoleAuthorizations, error) {
+func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, imageName, digest string, iras []internaladminv1.ImageRoleAuthorizationInstance, opts ...remote.Option) ([]internaladminv1.RoleAuthorizations, error) {
 	logrus.Debugf("Checking image %s (%s) against %d image role authorizations", imageName, digest, len(iras))
 	var authorized []internaladminv1.RoleAuthorizations
 
 	for _, ira := range iras {
-		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, ira.ImageSelector, imageselector.MatchImageOpts{}, opts...); err != nil {
-			if ierr := (*imageselector.ImageSelectorNoMatchError)(nil); errors.As(err, &ierr) {
+		if err := imageselector.MatchImage(ctx, c, namespace, imageName, "", digest, ira.Spec.ImageSelector, imageselector.MatchImageOpts{}, opts...); err != nil {
+			if ierr := (*imageselector.NoMatchError)(nil); errors.As(err, &ierr) {
 				logrus.Debugf("ImageRoleAuthorization %s/%s did not match: %v", ira.Namespace, ira.Name, err)
 			} else {
 				logrus.Errorf("Error matching ImageRoleAuthorization %s/%s: %v", ira.Namespace, ira.Name, err)
@@ -69,7 +68,7 @@ func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, im
 			continue
 		}
 		logrus.Debugf("Image %s (%s) is allowed by ImageRoleAuthorization %s/%s", imageName, digest, ira.Namespace, ira.Name)
-		authorized = append(authorized, ira.Roles)
+		authorized = append(authorized, ira.Spec.Roles)
 	}
 	if len(authorized) == 0 {
 		return authorized, &ErrImageNotAllowed{Image: imageName}

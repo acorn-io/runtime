@@ -68,7 +68,7 @@ func CheckImageAgainstRules(ctx context.Context, c client.Reader, namespace, ima
 
 	for _, imageAllowRule := range imageAllowRules {
 		if err := imageselector.MatchImage(ctx, c, namespace, imageName, resolvedName, digest, imageAllowRule.ImageSelector, imageselector.MatchImageOpts{}, opts...); err != nil {
-			if ierr := (*imageselector.ImageSelectorNoMatchError)(nil); errors.As(err, &ierr) {
+			if ierr := (*imageselector.NoMatchError)(nil); errors.As(err, &ierr) {
 				logrus.Debugf("ImageAllowRule %s/%s did not match: %v", imageAllowRule.Namespace, imageAllowRule.Name, err)
 			} else {
 				logrus.Errorf("Error matching ImageAllowRule %s/%s: %v", imageAllowRule.Namespace, imageAllowRule.Name, err)
