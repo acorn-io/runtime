@@ -44,18 +44,15 @@ func WaitForAllocation(req router.Request, resp router.Response) error {
 	}
 
 	/*
-		Determine how to proceed depending on if the quotaRequest exists and what it has written to its status. The four scenarios
-		are QuotaRequest:
+		Determine how to proceed depending on if the quotaRequest exists and what it has written to its status. The three scenarios
+		are the QuotaRequest:
 
-		1. Exists and has set FailedResources implying that the quota allocation failed.
-		2. Exists and had an error while trying to allocate quota.
-		3. Does not exist or has not yet been allocated the resources requested.
-		4. Exists and has successfully allocated the resources requested.
+		1. Exists and had an error while trying to allocate quota.
+		2. Does not exist or has not yet been allocated the resources requested.
+		3. Exists and has successfully allocated the resources requested.
 	*/
-	if quotaRequest.Status.FailedResources != nil {
-		status.Error(fmt.Errorf("failed to provision the following resources: %v", quotaRequest.Status.FailedResources.ToString()))
-	} else if cond := quotaRequest.Status.Condition(adminv1.QuotaRequestCondition); cond.Error {
-		status.Error(fmt.Errorf("error occurred while trying to allocate quota: %v", cond.Message))
+	if cond := quotaRequest.Status.Condition(adminv1.QuotaRequestCondition); cond.Error {
+		status.Error(fmt.Errorf("quota allocation failed: %v", cond.Message))
 	} else if err != nil || !quotaRequest.Spec.Resources.Equals(quotaRequest.Status.AllocatedResources) {
 		status.Unknown("waiting for quota allocation")
 	} else if quotaRequest.Status.Condition(adminv1.QuotaRequestCondition).Success {
