@@ -16,6 +16,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/secrets"
 	"github.com/acorn-io/runtime/pkg/volume"
 	name2 "github.com/rancher/wrangler/pkg/name"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,7 +201,14 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 			pvc.Spec.VolumeName = pvName
 
 			if volumeRequest.Size == "" {
-				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.DefaultSize
+				// This shouldn't happen because we set a default in the status. However
+				// if this situation does occur, we'll just use the default size for runtime
+				// and log it at the debug level. As an example, our unit tests hit this case.
+				if appInstance.Status.Defaults.VolumeSize == nil {
+					logrus.Debugf("no default volume size found in status, using static default size of %v", v1.DefaultSize)
+					appInstance.Status.Defaults.VolumeSize = v1.DefaultSize
+				}
+				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *appInstance.Status.Defaults.VolumeSize
 			} else {
 				pvc.Spec.Resources.Requests[corev1.ResourceStorage] = *v1.MustParseResourceQuantity(volumeRequest.Size)
 			}

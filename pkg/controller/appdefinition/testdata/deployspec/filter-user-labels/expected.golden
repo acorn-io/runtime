@@ -407,7 +407,8 @@ status:
     status: "True"
     success: true
     type: defined
-  defaults: {}
+  defaults:
+    volumeSize: 10G
   namespace: app-created-namespace
   staged:
     appImage:

@@ -377,7 +377,7 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	if newConfig.IngressControllerNamespace != nil {
 		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
 	}
-	if newConfig.VolumeSizeDefault == "" {
+	if newConfig.VolumeSizeDefault != "" {
 		mergedConfig.VolumeSizeDefault = newConfig.VolumeSizeDefault
 	}
 	if newConfig.AWSIdentityProviderARN != nil {
