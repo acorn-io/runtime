@@ -39,8 +39,17 @@ type ImageRoleAuthorizationInstance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
+	Spec   ImageRoleAuthorizationInstanceSpec   `json:"spec,omitempty"`
+	Status ImageRoleAuthorizationInstanceStatus `json:"status,omitempty"`
+}
+
+type ImageRoleAuthorizationInstanceSpec struct {
 	ImageSelector internalv1.ImageSelector `json:"imageSelector,omitempty"`
 	Roles         RoleAuthorizations       `json:"roles,omitempty"`
+}
+
+type ImageRoleAuthorizationInstanceStatus struct {
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

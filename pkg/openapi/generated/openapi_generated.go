@@ -234,6 +234,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ComputeClassMemory":                        schema_pkg_apis_internaladminacornio_v1_ComputeClassMemory(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstance":            schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceList":        schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceList(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec":        schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceSpec(ref),
+		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus":      schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceStatus(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstance":               schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstance(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectComputeClassInstanceList":           schema_pkg_apis_internaladminacornio_v1_ProjectComputeClassInstanceList(ref),
 		"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ProjectVolumeClassInstance":                schema_pkg_apis_internaladminacornio_v1_ProjectVolumeClassInstance(ref),
@@ -703,23 +705,23 @@ func schema_pkg_apis_adminacornio_v1_ClusterImageRoleAuthorization(ref common.Re
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"imageSelector": {
+					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec"),
 						},
 					},
-					"roles": {
+					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -940,23 +942,23 @@ func schema_pkg_apis_adminacornio_v1_ImageRoleAuthorization(ref common.Reference
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"imageSelector": {
+					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec"),
 						},
 					},
-					"roles": {
+					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -13245,23 +13247,23 @@ func schema_pkg_apis_internaladminacornio_v1_ClusterImageRoleAuthorizationInstan
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"imageSelector": {
+					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec"),
 						},
 					},
-					"roles": {
+					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -13526,23 +13528,23 @@ func schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstance(ref 
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"imageSelector": {
+					"spec": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec"),
 						},
 					},
-					"roles": {
+					"status": {
 						SchemaProps: spec.SchemaProps{
 							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstanceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -13591,6 +13593,50 @@ func schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceList(
 		},
 		Dependencies: []string{
 			"github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.ImageRoleAuthorizationInstance", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"imageSelector": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector"),
+						},
+					},
+					"roles": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ImageSelector", "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1.RoleAuthorizations"},
+	}
+}
+
+func schema_pkg_apis_internaladminacornio_v1_ImageRoleAuthorizationInstanceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"observedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

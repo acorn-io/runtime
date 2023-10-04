@@ -6,6 +6,7 @@ import (
 	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/controller/acornimagebuildinstance"
 	"github.com/acorn-io/runtime/pkg/controller/appdefinition"
 	"github.com/acorn-io/runtime/pkg/controller/appstatus"
@@ -62,7 +63,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appRouter.HandlerFunc(appstatus.PrepareStatus)
 	appRouter.HandlerFunc(appdefinition.AssignNamespace)
 	appRouter.HandlerFunc(appdefinition.PullAppImage(registryTransport, recorder))
-	appRouter.HandlerFunc(permissions.CheckPermissions(registryTransport))
+	appRouter.HandlerFunc(permissions.CheckPermissions)
 	appRouter.HandlerFunc(permissions.CopyPromoteStagedAppImage)
 	appRouter.HandlerFunc(images.CreateImages)
 	appRouter.HandlerFunc(appdefinition.ParseAppImage)
@@ -133,6 +134,9 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	router.Type(&netv1.Ingress{}).Selector(managedSelector).HandlerFunc(networkpolicy.ForIngress)
 	router.Type(&appsv1.Deployment{}).Namespace(system.ImagesNamespace).HandlerFunc(networkpolicy.ForBuilder)
 	router.Type(&netv1.NetworkPolicy{}).Selector(managedSelector).HandlerFunc(gc.GCOrphans)
+
+	router.Type(&internaladminv1.ImageRoleAuthorizationInstance{}).HandlerFunc(permissions.BumpImageRoleAuthorizations)
+	router.Type(&internaladminv1.ClusterImageRoleAuthorizationInstance{}).HandlerFunc(permissions.BumpClusterImageRoleAuthorizations)
 
 	configRouter := router.Type(&corev1.ConfigMap{}).Namespace(system.Namespace).Name(system.ConfigName)
 	configRouter.Handler(config.NewDNSConfigHandler())

@@ -2,10 +2,12 @@ package imagerules
 
 import (
 	"context"
+	_ "embed"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/acorn-io/baaah/pkg/apply"
 	"github.com/acorn-io/runtime/integration/helper"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
@@ -21,8 +23,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	cclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	_ "embed"
 )
 
 //go:embed testdata/nested-perms/Acornfile
@@ -237,15 +237,17 @@ func TestImageRoleAuthorizations(t *testing.T) {
 			Name:      "test",
 			Namespace: c.GetNamespace(),
 		},
-		ImageSelector: internalv1.ImageSelector{
-			NamePatterns: []string{"foobar"}, // does not cover the image
-		},
-		Roles: internaladminv1.RoleAuthorizations{
-			Scopes: []string{"project"},
-			RoleRefs: []internaladminv1.RoleRef{
-				{
-					Name: "foo:bar:admin", // required by rootapp
-					Kind: "Role",          // current namespace only
+		Spec: internaladminv1.ImageRoleAuthorizationInstanceSpec{
+			ImageSelector: internalv1.ImageSelector{
+				NamePatterns: []string{"foobar"}, // does not cover the image
+			},
+			Roles: internaladminv1.RoleAuthorizations{
+				Scopes: []string{"project"},
+				RoleRefs: []internaladminv1.RoleRef{
+					{
+						Name: "foo:bar:admin", // required by rootapp
+						Kind: "Role",          // current namespace only
+					},
 				},
 			},
 		},
@@ -263,12 +265,12 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	// --------------------------------------------------------------------
 	// Run #3 - Expect denied permissions since we have an IRA but it does only cover one api group
 	// --------------------------------------------------------------------
-	ira.ImageSelector.NamePatterns = []string{tagName, nestedImageTagName}
-	err = kclient.Update(ctx, ira)
+	ira.Spec.ImageSelector.NamePatterns = []string{tagName, nestedImageTagName}
+	err = apply.Ensure(ctx, kclient, ira)
 	require.NoError(t, err, "should not error while updating IRA")
 
 	// Ensure that the selector matches the image now
-	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), tagName, id, image.Digest, ira.ImageSelector, imageselector.MatchImageOpts{})
+	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), tagName, id, image.Digest, ira.Spec.ImageSelector, imageselector.MatchImageOpts{})
 	require.NoError(t, err, "should not error while matching image")
 
 	details, err = c.ImageDetails(ctx, id, &client.ImageDetailsOptions{IncludeNested: true})
@@ -335,15 +337,15 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	require.NoError(t, err, "should not error while creating aws role")
 
 	// Add the missing api group to the IRA
-	ira.Roles.RoleRefs = append(ira.Roles.RoleRefs, internaladminv1.RoleRef{
+	ira.Spec.Roles.RoleRefs = append(ira.Spec.Roles.RoleRefs, internaladminv1.RoleRef{
 		Name: awspermissions.AWSAdminRole, // required by foo.awsapp
 		Kind: "Role",
 	})
-	err = kclient.Update(ctx, ira)
+	err = apply.Ensure(ctx, kclient, ira)
 	require.NoError(t, err, "should not error while updating IRA")
 
 	// Ensure that the selector matches the image now
-	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), nestedImageTagName, "", nestedImage.Digest, ira.ImageSelector, imageselector.MatchImageOpts{})
+	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), nestedImageTagName, "", nestedImage.Digest, ira.Spec.ImageSelector, imageselector.MatchImageOpts{})
 	require.NoError(t, err, "should not error while matching image")
 
 	app = createWaitLoop(ctx, blueprint.DeepCopy())

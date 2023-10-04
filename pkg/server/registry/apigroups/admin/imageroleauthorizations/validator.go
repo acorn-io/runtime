@@ -13,10 +13,10 @@ type Validator struct{}
 
 func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	aiar := obj.(*adminv1.ImageRoleAuthorization)
-	if len(aiar.ImageSelector.NamePatterns) == 0 {
+	if len(aiar.Spec.ImageSelector.NamePatterns) == 0 {
 		return append(result, field.Required(field.NewPath("imageSelector", "namePatterns"), "the image selector patterns must be defined to specify which images this rule applies to"))
 	}
-	result = append(result, validateSignatureRules(aiar.ImageSelector.Signatures)...)
+	result = append(result, validateSignatureRules(aiar.Spec.ImageSelector.Signatures)...)
 	return
 }
 
@@ -38,10 +38,10 @@ type ClusterValidator struct{}
 
 func (s *ClusterValidator) Validate(ctx context.Context, obj runtime.Object) (result field.ErrorList) {
 	aiar := obj.(*adminv1.ClusterImageRoleAuthorization)
-	if len(aiar.ImageSelector.NamePatterns) == 0 {
+	if len(aiar.Spec.ImageSelector.NamePatterns) == 0 {
 		return append(result, field.Required(field.NewPath("imageSelector", "namePatterns"), "the image selector patterns must be defined to specify which images this rule applies to"))
 	}
-	result = append(result, validateSignatureRules(aiar.ImageSelector.Signatures)...)
+	result = append(result, validateSignatureRules(aiar.Spec.ImageSelector.Signatures)...)
 	return
 }
 
