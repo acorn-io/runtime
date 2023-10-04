@@ -19,7 +19,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,6 +31,20 @@ const (
 	AWSRoleHash          = "role.aws.acorn.io/hash"
 	AssumeVerb           = "assume"
 	AssumeRoleAnnotation = "eks.amazonaws.com/role-arn"
+
+	AWSAdminRole = "acorn:aws:admin"
+)
+
+var (
+	AWSRoles = map[string][]rbacv1.PolicyRule{
+		AWSAdminRole: {
+			{
+				APIGroups: []string{AWSAPIGroup, AWSRoleAPIGroup},
+				Verbs:     []string{"*"},
+				Resources: []string{"*"},
+			},
+		},
+	}
 )
 
 type policyDocument struct {
@@ -342,4 +358,15 @@ func AWSAnnotations(ctx context.Context, c kclient.Client, app *v1.AppInstance, 
 		AWSRoleHash:          digest.SHA256(policy),
 		AssumeRoleAnnotation: roleARN,
 	}, nil
+}
+
+func GetAWSRoles() []rbacv1.ClusterRole {
+	return []rbacv1.ClusterRole{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: AWSAdminRole,
+			},
+			Rules: AWSRoles[AWSAdminRole],
+		},
+	}
 }

@@ -744,10 +744,7 @@ func Roles() ([]kclient.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := roles.ClusterRoles()
-	r = append(r, roles.SuperAdminRole())
-	r = append(r, roles.AWSRoles()...)
-	for _, role := range r {
+	for _, role := range roles.ClusterRoles() {
 		role := role
 		objs = append(objs, &role)
 	}
