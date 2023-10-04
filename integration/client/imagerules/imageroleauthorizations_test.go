@@ -11,6 +11,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/awspermissions"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/imagerules"
 	"github.com/acorn-io/runtime/pkg/imageselector"
@@ -322,10 +323,21 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	// Run #4 - Expect no denied permissions since we have an IRA that covers the image
 	// --------------------------------------------------------------------
 
+	awsRole := &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      awspermissions.AWSAdminRole,
+			Namespace: c.GetNamespace(),
+		},
+		Rules: awspermissions.AWSRoles[awspermissions.AWSAdminRole],
+	}
+
+	err = kclient.Create(ctx, awsRole)
+	require.NoError(t, err, "should not error while creating aws role")
+
 	// Add the missing api group to the IRA
 	ira.Roles.RoleRefs = append(ira.Roles.RoleRefs, internaladminv1.RoleRef{
-		Name: "acorn:aws:admin", // required by foo.awsapp
-		Kind: "ClusterRole",     // current namespace only
+		Name: awspermissions.AWSAdminRole, // required by foo.awsapp
+		Kind: "Role",
 	})
 	err = kclient.Update(ctx, ira)
 	require.NoError(t, err, "should not error while updating IRA")
