@@ -13021,32 +13021,37 @@ func schema_pkg_apis_internaladminacornio_v1_BaseResources(ref common.ReferenceC
 				Properties: map[string]spec.Schema{
 					"apps": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"jobs": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"volumes": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"images": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"volumeStorage": {
@@ -13068,6 +13073,7 @@ func schema_pkg_apis_internaladminacornio_v1_BaseResources(ref common.ReferenceC
 						},
 					},
 				},
+				Required: []string{"apps", "containers", "jobs", "volumes", "images", "volumeStorage", "memory", "cpu"},
 			},
 		},
 		Dependencies: []string{
@@ -14102,32 +14108,37 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.Re
 				Properties: map[string]spec.Schema{
 					"apps": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"jobs": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"volumes": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"images": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 					"volumeStorage": {
@@ -14150,11 +14161,13 @@ func schema_pkg_apis_internaladminacornio_v1_QuotaRequestResources(ref common.Re
 					},
 					"secrets": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
 						},
 					},
 				},
+				Required: []string{"apps", "containers", "jobs", "volumes", "images", "volumeStorage", "memory", "cpu", "secrets"},
 			},
 		},
 		Dependencies: []string{

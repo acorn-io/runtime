@@ -77,7 +77,7 @@ type QuotaRequestInstanceList struct {
 // QuotaRequestResources defines resources that should can be created by an AppInstance.
 type QuotaRequestResources struct {
 	BaseResources `json:",inline"`
-	Secrets       int `json:"secrets,omitempty"`
+	Secrets       int `json:"secrets"`
 }
 
 // Add will add the QuotaRequestResources of another QuotaRequestResources struct into the current one.

@@ -10,15 +10,15 @@ import (
 // BaseResources defines resources that should be tracked at any scoped. The two main exclusions
 // currently are Secrets and Projects as they have situations they should be not be tracked.
 type BaseResources struct {
-	Apps       int `json:"apps,omitempty"`
-	Containers int `json:"containers,omitempty"`
-	Jobs       int `json:"jobs,omitempty"`
-	Volumes    int `json:"volumes,omitempty"`
-	Images     int `json:"images,omitempty"`
+	Apps       int `json:"apps"`
+	Containers int `json:"containers"`
+	Jobs       int `json:"jobs"`
+	Volumes    int `json:"volumes"`
+	Images     int `json:"images"`
 
-	VolumeStorage resource.Quantity `json:"volumeStorage,omitempty"`
-	Memory        resource.Quantity `json:"memory,omitempty"`
-	CPU           resource.Quantity `json:"cpu,omitempty"`
+	VolumeStorage resource.Quantity `json:"volumeStorage"`
+	Memory        resource.Quantity `json:"memory"`
+	CPU           resource.Quantity `json:"cpu"`
 }
 
 // Add will add the BaseResources of another BaseResources struct into the current one.
