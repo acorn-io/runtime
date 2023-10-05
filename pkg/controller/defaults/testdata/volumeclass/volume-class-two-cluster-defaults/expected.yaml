@@ -9,6 +9,7 @@ spec:
 status:
   defaults:
     region: local
+    volumeSize: 10G
   observedGeneration: 1
   namespace: app-created-namespace
   appImage:
