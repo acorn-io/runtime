@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/log"
@@ -52,9 +53,11 @@ func (s *Logs) Run(cmd *cobra.Command, args []string) error {
 		tailLines = &s.Tail
 	}
 	return log.Output(cmd.Context(), c, args[0], &client.LogOptions{
-		Follow:    s.Follow,
-		Container: s.Container,
-		Tail:      tailLines,
-		Since:     s.Since,
+		LogOptions: apiv1.LogOptions{
+			Follow:    s.Follow,
+			Container: s.Container,
+			Tail:      tailLines,
+			Since:     s.Since,
+		},
 	})
 }

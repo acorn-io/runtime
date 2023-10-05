@@ -118,7 +118,9 @@ func TestContainerLog(t *testing.T) {
 	})
 
 	output, err := c.AppLog(ctx, app.Name, &client.LogOptions{
-		ContainerReplica: replicas[0].Name,
+		LogOptions: apiv1.LogOptions{
+			ContainerReplica: replicas[0].Name,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -176,7 +178,9 @@ func TestSidecarContainerLog(t *testing.T) {
 	})
 
 	output, err := c.AppLog(ctx, app.Name, &client.LogOptions{
-		ContainerReplica: replicas[1].Name,
+		LogOptions: apiv1.LogOptions{
+			ContainerReplica: replicas[1].Name,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -223,7 +227,9 @@ func TestLogDuringDeletion(t *testing.T) {
 	})
 
 	output, err := c.AppLog(ctx, app.Name, &client.LogOptions{
-		Follow: true,
+		LogOptions: apiv1.LogOptions{
+			Follow: true,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

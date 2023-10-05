@@ -112,7 +112,15 @@ type AppUpdateOptions struct {
 	DevSessionClient    *v1.DevSessionInstanceClient
 }
 
-type LogOptions apiv1.LogOptions
+type ContainerLogsWriter interface {
+	Container(timeStamp metav1.Time, containerName, line string)
+}
+
+type LogOptions struct {
+	apiv1.LogOptions
+
+	Logger ContainerLogsWriter
+}
 
 type AppRunOptions struct {
 	Name                string

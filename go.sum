@@ -102,8 +102,8 @@ github.com/ThalesIgnite/crypto11 v1.2.5 h1:1IiIIEqYmBvUYFeMnHqRft4bwf/O36jryEUpY
 github.com/ThalesIgnite/crypto11 v1.2.5/go.mod h1:ILDKtnCKiQ7zRoNxcp36Y1ZR8LBPmR2E23+wTQe/MlE=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
-github.com/acorn-io/aml v0.0.0-20231002033428-fffd2918563a h1:vfo2HyUI+9OhHEDgOuQvpVjpS2z8RVwur2SSrDZw860=
-github.com/acorn-io/aml v0.0.0-20231002033428-fffd2918563a/go.mod h1:I1qN++bfN+6sOV/FiACluqj2Eu5YaHOy82cTAnjLMf0=
+github.com/acorn-io/aml v0.0.0-20231005222512-6a3f6ee06953 h1:uftFqiE7iD8B3gZkSiqvd53ny9Kf6YJbZxpt8bSDGsA=
+github.com/acorn-io/aml v0.0.0-20231005222512-6a3f6ee06953/go.mod h1:I1qN++bfN+6sOV/FiACluqj2Eu5YaHOy82cTAnjLMf0=
 github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a h1:0oMIx6lH47ImOakNyTDCfJGOonJHH1k5s0N1bLinCEU=
 github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a/go.mod h1:x7Y6lLMTqMD65KWjgVaGem5tQP2ZeevOQiaps9epJj4=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e h1:W67DG9AcoNvBwIOR9OFUCZlSJBaHuvM2kXQ2+C6EnLk=
@@ -693,12 +693,12 @@ github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de h1:9TO3cAIGXtEhn
 github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de/go.mod h1:zAbeS9B/r2mtpb6U+EI2rYA5OAXxsYw6wTamcNW+zcE=
 github.com/lithammer/fuzzysearch v1.1.5 h1:Ag7aKU08wp0R9QCfF4GoGST9HbmAIeLP7xwMrOBEp1c=
 github.com/lithammer/fuzzysearch v1.1.5/go.mod h1:1R1LRNk7yKid1BaQkmuLQaHruxcC4HmAH30Dh61Ih1Q=
-github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98 h1:EdaHnOWn24TBX08Yuhjr2p2bqS4R0K0TiljMYMJFgac=
-github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98/go.mod h1:TWJTlQAUCM0+r21Yeo8ILOvBuWypy2L459arjwwIRHA=
-github.com/loft-sh/loft-util v0.0.9-alpha h1:kGcyTQWxWHWy7bbjhS8Hsq/JRdlSztAU++anV6P+sqk=
-github.com/loft-sh/loft-util v0.0.9-alpha/go.mod h1:lsjG5Exh5iEf7Z/87nqwkxx3GRQTizFRLGuS1knF6Cg=
+github.com/loft-sh/devspace v1.1.1-0.20230918143357-5f97e998676e h1:1io5eZaWJ5mLrO0VDOkvlaXnGPJ7iAPVFFgJTKJ2oUA=
+github.com/loft-sh/devspace v1.1.1-0.20230918143357-5f97e998676e/go.mod h1:ZkURPkP4R3O8TGlnoY/GCw79LHmWIIFyUfzrXrV+yk0=
 github.com/loft-sh/notify v0.0.0-20210827094439-0720dcc7feee h1:hZ79+pKEbCBrH1dVmgZ4jtFrrDPxgM4zqEP1lHlSnvI=
 github.com/loft-sh/notify v0.0.0-20210827094439-0720dcc7feee/go.mod h1:pq83B8lgfCY7tKdegTTXU6DZxGQkcWMowUTOTpTQmqk=
+github.com/loft-sh/utils v0.0.16 h1:XnD6Sb6gRWIHgM34U94dHcQ5MtxN5kAGZQ5eddAxC+c=
+github.com/loft-sh/utils v0.0.16/go.mod h1:n2L3X4i7d8kb2NF+q5duKa41N+N6fBde6XY2AolgSBI=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mailru/easyjson v0.0.0-20190614124828-94de47d64c63/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=

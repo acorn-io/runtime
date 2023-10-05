@@ -60,6 +60,11 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		}
 	}
 
+	app.Status.Summary.ErrorMessages = errorMessages.List()
+	app.Status.Summary.TransitioningMessages = transitioning.List()
+	emptyMessage := len(app.Status.Summary.ErrorMessages) == 0 &&
+		len(app.Status.Summary.TransitioningMessages) == 0
+
 	var state string
 	if !app.DeletionTimestamp.IsZero() {
 		state = "removing"
@@ -68,12 +73,13 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 			state = "stopped"
 		} else {
 			state = "stopping"
+			if emptyMessage {
+				app.Status.Summary.TransitioningMessages = append(app.Status.Summary.TransitioningMessages, "Stopping")
+			}
 		}
 	} else if errorMessages.Len() > 0 {
-		app.Status.Summary.ErrorMessages = []string{errorMessages.List()[0]}
 		state = "error"
 	} else if transitioning.Len() > 0 {
-		app.Status.Summary.TransitioningMessages = []string{transitioning.List()[0]}
 		state = "provisioning"
 	} else if app.Status.Ready {
 		if app.Status.AppStatus.Completed {
@@ -83,6 +89,9 @@ func ReadyStatus(req router.Request, resp router.Response) error {
 		}
 	} else {
 		state = "not ready"
+		if emptyMessage {
+			app.Status.Summary.TransitioningMessages = append(app.Status.Summary.TransitioningMessages, "Waiting")
+		}
 	}
 
 	app.Status.Summary.State = state

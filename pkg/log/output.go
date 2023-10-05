@@ -29,13 +29,22 @@ func nextColor() pterm.Color {
 	return c
 }
 
+func getLogger(opts *client.LogOptions) client.ContainerLogsWriter {
+	if opts.Logger == nil {
+		return &DefaultLoggerImpl{
+			containerColors: map[string]pterm.Color{},
+		}
+	}
+	return opts.Logger
+}
+
 func Output(ctx context.Context, c client.Client, name string, opts *client.LogOptions) error {
 	msgs, err := c.AppLog(ctx, name, opts)
 	if err != nil {
 		return err
 	}
 
-	containerColors := map[string]pterm.Color{}
+	logger := getLogger(opts)
 
 	for msg := range msgs {
 		result, err := SinceLogCheck(opts.Since, msg)
@@ -44,13 +53,7 @@ func Output(ctx context.Context, c client.Client, name string, opts *client.LogO
 		}
 		if result {
 			if msg.Error == "" {
-				color, ok := containerColors[msg.ContainerName]
-				if !ok {
-					color = nextColor()
-					containerColors[msg.ContainerName] = color
-				}
-
-				pterm.Printf("%s: %s\n", color.Sprint(msg.ContainerName), msg.Line)
+				logger.Container(msg.Time, msg.ContainerName, msg.Line)
 			} else if !strings.Contains(msg.Error, "context canceled") {
 				logrus.Error(msg.Error)
 			}

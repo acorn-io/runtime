@@ -9,6 +9,7 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/dev"
+	"github.com/acorn-io/runtime/pkg/log"
 )
 
 func App(ctx context.Context, c client.Client, appName string, quiet bool) error {
@@ -25,7 +26,7 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_ = dev.AppStatusLoop(ctx, c, app.Name)
+			_ = dev.AppStatusLoop(ctx, c, log.DefaultLogger, app.Name)
 		}()
 	}
 
@@ -37,7 +38,7 @@ func App(ctx context.Context, c client.Client, appName string, quiet bool) error
 	cancel()
 	wg.Wait()
 	fmt.Println()
-	dev.PrintAppStatus(app)
+	dev.PrintAppStatus(app, log.DefaultLogger)
 	return nil
 }
 

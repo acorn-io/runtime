@@ -222,7 +222,7 @@ func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpd
 			},
 			Spec: v1.DevSessionInstanceSpec{
 				Client:                *opts.DevSessionClient,
-				SessionTimeoutSeconds: 60,
+				SessionTimeoutSeconds: 360,
 				SessionStartTime:      metav1.Now(),
 				SessionRenewTime:      metav1.Now(),
 				SpecOverride:          &app.Spec,
@@ -308,7 +308,7 @@ func (c *DefaultClient) AppLog(ctx context.Context, name string, opts *LogOption
 		Resource("apps").
 		Name(targetName).
 		SubResource("log").
-		VersionedParams((*apiv1.LogOptions)(opts), scheme.ParameterCodec).
+		VersionedParams(&opts.LogOptions, scheme.ParameterCodec).
 		URL()
 
 	conn, _, err := c.Dialer.DialWebsocket(ctx, url.String(), nil)
