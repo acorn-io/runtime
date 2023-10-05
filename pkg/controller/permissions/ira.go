@@ -24,6 +24,10 @@ func BumpClusterImageRoleAuthorizations(req router.Request, _ router.Response) e
 }
 
 func bumpAppsForIRA(req router.Request, ira *adminv1.ImageRoleAuthorizationInstance) error {
+	if ira.Status.ObservedGeneration == ira.Generation {
+		return nil
+	}
+
 	// Only name patterns should be considered for re-evaluation, not signatures.
 	nameSelectorOnly := v1.ImageSelector{
 		NamePatterns: ira.Spec.ImageSelector.NamePatterns,
