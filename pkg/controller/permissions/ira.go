@@ -42,7 +42,7 @@ func bumpAppsForIRA(req router.Request, ira *adminv1.ImageRoleAuthorizationInsta
 			continue
 		}
 
-		imageName := app.Status.AppImage.Name
+		imageName := app.Status.Staged.AppImage.Name
 
 		// E.g. for child Acorns, the appImage.Name is the image ID, but we need the original image name (with registry/repo)
 		// to check for the signatures
@@ -50,7 +50,7 @@ func bumpAppsForIRA(req router.Request, ira *adminv1.ImageRoleAuthorizationInsta
 			imageName = oi
 		}
 
-		err := imageselector.MatchImage(req.Ctx, req.Client, app.Namespace, imageName, "", app.Status.AppImage.Digest, nameSelectorOnly, imageselector.MatchImageOpts{})
+		err := imageselector.MatchImage(req.Ctx, req.Client, app.Namespace, imageName, "", app.Status.Staged.AppImage.Digest, nameSelectorOnly, imageselector.MatchImageOpts{})
 		if ierr := (*imageselector.NoMatchError)(nil); errors.As(err, &ierr) {
 			// If this app is not covered by the image role authorization, then no need to re-evaluate permissions
 			continue
