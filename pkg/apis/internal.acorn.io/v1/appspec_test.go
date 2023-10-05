@@ -149,3 +149,105 @@ func TestSimplify(t *testing.T) {
 		},
 	}))
 }
+
+func TestGrantsAllClusterGrantsProject(t *testing.T) {
+	requested := []Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"group-a"},
+					},
+					Scopes: []string{"project"},
+				},
+			},
+		},
+	}
+
+	granted := []Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"group-a"},
+					},
+					Scopes: []string{"cluster"},
+				},
+			},
+		},
+	}
+	gotMissing, _ := GrantsAll("acorn", requested, granted)
+	assert.Equal(t, []Permissions(nil), gotMissing, "cluster permissions should grant project permissions")
+}
+
+func TestGrantsAllClusterGrantsNamespace(t *testing.T) {
+	requested := []Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"group-a"},
+					},
+					Scopes: []string{"namespace:bar"},
+				},
+			},
+		},
+	}
+
+	granted := []Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"group-a"},
+					},
+					Scopes: []string{"cluster"},
+				},
+			},
+		},
+	}
+	gotMissing, _ := GrantsAll("acorn", requested, granted)
+	assert.Equal(t, []Permissions(nil), gotMissing, "cluster permissions should grant namespace permissions")
+}
+
+func TestGrantsAllProjectNotGrantCluster(t *testing.T) {
+	requested := []Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"group-a"},
+					},
+					Scopes: []string{"cluster"},
+				},
+			},
+		},
+	}
+
+	granted := []Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"get"},
+						APIGroups: []string{"group-a"},
+					},
+					Scopes: []string{"project"},
+				},
+			},
+		},
+	}
+	gotMissing, _ := GrantsAll("acorn", requested, granted)
+	assert.Equal(t, requested, gotMissing, "project permissions should not grant cluster permissions")
+}
