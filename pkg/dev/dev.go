@@ -19,7 +19,6 @@ import (
 	"github.com/acorn-io/runtime/pkg/log"
 	"github.com/acorn-io/runtime/pkg/rulerequest"
 	"github.com/acorn-io/z"
-	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"golang.org/x/sync/errgroup"
@@ -28,12 +27,53 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
+type Logger interface {
+	client.ContainerLogsWriter
+	AppStatusLogger
+
+	Errorf(format string, args ...interface{})
+	Infof(format string, args ...interface{})
+}
+
+type AppStatusLogger interface {
+	AppStatus(ready bool, msg string)
+}
+
 type Options struct {
 	ImageSource       imagesource.ImageSource
 	Run               client.AppRunOptions
 	Replace           bool
 	Dangerous         bool
 	BidirectionalSync bool
+	Logger            Logger
+	BuildStatus       chan<- BuildStatus
+}
+
+type BuildState string
+
+var (
+	BuildRunning   = BuildState("running")
+	BuildFailed    = BuildState("running")
+	BuildSucceeded = BuildState("succeeded")
+)
+
+type BuildStatus struct {
+	AppName string
+	State   BuildState
+	Image   string
+	Message string
+}
+
+func (o *Options) complete() *Options {
+	var cp Options
+	if o != nil {
+		cp = *o
+	}
+	if cp.Logger == nil {
+		cp.Logger = log.DefaultLogger
+	}
+
+	return &cp
 }
 
 type watcher struct {
@@ -43,6 +83,7 @@ type watcher struct {
 	watching     []string
 	watchingTS   []time.Time
 	initOnce     sync.Once
+	logger       Logger
 }
 
 func (w *watcher) Trigger() {
@@ -57,18 +98,18 @@ func (w *watcher) readFiles(ctx context.Context) ([]string, error) {
 }
 
 func (w *watcher) foundChanges() bool {
-	logrus.Debugf("Checking timestamp of %v", w.watching)
+	logrus.Tracef("Checking timestamp of %v", w.watching)
 	for i, f := range w.watching {
 		s, err := os.Stat(f)
 		if err == nil {
 			if w.watchingTS[i] != s.ModTime() {
 				if !w.watchingTS[i].IsZero() {
-					logrus.Infof("%s has changed", f)
+					w.logger.Infof("%s has changed", f)
 				}
 				return true
 			}
 		} else if !os.IsNotExist(err) {
-			logrus.Errorf("failed to read %s: %v", f, err)
+			w.logger.Errorf("failed to read %s: %v", f, err)
 		}
 	}
 	return false
@@ -90,7 +131,7 @@ func (w *watcher) updateTimestamps(ctx context.Context) {
 	if err == nil {
 		w.watching = files
 	} else {
-		logrus.Errorf("failed to resolve files to watch: %v", err)
+		w.logger.Errorf("failed to resolve files to watch: %v", err)
 	}
 	w.watchingTS = timestamps(w.watching)
 }
@@ -118,22 +159,64 @@ func (w *watcher) Wait(ctx context.Context) error {
 	}
 }
 
-func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts *Options) error {
+func buildFailed(c chan<- BuildStatus, msg string) {
+	if c == nil {
+		return
+	}
+	c <- BuildStatus{
+		State:   BuildFailed,
+		Message: msg,
+	}
+}
+
+func buildAppName(c chan<- BuildStatus, appName string) {
+	if c == nil {
+		return
+	}
+	c <- BuildStatus{
+		AppName: appName,
+	}
+}
+
+func buildSuccess(c chan<- BuildStatus, image string) {
+	if c == nil {
+		return
+	}
+	c <- BuildStatus{
+		State: BuildSucceeded,
+		Image: image,
+	}
+}
+
+func buildStart(c chan<- BuildStatus) {
+	if c == nil {
+		return
+	}
+	c <- BuildStatus{
+		State: BuildRunning,
+	}
+}
+
+func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Options) error {
+	opts = opts.complete()
+
 	var (
 		watcher = watcher{
 			trigger:      make(chan struct{}, 1),
 			watchingTS:   make([]time.Time, 1),
 			imageAndArgs: opts.ImageSource,
+			logger:       opts.Logger,
 		}
 		startLock sync.Mutex
 		started   = false
 		appName   string
 		lockOnce  sync.Once
+		logger    = opts.Logger
 	)
 
 	defer func() {
-		if err := releaseDevSession(client, appName); err != nil {
-			logrus.Errorf("Failed to release dev session app: %v", err)
+		if err := releaseDevSession(c, appName); err != nil {
+			logger.Errorf("Failed to release dev session app: %v", err)
 		}
 	}()
 
@@ -159,26 +242,29 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 			return err
 		}
 
-		image, deployArgs, profiles, err := opts.ImageSource.GetImageAndDeployArgs(ctx, client)
+		buildStart(opts.BuildStatus)
+		image, deployArgs, profiles, err := opts.ImageSource.GetImageAndDeployArgs(ctx, c)
 		if err == pflag.ErrHelp {
 			continue
 		} else if err != nil {
+			buildFailed(opts.BuildStatus, err.Error())
 			_, buildFile, _ := opts.ImageSource.ResolveImageAndFile()
 			if buildFile == "" {
 				return err
 			}
-			logrus.Errorf("Failed to build %s: %v", buildFile, err)
-			logrus.Infof("Build failed, touch [%s] to rebuild", buildFile)
+			logger.Errorf("Failed to build %s: %v", buildFile, err)
+			logger.Infof("Build failed, touch [%s] to rebuild", buildFile)
 			failed.Store(true)
 			continue
 		}
 
+		buildSuccess(opts.BuildStatus, image)
 		failed.Store(false)
 
 		for {
-			appName, err = runOrUpdate(ctx, client, hash, image, deployArgs, profiles, opts)
+			appName, err = runOrUpdate(ctx, c, hash, image, deployArgs, profiles, opts)
 			if apierror.IsConflict(err) {
-				logrus.Errorf("Failed to run/update app: %v", err)
+				logger.Errorf("Failed to run/update app: %v", err)
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
@@ -186,19 +272,25 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 					continue
 				}
 			} else if err != nil {
-				logrus.Errorf("Failed to run/update app: %v", err)
+				logger.Errorf("Failed to run/update app: %v", err)
 				failed.Store(true)
 			}
 			// appName will be empty if the runOrUpdate call fails so wait until first success to start devsession
 			if appName != "" {
+				buildAppName(opts.BuildStatus, appName)
 				lockOnce.Do(func() {
 					go func() {
-						renewDevSession(ctx, client, appName, hash.Client)
+						renewDevSession(ctx, c, logger, appName, hash.Client)
 						cancel()
 					}()
 				})
 			}
 			break
+		}
+
+		if appName == "" {
+			// Something failed, so continue and wait
+			continue
 		}
 
 		startLock.Lock()
@@ -210,24 +302,26 @@ func buildLoop(ctx context.Context, client client.Client, hash clientHash, opts 
 		opts.Run.Name = appName
 		eg, ctx := errgroup.WithContext(ctx)
 		eg.Go(func() error {
-			return DevPorts(ctx, client, appName)
+			return DevPorts(ctx, c, appName)
 		})
 		eg.Go(func() error {
-			return LogLoop(ctx, client, appName, nil)
+			return LogLoop(ctx, c, appName, &client.LogOptions{
+				Logger: logger,
+			})
 		})
 		eg.Go(func() error {
-			return AppStatusLoop(ctx, client, appName)
+			return AppStatusLoop(ctx, c, logger, appName)
 		})
 		eg.Go(func() error {
-			return containerSyncLoop(ctx, client, appName, opts)
+			return containerSyncLoop(ctx, c, appName, opts)
 		})
 		eg.Go(func() error {
-			return appDeleteStop(ctx, client, appName, cancel)
+			return appDeleteStop(ctx, c, logger, appName, cancel)
 		})
 		go func() {
 			err := eg.Wait()
 			if err != nil {
-				logrus.Error("dev loop terminated, restarting: ", err)
+				logger.Errorf("dev loop terminated, restarting: %v", err)
 			}
 			startLock.Lock()
 			started = false
@@ -249,7 +343,7 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	update.Replace = opts.Replace
 	update.Stop = new(bool)
 	update.AutoUpgrade = new(bool)
-	logrus.Infof("Updating acorn [%s] to image [%s]", appName, image)
+	opts.Logger.Infof("Updating acorn [%s] to image [%s]", appName, image)
 	app, err := rulerequest.PromptUpdate(ctx, c, opts.Dangerous, appName, update)
 	if err != nil {
 		return "", err
@@ -340,7 +434,7 @@ func runOrUpdate(ctx context.Context, client client.Client, hash clientHash, ima
 	return updateApp(ctx, client, appName, hash.Client, image, deployArgs, profiles, opts)
 }
 
-func appDeleteStop(ctx context.Context, c client.Client, appName string, cancel func()) error {
+func appDeleteStop(ctx context.Context, c client.Client, logger AppStatusLogger, appName string, cancel func()) error {
 	wc, err := c.GetClient()
 	if err != nil {
 		return err
@@ -348,7 +442,7 @@ func appDeleteStop(ctx context.Context, c client.Client, appName string, cancel 
 	w := objwatcher.New[*apiv1.App](wc)
 	_, err = w.ByName(ctx, c.GetNamespace(), appName, func(app *apiv1.App) (bool, error) {
 		if !app.DeletionTimestamp.IsZero() {
-			pterm.Println(pterm.FgCyan.Sprintf("app %s deleted, exiting", app.Name))
+			logger.AppStatus(false, fmt.Sprintf("app %s deleted, exiting", app.Name))
 			cancel()
 			return true, nil
 		}
@@ -357,7 +451,7 @@ func appDeleteStop(ctx context.Context, c client.Client, appName string, cancel 
 	return err
 }
 
-func renewDevSession(ctx context.Context, c client.Client, appName string, client v1.DevSessionInstanceClient) {
+func renewDevSession(ctx context.Context, c client.Client, logger Logger, appName string, client v1.DevSessionInstanceClient) {
 	timeout := 20 * time.Second
 	for {
 		select {
@@ -370,13 +464,13 @@ func renewDevSession(ctx context.Context, c client.Client, appName string, clien
 			return c.DevSessionRenew(ctx, appName, client)
 		})
 		if apierror.IsNotFound(err) {
-			logrus.Errorf("Dev session lost [%s]: %v", appName, err)
+			logger.Errorf("Dev session lost [%s]: %v", appName, err)
 			return
 		} else if err == nil {
 			timeout = 20 * time.Second
 		} else {
 			timeout = 5 * time.Second
-			logrus.Errorf("Failed to lock acorn [%s]: %v", appName, err)
+			logger.Errorf("Failed to lock acorn [%s]: %v", appName, err)
 		}
 	}
 }
@@ -395,16 +489,12 @@ func appStatusMessage(app *apiv1.App) (string, bool) {
 		msg), ready
 }
 
-func PrintAppStatus(app *apiv1.App) {
+func PrintAppStatus(app *apiv1.App, logger AppStatusLogger) {
 	msg, ready := appStatusMessage(app)
-	if ready {
-		pterm.DefaultBox.Println(pterm.LightGreen(msg))
-	} else {
-		pterm.Println(pterm.LightYellow(msg))
-	}
+	logger.AppStatus(ready, msg)
 }
 
-func AppStatusLoop(ctx context.Context, c client.Client, appName string) error {
+func AppStatusLoop(ctx context.Context, c client.Client, logger AppStatusLogger, appName string) error {
 	wc, err := c.GetClient()
 	if err != nil {
 		return err
@@ -416,7 +506,7 @@ func AppStatusLoop(ctx context.Context, c client.Client, appName string) error {
 		logrus.Debugf("app status loop %s/%s rev=%s, generation=%d, observed=%d: newMsg=%s, newReady=%v", app.Namespace, app.Name,
 			app.ResourceVersion, app.Generation, app.Status.ObservedGeneration, newMsg, newReady)
 		if newMsg != msg || newReady != ready {
-			PrintAppStatus(app)
+			PrintAppStatus(app, logger)
 		}
 		msg, ready = newMsg, newReady
 

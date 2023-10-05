@@ -13,7 +13,7 @@ replace (
 require (
 	cuelang.org/go v0.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20231002033428-fffd2918563a
+	github.com/acorn-io/aml v0.0.0-20231005222512-6a3f6ee06953
 	github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a
 	github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e
 	github.com/acorn-io/baaah v0.0.0-20230831185433-be0115009281
@@ -41,7 +41,7 @@ require (
 	github.com/hexops/autogold/v2 v2.2.1
 	github.com/hexops/valast v1.4.4
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
-	github.com/loft-sh/devspace v1.1.1-0.20221217093921-7604c5857f98
+	github.com/loft-sh/devspace v1.1.1-0.20230918143357-5f97e998676e
 	github.com/moby/buildkit v0.11.6
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0-rc4
@@ -188,8 +188,8 @@ require (
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/letsencrypt/boulder v0.0.0-20221109233200-85aa52084eaf // indirect
 	github.com/lithammer/fuzzysearch v1.1.5 // indirect
-	github.com/loft-sh/loft-util v0.0.9-alpha // indirect
 	github.com/loft-sh/notify v0.0.0-20210827094439-0720dcc7feee // indirect
+	github.com/loft-sh/utils v0.0.16 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

@@ -14,6 +14,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/config"
 	"github.com/acorn-io/runtime/pkg/credentials"
 	"github.com/acorn-io/runtime/pkg/deployargs"
+	"github.com/acorn-io/runtime/pkg/streams"
 )
 
 type ImageSource struct {
@@ -25,6 +26,7 @@ type ImageSource struct {
 	// NoDefaultRegistry - if true, indicates that no container registry should be assumed for the Image.
 	// This is used if the ImageSource is for an app with auto-upgrade enabled.
 	NoDefaultRegistry bool
+	Streams           *streams.Output
 
 	// acornConfig is the path to the acorn config file.
 	acornConfig string
@@ -192,6 +194,7 @@ func (i ImageSource) GetImageAndDeployArgs(ctx context.Context, c client.Client)
 			Args:        params,
 			Profiles:    profiles,
 			Platforms:   platforms,
+			Streams:     i.Streams,
 		})
 		if err != nil {
 			return "", nil, nil, err
