@@ -8,7 +8,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 const config = {
   title: 'Acorn Docs',
   tagline: 'Welcome to Acorn Docs',
-  url: 'http://docs.acorn.io',
+  url: 'https://docs.acorn.io',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   trailingSlash: false,
@@ -30,9 +30,9 @@ const config = {
       ({
         docs: {
           versions: {
-			"0.7": {label: "0.7", banner: "none", path: "0.7"},
-			"0.6": {label: "0.6", banner: "none", path: "0.6"},
-			"0.5": {label: "0.5", banner: "none", path: "0.5"},
+            "0.7": { label: "0.7", banner: "none", path: "0.7" },
+            "0.6": { label: "0.6", banner: "none", path: "0.6" },
+            "0.5": { label: "0.5", banner: "none", path: "0.5" },
           },
           routeBasePath: '/', // Serve the docs at the site's root
           sidebarPath: require.resolve('./sidebars.js'),
@@ -103,7 +103,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: ['cue','docker'],
+        additionalLanguages: ['cue', 'docker'],
       },
       algolia: {
         appId: '7QCEFR54LA',
