@@ -107,6 +107,9 @@ func complete(ctx context.Context, c *apiv1.Config, getter kclient.Reader, inclu
 	if c.IngressControllerNamespace == nil {
 		c.IngressControllerNamespace = profile.IngressControllerNamespace
 	}
+	if c.VolumeSizeDefault == "" {
+		c.VolumeSizeDefault = profile.VolumeSizeDefault
+	}
 	if c.AWSIdentityProviderARN == nil {
 		c.AWSIdentityProviderARN = profile.AWSIdentityProviderARN
 	}
@@ -373,6 +376,9 @@ func merge(oldConfig, newConfig *apiv1.Config) *apiv1.Config {
 	}
 	if newConfig.IngressControllerNamespace != nil {
 		mergedConfig.IngressControllerNamespace = newConfig.IngressControllerNamespace
+	}
+	if newConfig.VolumeSizeDefault != "" {
+		mergedConfig.VolumeSizeDefault = newConfig.VolumeSizeDefault
 	}
 	if newConfig.AWSIdentityProviderARN != nil {
 		mergedConfig.AWSIdentityProviderARN = newConfig.AWSIdentityProviderARN
