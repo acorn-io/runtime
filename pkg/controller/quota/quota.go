@@ -94,7 +94,11 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 	// Add the more complex values to the quota request
 	addContainers(app.Containers, quotaRequest)
 	addCompute(app.Containers, appInstance, quotaRequest)
-	addCompute(app.Jobs, appInstance, quotaRequest)
+	// TODO: This is a stop-gap until we figure out how to handle the compute resources of
+	//       jobs. The problem is that Jobs are not always running, so we can't just add
+	//       their compute resources to the quota request permananetly. To some degree it'll
+	//       have to be dynamic, but we can't do that until we have a better idea of how.
+	// addCompute(app.Jobs, appInstance, quotaRequest)
 	if err := addStorage(appInstance, quotaRequest); err != nil {
 		status.Error(err)
 		return err
