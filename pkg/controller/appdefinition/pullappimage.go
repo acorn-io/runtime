@@ -29,6 +29,7 @@ type pullClient struct {
 	pull pullImageFunc
 }
 
+// pullAppImage
 func pullAppImage(transport http.RoundTripper, client pullClient) router.HandlerFunc {
 	// NOTE: It is important that this logic does not interact with status.AppImage but instead
 	// status.Staged.AppImage
@@ -104,6 +105,9 @@ func pullAppImage(transport http.RoundTripper, client pullClient) router.Handler
 	}
 }
 
+// determineTargetImage returns the image that should be pulled and a reason why it may be unknown.
+// This goes through all the auto-upgrade logic.
+// If the determined image is not new, this returns empty strings.
 func determineTargetImage(appInstance *v1.AppInstance) (string, string) {
 	_, on := autoupgrade.Mode(appInstance.Spec)
 	pattern, isPattern := autoupgrade.AutoUpgradePattern(appInstance.Spec.Image)

@@ -11,7 +11,7 @@ import (
 )
 
 func getConsumerPermissions(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, containerName string, container v1.Container) (result v1.Permissions, _ error) {
-	result = v1.FindPermission(containerName, appInstance.Spec.GetPermissions())
+	result = v1.FindPermission(containerName, appInstance.Spec.GetGrantedPermissions())
 
 	for _, dep := range container.Dependencies {
 		// This shouldn't happen, but okay?

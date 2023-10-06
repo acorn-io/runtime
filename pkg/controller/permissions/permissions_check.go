@@ -46,6 +46,7 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 func CheckPermissions(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 
+	// Reset staged status fields if the respective feature is disabled
 	iraEnabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations)
 	if err != nil {
 		return err
@@ -54,9 +55,11 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 		app.Status.Staged.ImagePermissionsDenied = nil
 	}
 
+	// Early exit
 	if app.Status.Staged.AppImage.ID == "" ||
 		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest ||
 		app.Status.Staged.PermissionsObservedGeneration == app.Generation {
+		// IAR disabled? Allow the Image if we're not re-checking permissions
 		if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageAllowRules); err != nil {
 			return err
 		} else if !enabled {
@@ -136,7 +139,7 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 	}
 
 	// This is checking if the user granted all permissions that the app requires
-	missing, _ := v1.GrantsAll(app.Namespace, details.GetPermissions(), app.Spec.GetPermissions())
+	missing, _ := v1.GrantsAll(app.Namespace, details.GetCombinedPermissions(), app.Spec.GetGrantedPermissions())
 	app.Status.Staged.PermissionsObservedGeneration = app.Generation
 	app.Status.Staged.PermissionsChecked = true
 	app.Status.Staged.PermissionsMissing = missing

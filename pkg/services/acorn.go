@@ -427,7 +427,7 @@ func isGranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1.Po
 
 	var (
 		ungranted []v1.PolicyRule
-		granted   = appInstance.Spec.GetPermissions()
+		granted   = appInstance.Spec.GetGrantedPermissions()
 	)
 
 	for _, requested := range service.Spec.Consumer.Permissions.GetRules() {

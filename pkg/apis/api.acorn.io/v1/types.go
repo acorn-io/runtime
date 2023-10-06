@@ -270,7 +270,7 @@ type ImageDetails struct {
 	AppImage        v1.AppImage      `json:"appImage,omitempty"`
 	AppSpec         *v1.AppSpec      `json:"appSpec,omitempty"`
 	Params          *v1.ParamSpec    `json:"params,omitempty"`
-	Permissions     []v1.Permissions `json:"permissions,omitempty"`
+	Permissions     []v1.Permissions `json:"permissions,omitempty"` // Permissions requested by the image, including nested images
 	SignatureDigest string           `json:"signatureDigest,omitempty"`
 	Readme          string           `json:"readme,omitempty"`
 	NestedImages    []NestedImage    `json:"nestedImages,omitempty"`
@@ -289,7 +289,8 @@ func (i ImageDetails) GetParseError() string {
 	return ""
 }
 
-func (i *ImageDetails) GetPermissions() (result []v1.Permissions) {
+// GetCombinedPermissions returns the list of all permissions from the image and its nested images.
+func (i *ImageDetails) GetCombinedPermissions() (result []v1.Permissions) {
 	result = append(result, i.Permissions...)
 	for _, nested := range i.NestedImages {
 		result = append(result, nested.Permissions...)

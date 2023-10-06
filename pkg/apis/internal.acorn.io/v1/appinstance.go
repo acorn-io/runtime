@@ -100,8 +100,8 @@ type AppInstanceSpec struct {
 	Links                   []ServiceBinding `json:"services,omitempty"`
 	Publish                 []PortBinding    `json:"ports,omitempty"`
 	DeployArgs              *GenericMap      `json:"deployArgs,omitempty"`
-	Permissions             []Permissions    `json:"permissions,omitempty"`
-	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"`
+	UserGrantedPermissions  []Permissions    `json:"permissions,omitempty"`             // Permissions granted by the user
+	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"` // Permissions implicitly granted to the image
 	AutoUpgrade             *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade           *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval     string           `json:"autoUpgradeInterval,omitempty"`
@@ -109,8 +109,10 @@ type AppInstanceSpec struct {
 	Memory                  MemoryMap        `json:"memory,omitempty"`
 }
 
-func (in *AppInstanceSpec) GetPermissions() []Permissions {
-	return append(in.Permissions, in.ImageGrantedPermissions...)
+// GetGrantedPermissions returns the permissions for the app as granted by the user or granted implicitly to the image.
+// Those are not necessarily equal to the permissions actually requested by the images within the app.
+func (in *AppInstanceSpec) GetGrantedPermissions() []Permissions {
+	return append(in.UserGrantedPermissions, in.ImageGrantedPermissions...)
 }
 
 func (in *AppInstance) GetStopped() bool {
@@ -130,10 +132,7 @@ func addProfile(profiles []string, toAdd string) []string {
 	optional := strings.HasSuffix(toAdd, "?")
 	nonOptionalName := toAdd[:len(toAdd)-1]
 	for _, profile := range profiles {
-		if profile == toAdd {
-			found = true
-			break
-		} else if optional && profile == nonOptionalName {
+		if profile == toAdd || (optional && profile == nonOptionalName) {
 			found = true
 			break
 		}
@@ -214,7 +213,10 @@ type AppInstanceStatus struct {
 }
 
 type AppStatusStaged struct {
-	AppImage                      AppImage      `json:"appImage,omitempty"`
+	// Staged for promotion to Status
+	AppImage AppImage `json:"appImage,omitempty"`
+
+	// Requirements for the AppImage to be promoted to the actual Status
 	PermissionsChecked            bool          `json:"permissionsChecked,omitempty"`
 	PermissionsMissing            []Permissions `json:"permissionsMissing,omitempty"`
 	PermissionsObservedGeneration int64         `json:"permissionsObservedGeneration,omitempty"`

@@ -135,7 +135,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 		},
 		Spec: internalv1.AppInstanceSpec{
 			Image: tagName,
-			Permissions: []internalv1.Permissions{
+			UserGrantedPermissions: []internalv1.Permissions{
 				{
 					ServiceName: "rootapp",
 					Rules: []internalv1.PolicyRule{{
