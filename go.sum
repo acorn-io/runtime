@@ -108,8 +108,8 @@ github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a h1:0oMIx6lH47ImOa
 github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a/go.mod h1:x7Y6lLMTqMD65KWjgVaGem5tQP2ZeevOQiaps9epJj4=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e h1:W67DG9AcoNvBwIOR9OFUCZlSJBaHuvM2kXQ2+C6EnLk=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e/go.mod h1:XnJZSZq/tG/jWPE/tmm2zy90gOZrJRIaOyKpoMulxfE=
-github.com/acorn-io/baaah v0.0.0-20230831185433-be0115009281 h1:3/Avpd1rOQqwARqrey5nd7QK6/E3ryT81b3tuSRr9wU=
-github.com/acorn-io/baaah v0.0.0-20230831185433-be0115009281/go.mod h1:1KSGxZt0E2MDedJESKUUYtxCwsJ3A+xZiw2QD8cVbjU=
+github.com/acorn-io/baaah v0.0.0-20231006151510-91fb95b6997d h1:6b7zZ4If/X0rT3j3MAXXnX/WIZMXfy+7YB8aruifwa4=
+github.com/acorn-io/baaah v0.0.0-20231006151510-91fb95b6997d/go.mod h1:1KSGxZt0E2MDedJESKUUYtxCwsJ3A+xZiw2QD8cVbjU=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38 h1:oJMGvI702ZW5L0JjJfGV9ekzU2IqqTGjmAQl4gkO6Ro=
 github.com/acorn-io/cmd v0.0.0-20230929053520-ebe1b9879b38/go.mod h1:bo9ONX4kagbQmXcG4bnfoK53MBFFtbUZ5fR7s9NfS+M=
 github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c h1:3equCG9oMf2I5iDZxllb41jmNNSTiIpU3IegCHBtVyk=
