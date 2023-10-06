@@ -215,7 +215,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	require.Equal(t, 1, len(app.Status.Staged.ImagePermissionsDenied), "should have 1 denied permission (rootapp) with no IRA defined")
 	expectedDeniedPermissionsRootapp := []internalv1.Permissions{
 		{
-			ServiceName: tagName,
+			ServiceName: "rootapp",
 			Rules: []internalv1.PolicyRule{
 				{
 					PolicyRule: rbacv1.PolicyRule{
@@ -305,7 +305,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	require.Equal(t, 1, len(nestedApp.Status.Staged.ImagePermissionsDenied), "should have 1 denied permission (foo.awsapp)")
 	expectedDeniedPermissionsFooAwsapp := []internalv1.Permissions{
 		{
-			ServiceName: nestedImageTagName,
+			ServiceName: "awsapp",
 			Rules: []internalv1.PolicyRule{
 				{
 					PolicyRule: rbacv1.PolicyRule{
@@ -363,4 +363,26 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	})
 
 	require.Equal(t, 0, len(nestedApp.Status.Staged.ImagePermissionsDenied), "should have 0 denied permissions")
+
+	// --------------------------------------------------------------------
+	// Run #5 - Now we're updating the granted permissions to include permissions that the image is not authorized to have -> expect denied permissions
+	// --------------------------------------------------------------------
+
+	rmapp(ctx, app)
+
+	nappinstance := blueprint.DeepCopy()
+	nappinstance.Spec.UserGrantedPermissions = append(app.Spec.UserGrantedPermissions, internalv1.Permissions{
+		ServiceName: "rootapp",
+		Rules: []internalv1.PolicyRule{{
+			PolicyRule: rbacv1.PolicyRule{
+				APIGroups: []string{"*"},
+				Verbs:     []string{"*"},
+				Resources: []string{"*"},
+			},
+		}},
+	})
+
+	app = createWaitLoop(ctx, nappinstance)
+
+	require.Equal(t, 1, len(app.Status.Staged.ImagePermissionsDenied), "should have 1 denied permission (rootapp)")
 }

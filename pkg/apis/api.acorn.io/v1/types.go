@@ -289,8 +289,8 @@ func (i ImageDetails) GetParseError() string {
 	return ""
 }
 
-// GetCombinedPermissions returns the list of all permissions from the image and its nested images.
-func (i *ImageDetails) GetCombinedPermissions() (result []v1.Permissions) {
+// GetAllImagesRequestedPermissions returns the list of all permissions from the image and its nested images.
+func (i *ImageDetails) GetAllImagesRequestedPermissions() (result []v1.Permissions) {
 	result = append(result, i.Permissions...)
 	for _, nested := range i.NestedImages {
 		result = append(result, nested.Permissions...)

@@ -37,12 +37,13 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 	return nil
 }
 
-// CheckPermissions checks various things related to permissions
-// a) if the image is allowed by the image allow rules (if enabled)
-// b) if the permissions requested by all images in the app are
-//
-//	b.1) granted by the user (as set in the app spec)
-//	b.2) authorized by the image role authorizations (if enabled)
+/*
+CheckPermissions checks various things related to permissions
+
+	a) if the image is allowed by the image allow rules (if enabled)
+	b) [if ImageRoleAuthorizations are enabled] if the authorized permissions for the appImage cover the permissions granted explicitly by the user or implicitly to the image (Authorized >= Granted)
+	c) if the permissions granted by the user or implicitly to the image cover the permissions requested by the app (Granted >= Requested)
+*/
 func CheckPermissions(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 
@@ -133,16 +134,50 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			return nperms
 		}
 
-		denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, imageName), authzPerms)
+		// Filter out permissions that are granted to this app level (i.e. not for nested Acorns/Services)
+		// then check if the authorized permissions cover the permissions granted to those services.
+		grantedPermsByService := v1.GroupByServiceName(app.Spec.GetGrantedPermissions())
+		deniedPerms := []v1.Permissions{}
+		for cname, c := range appImage.ImageData.Containers {
+			if p, ok := grantedPermsByService[cname]; ok {
+				if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, cname)); !granted {
+					deniedPerms = append(deniedPerms, d...)
+				}
+			}
+			for sname := range c.Sidecars {
+				if p, ok := grantedPermsByService[sname]; ok {
+					if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, sname)); !granted {
+						deniedPerms = append(deniedPerms, d...)
+					}
+				}
+			}
+		}
 
-		app.Status.Staged.ImagePermissionsDenied = denied
+		app.Status.Staged.ImagePermissionsDenied = deniedPerms
 	}
 
 	// This is checking if the user granted all permissions that the app requires
-	missing, _ := v1.GrantsAll(app.Namespace, details.GetCombinedPermissions(), app.Spec.GetGrantedPermissions())
+	missing, _ := v1.GrantsAll(app.Namespace, details.GetAllImagesRequestedPermissions(), app.Spec.GetGrantedPermissions()) // Check: Granted Permissions is a superset of the requested permissions -> this includes nested images
 	app.Status.Staged.PermissionsObservedGeneration = app.Generation
 	app.Status.Staged.PermissionsChecked = true
 	app.Status.Staged.PermissionsMissing = missing
 
 	return nil
+}
+
+func GetAppLevelPerms(app *v1.AppInstance) []v1.Permissions {
+	perms := []v1.Permissions{}
+	grantedPermsByService := v1.GroupByServiceName(app.Spec.GetGrantedPermissions())
+	for cname := range app.Status.Staged.AppImage.ImageData.Containers {
+		if p, ok := grantedPermsByService[cname]; ok {
+			perms = append(perms, p)
+		}
+		for sname := range app.Status.Staged.AppImage.ImageData.Containers[cname].Sidecars {
+			if p, ok := grantedPermsByService[sname]; ok {
+				perms = append(perms, p)
+			}
+		}
+	}
+
+	return perms
 }
