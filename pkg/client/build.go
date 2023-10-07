@@ -69,7 +69,7 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 		return nil, err
 	}
 
-	vcs := vcs.VCS(filepath.Dir(file))
+	vcs := vcs.VCS(filepath.Dir(file), filepath.Base(file))
 
 	builder, err := c.getOrCreateBuilder(ctx, opts.BuilderName)
 	if err != nil {
