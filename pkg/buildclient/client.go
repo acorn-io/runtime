@@ -44,11 +44,11 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 			return nil, err
 		}
 
-		// If there was a body and an error ocurred, read the body and write it
+		// If there was a body and an error occurred, read the body and write it
 		// into the error message.
 		body, readErr := io.ReadAll(response.Body)
 		if readErr != nil {
-			return nil, fmt.Errorf("%w: status %v, error occured while reading builder response body: %v", err, response.StatusCode, readErr)
+			return nil, fmt.Errorf("%w: status %v, error occurred while reading builder response body: %v", err, response.StatusCode, readErr)
 		}
 		return nil, fmt.Errorf("%w: %v, %v", err, response.StatusCode, string(body))
 	}
