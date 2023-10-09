@@ -385,4 +385,78 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	app = createWaitLoop(ctx, nappinstance)
 
 	require.Equal(t, 1, len(app.Status.Staged.ImagePermissionsDenied), "should have 1 denied permission (rootapp)")
+
+	rmapp(ctx, app)
+}
+
+func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
+	// TODO: (@iwilltry42) once we aligned on a way to treat services/consumers with IRAs, this has to be updated
+	helper.StartController(t)
+
+	ctx := helper.GetCTX(t)
+	c, _ := helper.ClientAndProject(t)
+	kclient := helper.MustReturn(kclient.Default)
+
+	// enable image role authorizations in acorn config
+	helper.EnableFeatureWithRestore(t, ctx, kclient, profiles.FeatureImageRoleAuthorizations)
+
+	// Delete any existing rules from this project namespace
+	err := kclient.DeleteAllOf(ctx, &internaladminv1.ImageRoleAuthorizationInstance{}, cclient.InNamespace(c.GetNamespace()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = kclient.DeleteAllOf(ctx, &internaladminv1.ClusterImageRoleAuthorizationInstance{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	image, err := c.AcornImageBuild(ctx, "./testdata/serviceconsumer/Acornfile", &client.AcornImageBuildOptions{
+		Cwd: "./testdata/serviceconsumer/",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Integration tests don't have proper privileges so we will by pass the permission validation
+	appInstance := &internalv1.AppInstance{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "test-",
+			Namespace:    c.GetProject(),
+		},
+		Spec: internalv1.AppInstanceSpec{
+			Image: image.ID,
+			UserGrantedPermissions: []internalv1.Permissions{{
+				ServiceName: "producer.default",
+				Rules: []internalv1.PolicyRule{{
+					PolicyRule: rbacv1.PolicyRule{
+						APIGroups: []string{""},
+						Verbs:     []string{"get"},
+						Resources: []string{"secrets"},
+					},
+				}},
+			}},
+		},
+		Status: internalv1.AppInstanceStatus{},
+	}
+	if err := kclient.Create(ctx, appInstance); err != nil {
+		t.Fatal(err)
+	}
+
+	app, err := c.AppGet(ctx, appInstance.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Ready
+	})
+
+	app, err = c.AppGet(ctx, appInstance.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Equal(t, 0, len(app.Status.Staged.ImagePermissionsDenied), "should have 0 denied permission")
+
+	t.Logf("app: %#v", app)
 }

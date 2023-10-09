@@ -210,6 +210,7 @@ type AppInstanceStatus struct {
 	Conditions             []Condition             `json:"conditions,omitempty"`
 	Defaults               Defaults                `json:"defaults,omitempty"`
 	Summary                CommonSummary           `json:"summary,omitempty"`
+	Permissions            []Permissions           `json:"permissions,omitempty"` // Permissions given to this appInstance (only containers within, not nested Acorns/Services)
 }
 
 type AppStatusStaged struct {
@@ -217,11 +218,11 @@ type AppStatusStaged struct {
 	AppImage AppImage `json:"appImage,omitempty"`
 
 	// Requirements for the AppImage to be promoted to the actual Status
+
 	PermissionsChecked            bool          `json:"permissionsChecked,omitempty"`
 	PermissionsMissing            []Permissions `json:"permissionsMissing,omitempty"`
 	PermissionsObservedGeneration int64         `json:"permissionsObservedGeneration,omitempty"`
 	ImagePermissionsDenied        []Permissions `json:"imagePermissionsDenied,omitempty"`
-	ImagePermissionsAuthorized    []Permissions `json:"imagePermissionsAuthorized,omitempty"`
 	ImageAllowed                  *bool         `json:"imageAllowed,omitempty"`
 }
 

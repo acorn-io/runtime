@@ -10,8 +10,10 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// getConsumerPermissions returns the permissions for a given container augmented with permissions from
+// any services it depends on that expose consumer permissions
 func getConsumerPermissions(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, containerName string, container v1.Container) (result v1.Permissions, _ error) {
-	result = v1.FindPermission(containerName, appInstance.Spec.GetGrantedPermissions())
+	result = v1.FindPermission(containerName, appInstance.Status.Permissions)
 
 	for _, dep := range container.Dependencies {
 		// This shouldn't happen, but okay?
@@ -40,6 +42,8 @@ func getConsumerPermissions(ctx context.Context, c kclient.Client, appInstance *
 	return
 }
 
+// augmentContainerWithConsumerInfo adds files and environment variables from any services this container depends on
+// that expose consumer files and environment variables
 func augmentContainerWithConsumerInfo(ctx context.Context, c kclient.Client, namespace string, container v1.Container) (v1.Container, error) {
 	result := *container.DeepCopy()
 	for _, dep := range container.Dependencies {

@@ -33,6 +33,7 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 		len(app.Status.Staged.ImagePermissionsDenied) == 0 &&
 		z.Dereference[bool](app.Status.Staged.ImageAllowed) {
 		app.Status.AppImage = app.Status.Staged.AppImage
+		app.Status.Permissions = getAppLevelPerms(app)
 	}
 	return nil
 }
@@ -153,6 +154,8 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			}
 		}
 
+		// TODO:(@iwilltry42) Should we check consumed permissions here?
+
 		app.Status.Staged.ImagePermissionsDenied = deniedPerms
 	}
 
@@ -165,7 +168,8 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 	return nil
 }
 
-func GetAppLevelPerms(app *v1.AppInstance) []v1.Permissions {
+// getAppLevelPerms returns the permissions that are granted to the current app level (i.e. not to nested Acorns/Services)
+func getAppLevelPerms(app *v1.AppInstance) []v1.Permissions {
 	perms := []v1.Permissions{}
 	grantedPermsByService := v1.GroupByServiceName(app.Spec.GetGrantedPermissions())
 	for cname := range app.Status.Staged.AppImage.ImageData.Containers {
