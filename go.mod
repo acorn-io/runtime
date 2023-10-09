@@ -13,8 +13,8 @@ replace (
 require (
 	cuelang.org/go v0.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20231005222512-6a3f6ee06953
-	github.com/acorn-io/aml/cli v0.0.0-20231002033428-fffd2918563a
+	github.com/acorn-io/aml v0.0.0-20231009045340-a31c45f6d100
+	github.com/acorn-io/aml/cli v0.0.0-20231009055509-3c83c1247cf8
 	github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e
 	github.com/acorn-io/baaah v0.0.0-20231006151510-91fb95b6997d
 	github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c
@@ -59,9 +59,9 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tonistiigi/fsutil v0.0.0-20230629203738-36ef4d8c0dbb
 	github.com/wI2L/jsondiff v0.3.0
-	golang.org/x/crypto v0.13.0
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
-	golang.org/x/sync v0.3.0
+	golang.org/x/crypto v0.14.0
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+	golang.org/x/sync v0.4.0
 	google.golang.org/grpc v1.57.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	inet.af/tcpproxy v0.0.0-20221017015627-91f861402626
@@ -272,14 +272,14 @@ require (
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
-	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/oauth2 v0.11.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.12.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
