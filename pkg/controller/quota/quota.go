@@ -3,7 +3,7 @@ package quota
 import (
 	"fmt"
 
-	apiv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/labels"
 	corev1 "k8s.io/api/core/v1"
@@ -19,11 +19,11 @@ import (
 // WaitForAllocation blocks the appInstance from being deployed until quota has been allocated on
 // an associated QuotaRequest object.
 func WaitForAllocation(req router.Request, resp router.Response) error {
-	appInstance := req.Object.(*apiv1.AppInstance)
+	appInstance := req.Object.(*v1.AppInstance)
 
 	// Create a condition setter for AppInstanceConditionQuota, which blocks the appInstance from being deployed
 	// until quota has been allocated.
-	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuota)
+	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionQuota)
 
 	// Don't do anything if quota isn't enabled for this project.
 	enforced, err := isEnforced(req, appInstance.Namespace)
@@ -64,7 +64,7 @@ func WaitForAllocation(req router.Request, resp router.Response) error {
 
 // EnsureQuotaRequest ensures that the quota request exists and is up to date.
 func EnsureQuotaRequest(req router.Request, resp router.Response) error {
-	appInstance := req.Object.(*apiv1.AppInstance)
+	appInstance := req.Object.(*v1.AppInstance)
 
 	// Don't do anything if quota isn't enabled for this project
 	if enforced, err := isEnforced(req, appInstance.Namespace); err != nil || !enforced {
@@ -86,7 +86,7 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 		},
 	}
 
-	status := condition.Setter(appInstance, resp, apiv1.AppInstanceConditionQuota)
+	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionQuota)
 
 	// Add the more complex values to the quota request
 	addContainers(app.Containers, quotaRequest)
@@ -106,14 +106,14 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 }
 
 // addContainers adds the number of containers and accounts for the scale of each container.
-func addContainers(containers map[string]apiv1.Container, quotaRequest *adminv1.QuotaRequestInstance) {
+func addContainers(containers map[string]v1.Container, quotaRequest *adminv1.QuotaRequestInstance) {
 	for _, container := range containers {
 		quotaRequest.Spec.Resources.Containers += replicas(container.Scale)
 	}
 }
 
 // addCompute adds the compute resources of the containers passed to the quota request.
-func addCompute(containers map[string]apiv1.Container, appInstance *apiv1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) {
+func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) {
 	// For each workload, add their memory/cpu requests to the quota request
 	for name, container := range containers {
 		var requirements corev1.ResourceRequirements
@@ -135,7 +135,7 @@ func addCompute(containers map[string]apiv1.Container, appInstance *apiv1.AppIns
 }
 
 // addStorage adds the storage resources of the volumes passed to the quota request.
-func addStorage(appInstance *apiv1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) error {
+func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) error {
 	app := appInstance.Status.AppSpec
 
 	// Add the volume storage needed to the quota request. We only parse net new volumes, not
@@ -171,7 +171,7 @@ func addStorage(appInstance *apiv1.AppInstance, quotaRequest *adminv1.QuotaReque
 
 // boundVolumeSize determines if the specified volume will be bound to an existing one. If
 // it will not be bound, the size of the new volume is returned.
-func boundVolumeSize(name string, bindings []apiv1.VolumeBinding) (bool, apiv1.Quantity) {
+func boundVolumeSize(name string, bindings []v1.VolumeBinding) (bool, v1.Quantity) {
 	for _, binding := range bindings {
 		if binding.Target == name && binding.Volume == "" {
 			return true, binding.Size
@@ -181,7 +181,7 @@ func boundVolumeSize(name string, bindings []apiv1.VolumeBinding) (bool, apiv1.Q
 }
 
 // boundSecret determines if the specified secret will be bound to an existing one.
-func boundSecret(name string, bindings []apiv1.SecretBinding) bool {
+func boundSecret(name string, bindings []v1.SecretBinding) bool {
 	for _, binding := range bindings {
 		if binding.Target == name && binding.Secret == "" {
 			return true
@@ -190,10 +190,9 @@ func boundSecret(name string, bindings []apiv1.SecretBinding) bool {
 	return false
 }
 
-// isEnforced determines if the project has quota enabled.
+// isEnforced determines if the project requires quota enforcement.
 func isEnforced(req router.Request, namespace string) (bool, error) {
-	// Use the underlying Namespace type that stores Projects
-	project := corev1.Namespace{}
+	project := v1.ProjectInstance{}
 	if err := req.Client.Get(req.Ctx, router.Key("", namespace), &project); err != nil {
 		return false, err
 	}
