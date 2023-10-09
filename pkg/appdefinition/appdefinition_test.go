@@ -2582,7 +2582,7 @@ foo : std.toyaml({})
 
 	_, err := NewAppDefinition([]byte(data))
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "key not found \"toyaml\": Acornfile:2:7")
+	assert.Contains(t, err.Error(), "key not found \"toyaml\": Acornfile:2:11")
 }
 
 func TestArgsTopCondition(t *testing.T) {
