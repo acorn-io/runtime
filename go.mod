@@ -16,7 +16,7 @@ require (
 	github.com/acorn-io/aml v0.0.0-20231009045340-a31c45f6d100
 	github.com/acorn-io/aml/cli v0.0.0-20231009055509-3c83c1247cf8
 	github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e
-	github.com/acorn-io/baaah v0.0.0-20231006151510-91fb95b6997d
+	github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a
 	github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c
 	github.com/acorn-io/namegenerator v0.0.0-20220915160418-9e3d5a0ffe78
 	github.com/acorn-io/z v0.0.0-20230714155009-a770ecbbdc45
