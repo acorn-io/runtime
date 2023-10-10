@@ -12330,6 +12330,12 @@ func schema_pkg_apis_internalacornio_v1_VCS(ref common.ReferenceCallback) common
 							Format:      "",
 						},
 					},
+					"acornfile": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
