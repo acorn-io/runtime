@@ -14,11 +14,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/dev"
 	"github.com/acorn-io/runtime/pkg/imagesource"
 	"github.com/acorn-io/z"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/spf13/cobra"
-	"gopkg.in/src-d/go-billy.v4/osfs"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
-	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 func NewDev(c CommandContext) *cobra.Command {
@@ -97,21 +95,21 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 			// TODO workdir named after git repo, cloned app name, or just this app's name?
 			idx := strings.LastIndex(gitUrl, "/")
 			if idx < 0 || idx >= len(gitUrl) {
-				fmt.Fprintf(os.Stderr, "failed to determine repository name %q\n", gitUrl)
+				fmt.Printf("failed to determine repository name %q\n", gitUrl)
 				continue
 			}
 			workdir := strings.TrimSuffix(gitUrl[idx+1:], ".git")
 
 			// Clone git repo
 			auth, _ := ssh.NewSSHAgentAuth("git")
-			_, err = git.CloneContext(cmd.Context(), memory.NewStorage(), osfs.New(workdir), &git.CloneOptions{
+			_, err = git.PlainCloneContext(cmd.Context(), workdir, false, &git.CloneOptions{
 				URL: gitUrl,
 				// TODO print progress to somewhere maybe
 				// Progress: os.Stderr/os.Stdout,
 				Auth: auth,
 			})
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "failed to resolve repository %q\n", gitUrl)
+				fmt.Printf("failed to resolve repository %q\n", gitUrl)
 				continue
 			}
 
@@ -122,12 +120,12 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 				// Acornfile does not exist so we should create it
 				err = os.WriteFile(acornfile, []byte(app.Status.Staged.AppImage.Acornfile), 0666)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "failed to create file %q in repository %q", acornfile, gitUrl)
+					fmt.Printf("failed to create file %q in repository %q", acornfile, gitUrl)
 					// TODO we hit an error state but already cloned the repo, should we clean up the repo we cloned?
 					continue
 				}
 			} else {
-				fmt.Fprintf(os.Stderr, "could not check for file %q in repository %q", acornfile, gitUrl)
+				fmt.Printf("could not check for file %q in repository %q", acornfile, gitUrl)
 				// TODO we hit an error state but already cloned the repo, should we clean up the repo we cloned?
 				continue
 			}

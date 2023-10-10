@@ -3,12 +3,12 @@ package build
 import (
 	"testing"
 
-	vcs2 "github.com/acorn-io/runtime/pkg/vcs"
+	"github.com/acorn-io/runtime/pkg/vcs"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestVCS(t *testing.T) {
-	vcs := vcs2.VCS(".", "Acornfile")
+	vcs := vcs.VCS(".")
 	assert.NotEqual(t, "", vcs.Revision)
 }
 
