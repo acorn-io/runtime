@@ -6895,6 +6895,27 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							},
 						},
 					},
+					"deniedConsumerPermissions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Permissions given to this appInstance (only containers within, not nested Acorns/Services)",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
+					"consumerPermissionsObservedGeneration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Permissions given to this appInstance by a consumed service, which it is not authorized to have",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
 				},
 			},
 		},
@@ -7250,6 +7271,19 @@ func schema_pkg_apis_internalacornio_v1_AppStatusStaged(ref common.ReferenceCall
 							Description: "Staged for promotion to Status",
 							Default:     map[string]interface{}{},
 							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
+						},
+					},
+					"appScopedPermissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
 						},
 					},
 					"permissionsChecked": {

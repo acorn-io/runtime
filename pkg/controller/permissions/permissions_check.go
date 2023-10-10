@@ -16,7 +16,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
+	"golang.org/x/exp/maps"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 )
 
 // CopyPromoteStagedAppImage copies the staged app image to the app image if
@@ -33,7 +35,7 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 		len(app.Status.Staged.ImagePermissionsDenied) == 0 &&
 		z.Dereference[bool](app.Status.Staged.ImageAllowed) {
 		app.Status.AppImage = app.Status.Staged.AppImage
-		app.Status.Permissions = getAppLevelPerms(app)
+		app.Status.Permissions = app.Status.Staged.AppScopedPermissions
 	}
 	return nil
 }
@@ -44,6 +46,9 @@ CheckPermissions checks various things related to permissions
 	a) if the image is allowed by the image allow rules (if enabled)
 	b) [if ImageRoleAuthorizations are enabled] if the authorized permissions for the appImage cover the permissions granted explicitly by the user or implicitly to the image (Authorized >= Granted)
 	c) if the permissions granted by the user or implicitly to the image cover the permissions requested by the app (Granted >= Requested)
+
+	*Note*: One thing that we do not cover here is permissions consumed from a service. Since that's dynamic and we cannot know the generated permissions at this point,
+	the IRA check (if enabled) will happen later, just before the actual Kubernetes resources get applied (once the service instances are ready).
 */
 func CheckPermissions(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
@@ -109,6 +114,22 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			details.AppImage.Digest, appImage.Digest)
 	}
 
+	// ServiceNames of the current app level (i.e. not nested Acorns/Services)
+	scvnames := maps.Keys(details.AppSpec.Containers)
+	scvnames = append(scvnames, maps.Keys(details.AppSpec.Jobs)...)
+	scvnames = append(scvnames, maps.Keys(details.AppSpec.Services)...)
+
+	// Only consider the scope of the current app level (i.e. not nested Acorns/Services)
+	grantedPerms := app.Spec.GetGrantedPermissions()
+	scopedGrantedPerms := []v1.Permissions{}
+	for i, p := range grantedPerms {
+		if slices.Contains(scvnames, p.ServiceName) {
+			scopedGrantedPerms = append(scopedGrantedPerms, grantedPerms[i])
+		}
+	}
+
+	app.Status.Staged.AppScopedPermissions = scopedGrantedPerms
+
 	// If iraEnabled, check if the Acorn images are authorized to request the defined permissions.
 	if iraEnabled {
 		imageName := appImage.Name
@@ -135,26 +156,12 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			return nperms
 		}
 
-		// Filter out permissions that are granted to this app level (i.e. not for nested Acorns/Services)
-		// then check if the authorized permissions cover the permissions granted to those services.
-		grantedPermsByService := v1.GroupByServiceName(app.Spec.GetGrantedPermissions())
 		deniedPerms := []v1.Permissions{}
-		for cname, c := range appImage.ImageData.Containers {
-			if p, ok := grantedPermsByService[cname]; ok {
-				if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, cname)); !granted {
-					deniedPerms = append(deniedPerms, d...)
-				}
-			}
-			for sname := range c.Sidecars {
-				if p, ok := grantedPermsByService[sname]; ok {
-					if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, sname)); !granted {
-						deniedPerms = append(deniedPerms, d...)
-					}
-				}
+		for _, p := range scopedGrantedPerms {
+			if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, p.ServiceName)); !granted {
+				deniedPerms = append(deniedPerms, d...)
 			}
 		}
-
-		// TODO:(@iwilltry42) Should we check consumed permissions here?
 
 		app.Status.Staged.ImagePermissionsDenied = deniedPerms
 	}
@@ -166,22 +173,4 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 	app.Status.Staged.PermissionsMissing = missing
 
 	return nil
-}
-
-// getAppLevelPerms returns the permissions that are granted to the current app level (i.e. not to nested Acorns/Services)
-func getAppLevelPerms(app *v1.AppInstance) []v1.Permissions {
-	perms := []v1.Permissions{}
-	grantedPermsByService := v1.GroupByServiceName(app.Spec.GetGrantedPermissions())
-	for cname := range app.Status.Staged.AppImage.ImageData.Containers {
-		if p, ok := grantedPermsByService[cname]; ok {
-			perms = append(perms, p)
-		}
-		for sname := range app.Status.Staged.AppImage.ImageData.Containers[cname].Sidecars {
-			if p, ok := grantedPermsByService[sname]; ok {
-				perms = append(perms, p)
-			}
-		}
-	}
-
-	return perms
 }

@@ -1,4 +1,4 @@
-services: producer: build: acornfile: "service.acorn"
+services: producer: image: "harbor.thklein.dev/public/acorn:serviceconsumer-producer"
 
 jobs: test: {
 	consumes: "producer"

@@ -193,29 +193,32 @@ func (a AppInstanceStatus) GetDevMode() bool {
 }
 
 type AppInstanceStatus struct {
-	DevSession             *DevSessionInstanceSpec `json:"devSession,omitempty"`
-	ObservedGeneration     int64                   `json:"observedGeneration,omitempty"`
-	ObservedImageDigest    string                  `json:"observedImageDigest,omitempty"`
-	ObservedAutoUpgrade    bool                    `json:"observedAutoUpgrade,omitempty"`
-	Columns                AppColumns              `json:"columns,omitempty"`
-	Ready                  bool                    `json:"ready,omitempty"`
-	Namespace              string                  `json:"namespace,omitempty"`
-	Staged                 AppStatusStaged         `json:"staged,omitempty"`
-	AppImage               AppImage                `json:"appImage,omitempty"`
-	AvailableAppImage      string                  `json:"availableAppImage,omitempty"`
-	ConfirmUpgradeAppImage string                  `json:"confirmUpgradeAppImage,omitempty"`
-	AppSpec                AppSpec                 `json:"appSpec,omitempty"`
-	AppStatus              AppStatus               `json:"appStatus,omitempty"`
-	Scheduling             map[string]Scheduling   `json:"scheduling,omitempty"`
-	Conditions             []Condition             `json:"conditions,omitempty"`
-	Defaults               Defaults                `json:"defaults,omitempty"`
-	Summary                CommonSummary           `json:"summary,omitempty"`
-	Permissions            []Permissions           `json:"permissions,omitempty"` // Permissions given to this appInstance (only containers within, not nested Acorns/Services)
+	DevSession                            *DevSessionInstanceSpec `json:"devSession,omitempty"`
+	ObservedGeneration                    int64                   `json:"observedGeneration,omitempty"`
+	ObservedImageDigest                   string                  `json:"observedImageDigest,omitempty"`
+	ObservedAutoUpgrade                   bool                    `json:"observedAutoUpgrade,omitempty"`
+	Columns                               AppColumns              `json:"columns,omitempty"`
+	Ready                                 bool                    `json:"ready,omitempty"`
+	Namespace                             string                  `json:"namespace,omitempty"`
+	Staged                                AppStatusStaged         `json:"staged,omitempty"`
+	AppImage                              AppImage                `json:"appImage,omitempty"`
+	AvailableAppImage                     string                  `json:"availableAppImage,omitempty"`
+	ConfirmUpgradeAppImage                string                  `json:"confirmUpgradeAppImage,omitempty"`
+	AppSpec                               AppSpec                 `json:"appSpec,omitempty"`
+	AppStatus                             AppStatus               `json:"appStatus,omitempty"`
+	Scheduling                            map[string]Scheduling   `json:"scheduling,omitempty"`
+	Conditions                            []Condition             `json:"conditions,omitempty"`
+	Defaults                              Defaults                `json:"defaults,omitempty"`
+	Summary                               CommonSummary           `json:"summary,omitempty"`
+	Permissions                           []Permissions           `json:"permissions,omitempty"`                           // Permissions given to this appInstance (only containers within, not nested Acorns/Services)
+	DeniedConsumerPermissions             []Permissions           `json:"deniedConsumerPermissions,omitempty"`             // Permissions given to this appInstance by a consumed service, which it is not authorized to have
+	ConsumerPermissionsObservedGeneration int64                   `json:"consumerPermissionsObservedGeneration,omitempty"` // App Generation that
 }
 
 type AppStatusStaged struct {
 	// Staged for promotion to Status
-	AppImage AppImage `json:"appImage,omitempty"`
+	AppImage             AppImage      `json:"appImage,omitempty"`
+	AppScopedPermissions []Permissions `json:"appScopedPermissions,omitempty"` // Permissions requested by the app (narrow scope, not including nested Acorns/Services)
 
 	// Requirements for the AppImage to be promoted to the actual Status
 
