@@ -6909,13 +6909,6 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							},
 						},
 					},
-					"consumerPermissionsObservedGeneration": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Permissions given to this appInstance by a consumed service, which it is not authorized to have",
-							Type:        []string{"integer"},
-							Format:      "int64",
-						},
-					},
 				},
 			},
 		},

@@ -22,8 +22,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, interpolator *secrets.Interpolator, checkConsumerPerms bool, resp router.Response) error {
-	jobs, err := toJobs(req, appInstance, pullSecrets, tag, interpolator, checkConsumerPerms)
+func addJobs(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, interpolator *secrets.Interpolator, resp router.Response) error {
+	jobs, err := toJobs(req, appInstance, pullSecrets, tag, interpolator)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func stripPruneAndUpdate(annotations map[string]string) map[string]string {
 	return result
 }
 
-func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, interpolator *secrets.Interpolator, checkConsumerPerms bool) (result []kclient.Object, _ error) {
+func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSecrets, tag name.Reference, interpolator *secrets.Interpolator) (result []kclient.Object, _ error) {
 	for _, jobName := range typed.SortedKeys(appInstance.Status.AppSpec.Jobs) {
 		jobDef := appInstance.Status.AppSpec.Jobs[jobName]
 		jobDef, err := augmentContainerWithConsumerInfo(req.Ctx, req.Client, appInstance.Status.Namespace, jobDef)
@@ -56,10 +56,7 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if job == nil {
 			continue
 		}
-		perms, err := getPermissions(req.Ctx, req.Client, appInstance, jobName, jobDef, checkConsumerPerms)
-		if err != nil {
-			return nil, err
-		}
+		perms := v1.FindPermission(jobName, appInstance.Status.Permissions)
 		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance, perms)
 		if err != nil {
 			return nil, err

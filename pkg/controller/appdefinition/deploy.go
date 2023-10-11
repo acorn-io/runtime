@@ -29,7 +29,6 @@ import (
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/rancher/wrangler/pkg/data/convert"
-	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -62,15 +61,6 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	status := condition.Setter(appInstance, resp, v1.AppInstanceConditionDefined)
 	interpolator := secrets.NewInterpolator(req.Ctx, req.Client, appInstance)
 
-	// If the app changed, reset denied consumer permissions - will be filled (or hopefully not) while generating deployments and jobs
-	// This prevents it from filling up and re-doing the IRA check over and over again
-	checkConsumerPerms := false
-	if appInstance.Status.ConsumerPermissionsObservedGeneration != appInstance.Generation {
-		appInstance.Status.DeniedConsumerPermissions = nil
-		checkConsumerPerms = true
-		logrus.Infof("@@@ Resetting denied consumer permissions for %s/%s", appInstance.Namespace, appInstance.Name)
-	}
-
 	defer func() {
 		if err == nil {
 			// if there is an issue with interpolation, we just record it on the condition
@@ -99,20 +89,15 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 		return err
 	}
 
-	if err := addDeployments(req, appInstance, tag, pullSecrets, interpolator, checkConsumerPerms, resp); err != nil {
+	if err := addDeployments(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
 	if err := addRouters(appInstance, resp); err != nil {
 		return err
 	}
-	if err := addJobs(req, appInstance, tag, pullSecrets, interpolator, checkConsumerPerms, resp); err != nil {
+	if err := addJobs(req, appInstance, tag, pullSecrets, interpolator, resp); err != nil {
 		return err
 	}
-	if len(appInstance.Status.DeniedConsumerPermissions) > 0 {
-		appInstance.Status.DeniedConsumerPermissions = v1.SimplifySet(appInstance.Status.DeniedConsumerPermissions)
-		return fmt.Errorf("cannot run due to unauthorized consumer permissions")
-	}
-	appInstance.Status.ConsumerPermissionsObservedGeneration = appInstance.Generation
 	if err := addServices(req, appInstance, interpolator, resp); err != nil {
 		return err
 	}
@@ -128,8 +113,8 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 	return pullSecrets.Err()
 }
 
-func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator, checkConsumerPerms bool, resp router.Response) error {
-	deps, err := ToDeployments(req, appInstance, tag, pullSecrets, secrets, checkConsumerPerms)
+func addDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator, resp router.Response) error {
+	deps, err := ToDeployments(req, appInstance, tag, pullSecrets, secrets)
 	if err != nil {
 		return err
 	}
@@ -734,7 +719,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 	return dep, nil
 }
 
-func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator, checkConsumerPerms bool) (result []kclient.Object, _ error) {
+func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullSecrets, secrets *secrets.Interpolator) (result []kclient.Object, _ error) {
 	for _, containerName := range typed.SortedKeys(appInstance.Status.AppSpec.Containers) {
 		containerDef := appInstance.Status.AppSpec.Containers[containerName]
 		if ports.IsLinked(appInstance, containerName) {
@@ -748,10 +733,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		perms, err := getPermissions(req.Ctx, req.Client, appInstance, containerName, containerDef, checkConsumerPerms)
-		if err != nil {
-			return nil, err
-		}
+		perms := v1.FindPermission(containerName, appInstance.Status.Permissions)
 		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms)
 		if err != nil {
 			return nil, err

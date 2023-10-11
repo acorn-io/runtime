@@ -84,6 +84,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appMeetsPreconditions := appHasNamespace.Middleware(appstatus.CheckStatus)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.DeploySpec)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)
+	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(permissions.ConsumerPermissions)
 	appMeetsPreconditions.HandlerFunc(appstatus.SetStatus)
 	appMeetsPreconditions.HandlerFunc(appstatus.ReadyStatus)
 	appMeetsPreconditions.HandlerFunc(networkpolicy.ForApp)
