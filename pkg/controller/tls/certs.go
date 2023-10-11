@@ -36,6 +36,17 @@ func ProvisionWildcardCert(req router.Request, resp router.Response, domain, tok
 	return leUser.provisionCertIfNotExists(req.Ctx, req.Client, wildcardDomain, system.Namespace, system.TLSSecretName)
 }
 
+// AcornWildcardCertOnly is a middleware that ensures that we only act on the acorn wildcard cert
+func AcornWildcardCertOnly(h router.Handler) router.Handler {
+	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
+		if !(req.Object.GetName() == system.TLSSecretName && req.Object.GetNamespace() == system.Namespace) {
+			return nil
+		}
+
+		return h.Handle(req, resp)
+	})
+}
+
 // RequireSecretTypeTLS is a middleware that ensures that we only act on TLS-Type secrets
 func RequireSecretTypeTLS(h router.Handler) router.Handler {
 	return router.HandlerFunc(func(req router.Request, resp router.Response) error {
@@ -52,6 +63,12 @@ func RequireSecretTypeTLS(h router.Handler) router.Handler {
 // RenewCert handles the renewal of existing TLS certificates
 func RenewCert(req router.Request, resp router.Response) error {
 	sec := req.Object.(*corev1.Secret)
+
+	// Do not renew if this is a copy of another secret - only the original secret will be renewed
+	if sec.Annotations[labels.AcornSecretSourceName] != "" {
+		logrus.Debugf("not renewing certificate in secret %s/%s: it's a copy of %s/%s", sec.Namespace, sec.Name, sec.Annotations[labels.AcornSecretSourceNamespace], sec.Annotations[labels.AcornSecretSourceName])
+		return nil
+	}
 
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
