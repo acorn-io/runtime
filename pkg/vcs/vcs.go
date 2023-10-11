@@ -2,7 +2,6 @@ package vcs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -12,11 +11,16 @@ import (
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
-func VCS(filePath string) (result v1.VCS) {
+func VCS(filePath, buildContextPath string) (result v1.VCS) {
 	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return
+	}
+	buildContext, err := filepath.Abs(buildContextPath)
 	if err != nil {
 		return
 	}
@@ -43,6 +47,11 @@ func VCS(filePath string) (result v1.VCS) {
 	sb.WriteString(w.Filesystem.Root())
 	sb.WriteRune(filepath.Separator)
 	acornfile := strings.TrimPrefix(absPath, sb.String())
+	if buildContext == w.Filesystem.Root() {
+		buildContext = "."
+	} else {
+		buildContext = strings.TrimPrefix(buildContext, sb.String())
+	}
 
 	var (
 		modified, untracked bool
@@ -59,11 +68,12 @@ func VCS(filePath string) (result v1.VCS) {
 	}
 
 	result = v1.VCS{
-		Revision:  head.Hash().String(),
-		Clean:     !modified && !untracked,
-		Modified:  modified,
-		Untracked: untracked,
-		Acornfile: acornfile,
+		Revision:     head.Hash().String(),
+		Clean:        !modified && !untracked,
+		Modified:     modified,
+		Untracked:    untracked,
+		Acornfile:    acornfile,
+		BuildContext: buildContext,
 	}
 
 	// Set optional remotes field
@@ -79,17 +89,19 @@ func VCS(filePath string) (result v1.VCS) {
 	return
 }
 
-func AcornfileFromApp(ctx context.Context, app *apiv1.App) (string, error) {
-
+func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, error) {
 	vcs := app.Status.Staged.AppImage.VCS
-
 	if len(vcs.Remotes) == 0 {
-		return "", fmt.Errorf("clone can only be done on an app built from a git repository")
+		return "", "", fmt.Errorf("clone can only be done on an app built from a git repository")
+	}
+	if vcs.Acornfile == "" {
+		return "", "", fmt.Errorf("app has no acornfile information in vcs")
 	}
 
+	// Create auth object to use when fetching and cloning git repos
 	auth, err := ssh.NewSSHAgentAuth("git")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	for _, remote := range vcs.Remotes {
@@ -101,42 +113,64 @@ func AcornfileFromApp(ctx context.Context, app *apiv1.App) (string, error) {
 			gitUrl = remote
 		}
 
-		// TODO workdir named after git repo, cloned app name, or just this app's name?
-		idx := strings.LastIndex(gitUrl, "/")
-		if idx < 0 || idx >= len(gitUrl) {
-			fmt.Printf("failed to determine repository name %q\n", gitUrl)
+		idx := strings.LastIndex(remote, "/")
+		if idx < 0 || idx >= len(remote) {
+			fmt.Printf("failed to determine repository name %q\n", remote)
 			continue
 		}
-		workdir := filepath.Clean(strings.TrimSuffix(gitUrl[idx+1:], ".git"))
+		workdir := filepath.Clean(strings.TrimSuffix(remote[idx+1:], ".git"))
 
-		// Clone git repo
-		_, err = git.PlainCloneContext(ctx, workdir, false, &git.CloneOptions{
+		// Clone git repo and checkout revision
+		fmt.Printf("# Cloning repository %q into directory %q\n", gitUrl, workdir)
+		repo, err := git.PlainCloneContext(ctx, workdir, false, &git.CloneOptions{
 			URL:      gitUrl,
-			Progress: os.Stderr,
 			Auth:     auth,
+			Progress: os.Stderr,
 		})
-		// TODO handle ErrRepositoryAlreadyExists some way
 		if err != nil {
 			fmt.Printf("failed to clone repository %q: %s\n", gitUrl, err.Error())
 			continue
 		}
-
-		acornfile := filepath.Join(workdir, vcs.Acornfile)
-		// TODO if acornfile exists but is different than what is cached should we overwrite?
-		if _, err := os.Stat(acornfile); errors.Is(err, os.ErrNotExist) {
-			// Acornfile does not exist so we should create it
-			err = os.WriteFile(acornfile, []byte(app.Status.Staged.AppImage.Acornfile), 0666)
-			if err != nil {
-				fmt.Printf("failed to create file %q in repository %q: %s", acornfile, gitUrl, err.Error())
-				// TODO we hit an error state but already cloned the repo, should we clean up the repo we cloned?
-				continue
-			}
-		} else {
-			fmt.Printf("could not check for file %q in repository %q: %s", acornfile, gitUrl, err.Error())
-			// TODO we hit an error state but already cloned the repo, should we clean up the repo we cloned?
+		w, err := repo.Worktree()
+		if err != nil {
+			fmt.Printf("failed to get worktree from repository %q: %s\n", workdir, err.Error())
 			continue
 		}
-		return acornfile, nil
+		err = w.Checkout(&git.CheckoutOptions{
+			Hash: plumbing.NewHash(vcs.Revision),
+		})
+		if err != nil {
+			fmt.Printf("failed to checkout revision %q for repository %q: %s\n", vcs.Revision, workdir, err.Error())
+			continue
+		}
+
+		// Create the Acornfile in the repository
+		acornfile := filepath.Join(workdir, vcs.Acornfile)
+		err = os.WriteFile(acornfile, []byte(app.Status.Staged.AppImage.Acornfile), 0666)
+		if err != nil {
+			fmt.Printf("failed to create file %q in repository %q: %s\n", acornfile, workdir, err.Error())
+			continue
+		}
+
+		// Determine if the Acornfile is dirty or not
+		s, err := w.Status()
+		if err == nil {
+			if !s.IsClean() {
+				fmt.Printf("running with a dirty Acornfile %q\n", acornfile)
+			}
+		} else {
+			fmt.Printf("failed to get status from worktree %q: %s\n", workdir, err.Error())
+		}
+
+		// Get the build context
+		var buildContext string
+		if vcs.BuildContext == "." {
+			buildContext = workdir
+		} else {
+			buildContext = filepath.Join(workdir, vcs.BuildContext)
+		}
+
+		return acornfile, buildContext, nil
 	}
-	return "", fmt.Errorf("failed to resolve an acornfile from the app")
+	return "", "", fmt.Errorf("failed to resolve an acornfile from the app")
 }

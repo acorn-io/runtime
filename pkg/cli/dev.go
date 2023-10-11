@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
@@ -43,10 +44,10 @@ acorn dev --name wandering-sound <IMAGE>
 
 type Dev struct {
 	RunArgs
-	BidirectionalSync bool   `usage:"In interactive mode download changes in addition to uploading" short:"b"`
-	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	Clone             string `usage:"Clone a running app"`
-	HelpAdvanced      bool   `usage:"Show verbose help text"`
+	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Replace           bool `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Clone             bool `usage:"Clone the vcs repository for the given app"`
+	HelpAdvanced      bool `usage:"Show verbose help text"`
 	out               io.Writer
 	client            ClientFactory
 }
@@ -62,20 +63,26 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	var imageSource imagesource.ImageSource
-	if s.Clone == "" {
+	if !s.Clone {
 		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
+	} else if s.Name == "" {
+		return fmt.Errorf("clone option must be used when running dev on an existing app")
 	} else {
 		// Get info from the running app
-		app, err := c.AppGet(cmd.Context(), s.Clone)
+		app, err := c.AppGet(cmd.Context(), s.Name)
 		if err != nil {
 			return err
 		}
 
-		acornfile, err := vcs.AcornfileFromApp(cmd.Context(), app)
+		acornfile, buildContext, err := vcs.ImageInfoFromApp(cmd.Context(), app)
 		if err != nil {
 			return err
 		}
 
+		bc := app.Status.Staged.AppImage.VCS.BuildContext
+		if bc != "" {
+			args = append(args, buildContext)
+		}
 		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), acornfile, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
 	}
 
