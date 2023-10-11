@@ -53,6 +53,12 @@ func RequireSecretTypeTLS(h router.Handler) router.Handler {
 func RenewCert(req router.Request, resp router.Response) error {
 	sec := req.Object.(*corev1.Secret)
 
+	// Do not renew if this is a copy of another secret - only the original secret will be renewed
+	if sec.Annotations[labels.AcornSecretSourceName] != "" {
+		logrus.Debugf("not renewing certificate in secret %s/%s: it's a copy of %s/%s", sec.Namespace, sec.Name, sec.Annotations[labels.AcornSecretSourceNamespace], sec.Annotations[labels.AcornSecretSourceName])
+		return nil
+	}
+
 	leUser, err := ensureLEUser(req.Ctx, req.Client)
 	if err != nil {
 		logrus.Errorf("failed to get/create lets-encrypt account in RenewCert: %v", err)

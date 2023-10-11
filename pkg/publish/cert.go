@@ -110,10 +110,13 @@ func copySecretsForCerts(req router.Request, svc *v1.ServiceInstance, filteredTL
 		secretName := name.SafeConcatName(tlsCert.SecretName, svc.Name, string(originalSecret.UID)[:12])
 		objs = append(objs, &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        secretName,
-				Namespace:   svc.Namespace,
-				Labels:      labels.Merge(originalSecret.Labels, labels.ManagedByApp(svc.Spec.AppNamespace, svc.Spec.AppName)),
-				Annotations: originalSecret.Annotations,
+				Name:      secretName,
+				Namespace: svc.Namespace,
+				Labels:    labels.Merge(originalSecret.Labels, labels.ManagedByApp(svc.Spec.AppNamespace, svc.Spec.AppName)),
+				Annotations: labels.Merge(originalSecret.Annotations, map[string]string{
+					labels.AcornSecretSourceNamespace: originalSecret.Namespace,
+					labels.AcornSecretSourceName:      originalSecret.Name,
+				}),
 			},
 			Type: corev1.SecretTypeTLS,
 			Data: originalSecret.Data,
