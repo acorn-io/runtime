@@ -1,21 +1,14 @@
 package cli
 
 import (
-	"errors"
-	"fmt"
 	"io"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/dev"
 	"github.com/acorn-io/runtime/pkg/imagesource"
+	"github.com/acorn-io/runtime/pkg/vcs"
 	"github.com/acorn-io/z"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/spf13/cobra"
 )
 
@@ -77,66 +70,13 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		vcs := app.Status.Staged.AppImage.VCS
 
-		if len(vcs.Remotes) == 0 {
-			return fmt.Errorf("clone can only be done on an app built from a git repository")
+		acornfile, err := vcs.AcornfileFromApp(cmd.Context(), app)
+		if err != nil {
+			return err
 		}
 
-		for _, remote := range vcs.Remotes {
-			var gitUrl string
-			httpUrl, err := url.Parse(remote)
-			if err == nil {
-				gitUrl = fmt.Sprintf("git@%s:%s", httpUrl.Host, httpUrl.Path[1:])
-			} else {
-				gitUrl = remote
-			}
-
-			// TODO workdir named after git repo, cloned app name, or just this app's name?
-			idx := strings.LastIndex(gitUrl, "/")
-			if idx < 0 || idx >= len(gitUrl) {
-				fmt.Printf("failed to determine repository name %q\n", gitUrl)
-				continue
-			}
-			workdir := strings.TrimSuffix(gitUrl[idx+1:], ".git")
-
-			// Clone git repo
-			auth, _ := ssh.NewSSHAgentAuth("git")
-			_, err = git.PlainCloneContext(cmd.Context(), workdir, false, &git.CloneOptions{
-				URL: gitUrl,
-				// TODO print progress to somewhere maybe
-				// Progress: os.Stderr/os.Stdout,
-				Auth: auth,
-			})
-			if err != nil {
-				fmt.Printf("failed to resolve repository %q\n", gitUrl)
-				continue
-			}
-
-			acornfile := filepath.Join(workdir, vcs.Acornfile)
-			if _, err := os.Stat(acornfile); err == nil {
-				// Acornfile exists
-			} else if errors.Is(err, os.ErrNotExist) {
-				// Acornfile does not exist so we should create it
-				err = os.WriteFile(acornfile, []byte(app.Status.Staged.AppImage.Acornfile), 0666)
-				if err != nil {
-					fmt.Printf("failed to create file %q in repository %q", acornfile, gitUrl)
-					// TODO we hit an error state but already cloned the repo, should we clean up the repo we cloned?
-					continue
-				}
-			} else {
-				fmt.Printf("could not check for file %q in repository %q", acornfile, gitUrl)
-				// TODO we hit an error state but already cloned the repo, should we clean up the repo we cloned?
-				continue
-			}
-
-			imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), acornfile, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
-			break
-		}
-	}
-
-	if !imageSource.IsImageSet() {
-		return fmt.Errorf("failed to resolve image")
+		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), acornfile, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
 	}
 
 	opts, err := s.ToOpts()

@@ -12332,8 +12332,9 @@ func schema_pkg_apis_internalacornio_v1_VCS(ref common.ReferenceCallback) common
 					},
 					"acornfile": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Acornfile contains the path and filename within the git repository that was used to build the running app",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
