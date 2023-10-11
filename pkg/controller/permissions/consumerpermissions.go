@@ -132,9 +132,10 @@ func ConsumerPermissions(req router.Request, resp router.Response) error {
 		return err
 	}
 
-	newPerms, ok := v1.GrantsAll(app.Status.Namespace, consumerPerms, app.Status.Permissions)
+	newPerms, ok := v1.GrantsAll(app.Namespace, consumerPerms, app.Status.Permissions)
 	if ok {
 		// nothing new -> nothing to do
+		app.Status.DeniedConsumerPermissions = nil
 		return nil
 	}
 
@@ -150,7 +151,6 @@ func ConsumerPermissions(req router.Request, resp router.Response) error {
 		}
 	}
 
-	// TODO: test this
 	app.Status.DeniedConsumerPermissions = nil
 	app.Status.Permissions = v1.SimplifySet(append(app.Status.Permissions, newPerms...))
 	return nil

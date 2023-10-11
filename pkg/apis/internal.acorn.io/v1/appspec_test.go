@@ -115,6 +115,91 @@ func TestSimplify(t *testing.T) {
 		},
 	}))
 
+	autogold.Expect([]Permissions{
+		{
+			ServiceName: "bar",
+			Rules: []PolicyRule{{
+				PolicyRule: rbacv1.PolicyRule{
+					Verbs:     []string{"c"},
+					APIGroups: []string{"group-b", "group-c"},
+				}},
+			},
+		},
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{{
+				PolicyRule: rbacv1.PolicyRule{
+					Verbs:     []string{"a", "b"},
+					APIGroups: []string{"group-a", "group-b"},
+				}},
+			},
+		},
+	},
+	).Equal(t, SimplifySet([]Permissions{
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"a"},
+						APIGroups: []string{"group-a"},
+					},
+				},
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"b"},
+						APIGroups: []string{"group-b"},
+					},
+				},
+			},
+		},
+		{
+			ServiceName: "foo",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"a"},
+						APIGroups: []string{"group-b"},
+					},
+				},
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"b"},
+						APIGroups: []string{"group-a"},
+					},
+				},
+			},
+		},
+		{
+			ServiceName: "bar",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"c"},
+						APIGroups: []string{"group-c"},
+					},
+				},
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"c"},
+						APIGroups: []string{"group-b"},
+					},
+				},
+			},
+		},
+		{
+			ServiceName: "bar",
+			Rules: []PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:     []string{"c"},
+						APIGroups: []string{"group-c"},
+					},
+				},
+			},
+		},
+	}))
+
 	autogold.Expect(Permissions{Rules: []PolicyRule{
 		{PolicyRule: rbacv1.PolicyRule{
 			Verbs:     []string{"a", "b"},

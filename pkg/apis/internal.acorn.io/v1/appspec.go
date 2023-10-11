@@ -437,6 +437,7 @@ func (in *Permissions) Get() Permissions {
 	return *in
 }
 
+// SimplifySet takes a set of permissions and simplifies them by combining rules
 func SimplifySet(perms []Permissions) (result []Permissions) {
 	for _, servicePermissions := range GroupByServiceName(perms) {
 		result = append(result, Simplify(servicePermissions))
