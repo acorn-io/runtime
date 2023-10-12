@@ -44,3 +44,19 @@ status:
         build:
           dockerfile: "Dockerfile"
           context: "."
+  permissions:
+  - serviceName: oneimage
+    rules:
+    - verbs:
+      - create
+      apiGroups:
+      - "foo.io"
+      resources:
+      - "bar"
+      scope: "account"
+    - verbs:
+      - patch
+      apiGroups:
+      - "bar.io"
+      resources:
+      - "foo"
