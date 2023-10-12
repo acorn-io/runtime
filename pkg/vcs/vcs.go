@@ -16,15 +16,15 @@ import (
 )
 
 func VCS(filePath, buildContextPath string) (result v1.VCS) {
-	absPath, err := filepath.Abs(filePath)
+	filePath, err := filepath.Abs(filePath)
 	if err != nil {
 		return
 	}
-	buildContextAbs, err := filepath.Abs(buildContextPath)
+	buildContextPath, err = filepath.Abs(buildContextPath)
 	if err != nil {
 		return
 	}
-	repo, err := git.PlainOpenWithOptions(filepath.Dir(absPath), &git.PlainOpenOptions{
+	repo, err := git.PlainOpenWithOptions(filePath, &git.PlainOpenOptions{
 		DetectDotGit: true,
 	})
 	if err != nil {
@@ -43,11 +43,11 @@ func VCS(filePath, buildContextPath string) (result v1.VCS) {
 		return
 	}
 
-	acornfile, err := filepath.Rel(w.Filesystem.Root(), absPath)
+	acornfile, err := filepath.Rel(w.Filesystem.Root(), filePath)
 	if err != nil {
 		return
 	}
-	buildContext, err := filepath.Rel(w.Filesystem.Root(), buildContextAbs)
+	buildContext, err := filepath.Rel(w.Filesystem.Root(), buildContextPath)
 	if err != nil {
 		return
 	}
