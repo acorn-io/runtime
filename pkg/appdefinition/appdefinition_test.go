@@ -1454,6 +1454,12 @@ secrets: {
 	}, appSpec.Secrets["explicit"])
 	assert.Equal(t, v1.Secret{
 		Type: "basic",
+		Params: v1.NewGenericMap(map[string]any{
+			"passwordCharacters": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%^&*_-=+",
+			"passwordLength":     int64(16),
+			"usernameCharacters": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%^&*_-=+",
+			"usernameLength":     int64(8),
+		}),
 		Data: map[string]string{
 			"username": "bardata",
 			"password": "barpass",

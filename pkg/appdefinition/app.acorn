@@ -336,6 +336,16 @@
 	SecretBasicAuth: {
 		SecretBase
 		type: string == "basic"
+		params: {
+			// The character set used in the generated string
+			passwordCharacters: string || default "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%^&*_-=+"
+			// The length of the token to be generated
+			passwordLength: (int >= 0 && int <= 256) || default 16
+			// The character set used in the generated string
+			usernameCharacters: string || default "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%^&*_-=+"
+			// The length of the token to be generated
+			usernameLength: (int >= 0 && int <= 256) || default 8
+		}
 		data?: {
 			username?: string
 			password?: string
