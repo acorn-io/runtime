@@ -20,7 +20,7 @@ type ErrRulesNeeded struct {
 func (e *ErrRulesNeeded) Error() string {
 	prefix := PrefixErrRulesNeeded
 	if len(e.Missing) > 0 {
-		perms, err := json.Marshal(e.Permissions)
+		perms, err := json.Marshal(e.Missing)
 		if err != nil {
 			panic(err)
 		}
