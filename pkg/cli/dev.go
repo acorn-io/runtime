@@ -45,10 +45,11 @@ acorn dev --name wandering-sound --clone [acorn args]
 
 type Dev struct {
 	RunArgs
-	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
-	Replace           bool `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	Clone             bool `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
-	HelpAdvanced      bool `usage:"Show verbose help text"`
+	BidirectionalSync bool   `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Clone             bool   `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
+	CloneDir          string `usage:"Provide a directory to clone the repository into, use in conjunction with clone flag" default:"." hidden:"true"`
+	HelpAdvanced      bool   `usage:"Show verbose help text"`
 	out               io.Writer
 	client            ClientFactory
 }
@@ -74,7 +75,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		acornfile, buildContext, err := vcs.ImageInfoFromApp(cmd.Context(), app)
+		acornfile, buildContext, err := vcs.ImageInfoFromApp(cmd.Context(), app, s.CloneDir)
 		if err != nil {
 			return err
 		}

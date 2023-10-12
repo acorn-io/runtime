@@ -88,13 +88,13 @@ func VCS(filePath, buildContextPath string) (result v1.VCS) {
 	return
 }
 
-func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, error) {
-	vcs := app.Status.Staged.AppImage.VCS
+func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (string, string, error) {
+	vcs := app.Status.AppImage.VCS
 	if len(vcs.Remotes) == 0 {
 		return "", "", fmt.Errorf("clone can only be done on an app built from a git repository")
 	}
-	if vcs.Acornfile == "" {
-		return "", "", fmt.Errorf("app has no acornfile information in vcs")
+	if vcs.Acornfile == "" || vcs.BuildContext == "" {
+		return "", "", fmt.Errorf("app is missing required vcs information, image must be rebuilt with a newer acorn cli")
 	}
 
 	// Create auth object to use when fetching and cloning git repos
@@ -115,11 +115,11 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, erro
 
 		// Determine the repository name from the repo url
 		idx := strings.LastIndex(remote, "/")
-		if idx < 0 || idx >= len(remote) {
+		if idx < 0 || idx >= len(remote)-1 {
 			fmt.Printf("failed to determine repository name %q\n", remote)
 			continue
 		}
-		workdir := filepath.Clean(strings.TrimSuffix(remote[idx+1:], ".git"))
+		workdir := filepath.Join(cloneDir, strings.TrimSuffix(remote[idx+1:], ".git"))
 
 		// Clone git repo and checkout revision
 		fmt.Printf("# Cloning repository %q into directory %q\n", gitUrl, workdir)
@@ -147,7 +147,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, erro
 
 		// Create the Acornfile in the repository
 		acornfile := filepath.Join(workdir, vcs.Acornfile)
-		err = os.WriteFile(acornfile, []byte(app.Status.Staged.AppImage.Acornfile), 0666)
+		err = os.WriteFile(acornfile, []byte(app.Status.AppImage.Acornfile), 0666)
 		if err != nil {
 			fmt.Printf("failed to create file %q in repository %q: %s\n", acornfile, workdir, err.Error())
 			continue
