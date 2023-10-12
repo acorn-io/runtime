@@ -8,7 +8,7 @@ import (
 )
 
 func TestVCS(t *testing.T) {
-	vcs := vcs.VCS(".")
+	vcs := vcs.VCS(".", ".")
 	assert.NotEqual(t, "", vcs.Revision)
 }
 
