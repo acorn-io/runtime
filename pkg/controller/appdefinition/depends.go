@@ -56,9 +56,9 @@ func getDependencyAnnotations(app *v1.AppInstance, containerOrJobName string, de
 		}
 	}
 
-	consumerpermsok := len(app.Status.DeniedConsumerPermissions) == 0
+	consumerPermsOk := len(app.Status.DeniedConsumerPermissions) == 0
 
-	if !allReady || !consumerpermsok {
+	if !allReady || !consumerPermsOk {
 		result[apply.AnnotationCreate] = "false"
 		if !app.GetStopped() {
 			result[apply.AnnotationUpdate] = "false"

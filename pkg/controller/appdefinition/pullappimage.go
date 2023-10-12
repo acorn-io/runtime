@@ -29,7 +29,6 @@ type pullClient struct {
 	pull pullImageFunc
 }
 
-// pullAppImage
 func pullAppImage(transport http.RoundTripper, client pullClient) router.HandlerFunc {
 	// NOTE: It is important that this logic does not interact with status.AppImage but instead
 	// status.Staged.AppImage

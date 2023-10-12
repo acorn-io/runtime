@@ -476,7 +476,7 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 		return obj.Status.Staged.PermissionsChecked
 	})
 
-	require.Equal(t, 1, len(serviceAcorn.Status.Staged.ImagePermissionsDenied), "should have 0 denied permissions")
+	require.Equal(t, 1, len(serviceAcorn.Status.Staged.ImagePermissionsDenied), "should have 1 denied permissions")
 
 	// Create IRA to allow service Acorn to have the permissions
 	ira := &adminv1.ImageRoleAuthorization{
