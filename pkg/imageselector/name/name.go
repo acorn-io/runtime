@@ -23,15 +23,23 @@ func ImageCovered(image name.Reference, digest string, patterns []string) bool {
 			return true
 		}
 
-		parts := strings.Split(pattern, ":")
-		contextPattern := parts[0]
 		tagPattern := ""
-		if len(parts) > 1 {
-			if !strings.Contains(parts[len(parts)-1], "/") {
-				tagPattern = parts[len(parts)-1] // last part is tag
-				contextPattern = strings.TrimSuffix(pattern, ":"+tagPattern)
-			} else {
-				contextPattern = pattern // : was part of the context pattern (port)
+		contextPattern := ""
+
+		if strings.Contains(pattern, "@") {
+			parts := strings.Split(pattern, "@")
+			contextPattern = parts[0]
+			tagPattern = parts[1]
+		} else {
+			parts := strings.Split(pattern, ":")
+			contextPattern = parts[0]
+			if len(parts) > 1 {
+				if !strings.Contains(parts[len(parts)-1], "/") {
+					tagPattern = parts[len(parts)-1] // last part is tag
+					contextPattern = strings.TrimSuffix(pattern, ":"+tagPattern)
+				} else {
+					contextPattern = pattern // : was part of the context pattern (port)
+				}
 			}
 		}
 

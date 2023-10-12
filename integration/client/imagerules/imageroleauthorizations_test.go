@@ -12,6 +12,7 @@ import (
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/admin.acorn.io/v1"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	internalv1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	internaladminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/awspermissions"
 	"github.com/acorn-io/runtime/pkg/client"
@@ -390,7 +391,6 @@ func TestImageRoleAuthorizations(t *testing.T) {
 }
 
 func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
-	// TODO: (@iwilltry42) once we aligned on a way to treat services/consumers with IRAs, this has to be updated
 	helper.StartController(t)
 
 	ctx := helper.GetCTX(t)
@@ -410,6 +410,7 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Build Image
 	image, err := c.AcornImageBuild(ctx, "./testdata/serviceconsumer/Acornfile", &client.AcornImageBuildOptions{
 		Cwd: "./testdata/serviceconsumer/",
 	})
@@ -417,11 +418,29 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Prep: Create a role that we can use later
+	role := &rbacv1.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test:get:secrets",
+			Namespace: c.GetNamespace(),
+		},
+		Rules: []rbacv1.PolicyRule{{
+			APIGroups: []string{""},
+			Verbs:     []string{"get"},
+			Resources: []string{"secrets"},
+		}},
+	}
+
+	err = apply.Ensure(ctx, kclient, role)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Integration tests don't have proper privileges so we will by pass the permission validation
 	appInstance := &internalv1.AppInstance{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "test-",
-			Namespace:    c.GetProject(),
+			Name:      "test-consumer",
+			Namespace: c.GetProject(),
 		},
 		Spec: internalv1.AppInstanceSpec{
 			Image: image.ID,
@@ -438,7 +457,7 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 		},
 		Status: internalv1.AppInstanceStatus{},
 	}
-	if err := kclient.Create(ctx, appInstance); err != nil {
+	if err := apply.Ensure(ctx, kclient, appInstance); err != nil {
 		t.Fatal(err)
 	}
 
@@ -446,17 +465,126 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
-		return obj.Status.Ready
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.AppStatus.Services["producer"].ServiceAcornName != ""
 	})
 
-	app, err = c.AppGet(ctx, appInstance.Name)
+	serviceAcorn, err := c.AppGet(ctx, app.Status.AppStatus.Services["producer"].ServiceAcornName)
+	require.NoError(t, err, "should not error while getting service acorn")
+
+	serviceAcorn = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, serviceAcorn, func(obj *apiv1.App) bool {
+		return obj.Status.Staged.PermissionsChecked
+	})
+
+	require.Equal(t, 1, len(serviceAcorn.Status.Staged.ImagePermissionsDenied), "should have 0 denied permissions")
+
+	// Create IRA to allow service Acorn to have the permissions
+	ira := &adminv1.ImageRoleAuthorization{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: c.GetNamespace(),
+		},
+		Spec: internaladminv1.ImageRoleAuthorizationInstanceSpec{
+			ImageSelector: internalv1.ImageSelector{
+				NamePatterns: []string{
+					serviceAcorn.Status.Staged.AppImage.ID,
+					serviceAcorn.Status.Staged.AppImage.Digest,
+					"**@" + serviceAcorn.Status.Staged.AppImage.Digest,
+				},
+			},
+			Roles: internaladminv1.RoleAuthorizations{
+				Scopes: []string{"account"},
+				RoleRefs: []internaladminv1.RoleRef{
+					{
+						Name: "test:get:secrets",
+						Kind: "Role",
+					},
+				},
+			},
+		},
+	}
+
+	// Ensure that the selector matches the service acorn  image now
+	err = imageselector.MatchImage(ctx, kclient, c.GetNamespace(), serviceAcorn.Status.Staged.AppImage.Name, "", serviceAcorn.Status.Staged.AppImage.Digest, ira.Spec.ImageSelector, imageselector.MatchImageOpts{})
+	require.NoError(t, err, "should not error while matching image against pattern %s", ira.Spec.ImageSelector.NamePatterns[0])
+
+	err = apply.Ensure(ctx, kclient, ira)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	require.Equal(t, 0, len(app.Status.Staged.ImagePermissionsDenied), "should have 0 denied permission")
+	// Wait for permissions to be authorized (check gets re-triggered by the creation of the IRA)
+	serviceAcorn = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, serviceAcorn, func(obj *apiv1.App) bool {
+		return len(obj.Status.Staged.ImagePermissionsDenied) == 0
+	})
 
-	t.Logf("app: %#v", app)
+	helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, serviceAcorn, func(obj *apiv1.App) bool {
+		return obj.Status.Ready
+	})
+
+	// Service Acorn is ready, so App should try to consume permissions that it's not allowed to have
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return len(obj.Status.DeniedConsumerPermissions) > 0
+	})
+
+	expectedPerms := []internalv1.Permissions{
+		{
+			ServiceName: "kubetest",
+			Rules: []internalv1.PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:           []string{"get"},
+						APIGroups:       []string{""},
+						Resources:       []string{"secrets"},
+						ResourceNames:   []string{"foo"},
+						NonResourceURLs: []string(nil),
+					}, Scopes: []string(nil),
+				},
+			},
+			ZZ_ClusterRules: []v1.PolicyRule(nil),
+		},
+		{
+			ServiceName: "test",
+			Rules: []internalv1.PolicyRule{
+				{
+					PolicyRule: rbacv1.PolicyRule{
+						Verbs:           []string{"get"},
+						APIGroups:       []string{""},
+						Resources:       []string{"secrets"},
+						ResourceNames:   []string{"foo"},
+						NonResourceURLs: []string(nil),
+					},
+					Scopes: []string(nil),
+				},
+			},
+			ZZ_ClusterRules: []v1.PolicyRule(nil),
+		},
+	}
+
+	require.Equal(t, expectedPerms, app.Status.DeniedConsumerPermissions)
+	require.Empty(t, app.Status.Staged.ImagePermissionsDenied)
+	require.True(t, app.Status.Condition("consumer-permissions").Error)
+	require.Contains(t, app.Status.Condition("consumer-permissions").Message, "cannot run current image due to unauthorized permissions given to it by consumed services: rules needed:")
+
+	// Now update IRA to allow consumed permissions
+	ira.Spec.ImageSelector.NamePatterns = []string{"**"} // simply catch-all wildcard
+
+	err = apply.Ensure(ctx, kclient, ira)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Denied Consumer Permissions should vanish
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return len(obj.Status.DeniedConsumerPermissions) == 0
+	})
+
+	require.True(t, app.Status.Condition("consumer-permissions").Success)
+
+	app = helper.WaitForObject(t, helper.Watcher(t, c), &apiv1.AppList{}, app, func(obj *apiv1.App) bool {
+		return obj.Status.Ready
+	})
+
+	require.True(t, app.Status.Ready) // should be impossible to not be ready at this point given that we wait for it ¯\_(ツ)_/¯
+	require.Equal(t, expectedPerms, app.Status.Permissions)
 }

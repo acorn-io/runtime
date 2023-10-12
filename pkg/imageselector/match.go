@@ -8,6 +8,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/images"
 	nameselector "github.com/acorn-io/runtime/pkg/imageselector/name"
 	signatureselector "github.com/acorn-io/runtime/pkg/imageselector/signatures"
+	"github.com/acorn-io/runtime/pkg/imagesystem"
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -29,7 +30,13 @@ func (e *NoMatchError) Error() string {
 }
 
 func MatchImage(ctx context.Context, c client.Reader, namespace, imageName, resolvedName, digest string, selector internalv1.ImageSelector, opts MatchImageOpts, remoteOpts ...remote.Option) error {
-	imageNameRef, err := images.GetImageReference(ctx, c, namespace, imageName)
+	var imageNameRef name.Reference
+	var err error
+	if tags.SHAPattern.MatchString(imageName) {
+		imageNameRef, err = imagesystem.GetInternalRepoForNamespaceAndID(ctx, c, namespace, imageName)
+	} else {
+		imageNameRef, err = name.ParseReference(imageName, name.WithDefaultRegistry(""), name.WithDefaultTag(""))
+	}
 	if err != nil {
 		return fmt.Errorf("error parsing image reference %s: %w", imageName, err)
 	}
