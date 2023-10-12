@@ -20,7 +20,7 @@ func VCS(filePath, buildContextPath string) (result v1.VCS) {
 	if err != nil {
 		return
 	}
-	buildContext, err := filepath.Abs(buildContextPath)
+	buildContextAbs, err := filepath.Abs(buildContextPath)
 	if err != nil {
 		return
 	}
@@ -43,14 +43,13 @@ func VCS(filePath, buildContextPath string) (result v1.VCS) {
 		return
 	}
 
-	var sb strings.Builder
-	sb.WriteString(w.Filesystem.Root())
-	sb.WriteRune(filepath.Separator)
-	acornfile := strings.TrimPrefix(absPath, sb.String())
-	if buildContext == w.Filesystem.Root() {
-		buildContext = "."
-	} else {
-		buildContext = strings.TrimPrefix(buildContext, sb.String())
+	acornfile, err := filepath.Rel(w.Filesystem.Root(), absPath)
+	if err != nil {
+		return
+	}
+	buildContext, err := filepath.Rel(w.Filesystem.Root(), buildContextAbs)
+	if err != nil {
+		return
 	}
 
 	var (

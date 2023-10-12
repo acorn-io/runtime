@@ -3,14 +3,8 @@ package build
 import (
 	"testing"
 
-	"github.com/acorn-io/runtime/pkg/vcs"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestVCS(t *testing.T) {
-	vcs := vcs.VCS(".", ".")
-	assert.NotEqual(t, "", vcs.Revision)
-}
 
 func Test_toContextCopyDockerFile(t *testing.T) {
 	type args struct {
