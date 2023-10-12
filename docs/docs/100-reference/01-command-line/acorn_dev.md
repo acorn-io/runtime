@@ -26,7 +26,7 @@ acorn dev --name wandering-sound <IMAGE>
       --args-file string     Default args to apply to run/update command (default ".args.acorn")
       --auto-upgrade         Enabled automatic upgrades.
   -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
-      --clone string         Clone a running app
+      --clone                Clone the vcs repository for the given app
   -f, --file string          Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                 help for dev
       --help-advanced        Show verbose help text
