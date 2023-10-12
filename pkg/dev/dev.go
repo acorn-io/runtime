@@ -348,7 +348,7 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	if err != nil {
 		return "", err
 	}
-	opts.Run.Permissions = app.Spec.UserGrantedPermissions
+	opts.Run.Permissions = app.Spec.GrantedPermissions
 	return app.Name, nil
 }
 

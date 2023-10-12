@@ -49,25 +49,25 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Labels:      appScoped(opts.Labels),
 		},
 		Spec: v1.AppInstanceSpec{
-			Region:                 opts.Region,
-			Image:                  image,
-			PublishMode:            opts.PublishMode,
-			DeployArgs:             v1.NewGenericMap(opts.DeployArgs),
-			Volumes:                opts.Volumes,
-			Secrets:                opts.Secrets,
-			Links:                  opts.Links,
-			Publish:                opts.Publish,
-			Profiles:               opts.Profiles,
-			Stop:                   opts.Stop,
-			UserGrantedPermissions: opts.Permissions,
-			Environment:            opts.Env,
-			Labels:                 opts.Labels,
-			Annotations:            opts.Annotations,
-			AutoUpgrade:            opts.AutoUpgrade,
-			NotifyUpgrade:          opts.NotifyUpgrade,
-			AutoUpgradeInterval:    opts.AutoUpgradeInterval,
-			Memory:                 opts.Memory,
-			ComputeClasses:         opts.ComputeClasses,
+			Region:              opts.Region,
+			Image:               image,
+			PublishMode:         opts.PublishMode,
+			DeployArgs:          v1.NewGenericMap(opts.DeployArgs),
+			Volumes:             opts.Volumes,
+			Secrets:             opts.Secrets,
+			Links:               opts.Links,
+			Publish:             opts.Publish,
+			Profiles:            opts.Profiles,
+			Stop:                opts.Stop,
+			GrantedPermissions:  opts.Permissions,
+			Environment:         opts.Env,
+			Labels:              opts.Labels,
+			Annotations:         opts.Annotations,
+			AutoUpgrade:         opts.AutoUpgrade,
+			NotifyUpgrade:       opts.NotifyUpgrade,
+			AutoUpgradeInterval: opts.AutoUpgradeInterval,
+			Memory:              opts.Memory,
+			ComputeClasses:      opts.ComputeClasses,
 		},
 	}
 }
@@ -151,7 +151,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 		app.Spec.PublishMode = opts.PublishMode
 	}
 	if opts.Permissions != nil {
-		app.Spec.UserGrantedPermissions = opts.Permissions
+		app.Spec.GrantedPermissions = opts.Permissions
 	}
 	if opts.AutoUpgrade != nil {
 		app.Spec.AutoUpgrade = opts.AutoUpgrade

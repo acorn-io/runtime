@@ -6692,7 +6692,7 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 					},
 					"imageGrantedPermissions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Permissions granted by the user",
+							Description: "Permissions granted by the user (later mixed with other granted perms)",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{

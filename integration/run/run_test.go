@@ -140,7 +140,7 @@ func TestServiceConsumer(t *testing.T) {
 		},
 		Spec: v1.AppInstanceSpec{
 			Image: image.ID,
-			UserGrantedPermissions: []v1.Permissions{{
+			GrantedPermissions: []v1.Permissions{{
 				ServiceName: "producer.default",
 				Rules: []v1.PolicyRule{{
 					PolicyRule: rbacv1.PolicyRule{

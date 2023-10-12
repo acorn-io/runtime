@@ -13,7 +13,7 @@ import (
 func Test_filterForPermissionsAndAssignStatus(t *testing.T) {
 	app := &v1.AppInstance{
 		Spec: v1.AppInstanceSpec{
-			UserGrantedPermissions: []v1.Permissions{
+			GrantedPermissions: []v1.Permissions{
 				{
 					ServiceName: "allow",
 					Rules: []v1.PolicyRule{
@@ -76,7 +76,7 @@ func Test_filterForPermissionsAndAssignStatus(t *testing.T) {
 
 	autogold.Expect(&v1.AppInstance{
 		Spec: v1.AppInstanceSpec{
-			UserGrantedPermissions: []v1.Permissions{{
+			GrantedPermissions: []v1.Permissions{{
 				ServiceName: "allow",
 				Rules: []v1.PolicyRule{{
 					PolicyRule: rbacv1.PolicyRule{

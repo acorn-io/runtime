@@ -498,8 +498,8 @@ func (in *AppInstanceSpec) DeepCopyInto(out *AppInstanceSpec) {
 		x := (*in).DeepCopy()
 		*out = &x
 	}
-	if in.UserGrantedPermissions != nil {
-		in, out := &in.UserGrantedPermissions, &out.UserGrantedPermissions
+	if in.GrantedPermissions != nil {
+		in, out := &in.GrantedPermissions, &out.GrantedPermissions
 		*out = make([]Permissions, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

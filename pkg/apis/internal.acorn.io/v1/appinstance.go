@@ -101,7 +101,7 @@ type AppInstanceSpec struct {
 	Links                   []ServiceBinding `json:"services,omitempty"`
 	Publish                 []PortBinding    `json:"ports,omitempty"`
 	DeployArgs              *GenericMap      `json:"deployArgs,omitempty"`
-	UserGrantedPermissions  []Permissions    `json:"permissions,omitempty"`             // Permissions granted by the user
+	GrantedPermissions      []Permissions    `json:"permissions,omitempty"`             // Permissions granted by the user (later mixed with other granted perms)
 	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"` // Permissions implicitly granted to the image
 	AutoUpgrade             *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade           *bool            `json:"notifyUpgrade,omitempty"`
@@ -113,7 +113,7 @@ type AppInstanceSpec struct {
 // GetGrantedPermissions returns the permissions for the app as granted by the user or granted implicitly to the image.
 // Those are not necessarily equal to the permissions actually requested by the images within the app.
 func (in *AppInstanceSpec) GetGrantedPermissions() []Permissions {
-	return append(in.UserGrantedPermissions, in.ImageGrantedPermissions...)
+	return append(in.GrantedPermissions, in.ImageGrantedPermissions...)
 }
 
 func (in *AppInstance) GetStopped() bool {

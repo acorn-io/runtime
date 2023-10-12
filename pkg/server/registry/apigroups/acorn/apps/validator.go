@@ -212,22 +212,22 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		var imageRejectedPerms []v1.Permissions
 		imageGrantedPerms, imageRejectedPerms, err = s.imageGrants(ctx, imageDetails, checkImage)
 		if err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.UserGrantedPermissions, err.Error()))
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.GrantedPermissions, err.Error()))
 			return
 		}
 
-		if err := s.checkRequestedPermsSatisfyImagePerms(app.Namespace, imageRejectedPerms, app.Spec.UserGrantedPermissions); err != nil {
-			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.UserGrantedPermissions, err.Error()))
+		if err := s.checkRequestedPermsSatisfyImagePerms(app.Namespace, imageRejectedPerms, app.Spec.GrantedPermissions); err != nil {
+			result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.GrantedPermissions, err.Error()))
 			return
 		}
 
 		app.Spec.ImageGrantedPermissions = imageGrantedPerms
 	}
 
-	if _, rejected, err := s.checkPermissionsForPrivilegeEscalation(ctx, app.Spec.UserGrantedPermissions); err != nil {
-		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.UserGrantedPermissions, err.Error()))
+	if _, rejected, err := s.checkPermissionsForPrivilegeEscalation(ctx, app.Spec.GrantedPermissions); err != nil {
+		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.GrantedPermissions, err.Error()))
 	} else if len(rejected) > 0 {
-		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.UserGrantedPermissions, z.Pointer(client.ErrNotAuthorized{
+		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.GrantedPermissions, z.Pointer(client.ErrNotAuthorized{
 			Permissions: rejected,
 		}).Error()))
 	}

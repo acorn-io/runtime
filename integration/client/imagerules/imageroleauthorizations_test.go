@@ -136,7 +136,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 		},
 		Spec: internalv1.AppInstanceSpec{
 			Image: tagName,
-			UserGrantedPermissions: []internalv1.Permissions{
+			GrantedPermissions: []internalv1.Permissions{
 				{
 					ServiceName: "rootapp",
 					Rules: []internalv1.PolicyRule{{
@@ -372,7 +372,7 @@ func TestImageRoleAuthorizations(t *testing.T) {
 	rmapp(ctx, app)
 
 	nappinstance := blueprint.DeepCopy()
-	nappinstance.Spec.UserGrantedPermissions = append(app.Spec.UserGrantedPermissions, internalv1.Permissions{
+	nappinstance.Spec.GrantedPermissions = append(app.Spec.GrantedPermissions, internalv1.Permissions{
 		ServiceName: "rootapp",
 		Rules: []internalv1.PolicyRule{{
 			PolicyRule: rbacv1.PolicyRule{
@@ -444,7 +444,7 @@ func TestImageRoleAuthorizationConsumerPerms(t *testing.T) {
 		},
 		Spec: internalv1.AppInstanceSpec{
 			Image: image.ID,
-			UserGrantedPermissions: []internalv1.Permissions{{
+			GrantedPermissions: []internalv1.Permissions{{
 				ServiceName: "producer.default",
 				Rules: []internalv1.PolicyRule{{
 					PolicyRule: rbacv1.PolicyRule{
