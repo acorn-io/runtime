@@ -105,6 +105,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, erro
 	}
 
 	for _, remote := range vcs.Remotes {
+		// Since we use ssh auth to clone the repo we need a git url but will sometimes get http urls
 		var gitUrl string
 		httpUrl, err := url.Parse(remote)
 		if err == nil {
@@ -113,6 +114,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, erro
 			gitUrl = remote
 		}
 
+		// Determine the repository name from the repo url
 		idx := strings.LastIndex(remote, "/")
 		if idx < 0 || idx >= len(remote) {
 			fmt.Printf("failed to determine repository name %q\n", remote)
@@ -163,12 +165,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App) (string, string, erro
 		}
 
 		// Get the build context
-		var buildContext string
-		if vcs.BuildContext == "." {
-			buildContext = workdir
-		} else {
-			buildContext = filepath.Join(workdir, vcs.BuildContext)
-		}
+		buildContext := filepath.Join(workdir, vcs.BuildContext)
 
 		return acornfile, buildContext, nil
 	}

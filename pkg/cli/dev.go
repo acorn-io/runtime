@@ -24,6 +24,7 @@ acorn dev <IMAGE>
 acorn dev .
 acorn dev --name wandering-sound
 acorn dev --name wandering-sound <IMAGE>
+acorn dev --name wandering-sound --clone [acorn args]
 `})
 
 	// This will produce an error if the volume flag doesn't exist or a completion function has already
@@ -46,7 +47,7 @@ type Dev struct {
 	RunArgs
 	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
 	Replace           bool `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	Clone             bool `usage:"Clone the vcs repository for the given app"`
+	Clone             bool `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
 	HelpAdvanced      bool `usage:"Show verbose help text"`
 	out               io.Writer
 	client            ClientFactory
@@ -73,16 +74,14 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
 		acornfile, buildContext, err := vcs.ImageInfoFromApp(cmd.Context(), app)
 		if err != nil {
 			return err
 		}
 
-		bc := app.Status.Staged.AppImage.VCS.BuildContext
-		if bc != "" {
-			args = append(args, buildContext)
-		}
+		// We append the build context to the start of the args so that it gets set, and we can pass any args down to the running app
+		args = append([]string{buildContext}, args...)
+
 		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), acornfile, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
 	}
 

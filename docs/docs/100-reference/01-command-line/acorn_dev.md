@@ -17,6 +17,7 @@ acorn dev <IMAGE>
 acorn dev .
 acorn dev --name wandering-sound
 acorn dev --name wandering-sound <IMAGE>
+acorn dev --name wandering-sound --clone [acorn args]
 
 ```
 
@@ -26,7 +27,7 @@ acorn dev --name wandering-sound <IMAGE>
       --args-file string     Default args to apply to run/update command (default ".args.acorn")
       --auto-upgrade         Enabled automatic upgrades.
   -b, --bidirectional-sync   In interactive mode download changes in addition to uploading
-      --clone                Clone the vcs repository for the given app
+      --clone                Clone the vcs repository and infer the build context for the given app allowing for local development
   -f, --file string          Name of the build file (default "DIRECTORY/Acornfile")
   -h, --help                 help for dev
       --help-advanced        Show verbose help text
