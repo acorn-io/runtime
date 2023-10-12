@@ -12339,7 +12339,7 @@ func schema_pkg_apis_internalacornio_v1_VCS(ref common.ReferenceCallback) common
 					},
 					"buildContext": {
 						SchemaProps: spec.SchemaProps{
-							Description: "BuildContext the context provided",
+							Description: "BuildContext the context within the vcs repository that was used when building the running app",
 							Type:        []string{"string"},
 							Format:      "",
 						},
