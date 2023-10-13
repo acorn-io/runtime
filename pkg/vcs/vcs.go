@@ -104,9 +104,32 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		}
 		workdir := filepath.Join(cloneDir, strings.TrimSuffix(remote[idx+1:], ".git"))
 
-		// Check if we've cloned the repo already
-		if _, err := os.Stat(workdir); os.IsNotExist(err) {
-			// Clone the repo
+		// Check for the directory we want to use
+		f, err := os.Open(workdir)
+		if err == nil {
+			// Directory exists, check if empty
+			_, err = f.ReadDir(1)
+			if err != nil {
+				// Directory is empty, clone the repo
+				args := []string{"clone", remote, workdir}
+				cmd := exec.CommandContext(ctx, "git", args...)
+				err = cmd.Run()
+				if err != nil {
+					fmt.Printf("failed to clone repository %q: %v", remote, err)
+					continue
+				}
+			} else {
+				// Directory is not empty, try to fetch
+				args := []string{"-C", workdir, "fetch", remote}
+				cmd := exec.CommandContext(ctx, "git", args...)
+				err = cmd.Run()
+				if err != nil {
+					fmt.Printf("failed to fetch remote %q in repository %q: %v", remote, workdir, err)
+					continue
+				}
+			}
+		} else if os.IsNotExist(err) {
+			// Directory does not exist, just clone to create it
 			args := []string{"clone", remote, workdir}
 			cmd := exec.CommandContext(ctx, "git", args...)
 			err = cmd.Run()
@@ -114,16 +137,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 				fmt.Printf("failed to clone repository %q: %v", remote, err)
 				continue
 			}
-		} else if os.IsExist(err) {
-			// Fetch the remote in the repo
-			args := []string{"-C", workdir, "fetch", remote}
-			cmd := exec.CommandContext(ctx, "git", args...)
-			err = cmd.Run()
-			if err != nil {
-				fmt.Printf("failed to fetch remote %q in repository %q: %v", remote, workdir, err)
-				continue
-			}
-		} else if err != nil {
+		} else {
 			fmt.Printf("failed to check for the existence of directory %q: %v", workdir, err)
 			continue
 		}
@@ -131,7 +145,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		// Try to checkout the revision
 		args := []string{"-C", workdir, "checkout", vcs.Revision}
 		cmd := exec.CommandContext(ctx, "git", args...)
-		err := cmd.Run()
+		err = cmd.Run()
 		if err != nil {
 			fmt.Printf("failed to checkout revision %q: %v", vcs.Revision, err)
 			continue
