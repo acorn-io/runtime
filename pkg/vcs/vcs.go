@@ -165,6 +165,8 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 func gitClone(ctx context.Context, workdir, remote string) (err error) {
 	args := []string{"clone", remote, workdir}
 	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		err = fmt.Errorf("failed to clone repository %q: %v", remote, err)
@@ -175,6 +177,8 @@ func gitClone(ctx context.Context, workdir, remote string) (err error) {
 func gitRemoteAdd(ctx context.Context, workdir, remoteName, remote string) (err error) {
 	args := []string{"-C", workdir, "remote", "add", remoteName, remote}
 	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		err = fmt.Errorf("failed to add remote %q to repository %q: %v", remote, workdir, err)
@@ -185,6 +189,8 @@ func gitRemoteAdd(ctx context.Context, workdir, remoteName, remote string) (err 
 func gitFetch(ctx context.Context, workdir, remote string) (err error) {
 	args := []string{"-C", workdir, "fetch", remote}
 	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		err = fmt.Errorf("failed to fetch remote %q in repository %q: %v", remote, workdir, err)
@@ -195,6 +201,8 @@ func gitFetch(ctx context.Context, workdir, remote string) (err error) {
 func gitCheckout(ctx context.Context, workdir, revision string) (err error) {
 	args := []string{"-C", workdir, "checkout", revision}
 	cmd := exec.CommandContext(ctx, "git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		err = fmt.Errorf("failed to checkout revision %q: %v", revision, err)
