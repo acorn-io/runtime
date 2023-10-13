@@ -2,6 +2,7 @@ package quota
 
 import (
 	"fmt"
+	"strconv"
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
@@ -38,8 +39,7 @@ func WaitForAllocation(req router.Request, resp router.Response) error {
 	// Attempt to get the quotaRequest for this appInstance. It should exist with the name and namespace of the
 	// appInstance being processed.
 	quotaRequest := &adminv1.QuotaRequestInstance{}
-	err = req.Client.Get(req.Ctx, router.Key(appInstance.Namespace, appInstance.Name), quotaRequest)
-	if err != nil && !errors.IsNotFound(err) {
+	if err := req.Client.Get(req.Ctx, router.Key(appInstance.Namespace, appInstance.Name), quotaRequest); err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
@@ -48,18 +48,30 @@ func WaitForAllocation(req router.Request, resp router.Response) error {
 		are the QuotaRequest:
 
 		1. Exists and had an error while trying to allocate quota.
-		2. Does not exist or has not yet been allocated the resources requested.
+		2. Does not exist or has not yet had the requested resources marked as allocated.
 		3. Exists and has successfully allocated the resources requested.
 	*/
 	if cond := quotaRequest.Status.Condition(adminv1.QuotaRequestCondition); cond.Error {
 		status.Error(fmt.Errorf("quota allocation failed: %v", cond.Message))
-	} else if err != nil || !quotaRequest.Spec.Resources.Equals(quotaRequest.Status.AllocatedResources) {
+	} else if waitingForAllocation(quotaRequest, appInstance) {
 		status.Unknown("waiting for quota allocation")
 	} else if quotaRequest.Status.Condition(adminv1.QuotaRequestCondition).Success {
 		status.Success()
 	}
 
 	return nil
+}
+
+// waitingForAllocation determines if the quota request is waiting for allocation. This is determined
+// by comparing the generation of the QuotaAppGeneration annotation of the quota request and the generation of
+// the appInstance and by comparing the allocated resources of the quota request and the requested resources.
+func waitingForAllocation(quotaRequest *adminv1.QuotaRequestInstance, appInstance *v1.AppInstance) bool {
+	generation, err := strconv.ParseInt(quotaRequest.Annotations[labels.AcornAppGeneration], 10, 64)
+	if err != nil {
+		return true
+	}
+	return generation != appInstance.Generation ||
+		!quotaRequest.Spec.Resources.Equals(quotaRequest.Status.AllocatedResources)
 }
 
 // EnsureQuotaRequest ensures that the quota request exists and is up to date.
@@ -74,7 +86,10 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 	// Create the quota request object and give calculate the standard numeric values
 	name, namespace, app := appInstance.Name, appInstance.Namespace, appInstance.Status.AppSpec
 	quotaRequest := &adminv1.QuotaRequestInstance{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name, Namespace: namespace,
+			Annotations: map[string]string{labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10)},
+		},
 		Spec: adminv1.QuotaRequestInstanceSpec{
 			Resources: adminv1.QuotaRequestResources{
 				BaseResources: adminv1.BaseResources{
