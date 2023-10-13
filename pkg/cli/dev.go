@@ -68,7 +68,7 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 	if !s.Clone {
 		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
 	} else if s.Name == "" {
-		return fmt.Errorf("clone option must be used when running dev on an existing app")
+		return fmt.Errorf("clone option can only be used when running dev on an existing app")
 	} else {
 		// Get info from the running app
 		app, err := c.AppGet(cmd.Context(), s.Name)
