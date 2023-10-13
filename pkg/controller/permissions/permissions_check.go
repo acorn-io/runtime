@@ -156,7 +156,7 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			return nperms
 		}
 
-		deniedPerms := []v1.Permissions{}
+		var deniedPerms []v1.Permissions
 		for _, p := range scopedGrantedPerms {
 			if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, p.ServiceName)); !granted {
 				deniedPerms = append(deniedPerms, d...)
