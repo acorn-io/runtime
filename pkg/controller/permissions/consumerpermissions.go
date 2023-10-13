@@ -49,7 +49,7 @@ func GetConsumerPermissions(ctx context.Context, c kclient.Client, appInstance *
 }
 
 func collectConsumerPermissions(ctx context.Context, client kclient.Client, app *v1.AppInstance) ([]v1.Permissions, error) {
-	result := []v1.Permissions{}
+	var result []v1.Permissions
 
 	for containerName, containerDef := range app.Status.AppSpec.Containers {
 		consumerPerms, err := GetConsumerPermissions(ctx, client, app, containerName, containerDef)
