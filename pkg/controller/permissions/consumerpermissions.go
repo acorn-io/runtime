@@ -114,10 +114,6 @@ func ConsumerPermissions(req router.Request, resp router.Response) error {
 	if err != nil {
 		return err
 	}
-	if !iraEnabled {
-		// Reset status field if IRAs are disabled
-		app.Status.DeniedConsumerPermissions = nil
-	}
 
 	// Register for re-triggering when any service instance changes
 	svclist := &v1.ServiceInstanceList{}
