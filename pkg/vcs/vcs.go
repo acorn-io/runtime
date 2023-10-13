@@ -197,9 +197,5 @@ func gitCheckout(ctx context.Context, workdir, revision string) (err error) {
 func gitDirty(ctx context.Context, workdir string) bool {
 	args := []string{"-C", workdir, "diff", "--quiet"}
 	cmd := exec.CommandContext(ctx, "git", args...)
-	cmdErr := cmd.Run()
-	if cmdErr != nil {
-		return true
-	}
-	return false
+	return cmd.Run() != nil
 }
