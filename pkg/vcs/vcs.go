@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -95,15 +94,9 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		return "", "", fmt.Errorf("app is missing required vcs information, image must be rebuilt with a newer acorn cli")
 	}
 
-	for _, remote := range vcs.Remotes {
-		// Determine the repository name from the repo url
-		idx := strings.LastIndex(remote, "/")
-		if idx < 0 || idx >= len(remote)-1 {
-			fmt.Printf("failed to determine repository name %q\n", remote)
-			continue
-		}
-		workdir := filepath.Join(cloneDir, strings.TrimSuffix(remote[idx+1:], ".git"))
+	workdir := filepath.Join(cloneDir, app.Name)
 
+	for i, remote := range vcs.Remotes {
 		// Check for the directory we want to use
 		f, err := os.Open(workdir)
 		if err == nil {
@@ -117,8 +110,13 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 					continue
 				}
 			} else {
-				// Directory is not empty, try to fetch
-				err = gitFetch(ctx, workdir, remote)
+				// Directory is not empty so we assume it exists, add a new remote and try to fetch
+				remoteName := fmt.Sprintf("remote%d", i)
+				err = gitRemoteAdd(ctx, workdir, remoteName, remote)
+				if err != nil {
+					fmt.Printf("%v\n", err)
+				}
+				err = gitFetch(ctx, workdir, remoteName)
 				if err != nil {
 					fmt.Printf("%v\n", err)
 					continue
@@ -153,7 +151,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 
 		// Determine if the Acornfile is dirty or not
 		if gitDirty(ctx, workdir) {
-			fmt.Printf("running with a dirty Acornfile %q\n", acornfile)
+			fmt.Printf("NOTE: The Acornfile used for this acorn differs from the git repository. Run `git status` for more details.")
 		}
 
 		// Get the build context
@@ -170,6 +168,16 @@ func gitClone(ctx context.Context, workdir, remote string) (err error) {
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		err = fmt.Errorf("failed to clone repository %q: %v", remote, err)
+	}
+	return
+}
+
+func gitRemoteAdd(ctx context.Context, workdir, remoteName, remote string) (err error) {
+	args := []string{"-C", workdir, "remote", "add", remoteName, remote}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		err = fmt.Errorf("failed to add remote %q to repository %q: %v", remote, workdir, err)
 	}
 	return
 }
