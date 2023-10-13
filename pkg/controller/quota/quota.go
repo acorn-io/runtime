@@ -161,16 +161,25 @@ func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestI
 			size = boundSize
 		}
 
-		// No need to proceed if the size is empty
-		if size == "" || size == "0" {
+		// Handle three cases:
+		// 1. The volume's size is explicitly set to 0. This means there is nothing to count.
+		// 2. The volume's size is not set. This means we should assume the default size.
+		// 3. The volume's size is set to a specific value. This means we should use that value.
+		var sizeQuantity resource.Quantity
+		switch size {
+		case "0":
 			continue
+		case "":
+			sizeQuantity = defaultVolumeSize(appInstance, name)
+		default:
+			parsedQuantity, err := resource.ParseQuantity(string(size))
+			if err != nil {
+				return err
+			}
+			sizeQuantity = parsedQuantity
 		}
 
-		parsedSize, err := resource.ParseQuantity(string(size))
-		if err != nil {
-			return err
-		}
-		quotaRequest.Spec.Resources.VolumeStorage.Add(parsedSize)
+		quotaRequest.Spec.Resources.VolumeStorage.Add(sizeQuantity)
 	}
 
 	// Add the secrets needed to the quota request. We only parse net new secrets, not
@@ -182,6 +191,25 @@ func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestI
 		quotaRequest.Spec.Resources.Secrets += 1
 	}
 	return nil
+}
+
+func defaultVolumeSize(appInstance *v1.AppInstance, name string) resource.Quantity {
+	result := *v1.DefaultSize // Safe to dereference because it is statically set in the v1 package.
+
+	// If the volume has a default size set, use that on status.Defaults, use that. Otherwise, if the
+	// VolumeSize default is set on status.Defaults, use that.
+	if defaultVolume, set := appInstance.Status.Defaults.Volumes[name]; set {
+		// We do not expect this to ever fail because VolumeClasses have their sizes validated. However,
+		// if it does fail, we'll just return the default size.
+		parsedQuantity, err := resource.ParseQuantity(string(defaultVolume.Size))
+		if err == nil {
+			result = parsedQuantity
+		}
+	} else if appInstance.Status.Defaults.VolumeSize != nil {
+		result = *appInstance.Status.Defaults.VolumeSize
+	}
+
+	return result
 }
 
 // boundVolumeSize determines if the specified volume will be bound to an existing one. If
