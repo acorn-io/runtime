@@ -111,30 +111,24 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 			_, err = f.ReadDir(1)
 			if err != nil {
 				// Directory is empty, clone the repo
-				args := []string{"clone", remote, workdir}
-				cmd := exec.CommandContext(ctx, "git", args...)
-				err = cmd.Run()
+				err = gitClone(ctx, workdir, remote)
 				if err != nil {
-					fmt.Printf("failed to clone repository %q: %v", remote, err)
+					fmt.Printf("%v\n", err)
 					continue
 				}
 			} else {
 				// Directory is not empty, try to fetch
-				args := []string{"-C", workdir, "fetch", remote}
-				cmd := exec.CommandContext(ctx, "git", args...)
-				err = cmd.Run()
+				err = gitFetch(ctx, workdir, remote)
 				if err != nil {
-					fmt.Printf("failed to fetch remote %q in repository %q: %v", remote, workdir, err)
+					fmt.Printf("%v\n", err)
 					continue
 				}
 			}
 		} else if os.IsNotExist(err) {
 			// Directory does not exist, just clone to create it
-			args := []string{"clone", remote, workdir}
-			cmd := exec.CommandContext(ctx, "git", args...)
-			err = cmd.Run()
+			err = gitClone(ctx, workdir, remote)
 			if err != nil {
-				fmt.Printf("failed to clone repository %q: %v", remote, err)
+				fmt.Printf("%v\n", err)
 				continue
 			}
 		} else {
@@ -143,11 +137,9 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		}
 
 		// Try to checkout the revision
-		args := []string{"-C", workdir, "checkout", vcs.Revision}
-		cmd := exec.CommandContext(ctx, "git", args...)
-		err = cmd.Run()
+		err = gitCheckout(ctx, workdir, vcs.Revision)
 		if err != nil {
-			fmt.Printf("failed to checkout revision %q: %v", vcs.Revision, err)
+			fmt.Printf("%v\n", err)
 			continue
 		}
 
@@ -160,10 +152,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		}
 
 		// Determine if the Acornfile is dirty or not
-		args = []string{"-C", workdir, "diff", "--quiet"}
-		cmd = exec.CommandContext(ctx, "git", args...)
-		err = cmd.Run()
-		if err != nil {
+		if gitDirty(ctx, workdir) {
 			fmt.Printf("running with a dirty Acornfile %q\n", acornfile)
 		}
 
@@ -173,4 +162,44 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		return acornfile, buildContext, nil
 	}
 	return "", "", fmt.Errorf("failed to resolve an acornfile from the app")
+}
+
+func gitClone(ctx context.Context, workdir, remote string) (err error) {
+	args := []string{"clone", remote, workdir}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		err = fmt.Errorf("failed to clone repository %q: %v", remote, err)
+	}
+	return
+}
+
+func gitFetch(ctx context.Context, workdir, remote string) (err error) {
+	args := []string{"-C", workdir, "fetch", remote}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		err = fmt.Errorf("failed to fetch remote %q in repository %q: %v", remote, workdir, err)
+	}
+	return
+}
+
+func gitCheckout(ctx context.Context, workdir, revision string) (err error) {
+	args := []string{"-C", workdir, "checkout", revision}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		err = fmt.Errorf("failed to checkout revision %q: %v", revision, err)
+	}
+	return
+}
+
+func gitDirty(ctx context.Context, workdir string) bool {
+	args := []string{"-C", workdir, "diff", "--quiet"}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		return true
+	}
+	return false
 }
