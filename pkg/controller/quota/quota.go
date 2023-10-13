@@ -162,7 +162,7 @@ func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestI
 		}
 
 		// Handle three cases:
-		// 1. The volume's size is explicitly set to 0. This means there is nothing to count.
+		// 1. The volume's size is explicitly set to 0 or is implicitly set from boundVolumeSize. This means there is nothing to count.
 		// 2. The volume's size is not set. This means we should assume the default size.
 		// 3. The volume's size is set to a specific value. This means we should use that value.
 		var sizeQuantity resource.Quantity
@@ -212,11 +212,15 @@ func defaultVolumeSize(appInstance *v1.AppInstance, name string) resource.Quanti
 	return result
 }
 
-// boundVolumeSize determines if the specified volume will be bound to an existing one. If
-// it will not be bound, the size of the new volume is returned.
+// boundVolumeSize determines if the specified volume will be bound and at what size. If it is bound to
+// an existing volume, it returns "0" since that should not be double counted. If it would be bound to a
+// volume in the Acornfile, it returns the new binding volume size. Otherwise, it returns false and a zero.
 func boundVolumeSize(name string, bindings []v1.VolumeBinding) (bool, v1.Quantity) {
 	for _, binding := range bindings {
-		if binding.Target == name && binding.Volume == "" {
+		if binding.Target == name {
+			if binding.Volume != "" {
+				return true, "0"
+			}
 			return true, binding.Size
 		}
 	}
