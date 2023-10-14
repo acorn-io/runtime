@@ -114,7 +114,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 
 		// Determine if the Acornfile is dirty or not
 		if gitDirty(ctx, workdir) {
-			fmt.Printf("NOTE: The Acornfile used for this acorn differs from the git repository. Run `git status` for more details.")
+			fmt.Printf("NOTE: The Acornfile used for this acorn differs from the git repository. Run `git status` for more details.\n")
 		}
 
 		// Get the build context
