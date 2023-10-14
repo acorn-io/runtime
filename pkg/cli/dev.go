@@ -1,12 +1,14 @@
 package cli
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
 	"github.com/acorn-io/runtime/pkg/dev"
 	"github.com/acorn-io/runtime/pkg/imagesource"
+	"github.com/acorn-io/runtime/pkg/vcs"
 	"github.com/acorn-io/z"
 	"github.com/spf13/cobra"
 )
@@ -22,6 +24,7 @@ acorn dev <IMAGE>
 acorn dev .
 acorn dev --name wandering-sound
 acorn dev --name wandering-sound <IMAGE>
+acorn dev --name wandering-sound --clone [acorn args]
 `})
 
 	// This will produce an error if the volume flag doesn't exist or a completion function has already
@@ -42,9 +45,11 @@ acorn dev --name wandering-sound <IMAGE>
 
 type Dev struct {
 	RunArgs
-	BidirectionalSync bool `usage:"In interactive mode download changes in addition to uploading" short:"b"`
-	Replace           bool `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	HelpAdvanced      bool `usage:"Show verbose help text"`
+	BidirectionalSync bool   `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Clone             bool   `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
+	CloneDir          string `usage:"Provide a directory to clone the repository into, use in conjunction with clone flag" default:"." hidden:"true"`
+	HelpAdvanced      bool   `usage:"Show verbose help text"`
 	out               io.Writer
 	client            ClientFactory
 }
@@ -59,7 +64,27 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	imageSource := imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
+	var imageSource imagesource.ImageSource
+	if !s.Clone {
+		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), s.File, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
+	} else if s.Name == "" {
+		return fmt.Errorf("clone option can only be used when running dev on an existing app")
+	} else {
+		// Get info from the running app
+		app, err := c.AppGet(cmd.Context(), s.Name)
+		if err != nil {
+			return err
+		}
+		acornfile, buildContext, err := vcs.ImageInfoFromApp(cmd.Context(), app, s.CloneDir)
+		if err != nil {
+			return err
+		}
+
+		// We append the build context to the start of the args so that it gets set, and we can pass any args down to the running app
+		args = append([]string{buildContext}, args...)
+
+		imageSource = imagesource.NewImageSource(s.client.AcornConfigFile(), acornfile, s.ArgsFile, args, nil, z.Dereference(s.AutoUpgrade))
+	}
 
 	opts, err := s.ToOpts()
 	if err != nil {

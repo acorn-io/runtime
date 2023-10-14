@@ -29,6 +29,10 @@ type VCS struct {
 	Modified bool `json:"modified,omitempty"`
 	// Untracked a true value indicates the build contained untracked files according to git
 	Untracked bool `json:"untracked,omitempty"`
+	// Acornfile the path and filename within the vcs repository that was used to build the running app
+	Acornfile string `json:"acornfile,omitempty"`
+	// BuildContext the context within the vcs repository that was used when building the running app
+	BuildContext string `json:"buildContext,omitempty"`
 }
 
 type Platform struct {
