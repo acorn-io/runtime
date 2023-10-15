@@ -249,15 +249,40 @@ func generateBasic(req router.Request, appInstance *v1.AppInstance, secretName s
 		Type: v1.SecretTypeBasic,
 	}
 
-	for i, key := range []string{corev1.BasicAuthUsernameKey, corev1.BasicAuthPasswordKey} {
-		if len(secret.Data[key]) == 0 {
-			v, err := GenerateRandomSecret(54)
-			v = v[:(i+1)*8]
-			if err != nil {
+	for _, keys := range []struct {
+		dataKey, lengthKey, charactersKey string
+	}{
+		{
+			dataKey:       corev1.BasicAuthUsernameKey,
+			lengthKey:     "usernameLength",
+			charactersKey: "usernameCharacters",
+		},
+		{
+			dataKey:       corev1.BasicAuthPasswordKey,
+			lengthKey:     "passwordLength",
+			charactersKey: "passwordCharacters",
+		},
+	} {
+		if len(secret.Data[keys.dataKey]) > 0 {
+			// Explicitly set by user, don't generate
+			continue
+		}
+
+		var length int64
+		if lengthParam, ok := secretRef.Params.GetData()[keys.lengthKey]; ok {
+			var err error
+			if length, err = convert.ToNumber(lengthParam); err != nil {
 				return nil, err
 			}
-			secret.Data[key] = []byte(v)
 		}
+		characters := convert.ToString(secretRef.Params.GetData()[keys.charactersKey])
+
+		v, err := GenerateRandomSecret(int(length), characters)
+		if err != nil {
+			return nil, err
+		}
+
+		secret.Data[keys.dataKey] = []byte(v)
 	}
 
 	return updateOrCreate(req, existing, secret)

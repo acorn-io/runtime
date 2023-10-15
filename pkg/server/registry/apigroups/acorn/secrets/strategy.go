@@ -18,12 +18,12 @@ func (d *defaultSecretGenerateStrategy) Create(ctx context.Context, object types
 	// If the secret is of type 'basic' and data is empty,
 	// default username and password values are set.
 	if secret.Type == "basic" && secret.Data == nil {
-		username, err := sec.GenerateRandomSecret(8)
+		username, err := sec.GenerateRandomSecret(8, "")
 		if err != nil {
 			return nil, err
 		}
 
-		password, err := sec.GenerateRandomSecret(16)
+		password, err := sec.GenerateRandomSecret(16, "")
 		if err != nil {
 			return nil, err
 		}

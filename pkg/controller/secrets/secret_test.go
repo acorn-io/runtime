@@ -10,6 +10,7 @@ import (
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/scheme"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -86,7 +87,8 @@ func TestBasic_Gen(t *testing.T) {
 			},
 			AppSpec: v1.AppSpec{
 				Secrets: map[string]v1.Secret{
-					"pass": {Type: "basic",
+					"pass": {
+						Type: "basic",
 						Data: map[string]string{
 							// cue will populate empty string if not sent
 							"username": "",
@@ -108,8 +110,8 @@ func TestBasic_Gen(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Len(t, resp.Client.Created, 2)
-	assert.Len(t, resp.Collected, 2)
+	require.Len(t, resp.Client.Created, 2)
+	require.Len(t, resp.Collected, 2)
 
 	secret := resp.Client.Created[0].(*corev1.Secret)
 	assert.Equal(t, "pass", secret.Labels[labels.AcornSecretName])
