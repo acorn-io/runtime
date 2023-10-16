@@ -152,6 +152,7 @@ spec:
   image: test
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -180,6 +181,7 @@ status:
   namespace: app-created-namespace
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

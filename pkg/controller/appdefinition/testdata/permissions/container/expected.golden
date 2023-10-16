@@ -270,6 +270,7 @@ spec:
     serviceName: oneimage
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -323,6 +324,7 @@ status:
     serviceName: oneimage
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

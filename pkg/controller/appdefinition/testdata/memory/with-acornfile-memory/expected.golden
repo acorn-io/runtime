@@ -167,6 +167,7 @@ spec:
   image: test
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -226,6 +227,7 @@ status:
           memory: 1Mi
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

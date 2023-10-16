@@ -12,6 +12,7 @@ spec:
   image: test
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -80,6 +81,7 @@ status:
         operator: Exists
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

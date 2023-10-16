@@ -11,6 +11,7 @@ items:
       target: found
   status:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
     appSpec: {}
@@ -19,6 +20,7 @@ items:
     defaults: {}
     staged:
       appImage:
+        buildContext: {}
         imageData: {}
         vcs: {}
     summary: {}

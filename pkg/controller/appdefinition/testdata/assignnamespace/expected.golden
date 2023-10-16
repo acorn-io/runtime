@@ -8,6 +8,7 @@ metadata:
 spec: {}
 status:
   appImage:
+    buildContext: {}
     imageData: {}
     vcs: {}
   appSpec: {}
@@ -22,6 +23,7 @@ status:
   namespace: default-1234567890ab
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}
@@ -37,6 +39,7 @@ metadata:
 spec: {}
 status:
   appImage:
+    buildContext: {}
     imageData: {}
     vcs: {}
   appSpec: {}
@@ -51,6 +54,7 @@ status:
   namespace: default-1234567890ab
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

@@ -17,6 +17,7 @@ status:
           dockerfile: "custom-dockerfile"
         }
       }
+    buildContext: {}
     imageData:
       containers:
         buildimage:
@@ -53,6 +54,7 @@ status:
   defaults: {}
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

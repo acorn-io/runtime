@@ -299,6 +299,7 @@ spec:
     oneimage: 1048576
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -359,6 +360,7 @@ status:
       requirements: {}
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}
