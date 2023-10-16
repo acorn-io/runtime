@@ -63,8 +63,8 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 	}
 
 	// Early exit
-	if app.Status.Staged.AppImage.ID == "" ||
-		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest ||
+	if (app.Status.Staged.AppImage.ID == "" ||
+		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest) &&
 		app.Status.Staged.PermissionsObservedGeneration == app.Generation {
 		// IAR disabled? Allow the Image if we're not re-checking permissions
 		if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageAllowRules); err != nil {
