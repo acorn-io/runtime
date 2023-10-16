@@ -24,14 +24,15 @@ import (
 )
 
 const (
-	IconFile      = "icon"
-	ReadmeFile    = "README"
-	Acornfile     = "Acornfile"
-	ImageDataFile = "images.json"
-	VersionFile   = "version.json"
-	VCSDataFile   = "vcs.json"
-	BuildDataFile = "build.json"
-	messageSuffix = ", you may need to define the image/build in the images section of the Acornfile"
+	IconFile         = "icon"
+	ReadmeFile       = "README"
+	Acornfile        = "Acornfile"
+	ImageDataFile    = "images.json"
+	VersionFile      = "version.json"
+	VCSDataFile      = "vcs.json"
+	BuildDataFile    = "build.json"
+	BuildContextFile = "build-context.json"
+	messageSuffix    = ", you may need to define the image/build in the images section of the Acornfile"
 
 	AcornfileSchemaVersion = "v1"
 	V0Pragma               = "//acorn:amlv0"
@@ -473,6 +474,11 @@ func AppImageFromTar(reader io.Reader) (*v1.AppImage, *DataFiles, error) {
 		case BuildDataFile:
 			result.BuildArgs = v1.NewGenericMap(map[string]any{})
 			err := json.NewDecoder(tar).Decode(result.BuildArgs)
+			if err != nil {
+				return nil, nil, err
+			}
+		case BuildContextFile:
+			err := json.NewDecoder(tar).Decode(&result.BuildContext)
 			if err != nil {
 				return nil, nil, err
 			}

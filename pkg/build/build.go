@@ -117,8 +117,12 @@ func build(ctx *buildContext) (*v1.AppImage, error) {
 		Acornfile: string(acornfileData),
 		ImageData: imageData,
 		BuildArgs: v1.NewGenericMap(buildArgs),
-		Profiles:  profiles,
-		VCS:       ctx.opts.VCS,
+		BuildContext: v1.BuildContext{
+			Cwd:           ctx.cwd,
+			AcornfilePath: ctx.acornfilePath,
+		},
+		Profiles: profiles,
+		VCS:      ctx.opts.VCS,
 	}
 	if err != nil {
 		return nil, err
@@ -239,6 +243,8 @@ func buildAcorns(ctx *buildContext, acorns map[string]v1.AcornBuilderSpec) (map[
 			newCtx.opts.Acornfile = ""
 			newCtx.acornfilePath = filepath.Join(ctx.cwd, acornImage.Build.Acornfile)
 			newCtx.cwd = filepath.Join(ctx.cwd, acornImage.Build.Context)
+			// We know this field will never be correct for nested build so just blank it out
+			newCtx.opts.VCS.Acornfile = ""
 			appImage, err := build(&newCtx)
 			if err != nil {
 				return nil, nil, err

@@ -111,6 +111,9 @@ func getContextFromAppImage(dataFiles appdefinition.DataFiles, appImage *v1.AppI
 			return "", err
 		}
 	}
+	if err := addFile(tempDir, appdefinition.BuildContextFile, appImage.BuildContext); err != nil {
+		return "", err
+	}
 	return tempDir, nil
 }
 

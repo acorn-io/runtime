@@ -5,14 +5,20 @@ type AppImage struct {
 	// ImageInstance.Name
 	ID string `json:"id,omitempty"`
 	// Name is the image name requested by the user of any format
-	Name      string           `json:"name,omitempty"`
-	Digest    string           `json:"digest,omitempty"`
-	Acornfile string           `json:"acornfile,omitempty"`
-	ImageData ImagesData       `json:"imageData,omitempty"`
-	BuildArgs *GenericMap      `json:"buildArgs,omitempty"`
-	Profiles  []string         `json:"profiles,omitempty"`
-	VCS       VCS              `json:"vcs,omitempty"`
-	Version   *AppImageVersion `json:"version,omitempty"`
+	Name         string           `json:"name,omitempty"`
+	Digest       string           `json:"digest,omitempty"`
+	Acornfile    string           `json:"acornfile,omitempty"`
+	ImageData    ImagesData       `json:"imageData,omitempty"`
+	BuildArgs    *GenericMap      `json:"buildArgs,omitempty"`
+	BuildContext BuildContext     `json:"buildContext,omitempty"`
+	Profiles     []string         `json:"profiles,omitempty"`
+	VCS          VCS              `json:"vcs,omitempty"`
+	Version      *AppImageVersion `json:"version,omitempty"`
+}
+
+type BuildContext struct {
+	Cwd           string `json:"cwd,omitempty"`
+	AcornfilePath string `json:"acornfilePath,omitempty"`
 }
 
 type AppImageVersion struct {
