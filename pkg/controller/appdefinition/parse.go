@@ -5,6 +5,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/appdefinition"
 	"github.com/acorn-io/runtime/pkg/condition"
+	"github.com/acorn-io/runtime/pkg/controller/permissions"
 )
 
 func ParseAppImage(req router.Request, resp router.Response) error {
@@ -28,6 +29,13 @@ func ParseAppImage(req router.Request, resp router.Response) error {
 	if err != nil {
 		status.Error(err)
 		return nil
+	}
+
+	// Migration for AppScopedPermissions
+	if len(appInstance.Status.Staged.AppScopedPermissions) == 0 &&
+		appInstance.Status.Staged.PermissionsObservedGeneration == appInstance.Generation &&
+		len(appInstance.Status.Staged.ImagePermissionsDenied) == 0 {
+		appInstance.Status.Staged.AppScopedPermissions = permissions.GetAppScopedPermissions(appInstance, appSpec)
 	}
 
 	appInstance.Status.AppSpec = *appSpec
