@@ -392,6 +392,8 @@ func ToAcornServices(ctx context.Context, c kclient.Client, interpolator *secret
 	return
 }
 
+// filterForPermissionsAndAssignStatus filters out services that are not granted permissions
+// and updates the appInstance status with the missing consumer permissions
 func filterForPermissionsAndAssignStatus(appInstance *v1.AppInstance, services []kclient.Object) (result []kclient.Object) {
 	result = make([]kclient.Object, 0, len(services))
 	for _, obj := range services {
@@ -400,7 +402,7 @@ func filterForPermissionsAndAssignStatus(appInstance *v1.AppInstance, services [
 			continue
 		}
 
-		ungranted := isGranted(appInstance, svc)
+		ungranted := getUngranted(appInstance, svc)
 		if len(ungranted) > 0 {
 			serviceStatus := appInstance.Status.AppStatus.Services[svc.Name]
 			serviceStatus.MissingConsumerPermissions = append(serviceStatus.MissingConsumerPermissions, v1.Permissions{
@@ -419,7 +421,8 @@ func filterForPermissionsAndAssignStatus(appInstance *v1.AppInstance, services [
 	return result
 }
 
-func isGranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1.PolicyRule {
+// getUngranted returns the list of rules that are not granted to the appInstance but are requested by the serviceInstance
+func getUngranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1.PolicyRule {
 	if service.Spec.Consumer == nil || service.Spec.Consumer.Permissions == nil ||
 		len(service.Spec.Consumer.Permissions.GetRules()) == 0 {
 		return nil
@@ -427,7 +430,7 @@ func isGranted(appInstance *v1.AppInstance, service *v1.ServiceInstance) []v1.Po
 
 	var (
 		ungranted []v1.PolicyRule
-		granted   = appInstance.Spec.GetPermissions()
+		granted   = appInstance.Spec.GetGrantedPermissions()
 	)
 
 	for _, requested := range service.Spec.Consumer.Permissions.GetRules() {

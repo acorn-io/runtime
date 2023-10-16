@@ -56,10 +56,7 @@ func toJobs(req router.Request, appInstance *v1.AppInstance, pullSecrets *PullSe
 		if job == nil {
 			continue
 		}
-		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, jobName, jobDef)
-		if err != nil {
-			return nil, err
-		}
+		perms := v1.FindPermission(jobName, appInstance.Status.Permissions)
 		sa, err := toServiceAccount(req, job.GetName(), job.GetLabels(), stripPruneAndUpdate(job.GetAnnotations()), appInstance, perms)
 		if err != nil {
 			return nil, err

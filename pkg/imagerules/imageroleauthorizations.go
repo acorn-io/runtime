@@ -67,7 +67,7 @@ func CheckRoleAuthorizations(ctx context.Context, c client.Reader, namespace, im
 			}
 			continue
 		}
-		logrus.Debugf("Image %s (%s) is allowed by ImageRoleAuthorization %s/%s", imageName, digest, ira.Namespace, ira.Name)
+		logrus.Debugf("Image %s (%s) is matched by ImageRoleAuthorization %s/%s", imageName, digest, ira.Namespace, ira.Name)
 		authorized = append(authorized, ira.Spec.Roles)
 	}
 	if len(authorized) == 0 {

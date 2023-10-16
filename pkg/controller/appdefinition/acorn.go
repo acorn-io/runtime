@@ -203,7 +203,7 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 			Publish:             acorn.Publish,
 			Stop:                typed.Pointer(appInstance.GetStopped()),
 			Environment:         append(acorn.Environment, trimEnvPrefix(appInstance.Spec.Environment, acornName)...),
-			Permissions:         trimPermPrefix(appInstance.Spec.GetPermissions(), acornName),
+			GrantedPermissions:  trimPermPrefix(appInstance.Spec.GetGrantedPermissions(), acornName),
 			AutoUpgrade:         acorn.AutoUpgrade,
 			AutoUpgradeInterval: acorn.AutoUpgradeInterval,
 			NotifyUpgrade:       acorn.NotifyUpgrade,

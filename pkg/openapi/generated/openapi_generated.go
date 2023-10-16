@@ -3964,8 +3964,9 @@ func schema_pkg_apis_apiacornio_v1_ImageDetails(ref common.ReferenceCallback) co
 					},
 					"signatureDigest": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Permissions requested by the image, including nested images",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"readme": {
@@ -6698,7 +6699,8 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 					},
 					"imageGrantedPermissions": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "Permissions granted by the user (later mixed with other granted perms)",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
@@ -6711,8 +6713,9 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceSpec(ref common.ReferenceCall
 					},
 					"autoUpgrade": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
+							Description: "Permissions implicitly granted to the image",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 					"notifyUpgrade": {
@@ -6886,11 +6889,38 @@ func schema_pkg_apis_internalacornio_v1_AppInstanceStatus(ref common.ReferenceCa
 							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonSummary"),
 						},
 					},
+					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
+					"deniedConsumerPermissions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Permissions given to this appInstance (only containers within, not nested Acorns/Services)",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatusStaged", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonSummary", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppColumns", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppStatusStaged", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.CommonSummary", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Condition", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Defaults", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.DevSessionInstanceSpec", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Scheduling"},
 	}
 }
 
@@ -7086,6 +7116,19 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
+					"permissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
+						},
+					},
 					"containers": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"object"},
@@ -7213,7 +7256,7 @@ func schema_pkg_apis_internalacornio_v1_AppStatus(ref common.ReferenceCallback) 
 			},
 		},
 		Dependencies: []string{
-			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.RouterStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeStatus"},
+			"github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AcornStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ContainerStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Endpoint", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.JobStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.RouterStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.SecretStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.ServiceStatus", "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.VolumeStatus"},
 	}
 }
 
@@ -7225,8 +7268,22 @@ func schema_pkg_apis_internalacornio_v1_AppStatusStaged(ref common.ReferenceCall
 				Properties: map[string]spec.Schema{
 					"appImage": {
 						SchemaProps: spec.SchemaProps{
-							Default: map[string]interface{}{},
-							Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
+							Description: "Staged for promotion to Status",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.AppImage"),
+						},
+					},
+					"appScopedPermissions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1.Permissions"),
+									},
+								},
+							},
 						},
 					},
 					"permissionsChecked": {

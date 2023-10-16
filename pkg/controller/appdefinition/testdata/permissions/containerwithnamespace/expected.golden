@@ -403,6 +403,32 @@ status:
     type: defined
   defaults: {}
   namespace: app-created-namespace
+  permissions:
+  - rules:
+    - apiGroups:
+      - foo.io
+      resources:
+      - bar
+      scopes:
+      - account
+      verbs:
+      - create
+    - apiGroups:
+      - 2.foo.io
+      resources:
+      - 2.bar
+      scopes:
+      - namespace:ns1
+      - namespace:ns2
+      verbs:
+      - create
+    - apiGroups:
+      - bar.io
+      resources:
+      - foo
+      verbs:
+      - patch
+    serviceName: oneimage
   staged:
     appImage:
       imageData: {}

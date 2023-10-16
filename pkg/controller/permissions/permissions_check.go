@@ -16,7 +16,9 @@ import (
 	"github.com/acorn-io/runtime/pkg/tags"
 	"github.com/acorn-io/z"
 	"github.com/google/go-containerregistry/pkg/name"
+	"golang.org/x/exp/maps"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/strings/slices"
 )
 
 // CopyPromoteStagedAppImage copies the staged app image to the app image if
@@ -33,19 +35,25 @@ func CopyPromoteStagedAppImage(req router.Request, resp router.Response) error {
 		len(app.Status.Staged.ImagePermissionsDenied) == 0 &&
 		z.Dereference[bool](app.Status.Staged.ImageAllowed) {
 		app.Status.AppImage = app.Status.Staged.AppImage
+		app.Status.Permissions = app.Status.Staged.AppScopedPermissions
 	}
 	return nil
 }
 
-// CheckPermissions checks various things related to permissions
-// a) if the image is allowed by the image allow rules (if enabled)
-// b) if the permissions requested by all images in the app are
-//
-//	b.1) granted by the user (as set in the app spec)
-//	b.2) authorized by the image role authorizations (if enabled)
+/*
+CheckPermissions checks various things related to permissions
+
+	a) if the image is allowed by the image allow rules (if enabled)
+	b) [if ImageRoleAuthorizations are enabled] if the authorized permissions for the appImage cover the permissions granted explicitly by the user or implicitly to the image (Authorized >= Granted)
+	c) if the permissions granted by the user or implicitly to the image cover the permissions requested by the app (Granted >= Requested)
+
+	*Note*: One thing that we do not cover here is permissions consumed from a service. Since that's dynamic and we cannot know the generated permissions at this point,
+	the IRA check (if enabled) will happen later, just before the actual Kubernetes resources get applied (once the service instances are ready).
+*/
 func CheckPermissions(req router.Request, _ router.Response) error {
 	app := req.Object.(*v1.AppInstance)
 
+	// Reset staged status fields if the respective feature is disabled
 	iraEnabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageRoleAuthorizations)
 	if err != nil {
 		return err
@@ -54,9 +62,11 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 		app.Status.Staged.ImagePermissionsDenied = nil
 	}
 
+	// Early exit
 	if app.Status.Staged.AppImage.ID == "" ||
 		app.Status.Staged.AppImage.Digest == app.Status.AppImage.Digest ||
 		app.Status.Staged.PermissionsObservedGeneration == app.Generation {
+		// IAR disabled? Allow the Image if we're not re-checking permissions
 		if enabled, err := config.GetFeature(req.Ctx, req.Client, profiles.FeatureImageAllowRules); err != nil {
 			return err
 		} else if !enabled {
@@ -104,6 +114,22 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			details.AppImage.Digest, appImage.Digest)
 	}
 
+	// ServiceNames of the current app level (i.e. not nested Acorns/Services)
+	scvnames := maps.Keys(details.AppSpec.Containers)
+	scvnames = append(scvnames, maps.Keys(details.AppSpec.Jobs)...)
+	scvnames = append(scvnames, maps.Keys(details.AppSpec.Services)...)
+
+	// Only consider the scope of the current app level (i.e. not nested Acorns/Services)
+	grantedPerms := app.Spec.GetGrantedPermissions()
+	scopedGrantedPerms := []v1.Permissions{}
+	for i, p := range grantedPerms {
+		if slices.Contains(scvnames, p.ServiceName) {
+			scopedGrantedPerms = append(scopedGrantedPerms, grantedPerms[i])
+		}
+	}
+
+	app.Status.Staged.AppScopedPermissions = scopedGrantedPerms
+
 	// If iraEnabled, check if the Acorn images are authorized to request the defined permissions.
 	if iraEnabled {
 		imageName := appImage.Name
@@ -130,13 +156,18 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			return nperms
 		}
 
-		denied, _ := v1.GrantsAll(app.Namespace, copyWithName(details.Permissions, imageName), authzPerms)
+		var deniedPerms []v1.Permissions
+		for _, p := range scopedGrantedPerms {
+			if d, granted := v1.GrantsAll(app.Namespace, []v1.Permissions{p}, copyWithName(authzPerms, p.ServiceName)); !granted {
+				deniedPerms = append(deniedPerms, d...)
+			}
+		}
 
-		app.Status.Staged.ImagePermissionsDenied = denied
+		app.Status.Staged.ImagePermissionsDenied = deniedPerms
 	}
 
 	// This is checking if the user granted all permissions that the app requires
-	missing, _ := v1.GrantsAll(app.Namespace, details.GetPermissions(), app.Spec.GetPermissions())
+	missing, _ := v1.GrantsAll(app.Namespace, details.GetAllImagesRequestedPermissions(), app.Spec.GetGrantedPermissions()) // Check: Granted Permissions is a superset of the requested permissions -> this includes nested images
 	app.Status.Staged.PermissionsObservedGeneration = app.Generation
 	app.Status.Staged.PermissionsChecked = true
 	app.Status.Staged.PermissionsMissing = missing

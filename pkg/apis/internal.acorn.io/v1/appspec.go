@@ -437,6 +437,7 @@ func (in *Permissions) Get() Permissions {
 	return *in
 }
 
+// SimplifySet takes a set of permissions and simplifies them by combining rules
 func SimplifySet(perms []Permissions) (result []Permissions) {
 	for _, servicePermissions := range GroupByServiceName(perms) {
 		result = append(result, Simplify(servicePermissions))
@@ -563,9 +564,9 @@ func canCombine(left, right PolicyRule) (combined PolicyRule, ok bool) {
 	return combined, singleDiff
 }
 
-func GrantsAll(currentNamespace string, requestedPerms, grantedUserPerms []Permissions) (missing []Permissions, granted bool) {
+func GrantsAll(currentNamespace string, requestedPerms, grantedPerms []Permissions) (missing []Permissions, granted bool) {
 	var (
-		grantedByServiceName = GroupByServiceName(grantedUserPerms)
+		grantedByServiceName = GroupByServiceName(grantedPerms)
 	)
 
 	for serviceName, requestedPerm := range GroupByServiceName(requestedPerms) {

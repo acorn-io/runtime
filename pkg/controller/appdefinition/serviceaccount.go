@@ -13,6 +13,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// toServiceAccount generates a ServiceAccount for the container that includes annotations for AWS permissions if required
 func toServiceAccount(req router.Request, saName string, labelMap, annotations map[string]string, appInstance *v1.AppInstance, perms v1.Permissions) (result kclient.Object, _ error) {
 	sa := &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{

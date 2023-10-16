@@ -13,23 +13,24 @@ import (
 type AppInstanceCondition string
 
 var (
-	AppInstanceConditionDefined     = "defined"
-	AppInstanceConditionDefaults    = "defaults"
-	AppInstanceConditionScheduling  = "scheduling"
-	AppInstanceConditionNamespace   = "namespace"
-	AppInstanceConditionParsed      = "parsed"
-	AppInstanceConditionController  = "controller"
-	AppInstanceConditionPulled      = "image-pull"
-	AppInstanceConditionSecrets     = "secrets"
-	AppInstanceConditionServices    = "services"
-	AppInstanceConditionContainers  = "containers"
-	AppInstanceConditionJobs        = "jobs"
-	AppInstanceConditionAcorns      = "acorns"
-	AppInstanceConditionRouters     = "routers"
-	AppInstanceConditionPermissions = "permissions"
-	AppInstanceConditionReady       = "Ready"
-	AppInstanceConditionVolumes     = "volumes"
-	AppInstanceConditionQuota       = "quota"
+	AppInstanceConditionDefined             = "defined"
+	AppInstanceConditionDefaults            = "defaults"
+	AppInstanceConditionScheduling          = "scheduling"
+	AppInstanceConditionNamespace           = "namespace"
+	AppInstanceConditionParsed              = "parsed"
+	AppInstanceConditionController          = "controller"
+	AppInstanceConditionPulled              = "image-pull"
+	AppInstanceConditionSecrets             = "secrets"
+	AppInstanceConditionServices            = "services"
+	AppInstanceConditionContainers          = "containers"
+	AppInstanceConditionJobs                = "jobs"
+	AppInstanceConditionAcorns              = "acorns"
+	AppInstanceConditionRouters             = "routers"
+	AppInstanceConditionPermissions         = "permissions"
+	AppInstanceConditionConsumerPermissions = "consumer-permissions"
+	AppInstanceConditionReady               = "Ready"
+	AppInstanceConditionVolumes             = "volumes"
+	AppInstanceConditionQuota               = "quota"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -100,8 +101,8 @@ type AppInstanceSpec struct {
 	Links                   []ServiceBinding `json:"services,omitempty"`
 	Publish                 []PortBinding    `json:"ports,omitempty"`
 	DeployArgs              *GenericMap      `json:"deployArgs,omitempty"`
-	Permissions             []Permissions    `json:"permissions,omitempty"`
-	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"`
+	GrantedPermissions      []Permissions    `json:"permissions,omitempty"`             // Permissions granted by the user (later mixed with other granted perms)
+	ImageGrantedPermissions []Permissions    `json:"imageGrantedPermissions,omitempty"` // Permissions implicitly granted to the image
 	AutoUpgrade             *bool            `json:"autoUpgrade,omitempty"`
 	NotifyUpgrade           *bool            `json:"notifyUpgrade,omitempty"`
 	AutoUpgradeInterval     string           `json:"autoUpgradeInterval,omitempty"`
@@ -109,8 +110,10 @@ type AppInstanceSpec struct {
 	Memory                  MemoryMap        `json:"memory,omitempty"`
 }
 
-func (in *AppInstanceSpec) GetPermissions() []Permissions {
-	return append(in.Permissions, in.ImageGrantedPermissions...)
+// GetGrantedPermissions returns the permissions for the app as granted by the user or granted implicitly to the image.
+// Those are not necessarily equal to the permissions actually requested by the images within the app.
+func (in *AppInstanceSpec) GetGrantedPermissions() []Permissions {
+	return append(in.GrantedPermissions, in.ImageGrantedPermissions...)
 }
 
 func (in *AppInstance) GetStopped() bool {
@@ -130,10 +133,7 @@ func addProfile(profiles []string, toAdd string) []string {
 	optional := strings.HasSuffix(toAdd, "?")
 	nonOptionalName := toAdd[:len(toAdd)-1]
 	for _, profile := range profiles {
-		if profile == toAdd {
-			found = true
-			break
-		} else if optional && profile == nonOptionalName {
+		if profile == toAdd || (optional && profile == nonOptionalName) {
 			found = true
 			break
 		}
@@ -194,27 +194,34 @@ func (a AppInstanceStatus) GetDevMode() bool {
 }
 
 type AppInstanceStatus struct {
-	DevSession             *DevSessionInstanceSpec `json:"devSession,omitempty"`
-	ObservedGeneration     int64                   `json:"observedGeneration,omitempty"`
-	ObservedImageDigest    string                  `json:"observedImageDigest,omitempty"`
-	ObservedAutoUpgrade    bool                    `json:"observedAutoUpgrade,omitempty"`
-	Columns                AppColumns              `json:"columns,omitempty"`
-	Ready                  bool                    `json:"ready,omitempty"`
-	Namespace              string                  `json:"namespace,omitempty"`
-	Staged                 AppStatusStaged         `json:"staged,omitempty"`
-	AppImage               AppImage                `json:"appImage,omitempty"`
-	AvailableAppImage      string                  `json:"availableAppImage,omitempty"`
-	ConfirmUpgradeAppImage string                  `json:"confirmUpgradeAppImage,omitempty"`
-	AppSpec                AppSpec                 `json:"appSpec,omitempty"`
-	AppStatus              AppStatus               `json:"appStatus,omitempty"`
-	Scheduling             map[string]Scheduling   `json:"scheduling,omitempty"`
-	Conditions             []Condition             `json:"conditions,omitempty"`
-	Defaults               Defaults                `json:"defaults,omitempty"`
-	Summary                CommonSummary           `json:"summary,omitempty"`
+	DevSession                *DevSessionInstanceSpec `json:"devSession,omitempty"`
+	ObservedGeneration        int64                   `json:"observedGeneration,omitempty"`
+	ObservedImageDigest       string                  `json:"observedImageDigest,omitempty"`
+	ObservedAutoUpgrade       bool                    `json:"observedAutoUpgrade,omitempty"`
+	Columns                   AppColumns              `json:"columns,omitempty"`
+	Ready                     bool                    `json:"ready,omitempty"`
+	Namespace                 string                  `json:"namespace,omitempty"`
+	Staged                    AppStatusStaged         `json:"staged,omitempty"`
+	AppImage                  AppImage                `json:"appImage,omitempty"`
+	AvailableAppImage         string                  `json:"availableAppImage,omitempty"`
+	ConfirmUpgradeAppImage    string                  `json:"confirmUpgradeAppImage,omitempty"`
+	AppSpec                   AppSpec                 `json:"appSpec,omitempty"`
+	AppStatus                 AppStatus               `json:"appStatus,omitempty"`
+	Scheduling                map[string]Scheduling   `json:"scheduling,omitempty"`
+	Conditions                []Condition             `json:"conditions,omitempty"`
+	Defaults                  Defaults                `json:"defaults,omitempty"`
+	Summary                   CommonSummary           `json:"summary,omitempty"`
+	Permissions               []Permissions           `json:"permissions,omitempty"`               // Permissions given to this appInstance (only containers within, not nested Acorns/Services)
+	DeniedConsumerPermissions []Permissions           `json:"deniedConsumerPermissions,omitempty"` // Permissions given to this appInstance by a consumed service, which it is not authorized to have
 }
 
 type AppStatusStaged struct {
-	AppImage                      AppImage      `json:"appImage,omitempty"`
+	// Staged for promotion to Status
+	AppImage             AppImage      `json:"appImage,omitempty"`
+	AppScopedPermissions []Permissions `json:"appScopedPermissions,omitempty"` // Permissions requested by the app (narrow scope, not including nested Acorns/Services)
+
+	// Requirements for the AppImage to be promoted to the actual Status
+
 	PermissionsChecked            bool          `json:"permissionsChecked,omitempty"`
 	PermissionsMissing            []Permissions `json:"permissionsMissing,omitempty"`
 	PermissionsObservedGeneration int64         `json:"permissionsObservedGeneration,omitempty"`

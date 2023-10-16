@@ -59,7 +59,7 @@ func ToApp(namespace, image string, opts *AppRunOptions) *apiv1.App {
 			Publish:             opts.Publish,
 			Profiles:            opts.Profiles,
 			Stop:                opts.Stop,
-			Permissions:         opts.Permissions,
+			GrantedPermissions:  opts.Permissions,
 			Environment:         opts.Env,
 			Labels:              opts.Labels,
 			Annotations:         opts.Annotations,
@@ -151,7 +151,7 @@ func ToAppUpdate(ctx context.Context, c Client, name string, opts *AppUpdateOpti
 		app.Spec.PublishMode = opts.PublishMode
 	}
 	if opts.Permissions != nil {
-		app.Spec.Permissions = opts.Permissions
+		app.Spec.GrantedPermissions = opts.Permissions
 	}
 	if opts.AutoUpgrade != nil {
 		app.Spec.AutoUpgrade = opts.AutoUpgrade

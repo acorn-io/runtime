@@ -1,0 +1,39 @@
+services: default: {
+	default: true
+	// You this must be a superset or the exact same permissions
+	// that you will grant to the consumer
+	consumer: permissions: rules: [{
+		verbs: ["get"]
+		apiGroups: [""]
+		resources: ["secrets"]
+	}]
+	generated: job: "default-svc"
+}
+
+secrets: asecret: data: {
+	env:  "envvalue"
+	file: "filevalue"
+}
+
+jobs: "default-svc": {
+	image:   "ghcr.io/acorn-io/images-mirror/busybox:latest"
+	command: "/run.sh"
+	files: "/run.sh": """
+		#!/bin/sh
+		cat > /run/secrets/output << EOF
+		services: default: {
+		    secrets: ["asecret"]
+		    consumer: {
+		        permissions: rules: [{
+		            verbs:["get"]
+		            apiGroups: [""]
+		            resources: ["secrets"]
+		            resourceNames: ["foo"]
+		        }]
+		        env: foo: "secret://asecret/env"
+		        files: "/secret-file": "secret://asecret/file"
+		    }
+		}
+		EOF
+		"""
+}

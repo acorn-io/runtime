@@ -533,6 +533,39 @@ status:
     type: defined
   defaults: {}
   namespace: app-created-namespace
+  permissions:
+  - rules:
+    - apiGroups:
+      - foo.io
+      resources:
+      - bar
+      scopes:
+      - cluster
+      verbs:
+      - create
+    - apiGroups:
+      - bar.io
+      resources:
+      - foo
+      verbs:
+      - patch
+    serviceName: oneimage
+  - rules:
+    - apiGroups:
+      - foo.io
+      resources:
+      - bar
+      scopes:
+      - cluster
+      verbs:
+      - create
+    - apiGroups:
+      - bar.io
+      resources:
+      - foo
+      verbs:
+      - patch
+    serviceName: twoimage
   staged:
     appImage:
       imageData: {}

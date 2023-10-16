@@ -120,6 +120,7 @@ func SetStatus(req router.Request, _ router.Response) error {
 
 func setPermissionCondition(app *v1.AppInstance) {
 	cond := condition.ForName(app, v1.AppInstanceConditionPermissions)
+
 	if len(app.Status.Staged.PermissionsMissing) > 0 {
 		cond.Error(fmt.Errorf("cannot run new image due to missing permissions: %w", &client2.ErrRulesNeeded{
 			Permissions: app.Status.Staged.PermissionsMissing,
@@ -127,6 +128,15 @@ func setPermissionCondition(app *v1.AppInstance) {
 	} else if len(app.Status.Staged.ImagePermissionsDenied) > 0 {
 		cond.Error(fmt.Errorf("cannot run new image due to denied permissions: %w", &client2.ErrRulesNeeded{
 			Permissions: app.Status.Staged.ImagePermissionsDenied,
+		}))
+	} else {
+		cond.Success()
+	}
+
+	cond = condition.ForName(app, v1.AppInstanceConditionConsumerPermissions)
+	if len(app.Status.DeniedConsumerPermissions) > 0 {
+		cond.Error(fmt.Errorf("cannot run current image due to unauthorized permissions given to it by consumed services: %w", &client2.ErrRulesNeeded{
+			Permissions: app.Status.DeniedConsumerPermissions,
 		}))
 	} else {
 		cond.Success()

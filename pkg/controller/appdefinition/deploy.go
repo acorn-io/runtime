@@ -71,7 +71,7 @@ func DeploySpec(req router.Request, resp router.Response) (err error) {
 			status.Error(interpolator.Err())
 		} else if errors.Is(err, appdefinition.ErrInvalidInput) {
 			status.Error(err)
-			// Not all object could have been rendered to don't purge anything
+			// Not all object could have been rendered so don't purge anything
 			resp.DisablePrune()
 			err = nil
 		} else {
@@ -733,10 +733,7 @@ func ToDeployments(req router.Request, appInstance *v1.AppInstance, tag name.Ref
 		if err != nil {
 			return nil, err
 		}
-		perms, err := getConsumerPermissions(req.Ctx, req.Client, appInstance, containerName, containerDef)
-		if err != nil {
-			return nil, err
-		}
+		perms := v1.FindPermission(containerName, appInstance.Status.Permissions)
 		sa, err := toServiceAccount(req, dep.GetName(), dep.GetLabels(), dep.GetAnnotations(), appInstance, perms)
 		if err != nil {
 			return nil, err

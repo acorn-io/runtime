@@ -10,36 +10,8 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getConsumerPermissions(ctx context.Context, c kclient.Client, appInstance *v1.AppInstance, containerName string, container v1.Container) (result v1.Permissions, _ error) {
-	result = v1.FindPermission(containerName, appInstance.Spec.GetPermissions())
-
-	for _, dep := range container.Dependencies {
-		// This shouldn't happen, but okay?
-		if dep.TargetName == "" {
-			continue
-		}
-
-		svc := &v1.ServiceInstance{}
-		if err := ref.Lookup(ctx, c, svc, appInstance.Status.Namespace, dep.TargetName); apierror.IsNotFound(err) {
-			// We can ignore missing deps because the normal dep ordering will ensure that this container
-			// can't be created/update until it's dependency is
-			continue
-		} else if err != nil {
-			return result, err
-		}
-
-		if svc.Spec.Consumer == nil {
-			continue
-		}
-
-		if svc.Spec.Consumer.Permissions != nil {
-			result.Rules = append(result.Rules, svc.Spec.Consumer.Permissions.GetRules()...)
-		}
-	}
-
-	return
-}
-
+// augmentContainerWithConsumerInfo adds files and environment variables from any services this container depends on
+// that expose consumer files and environment variables
 func augmentContainerWithConsumerInfo(ctx context.Context, c kclient.Client, namespace string, container v1.Container) (v1.Container, error) {
 	result := *container.DeepCopy()
 	for _, dep := range container.Dependencies {

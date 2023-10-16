@@ -22,6 +22,7 @@ func toRBACPolicyRules(rules []v1.PolicyRule) (result []rbacv1.PolicyRule) {
 	return
 }
 
+// toClusterPermissions converts permissions to Kubernetes RBAC ClusterRoles/Roles and ClusterRoleBindings/RoleBindings
 func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object) {
 	byNamespace := map[string][]v1.PolicyRule{}
 
@@ -63,8 +64,8 @@ func toClusterPermissions(permissions v1.Permissions, labelMap, annotations map[
 				},
 			})
 		} else {
-			name := name.SafeConcatName(permissions.ServiceName, appInstance.Name, appInstance.Namespace, appInstance.ShortID(), namespace)
-			result = append(result, toRoleAndRoleBinding(name, namespace, permissions.ServiceName, appInstance.Status.Namespace,
+			roleName := name.SafeConcatName(permissions.ServiceName, appInstance.Name, appInstance.Namespace, appInstance.ShortID(), namespace)
+			result = append(result, toRoleAndRoleBinding(roleName, namespace, permissions.ServiceName, appInstance.Status.Namespace,
 				toRBACPolicyRules(rules), labelMap, annotations, appInstance)...)
 		}
 	}
@@ -105,6 +106,7 @@ func toRoleAndRoleBinding(roleName, roleNamespace, serviceAccountName, serviceAc
 	return
 }
 
+// toPermissions generates the required Kubernetes RBAC objects for the given permissions
 func toPermissions(ctx context.Context, c kclient.Client, permissions v1.Permissions, labelMap, annotations map[string]string, appInstance *v1.AppInstance) (result []kclient.Object, _ error) {
 	var ns corev1.Namespace
 	if err := c.Get(ctx, router.Key("", appInstance.Namespace), &ns); err != nil && !apierrors.IsNotFound(err) {

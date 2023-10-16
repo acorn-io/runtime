@@ -7,6 +7,8 @@ import (
 )
 
 type AppStatus struct {
+	Permissions []Permissions `json:"permissions,omitempty"`
+
 	Containers map[string]ContainerStatus `json:"containers,omitempty"`
 	Jobs       map[string]JobStatus       `json:"jobs,omitempty"`
 	Volumes    map[string]VolumeStatus    `json:"volumes,omitempty"`
