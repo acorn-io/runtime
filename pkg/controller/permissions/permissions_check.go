@@ -114,20 +114,7 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 			details.AppImage.Digest, appImage.Digest)
 	}
 
-	// ServiceNames of the current app level (i.e. not nested Acorns/Services)
-	scvnames := maps.Keys(details.AppSpec.Containers)
-	scvnames = append(scvnames, maps.Keys(details.AppSpec.Jobs)...)
-	scvnames = append(scvnames, maps.Keys(details.AppSpec.Services)...)
-
-	// Only consider the scope of the current app level (i.e. not nested Acorns/Services)
-	grantedPerms := app.Spec.GetGrantedPermissions()
-	scopedGrantedPerms := []v1.Permissions{}
-	for i, p := range grantedPerms {
-		if slices.Contains(scvnames, p.ServiceName) {
-			scopedGrantedPerms = append(scopedGrantedPerms, grantedPerms[i])
-		}
-	}
-
+	scopedGrantedPerms := GetAppScopedPermissions(app, details.AppSpec)
 	app.Status.Staged.AppScopedPermissions = scopedGrantedPerms
 
 	// If iraEnabled, check if the Acorn images are authorized to request the defined permissions.
@@ -173,4 +160,21 @@ func CheckPermissions(req router.Request, _ router.Response) error {
 	app.Status.Staged.PermissionsMissing = missing
 
 	return nil
+}
+
+func GetAppScopedPermissions(app *v1.AppInstance, appSpec *v1.AppSpec) []v1.Permissions {
+	// ServiceNames of the current app level (i.e. not nested Acorns/Services)
+	scvnames := maps.Keys(appSpec.Containers)
+	scvnames = append(scvnames, maps.Keys(appSpec.Jobs)...)
+	scvnames = append(scvnames, maps.Keys(appSpec.Services)...)
+
+	// Only consider the scope of the current app level (i.e. not nested Acorns/Services)
+	grantedPerms := app.Spec.GetGrantedPermissions()
+	scopedGrantedPerms := []v1.Permissions{}
+	for i, p := range grantedPerms {
+		if slices.Contains(scvnames, p.ServiceName) {
+			scopedGrantedPerms = append(scopedGrantedPerms, grantedPerms[i])
+		}
+	}
+	return scopedGrantedPerms
 }
