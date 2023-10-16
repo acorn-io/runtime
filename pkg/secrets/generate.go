@@ -3,6 +3,9 @@ package secrets
 import (
 	"crypto/rand"
 	"math/big"
+	"sort"
+
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -20,6 +23,8 @@ func GenerateRandomSecret(length int, characterSet string) (string, error) {
 	}
 	if characterSet == "" {
 		characterSet = defaultCharacterSet
+	} else {
+		characterSet = inflateRanges(characterSet)
 	}
 
 	// Generate a random secret by randomly selecting characters from the given character set.
@@ -33,4 +38,51 @@ func GenerateRandomSecret(length int, characterSet string) (string, error) {
 	}
 
 	return string(secret), nil
+}
+
+// inflateRanges inflates a character set by expanding any ranges (e.g. `A-z`) into the full set of characters they represent.
+func inflateRanges(characterSet string) string {
+	var (
+		runeSet  = []rune(characterSet)
+		inflated = sets.New[rune]()
+	)
+	for i := 0; i < len(runeSet); i++ {
+		cur := runeSet[i]
+		if alphanumeric(cur) {
+			// Alphanumeric character detected
+			if i+2 < len(runeSet) && runeSet[i+1] == '-' && alphanumeric(runeSet[i+2]) {
+				// Range detected, convert to full set of characters
+				start, end := cur, runeSet[i+2]
+				if start > end {
+					// Swap start and end if they're out of order
+					start, end = end, start
+				}
+
+				for c := start; c <= end; c++ {
+					if alphanumeric(c) {
+						inflated.Insert(c)
+					}
+				}
+
+				// Skip the next two characters since we've already processed them
+				i += 2
+				continue
+			}
+		}
+
+		inflated.Insert(cur)
+	}
+
+	sorted := inflated.UnsortedList()
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i] < sorted[j]
+	})
+
+	return string(sorted)
+}
+
+// alphanumeric returns true IFF the given rune is alphanumeric; e.g. [A-z0-9] .
+func alphanumeric(r rune) bool {
+	cv := int(r)
+	return (cv >= int('A') && cv <= int('Z')) || (cv >= int('a') && cv <= int('z')) || (cv >= int('0') && cv <= int('9'))
 }
