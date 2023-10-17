@@ -10,6 +10,7 @@ spec:
   image: myimage:latest
 status:
   appImage:
+    buildContext: {}
     imageData: {}
     vcs: {}
   appSpec: {}
@@ -24,6 +25,7 @@ status:
   namespace: app-created-namespace
   staged:
     appImage:
+      buildContext: {}
       digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       imageData: {}
       name: myimage:latest

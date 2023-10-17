@@ -40,6 +40,7 @@ spec:
     target: con
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -60,6 +61,7 @@ status:
   namespace: app-created-namespace
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

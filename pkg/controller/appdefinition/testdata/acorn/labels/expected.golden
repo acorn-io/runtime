@@ -128,6 +128,7 @@ spec:
   stop: false
 status:
   appImage:
+    buildContext: {}
     imageData: {}
     vcs: {}
   appSpec: {}
@@ -136,6 +137,7 @@ status:
   defaults: {}
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}
@@ -202,6 +204,7 @@ spec:
     value: outervalue
 status:
   appImage:
+    buildContext: {}
     id: foo
     imageData: {}
     vcs: {}
@@ -253,6 +256,7 @@ status:
   namespace: app-created-namespace
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

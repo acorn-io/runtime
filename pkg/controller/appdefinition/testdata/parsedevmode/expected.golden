@@ -13,6 +13,7 @@ status:
       containers: {
         oneimage: image: "\(args.image)" + args.image
       }
+    buildContext: {}
     imageData:
       containers:
         oneimage:
@@ -45,6 +46,7 @@ status:
     sessionStartTime: null
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

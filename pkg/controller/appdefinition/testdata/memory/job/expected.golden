@@ -135,6 +135,7 @@ spec:
     oneimage: 1048576
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -195,6 +196,7 @@ status:
           memory: 1Mi
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

@@ -222,6 +222,7 @@ spec:
   image: foo.io/test
 status:
   appImage:
+    buildContext: {}
     id: foo.io/test
     imageData: {}
     vcs: {}
@@ -251,6 +252,7 @@ status:
   namespace: app-created-namespace
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

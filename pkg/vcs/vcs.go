@@ -90,7 +90,7 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 	if len(vcs.Remotes) == 0 {
 		return "", "", fmt.Errorf("clone can only be done on an app built from a git repository")
 	}
-	if vcs.Acornfile == "" || vcs.BuildContext == "" {
+	if vcs.BuildContext == "" || (vcs.Acornfile == "" && app.Status.AppImage.BuildContext.AcornfilePath == "") {
 		return "", "", fmt.Errorf("app is missing required vcs information, image must be rebuilt with a newer acorn cli")
 	}
 
@@ -104,6 +104,16 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 			continue
 		}
 
+		// Clean values if we're running on a nested app
+		buildContext := vcs.BuildContext
+		if vcs.Acornfile == "" {
+			vcs.Acornfile = filepath.Join(vcs.BuildContext, app.Status.AppImage.BuildContext.AcornfilePath)
+			buildContext = filepath.Join(buildContext, app.Status.AppImage.BuildContext.Cwd)
+		}
+
+		// Get the build context
+		buildContext = filepath.Join(workdir, buildContext)
+
 		// Create the Acornfile in the repository
 		acornfile := filepath.Join(workdir, vcs.Acornfile)
 		err = os.WriteFile(acornfile, []byte(app.Status.AppImage.Acornfile), 0666)
@@ -116,9 +126,6 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 		if gitDirty(ctx, workdir) {
 			fmt.Printf("NOTE: The Acornfile used for this acorn differs from the git repository. Run `git status` for more details.\n")
 		}
-
-		// Get the build context
-		buildContext := filepath.Join(workdir, vcs.BuildContext)
 
 		return acornfile, buildContext, nil
 	}

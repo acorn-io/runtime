@@ -11,6 +11,7 @@ spec:
   image: test
 status:
   appImage:
+    buildContext: {}
     digest: foo
     imageData: {}
     name: test
@@ -77,6 +78,7 @@ status:
           memory: 10Mi
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

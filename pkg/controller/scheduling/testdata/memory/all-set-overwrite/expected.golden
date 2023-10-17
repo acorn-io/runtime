@@ -12,6 +12,7 @@ spec:
     oneimage: 2097152
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -69,6 +70,7 @@ status:
         operator: Exists
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

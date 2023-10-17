@@ -503,6 +503,7 @@ spec:
     serviceName: twoimage
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -595,6 +596,7 @@ status:
     serviceName: twoimage
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

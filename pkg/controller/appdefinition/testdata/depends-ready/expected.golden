@@ -250,6 +250,7 @@ spec:
     target: db
 status:
   appImage:
+    buildContext: {}
     id: image-name
     imageData: {}
     vcs: {}
@@ -296,6 +297,7 @@ status:
   namespace: app-created-namespace
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}

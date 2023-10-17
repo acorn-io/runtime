@@ -20,11 +20,13 @@ ACORNS:
                 "staged": {
                     "appImage": {
                         "imageData": {},
+                        "buildContext": {},
                         "vcs": {}
                     }
                 },
                 "appImage": {
                     "imageData": {},
+                    "buildContext": {},
                     "vcs": {}
                 },
                 "appSpec": {},

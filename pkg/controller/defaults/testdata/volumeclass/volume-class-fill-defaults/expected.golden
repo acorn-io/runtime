@@ -9,6 +9,7 @@ spec:
   image: test
 status:
   appImage:
+    buildContext: {}
     id: test
     imageData: {}
     vcs: {}
@@ -47,6 +48,7 @@ status:
   observedGeneration: 1
   staged:
     appImage:
+      buildContext: {}
       imageData: {}
       vcs: {}
   summary: {}
