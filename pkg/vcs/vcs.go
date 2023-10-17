@@ -128,6 +128,10 @@ func ImageInfoFromApp(ctx context.Context, app *apiv1.App, cloneDir string) (str
 func getRemoteRepo(ctx context.Context, workdir string, vcs v1.VCS, idx int) error {
 	remote := vcs.Remotes[idx]
 	remoteName := fmt.Sprintf("remote%d", idx)
+	fullPath, err := filepath.Abs(workdir)
+	if err != nil {
+		return err
+	}
 
 	// Check for the directory we want to use
 	f, err := os.Open(workdir)
@@ -136,12 +140,18 @@ func getRemoteRepo(ctx context.Context, workdir string, vcs v1.VCS, idx int) err
 		_, err = f.ReadDir(1)
 		if err != nil {
 			// Directory is empty, clone the repo
+			fmt.Printf("Cloning into empty directory %q\n", fullPath)
 			err = gitClone(ctx, workdir, remote)
 			if err != nil {
 				return err
 			}
 		} else {
-			// Directory is not empty, we assume it already exists, add a new remote and try to fetch
+			// Directory is not empty, check that it's a repo, add a new remote and try to fetch
+			fmt.Printf("Fetching into existing directory %q\n", fullPath)
+			err = gitCheckRepo(ctx, workdir)
+			if err != nil {
+				return err
+			}
 			err = gitRemoteAdd(ctx, workdir, remoteName, remote)
 			if err != nil {
 				return err
@@ -153,6 +163,7 @@ func getRemoteRepo(ctx context.Context, workdir string, vcs v1.VCS, idx int) err
 		}
 	} else if os.IsNotExist(err) {
 		// Directory does not exist, just clone to create it
+		fmt.Printf("Cloning into new directory %q\n", fullPath)
 		err = gitClone(ctx, workdir, remote)
 		if err != nil {
 			return err
@@ -177,6 +188,16 @@ func gitClone(ctx context.Context, workdir, remote string) (err error) {
 	cmdErr := cmd.Run()
 	if cmdErr != nil {
 		err = fmt.Errorf("failed to clone repository %q: %v", remote, err)
+	}
+	return
+}
+
+func gitCheckRepo(ctx context.Context, workdir string) (err error) {
+	args := []string{"-C", workdir, "rev-parse"}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		err = fmt.Errorf("directory %q is not empty and is not a git repository", workdir)
 	}
 	return
 }
