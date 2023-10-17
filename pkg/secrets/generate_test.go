@@ -20,6 +20,10 @@ func TestInflateRanges(t *testing.T) {
 			want: "-",
 		},
 		{
+			name: "0-a",
+			want: "-0a",
+		},
+		{
 			name: "A-",
 			want: "-A",
 		},
@@ -33,22 +37,30 @@ func TestInflateRanges(t *testing.T) {
 		},
 		{
 			name: "Z-A",
-			want: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+			want: "-AZ",
 		},
 		{
 			name: "A-z",
-			want: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+			want: "-Az",
 		},
 		{
 			name: "z-A",
-			want: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+			want: "-Az",
 		},
 		{
-			name: "a-z",
-			want: "abcdefghijklmnopqrstuvwxyz",
+			name: "a-Z",
+			want: "-Za",
+		},
+		{
+			name: "Z-a",
+			want: "-Za",
 		},
 		{
 			name: "z-a",
+			want: "-az",
+		},
+		{
+			name: "a-z",
 			want: "abcdefghijklmnopqrstuvwxyz",
 		},
 		{
@@ -57,7 +69,7 @@ func TestInflateRanges(t *testing.T) {
 		},
 		{
 			name: "9-0",
-			want: "0123456789",
+			want: "-09",
 		},
 		{
 			name: "0-9A-Z",
