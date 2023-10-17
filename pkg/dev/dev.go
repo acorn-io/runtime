@@ -53,7 +53,7 @@ type BuildState string
 
 var (
 	BuildRunning   = BuildState("running")
-	BuildFailed    = BuildState("running")
+	BuildFailed    = BuildState("failed")
 	BuildSucceeded = BuildState("succeeded")
 )
 
