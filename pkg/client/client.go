@@ -89,27 +89,28 @@ func New(restConfig *rest.Config, project, namespace string) (Client, error) {
 }
 
 type AppUpdateOptions struct {
-	Annotations         []v1.ScopedLabel
-	Labels              []v1.ScopedLabel
-	PublishMode         v1.PublishMode
-	Volumes             []v1.VolumeBinding
-	Secrets             []v1.SecretBinding
-	Links               []v1.ServiceBinding
-	Publish             []v1.PortBinding
-	Env                 []v1.NameValue
-	Profiles            []string
-	Permissions         []v1.Permissions
-	DeployArgs          map[string]any
-	Stop                *bool
-	Image               string
-	Replace             bool // Replace is used to indicate whether the update should be a patch (replace=false: only change specified fields) or a full update (replace=true: reset unspecified fields to defaults)
-	AutoUpgrade         *bool
-	NotifyUpgrade       *bool
-	AutoUpgradeInterval string
-	Memory              v1.MemoryMap
-	ComputeClasses      v1.ComputeClassMap
-	Region              string
-	DevSessionClient    *v1.DevSessionInstanceClient
+	Annotations              []v1.ScopedLabel
+	Labels                   []v1.ScopedLabel
+	PublishMode              v1.PublishMode
+	Volumes                  []v1.VolumeBinding
+	Secrets                  []v1.SecretBinding
+	Links                    []v1.ServiceBinding
+	Publish                  []v1.PortBinding
+	Env                      []v1.NameValue
+	Profiles                 []string
+	Permissions              []v1.Permissions
+	DeployArgs               map[string]any
+	Stop                     *bool
+	Image                    string
+	Replace                  bool // Replace is used to indicate whether the update should be a patch (replace=false: only change specified fields) or a full update (replace=true: reset unspecified fields to defaults)
+	AutoUpgrade              *bool
+	NotifyUpgrade            *bool
+	AutoUpgradeInterval      string
+	Memory                   v1.MemoryMap
+	ComputeClasses           v1.ComputeClassMap
+	Region                   string
+	DevSessionClient         *v1.DevSessionInstanceClient
+	DevSessionTimeoutSeconds int32
 }
 
 type ContainerLogsWriter interface {
