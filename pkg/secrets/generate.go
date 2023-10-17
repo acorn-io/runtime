@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"math/big"
 	"sort"
+	"unicode"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -48,23 +49,18 @@ func inflateRanges(characterSet string) string {
 	)
 	for i := 0; i < len(runeSet); i++ {
 		cur := runeSet[i]
-		if alphanumeric(cur) {
-			// Alphanumeric character detected
-			if i+2 < len(runeSet) && runeSet[i+1] == '-' && alphanumeric(runeSet[i+2]) {
-				// Range detected, convert to full set of characters
-				start, end := cur, runeSet[i+2]
-				if start > end {
-					// Swap start and end if they're out of order
-					start, end = end, start
-				}
-
+		// Alphanumeric character detected
+		if alphanumeric(cur) && (i+2 < len(runeSet) && runeSet[i+1] == '-' && alphanumeric(runeSet[i+2])) {
+			// Range detected, convert to full set of characters
+			start, end := cur, runeSet[i+2]
+			if start <= end && !mixedRange(start, end) {
 				for c := start; c <= end; c++ {
 					if alphanumeric(c) {
 						inflated.Insert(c)
 					}
 				}
 
-				// Skip the next two characters since we've already processed them
+				// Skip the next two characters since they were part of the range
 				i += 2
 				continue
 			}
@@ -83,6 +79,19 @@ func inflateRanges(characterSet string) string {
 
 // alphanumeric returns true IFF the given rune is alphanumeric; e.g. [A-z0-9] .
 func alphanumeric(r rune) bool {
-	cv := int(r)
-	return (cv >= int('A') && cv <= int('Z')) || (cv >= int('a') && cv <= int('z')) || (cv >= int('0') && cv <= int('9'))
+	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')
+}
+
+// mixedRange returns true IFF the given runes don't have the same casing or aren't both numbers.
+func mixedRange(a, b rune) bool {
+	switch {
+	case unicode.IsNumber(a):
+		return !unicode.IsNumber(b)
+	case unicode.IsUpper(a):
+		return !unicode.IsUpper(b)
+	case unicode.IsLower(a):
+		return !unicode.IsLower(b)
+	}
+
+	return true
 }
