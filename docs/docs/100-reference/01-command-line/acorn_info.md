@@ -12,6 +12,7 @@ acorn info [flags]
 ### Options
 
 ```
+  -A, --all-projects    Include all projects to all currently logged in servers
   -h, --help            help for info
   -o, --output string   Output format (json, yaml, {{gotemplate}}) (default "yaml")
 ```
