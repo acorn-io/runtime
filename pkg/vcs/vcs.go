@@ -153,6 +153,10 @@ func getRemoteRepo(ctx context.Context, workdir string, vcs v1.VCS, idx int) err
 				return err
 			}
 		} else {
+			if idx == 0 {
+				// We encountered a non-empty directory on our first attempt to checkout code
+				return fmt.Errorf("non-empty directory %q already exists", fullPath)
+			}
 			// Directory is not empty, check that it's a repo, add a new remote and try to fetch
 			fmt.Printf("Fetching into existing directory %q\n", fullPath)
 			err = gitCheckRepo(ctx, workdir)
