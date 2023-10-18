@@ -13,8 +13,8 @@ replace (
 require (
 	cuelang.org/go v0.6.0
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/acorn-io/aml v0.0.0-20231009045340-a31c45f6d100
-	github.com/acorn-io/aml/cli v0.0.0-20231009055509-3c83c1247cf8
+	github.com/acorn-io/aml v0.0.0-20231017143906-5a6098a42249
+	github.com/acorn-io/aml/cli v0.0.0-20231018040203-8b7022061cc2
 	github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e
 	github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a
 	github.com/acorn-io/mink v0.0.0-20230804175412-8d121aae112c

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
+	"github.com/acorn-io/aml"
 	"github.com/acorn-io/baaah/pkg/typed"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
@@ -30,7 +30,7 @@ import (
 )
 
 func ResolveAndParse(file string) (*appdefinition.AppDefinition, error) {
-	fileData, err := amlreadhelper.ReadFile(file)
+	fileData, err := aml.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

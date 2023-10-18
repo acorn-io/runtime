@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
+	"github.com/acorn-io/aml"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/streams"
@@ -119,7 +119,7 @@ func Stream(ctx context.Context, cwd string, streams *streams.Output, dialer Web
 				return nil, err
 			}
 		} else if msg.Acornfile != "" {
-			data, err := amlreadhelper.ReadFile(filepath.Join(cwd, msg.Acornfile))
+			data, err := aml.ReadFile(filepath.Join(cwd, msg.Acornfile))
 			if err != nil {
 				return nil, err
 			}
