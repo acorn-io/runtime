@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/acorn-io/aml"
-	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
 	amllegacy "github.com/acorn-io/aml/legacy"
 	"github.com/acorn-io/aml/pkg/eval"
 	"github.com/acorn-io/aml/pkg/schema"
@@ -364,7 +363,7 @@ func addAcorns(fileSet map[string]bool, builds map[string]v1.AcornBuilderSpec, c
 		if build.Build == nil {
 			continue
 		}
-		data, err := amlreadhelper.ReadFile(filepath.Join(cwd, build.Build.Acornfile))
+		data, err := aml.ReadFile(filepath.Join(cwd, build.Build.Acornfile))
 		if err != nil {
 			return
 		}

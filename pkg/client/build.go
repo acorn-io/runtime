@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/acorn-io/aml/cli/pkg/amlreadhelper"
+	"github.com/acorn-io/aml"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/buildclient"
@@ -64,7 +64,7 @@ func (c *DefaultClient) AcornImageBuild(ctx context.Context, file string, opts *
 		return nil, err
 	}
 
-	fileData, err := amlreadhelper.ReadFile(file)
+	fileData, err := aml.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

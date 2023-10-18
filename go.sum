@@ -107,10 +107,10 @@ github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpH
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/acomagu/bufpipe v1.0.4 h1:e3H4WUzM3npvo5uv95QuJM3cQspFNtFBzvJ2oNjKIDQ=
 github.com/acomagu/bufpipe v1.0.4/go.mod h1:mxdxdup/WdsKVreO5GpW4+M/1CE2sMG4jeGJ2sYmHc4=
-github.com/acorn-io/aml v0.0.0-20231009045340-a31c45f6d100 h1:BXiQnq8aT780sd6T3Hs1+BJgsJcl/MTz00QZbiJfylE=
-github.com/acorn-io/aml v0.0.0-20231009045340-a31c45f6d100/go.mod h1:I1qN++bfN+6sOV/FiACluqj2Eu5YaHOy82cTAnjLMf0=
-github.com/acorn-io/aml/cli v0.0.0-20231009055509-3c83c1247cf8 h1:eQhRTIMBGbufCcww4Shqenh3nhPjl2l87Itxecl9Qjk=
-github.com/acorn-io/aml/cli v0.0.0-20231009055509-3c83c1247cf8/go.mod h1:CQ8Bc6t6xgu/K8vU8rl5LBz45aTzTj1eL4yQYZy6zh8=
+github.com/acorn-io/aml v0.0.0-20231017143906-5a6098a42249 h1:Mclb6bw5z+L78eRW7qAZKVxDnGrWw9F1iabSaIK9Dtg=
+github.com/acorn-io/aml v0.0.0-20231017143906-5a6098a42249/go.mod h1:I1qN++bfN+6sOV/FiACluqj2Eu5YaHOy82cTAnjLMf0=
+github.com/acorn-io/aml/cli v0.0.0-20231018040203-8b7022061cc2 h1:NtTkTnXDg2EnZTxwUi27LytYy/dSqBWPC97ERZ+rgRU=
+github.com/acorn-io/aml/cli v0.0.0-20231018040203-8b7022061cc2/go.mod h1:/BeWMP1u6zv/s3x+hWxm+buKqKXnFKuEbqEBGpzcKi4=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e h1:W67DG9AcoNvBwIOR9OFUCZlSJBaHuvM2kXQ2+C6EnLk=
 github.com/acorn-io/aml/legacy v0.0.0-20230929081514-1e9f3394432e/go.mod h1:XnJZSZq/tG/jWPE/tmm2zy90gOZrJRIaOyKpoMulxfE=
 github.com/acorn-io/baaah v0.0.0-20231009165317-af2b68361b8a h1:0bHfiYUw4ojXCUfGHUPmRewrgJ/EpLQ4BaR4yEy8BC4=
