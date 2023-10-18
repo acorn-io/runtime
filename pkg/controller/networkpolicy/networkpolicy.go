@@ -19,7 +19,6 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/strings/slices"
 )
 
 // ForApp creates a single Kubernetes NetworkPolicy that restricts incoming network traffic
@@ -304,10 +303,6 @@ func ForBuilder(req router.Request, resp router.Response) error {
 	}
 
 	podLabels := deployment.Spec.Template.ObjectMeta.Labels
-	externalIPBlock, err := buildExternalIPBlock(req)
-	if err != nil {
-		return err
-	}
 
 	// build the NetPol
 	resp.Objects(&networkingv1.NetworkPolicy{
@@ -337,60 +332,9 @@ func ForBuilder(req router.Request, resp router.Response) error {
 					},
 				}},
 			}},
-			Egress: []networkingv1.NetworkPolicyEgressRule{{
-				To: []networkingv1.NetworkPolicyPeer{
-					{
-						IPBlock: externalIPBlock, // allow traffic to the Internet
-					},
-					{
-						NamespaceSelector: &metav1.LabelSelector{
-							// allow traffic to kube-system for CoreDNS
-							MatchLabels: map[string]string{
-								"kubernetes.io/metadata.name": "kube-system",
-							},
-						},
-						PodSelector: &metav1.LabelSelector{
-							MatchLabels: map[string]string{
-								"k8s-app": "kube-dns",
-							},
-						},
-					},
-					{
-						PodSelector: &metav1.LabelSelector{
-							// allow traffic to the registry for pushing images
-							MatchLabels: map[string]string{
-								"app": system.RegistryName,
-							},
-						},
-					},
-				},
-			}},
-			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress, networkingv1.PolicyTypeEgress},
+			PolicyTypes: []networkingv1.PolicyType{networkingv1.PolicyTypeIngress},
 		},
 	})
 
 	return nil
-}
-
-// buildExternalIPBlock creates a NetworkPolicy IPBlock with the CIDR set to 0.0.0.0/0
-// and the Except set to the pod CIDRs of the nodes.
-func buildExternalIPBlock(req router.Request) (*networkingv1.IPBlock, error) {
-	ipBlock := networkingv1.IPBlock{
-		CIDR: "0.0.0.0/0",
-	}
-
-	// get pod CIDRs from the nodes so that we can only allow IP addresses outside the cluster
-	nodes := corev1.NodeList{}
-	if err := req.Client.List(req.Ctx, &nodes); err != nil {
-		return nil, fmt.Errorf("failed to list nodes: %w", err)
-	}
-	for _, node := range nodes.Items {
-		for _, cidr := range node.Spec.PodCIDRs {
-			if !slices.Contains(ipBlock.Except, cidr) {
-				ipBlock.Except = append(ipBlock.Except, cidr)
-			}
-		}
-	}
-
-	return &ipBlock, nil
 }
