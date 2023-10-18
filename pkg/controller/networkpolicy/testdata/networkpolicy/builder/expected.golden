@@ -7,21 +7,6 @@ metadata:
   name: buildkitd
   namespace: acorn-image-system
 spec:
-  egress:
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.42.0.0/24
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    - podSelector:
-        matchLabels:
-          app: registry
   ingress:
   - from:
     - namespaceSelector:
@@ -36,6 +21,5 @@ spec:
       app: buildkitd
   policyTypes:
   - Ingress
-  - Egress
 status: {}
 `
