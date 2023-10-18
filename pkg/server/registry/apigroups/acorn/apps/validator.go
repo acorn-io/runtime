@@ -51,17 +51,29 @@ var (
 type Validator struct {
 	client            kclient.Client
 	clientFactory     *client.Factory
-	deleter           strategy.Deleter
+	getter            strategy.Getter
 	allowNestedUpdate bool
 	transport         http.RoundTripper
+	rbac              *RBACValidator
 }
 
-func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter strategy.Deleter, transport http.RoundTripper) *Validator {
+type RBACValidator struct {
+	client kclient.Client
+}
+
+func NewRBACValidator(client kclient.Client) *RBACValidator {
+	return &RBACValidator{
+		client: client,
+	}
+}
+
+func NewValidator(client kclient.Client, clientFactory *client.Factory, deleter strategy.Getter, transport http.RoundTripper) *Validator {
 	return &Validator{
 		client:        client,
 		clientFactory: clientFactory,
-		deleter:       deleter,
+		getter:        deleter,
 		transport:     transport,
+		rbac:          NewRBACValidator(client),
 	}
 }
 
@@ -87,7 +99,7 @@ func (s *Validator) AllowNestedUpdate() *Validator {
 }
 
 func (s *Validator) Get(ctx context.Context, namespace, name string) (types.Object, error) {
-	return s.deleter.Get(ctx, namespace, name)
+	return s.getter.Get(ctx, namespace, name)
 }
 
 // Validate will validate the App but also populate the spec.ImageGrantedPermissions on the object.
@@ -224,7 +236,7 @@ func (s *Validator) Validate(ctx context.Context, obj runtime.Object) (result fi
 		app.Spec.ImageGrantedPermissions = imageGrantedPerms
 	}
 
-	if _, rejected, err := s.checkPermissionsForPrivilegeEscalation(ctx, app.Spec.GrantedPermissions); err != nil {
+	if _, rejected, err := s.rbac.CheckPermissionsForPrivilegeEscalation(ctx, app.Spec.GrantedPermissions); err != nil {
 		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.GrantedPermissions, err.Error()))
 	} else if len(rejected) > 0 {
 		result = append(result, field.Invalid(field.NewPath("spec", "permissions"), app.Spec.GrantedPermissions, z.Pointer(client.ErrNotAuthorized{
@@ -313,7 +325,7 @@ func sarToPolicyRules(sars []sarRequest) []v1.PolicyRule {
 	return result
 }
 
-func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) (granted, rejected []v1.Permissions, _ error) {
+func (s *RBACValidator) checkSARs(ctx context.Context, sars []sarRequest) (granted, rejected []v1.Permissions, _ error) {
 	var (
 		lock        sync.Mutex
 		grantedMap  = map[string][]sarRequest{}
@@ -362,7 +374,7 @@ func (s *Validator) checkSARs(ctx context.Context, sars []sarRequest) (granted, 
 	return granted, rejected, nil
 }
 
-func (s *Validator) check(ctx context.Context, sar *authv1.SubjectAccessReview) (bool, error) {
+func (s *RBACValidator) check(ctx context.Context, sar *authv1.SubjectAccessReview) (bool, error) {
 	err := s.client.Create(ctx, sar)
 	if err != nil {
 		return false, err
@@ -377,7 +389,7 @@ type sarRequest struct {
 	Order       int
 }
 
-func (s *Validator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule) (result []sarRequest, _ error) {
+func (s *RBACValidator) getSARNonResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule) (result []sarRequest, _ error) {
 	if len(rule.Verbs) == 0 {
 		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty verbs")
 	}
@@ -420,7 +432,7 @@ func toScope(namespace, currentNamespace string) []string {
 	return []string{"project:" + namespace}
 }
 
-func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule, namespace, currentNamespace string) (result []sarRequest, _ error) {
+func (s *RBACValidator) getSARResourceRole(sar *authv1.SubjectAccessReview, serviceName string, rule v1.PolicyRule, namespace, currentNamespace string) (result []sarRequest, _ error) {
 	if len(rule.APIGroups) == 0 {
 		return nil, fmt.Errorf("can not deploy acorn due to requesting role with empty apiGroups")
 	}
@@ -490,7 +502,7 @@ func (s *Validator) getSARResourceRole(sar *authv1.SubjectAccessReview, serviceN
 	return result, nil
 }
 
-func (s *Validator) getSARs(sar *authv1.SubjectAccessReview, perm v1.Permissions, currentNamespace string) (result []sarRequest, _ error) {
+func (s *RBACValidator) getSARs(sar *authv1.SubjectAccessReview, perm v1.Permissions, currentNamespace string) (result []sarRequest, _ error) {
 	var errs []error
 	for _, rule := range perm.GetRules() {
 		if len(rule.NonResourceURLs) > 0 {
@@ -527,9 +539,9 @@ func (s *Validator) checkRequestedPermsSatisfyImagePerms(currentNamespace string
 	return nil
 }
 
-// checkPermissionsForPrivilegeEscalation is an actual RBAC check to prevent privilege escalation. The user making the request must have the
+// CheckPermissionsForPrivilegeEscalation is an actual RBAC check to prevent privilege escalation. The user making the request must have the
 // permissions that they are requesting the app gets
-func (s *Validator) checkPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) (granted, rejected []v1.Permissions, _ error) {
+func (s *RBACValidator) CheckPermissionsForPrivilegeEscalation(ctx context.Context, requestedPerms []v1.Permissions) (granted, rejected []v1.Permissions, _ error) {
 	user, ok := request.UserFrom(ctx)
 	if !ok {
 		return nil, nil, fmt.Errorf("failed to find active user to check current privileges")
@@ -749,7 +761,7 @@ func (s *Validator) imageSAR(ns, imageName, imageDigest string, perms []v1.Permi
 	}
 
 	for _, perm := range perms {
-		newSARs, err := s.getSARs(sar, perm, ns)
+		newSARs, err := s.rbac.getSARs(sar, perm, ns)
 		if err != nil {
 			return nil, err
 		}
@@ -786,7 +798,7 @@ func (s *Validator) imageGrants(ctx context.Context, details *apiv1.ImageDetails
 		sars = append(sars, newSars...)
 	}
 
-	return s.checkSARs(ctx, sars)
+	return s.rbac.checkSARs(ctx, sars)
 }
 
 func (s *Validator) getWorkloads(details *apiv1.ImageDetails) (map[string]v1.Container, error) {

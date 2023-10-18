@@ -11,13 +11,17 @@ import (
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/acorn-io/mink/pkg/strategy"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
+	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
+	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/apps"
 	"github.com/rancher/wrangler/pkg/name"
 	"github.com/rancher/wrangler/pkg/randomtoken"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	registryrest "k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/client-go/kubernetes"
@@ -41,6 +45,7 @@ type ContainerExec struct {
 	proxy      httputil.ReverseProxy
 	RESTClient rest.Interface
 	k8s        kubernetes.Interface
+	rbac       *apps.RBACValidator
 }
 
 func NewContainerExec(client kclient.WithWatch, cfg *rest.Config) (*ContainerExec, error) {
@@ -69,6 +74,7 @@ func NewContainerExec(client kclient.WithWatch, cfg *rest.Config) (*ContainerExe
 			Director:      func(request *http.Request) {},
 		},
 		RESTClient: k8s.CoreV1().RESTClient(),
+		rbac:       apps.NewRBACValidator(client),
 	}, nil
 }
 
@@ -105,6 +111,29 @@ func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.
 	err := c.client.Get(ctx, k8sclient.ObjectKey{Namespace: ns, Name: id}, container)
 	if err != nil {
 		return nil, err
+	}
+
+	app := &v1.AppInstance{}
+	err = c.client.Get(ctx, k8sclient.ObjectKey{Namespace: ns, Name: container.Spec.AppName}, app)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check spec and status permissions to ensure we don't have some race condition where
+	// we validate against the wrong set of permissions
+	perms := app.Spec.GrantedPermissions
+	perms = append(perms, app.Spec.ImageGrantedPermissions...)
+	perms = append(perms, app.Status.Permissions...)
+	_, rejected, err := c.rbac.CheckPermissionsForPrivilegeEscalation(ctx, perms)
+	if err != nil {
+		return nil, err
+	} else if len(rejected) > 0 {
+		return nil, apierror.NewForbidden(schema.GroupResource{
+			Group:    apiv1.SchemeGroupVersion.Group,
+			Resource: "containerreplicas",
+		}, id, &client.ErrNotAuthorized{
+			Permissions: rejected,
+		})
 	}
 
 	containerName := container.Spec.ContainerName
