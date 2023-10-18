@@ -193,20 +193,23 @@ func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestI
 	return nil
 }
 
+// defaultVolumeSize determines the default size of the specified volume. If the volume has a default size set
+// on the status.Defaults.Volumes, it uses that. Otherwise, it uses the default size set on the status.Defaults.VolumeSize.
 func defaultVolumeSize(appInstance *v1.AppInstance, name string) resource.Quantity {
+	// Figure out what the default volume size should be. If the status has a default volume size set, use that. Otherwise,
+	// use the default size set in the v1 package.
 	result := *v1.DefaultSize // Safe to dereference because it is statically set in the v1 package.
+	if appInstance.Status.Defaults.VolumeSize != nil {
+		result = *appInstance.Status.Defaults.VolumeSize
+	}
 
-	// If the volume has a default size set, use that on status.Defaults, use that. Otherwise, if the
-	// VolumeSize default is set on status.Defaults, use that.
+	// If the volume has a default size set on status.Defaults.Volumes, use that.
 	if defaultVolume, set := appInstance.Status.Defaults.Volumes[name]; set {
 		// We do not expect this to ever fail because VolumeClasses have their sizes validated. However,
-		// if it does fail, we'll just return the default size.
-		parsedQuantity, err := resource.ParseQuantity(string(defaultVolume.Size))
-		if err == nil {
+		// if it does fail, we'll just use the default size instead.
+		if parsedQuantity, err := resource.ParseQuantity(string(defaultVolume.Size)); err == nil {
 			result = parsedQuantity
 		}
-	} else if appInstance.Status.Defaults.VolumeSize != nil {
-		result = *appInstance.Status.Defaults.VolumeSize
 	}
 
 	return result
