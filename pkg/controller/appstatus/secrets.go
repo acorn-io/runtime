@@ -79,6 +79,17 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 		s.Ready = s.Ready && s.JobReady
 		s.DataKeys = typed.SortedKeys(sourceSecret.Data)
 
+		a.app.Status.AppStatus.Secrets[secretName] = s
+	}
+
+	return nil
+}
+
+func setSecretMessages(app *v1.AppInstance) {
+	for secretName, s := range app.Status.AppStatus.Secrets {
+		s.ErrorMessages = s.LookupErrors
+		s.TransitioningMessages = s.LookupTransitioning
+
 		// Not ready if we have any error messages
 		if len(s.ErrorMessages) > 0 {
 			s.Ready = false
@@ -106,8 +117,6 @@ func (a *appStatusRenderer) readSecrets() (err error) {
 			}
 		}
 
-		a.app.Status.AppStatus.Secrets[secretName] = s
+		app.Status.AppStatus.Secrets[secretName] = s
 	}
-
-	return nil
 }

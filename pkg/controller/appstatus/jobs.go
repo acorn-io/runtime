@@ -6,16 +6,18 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/z"
+	"github.com/google/go-containerregistry/pkg/name"
 	cronv3 "github.com/robfig/cron/v3"
 	batchv1 "k8s.io/api/batch/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (a *appStatusRenderer) readJobs() error {
+func (a *appStatusRenderer) readJobs(tag name.Reference) error {
 	var (
 		existingStatus = a.app.Status.AppStatus.Jobs
 	)
@@ -28,7 +30,7 @@ func (a *appStatusRenderer) readJobs() error {
 		return err
 	}
 
-	for jobName := range a.app.Status.AppSpec.Jobs {
+	for jobName, jobDef := range a.app.Status.AppSpec.Jobs {
 		c := v1.JobStatus{
 			CreateEventSucceeded: existingStatus[jobName].CreateEventSucceeded,
 			Skipped:              existingStatus[jobName].Skipped,
@@ -73,7 +75,7 @@ func (a *appStatusRenderer) readJobs() error {
 				c.CompletionTime = cronJob.Status.LastSuccessfulTime
 				c.Schedule = cronJob.Spec.Schedule
 				c.Defined = true
-				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && tag != nil && images.ResolveTag(tag, jobDef.Image) == cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Image
 				for _, nj := range cronJob.Status.Active {
 					nestedJob := &batchv1.Job{}
 					err := a.c.Get(a.ctx, router.Key(nj.Namespace, nj.Name), nestedJob)
@@ -102,7 +104,8 @@ func (a *appStatusRenderer) readJobs() error {
 			c.CompletionTime = job.Status.CompletionTime
 			c.LastRun = job.Status.StartTime
 			c.Defined = true
-			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+			image := images.ResolveTag(tag, jobDef.Image)
+			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && tag != nil && image == job.Spec.Template.Spec.Containers[0].Image
 			if job.Status.Succeeded > 0 {
 				c.CreateEventSucceeded = true
 				c.Ready = c.UpToDate
@@ -111,20 +114,6 @@ func (a *appStatusRenderer) readJobs() error {
 			} else if job.Status.Active > 0 && c.RunningCount == 0 {
 				c.RunningCount = int(job.Status.Active)
 			}
-		}
-
-		if c.RunningCount > 0 {
-			c.TransitioningMessages = append(c.TransitioningMessages, "job running")
-			// Move error to transitioning to make it look better
-			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
-			c.ErrorMessages = nil
-		} else if c.ErrorCount > 0 && c.ErrorCount < 3 {
-			c.TransitioningMessages = append(c.TransitioningMessages, fmt.Sprintf("restarting job, previous %d attempts failed to complete", c.ErrorCount))
-			// Move error to transitioning to make it look better
-			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
-			c.ErrorMessages = nil
-		} else if c.ErrorCount > 0 {
-			c.ErrorMessages = append(c.ErrorMessages, fmt.Sprintf("%d failed attempts", c.ErrorCount))
 		}
 
 		if c.LinkOverride != "" {
@@ -137,6 +126,28 @@ func (a *appStatusRenderer) readJobs() error {
 			if c.Ready {
 				c.CreateEventSucceeded = true
 			}
+		}
+
+		a.app.Status.AppStatus.Jobs[jobName] = c
+	}
+
+	return nil
+}
+
+func setJobMessages(app *v1.AppInstance) {
+	for jobName, c := range app.Status.AppStatus.Jobs {
+		if c.RunningCount > 0 {
+			c.TransitioningMessages = append(c.TransitioningMessages, "job running")
+			// Move error to transitioning to make it look better
+			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
+			c.ErrorMessages = nil
+		} else if c.ErrorCount > 0 && c.ErrorCount < 3 {
+			c.TransitioningMessages = append(c.TransitioningMessages, fmt.Sprintf("restarting job, previous %d attempts failed to complete", c.ErrorCount))
+			// Move error to transitioning to make it look better
+			c.TransitioningMessages = append(c.TransitioningMessages, c.ErrorMessages...)
+			c.ErrorMessages = nil
+		} else if c.ErrorCount > 0 {
+			c.ErrorMessages = append(c.ErrorMessages, fmt.Sprintf("%d failed attempts", c.ErrorCount))
 		}
 
 		addExpressionErrors(&c.CommonStatus, c.ExpressionErrors)
@@ -170,18 +181,8 @@ func (a *appStatusRenderer) readJobs() error {
 			}
 		}
 
-		if !c.Ready {
-			msg, blocked := isBlocked(c.Dependencies, c.ExpressionErrors)
-			if blocked {
-				c.State = "waiting"
-			}
-			c.TransitioningMessages = append(c.TransitioningMessages, msg...)
-		}
-
-		a.app.Status.AppStatus.Jobs[jobName] = c
+		app.Status.AppStatus.Jobs[jobName] = c
 	}
-
-	return nil
 }
 
 func addExpressionErrors(status *v1.CommonStatus, expressionErrors []v1.ExpressionError) {

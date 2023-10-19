@@ -98,6 +98,14 @@ func (a *appStatusRenderer) readVolumes() error {
 			}
 		}
 
+		a.app.Status.AppStatus.Volumes[volumeName] = v
+	}
+
+	return nil
+}
+
+func setVolumeMessages(app *v1.AppInstance) {
+	for volumeName, v := range app.Status.AppStatus.Volumes {
 		// Not ready if we have any error messages
 		if len(v.ErrorMessages) > 0 {
 			v.Ready = false
@@ -129,10 +137,8 @@ func (a *appStatusRenderer) readVolumes() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Volumes[volumeName] = v
+		app.Status.AppStatus.Volumes[volumeName] = v
 	}
-
-	return nil
 }
 
 func linkedVolume(app *v1.AppInstance, name string) string {

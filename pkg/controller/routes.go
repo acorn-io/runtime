@@ -82,6 +82,7 @@ func routes(router *router.Router, cfg *rest.Config, registryTransport http.Roun
 	appHasNamespace.HandlerFunc(quota.WaitForAllocation)
 
 	appMeetsPreconditions := appHasNamespace.Middleware(appstatus.CheckStatus)
+	appMeetsPreconditions.HandlerFunc(appstatus.GetStatus)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(permissions.ConsumerPermissions)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(appdefinition.DeploySpec)
 	appMeetsPreconditions.Middleware(appdefinition.ImagePulled).HandlerFunc(secrets.CreateSecrets)

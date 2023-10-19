@@ -39,6 +39,14 @@ func (a *appStatusRenderer) readRouters() error {
 			s.Ready = true
 		}
 
+		a.app.Status.AppStatus.Routers[routerName] = s
+	}
+
+	return nil
+}
+
+func setRouterMessages(app *v1.AppInstance) {
+	for routerName, s := range app.Status.AppStatus.Routers {
 		// Not ready if we have any error messages
 		if len(s.ErrorMessages) > 0 {
 			s.Ready = false
@@ -66,8 +74,6 @@ func (a *appStatusRenderer) readRouters() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Routers[routerName] = s
+		app.Status.AppStatus.Routers[routerName] = s
 	}
-
-	return nil
 }

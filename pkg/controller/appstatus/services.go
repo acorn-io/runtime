@@ -9,20 +9,23 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
+	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
 	"github.com/acorn-io/z"
+	"github.com/google/go-containerregistry/pkg/name"
 	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *appStatusRenderer) readServices() error {
+func (a *appStatusRenderer) readServices(tag name.Reference) error {
 	existingStatus := a.app.Status.AppStatus.Services
 
 	// reset state
@@ -49,8 +52,18 @@ func (a *appStatusRenderer) readServices() error {
 			serviceAcorn := &v1.AppInstance{}
 			err := a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, serviceName)), serviceAcorn)
 			if apierrors.IsNotFound(err) || err == nil {
+				var image string
+				if _, isPattern := autoupgrade.AutoUpgradePattern(serviceDef.Image); isPattern {
+					image = serviceDef.Image
+				} else if tag != nil {
+					if strings.HasPrefix(serviceDef.Image, "sha256:") {
+						image = strings.TrimPrefix(serviceDef.Image, "sha256:")
+					} else {
+						image = images.ResolveTag(tag, serviceDef.Image)
+					}
+				}
 				s.ServiceAcornName = publicname.Get(serviceAcorn)
-				s.ServiceAcornReady = serviceAcorn.Status.Ready
+				s.ServiceAcornReady = serviceAcorn.Status.Ready && image != "" && serviceAcorn.Spec.Image == image && serviceAcorn.Status.AppImage.Digest == serviceAcorn.Status.Staged.AppImage.Digest
 			} else {
 				return err
 			}
@@ -131,6 +144,13 @@ func (a *appStatusRenderer) readServices() error {
 			return err
 		}
 
+		a.app.Status.AppStatus.Services[serviceName] = s
+	}
+	return nil
+}
+
+func setServiceMessages(app *v1.AppInstance) {
+	for serviceName, s := range app.Status.AppStatus.Services {
 		addExpressionErrors(&s.CommonStatus, s.ExpressionErrors)
 
 		// Not ready if we have any error messages
@@ -163,9 +183,8 @@ func (a *appStatusRenderer) readServices() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Services[serviceName] = s
+		app.Status.AppStatus.Services[serviceName] = s
 	}
-	return nil
 }
 
 func (a *appStatusRenderer) isServiceReady(svc string) (ready bool, found bool, err error) {

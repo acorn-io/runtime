@@ -162,9 +162,10 @@ func toAcorn(appInstance *v1.AppInstance, tag name.Reference, pullSecrets *PullS
 		// the registry is all that really matters for the pull secret so this is safe to do
 		pullSecrets.ForAcorn(acornName, strings.TrimSuffix(image, ":"+pattern))
 	} else {
-		image = images.ResolveTag(tag, acorn.Image)
 		if strings.HasPrefix(acorn.Image, "sha256:") {
 			image = strings.TrimPrefix(acorn.Image, "sha256:")
+		} else {
+			image = images.ResolveTag(tag, acorn.Image)
 		}
 
 		pullSecrets.ForAcorn(acornName, image)

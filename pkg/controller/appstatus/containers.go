@@ -6,16 +6,19 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
+	"github.com/google/go-containerregistry/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	klabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/kubectl/pkg/util/deployment"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *appStatusRenderer) readContainers() error {
+func (a *appStatusRenderer) readContainers(tag name.Reference) error {
 	var (
 		isTransitioning bool
 		existingStatus  = a.app.Status.AppStatus.Containers
@@ -29,7 +32,7 @@ func (a *appStatusRenderer) readContainers() error {
 		return err
 	}
 
-	for containerName := range a.app.Status.AppSpec.Containers {
+	for containerName, containerDef := range a.app.Status.AppSpec.Containers {
 		var cs v1.ContainerStatus
 		summary := summary[containerName]
 
@@ -49,7 +52,7 @@ func (a *appStatusRenderer) readContainers() error {
 			return err
 		} else {
 			cs.Defined = true
-			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
+			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && tag != nil && images.ResolveTag(tag, containerDef.Image) == dep.Spec.Template.Spec.Containers[0].Image
 			cs.ReadyReplicaCount = dep.Status.ReadyReplicas
 			cs.RunningReplicaCount = dep.Status.Replicas
 			cs.DesiredReplicaCount = replicas(dep.Spec.Replicas)
@@ -76,6 +79,28 @@ func (a *appStatusRenderer) readContainers() error {
 			isTransitioning = true
 		}
 
+		a.app.Status.AppStatus.Containers[containerName] = cs
+	}
+
+	a.app.Status.AppStatus.Stopped = false
+	if !isTransitioning && a.app.GetStopped() {
+		allZero := true
+		for _, v := range a.app.Status.AppStatus.Containers {
+			if v.DesiredReplicaCount != 0 {
+				allZero = false
+				break
+			}
+		}
+		if allZero {
+			a.app.Status.AppStatus.Stopped = true
+		}
+	}
+
+	return nil
+}
+
+func setContainerMessages(app *v1.AppInstance) {
+	for containerName, cs := range app.Status.AppStatus.Containers {
 		addExpressionErrors(&cs.CommonStatus, cs.ExpressionErrors)
 
 		// Not ready if we have any error messages
@@ -84,7 +109,7 @@ func (a *appStatusRenderer) readContainers() error {
 		}
 
 		if cs.Ready {
-			if a.app.GetStopped() {
+			if app.GetStopped() {
 				cs.State = "stopped"
 			} else {
 				cs.State = "running"
@@ -109,14 +134,6 @@ func (a *appStatusRenderer) readContainers() error {
 			}
 		}
 
-		if !cs.Ready {
-			msg, blocked := isBlocked(cs.Dependencies, cs.ExpressionErrors)
-			if blocked {
-				cs.State = "waiting"
-			}
-			cs.TransitioningMessages = append(cs.TransitioningMessages, msg...)
-		}
-
 		// Add informative messages if all else is healthy
 		if len(cs.TransitioningMessages) == 0 && len(cs.ErrorMessages) == 0 {
 			if cs.RunningReplicaCount > 1 {
@@ -127,24 +144,8 @@ func (a *appStatusRenderer) readContainers() error {
 			}
 		}
 
-		a.app.Status.AppStatus.Containers[containerName] = cs
+		app.Status.AppStatus.Containers[containerName] = cs
 	}
-
-	a.app.Status.AppStatus.Stopped = false
-	if !isTransitioning && a.app.GetStopped() {
-		allZero := true
-		for _, v := range a.app.Status.AppStatus.Containers {
-			if v.DesiredReplicaCount != 0 {
-				allZero = false
-				break
-			}
-		}
-		if allZero {
-			a.app.Status.AppStatus.Stopped = true
-		}
-	}
-
-	return nil
 }
 
 func (a *appStatusRenderer) isDeploymentReady(dep *appsv1.Deployment) (bool, error) {
@@ -181,7 +182,7 @@ func (a *appStatusRenderer) isDeploymentReady(dep *appsv1.Deployment) (bool, err
 	}
 
 	for _, rep := range reps.Items {
-		if rep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) &&
+		if rep.Annotations[deployment.RevisionAnnotation] == dep.Annotations[deployment.RevisionAnnotation] &&
 			rep.Generation == rep.Status.ObservedGeneration &&
 			rep.Status.Replicas == rep.Status.ReadyReplicas &&
 			rep.Status.Replicas == rep.Status.AvailableReplicas {
