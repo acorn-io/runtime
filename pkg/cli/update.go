@@ -8,9 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hideUpdateFlags = []string{"dangerous", "memory", "secret", "volume", "region", "publish-all",
-	"publish", "link", "label", "interval", "env", "compute-class", "annotation"}
-
 func NewUpdate(c CommandContext) *cobra.Command {
 	cmd := cli.Command(&Update{out: c.StdOut, client: c.ClientFactory}, cobra.Command{
 		Use:               "update [flags] ACORN_NAME [deploy flags]",
@@ -28,7 +25,6 @@ func NewUpdate(c CommandContext) *cobra.Command {
     acorn update --auto-upgrade my-app`,
 	})
 
-	toggleHiddenFlags(cmd, hideUpdateFlags, true)
 	cmd.Flags().SetInterspersed(false)
 	return cmd
 }
@@ -61,18 +57,12 @@ type Update struct {
 	Pull           bool   `usage:"Re-pull the app's image, which will cause the app to re-deploy if the image has changed"`
 	Wait           *bool  `usage:"Wait for app to become ready before command exiting (default: true)"`
 	Quiet          bool   `usage:"Do not print status" short:"q"`
-	HelpAdvanced   bool   `usage:"Show verbose help text"`
 
 	out    io.Writer
 	client ClientFactory
 }
 
 func (s *Update) Run(cmd *cobra.Command, args []string) error {
-	if s.HelpAdvanced {
-		setAdvancedHelp(cmd, hideUpdateFlags, "")
-		return cmd.Help()
-	}
-
 	// we can't enforce the one argument requirement at the Cobra level since we have to make --help-advanced possible
 	// so enforce the argument requirement here
 	if len(args) == 0 {

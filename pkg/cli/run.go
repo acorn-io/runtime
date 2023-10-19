@@ -69,31 +69,8 @@ func NewRun(c CommandContext) *cobra.Command {
    acorn run --notify-upgrade myorg/hello-world:v#.#.# myapp
 
    # To proceed with an upgrade you've been notified of:
-   acorn update --confirm-upgrade myapp`,
-	})
+   acorn update --confirm-upgrade myapp
 
-	// These will produce an error if the flag doesn't exist or a completion function has already been registered for the
-	// flag. Not returning the error since neither of these is likely occur.
-	if err := cmd.RegisterFlagCompletionFunc("volume", newCompletion(c.ClientFactory, volumeFlagClassCompletion).complete); err != nil {
-		cmd.Printf("Error registering completion function for -v flag: %v\n", err)
-	}
-	if err := cmd.RegisterFlagCompletionFunc("compute-class", newCompletion(c.ClientFactory, computeClassFlagCompletion).complete); err != nil {
-		cmd.Printf("Error registering completion function for --compute-class flag: %v\n", err)
-	}
-	if err := cmd.RegisterFlagCompletionFunc("region", newCompletion(c.ClientFactory, regionsCompletion).complete); err != nil {
-		cmd.Printf("Error registering completion function for --region flag: %v\n", err)
-	}
-	cmd.Flags().SetInterspersed(false)
-	toggleHiddenFlags(cmd, hideRunFlags, true)
-
-	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.Short + "\n")
-		fmt.Println(cmd.UsageString())
-	})
-	return cmd
-}
-
-const AdvancedHelp = `    
 More Usages:
      # Publish and Expose Port Syntax
      - Publish port 80 for any containers that define it as a port
@@ -127,10 +104,28 @@ More Usages:
      - Create the volume named "mydata" with a size of 5 gigabyes and using the "fast" storage class
         acorn run --volume mydata,size=5G,class=fast .
      - Bind the acorn volume named "mydata" into the current app, replacing the volume named "data", See "acorn volumes --help for more info"
-        acorn run --volume mydata:data .`
+        acorn run --volume mydata:data .`,
+	})
 
-var hideRunFlags = []string{"dangerous", "memory", "secret", "volume", "region", "publish-all",
-	"publish", "link", "label", "interval", "env", "compute-class", "annotation", "update", "replace"}
+	// These will produce an error if the flag doesn't exist or a completion function has already been registered for the
+	// flag. Not returning the error since neither of these is likely occur.
+	if err := cmd.RegisterFlagCompletionFunc("volume", newCompletion(c.ClientFactory, volumeFlagClassCompletion).complete); err != nil {
+		cmd.Printf("Error registering completion function for -v flag: %v\n", err)
+	}
+	if err := cmd.RegisterFlagCompletionFunc("compute-class", newCompletion(c.ClientFactory, computeClassFlagCompletion).complete); err != nil {
+		cmd.Printf("Error registering completion function for --compute-class flag: %v\n", err)
+	}
+	if err := cmd.RegisterFlagCompletionFunc("region", newCompletion(c.ClientFactory, regionsCompletion).complete); err != nil {
+		cmd.Printf("Error registering completion function for --region flag: %v\n", err)
+	}
+	cmd.Flags().SetInterspersed(false)
+
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		fmt.Println(cmd.Short + "\n")
+		fmt.Println(cmd.UsageString())
+	})
+	return cmd
+}
 
 type Run struct {
 	RunArgs
@@ -140,7 +135,6 @@ type Run struct {
 	Quiet             bool  `usage:"Do not print status" short:"q"`
 	Update            bool  `usage:"Update the app if it already exists" short:"u"`
 	Replace           bool  `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	HelpAdvanced      bool  `usage:"Show verbose help text"`
 
 	out    io.Writer
 	client ClientFactory
@@ -215,10 +209,6 @@ func (s RunArgs) ToOpts() (client.AppRunOptions, error) {
 }
 
 func (s *Run) Run(cmd *cobra.Command, args []string) (err error) {
-	if s.HelpAdvanced {
-		setAdvancedHelp(cmd, hideRunFlags, AdvancedHelp)
-		return cmd.Help()
-	}
 	defer func() {
 		if errors.Is(err, pflag.ErrHelp) {
 			err = nil
@@ -399,20 +389,4 @@ func outputApp(out io.Writer, format string, app *apiv1.App) error {
 		_, err = out.Write(data)
 	}
 	return err
-}
-
-func toggleHiddenFlags(cmd *cobra.Command, flagsToHide []string, hide bool) {
-	for _, flag := range flagsToHide {
-		cmd.PersistentFlags().Lookup(flag).Hidden = hide
-	}
-}
-
-func setAdvancedHelp(cmd *cobra.Command, hideRunFlags []string, advancedHelp string) {
-	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		fmt.Println(cmd.Short + "\n")
-		// toggle advanced flags on before printing flags out in cmd.UsageString
-		toggleHiddenFlags(cmd, hideRunFlags, false)
-		fmt.Println(cmd.UsageString())
-		fmt.Println(advancedHelp)
-	})
 }
