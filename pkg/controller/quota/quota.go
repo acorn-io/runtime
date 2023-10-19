@@ -164,7 +164,9 @@ func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *a
 
 		// If the volume will be bound to an existing PV implicitly, then we don't need to count it. This will happen
 		// when the incoming app has the same name as the app that created an existing released PV.
-		if pvName, err := appdefinition.LookupExistingPV(req, appInstance, name); err == nil && pvName != "" {
+		if pvName, err := appdefinition.LookupExistingPV(req, appInstance, name); err != nil {
+			return err
+		} else if pvName != "" {
 			continue
 		}
 

@@ -1,0 +1,54 @@
+---
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace
+  annotations:
+    acorn.io/enforced-quota: "true"
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  creationTimestamp: "2023-10-18T21:06:32Z"
+  labels:
+    acorn.io/app-name: app-name
+    acorn.io/app-namespace: app-namespace
+    acorn.io/managed: "true"
+    acorn.io/public-name: app-name.volume-name
+    acorn.io/volume-class: ephemeral
+    acorn.io/volume-name: volume-name
+  name: persistent-volume-name
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: volume-name
+    namespace: app-namespace
+  csi:
+    driver: ebs.csi.aws.com
+    fsType: ext4
+    volumeAttributes:
+      storage.kubernetes.io/csiProvisionerIdentity: 1697484153737-8081-ebs.csi.aws.com
+    volumeHandle: vol-0516f48bd9b33de5f
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: topology.ebs.csi.aws.com/zone
+          operator: In
+          values:
+          - us-east-2b
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ephemeral
+  volumeMode: Filesystem
+status:
+  phase: Bound
