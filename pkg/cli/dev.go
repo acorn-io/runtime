@@ -38,7 +38,6 @@ acorn dev --name wandering-sound --clone [acorn args]
 		cmd.Printf("Error registering completion function for --compute-class flag: %v\n", err)
 	}
 	cmd.PersistentFlags().Lookup("dangerous").Hidden = true
-	toggleHiddenFlags(cmd, hideUpdateFlags, true)
 	cmd.Flags().SetInterspersed(false)
 	return cmd
 }
@@ -49,16 +48,11 @@ type Dev struct {
 	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
 	Clone             bool   `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
 	CloneDir          string `usage:"Provide a directory to clone the repository into, use in conjunction with clone flag" default:"." hidden:"true"`
-	HelpAdvanced      bool   `usage:"Show verbose help text"`
 	out               io.Writer
 	client            ClientFactory
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
-	if s.HelpAdvanced {
-		setAdvancedHelp(cmd, hideUpdateFlags, AdvancedHelp)
-		return cmd.Help()
-	}
 	c, err := s.client.CreateDefault()
 	if err != nil {
 		return err
