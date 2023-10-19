@@ -29,7 +29,7 @@ func scheme(address string) string {
 }
 
 func toLoginURL(address, password string) string {
-	return fmt.Sprintf("%s://%s/auth/login?p=%s", scheme(address), address, password)
+	return fmt.Sprintf("%s://%s/auth/cli?p=%s", scheme(address), address, password)
 }
 
 func toTokenRequestURL(address, password string) string {
