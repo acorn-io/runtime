@@ -42,7 +42,7 @@ require (
 	github.com/hexops/autogold/v2 v2.2.1
 	github.com/hexops/valast v1.4.4
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de
-	github.com/loft-sh/devspace v1.1.1-0.20230918143357-5f97e998676e
+	github.com/loft-sh/devspace v1.1.1-0.20231020132550-69e7df31933d
 	github.com/moby/buildkit v0.11.6
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0-rc4

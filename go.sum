@@ -703,8 +703,8 @@ github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de h1:9TO3cAIGXtEhn
 github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de/go.mod h1:zAbeS9B/r2mtpb6U+EI2rYA5OAXxsYw6wTamcNW+zcE=
 github.com/lithammer/fuzzysearch v1.1.5 h1:Ag7aKU08wp0R9QCfF4GoGST9HbmAIeLP7xwMrOBEp1c=
 github.com/lithammer/fuzzysearch v1.1.5/go.mod h1:1R1LRNk7yKid1BaQkmuLQaHruxcC4HmAH30Dh61Ih1Q=
-github.com/loft-sh/devspace v1.1.1-0.20230918143357-5f97e998676e h1:1io5eZaWJ5mLrO0VDOkvlaXnGPJ7iAPVFFgJTKJ2oUA=
-github.com/loft-sh/devspace v1.1.1-0.20230918143357-5f97e998676e/go.mod h1:ZkURPkP4R3O8TGlnoY/GCw79LHmWIIFyUfzrXrV+yk0=
+github.com/loft-sh/devspace v1.1.1-0.20231020132550-69e7df31933d h1:w8teuH/cvVHkOsJjZjN6PmXAnERGXuULpIyQV/lUiNE=
+github.com/loft-sh/devspace v1.1.1-0.20231020132550-69e7df31933d/go.mod h1:ZkURPkP4R3O8TGlnoY/GCw79LHmWIIFyUfzrXrV+yk0=
 github.com/loft-sh/notify v0.0.0-20210827094439-0720dcc7feee h1:hZ79+pKEbCBrH1dVmgZ4jtFrrDPxgM4zqEP1lHlSnvI=
 github.com/loft-sh/notify v0.0.0-20210827094439-0720dcc7feee/go.mod h1:pq83B8lgfCY7tKdegTTXU6DZxGQkcWMowUTOTpTQmqk=
 github.com/loft-sh/utils v0.0.16 h1:XnD6Sb6gRWIHgM34U94dHcQ5MtxN5kAGZQ5eddAxC+c=
