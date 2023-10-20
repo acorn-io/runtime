@@ -11,7 +11,6 @@ import (
 	"github.com/acorn-io/baaah/pkg/watcher"
 	"github.com/acorn-io/mink/pkg/strategy"
 	apiv1 "github.com/acorn-io/runtime/pkg/apis/api.acorn.io/v1"
-	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	"github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/k8sclient"
 	"github.com/acorn-io/runtime/pkg/server/registry/apigroups/acorn/apps"
@@ -113,8 +112,7 @@ func (c *ContainerExec) Connect(ctx context.Context, id string, options runtime.
 		return nil, err
 	}
 
-	app := &v1.AppInstance{}
-	err = c.client.Get(ctx, k8sclient.ObjectKey{Namespace: ns, Name: container.Spec.AppName}, app)
+	app, err := apps.GetAppInstanceFromPublicName(ctx, c.client, ns, container.Spec.AppName)
 	if err != nil {
 		return nil, err
 	}

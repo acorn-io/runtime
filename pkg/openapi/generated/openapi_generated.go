@@ -7994,6 +7994,12 @@ func schema_pkg_apis_internalacornio_v1_Constraint(ref common.ReferenceCallback)
 							Format: "",
 						},
 					},
+					"id": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"right": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
