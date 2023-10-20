@@ -32,27 +32,22 @@ type InfoStrategy struct {
 	client client.WithWatch
 }
 
-func (s *InfoStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
-	ri, _ := request.RequestInfoFrom(ctx)
-
-	var (
-		appInstance = &v1.AppInstance{}
-		err         error
-	)
+func GetAppInstanceFromPublicName(ctx context.Context, c client.Client, namespace, name string) (*v1.AppInstance, error) {
+	appInstance := &v1.AppInstance{}
 
 	if strings.Contains(name, ".") {
 		app := &apiv1.App{}
-		err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, app)
+		err := c.Get(ctx, kclient.ObjectKey{Namespace: namespace, Name: name}, app)
 		if err != nil {
 			return nil, err
 		}
 
 		appInstances := &v1.AppInstanceList{}
-		err = s.client.List(ctx, appInstances, &kclient.ListOptions{
+		err = c.List(ctx, appInstances, &kclient.ListOptions{
 			LabelSelector: klabels.SelectorFromSet(klabels.Set{
 				labels.AcornPublicName: name,
 			}),
-			Namespace: ri.Namespace,
+			Namespace: namespace,
 		})
 		if err != nil {
 			return nil, err
@@ -67,10 +62,21 @@ func (s *InfoStrategy) Get(ctx context.Context, namespace, name string) (types.O
 
 		appInstance = &appInstances.Items[0]
 	} else {
-		err := s.client.Get(ctx, kclient.ObjectKey{Namespace: ri.Namespace, Name: ri.Name}, appInstance)
+		err := c.Get(ctx, kclient.ObjectKey{Namespace: namespace, Name: name}, appInstance)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	return appInstance, nil
+}
+
+func (s *InfoStrategy) Get(ctx context.Context, namespace, name string) (types.Object, error) {
+	ri, _ := request.RequestInfoFrom(ctx)
+
+	appInstance, err := GetAppInstanceFromPublicName(ctx, s.client, namespace, name)
+	if err != nil {
+		return nil, err
 	}
 
 	resp := &apiv1.AppInfo{

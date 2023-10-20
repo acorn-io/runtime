@@ -20,6 +20,7 @@ type FieldType struct {
 type Constraint struct {
 	Description string     `json:"description,omitempty"`
 	Op          string     `json:"op,omitempty"`
+	ID          string     `json:"id,omitempty"`
 	Right       string     `json:"right,omitempty"`
 	Type        *FieldType `json:"type,omitempty"`
 }

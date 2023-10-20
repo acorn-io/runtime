@@ -91,6 +91,7 @@ func fromConstraints(in []schema.Constraint) (result []v1.Constraint) {
 		result = append(result, v1.Constraint{
 			Description: item.Description,
 			Op:          item.Op,
+			ID:          item.ID,
 			Right:       anyToString(item.Right),
 			Type:        anyToFieldType(item.Right),
 		})
