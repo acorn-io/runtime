@@ -45,6 +45,8 @@ type Options struct {
 	Replace           bool
 	Dangerous         bool
 	BidirectionalSync bool
+	TimeoutSeconds    int32
+	ReleaseOnExit     bool
 	Logger            Logger
 	BuildStatus       chan<- BuildStatus
 }
@@ -214,11 +216,13 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 		logger    = opts.Logger
 	)
 
-	defer func() {
-		if err := releaseDevSession(c, appName); err != nil {
-			logger.Errorf("Failed to release dev session app: %v", err)
-		}
-	}()
+	if opts.ReleaseOnExit {
+		defer func() {
+			if err := releaseDevSession(c, appName); err != nil {
+				logger.Errorf("Failed to release dev session app: %v", err)
+			}
+		}()
+	}
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -343,6 +347,7 @@ func updateApp(ctx context.Context, c client.Client, appName string, client v1.D
 	update.Replace = opts.Replace
 	update.Stop = new(bool)
 	update.AutoUpgrade = new(bool)
+	update.DevSessionTimeoutSeconds = opts.TimeoutSeconds
 	opts.Logger.Infof("Updating acorn [%s] to image [%s]", appName, image)
 	app, err := rulerequest.PromptUpdate(ctx, c, opts.Dangerous, appName, update)
 	if err != nil {

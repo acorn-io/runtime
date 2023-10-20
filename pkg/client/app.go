@@ -215,6 +215,10 @@ func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpd
 	}
 
 	if opts.DevSessionClient != nil {
+		timeout := int32(360)
+		if opts.DevSessionTimeoutSeconds != 0 {
+			timeout = opts.DevSessionTimeoutSeconds
+		}
 		return app, translatePermissions(apply.New(c.Client).Ensure(ctx, &apiv1.DevSession{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
@@ -222,7 +226,7 @@ func (c *DefaultClient) appUpdate(ctx context.Context, name string, opts *AppUpd
 			},
 			Spec: v1.DevSessionInstanceSpec{
 				Client:                *opts.DevSessionClient,
-				SessionTimeoutSeconds: 360,
+				SessionTimeoutSeconds: timeout,
 				SessionStartTime:      metav1.Now(),
 				SessionRenewTime:      metav1.Now(),
 				SpecOverride:          &app.Spec,

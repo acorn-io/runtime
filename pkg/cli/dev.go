@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	cli "github.com/acorn-io/runtime/pkg/cli/builder"
@@ -44,12 +45,14 @@ acorn dev --name wandering-sound --clone [acorn args]
 
 type Dev struct {
 	RunArgs
-	BidirectionalSync bool   `usage:"In interactive mode download changes in addition to uploading" short:"b"`
-	Replace           bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
-	Clone             bool   `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
-	CloneDir          string `usage:"Provide a directory to clone the repository into, use in conjunction with clone flag" default:"." hidden:"true"`
-	out               io.Writer
-	client            ClientFactory
+	BidirectionalSync    bool   `usage:"In interactive mode download changes in addition to uploading" short:"b"`
+	Replace              bool   `usage:"Replace the app with only defined values, resetting undefined fields to default values" json:"replace,omitempty"` // Replace sets patchMode to false, resulting in a full update, resetting all undefined fields to their defaults
+	Clone                bool   `usage:"Clone the vcs repository and infer the build context for the given app allowing for local development"`
+	CloneDir             string `usage:"Provide a directory to clone the repository into, use in conjunction with clone flag" default:"." hidden:"true"`
+	SessionTimeout       string `usage:"Timeout in seconds for the dev session" default:"360s"`
+	SessionReleaseOnExit bool   `usage:"Release the session when the dev command exits" default:"true"`
+	out                  io.Writer
+	client               ClientFactory
 }
 
 func (s *Dev) Run(cmd *cobra.Command, args []string) error {
@@ -90,11 +93,18 @@ func (s *Dev) Run(cmd *cobra.Command, args []string) error {
 		opts.AutoUpgrade = z.Pointer(true)
 	}
 
+	sessionTimeout, err := time.ParseDuration(s.SessionTimeout)
+	if err != nil {
+		return err
+	}
+
 	return dev.Dev(cmd.Context(), c, &dev.Options{
 		ImageSource:       imageSource,
 		Run:               opts,
 		Replace:           s.Replace,
 		Dangerous:         s.Dangerous,
 		BidirectionalSync: s.BidirectionalSync,
+		TimeoutSeconds:    int32(sessionTimeout.Seconds()),
+		ReleaseOnExit:     s.SessionReleaseOnExit,
 	})
 }
