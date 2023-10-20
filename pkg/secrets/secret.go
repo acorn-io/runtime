@@ -2,9 +2,7 @@ package secrets
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
-	"math/big"
 	"regexp"
 	"sort"
 	"strings"
@@ -212,7 +210,7 @@ func generateToken(req router.Request, appInstance *v1.AppInstance, secretName s
 			return nil, err
 		}
 		characters := convert.ToString(secretRef.Params.GetData()["characters"])
-		v, err := generate(characters, int(length))
+		v, err := GenerateRandomSecret(int(length), characters)
 		if err != nil {
 			return nil, err
 		}
@@ -462,16 +460,4 @@ func GetOrCreateSecret(secrets map[string]*corev1.Secret, req router.Request, ap
 	}
 	secrets[secretName] = secret
 	return secret, nil
-}
-
-func generate(characters string, tokenLength int) (string, error) {
-	token := make([]byte, tokenLength)
-	for i := range token {
-		r, err := rand.Int(rand.Reader, big.NewInt(int64(len(characters))))
-		if err != nil {
-			return "", err
-		}
-		token[i] = characters[r.Int64()]
-	}
-	return string(token), nil
 }
