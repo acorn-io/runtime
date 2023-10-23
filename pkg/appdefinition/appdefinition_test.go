@@ -1378,7 +1378,7 @@ volumes: {
 	assert.Equal(t, "", appSpec.Volumes["uri"].Class)
 	assert.Equal(t, toQuantity(70), appSpec.Volumes["uri"].Size)
 	assert.Equal(t, v1.AccessModes{"readWriteMany", "readWriteOnce"}, appSpec.Volumes["uri"].AccessModes)
-	assert.Equal(t, toQuantity(10), appSpec.Volumes["uri-sub"].Size)
+	assert.Equal(t, v1.Quantity(""), appSpec.Volumes["uri-sub"].Size)
 	assert.Nil(t, appSpec.Volumes["uri-sub"].AccessModes)
 	assert.Equal(t, "ephemeral", appSpec.Volumes["s/left/var/anon-ephemeral-vol"].Class)
 	assert.Equal(t, "ephemeral", appSpec.Volumes["s/left/var/anon-ephemeral2-vol"].Class)

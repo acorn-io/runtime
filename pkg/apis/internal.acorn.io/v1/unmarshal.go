@@ -355,9 +355,6 @@ func impliedVolumesForContainer(app *AppSpec, containerName, sideCarName string,
 				})
 				app.Volumes[mount.Volume] = existing
 			} else {
-				if v.Size == "" {
-					v.Size = DefaultSizeQuantity
-				}
 				app.Volumes[mount.Volume] = VolumeRequest{
 					Size:        v.Size,
 					AccessModes: v.AccessModes,
