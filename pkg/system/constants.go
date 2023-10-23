@@ -30,5 +30,5 @@ var (
 	APIServerName                    = "acorn-api"
 	BuildkitPort               int32 = 8080
 	ContainerdConfigPathName         = "containerd-config-path"
-	DefaultManagerAddress            = "beta.acorn.io"
+	DefaultManagerAddress            = "acorn.io"
 )
