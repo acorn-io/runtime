@@ -9,23 +9,20 @@ import (
 	"github.com/acorn-io/baaah/pkg/router"
 	"github.com/acorn-io/baaah/pkg/typed"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/autoupgrade"
 	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/config"
-	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
 	"github.com/acorn-io/runtime/pkg/ref"
 	"github.com/acorn-io/z"
-	"github.com/google/go-containerregistry/pkg/name"
 	"golang.org/x/exp/slices"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *appStatusRenderer) readServices(tag name.Reference) error {
+func (a *appStatusRenderer) readServices() error {
 	existingStatus := a.app.Status.AppStatus.Services
 
 	// reset state
@@ -33,15 +30,20 @@ func (a *appStatusRenderer) readServices(tag name.Reference) error {
 
 	for _, entry := range typed.Sorted(a.app.Status.AppSpec.Services) {
 		serviceName, serviceDef := entry.Key, entry.Value
+		hash, err := configHash(serviceDef)
+		if err != nil {
+			return err
+		}
+
 		s := v1.ServiceStatus{
 			CommonStatus: v1.CommonStatus{
 				LinkOverride: ports.LinkService(a.app, serviceName),
+				ConfigHash:   hash,
 			},
 			ExpressionErrors:           existingStatus[serviceName].ExpressionErrors,
 			MissingConsumerPermissions: existingStatus[serviceName].MissingConsumerPermissions,
 		}
 
-		var err error
 		s.Ready, s.Defined, err = a.isServiceReady(serviceName)
 		if err != nil {
 			return err
@@ -52,18 +54,8 @@ func (a *appStatusRenderer) readServices(tag name.Reference) error {
 			serviceAcorn := &v1.AppInstance{}
 			err := a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, serviceName)), serviceAcorn)
 			if apierrors.IsNotFound(err) || err == nil {
-				var image string
-				if _, isPattern := autoupgrade.AutoUpgradePattern(serviceDef.Image); isPattern {
-					image = serviceDef.Image
-				} else if tag != nil {
-					if strings.HasPrefix(serviceDef.Image, "sha256:") {
-						image = strings.TrimPrefix(serviceDef.Image, "sha256:")
-					} else {
-						image = images.ResolveTag(tag, serviceDef.Image)
-					}
-				}
 				s.ServiceAcornName = publicname.Get(serviceAcorn)
-				s.ServiceAcornReady = serviceAcorn.Status.Ready && image != "" && serviceAcorn.Spec.Image == image && serviceAcorn.Status.AppImage.Digest == serviceAcorn.Status.Staged.AppImage.Digest
+				s.ServiceAcornReady = serviceAcorn.Status.Ready && serviceAcorn.Annotations[labels.AcornConfigHashAnnotation] == hash
 			} else {
 				return err
 			}
@@ -88,7 +80,7 @@ func (a *appStatusRenderer) readServices(tag name.Reference) error {
 			s.Defined = s.Defined || !service.Status.HasService
 			s.UpToDate = service.Namespace != a.app.Status.Namespace ||
 				service.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation))
-			s.UpToDate = s.Defined && s.UpToDate
+			s.UpToDate = s.Defined && s.UpToDate && (s.ServiceAcornReady || s.LinkOverride != "" || service.Annotations[labels.AcornConfigHashAnnotation] == hash)
 			s.Ready = (s.Ready || !service.Status.HasService) && s.UpToDate
 			if s.ServiceAcornName != "" {
 				s.Ready = s.Ready && s.ServiceAcornReady
@@ -198,11 +190,9 @@ func (a *appStatusRenderer) isServiceReadyByNamespace(seen []client.ObjectKey, n
 	seen = append(seen, router.Key(namespace, svc))
 
 	var svcDep corev1.Service
-	err = a.c.Get(a.ctx, router.Key(namespace, svc), &svcDep)
-	if apierrors.IsNotFound(err) {
+	if err = a.c.Get(a.ctx, router.Key(namespace, svc), &svcDep); apierrors.IsNotFound(err) {
 		return false, false, nil
-	}
-	if err != nil {
+	} else if err != nil {
 		// if err just return it as not ready
 		return false, true, err
 	}

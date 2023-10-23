@@ -60,6 +60,7 @@ const (
 	AcornCalculatedProjectSupportedRegions = Prefix + "calculated-project-supported-regions"
 	ProjectEnforcedQuotaAnnotation         = Prefix + "enforced-quota"
 	AcornPermissions                       = Prefix + "permissions"
+	AcornConfigHashAnnotation              = Prefix + "config-hash"
 
 	IdentityPrefix                = "identity." + Prefix
 	AcornIdentityAccountServerURL = IdentityPrefix + "account-server-url"

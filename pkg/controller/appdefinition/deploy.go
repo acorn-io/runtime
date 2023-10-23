@@ -669,7 +669,7 @@ func toDeployment(req router.Request, appInstance *v1.AppInstance, tag name.Refe
 			Name:        name,
 			Namespace:   appInstance.Status.Namespace,
 			Labels:      deploymentLabels,
-			Annotations: typed.Concat(deploymentAnnotations, getDependencyAnnotations(appInstance, name, container.Dependencies), secretAnnotations),
+			Annotations: typed.Concat(deploymentAnnotations, getDependencyAnnotations(appInstance, name, container.Dependencies), secretAnnotations, map[string]string{labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Containers[name].ConfigHash}),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: container.Scale,

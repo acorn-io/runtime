@@ -1,6 +1,8 @@
 `apiVersion: v1
 kind: ServiceAccount
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -16,6 +18,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -79,6 +83,8 @@ status: {}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -109,6 +115,7 @@ kind: ServiceAccount
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -126,6 +133,7 @@ kind: Job
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
   creationTimestamp: null
@@ -143,6 +151,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/config-hash: ""
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
       creationTimestamp: null
       labels:
@@ -215,6 +224,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name

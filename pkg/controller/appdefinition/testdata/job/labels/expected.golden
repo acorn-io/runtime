@@ -3,6 +3,7 @@ kind: ServiceAccount
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     alljobsa: value
     global2a: value
     globala: value
@@ -30,6 +31,7 @@ kind: Job
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     alljobsa: value
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
@@ -57,6 +59,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/config-hash: ""
         acorn.io/container-spec: '{"annotations":{"job3a":"value"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"job3":"value"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         alljobsa: value
         global2a: value

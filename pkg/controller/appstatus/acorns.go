@@ -2,30 +2,32 @@ package appstatus
 
 import (
 	"strconv"
-	"strings"
 
 	name2 "github.com/acorn-io/baaah/pkg/name"
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/autoupgrade"
-	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/runtime/pkg/publicname"
-	"github.com/google/go-containerregistry/pkg/name"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (a *appStatusRenderer) readAcorns(tag name.Reference) error {
+func (a *appStatusRenderer) readAcorns() error {
 	// reset state
 	a.app.Status.AppStatus.Acorns = map[string]v1.AcornStatus{}
 
 	for acornName, acornDef := range a.app.Status.AppSpec.Acorns {
+		hash, err := configHash(acornDef)
+		if err != nil {
+			return err
+		}
+
 		s := v1.AcornStatus{
 			CommonStatus: v1.CommonStatus{
 				Defined:      ports.IsLinked(a.app, acornName),
 				LinkOverride: ports.LinkService(a.app, acornName),
+				ConfigHash:   hash,
 			},
 		}
 
@@ -41,7 +43,7 @@ func (a *appStatusRenderer) readAcorns(tag name.Reference) error {
 		}
 
 		acorn := &v1.AppInstance{}
-		err := a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, acornName)), acorn)
+		err = a.c.Get(a.ctx, router.Key(a.app.Namespace, name2.SafeHashConcatName(a.app.Name, acornName)), acorn)
 		if apierrors.IsNotFound(err) {
 			a.app.Status.AppStatus.Acorns[acornName] = s
 			continue
@@ -50,20 +52,7 @@ func (a *appStatusRenderer) readAcorns(tag name.Reference) error {
 		}
 
 		s.Defined = true
-		var image string
-		if _, isPattern := autoupgrade.AutoUpgradePattern(acornDef.Image); isPattern {
-			image = acornDef.Image
-		} else if tag != nil {
-			if strings.HasPrefix(acornDef.Image, "sha256:") {
-				image = strings.TrimPrefix(acornDef.Image, "sha256:")
-			} else {
-				image = images.ResolveTag(tag, acornDef.Image)
-			}
-		}
-		s.UpToDate = acorn.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) &&
-			image != "" &&
-			image == acorn.Spec.Image &&
-			acorn.Status.AppImage.Digest == acorn.Status.Staged.AppImage.Digest
+		s.UpToDate = acorn.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && acorn.Annotations[labels.AcornConfigHashAnnotation] == hash
 		s.Ready = s.UpToDate && acorn.Status.Ready
 		s.AcornName = publicname.Get(acorn)
 

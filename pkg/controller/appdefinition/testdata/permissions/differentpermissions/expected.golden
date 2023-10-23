@@ -1,6 +1,8 @@
 `apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -22,6 +24,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -44,6 +48,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -66,6 +72,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -90,6 +98,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     acorn.io/permissions: '{"serviceName":"oneimage","rules":[{"verbs":["create"],"apiGroups":["foo.io"],"resources":["bar"],"scopes":["account"]},{"verbs":["patch"],"apiGroups":["bar.io"],"resources":["foo"]}]}'
   creationTimestamp: null
   labels:
@@ -106,6 +115,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -169,6 +180,8 @@ status: {}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -197,6 +210,8 @@ status:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -218,6 +233,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -240,6 +257,8 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -262,6 +281,8 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -286,6 +307,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     acorn.io/permissions: '{"serviceName":"twoimage","rules":[{"verbs":["put"],"apiGroups":["foo.io"],"resources":["bar"],"scopes":["cluster"]},{"verbs":["delete"],"apiGroups":["bar.io"],"resources":["foo"]}]}'
   creationTimestamp: null
   labels:
@@ -302,6 +324,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -365,6 +389,8 @@ status: {}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -395,6 +421,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -429,6 +456,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name

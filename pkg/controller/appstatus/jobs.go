@@ -6,21 +6,18 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/images"
+	"github.com/acorn-io/runtime/pkg/jobs"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
 	"github.com/acorn-io/z"
-	"github.com/google/go-containerregistry/pkg/name"
 	cronv3 "github.com/robfig/cron/v3"
 	batchv1 "k8s.io/api/batch/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (a *appStatusRenderer) readJobs(tag name.Reference) error {
-	var (
-		existingStatus = a.app.Status.AppStatus.Jobs
-	)
+func (a *appStatusRenderer) readJobs() error {
+	existingStatus := a.app.Status.AppStatus.Jobs
 
 	// reset state
 	a.app.Status.AppStatus.Jobs = make(map[string]v1.JobStatus, len(a.app.Status.AppSpec.Jobs))
@@ -31,11 +28,19 @@ func (a *appStatusRenderer) readJobs(tag name.Reference) error {
 	}
 
 	for jobName, jobDef := range a.app.Status.AppSpec.Jobs {
+		hash, err := configHash(jobDef)
+		if err != nil {
+			return err
+		}
+
 		c := v1.JobStatus{
 			CreateEventSucceeded: existingStatus[jobName].CreateEventSucceeded,
-			Skipped:              existingStatus[jobName].Skipped,
+			Skipped:              !jobs.ShouldRun(jobName, a.app),
 			ExpressionErrors:     existingStatus[jobName].ExpressionErrors,
 			Dependencies:         existingStatus[jobName].Dependencies,
+			CommonStatus: v1.CommonStatus{
+				ConfigHash: hash,
+			},
 		}
 		summary := summary[jobName]
 
@@ -61,7 +66,7 @@ func (a *appStatusRenderer) readJobs(tag name.Reference) error {
 		}
 
 		var job batchv1.Job
-		err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &job)
+		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &job)
 		if apierror.IsNotFound(err) {
 			var cronJob batchv1.CronJob
 			err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, jobName), &cronJob)
@@ -75,7 +80,7 @@ func (a *appStatusRenderer) readJobs(tag name.Reference) error {
 				c.CompletionTime = cronJob.Status.LastSuccessfulTime
 				c.Schedule = cronJob.Spec.Schedule
 				c.Defined = true
-				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && tag != nil && images.ResolveTag(tag, jobDef.Image) == cronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Image
+				c.UpToDate = cronJob.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && cronJob.Annotations[labels.AcornConfigHashAnnotation] == hash
 				for _, nj := range cronJob.Status.Active {
 					nestedJob := &batchv1.Job{}
 					err := a.c.Get(a.ctx, router.Key(nj.Namespace, nj.Name), nestedJob)
@@ -104,8 +109,7 @@ func (a *appStatusRenderer) readJobs(tag name.Reference) error {
 			c.CompletionTime = job.Status.CompletionTime
 			c.LastRun = job.Status.StartTime
 			c.Defined = true
-			image := images.ResolveTag(tag, jobDef.Image)
-			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && tag != nil && image == job.Spec.Template.Spec.Containers[0].Image
+			c.UpToDate = job.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && (c.Skipped || job.Annotations[labels.AcornConfigHashAnnotation] == hash)
 			if job.Status.Succeeded > 0 {
 				c.CreateEventSucceeded = true
 				c.Ready = c.UpToDate

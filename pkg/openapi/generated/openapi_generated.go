@@ -6279,6 +6279,12 @@ func schema_pkg_apis_internalacornio_v1_AcornStatus(ref common.ReferenceCallback
 							},
 						},
 					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"acornName": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -7841,6 +7847,12 @@ func schema_pkg_apis_internalacornio_v1_CommonStatus(ref common.ReferenceCallbac
 							},
 						},
 					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -8433,6 +8445,12 @@ func schema_pkg_apis_internalacornio_v1_ContainerStatus(ref common.ReferenceCall
 									},
 								},
 							},
+						},
+					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"readyCount": {
@@ -9955,6 +9973,12 @@ func schema_pkg_apis_internalacornio_v1_JobStatus(ref common.ReferenceCallback) 
 							},
 						},
 					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"schedule": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -11050,6 +11074,12 @@ func schema_pkg_apis_internalacornio_v1_RouterStatus(ref common.ReferenceCallbac
 							},
 						},
 					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"missingTargets": {
 						SchemaProps: spec.SchemaProps{
 							Type: []string{"array"},
@@ -11374,6 +11404,12 @@ func schema_pkg_apis_internalacornio_v1_SecretStatus(ref common.ReferenceCallbac
 									},
 								},
 							},
+						},
+					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"secretName": {
@@ -12150,6 +12186,12 @@ func schema_pkg_apis_internalacornio_v1_ServiceStatus(ref common.ReferenceCallba
 							},
 						},
 					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"default": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
@@ -12750,6 +12792,12 @@ func schema_pkg_apis_internalacornio_v1_VolumeStatus(ref common.ReferenceCallbac
 									},
 								},
 							},
+						},
+					},
+					"configHash": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"volumeName": {

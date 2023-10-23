@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -26,6 +27,7 @@ kind: ClusterRoleBinding
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -50,6 +52,7 @@ kind: Role
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -74,6 +77,7 @@ kind: RoleBinding
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -99,6 +103,7 @@ kind: ServiceAccount
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     acorn.io/permissions: '{"serviceName":"oneimage","rules":[{"verbs":["create"],"apiGroups":["foo.io"],"resources":["bar"],"scopes":["account"]},{"verbs":["patch"],"apiGroups":["bar.io"],"resources":["foo"]}]}'
   creationTimestamp: null
   labels:
@@ -117,6 +122,7 @@ kind: Job
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
   creationTimestamp: null
@@ -134,6 +140,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/config-hash: ""
         acorn.io/container-spec: '{"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null,"sidecars":{"left":{"image":"foo","metrics":{},"ports":[{"port":90,"protocol":"tcp","targetPort":91}],"probes":null}}}'
       creationTimestamp: null
       labels:

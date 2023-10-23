@@ -44,7 +44,8 @@ func forDefined(ctx context.Context, c kclient.Client, interpolator *secrets.Int
 		}
 
 		annotations := map[string]string{
-			labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+			labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
+			labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Services[serviceName].ConfigHash,
 		}
 
 		if service.GetJob() != "" {
@@ -164,7 +165,8 @@ func forRouters(appInstance *v1.AppInstance) (result []kclient.Object, err error
 					labels.AcornPublicName, publicname.ForChild(appInstance, routerName),
 					labels.AcornRouterName, routerName),
 				Annotations: labels.Merge(annotations, map[string]string{
-					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Routers[routerName].ConfigHash,
 				}),
 			},
 			Spec: v1.ServiceInstanceSpec{
@@ -205,7 +207,8 @@ func forAcorns(appInstance *v1.AppInstance) (result []kclient.Object) {
 					labels.AcornPublicName, publicname.ForChild(appInstance, acornName),
 					labels.AcornAcornName, acornName),
 				Annotations: map[string]string{
-					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Acorns[acornName].ConfigHash,
 				},
 			},
 			Spec: v1.ServiceInstanceSpec{
@@ -255,7 +258,8 @@ func forContainers(appInstance *v1.AppInstance) (result []kclient.Object) {
 					labels.AcornPublicName, publicname.ForChild(appInstance, containerName),
 					labels.AcornContainerName, containerName),
 				Annotations: map[string]string{
-					labels.AcornAppGeneration: strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornAppGeneration:        strconv.FormatInt(appInstance.Generation, 10),
+					labels.AcornConfigHashAnnotation: appInstance.Status.AppStatus.Containers[containerName].ConfigHash,
 				},
 			},
 			Spec: v1.ServiceInstanceSpec{

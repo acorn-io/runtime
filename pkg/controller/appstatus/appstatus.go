@@ -2,6 +2,8 @@ package appstatus
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -10,9 +12,7 @@ import (
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	client2 "github.com/acorn-io/runtime/pkg/client"
 	"github.com/acorn-io/runtime/pkg/condition"
-	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/jobs"
-	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/pkg/errors"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -24,7 +24,7 @@ type appStatusRenderer struct {
 }
 
 // resetHandlerControlledFields will set fields to empty values because it is expected that handlers will append values
-// to them.  If the field is not reset it will grow indefinitely in a tight loop. This behavior does not
+// to them. If the field is not reset it will grow indefinitely in a tight loop. This behavior does not
 // apply to most status field built in AppStatus as they are fully calculated and reset on each run. But these
 // fields are specifically fields with aggregated values.
 // Additionally, some corner cases are handled in this code where fields need to be initialized in a special way
@@ -217,22 +217,11 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 		app: app.DeepCopy(),
 	}
 
-	var (
-		tag name.Reference
-		err error
-	)
-	if app.Status.AppImage.ID != "" {
-		tag, err = images.GetRuntimePullableImageReference(ctx, c, app.Namespace, app.Status.AppImage.ID)
-		if err != nil {
-			return v1.AppStatus{}, err
-		}
-	}
-
-	if err := render.readContainers(tag); err != nil {
+	if err := render.readContainers(); err != nil {
 		return v1.AppStatus{}, err
 	}
 
-	if err := render.readJobs(tag); err != nil {
+	if err := render.readJobs(); err != nil {
 		return v1.AppStatus{}, err
 	}
 
@@ -240,7 +229,7 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 		return v1.AppStatus{}, err
 	}
 
-	if err := render.readServices(tag); err != nil {
+	if err := render.readServices(); err != nil {
 		return v1.AppStatus{}, err
 	}
 
@@ -248,7 +237,7 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 		return v1.AppStatus{}, err
 	}
 
-	if err := render.readAcorns(tag); err != nil {
+	if err := render.readAcorns(); err != nil {
 		return v1.AppStatus{}, err
 	}
 
@@ -261,4 +250,12 @@ func Get(ctx context.Context, c kclient.Client, app *v1.AppInstance) (v1.AppStat
 	}
 
 	return render.app.Status.AppStatus, nil
+}
+
+func configHash(c any) (string, error) {
+	b, err := json.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(b)), nil
 }

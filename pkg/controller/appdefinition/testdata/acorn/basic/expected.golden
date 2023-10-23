@@ -3,6 +3,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/acorn-name: acorn-name
@@ -31,6 +32,8 @@ status: {}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  annotations:
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/app-name: app-name
@@ -55,6 +58,7 @@ kind: AppInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     myAnnotation: myValue
   creationTimestamp: null
   labels:

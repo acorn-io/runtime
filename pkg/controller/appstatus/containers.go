@@ -6,10 +6,8 @@ import (
 
 	"github.com/acorn-io/baaah/pkg/router"
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
-	"github.com/acorn-io/runtime/pkg/images"
 	"github.com/acorn-io/runtime/pkg/labels"
 	"github.com/acorn-io/runtime/pkg/ports"
-	"github.com/google/go-containerregistry/pkg/name"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierror "k8s.io/apimachinery/pkg/api/errors"
@@ -18,7 +16,7 @@ import (
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *appStatusRenderer) readContainers(tag name.Reference) error {
+func (a *appStatusRenderer) readContainers() error {
 	var (
 		isTransitioning bool
 		existingStatus  = a.app.Status.AppStatus.Containers
@@ -43,16 +41,21 @@ func (a *appStatusRenderer) readContainers(tag name.Reference) error {
 		cs.Dependencies = existingStatus[containerName].Dependencies
 		cs.TransitioningMessages = append(cs.TransitioningMessages, summary.TransitioningMessages...)
 		cs.MaxReplicaRestartCount = summary.MaxReplicaRestartCount
+		hash, err := configHash(containerDef)
+		if err != nil {
+			return err
+		}
+		cs.ConfigHash = hash
 
 		dep := appsv1.Deployment{}
-		err := a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, containerName), &dep)
+		err = a.c.Get(a.ctx, router.Key(a.app.Status.Namespace, containerName), &dep)
 		if apierror.IsNotFound(err) {
 			// do nothing
 		} else if err != nil {
 			return err
 		} else {
 			cs.Defined = true
-			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && tag != nil && images.ResolveTag(tag, containerDef.Image) == dep.Spec.Template.Spec.Containers[0].Image
+			cs.UpToDate = dep.Annotations[labels.AcornAppGeneration] == strconv.Itoa(int(a.app.Generation)) && dep.Annotations[labels.AcornConfigHashAnnotation] == hash
 			cs.ReadyReplicaCount = dep.Status.ReadyReplicas
 			cs.RunningReplicaCount = dep.Status.Replicas
 			cs.DesiredReplicaCount = replicas(dep.Spec.Replicas)

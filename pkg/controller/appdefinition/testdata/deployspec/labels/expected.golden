@@ -2,6 +2,7 @@
 kind: ServiceAccount
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     appSpecAnn: test-app-spec-ann
     container-scoped-ann: test-container
     containerAnn: test-container-ann
@@ -28,6 +29,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     appSpecAnn: test-app-spec-ann
     container-scoped-ann: test-container
     containerAnn: test-container-ann
@@ -106,6 +108,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     appSpecAnn: test-app-spec-ann
     container-scoped-ann: test-container
     containerAnn: test-container-ann
@@ -146,6 +149,7 @@ kind: ServiceAccount
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     appSpecAnn: test-app-spec-ann
     global-scoped-ann: test-global
     jobAnn: test-job-ann
@@ -169,6 +173,7 @@ kind: Job
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     appSpecAnn: test-app-spec-ann
     apply.acorn.io/prune: "false"
     apply.acorn.io/update: "true"
@@ -192,6 +197,7 @@ spec:
   template:
     metadata:
       annotations:
+        acorn.io/config-hash: ""
         acorn.io/container-spec: '{"annotations":{"jobAnn":"test-job-ann"},"build":{"context":".","dockerfile":"Dockerfile"},"image":"image-name","labels":{"jobLabel":"test-job-label"},"metrics":{},"ports":[{"port":80,"protocol":"http","targetPort":81}],"probes":null}'
         appSpecAnn: test-app-spec-ann
         global-scoped-ann: test-global
@@ -254,6 +260,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   annotations:
+    acorn.io/config-hash: ""
     appSpecAnn: test-app-spec-ann
     global-scoped-ann: test-global
     named-scoped-ann: test-named

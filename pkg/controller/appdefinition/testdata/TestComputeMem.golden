@@ -3,6 +3,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/acorn-name: byname
@@ -30,6 +31,7 @@ kind: ServiceInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
   creationTimestamp: null
   labels:
     acorn.io/acorn-name: other
@@ -57,6 +59,7 @@ kind: AppInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     acorn.io/original-image: foo
   creationTimestamp: null
   labels:
@@ -99,6 +102,7 @@ kind: AppInstance
 metadata:
   annotations:
     acorn.io/app-generation: "0"
+    acorn.io/config-hash: ""
     acorn.io/original-image: foo
   creationTimestamp: null
   labels:
