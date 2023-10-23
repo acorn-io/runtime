@@ -46,7 +46,7 @@ type Options struct {
 	Dangerous         bool
 	BidirectionalSync bool
 	TimeoutSeconds    int32
-	ReleaseOnExit     bool
+	ReleaseOnExit     *bool
 	Logger            Logger
 	BuildStatus       chan<- BuildStatus
 }
@@ -216,7 +216,7 @@ func buildLoop(ctx context.Context, c client.Client, hash clientHash, opts *Opti
 		logger    = opts.Logger
 	)
 
-	if opts.ReleaseOnExit {
+	if opts.ReleaseOnExit == nil || *opts.ReleaseOnExit {
 		defer func() {
 			if err := releaseDevSession(c, appName); err != nil {
 				logger.Errorf("Failed to release dev session app: %v", err)

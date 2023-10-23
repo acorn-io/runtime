@@ -45,7 +45,7 @@ acorn dev --name wandering-sound --clone [acorn args]
       --region string             Region in which to deploy the app, immutable
       --replace                   Replace the app with only defined values, resetting undefined fields to default values
   -s, --secret strings            Bind an existing secret (format existing:sec-name) (ex: sec-name:app-secret)
-      --session-release-on-exit   Release the session when the dev command exits
+      --session-release-on-exit   Release the session when the dev command exits (default: true)
       --session-timeout string    Timeout in seconds for the dev session (default "360s")
   -v, --volume stringArray        Bind an existing volume (format existing:vol-name,field=value) (ex: pvc-name:app-data)
 ```
