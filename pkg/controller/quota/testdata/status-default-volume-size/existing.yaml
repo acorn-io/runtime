@@ -1,0 +1,12 @@
+---
+kind: ProjectInstance
+apiVersion: internal.acorn.io/v1
+metadata:
+  name: app-namespace
+  annotations:
+    acorn.io/enforced-quota: "true"
+spec: {}
+status:
+  defaultRegion: local
+  supportedRegions:
+    - local

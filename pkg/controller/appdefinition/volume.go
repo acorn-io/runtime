@@ -51,7 +51,7 @@ func translateAccessModes(accessModes []v1.AccessMode) []corev1.PersistentVolume
 	return result
 }
 
-func lookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeName string) (string, error) {
+func LookupExistingPV(req router.Request, appInstance *v1.AppInstance, volumeName string) (string, error) {
 	var pvc corev1.PersistentVolumeClaim
 	if err := req.Get(&pvc, appInstance.Status.Namespace, volumeName); err == nil {
 		if pvc.Spec.VolumeName == "" {
@@ -194,7 +194,7 @@ func toPVCs(req router.Request, appInstance *v1.AppInstance) (result []kclient.O
 					pvc.Labels[labels.AcornVolumeClass] = volClass.Name
 				}
 			}
-			pvName, err := lookupExistingPV(req, appInstance, vol)
+			pvName, err := LookupExistingPV(req, appInstance, vol)
 			if err != nil {
 				return nil, err
 			}

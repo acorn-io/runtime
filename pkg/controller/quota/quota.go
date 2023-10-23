@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/acorn-io/runtime/pkg/apis/internal.acorn.io/v1"
 	adminv1 "github.com/acorn-io/runtime/pkg/apis/internal.admin.acorn.io/v1"
+	"github.com/acorn-io/runtime/pkg/controller/appdefinition"
 	"github.com/acorn-io/runtime/pkg/labels"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -111,7 +112,7 @@ func EnsureQuotaRequest(req router.Request, resp router.Response) error {
 	//       their compute resources to the quota request permananetly. To some degree it'll
 	//       have to be dynamic, but we can't do that until we have a better idea of how.
 	// addCompute(app.Jobs, appInstance, quotaRequest)
-	if err := addStorage(appInstance, quotaRequest); err != nil {
+	if err := addStorage(req, appInstance, quotaRequest); err != nil {
 		status.Error(err)
 		return err
 	}
@@ -150,7 +151,7 @@ func addCompute(containers map[string]v1.Container, appInstance *v1.AppInstance,
 }
 
 // addStorage adds the storage resources of the volumes passed to the quota request.
-func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) error {
+func addStorage(req router.Request, appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestInstance) error {
 	app := appInstance.Status.AppSpec
 
 	// Add the volume storage needed to the quota request. We only parse net new volumes, not
@@ -159,6 +160,14 @@ func addStorage(appInstance *v1.AppInstance, quotaRequest *adminv1.QuotaRequestI
 		size := volume.Size
 		if bound, boundSize := boundVolumeSize(name, appInstance.Spec.Volumes); bound {
 			size = boundSize
+		}
+
+		// If the volume will be bound to an existing PV implicitly, then we don't need to count it. This will happen
+		// when the incoming app has the same name as the app that created an existing released PV.
+		if pvName, err := appdefinition.LookupExistingPV(req, appInstance, name); err != nil {
+			return err
+		} else if pvName != "" {
+			continue
 		}
 
 		// Handle three cases:
