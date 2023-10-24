@@ -23,7 +23,7 @@ func getSecretsToRemove(arg string, client client.Client, cmd *cobra.Command) ([
 	}
 
 	for _, secret := range secrets {
-		if strings.HasPrefix(secret.Name, arg+".") {
+		if after, found := strings.CutPrefix(secret.Name, arg+"."); found && !strings.ContainsRune(after, '.') {
 			result = append(result, secret.Name)
 		}
 	}
