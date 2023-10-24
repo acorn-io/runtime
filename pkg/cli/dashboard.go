@@ -11,11 +11,10 @@ import (
 
 func NewDashboard(c CommandContext) *cobra.Command {
 	return cli.Command(&Dashboard{client: c.ClientFactory}, cobra.Command{
-		Use:          "dashboard [flags] [APP]",
+		Use:          "dashboard [flags] [ACORN]",
 		SilenceUsage: true,
-		Short:        "Open the global or acorn specific dashboard",
+		Short:        "Open the web dashboard for the project",
 		Args:         cobra.MaximumNArgs(1),
-		Hidden:       true,
 	})
 }
 
